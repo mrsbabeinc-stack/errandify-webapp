@@ -1,8 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
+import CategorySelectionPage from './pages/CategorySelectionPage';
+import CreateErrandPage from './pages/CreateErrandPage';
+import BrowseErrandsPage from './pages/BrowseErrandsPage';
 import ErrandsPage from './pages/ErrandsPage';
 import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage';
@@ -10,6 +13,25 @@ import ProfilePage from './pages/ProfilePage';
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<'asker' | 'doer'>('asker');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    // Check if user is already authenticated
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+
+    if (token && user) {
+      try {
+        const userData = JSON.parse(user);
+        setIsAuthenticated(true);
+        setUserRole(userData.role || 'asker');
+      } catch {
+        setIsAuthenticated(false);
+      }
+    }
+
+    setIsCheckingAuth(false);
+  }, []);
 
   const handleLogin = (role: 'asker' | 'doer') => {
     setIsAuthenticated(true);
@@ -18,7 +40,15 @@ export default function App() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
+
+  if (isCheckingAuth) {
+    return <div className="min-h-screen bg-errandify-bg flex items-center justify-center">
+      <p className="text-gray-600">Loading...</p>
+    </div>;
+  }
 
   return (
     <Router>
@@ -27,12 +57,50 @@ export default function App() {
           path="/login"
           element={
             isAuthenticated ? (
-              <Navigate to="/" replace />
+              <Navigate to="/category" replace />
             ) : (
               <LoginPage onLogin={handleLogin} />
             )
           }
         />
+
+        {/* Category selection (post-auth, pre-dashboard) */}
+        <Route
+          path="/category"
+          element={
+            isAuthenticated ? (
+              <CategorySelectionPage userRole={userRole} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        {/* Create errand (asker flow) */}
+        <Route
+          path="/create-errand/:categoryId"
+          element={
+            isAuthenticated ? (
+              <CreateErrandPage />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        {/* Browse errands (doer flow) */}
+        <Route
+          path="/browse-errands/:categoryId"
+          element={
+            isAuthenticated ? (
+              <BrowseErrandsPage />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        {/* Main dashboard layout */}
         <Route
           element={
             isAuthenticated ? (
