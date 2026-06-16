@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+@media (min-width: 320px) and (max-width: 480px) {
+  /* Mobile-first responsive */
+  body {
+    font-size: 16px;
+  }
+}
+
+/* Increase font size for users 50+ */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #FFFAF6;
+  color: #4A3221;
+}
+
+/* Safe area for notches and home indicators */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}

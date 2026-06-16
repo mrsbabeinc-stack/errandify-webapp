@@ -1,0 +1,68 @@
+-- Users table
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  phone VARCHAR(20),
+  role VARCHAR(50) NOT NULL CHECK (role IN ('asker', 'doer')),
+  age INTEGER,
+  profile_image_url VARCHAR(500),
+  singpass_id VARCHAR(255) UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Errands table
+CREATE TABLE errands (
+  id SERIAL PRIMARY KEY,
+  asker_id INTEGER NOT NULL REFERENCES users(id),
+  title VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  category VARCHAR(100),
+  status VARCHAR(50) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'assigned', 'in_progress', 'completed', 'cancelled')),
+  budget DECIMAL(10, 2),
+  deadline TIMESTAMP,
+  location VARCHAR(500),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Errand Assignments table
+CREATE TABLE errand_assignments (
+  id SERIAL PRIMARY KEY,
+  errand_id INTEGER NOT NULL REFERENCES errands(id),
+  doer_id INTEGER NOT NULL REFERENCES users(id),
+  status VARCHAR(50) NOT NULL DEFAULT 'accepted' CHECK (status IN ('accepted', 'declined', 'completed', 'cancelled')),
+  completed_at TIMESTAMP,
+  rating_score DECIMAL(3, 2),
+  rating_comment TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Conversations table
+CREATE TABLE conversations (
+  id SERIAL PRIMARY KEY,
+  participant_ids INTEGER[] NOT NULL,
+  errand_id INTEGER REFERENCES errands(id),
+  last_message_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Chat Messages table
+CREATE TABLE chat_messages (
+  id SERIAL PRIMARY KEY,
+  conversation_id INTEGER NOT NULL REFERENCES conversations(id),
+  sender_id INTEGER NOT NULL REFERENCES users(id),
+  text TEXT,
+  audio_url VARCHAR(500),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for better query performance
+CREATE INDEX idx_errands_asker_id ON errands(asker_id);
+CREATE INDEX idx_errands_status ON errands(status);
+CREATE INDEX idx_assignments_errand_id ON errand_assignments(errand_id);
+CREATE INDEX idx_assignments_doer_id ON errand_assignments(doer_id);
+CREATE INDEX idx_chat_messages_conversation_id ON chat_messages(conversation_id);
+CREATE INDEX idx_chat_messages_created_at ON chat_messages(created_at);
