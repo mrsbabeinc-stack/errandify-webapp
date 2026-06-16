@@ -1,0 +1,121 @@
+================================================================================
+                    ERRANDIFY AUTH TESTING FILES
+================================================================================
+
+📖 WHICH DOCUMENT TO READ?
+
+START_HERE.md (👈 START HERE)
+├─ 10-minute fast path
+├─ Copy-paste commands
+├─ Success criteria
+└─ Quick troubleshooting
+
+QUICK_TEST.md
+├─ 11-step detailed walkthrough
+├─ Each step with expected output
+├─ Full checklist
+├─ Troubleshooting for each step
+└─ Database verification queries
+
+TEST_SCENARIOS.md
+├─ 9 complete test cases
+├─ Step-by-step with diagrams
+├─ Expected API responses
+├─ Database verification
+└─ Advanced test scenarios
+
+AUTH_FLOW.md
+├─ Complete technical documentation
+├─ API endpoint specifications
+├─ Database schema details
+├─ How to switch to real SingPass
+└─ Security features
+
+GETTING_STARTED.md
+├─ Database setup
+├─ Environment configuration
+├─ Server startup
+├─ Testing tips
+└─ Troubleshooting guide
+
+================================================================================
+
+🚀 RECOMMENDED READING ORDER
+
+1. START_HERE.md          (5 min)    ← Start here!
+2. Run the commands       (10 min)   ← Test in browser
+3. QUICK_TEST.md          (5 min)    ← Follow detailed steps if needed
+4. TEST_SCENARIOS.md      (10 min)   ← Advanced testing
+5. AUTH_FLOW.md           (15 min)   ← Deep dive (optional)
+
+================================================================================
+
+📂 TESTING CHECKLIST
+
+Getting Started:
+  [ ] Read START_HERE.md
+  [ ] Run database setup command
+  [ ] Start backend (Terminal A)
+  [ ] Start frontend (Terminal B)
+  [ ] Open http://localhost:5173
+
+Signup Test:
+  [ ] Click "Sign Up with SingPass"
+  [ ] Select "Tan Wei Ming" (age 51)
+  [ ] Fill mobile: 98765432
+  [ ] Verify text is larger (19px)
+  [ ] Check localStorage has token
+
+Login Test:
+  [ ] Clear localStorage
+  [ ] Click "Log in"
+  [ ] Enter mobile: 98765432
+  [ ] Check backend console for OTP
+  [ ] Enter OTP code
+  [ ] Verify logged in with 19px font
+
+Database Test:
+  [ ] Run: psql errandify
+  [ ] Query: SELECT display_name, mobile, font_size_pref FROM users;
+  [ ] Verify user exists with font_size_pref: 19
+
+Success:
+  [ ] All tests passed
+  [ ] All items checked
+  [ ] Ready to move to Category Selection
+
+================================================================================
+
+🐛 QUICK TROUBLESHOOTING
+
+If something breaks, check:
+  1. PostgreSQL running: brew services start postgresql@15
+  2. Backend terminal shows: "Errandify API running on port 3000"
+  3. Frontend terminal shows: "Local: http://localhost:5173"
+  4. Browser DevTools → Network tab (check for errors)
+  5. Check QUICK_TEST.md → Troubleshooting section
+
+Can't login?
+  → Check backend console for OTP log (📱 message)
+  → Verify mobile matches signup (98765432)
+  → OTP is valid 10 minutes only
+
+Font size not changing?
+  → Database: SELECT font_size_pref FROM users;
+  → Should be 19 for age 51+
+  → Clear localStorage and refresh
+  → Inspect element → check font-size in HTML
+
+================================================================================
+
+✨ WHEN YOU'RE DONE
+
+All tests pass? You're ready for:
+  → Category Selection screen (Next Phase)
+  → Errand browsing & creation
+  → Chat with Qwen AI
+  → Audio features (speech-to-text, text-to-speech)
+
+Share your test results and we'll build Phase 2!
+
+================================================================================
