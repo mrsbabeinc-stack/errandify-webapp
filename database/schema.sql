@@ -1,13 +1,18 @@
 -- Users table
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  phone VARCHAR(20),
-  role VARCHAR(50) NOT NULL CHECK (role IN ('asker', 'doer')),
-  age INTEGER,
+  nric_hash VARCHAR(64) UNIQUE NOT NULL,
+  display_name VARCHAR(255) NOT NULL,
+  mobile VARCHAR(20) NOT NULL,
+  dob DATE,
+  address TEXT,
   profile_image_url VARCHAR(500),
   singpass_id VARCHAR(255) UNIQUE,
+  font_size_pref INTEGER DEFAULT 16,
+  language_pref VARCHAR(5) DEFAULT 'en',
+  role VARCHAR(50) NOT NULL DEFAULT 'asker' CHECK (role IN ('asker', 'doer')),
+  kyc_status VARCHAR(50) DEFAULT 'verified' CHECK (kyc_status IN ('pending', 'verified', 'rejected')),
+  referral_code VARCHAR(20) UNIQUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -60,6 +65,9 @@ CREATE TABLE chat_messages (
 );
 
 -- Indexes for better query performance
+CREATE INDEX idx_users_mobile ON users(mobile);
+CREATE INDEX idx_users_nric_hash ON users(nric_hash);
+CREATE INDEX idx_users_referral_code ON users(referral_code);
 CREATE INDEX idx_errands_asker_id ON errands(asker_id);
 CREATE INDEX idx_errands_status ON errands(status);
 CREATE INDEX idx_assignments_errand_id ON errand_assignments(errand_id);

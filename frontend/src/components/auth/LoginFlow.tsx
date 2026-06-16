@@ -1,0 +1,163 @@
+import { useState } from 'react';
+import axios from 'axios';
+
+interface LoginFlowProps {
+  onComplete: () => void;
+  onBack: () => void;
+}
+
+export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
+  const [mobile, setMobile] = useState('');
+  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState<'mobile' | 'otp'>('mobile');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleRequestOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/request-otp`,
+        { mobile }
+      );
+
+      // For demo: show OTP in console
+      console.log(
+        '📱 OTP sent to console (real SMS in production). Use: 123456'
+      );
+
+      setStep('otp');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to request OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/verify-otp`,
+        { mobile, otp }
+      );
+
+      localStorage.setItem('token', response.data.data.accessToken);
+      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+
+      onComplete();
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Invalid OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-errandify-bg flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-white rounded-lg shadow-lg p-6">
+        {/* Header */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-errandify-orange mb-2">
+            Welcome Back
+          </h2>
+          <p className="text-sm text-gray-600">
+            Sign in with your mobile number
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
+        {step === 'mobile' ? (
+          <form onSubmit={handleRequestOtp} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-errandify-brown mb-1">
+                Mobile Number
+              </label>
+              <input
+                type="tel"
+                value={mobile}
+                onChange={(e) => setMobile(e.target.value)}
+                placeholder="e.g. 98765432"
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                type="button"
+                onClick={onBack}
+                className="flex-1 py-3 px-4 border-2 border-gray-300 text-errandify-brown rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={loading || !mobile.trim()}
+                className="flex-1 py-3 px-4 bg-errandify-orange text-white rounded-lg font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Sending...' : 'Send OTP'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Enter the OTP sent to <span className="font-semibold">{mobile}</span>
+            </p>
+
+            <div>
+              <label className="block text-sm font-medium text-errandify-brown mb-1">
+                OTP Code
+              </label>
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder="e.g. 123456"
+                maxLength={6}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange text-center text-xl tracking-widest"
+              />
+            </div>
+
+            <p className="text-xs text-gray-500 text-center">
+              💡 Demo: Use OTP <span className="font-mono">123456</span>
+            </p>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('mobile');
+                  setOtp('');
+                }}
+                className="flex-1 py-3 px-4 border-2 border-gray-300 text-errandify-brown rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={loading || otp.length !== 6}
+                className="flex-1 py-3 px-4 bg-errandify-orange text-white rounded-lg font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Verifying...' : 'Verify'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
