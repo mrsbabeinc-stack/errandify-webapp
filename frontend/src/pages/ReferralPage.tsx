@@ -1,4 +1,5 @@
-import { useNavigate, useEffect, useRef } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function ReferralPage() {
   const navigate = useNavigate();
