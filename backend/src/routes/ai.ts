@@ -85,15 +85,26 @@ const certificationSuggestions: Record<string, { required: string[]; optional: s
   },
 };
 
+// Clean title for use in description (remove "wash my", "help me", etc.)
+function cleanTitleForDescription(title: string): string {
+  let cleaned = title.trim();
+
+  // Remove common prefixes
+  cleaned = cleaned.replace(/^(help me |help with |need |wash |clean |need to |i need |can you )/, '');
+  cleaned = cleaned.replace(/^(my|a|the) /, '');
+
+  return cleaned;
+}
+
 const descriptionTemplates: Record<string, (title: string) => string> = {
-  'home-maintenance': (title: string) => `Need help with ${title}. Please ensure the work is done professionally and safely.`,
-  'cleaning-laundry': (title: string) => `Looking for someone to help with ${title}. Please bring own supplies if needed.`,
-  'shopping-errands': (title: string) => `Need someone to ${title} for me. Receipt required for reimbursement.`,
-  'delivery-moving': (title: string) => `Assistance needed with ${title}. Careful handling is important.`,
-  'childcare-tutoring': (title: string) => `Seeking help with ${title}. References and experience preferred.`,
-  'pet-care': (title: string) => `Help needed with ${title}. Pet-friendly and experienced handlers only.`,
-  'tech-support': (title: string) => `Need technical assistance with ${title}. Problem diagnosis required.`,
-  'moving-help': (title: string) => `Help with ${title}. Physical ability and reliability important.`,
+  'home-maintenance': (title: string) => `Need help with ${cleanTitleForDescription(title)}. Please ensure the work is done professionally and safely.`,
+  'cleaning-laundry': (title: string) => `Looking for someone to help with ${cleanTitleForDescription(title)}. Please bring own supplies if needed.`,
+  'shopping-errands': (title: string) => `Need someone to ${cleanTitleForDescription(title)}. Receipt required for reimbursement.`,
+  'delivery-moving': (title: string) => `Assistance needed with ${cleanTitleForDescription(title)}. Careful handling is important.`,
+  'childcare-tutoring': (title: string) => `Seeking help with ${cleanTitleForDescription(title)}. References and experience preferred.`,
+  'pet-care': (title: string) => `Help needed with ${cleanTitleForDescription(title)}. Pet-friendly and experienced handlers only.`,
+  'tech-support': (title: string) => `Need technical assistance with ${cleanTitleForDescription(title)}. Problem diagnosis required.`,
+  'moving-help': (title: string) => `Help with ${cleanTitleForDescription(title)}. Physical ability and reliability important.`,
 };
 
 // Check for inappropriate content
