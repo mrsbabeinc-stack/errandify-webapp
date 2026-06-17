@@ -17,44 +17,75 @@ export default function HanaAnimatedAvatar({
   const audioRef = useRef<HTMLAudioElement>(null);
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Speak the message using Web Speech API with Singapore voice
+  // Speak the message using Web Speech API with Singapore female voice
   useEffect(() => {
     if (!isSpeaking || !message) return;
 
     // Cancel any existing speech
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(message);
+    // Load voices first
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        speakMessage(message);
+      };
+      return;
+    }
 
-    // Try to use Singapore English female voice
+    speakMessage(message);
+  }, [isSpeaking, message, onSpeakingEnd]);
+
+  const speakMessage = (text: string) => {
+    const utterance = new SpeechSynthesisUtterance(text);
     const voices = window.speechSynthesis.getVoices();
 
-    // Prefer Singapore English voice
+    // Prefer Singapore English female voice (case-insensitive)
     let selectedVoice = voices.find(voice =>
-      voice.lang.includes('en-SG') && voice.name.includes('female')
+      voice.lang.includes('en-SG') &&
+      (voice.name.toLowerCase().includes('female') ||
+       voice.name.toLowerCase().includes('woman') ||
+       voice.name.toLowerCase().includes('zira') ||
+       voice.name.toLowerCase().includes('susan') ||
+       voice.name.toLowerCase().includes('karen'))
     );
 
-    // Fallback to any Singapore English
+    // Fallback to any Singapore English voice
     if (!selectedVoice) {
       selectedVoice = voices.find(voice => voice.lang.includes('en-SG'));
     }
 
-    // Fallback to British English (similar accent)
+    // Fallback to British English female
     if (!selectedVoice) {
       selectedVoice = voices.find(voice =>
-        voice.lang.includes('en-GB') && voice.name.includes('female')
+        voice.lang.includes('en-GB') &&
+        (voice.name.toLowerCase().includes('female') ||
+         voice.name.toLowerCase().includes('woman'))
       );
     }
 
-    // Last resort - any female English voice
+    // Fallback to US English female
     if (!selectedVoice) {
       selectedVoice = voices.find(voice =>
-        voice.lang.startsWith('en') && voice.name.includes('female')
+        voice.lang.includes('en-US') &&
+        (voice.name.toLowerCase().includes('female') ||
+         voice.name.toLowerCase().includes('woman') ||
+         voice.name.toLowerCase().includes('zira') ||
+         voice.name.toLowerCase().includes('susan'))
       );
     }
 
-    // Absolute fallback
-    if (!selectedVoice && voices.length > 0) {
+    // Last resort - any female voice with English
+    if (!selectedVoice) {
+      selectedVoice = voices.find(voice =>
+        voice.lang.startsWith('en') &&
+        (voice.name.toLowerCase().includes('female') ||
+         voice.name.toLowerCase().includes('woman'))
+      );
+    }
+
+    // Absolute fallback - any English voice
+    if (!selectedVoice) {
       selectedVoice = voices.find(voice => voice.lang.startsWith('en'));
     }
 
@@ -63,7 +94,7 @@ export default function HanaAnimatedAvatar({
     }
 
     utterance.rate = 0.9; // Slightly slower for clarity
-    utterance.pitch = 1.2; // Higher pitch for feminine voice
+    utterance.pitch = 1.3; // Higher pitch for feminine voice
     utterance.volume = 1;
 
     synthRef.current = utterance;
@@ -74,11 +105,7 @@ export default function HanaAnimatedAvatar({
     };
 
     window.speechSynthesis.speak(utterance);
-
-    return () => {
-      window.speechSynthesis.cancel();
-    };
-  }, [isSpeaking, message, onSpeakingEnd]);
+  };
 
   // Animate mouth when speaking
   useEffect(() => {
@@ -170,58 +197,20 @@ export default function HanaAnimatedAvatar({
           }}
         />
 
-        {/* Animated Overlay SVG - Arms and Mouth (only show when speaking) */}
+        {/* Animated Overlay SVG - Mouth and subtle gestures (only show when speaking) */}
         {isSpeaking && (
         <svg
-          viewBox="0 0 200 200"
-          className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
-          preserveAspectRatio="none"
+          viewBox="0 0 200 120"
+          className="absolute top-0 left-0 w-full pointer-events-none"
+          preserveAspectRatio="xMidYMid slice"
           style={{
             transform: `translateY(${shoulderTranslate}px)`,
             transition: 'transform 0.1s ease-out',
             opacity: isSpeaking ? 1 : 0,
             pointerEvents: 'none',
+            height: '60%',
           }}
         >
-          {/* Left Arm - Animated */}
-          <g
-            style={{
-              transformOrigin: '100px 90px',
-              transform: getLeftArmTransform(),
-              transition: 'transform 0.08s ease-out',
-            }}
-          >
-            <path
-              d="M 80 90 Q 65 105 60 130"
-              stroke="rgba(245, 213, 192, 0.85)"
-              strokeWidth="18"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            {/* Left Hand */}
-            <circle cx="60" cy="130" r="12" fill="rgba(245, 213, 192, 0.85)" />
-          </g>
-
-          {/* Right Arm - Animated */}
-          <g
-            style={{
-              transformOrigin: '100px 90px',
-              transform: getRightArmTransform(),
-              transition: 'transform 0.08s ease-out',
-            }}
-          >
-            <path
-              d="M 120 90 Q 135 105 140 130"
-              stroke="rgba(245, 213, 192, 0.85)"
-              strokeWidth="18"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            {/* Right Hand */}
-            <circle cx="140" cy="130" r="12" fill="rgba(245, 213, 192, 0.85)" />
-          </g>
 
           {/* Mouth - Animated Lip Sync */}
           {isSpeaking && (
