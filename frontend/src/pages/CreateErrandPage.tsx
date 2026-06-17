@@ -280,11 +280,11 @@ export default function CreateErrandPage() {
       const lowerValue = value.toLowerCase();
 
       // Extract time: patterns like "4pm", "14:00", "2:30pm"
-      const timeMatch = lowerValue.match(/\b(\d{1,2}):?(\d{2})?\s*(am|pm)\b/i);
-      if (timeMatch) {
+      const timeMatch = lowerValue.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
+      if (timeMatch && timeMatch[3]) {
         let hours = parseInt(timeMatch[1]);
         const minutes = timeMatch[2] || '00';
-        const period = timeMatch[3];
+        const period = timeMatch[3].toLowerCase();
 
         if (period === 'pm' && hours !== 12) {
           hours += 12;
@@ -337,48 +337,6 @@ export default function CreateErrandPage() {
     }
   };
 
-  const extractTimeAndDurationFromTitle = (title: string) => {
-    const lowerTitle = title.toLowerCase();
-
-    // Extract time: patterns like "4pm", "14:00", "2:30pm"
-    const timeMatch = lowerTitle.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/);
-    if (timeMatch) {
-      let hours = parseInt(timeMatch[1]);
-      const minutes = timeMatch[2] || '00';
-      const period = timeMatch[3];
-
-      if (period === 'pm' && hours !== 12) {
-        hours += 12;
-      } else if (period === 'am' && hours === 12) {
-        hours = 0;
-      }
-
-      const timeStr = `${String(hours).padStart(2, '0')}:${minutes}`;
-      setFormData((prev) => ({
-        ...prev,
-        duration: timeStr,
-      }));
-    }
-
-    // Extract duration: patterns like "1hour", "2 hours", "30min"
-    const durationMatch = lowerTitle.match(/(\d+(?:\.\d+)?)\s*(hour|hr|min|minute|day|d)\b/);
-    if (durationMatch && durationMatch[2]) {
-      const value = durationMatch[1];
-      const unit = durationMatch[2];
-
-      let normalizedUnit = 'Hr' as 'Min' | 'Hr' | 'Day' | 'Week';
-      if (unit.includes('min')) normalizedUnit = 'Min';
-      else if (unit.includes('day') || unit === 'd') normalizedUnit = 'Day';
-      else if (unit.includes('week')) normalizedUnit = 'Week';
-
-      setFormData((prev) => ({
-        ...prev,
-        duration: value,
-        durationUnit: normalizedUnit,
-      }));
-    }
-  };
-
   // Auto-apply AI suggestions when they arrive
   useEffect(() => {
     // Update category if AI has a suggestion
@@ -405,26 +363,6 @@ export default function CreateErrandPage() {
 
     // Certifications: show as suggestions only, don't auto-apply (user must approve)
   }, [aiSuggestions]);
-
-  // Auto-fill time and budget when title changes (from local extraction)
-  useEffect(() => {
-    if (formData.title) {
-      extractTimeAndDurationFromTitle(formData.title);
-      extractBudgetFromTitle(formData.title);
-    }
-  }, [formData.title]);
-
-  const extractBudgetFromTitle = (title: string) => {
-    const lowerTitle = title.toLowerCase();
-    // Look for $ or numbers in certain patterns
-    const dollarMatch = lowerTitle.match(/\$\s*(\d+)/);
-    if (dollarMatch) {
-      setFormData((prev) => ({
-        ...prev,
-        budget: dollarMatch[1],
-      }));
-    }
-  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
