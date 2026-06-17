@@ -125,11 +125,9 @@ export default function CreateErrandPage() {
     }
   };
 
-  // Auto-apply AI suggestions dynamically when title changes
+  // Auto-apply AI suggestions when they arrive
   useEffect(() => {
-    if (!formData.title || formData.title.length < 4) return;
-
-    // Always update category from AI
+    // Update category if AI has a suggestion
     if (aiSuggestions.suggestedCategory) {
       setFormData((prev) => ({
         ...prev,
@@ -137,7 +135,7 @@ export default function CreateErrandPage() {
       }));
     }
 
-    // Always update description from AI
+    // Update description if AI has a suggestion
     if (aiSuggestions.suggestedDescription) {
       setFormData((prev) => ({
         ...prev,
@@ -145,30 +143,30 @@ export default function CreateErrandPage() {
       }));
     }
 
-    // Auto-apply suggested skills (replace old suggestions with new ones)
-    if (aiSuggestions.skills.length > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        skills: aiSuggestions.skills, // Replace, don't merge
-      }));
-    }
-
-    // Auto-apply suggested certifications (always update)
-    if (aiSuggestions.certifications.required.length > 0 || aiSuggestions.certifications.optional.length > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        certifications: aiSuggestions.certifications,
-      }));
-    }
-
-    // Auto-apply suggested budget
+    // Update budget if AI has a suggestion
     if (aiSuggestions.suggestedBudget) {
       setFormData((prev) => ({
         ...prev,
         budget: aiSuggestions.suggestedBudget?.toString() || '',
       }));
     }
-  }, [formData.title, aiSuggestions.suggestedCategory, aiSuggestions.suggestedDescription, aiSuggestions.skills, aiSuggestions.certifications, aiSuggestions.suggestedBudget]);
+
+    // Update skills if AI has suggestions
+    if (aiSuggestions.skills.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        skills: aiSuggestions.skills,
+      }));
+    }
+
+    // Update certifications if AI has suggestions
+    if (aiSuggestions.certifications.required.length > 0 || aiSuggestions.certifications.optional.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        certifications: aiSuggestions.certifications,
+      }));
+    }
+  }, [aiSuggestions]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
