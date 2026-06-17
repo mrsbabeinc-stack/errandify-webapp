@@ -18,9 +18,9 @@ export default function LandingPage() {
         </div>
 
         {/* Bottom Section - Text & Button */}
-        <div className="w-full bg-gradient-to-b from-orange-50 to-orange-100 px-4 py-4 flex flex-col justify-end">
+        <div className="w-full bg-gradient-to-b from-orange-50 to-orange-100 px-4 py-4 flex flex-col justify-end items-center">
           {/* Value Proposition - Compact */}
-          <div className="w-full max-w-sm mx-auto space-y-1 mb-3">
+          <div className="max-w-xs w-full space-y-1 mb-3">
             <div className="flex items-start gap-2">
               <span className="text-base flex-shrink-0">✨</span>
               <div className="min-w-0">
@@ -49,7 +49,7 @@ export default function LandingPage() {
           {/* CTA Button */}
           <button
             onClick={() => window.location.href = '/login'}
-            className="w-full max-w-sm mx-auto bg-errandify-orange text-white py-3 rounded-full font-bold text-sm hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl mb-2"
+            className="w-full max-w-xs bg-errandify-orange text-white py-3 rounded-full font-bold text-sm hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl mb-2"
           >
             Get Started
           </button>
