@@ -1094,22 +1094,47 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
     let location = '';
     let postalCode = '';
 
+    // Valid Singapore postal code prefixes (01-82)
+    const validPostalPrefixes = ['01', '02', '03', '04', '05', '06', '07', '08', '09',
+      '10', '11', '12', '13', '14', '15', '16', '17', '18', '19',
+      '20', '21', '22', '23', '24', '25', '26', '27', '28', '29',
+      '30', '31', '32', '33', '34', '35', '36', '37', '38', '39',
+      '40', '41', '42', '43', '44', '45', '46', '47', '48', '49',
+      '50', '51', '52', '53', '54', '55', '56', '57', '58', '59',
+      '60', '61', '62', '63', '64', '65', '66', '67', '68', '69',
+      '70', '71', '72', '73', '74', '75', '76', '77', '78', '79',
+      '80', '81', '82'];
+
     // First try to extract postal code (6-digit Singapore postal code)
     const postalMatch = cleaned.match(/\b(\d{6})\b/);
     if (postalMatch) {
-      postalCode = postalMatch[1];
-      const firstTwo = postalCode.substring(0, 2);
-      const postalCodeAreas: Record<string, string> = {
-        '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
-        '05': 'Outram', '06': 'People\'s Park', '07': 'Chinatown', '08': 'Sengkang', '09': 'Tanjong Pagar',
-        '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
-        '15': 'Serangoon', '16': 'Serangoon', '17': 'Serangoon', '18': 'Macpherson', '19': 'Paya Lebar',
-        '20': 'Paya Lebar', '21': 'Geylang', '22': 'Geylang', '23': 'Geylang', '24': 'Eunos',
-        '25': 'Bedok', '26': 'Bedok', '27': 'Bedok', '28': 'Tampines', '29': 'Tampines', '30': 'Tampines',
-        '31': 'Pasir Ris', '32': 'Pasir Ris', '33': 'Punggol', '34': 'Punggol', '35': 'Hougang',
-        '36': 'Hougang', '37': 'Sengkang', '38': 'Sengkang', '39': 'Sengkang', '40': 'Jurong West',
-      };
-      location = postalCodeAreas[firstTwo] || '';
+      const code = postalMatch[1];
+      const firstTwo = code.substring(0, 2);
+
+      // Only accept if it's a valid postal code prefix
+      if (validPostalPrefixes.includes(firstTwo)) {
+        postalCode = code;
+        const postalCodeAreas: Record<string, string> = {
+          '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
+          '05': 'Outram', '06': 'People\'s Park', '07': 'Chinatown', '08': 'Sengkang', '09': 'Tanjong Pagar',
+          '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
+          '15': 'Serangoon', '16': 'Serangoon', '17': 'Serangoon', '18': 'Macpherson', '19': 'Paya Lebar',
+          '20': 'Paya Lebar', '21': 'Geylang', '22': 'Geylang', '23': 'Geylang', '24': 'Eunos',
+          '25': 'Bedok', '26': 'Bedok', '27': 'Bedok', '28': 'Tampines', '29': 'Tampines', '30': 'Tampines',
+          '31': 'Pasir Ris', '32': 'Pasir Ris', '33': 'Punggol', '34': 'Punggol', '35': 'Hougang',
+          '36': 'Hougang', '37': 'Sengkang', '38': 'Sengkang', '39': 'Sengkang', '40': 'Jurong West',
+          '41': 'Jurong West', '42': 'Jurong', '43': 'Jurong East', '44': 'Clementi', '45': 'Clementi',
+          '46': 'Clementi', '47': 'Bukit Merah', '48': 'Bukit Merah', '49': 'Tiong Bahru', '50': 'Redhill',
+          '51': 'Queenstown', '52': 'Commonwealth', '53': 'Pasir Panjang', '54': 'Pasir Panjang',
+          '55': 'Bukit Timah', '56': 'Bukit Timah', '57': 'Holland', '58': 'Tanglin', '59': 'Clementi',
+          '60': 'Bukit Timah', '61': 'Bishan', '62': 'Bishan', '63': 'Serangoon', '64': 'Serangoon',
+          '65': 'Serangoon', '66': 'Serangoon', '67': 'Aljunied', '68': 'Aljunied', '69': 'Geylang',
+          '70': 'Bedok', '71': 'Bedok', '72': 'Bedok', '73': 'Bedok', '74': 'Tampines', '75': 'Tampines',
+          '76': 'Tampines', '77': 'Tampines', '78': 'Tampines', '79': 'Sengkang', '80': 'Sengkang',
+          '81': 'Sengkang', '82': 'Sengkang',
+        };
+        location = postalCodeAreas[firstTwo] || '';
+      }
     }
 
     // If no postal code found, try named locations
