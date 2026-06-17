@@ -91,6 +91,7 @@ export default function HanaTaskCreation({
         { input: userInput }
       );
 
+      console.log('Extract response:', response.data);
       const extracted = response.data.data;
 
       // Update task data with extracted info
@@ -114,7 +115,9 @@ export default function HanaTaskCreation({
       triggerSpeaking();
     } catch (err: any) {
       console.error('Extraction error:', err);
-      setHanaMessage('I could not extract the details. Please provide more specific info (title, location, date, budget).');
+      const errorMsg = err.response?.data?.error || err.message || 'Unknown error';
+      console.log('Full error:', errorMsg);
+      setHanaMessage(`Sorry, I had trouble understanding that. Error: ${errorMsg}\n\nPlease try again with: what you need, where, when, and budget.`);
     }
   };
 

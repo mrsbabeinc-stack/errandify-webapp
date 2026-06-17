@@ -958,7 +958,15 @@ For time - convert to HH:MM:
     }
 
     const result = await response.json();
+    console.log('Qwen API response:', JSON.stringify(result, null, 2));
+
+    if (!result.output || !result.output.choices || !result.output.choices[0]) {
+      console.error('Invalid API response structure:', result);
+      return res.status(500).json({ error: 'API returned invalid response' });
+    }
+
     const content = result.output.choices[0].message.content;
+    console.log('Extracted content from API:', content);
 
     // Parse JSON from response
     let extracted = {
