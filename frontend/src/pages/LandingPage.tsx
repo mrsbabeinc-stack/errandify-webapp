@@ -9,10 +9,12 @@ export default function LandingPage() {
       <div className="w-full max-w-sm flex flex-col items-center justify-center">
         {/* Logo Section */}
         <div className="mb-12 text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-16 h-16 bg-errandify-orange rounded-full flex items-center justify-center text-white text-3xl font-bold">
-              E
-            </div>
+          <div className="flex flex-col items-center gap-4 mb-4">
+            <img
+              src="/images/Errandify Logo.png"
+              alt="Errandify Logo"
+              className="w-32 h-32 object-contain"
+            />
             <h1 className="text-3xl font-bold text-errandify-brown">
               ERRANDIFY
             </h1>
