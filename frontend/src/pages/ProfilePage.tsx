@@ -3,16 +3,21 @@ import { useNavigate } from 'react-router-dom';
 
 interface ProfilePageProps {
   userRole: 'asker' | 'doer';
+  onLogout?: () => void;
 }
 
-export default function ProfilePage({ userRole }: ProfilePageProps) {
+export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
   const navigate = useNavigate();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    navigate('/login');
+    if (onLogout) {
+      onLogout(); // Call parent logout to update App state
+    } else {
+      navigate('/login'); // Fallback if no parent handler
+    }
   };
 
   // Navigation handlers for profile sections
