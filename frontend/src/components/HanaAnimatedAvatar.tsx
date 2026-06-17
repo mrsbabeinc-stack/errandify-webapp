@@ -39,22 +39,30 @@ export default function HanaAnimatedAvatar({
   }, [isSpeaking, message, onSpeakingEnd]);
 
   const selectFemaleVoice = (utterance: SpeechSynthesisUtterance, allVoices: SpeechSynthesisVoice[]) => {
-    // Prioritize Diana, then other female voices
-    const femaleNames = ['Diana', 'Moira', 'Samantha', 'Victoria', 'Fiona', 'Karen', 'Susan', 'Zira', 'Cortana'];
-
+    // First try Singapore English voices
     let selectedVoice = null;
 
-    for (const name of femaleNames) {
-      const found = allVoices.find(v => v.name.includes(name));
-      if (found) {
-        selectedVoice = found;
-        break;
+    const sgVoices = allVoices.filter(v => v.lang.includes('en-SG'));
+    if (sgVoices.length > 0) {
+      selectedVoice = sgVoices.find(v => v.name.includes('Female')) || sgVoices[0];
+    }
+
+    // Fallback to explicit female voice names
+    if (!selectedVoice) {
+      const femaleNames = ['Diana', 'Moira', 'Samantha', 'Victoria', 'Fiona', 'Karen', 'Susan', 'Zira', 'Cortana'];
+      for (const name of femaleNames) {
+        const found = allVoices.find(v => v.name.includes(name));
+        if (found) {
+          selectedVoice = found;
+          break;
+        }
       }
     }
 
+    // Fallback to any English voice with female indicator
     if (!selectedVoice) {
       const englishVoices = allVoices.filter(v => v.lang.startsWith('en'));
-      selectedVoice = englishVoices.find(v => v.lang.includes('en-SG')) ||
+      selectedVoice = englishVoices.find(v => v.name.includes('Female')) ||
                      englishVoices.find(v => v.lang.includes('en-GB')) ||
                      englishVoices[0];
     }
@@ -67,8 +75,8 @@ export default function HanaAnimatedAvatar({
       utterance.voice = selectedVoice;
     }
 
-    utterance.rate = 0.9;
-    utterance.pitch = 1.4;
+    utterance.rate = 0.85;
+    utterance.pitch = 1.2;
     utterance.volume = 1;
 
     synthRef.current = utterance;
