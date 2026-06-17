@@ -29,7 +29,7 @@ CREATE TABLE errands (
   title VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
   category VARCHAR(100),
-  status VARCHAR(50) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'assigned', 'in_progress', 'completed', 'cancelled', 'confirmed', 'cancelled_by_asker', 'cancelled_by_doer')),
+  status VARCHAR(50) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'assigned', 'in_progress', 'completed', 'cancelled', 'confirmed', 'cancelled_by_asker', 'cancelled_by_doer', 'in_progress', 'completed_unconfirmed', 'completed_confirmed')),
   budget DECIMAL(10, 2),
   deadline TIMESTAMP,
   location VARCHAR(500),
@@ -39,6 +39,14 @@ CREATE TABLE errands (
   recurring_config JSONB,
   accepted_bid_id INTEGER,
   stripe_payment_intent_id VARCHAR(255),
+  started_at TIMESTAMP,
+  completed_at TIMESTAMP,
+  payment_release_at TIMESTAMP,
+  payment_released_at TIMESTAMP,
+  dispute_status VARCHAR(50) CHECK (dispute_status IN ('open', 'resolved', 'settled')),
+  dispute_reason TEXT,
+  reminder_24h_sent BOOLEAN DEFAULT FALSE,
+  reminder_47h_sent BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -101,6 +109,39 @@ CREATE TABLE chat_messages (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Task execution photos table (for proof of work)
+CREATE TABLE task_photos (
+  id SERIAL PRIMARY KEY,
+  task_id INTEGER NOT NULL REFERENCES errands(id),
+  photo_url VARCHAR(500) NOT NULL,
+  uploaded_by INTEGER NOT NULL REFERENCES users(id),
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Payment releases table (audit trail)
+CREATE TABLE payment_releases (
+  id SERIAL PRIMARY KEY,
+  task_id INTEGER NOT NULL REFERENCES errands(id),
+  bid_amount DECIMAL(10, 2) NOT NULL,
+  platform_fee DECIMAL(10, 2) NOT NULL,
+  doer_payout DECIMAL(10, 2) NOT NULL,
+  stripe_transfer_id VARCHAR(255),
+  released_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  release_reason VARCHAR(50) CHECK (release_reason IN ('early_confirm', 'auto_release', 'manual_override'))
+);
+
+-- Disputes table
+CREATE TABLE disputes (
+  id SERIAL PRIMARY KEY,
+  task_id INTEGER NOT NULL REFERENCES errands(id),
+  opened_by INTEGER NOT NULL REFERENCES users(id),
+  reason TEXT NOT NULL,
+  status VARCHAR(50) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'resolved', 'settled')),
+  resolution TEXT,
+  resolved_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for better query performance
 CREATE INDEX idx_users_mobile ON users(mobile);
 CREATE INDEX idx_users_nric_hash ON users(nric_hash);
@@ -108,6 +149,8 @@ CREATE INDEX idx_users_referral_code ON users(referral_code);
 CREATE INDEX idx_errands_asker_id ON errands(asker_id);
 CREATE INDEX idx_errands_status ON errands(status);
 CREATE INDEX idx_errands_is_recurring ON errands(is_recurring);
+CREATE INDEX idx_errands_payment_release_at ON errands(payment_release_at);
+CREATE INDEX idx_errands_dispute_status ON errands(dispute_status);
 CREATE INDEX idx_bids_task_id ON bids(task_id);
 CREATE INDEX idx_bids_doer_id ON bids(doer_id);
 CREATE INDEX idx_bids_status ON bids(status);
@@ -117,3 +160,7 @@ CREATE INDEX idx_assignments_errand_id ON errand_assignments(errand_id);
 CREATE INDEX idx_assignments_doer_id ON errand_assignments(doer_id);
 CREATE INDEX idx_chat_messages_conversation_id ON chat_messages(conversation_id);
 CREATE INDEX idx_chat_messages_created_at ON chat_messages(created_at);
+CREATE INDEX idx_task_photos_task_id ON task_photos(task_id);
+CREATE INDEX idx_payment_releases_task_id ON payment_releases(task_id);
+CREATE INDEX idx_disputes_task_id ON disputes(task_id);
+CREATE INDEX idx_disputes_status ON disputes(status);

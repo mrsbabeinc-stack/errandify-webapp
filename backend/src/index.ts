@@ -9,6 +9,8 @@ import hanaRoutes from './routes/hana.js';
 import aiRoutes from './routes/ai.js';
 import bidsRoutes from './routes/bids.js';
 import paymentRoutes from './routes/payment.js';
+import jobsRoutes from './routes/jobs.js';
+import { startCrons } from './cron.js';
 
 const app = express();
 
@@ -29,6 +31,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/bids', bidsRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/jobs', jobsRoutes);
 app.use('/api', hanaRoutes);
 
 // Error handling
@@ -43,4 +46,7 @@ app.listen(PORT, () => {
   console.log(`Errandify API running on port ${PORT}`);
   console.log(`Environment: ${config.nodeEnv}`);
   console.log(`SingPass enabled: ${config.singpass.useSingpass}`);
+
+  // Start background cron jobs
+  startCrons();
 });
