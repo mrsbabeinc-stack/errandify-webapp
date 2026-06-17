@@ -1,6 +1,6 @@
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-errandify-bg to-orange-50 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-b from-errandify-bg to-orange-50 flex flex-col items-center justify-center px-3 py-4">
       {/* Background decorative elements */}
       <div className="absolute top-0 left-0 w-32 h-32 text-orange-100 opacity-20 text-8xl">🌴</div>
       <div className="absolute top-10 right-0 w-32 h-32 text-orange-100 opacity-20 text-8xl">🌴</div>
@@ -8,54 +8,54 @@ export default function LandingPage() {
       {/* Main Container */}
       <div className="w-full max-w-sm flex flex-col items-center justify-center">
         {/* Logo Section */}
-        <div className="mb-12 text-center">
-          <div className="flex flex-col items-center gap-4 mb-4">
+        <div className="mb-6 text-center">
+          <div className="flex flex-col items-center gap-2 mb-2">
             <img
               src="/images/Errandify Logo.png"
               alt="Errandify Logo"
-              className="w-32 h-32 object-contain"
+              className="w-24 h-24 object-contain"
             />
-            <h1 className="text-3xl font-bold text-errandify-brown">
+            <h1 className="text-2xl font-bold text-errandify-brown">
               ERRANDIFY
             </h1>
           </div>
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-600 text-xs">
             Simplifying lives. Amplifying humanity.
           </p>
         </div>
 
         {/* Meet Our Friends Section - Family Photo */}
-        <div className="w-full mb-8 rounded-3xl overflow-hidden shadow-lg relative">
-          {/* Family Photo */}
+        <div className="w-full mb-4 rounded-2xl overflow-hidden shadow-lg relative">
+          {/* Family Photo - No Button */}
           <img
-            src="/images/family.jpeg"
+            src="/images/family_no_button.jpeg"
             alt="Our Community Family"
             className="w-full h-auto object-cover"
           />
         </div>
 
         {/* Value Proposition */}
-        <div className="w-full mb-8 space-y-4 px-4">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">✨</span>
+        <div className="w-full mb-4 space-y-2 px-2">
+          <div className="flex items-start gap-2">
+            <span className="text-lg">✨</span>
             <div>
-              <p className="font-semibold text-errandify-brown text-sm">Post Errands Easily</p>
+              <p className="font-semibold text-errandify-brown text-xs">Post Errands Easily</p>
               <p className="text-xs text-gray-600">Tell us what you need done</p>
             </div>
           </div>
 
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">👥</span>
+          <div className="flex items-start gap-2">
+            <span className="text-lg">👥</span>
             <div>
-              <p className="font-semibold text-errandify-brown text-sm">Find Trusted Neighbours</p>
+              <p className="font-semibold text-errandify-brown text-xs">Find Trusted Neighbours</p>
               <p className="text-xs text-gray-600">Get help from your community</p>
             </div>
           </div>
 
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">💰</span>
+          <div className="flex items-start gap-2">
+            <span className="text-lg">💰</span>
             <div>
-              <p className="font-semibold text-errandify-brown text-sm">Earn While Helping</p>
+              <p className="font-semibold text-errandify-brown text-xs">Earn While Helping</p>
               <p className="text-xs text-gray-600">Turn your skills into income</p>
             </div>
           </div>
@@ -64,7 +64,7 @@ export default function LandingPage() {
         {/* CTA Button */}
         <button
           onClick={() => window.location.href = '/login'}
-          className="w-full bg-errandify-orange text-white py-4 rounded-full font-bold text-base hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl mb-4"
+          className="w-full bg-errandify-orange text-white py-3 rounded-full font-bold text-sm hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl mb-2"
         >
           Get Started
         </button>
