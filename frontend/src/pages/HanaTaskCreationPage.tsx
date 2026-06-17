@@ -39,29 +39,6 @@ export default function HanaTaskCreationPage({ userRole }: HanaTaskCreationPageP
   const [showReview, setShowReview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [paymentRequired, setPaymentRequired] = useState(false);
-
-  useEffect(() => {
-    checkPaymentMethod();
-  }, []);
-
-  const checkPaymentMethod = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/payment-method`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (!response.data.data.hasPaymentMethod) {
-        setPaymentRequired(true);
-      }
-    } catch (err) {
-      console.log('Could not check payment method, assuming setup needed');
-      setPaymentRequired(true);
-    }
-  };
 
   const handleTaskUpdate = (updates: Partial<TaskData>) => {
     setTaskData((prev) => ({ ...prev, ...updates }));
@@ -121,31 +98,6 @@ export default function HanaTaskCreationPage({ userRole }: HanaTaskCreationPageP
       setIsSubmitting(false);
     }
   };
-
-  if (paymentRequired) {
-    return (
-      <div className="min-h-screen bg-errandify-bg flex flex-col items-center justify-center px-4">
-        <div className="max-w-sm w-full bg-white rounded-lg shadow-lg p-6">
-          <h1 className="text-2xl font-bold text-errandify-brown mb-4">Add Payment Method</h1>
-          <p className="text-gray-600 mb-6">
-            To post tasks on Errandify, you need to add a payment method to pay for services.
-          </p>
-          <button
-            onClick={() => navigate('/payment-setup')}
-            className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 mb-2"
-          >
-            Add Payment Method
-          </button>
-          <button
-            onClick={() => navigate(-1)}
-            className="w-full border border-gray-300 py-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-errandify-bg">
