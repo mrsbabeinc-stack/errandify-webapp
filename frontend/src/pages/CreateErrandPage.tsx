@@ -274,8 +274,64 @@ export default function CreateErrandPage() {
     if (value.length > 3) {
       debouncedFetchAiSuggestions(value, formData.description);
 
-      // Also try to extract time and duration from title
-      extractTimeAndDurationFromTitle(value);
+      // Extract time, duration, and budget from the raw input
+      const lowerValue = value.toLowerCase();
+
+      // Extract time: patterns like "4pm", "14:00", "2:30pm"
+      const timeMatch = lowerValue.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/);
+      if (timeMatch) {
+        let hours = parseInt(timeMatch[1]);
+        const minutes = timeMatch[2] || '00';
+        const period = timeMatch[3];
+
+        if (period === 'pm' && hours !== 12) {
+          hours += 12;
+        } else if (period === 'am' && hours === 12) {
+          hours = 0;
+        }
+
+        const timeStr = `${String(hours).padStart(2, '0')}:${minutes}`;
+        setFormData((prev) => ({
+          ...prev,
+          duration: timeStr,
+        }));
+      }
+
+      // Extract duration: patterns like "30min", "1hour", "2 hours"
+      const durationMatch = lowerValue.match(/(\d+(?:\.\d+)?)\s*(hour|hr|min|minute|m|day|d)\b/);
+      if (durationMatch && durationMatch[2]) {
+        const durationValue = durationMatch[1];
+        const unit = durationMatch[2];
+
+        let normalizedUnit = 'Hr' as 'Min' | 'Hr' | 'Day' | 'Week';
+        if (unit.includes('min') || unit === 'm') normalizedUnit = 'Min';
+        else if (unit.includes('day') || unit === 'd') normalizedUnit = 'Day';
+        else if (unit.includes('week')) normalizedUnit = 'Week';
+
+        setFormData((prev) => ({
+          ...prev,
+          duration: durationValue,
+          durationUnit: normalizedUnit,
+        }));
+      }
+
+      // Extract budget: look for $ or trailing number
+      const dollarMatch = lowerValue.match(/\$\s*(\d+)/);
+      if (dollarMatch) {
+        setFormData((prev) => ({
+          ...prev,
+          budget: dollarMatch[1],
+        }));
+      } else {
+        // Try trailing number
+        const trailingNum = lowerValue.match(/(\d+)\s*$/);
+        if (trailingNum) {
+          setFormData((prev) => ({
+            ...prev,
+            budget: trailingNum[1],
+          }));
+        }
+      }
     }
   };
 
@@ -347,6 +403,26 @@ export default function CreateErrandPage() {
 
     // Certifications: show as suggestions only, don't auto-apply (user must approve)
   }, [aiSuggestions]);
+
+  // Auto-fill time and budget when title changes (from local extraction)
+  useEffect(() => {
+    if (formData.title) {
+      extractTimeAndDurationFromTitle(formData.title);
+      extractBudgetFromTitle(formData.title);
+    }
+  }, [formData.title]);
+
+  const extractBudgetFromTitle = (title: string) => {
+    const lowerTitle = title.toLowerCase();
+    // Look for $ or numbers in certain patterns
+    const dollarMatch = lowerTitle.match(/\$\s*(\d+)/);
+    if (dollarMatch) {
+      setFormData((prev) => ({
+        ...prev,
+        budget: dollarMatch[1],
+      }));
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
