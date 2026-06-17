@@ -228,8 +228,8 @@ export default function CreateErrandPage() {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract`,
-        { title }
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
+        { input: title }
       );
 
       if (response.data.success && response.data.data) {
