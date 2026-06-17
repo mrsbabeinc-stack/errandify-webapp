@@ -881,48 +881,87 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'API key not configured' });
     }
 
+    // Normalize input: handle common Singlish patterns before sending to AI
+    let normalizedInput = input.toLowerCase().trim();
+
+    // Remove Singlish particles that don't add meaning
+    normalizedInput = normalizedInput.replace(/\s+(lor|lah|leh|lor|meh|lor|lor|lor|lor)\s*/g, ' ');
+    normalizedInput = normalizedInput.replace(/\s+(lor|lah|leh|lor|meh)$/g, '');
+
+    // Replace common shortcuts
+    const shortcuts: Record<string, string> = {
+      'tmr': 'tomorrow',
+      'tomorrow morning': 'tomorrow 09:00',
+      'tomorrow afternoon': 'tomorrow 14:00',
+      'tomorrow evening': 'tomorrow 18:00',
+      'tmr morning': 'tomorrow 09:00',
+      'tmr afternoon': 'tomorrow 14:00',
+      'tmr evening': 'tomorrow 18:00',
+      'sat': 'saturday',
+      'sun': 'sunday',
+      'mon': 'monday',
+      'tue': 'tuesday',
+      'wed': 'wednesday',
+      'thu': 'thursday',
+      'fri': 'friday',
+      'asap': 'urgent today',
+      'urgent': 'urgent today',
+      'rush': 'urgent today',
+      'morning': '09:00',
+      'afternoon': '14:00',
+      'evening': '18:00',
+      'night': '20:00',
+      'pls': 'please',
+      'thanx': 'thanks',
+      'thx': 'thanks',
+      'tq': 'thanks',
+      'ok': 'okay',
+      'nah': 'no',
+      'yeah': 'yes',
+      'yep': 'yes',
+    };
+
+    for (const [shortcut, full] of Object.entries(shortcuts)) {
+      normalizedInput = normalizedInput.replace(new RegExp(`\\b${shortcut}\\b`, 'g'), full);
+    }
+
+    // Fix missing spaces around common words
+    normalizedInput = normalizedInput
+      .replace(/([a-z])(at|in|near|to|from)([a-z])/g, '$1 $2 $3')
+      .replace(/(\d+)(am|pm|morning|afternoon|evening|night)/g, '$1 $2');
+
     const prompt = `You are an AI assistant that understands Singlish, Singapore slang, and casual shorthand.
-You extract structured errand information from freeform user input in Singapore context.
+You extract structured errand information from user input in Singapore context.
 
-SINGLISH/SLANG EXAMPLES YOU MUST UNDERSTAND:
-- "clean house lor" = clean my house
-- "fix door lah" = repair door
-- "buy groceries at IMM can?" = shopping task at IMM
-- "walk dog at east coast park" = pet care at East Coast Park
-- "help tuition boy math" = childcare/tutoring
-- "move stuff to new place" = moving help
-- "wash laundry asap" = cleaning & laundry, urgent
-- "bathe cat" = pet care
-- "paint wall blue" = home maintenance
-- "deliver package to tampines" = delivery
-- "tech support for laptop" = tech support
-- Common SG areas: Orchard, Marina Bay, Tampines, Jurong, Clementi, Bishan, Serangoon, Bedok, etc.
+CONTEXT:
+- Today's date is 2026-06-17 (Tuesday)
+- Common Singapore areas: Orchard, Marina Bay, Tampines, Jurong, Clementi, Bishan, Serangoon, Bedok, Geylang, Bukit Timah, Holland, Tanglin, East Coast, Hougang, Punggol, Pasir Ris, Sengkang, Ang Mo Kio, Tiong Bahru, Redhill, Queenstown, Commonwealth, Pasir Panjang, Outram, Tanjong Pagar, Chinatown, Kallang, Lavender
 
-COMMON SHORTCUTS:
-- "lor", "lah", "lor", "meh", "lor" = Singlish particles (ignore for meaning)
-- "asap" = today/urgent
-- "tmr" = tomorrow
-- "sat" = Saturday
-- "sun" = Sunday
-- "morning" = 09:00, "afternoon" = 14:00, "evening" = 18:00, "night" = 20:00
+TASK EXAMPLES:
+- "clean house at tampines tomorrow afternoon 50" → title: Clean house at Tampines, location: Tampines, date: 2026-06-18, time: 14:00, budget: 50
+- "help me fix broken door" → title: Fix broken door, category: home-maintenance
+- "buy groceries at ntuc" → title: Buy groceries at NTUC, category: shopping-errands
+- "walk dog east coast park" → title: Walk dog at East Coast Park, category: pet-care, location: East Coast
+- "babysit child weekend" → title: Babysit child, category: childcare-tutoring
+- "paint bedroom blue" → title: Paint bedroom blue, category: home-maintenance
+- "deliver package to serangoon" → title: Deliver package, category: delivery-moving, location: Serangoon
+- "tutor maths tmr 100" → title: Tutor Maths, date: 2026-06-18, budget: 100, category: childcare-tutoring
 
-HANDLE MISSING SPACES:
-- "cleanhouseatOrchard" = "clean house at Orchard"
-- "helpmetutormath" = "help tutor math"
-- "buygroceries" = "buy groceries"
+EXTRACTION RULES:
+1. TITLE: Extract what work needs to be done (max 50 chars)
+2. CATEGORY: Match to one of these: home-maintenance, cleaning-laundry, shopping-errands, delivery-moving, childcare-tutoring, pet-care, tech-support, moving-help
+3. LOCATION: Singapore area names only
+4. DATE: ISO format (YYYY-MM-DD). If "tomorrow" use 2026-06-18. If Saturday use next occurrence.
+5. TIME: HH:MM format (24-hour). 09:00=morning, 14:00=afternoon, 18:00=evening, 20:00=night
+6. BUDGET: Numbers only, no currency symbols
+7. NOTES: Any special requirements or details
 
-Given the user's input, extract and return ONLY valid JSON (no markdown, no code blocks) with these fields:
-- title: Brief task title (max 50 chars) - clean and professional
-- category: One of: home-maintenance, cleaning-laundry, shopping-errands, delivery-moving, childcare-tutoring, pet-care, tech-support, moving-help (or empty string if unclear)
-- location: Location/area name (SG areas) (e.g., Orchard, Marina Bay, Ang Mo Kio, Tampines, etc.)
-- date: ISO date string (YYYY-MM-DD) or empty if not mentioned. Assume current week context. Use today's date for "tmr" = 2026-06-18
-- time: Time in HH:MM format (24-hour) or empty if not mentioned
-- budget: Numeric budget in SGD (numbers only, no $ or text) or empty if not mentioned
-- notes: Any additional details or requirements
+Given this user input, extract and return ONLY valid JSON (no markdown, no code blocks):
 
-User input: "${input}"
+User input: "${normalizedInput}"
 
-Return ONLY valid JSON, no other text:`;
+Return ONLY valid JSON in this exact format:
+{"title": "...", "category": "...", "location": "...", "date": "...", "time": "...", "budget": "...", "notes": "..."}`;
 
     const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
       method: 'POST',
