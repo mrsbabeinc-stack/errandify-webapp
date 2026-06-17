@@ -867,12 +867,12 @@ router.post('/suggest-completion', async (req: Request, res: Response) => {
   }
 });
 
-// Extract task info from freeform input
+// Extract task info from freeform input (supports Singlish, shortcuts, casual language)
 router.post('/extract-task-info', async (req: Request, res: Response) => {
   try {
     const { input } = req.body;
 
-    if (!input || input.length < 5) {
+    if (!input || input.length < 2) {
       return res.status(400).json({ error: 'Input too short' });
     }
 
@@ -881,15 +881,43 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'API key not configured' });
     }
 
-    const prompt = `You are an AI that extracts structured errand information from freeform user input.
+    const prompt = `You are an AI assistant that understands Singlish, Singapore slang, and casual shorthand.
+You extract structured errand information from freeform user input in Singapore context.
+
+SINGLISH/SLANG EXAMPLES YOU MUST UNDERSTAND:
+- "clean house lor" = clean my house
+- "fix door lah" = repair door
+- "buy groceries at IMM can?" = shopping task at IMM
+- "walk dog at east coast park" = pet care at East Coast Park
+- "help tuition boy math" = childcare/tutoring
+- "move stuff to new place" = moving help
+- "wash laundry asap" = cleaning & laundry, urgent
+- "bathe cat" = pet care
+- "paint wall blue" = home maintenance
+- "deliver package to tampines" = delivery
+- "tech support for laptop" = tech support
+- Common SG areas: Orchard, Marina Bay, Tampines, Jurong, Clementi, Bishan, Serangoon, Bedok, etc.
+
+COMMON SHORTCUTS:
+- "lor", "lah", "lor", "meh", "lor" = Singlish particles (ignore for meaning)
+- "asap" = today/urgent
+- "tmr" = tomorrow
+- "sat" = Saturday
+- "sun" = Sunday
+- "morning" = 09:00, "afternoon" = 14:00, "evening" = 18:00, "night" = 20:00
+
+HANDLE MISSING SPACES:
+- "cleanhouseatOrchard" = "clean house at Orchard"
+- "helpmetutormath" = "help tutor math"
+- "buygroceries" = "buy groceries"
 
 Given the user's input, extract and return ONLY valid JSON (no markdown, no code blocks) with these fields:
-- title: Brief task title (max 50 chars)
+- title: Brief task title (max 50 chars) - clean and professional
 - category: One of: home-maintenance, cleaning-laundry, shopping-errands, delivery-moving, childcare-tutoring, pet-care, tech-support, moving-help (or empty string if unclear)
-- location: Location/area name (e.g., Orchard, Marina Bay, Ang Mo Kio)
-- date: ISO date string (YYYY-MM-DD) or empty if not mentioned
+- location: Location/area name (SG areas) (e.g., Orchard, Marina Bay, Ang Mo Kio, Tampines, etc.)
+- date: ISO date string (YYYY-MM-DD) or empty if not mentioned. Assume current week context. Use today's date for "tmr" = 2026-06-18
 - time: Time in HH:MM format (24-hour) or empty if not mentioned
-- budget: Numeric budget in SGD or empty if not mentioned
+- budget: Numeric budget in SGD (numbers only, no $ or text) or empty if not mentioned
 - notes: Any additional details or requirements
 
 User input: "${input}"
