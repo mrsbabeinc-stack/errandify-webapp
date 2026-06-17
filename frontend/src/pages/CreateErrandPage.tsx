@@ -297,16 +297,16 @@ export default function CreateErrandPage() {
         }));
       }
 
-      // Extract duration: patterns like "30min", "1hour", "2 hours"
-      const durationMatch = lowerValue.match(/(\d+(?:\.\d+)?)\s*(hour|hr|min|minute|m|day|d)\b/);
+      // Extract duration: patterns like "30min", "1hour", "2 hours", "30m"
+      const durationMatch = lowerValue.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|minutes?|mins?|m\b|days?|d\b)/);
       if (durationMatch && durationMatch[2]) {
         const durationValue = durationMatch[1];
         const unit = durationMatch[2];
 
         let normalizedUnit = 'Hr' as 'Min' | 'Hr' | 'Day' | 'Week';
-        if (unit.includes('min') || unit === 'm') normalizedUnit = 'Min';
-        else if (unit.includes('day') || unit === 'd') normalizedUnit = 'Day';
-        else if (unit.includes('week')) normalizedUnit = 'Week';
+        if (unit.match(/^(min|m)/) ) normalizedUnit = 'Min';
+        else if (unit.match(/^(day|d)/) ) normalizedUnit = 'Day';
+        else if (unit.match(/^(week|w)/) ) normalizedUnit = 'Week';
 
         setFormData((prev) => ({
           ...prev,
