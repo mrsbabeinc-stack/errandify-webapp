@@ -641,10 +641,15 @@ router.post('/suggestions', (req: Request, res: Response) => {
       });
     }
 
-    // Correct spelling and punctuation
-    const { corrected: correctedTitle, hasSuggestions: hasCorrections } = correctSpellingAndPunctuation(title);
+    // Correct spelling and punctuation (but remove period for now - will re-add after cleaning)
+    let correctedTitle = title.trim();
 
-    // Clean up title: remove time, duration, budget, locations, and dates from correctedTitle
+    // Apply spell/punctuation corrections manually to avoid period interference
+    const { corrected: spellCorrected } = correctSpellingAndPunctuation(title);
+    // Use the spell-corrected version but remove trailing period if present
+    correctedTitle = spellCorrected.replace(/\.$/, '');
+
+    // Clean up title: remove time, duration, budget, locations, and dates
     let cleanedTitle = correctedTitle;
 
     // Remove time patterns (9am, 4pm, 14:00, morning, afternoon, etc.)
@@ -653,7 +658,7 @@ router.post('/suggestions', (req: Request, res: Response) => {
     // Remove duration patterns (1hour, 2 hours, 30min, 30 m, etc.)
     cleanedTitle = cleanedTitle.replace(/\s+\d+(?:\.\d+)?\s*(hour|hr|min|minute|m|day|d)\b/gi, '');
 
-    // Remove budget patterns ($50, budget 50, etc.) and trailing numbers
+    // Remove budget patterns ($50, budget 50, etc.) and trailing numbers (before period)
     cleanedTitle = cleanedTitle.replace(/\s*\$\s*\d+\b/g, '');
     cleanedTitle = cleanedTitle.replace(/\s+budget\s+\d+\b/gi, '');
     cleanedTitle = cleanedTitle.replace(/\s+\d+\s*$/, '');
@@ -670,10 +675,17 @@ router.post('/suggestions', (req: Request, res: Response) => {
     // Clean up any double spaces
     cleanedTitle = cleanedTitle.replace(/\s+/g, ' ').trim();
 
+    // Capitalize first letter
+    if (cleanedTitle && cleanedTitle[0] === cleanedTitle[0].toLowerCase()) {
+      cleanedTitle = cleanedTitle[0].toUpperCase() + cleanedTitle.slice(1);
+    }
+
     // Re-ensure proper punctuation on cleaned title
     if (cleanedTitle && !/[.!?]$/.test(cleanedTitle)) {
       cleanedTitle += '.';
     }
+
+    const hasCorrections = spellCorrected !== title || cleanedTitle !== correctedTitle;
 
     // Detect category
     const suggestedCategory = detectCategory(cleanedTitle);
@@ -700,8 +712,8 @@ router.post('/suggestions', (req: Request, res: Response) => {
       success: true,
       data: {
         originalTitle: title,
-        correctedTitle: (hasCorrections || cleanedTitle !== title) ? cleanedTitle : null,
-        hasCorrections: hasCorrections || cleanedTitle !== correctedTitle,
+        correctedTitle: hasCorrections ? cleanedTitle : null,
+        hasCorrections,
         category: suggestedCategory,
         description: suggestedDescription,
         budget: suggestedBudgetAmount,
