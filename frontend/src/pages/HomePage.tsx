@@ -9,6 +9,17 @@ export default function HomePage({ userRole }: HomePageProps) {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('Friend');
 
+  const categories = [
+    { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50' },
+    { id: 'cleaning-laundry', name: 'Cleaning & Laundry', icon: '🧺', color: 'from-blue-100 to-blue-50' },
+    { id: 'shopping-errands', name: 'Shopping & Errands', icon: '🛍️', color: 'from-pink-100 to-pink-50' },
+    { id: 'delivery-moving', name: 'Delivery & Moving', icon: '📦', color: 'from-yellow-100 to-yellow-50' },
+    { id: 'childcare-tutoring', name: 'Childcare & Tutoring', icon: '🧒', color: 'from-green-100 to-green-50' },
+    { id: 'pet-care', name: 'Pet Care', icon: '🐕', color: 'from-purple-100 to-purple-50' },
+    { id: 'tech-support', name: 'Tech Support', icon: '💻', color: 'from-indigo-100 to-indigo-50' },
+    { id: 'moving-help', name: 'Moving Help', icon: '🚚', color: 'from-red-100 to-red-50' },
+  ];
+
   useEffect(() => {
     const user = localStorage.getItem('user');
     if (user) {
@@ -38,7 +49,7 @@ export default function HomePage({ userRole }: HomePageProps) {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-8 max-w-3xl mx-auto">
           <button
             onClick={() => navigate(userRole === 'asker' ? '/create-errand' : '/browse')}
             className="bg-errandify-orange text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
@@ -63,6 +74,26 @@ export default function HomePage({ userRole }: HomePageProps) {
             </span>
           </button>
         </div>
+
+        {/* Category Tabs */}
+        {userRole === 'asker' && (
+          <div className="mb-8">
+            <h3 className="text-sm font-semibold text-errandify-brown mb-3">Quick Categories</h3>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => navigate(`/create-errand`)}
+                  className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:shadow-md bg-gradient-to-r ${category.color}`}
+                  title={category.name}
+                >
+                  <span className="mr-1">{category.icon}</span>
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Role-Specific Feature List */}
         <div className="bg-white rounded-lg p-6 mb-8 border border-gray-200">
