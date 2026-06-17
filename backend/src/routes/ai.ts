@@ -870,6 +870,50 @@ router.post('/suggest-completion', async (req: Request, res: Response) => {
   }
 });
 
+// Parse time from freeform input (e.g., "4pm", "14:00", "2pm")
+function parseTimeFromInput(text: string): string | null {
+  const lowerText = text.toLowerCase();
+
+  // Match patterns like "4pm", "4 pm", "14:00", "2:30pm"
+  const timeMatch = lowerText.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/);
+  if (timeMatch) {
+    let hours = parseInt(timeMatch[1]);
+    const minutes = timeMatch[2] || '00';
+    const period = timeMatch[3];
+
+    if (period === 'pm' && hours !== 12) {
+      hours += 12;
+    } else if (period === 'am' && hours === 12) {
+      hours = 0;
+    }
+
+    return `${String(hours).padStart(2, '0')}:${minutes}`;
+  }
+
+  return null;
+}
+
+// Parse duration from freeform input (e.g., "1hour", "2 hours", "30min")
+function parseDurationFromInput(text: string): { duration: string; unit: string } | null {
+  const lowerText = text.toLowerCase();
+
+  // Match patterns like "1hour", "2 hours", "30min", "1.5hr"
+  const durationMatch = lowerText.match(/(\d+(?:\.\d+)?)\s*(hour|hr|min|minute|day|d)?/);
+  if (durationMatch) {
+    const value = durationMatch[1];
+    const unit = durationMatch[2] || 'hour';
+
+    let normalizedUnit = 'Hr';
+    if (unit.includes('min')) normalizedUnit = 'Min';
+    else if (unit.includes('day') || unit === 'd') normalizedUnit = 'Day';
+    else if (unit.includes('week')) normalizedUnit = 'Week';
+
+    return { duration: value, unit: normalizedUnit };
+  }
+
+  return null;
+}
+
 // Extract task info from freeform input using local pattern matching
 router.post('/extract-task-info', (req: Request, res: Response) => {
   try {
@@ -975,14 +1019,23 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
       }
     }
 
-    // Extract time
-    let time = '';
-    for (const [key, val] of Object.entries(timeMap)) {
-      if (cleaned.includes(key)) {
-        time = val;
-        break;
+    // Extract time - use new parser
+    let time = parseTimeFromInput(cleaned) || '';
+
+    // Fallback to timeMap lookup if new parser didn't find it
+    if (!time) {
+      for (const [key, val] of Object.entries(timeMap)) {
+        if (cleaned.includes(key)) {
+          time = val;
+          break;
+        }
       }
     }
+
+    // Extract duration
+    const durationParse = parseDurationFromInput(cleaned);
+    let duration = durationParse?.duration || '';
+    let durationUnit = durationParse?.unit || 'Hr';
 
     // Extract budget (look for $ symbol or "budget" keyword, avoid times like 4pm)
     let budget = '';
@@ -1008,6 +1061,8 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
         location,
         date,
         time,
+        duration,
+        durationUnit,
         budget,
         notes: '',
       },

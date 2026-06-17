@@ -35,6 +35,7 @@ export default function CreateErrandPage() {
   const [fullAddress, setFullAddress] = useState('');
   const [gpsLocation, setGpsLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [gpsEnabled, setGpsEnabled] = useState(false);
+  const [showStartLocation, setShowStartLocation] = useState(false);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const [aiSuggestions, setAiSuggestions] = useState({
@@ -271,6 +272,51 @@ export default function CreateErrandPage() {
     // Trigger AI suggestions with debounce (wait 300ms after user stops typing)
     if (value.length > 3) {
       debouncedFetchAiSuggestions(value, formData.description);
+
+      // Also try to extract time and duration from title
+      extractTimeAndDurationFromTitle(value);
+    }
+  };
+
+  const extractTimeAndDurationFromTitle = (title: string) => {
+    const lowerTitle = title.toLowerCase();
+
+    // Extract time: patterns like "4pm", "14:00", "2:30pm"
+    const timeMatch = lowerTitle.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/);
+    if (timeMatch) {
+      let hours = parseInt(timeMatch[1]);
+      const minutes = timeMatch[2] || '00';
+      const period = timeMatch[3];
+
+      if (period === 'pm' && hours !== 12) {
+        hours += 12;
+      } else if (period === 'am' && hours === 12) {
+        hours = 0;
+      }
+
+      const timeStr = `${String(hours).padStart(2, '0')}:${minutes}`;
+      setFormData((prev) => ({
+        ...prev,
+        duration: timeStr,
+      }));
+    }
+
+    // Extract duration: patterns like "1hour", "2 hours", "30min"
+    const durationMatch = lowerTitle.match(/(\d+(?:\.\d+)?)\s*(hour|hr|min|minute|day|d)\b/);
+    if (durationMatch && durationMatch[2]) {
+      const value = durationMatch[1];
+      const unit = durationMatch[2];
+
+      let normalizedUnit = 'Hr' as 'Min' | 'Hr' | 'Day' | 'Week';
+      if (unit.includes('min')) normalizedUnit = 'Min';
+      else if (unit.includes('day') || unit === 'd') normalizedUnit = 'Day';
+      else if (unit.includes('week')) normalizedUnit = 'Week';
+
+      setFormData((prev) => ({
+        ...prev,
+        duration: value,
+        durationUnit: normalizedUnit,
+      }));
     }
   };
 
@@ -679,20 +725,33 @@ export default function CreateErrandPage() {
           <div className="border-t pt-4 space-y-4">
             <h3 className="font-bold text-errandify-brown text-sm">Work Location</h3>
 
-            {/* Start Location */}
-            <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Start Location (Where Doer Arrives From)
-              </label>
+            {/* Start Location Toggle */}
+            <label className="flex items-center gap-2">
               <input
-                type="text"
-                name="startLocation"
-                value={formData.startLocation}
-                onChange={handleChange}
-                placeholder="e.g., Orchard, Jurong, Your home address area"
-                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
+                type="checkbox"
+                checked={showStartLocation}
+                onChange={(e) => setShowStartLocation(e.target.checked)}
+                className="w-4 h-4"
               />
-            </div>
+              <span className="text-sm text-gray-700">Specify where errand starts (optional)</span>
+            </label>
+
+            {/* Start Location - Only shown when toggled */}
+            {showStartLocation && (
+              <div>
+                <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                  Where Errand Starts
+                </label>
+                <input
+                  type="text"
+                  name="startLocation"
+                  value={formData.startLocation}
+                  onChange={handleChange}
+                  placeholder="e.g., My home in Orchard, Office in Jurong"
+                  className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <div>
