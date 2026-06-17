@@ -145,7 +145,9 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
     if (config.qwen.apiKey) {
       try {
         console.log('[DEBUG] Attempting Qwen API call with language:', language);
-        const systemPrompt = `You are Hana, a helpful AI assistant for Errandify (帮帮乐), Singapore's community errand platform. Be warm, brief (2-3 sentences), helpful, and professional. Do not use any emoticons or emojis in your responses. ${languageInstruction}`;
+        const systemPrompt = language === 'en'
+          ? `You are Hana, a warm and friendly AI assistant for Errandify (帮帮乐), Singapore's community errand platform. You speak like a young 20-year-old Singaporean girl with natural warmth and passion. Use conversational Singlish (Singapore English) - it's okay to drop subjects, use particles like "lor", "lah", "meh", "leh", and be casual and friendly. Keep responses brief (2-3 sentences), genuine, and helpful. No emoticons. Sound like you genuinely care about helping!`
+          : `You are Hana, a warm and friendly AI assistant for Errandify (帮帮乐), Singapore's community errand platform. Respond with genuine warmth and passion. Be brief (2-3 sentences) and helpful. Sound natural and caring, like a young 20-year-old Singaporean girl. No emoticons. ${languageInstruction}`;
 
         const response = await axios.post(
           'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
@@ -206,19 +208,19 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
           reply = '谢谢你的联系。我是帮帮乐的助手 Hana。今天有什么我可以为你效劳的吗？';
         }
       } else {
-        // English fallback responses
+        // English fallback responses (warm, Singlish style)
         if (messageLower.includes('post') || messageLower.includes('create') || messageLower.includes('errand')) {
-          reply = 'Posting an errand is simple. Tap the plus button at the bottom, fill in the details of what you need help with, and submit. Would you like more guidance?';
+          reply = 'Super easy lah! Just tap the plus button at the bottom, fill in what you need help with, and submit lor. I can help you step by step if you need!';
         } else if (messageLower.includes('bid') || messageLower.includes('accept') || messageLower.includes('job')) {
-          reply = 'You can browse all available errands, check out the details, and tap the accept button to place your bid. The person who posted the errand will choose their favorite helper.';
+          reply = 'Browse the errands, see which ones you like, then tap accept to submit your bid lor. The person will pick their favorite helper - could be you!';
         } else if (messageLower.includes('payment') || messageLower.includes('money') || messageLower.includes('price')) {
-          reply = 'Payments are kept safe with us until the work is done and confirmed. Once the person who posted the errand approves your work, you get paid.';
+          reply = 'Don\'t worry, the money is safe with us until the work is done and confirmed properly. You get paid once they approve your work lor!';
         } else if (messageLower.includes('help') || messageLower.includes('support') || messageLower.includes('issue')) {
-          reply = 'I am here to help you. Tell me what you need assistance with, whether it is posting an errand, bidding on jobs, payment questions, or anything else about Errandify.';
+          reply = 'I\'m here to help you, lah! Tell me what you need - posting errands, accepting jobs, payments, or anything about Errandify. I got you!';
         } else if (messageLower.includes('how to') || messageLower.includes('how do')) {
-          reply = 'I can help you with that. Are you asking about how to post an errand, how to bid on jobs, payment related questions, or something else?';
+          reply = 'You asking about posting errands, bidding on jobs, or something else? Tell me and I\'ll explain lor!';
         } else {
-          reply = 'Thank you for reaching out. I am Hana, Errandify assistant. How can I help you today?';
+          reply = 'Hi! I\'m Hana, your Errandify assistant. What can I help you with today, ah?';
         }
       }
     }
@@ -287,10 +289,11 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
 
     const voiceConfig = voiceMap[language] || voiceMap['en'];
 
-    // Generate SSML with voice parameters for 20-year-old young female
+    // Generate SSML with voice parameters for warm, passionate 20-year-old young female
+    // Add prosody for natural warmth and passion
     const ssml = `<speak version="1.0" xml:lang="${voiceConfig.lang}">
       <voice name="${voiceConfig.voice}">
-        <prosody pitch="+15%" rate="0.95">
+        <prosody pitch="+10%" rate="0.92" contour="(0%,+20%) (100%,+15%)">
           ${text}
         </prosody>
       </voice>
