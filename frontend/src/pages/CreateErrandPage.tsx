@@ -284,19 +284,26 @@ export default function CreateErrandPage() {
     if (!formData.title || formData.title.length <= 3) return;
 
     const rawTitle = formData.title.toLowerCase();
+    console.log('[extraction] rawTitle:', rawTitle);
 
     // Extract time: "4pm" → "16:00"
+    // ONLY if it matches am/pm pattern properly
     const timeMatch = rawTitle.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+    console.log('[extraction] timeMatch:', timeMatch);
     if (timeMatch && timeMatch[3]) {
       const hourNum = parseInt(timeMatch[1]);
-      if (hourNum >= 1 && hourNum <= 23) {
+      // Validate: hour must be 1-12 for 12-hour format (will convert to 24-hour)
+      if (hourNum >= 1 && hourNum <= 12) {
         let hours = hourNum;
         const minutes = timeMatch[2] || '00';
         const period = timeMatch[3].toLowerCase();
         if (period === 'pm' && hours !== 12) hours += 12;
         else if (period === 'am' && hours === 12) hours = 0;
         const timeStr = `${String(hours).padStart(2, '0')}:${minutes}`;
-        setFormData((prev) => ({ ...prev, time: timeStr }));
+        // Only set if it's a valid time format (HH:MM where HH is 00-23)
+        if (hours >= 0 && hours <= 23 && minutes >= '00' && minutes <= '59') {
+          setFormData((prev) => ({ ...prev, time: timeStr }));
+        }
       }
     }
 
