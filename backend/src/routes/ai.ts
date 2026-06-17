@@ -304,6 +304,12 @@ function correctSpellingAndPunctuation(text: string): { corrected: string; hasSu
   corrected = corrected.replace(/\s+([.,!?;:])/g, '$1');
   corrected = corrected.replace(/([.,!?;:])\s+([a-z])/g, '$1 $2');
 
+  // Remove trailing standalone numbers (likely budget that shouldn't be in title)
+  if (/\s+\d+\s*$/.test(corrected)) {
+    corrected = corrected.replace(/\s+\d+\s*$/, '');
+    suggestions.push('Removed trailing budget number');
+  }
+
   // Ensure proper capitalization at start
   if (corrected.length > 0 && corrected[0] === corrected[0].toLowerCase()) {
     corrected = corrected[0].toUpperCase() + corrected.slice(1);
