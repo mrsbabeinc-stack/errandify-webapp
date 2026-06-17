@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.js';
 import errandRoutes from './routes/errands.js';
 import chatRoutes from './routes/chat.js';
 import userRoutes from './routes/users.js';
+import hanaRoutes from './routes/hana.js';
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/errands', errandRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api', hanaRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

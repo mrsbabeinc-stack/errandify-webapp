@@ -1,9 +1,9 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { config } from '../config.js';
 import db from '../db.js';
-import { authMiddleware } from '../middleware/auth.js';
+import { authMiddleware, AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -192,7 +192,7 @@ router.post('/verify-otp', async (req: Request, res: Response) => {
 });
 
 // Get current user profile
-router.get('/me', authMiddleware, async (req: Request, res: Response) => {
+router.get('/me', authMiddleware, async (req: any, res: Response) => {
   try {
     const result = await db.query(
       'SELECT id, display_name, mobile, role, language_pref FROM users WHERE id = $1',
@@ -221,7 +221,7 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
 });
 
 // SingPass login endpoint (when USE_SINGPASS is true)
-router.post('/singpass/login', (req: Request, res: Response) => {
+router.post('/singpass/login', (req: any, res: Response) => {
   if (!config.singpass.useSingpass) {
     return res
       .status(400)

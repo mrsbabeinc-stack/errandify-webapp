@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import BottomNav from './BottomNav';
 import RoleToggle from './RoleToggle';
+import HanaAssistant from './HanaAssistant';
 
 interface LayoutProps {
   userRole: 'asker' | 'doer';
@@ -18,6 +19,9 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
       <main className="flex-1 overflow-y-auto pb-20">
         <Outlet />
       </main>
+
+      {/* Hana Assistant - Floating Button */}
+      <HanaAssistant />
 
       {/* Bottom Navigation */}
       <BottomNav onLogout={onLogout} />
