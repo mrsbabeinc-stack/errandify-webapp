@@ -7,6 +7,8 @@ import chatRoutes from './routes/chat.js';
 import userRoutes from './routes/users.js';
 import hanaRoutes from './routes/hana.js';
 import aiRoutes from './routes/ai.js';
+import bidsRoutes from './routes/bids.js';
+import paymentRoutes from './routes/payment.js';
 
 const app = express();
 
@@ -25,6 +27,8 @@ app.use('/api/errands', errandRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/bids', bidsRoutes);
+app.use('/api/payment', paymentRoutes);
 app.use('/api', hanaRoutes);
 
 // Error handling

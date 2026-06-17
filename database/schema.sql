@@ -7,13 +7,17 @@ CREATE TABLE users (
   dob DATE,
   address TEXT,
   profile_image_url VARCHAR(500),
+  avatar_url VARCHAR(500),
   singpass_id VARCHAR(255) UNIQUE,
   font_size_pref INTEGER DEFAULT 16,
   language_pref VARCHAR(5) DEFAULT 'en',
   role VARCHAR(50) NOT NULL DEFAULT 'asker' CHECK (role IN ('asker', 'doer')),
   kyc_status VARCHAR(50) DEFAULT 'verified' CHECK (kyc_status IN ('pending', 'verified', 'rejected')),
+  declaration_status VARCHAR(50) DEFAULT 'pending' CHECK (declaration_status IN ('pending', 'clean', 'flagged')),
   referral_code VARCHAR(20) UNIQUE,
   category_preferences JSONB,
+  trust_score DECIMAL(3, 2) DEFAULT 5.0,
+  penalty_owed DECIMAL(10, 2) DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -25,7 +29,7 @@ CREATE TABLE errands (
   title VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
   category VARCHAR(100),
-  status VARCHAR(50) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'assigned', 'in_progress', 'completed', 'cancelled')),
+  status VARCHAR(50) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'assigned', 'in_progress', 'completed', 'cancelled', 'confirmed', 'cancelled_by_asker', 'cancelled_by_doer')),
   budget DECIMAL(10, 2),
   deadline TIMESTAMP,
   location VARCHAR(500),
@@ -33,6 +37,21 @@ CREATE TABLE errands (
   certifications JSONB,
   is_recurring BOOLEAN DEFAULT FALSE,
   recurring_config JSONB,
+  accepted_bid_id INTEGER,
+  stripe_payment_intent_id VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Bids table
+CREATE TABLE bids (
+  id SERIAL PRIMARY KEY,
+  task_id INTEGER NOT NULL REFERENCES errands(id),
+  doer_id INTEGER NOT NULL REFERENCES users(id),
+  amount DECIMAL(10, 2) NOT NULL,
+  note TEXT,
+  status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected', 'rejected_resubmitted')),
+  resubmit_count INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -89,6 +108,9 @@ CREATE INDEX idx_users_referral_code ON users(referral_code);
 CREATE INDEX idx_errands_asker_id ON errands(asker_id);
 CREATE INDEX idx_errands_status ON errands(status);
 CREATE INDEX idx_errands_is_recurring ON errands(is_recurring);
+CREATE INDEX idx_bids_task_id ON bids(task_id);
+CREATE INDEX idx_bids_doer_id ON bids(doer_id);
+CREATE INDEX idx_bids_status ON bids(status);
 CREATE INDEX idx_sessions_errand_id ON errand_sessions(errand_id);
 CREATE INDEX idx_sessions_status ON errand_sessions(status);
 CREATE INDEX idx_assignments_errand_id ON errand_assignments(errand_id);
