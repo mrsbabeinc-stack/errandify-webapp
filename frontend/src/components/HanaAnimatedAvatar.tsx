@@ -26,26 +26,44 @@ export default function HanaAnimatedAvatar({
 
     const utterance = new SpeechSynthesisUtterance(message);
 
-    // Try to use Singapore English voice
+    // Try to use Singapore English female voice
     const voices = window.speechSynthesis.getVoices();
-    const singaporeVoice = voices.find(voice =>
-      voice.lang.includes('en-SG') ||
-      voice.lang.includes('en-GB') ||
-      voice.name.toLowerCase().includes('singapore')
+
+    // Prefer Singapore English voice
+    let selectedVoice = voices.find(voice =>
+      voice.lang.includes('en-SG') && voice.name.includes('female')
     );
 
-    if (singaporeVoice) {
-      utterance.voice = singaporeVoice;
-    } else if (voices.length > 0) {
-      // Fallback to any English voice
-      const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
-      if (englishVoice) {
-        utterance.voice = englishVoice;
-      }
+    // Fallback to any Singapore English
+    if (!selectedVoice) {
+      selectedVoice = voices.find(voice => voice.lang.includes('en-SG'));
     }
 
-    utterance.rate = 0.95; // Slightly slower for clarity
-    utterance.pitch = 1.1; // Slightly higher pitch for female voice
+    // Fallback to British English (similar accent)
+    if (!selectedVoice) {
+      selectedVoice = voices.find(voice =>
+        voice.lang.includes('en-GB') && voice.name.includes('female')
+      );
+    }
+
+    // Last resort - any female English voice
+    if (!selectedVoice) {
+      selectedVoice = voices.find(voice =>
+        voice.lang.startsWith('en') && voice.name.includes('female')
+      );
+    }
+
+    // Absolute fallback
+    if (!selectedVoice && voices.length > 0) {
+      selectedVoice = voices.find(voice => voice.lang.startsWith('en'));
+    }
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    utterance.rate = 0.9; // Slightly slower for clarity
+    utterance.pitch = 1.2; // Higher pitch for feminine voice
     utterance.volume = 1;
 
     synthRef.current = utterance;
@@ -141,16 +159,14 @@ export default function HanaAnimatedAvatar({
       <audio ref={audioRef} />
 
       {/* Hana Image Container - Half Body Only */}
-      <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-        {/* Base Image - Cropped to half-body (full head to waist) */}
+      <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-white">
+        {/* Base Image - Full head to waist half-body */}
         <img
           src="/images/Hana_Pose_2_4K.png"
           alt="Hana"
-          className="w-full h-auto object-cover z-0"
+          className="w-full h-full object-cover z-0"
           style={{
-            objectPosition: 'center 20%',
-            maxHeight: '100%',
-            minHeight: '100%',
+            objectPosition: 'center 25%',
           }}
         />
 

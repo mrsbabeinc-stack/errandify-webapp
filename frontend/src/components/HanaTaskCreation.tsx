@@ -55,7 +55,7 @@ export default function HanaTaskCreation({
   }, [isOpen]);
 
   const initializeChat = () => {
-    setHanaMessage("Hello! 🌸 I'm Hana. Let's create your task together!\n\nShare what you need done, your location, timing, and budget. I'll take care of the rest.");
+    setHanaMessage("Hello! I'm Hana. Let's create your task together!\n\nShare what you need done, your location, timing, and budget. I'll help you fill in some details.");
     setCurrentStep('title');
     triggerExpression();
   };
@@ -323,9 +323,9 @@ export default function HanaTaskCreation({
             </div>
           )}
 
-          {/* Middle Section: Hana Image with Animation */}
-          <div className="flex-1 flex items-center justify-center overflow-hidden px-4 py-4">
-            <div className="h-96 w-auto">
+          {/* Middle Section: Hana Half-Body Image with Animation */}
+          <div className="flex-1 flex items-center justify-center overflow-hidden px-2 py-2">
+            <div className="h-80 w-auto">
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}
                 message={hanaMessage}
