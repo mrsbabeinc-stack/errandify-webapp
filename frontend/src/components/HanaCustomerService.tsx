@@ -174,12 +174,12 @@ export default function HanaCustomerService() {
       console.log('[Hana] Speaking with voice:', voice, 'for language:', language);
 
       // Adjust rate and pitch based on language
-      const rate = language === 'en' ? 1.1 : 1.0; // Faster for English (more energetic)
-      const pitch = language === 'en' ? 1.15 : 1.0; // Higher pitch for English (younger)
+      const rate = language === 'en' ? 1.2 : 1.0; // Much faster for English (high energy)
+      const pitch = language === 'en' ? 1.25 : 1.0; // Higher pitch for English (youthful, energetic)
 
       responsiveVoice.speak(text, voice, {
-        rate, // Faster for English, normal for others
-        pitch, // Higher for English, normal for others
+        rate, // Much faster for English, normal for others
+        pitch, // Much higher for English, normal for others
         volume: 1.0, // Full volume
         onstart: () => {
           console.log('[Hana] Speaking');

@@ -310,10 +310,10 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
     const voiceConfig = voiceMap[language] || voiceMap['en'];
 
     // Generate SSML with voice parameters
-    // English: younger, more energetic
+    // English: maximum energy - faster, higher pitch, dynamic expression
     // Others: warm and friendly
     const prosodySettings = language === 'en'
-      ? 'pitch="+15%" rate="1.05" contour="(0%,+25%) (100%,+20%)"' // Energetic, youthful
+      ? 'pitch="+20%" rate="1.15" contour="(0%,+35%) (50%,+25%) (100%,+20%)"' // High energy, dynamic
       : 'pitch="+10%" rate="0.95" contour="(0%,+20%) (100%,+15%)"'; // Warm, friendly
 
     const ssml = `<speak version="1.0" xml:lang="${voiceConfig.lang}">
