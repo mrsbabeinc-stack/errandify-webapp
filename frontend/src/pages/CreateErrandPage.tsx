@@ -29,6 +29,7 @@ export default function CreateErrandPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [skillInput, setSkillInput] = useState('');
+  const [postalCode, setPostalCode] = useState('');
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const [aiSuggestions, setAiSuggestions] = useState({
@@ -490,15 +491,18 @@ export default function CreateErrandPage() {
                 <input
                   type="text"
                   placeholder="e.g., 082001"
+                  value={postalCode}
                   onChange={(e) => {
-                    const postalCode = e.target.value.trim();
-                    if (postalCode.length === 6 && /^\d+$/.test(postalCode)) {
+                    const code = e.target.value.trim();
+                    setPostalCode(code);
+
+                    if (code.length === 6 && /^\d+$/.test(code)) {
                       // Auto-fill full address with postal code
                       setFormData((prev) => ({
                         ...prev,
-                        location: `Singapore ${postalCode}`,
+                        location: `Singapore ${code}`,
                       }));
-                    } else if (postalCode.length === 0) {
+                    } else if (code.length === 0) {
                       // Clear address if postal code is cleared
                       setFormData((prev) => ({
                         ...prev,
