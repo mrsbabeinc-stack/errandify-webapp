@@ -955,8 +955,9 @@ function parseTimeFromInput(text: string): string | null {
 function parseDurationFromInput(text: string): { duration: string; unit: string } | null {
   const lowerText = text.toLowerCase();
 
-  // Match patterns like "30min", "2 hours", "1.5hr" - REQUIRE unit keyword
-  const durationMatch = lowerText.match(/\b(\d+(?:\.\d+)?)\s*(hours?|hrs?|minutes?|mins?|m\b|days?|d\b)/);
+  // Match patterns like "30min", "2 hours", "1.5hr", "20 m" - REQUIRE unit keyword
+  // Use negative lookahead to avoid matching postal codes like "082001"
+  const durationMatch = lowerText.match(/\b(\d+(?:\.\d+)?)\s*(hours?|hrs?|minutes?|mins?|min|m(?:in)?|days?|d(?:ay)?)\b/);
   if (durationMatch) {
     const value = durationMatch[1];
     const unit = durationMatch[2];
@@ -1079,33 +1080,36 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
       }
     }
 
-    // Extract location - first try named locations, then postal code
+    // Extract location and postal code
     let location = '';
-    for (const loc of locations) {
-      if (cleaned.includes(loc)) {
-        location = loc.split(' ')[0];
-        location = location.charAt(0).toUpperCase() + location.slice(1);
-        break;
-      }
+    let postalCode = '';
+
+    // First try to extract postal code (6-digit Singapore postal code)
+    const postalMatch = cleaned.match(/\b(\d{6})\b/);
+    if (postalMatch) {
+      postalCode = postalMatch[1];
+      const firstTwo = postalCode.substring(0, 2);
+      const postalCodeAreas: Record<string, string> = {
+        '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
+        '05': 'Outram', '06': 'People\'s Park', '07': 'Chinatown', '08': 'Sengkang', '09': 'Tanjong Pagar',
+        '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
+        '15': 'Serangoon', '16': 'Serangoon', '17': 'Serangoon', '18': 'Macpherson', '19': 'Paya Lebar',
+        '20': 'Paya Lebar', '21': 'Geylang', '22': 'Geylang', '23': 'Geylang', '24': 'Eunos',
+        '25': 'Bedok', '26': 'Bedok', '27': 'Bedok', '28': 'Tampines', '29': 'Tampines', '30': 'Tampines',
+        '31': 'Pasir Ris', '32': 'Pasir Ris', '33': 'Punggol', '34': 'Punggol', '35': 'Hougang',
+        '36': 'Hougang', '37': 'Sengkang', '38': 'Sengkang', '39': 'Sengkang', '40': 'Jurong West',
+      };
+      location = postalCodeAreas[firstTwo] || '';
     }
 
-    // If no named location found, try to extract postal code
+    // If no postal code found, try named locations
     if (!location) {
-      const postalMatch = cleaned.match(/\b(\d{6})\b/);
-      if (postalMatch) {
-        const postalCode = postalMatch[1];
-        const firstTwo = postalCode.substring(0, 2);
-        const postalCodeAreas: Record<string, string> = {
-          '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
-          '05': 'Outram', '06': 'People\'s Park', '07': 'Chinatown', '08': 'Sengkang', '09': 'Tanjong Pagar',
-          '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
-          '15': 'Serangoon', '16': 'Serangoon', '17': 'Serangoon', '18': 'Macpherson', '19': 'Paya Lebar',
-          '20': 'Paya Lebar', '21': 'Geylang', '22': 'Geylang', '23': 'Geylang', '24': 'Eunos',
-          '25': 'Bedok', '26': 'Bedok', '27': 'Bedok', '28': 'Tampines', '29': 'Tampines', '30': 'Tampines',
-          '31': 'Pasir Ris', '32': 'Pasir Ris', '33': 'Punggol', '34': 'Punggol', '35': 'Hougang',
-          '36': 'Hougang', '37': 'Sengkang', '38': 'Sengkang', '39': 'Sengkang', '40': 'Jurong West',
-        };
-        location = postalCodeAreas[firstTwo] || '';
+      for (const loc of locations) {
+        if (cleaned.includes(loc)) {
+          location = loc.split(' ')[0];
+          location = location.charAt(0).toUpperCase() + location.slice(1);
+          break;
+        }
       }
     }
 
@@ -1202,6 +1206,7 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
         title,
         category,
         location,
+        postalCode,
         date,
         time,
         duration,

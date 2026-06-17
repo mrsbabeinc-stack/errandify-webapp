@@ -244,6 +244,10 @@ export default function CreateErrandPage() {
           ...(extracted.date && { deadline: extracted.date }),
           ...(extracted.description && { description: extracted.description }),
         }));
+        // Set postal code separately (it's not in formData, it's a separate state)
+        if (extracted.postalCode) {
+          setPostalCode(extracted.postalCode);
+        }
       }
     } catch (err) {
       console.error('Extraction error:', err);
