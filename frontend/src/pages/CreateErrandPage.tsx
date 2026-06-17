@@ -280,7 +280,8 @@ export default function CreateErrandPage() {
       const lowerValue = value.toLowerCase();
 
       // Extract time: patterns like "4pm", "14:00", "2:30pm"
-      const timeMatch = lowerValue.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
+      // Must have am/pm to avoid matching duration numbers (30min looks like "30" + something)
+      const timeMatch = lowerValue.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
       if (timeMatch && timeMatch[3]) {
         let hours = parseInt(timeMatch[1]);
         const minutes = timeMatch[2] || '00';
