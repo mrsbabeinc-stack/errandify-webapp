@@ -132,9 +132,16 @@ export default function HanaCustomerService() {
 
           <div className="w-80 h-96 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-errandify-orange to-orange-600 text-white p-4">
-              <h2 className="font-bold text-sm">✿ Hana's Assistant</h2>
-              <p className="text-xs opacity-90">How can I help you today?</p>
+            <div className="bg-gradient-to-r from-errandify-orange to-orange-600 text-white p-4 flex items-center gap-3">
+              <img
+                src="/images/hana-avatar.png"
+                alt="Sister Hana"
+                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+              />
+              <div>
+                <h2 className="font-bold text-sm">Sister Hana</h2>
+                <p className="text-xs opacity-90">How can I help you today?</p>
+              </div>
             </div>
 
             {/* Messages */}
