@@ -33,6 +33,12 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
     try {
       const token = localStorage.getItem('token');
 
+      if (!token) {
+        setError('Not authenticated. Please log in again.');
+        setLoading(false);
+        return;
+      }
+
       let url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`;
 
       if (userRole === 'asker') {
@@ -48,8 +54,13 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
       });
       setErrands(response.data.data || []);
     } catch (err: any) {
-      console.error('Failed to fetch errands:', err);
-      setError(err.response?.data?.error || 'Failed to fetch errands');
+      console.error('Failed to fetch errands:', err.response?.data || err.message);
+      if (err.response?.status === 401) {
+        setError('Your session has expired. Please log in again.');
+        localStorage.removeItem('token');
+      } else {
+        setError(err.response?.data?.error || 'Failed to fetch errands');
+      }
     } finally {
       setLoading(false);
     }
