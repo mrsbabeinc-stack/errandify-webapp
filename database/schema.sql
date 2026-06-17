@@ -28,6 +28,7 @@ CREATE TABLE errands (
   budget DECIMAL(10, 2),
   deadline TIMESTAMP,
   location VARCHAR(500),
+  postal_code VARCHAR(6),
   certifications JSONB,
   is_recurring BOOLEAN DEFAULT FALSE,
   recurring_config JSONB,

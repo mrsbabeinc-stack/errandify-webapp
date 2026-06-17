@@ -427,6 +427,19 @@ function generateDescription(category: string, title: string): string {
   return `Help needed with: ${title}`;
 }
 
+// Extract postal code from location string
+function extractPostalCode(location: string): string | null {
+  if (!location) return null;
+
+  // Match 6-digit postal code
+  const postalMatch = location.match(/\d{6}/);
+  if (postalMatch) {
+    return postalMatch[0];
+  }
+
+  return null;
+}
+
 // Suggest skills based on category and keywords
 function suggestSkills(category: string, title: string): string[] {
   const lowerTitle = title.toLowerCase();

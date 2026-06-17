@@ -109,6 +109,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         status: errand.status,
         budget: errand.budget,
         location: errand.location,
+        postalCode: errand.postal_code,
         deadline: errand.deadline,
         certifications: errand.certifications ? JSON.parse(errand.certifications) : undefined,
         isRecurring: errand.is_recurring,
@@ -128,12 +129,19 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
 // Create errand (asker only)
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, category, budget, deadline, certifications, isRecurring, repeatEvery, repeatUnit, occurrences } = req.body;
+    const { title, description, category, location, budget, deadline, certifications, isRecurring, repeatEvery, repeatUnit, occurrences } = req.body;
 
     if (!title || !category) {
       return res
         .status(400)
         .json({ error: 'title and category required' });
+    }
+
+    // Extract postal code from location for matching/filtering
+    let postalCode: string | null = null;
+    if (location) {
+      const postalMatch = location.match(/\d{6}/);
+      postalCode = postalMatch ? postalMatch[0] : null;
     }
 
     const client = await db.getClient();
@@ -142,14 +150,16 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
       // Create parent errand
       const errandResult = await client.query(
-        `INSERT INTO errands (asker_id, title, description, category, budget, deadline, certifications, is_recurring, recurring_config, status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        `INSERT INTO errands (asker_id, title, description, category, location, postal_code, budget, deadline, certifications, is_recurring, recurring_config, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          RETURNING id, title, description, category, status, budget, deadline, certifications, is_recurring, recurring_config, created_at`,
         [
           req.userId,
           title,
           description || null,
           category,
+          location || null,
+          postalCode,
           budget || null,
           deadline || null,
           certifications ? JSON.stringify(certifications) : null,
@@ -206,6 +216,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           status: errand.status,
           budget: errand.budget,
           deadline: errand.deadline,
+          location: location || null,
+          postalCode: postalCode,
           certifications: errand.certifications ? JSON.parse(errand.certifications) : undefined,
           isRecurring: errand.is_recurring,
           recurringConfig: errand.recurring_config ? JSON.parse(errand.recurring_config) : null,
