@@ -92,9 +92,14 @@ function cleanTitleForDescription(title: string): string {
   // Remove ending period for cleaner insertion into sentence
   cleaned = cleaned.replace(/\.$/, '');
 
-  // Remove common prefixes
-  cleaned = cleaned.replace(/^(help me |help with |need |wash |clean |need to |i need |can you )/, '');
-  cleaned = cleaned.replace(/^(my|a|the) /, '');
+  // Remove action verb + possessive combos (wash my, walk my, help me, etc.)
+  cleaned = cleaned.replace(/^(help|wash|clean|walk|groom|feed|babysit|tutor|repair|fix|install|deliver|move|shop|buy|teach|need) (me |my |him |his |her |your )/i, '');
+
+  // Remove remaining common prefixes
+  cleaned = cleaned.replace(/^(need |help with |help me |i need |can you |need to |need help )/, '');
+
+  // Remove articles and remaining possessives at start
+  cleaned = cleaned.replace(/^(my |a |the |your |his |her )/, '');
 
   return cleaned;
 }
