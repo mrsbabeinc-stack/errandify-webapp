@@ -62,7 +62,7 @@ export default function HanaTaskCreation({
   }, [isOpen]);
 
   const initializeChat = () => {
-    setHanaMessage("Hi! What errand do you need help with?\n\nTell me: what, where (postal code), when, how long & budget\n\nExample:\n'Clean my house at 680433 on Saturday for 2 hours at 2pm, budget $100'");
+    setHanaMessage("Hi! What errand do you need help with?\n\nExample:\n'Clean my house at 680433 on Saturday for 2 hours at 2pm, budget $100'");
     setCurrentStep('input');
     triggerSpeaking();
   };
