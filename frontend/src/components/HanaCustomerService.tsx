@@ -47,15 +47,15 @@ export default function HanaCustomerService() {
 
     try {
       const token = localStorage.getItem('token');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const response = await axios.post(
         '/api/chat/hana/customer-service',
         { message: input },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
+        { headers }
       );
 
       const reply = response.data?.data?.reply || response.data?.reply || 'How else can I help?';
