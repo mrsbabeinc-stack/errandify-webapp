@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import BidSubmissionModal from '../components/BidSubmissionModal';
+import BidsViewer from '../components/BidsViewer';
 
 interface ErrandDetail {
   id: number;
@@ -16,19 +18,26 @@ interface ErrandDetail {
   createdAt: string;
 }
 
+interface UserProfile {
+  id: number;
+  role: 'asker' | 'doer';
+}
+
 export default function ErrandDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [errand, setErrand] = useState<ErrandDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [showBidModal, setShowBidModal] = useState(false);
+  const [bidSubmitted, setBidSubmitted] = useState(false);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       const user = JSON.parse(userStr);
-      setCurrentUserId(user.id);
+      setCurrentUser(user);
     }
   }, []);
 
@@ -272,11 +281,14 @@ export default function ErrandDetailPage() {
             </div>
 
             {/* Action Button */}
-            {errand.status === 'open' && currentUserId !== errand.askerId ? (
-              <button className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2">
-                Accept This Errand
+            {errand.status === 'open' && currentUser && currentUser.id !== errand.askerId ? (
+              <button
+                onClick={() => setShowBidModal(true)}
+                className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
+              >
+                {bidSubmitted ? '✓ Bid Submitted' : 'Submit a Bid'}
               </button>
-            ) : errand.status === 'open' && currentUserId === errand.askerId ? (
+            ) : errand.status === 'open' && currentUser && currentUser.id === errand.askerId ? (
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => navigate(`/errand/${id}/edit`)}
@@ -294,10 +306,37 @@ export default function ErrandDetailPage() {
             ) : null}
           </div>
         </div>
+
+        {/* Bids Section - Only for Asker */}
+        {currentUser && currentUser.id === errand?.askerId && (
+          <div className="mt-6">
+            <BidsViewer
+              taskId={errand?.id || 0}
+              taskBudget={errand?.budget || 0}
+              onBidAccepted={() => fetchErrandDetail()}
+            />
+          </div>
+        )}
+          </div>
+        </div>
       </div>
 
       {/* Bottom Spacing */}
       <div className="h-8"></div>
+
+      {/* Bid Submission Modal */}
+      {showBidModal && errand && (
+        <BidSubmissionModal
+          taskId={errand.id}
+          taskBudget={errand.budget || 0}
+          taskTitle={errand.title}
+          onSuccess={() => {
+            setBidSubmitted(true);
+            setShowBidModal(false);
+          }}
+          onClose={() => setShowBidModal(false)}
+        />
+      )}
     </div>
   );
 }
