@@ -829,20 +829,18 @@ export default function CreateErrandPage() {
                     </div>
 
                     {/* Start Location Full Address */}
-                    {startLocationPostalCode && (
-                      <div>
-                        <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                          Start Location Full Address (Shown to Confirmed Doer - Add Unit Number if Required)
-                        </label>
-                        <textarea
-                          value={startLocationFullAddress}
-                          onChange={(e) => setStartLocationFullAddress(e.target.value)}
-                          placeholder="e.g., Block 1, Tanjong Pagar Plaza, Unit #5-10, Singapore 082001"
-                          rows={2}
-                          className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
-                        />
-                      </div>
-                    )}
+                    <div>
+                      <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                        Start Location Full Address (Shown to Confirmed Doer - Add Unit Number if Required)
+                      </label>
+                      <textarea
+                        value={startLocationFullAddress}
+                        onChange={(e) => setStartLocationFullAddress(e.target.value)}
+                        placeholder="e.g., Block 1, Tanjong Pagar Plaza, Unit #5-10, Singapore 082001"
+                        rows={2}
+                        className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
+                      />
+                    </div>
                   </div>
                 )}
               </>
