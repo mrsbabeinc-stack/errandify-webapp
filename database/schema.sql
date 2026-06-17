@@ -18,6 +18,7 @@ CREATE TABLE users (
   category_preferences JSONB,
   trust_score DECIMAL(3, 2) DEFAULT 5.0,
   penalty_owed DECIMAL(10, 2) DEFAULT 0,
+  suspended_until TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -109,6 +110,16 @@ CREATE TABLE chat_messages (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Task Messages table (in-task chat between asker and doer)
+CREATE TABLE task_messages (
+  id SERIAL PRIMARY KEY,
+  task_id INTEGER NOT NULL REFERENCES errands(id),
+  sender_id INTEGER NOT NULL REFERENCES users(id),
+  content TEXT NOT NULL,
+  flagged BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Task execution photos table (for proof of work)
 CREATE TABLE task_photos (
   id SERIAL PRIMARY KEY,
@@ -164,3 +175,6 @@ CREATE INDEX idx_task_photos_task_id ON task_photos(task_id);
 CREATE INDEX idx_payment_releases_task_id ON payment_releases(task_id);
 CREATE INDEX idx_disputes_task_id ON disputes(task_id);
 CREATE INDEX idx_disputes_status ON disputes(status);
+CREATE INDEX idx_task_messages_task_id ON task_messages(task_id);
+CREATE INDEX idx_task_messages_sender_id ON task_messages(sender_id);
+CREATE INDEX idx_task_messages_created_at ON task_messages(created_at);

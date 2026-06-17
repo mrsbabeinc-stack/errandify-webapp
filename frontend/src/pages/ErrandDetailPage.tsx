@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import BidSubmissionModal from '../components/BidSubmissionModal';
 import BidsViewer from '../components/BidsViewer';
+import TaskChatbox from '../components/TaskChatbox';
 
 interface ErrandDetail {
   id: number;
@@ -37,6 +38,7 @@ export default function ErrandDetailPage() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [showBidModal, setShowBidModal] = useState(false);
   const [bidSubmitted, setBidSubmitted] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -356,6 +358,16 @@ export default function ErrandDetailPage() {
             />
           </div>
         )}
+
+        {/* Chat Button - For both Asker and Doer */}
+        {errand && errand.status !== 'open' && (
+          <button
+            onClick={() => setShowChat(true)}
+            className="mt-6 w-full bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600"
+          >
+            💬 Chat with {currentUser?.id === errand.askerId ? 'Doer' : 'Asker'}
+          </button>
+        )}
       </div>
 
       {/* Page Container End */}
@@ -374,6 +386,16 @@ export default function ErrandDetailPage() {
             setShowBidModal(false);
           }}
           onClose={() => setShowBidModal(false)}
+        />
+      )}
+
+      {/* Task Chatbox */}
+      {errand && (
+        <TaskChatbox
+          taskId={errand.id}
+          taskTitle={errand.title}
+          isOpen={showChat}
+          onClose={() => setShowChat(false)}
         />
       )}
     </div>
