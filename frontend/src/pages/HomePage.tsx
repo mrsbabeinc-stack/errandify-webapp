@@ -40,7 +40,7 @@ export default function HomePage({ userRole }: HomePageProps) {
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <button
-            onClick={() => navigate(userRole === 'asker' ? '/create-errand' : '/category')}
+            onClick={() => navigate(userRole === 'asker' ? '/create-errand' : '/browse')}
             className="bg-errandify-orange text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
           >
             <span className="text-3xl mb-2 block">
