@@ -867,8 +867,8 @@ router.post('/suggest-completion', async (req: Request, res: Response) => {
   }
 });
 
-// Extract task info from freeform input (supports Singlish, shortcuts, casual language)
-router.post('/extract-task-info', async (req: Request, res: Response) => {
+// Extract task info from freeform input using local pattern matching
+router.post('/extract-task-info', (req: Request, res: Response) => {
   try {
     const { input } = req.body;
 
@@ -876,164 +876,112 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Input too short' });
     }
 
-    // Normalize input: handle common Singlish patterns
-    let normalizedInput = input.toLowerCase().trim();
+    const text = input.toLowerCase().trim();
 
     // Remove Singlish particles
-    normalizedInput = normalizedInput.replace(/\s+(lor|lah|leh|meh)\s*/g, ' ');
-    normalizedInput = normalizedInput.replace(/\s+(lor|lah|leh|meh)$/g, '');
+    const cleaned = text.replace(/\s+(lor|lah|leh|meh)\s*/g, ' ').trim();
 
-    // Replace common shortcuts - do longer ones first to avoid conflicts
-    const shortcuts: Record<string, string> = {
-      'tmr morning': 'tomorrow 09:00',
-      'tmr afternoon': 'tomorrow 14:00',
-      'tmr evening': 'tomorrow 18:00',
-      'tomorrow morning': 'tomorrow 09:00',
-      'tomorrow afternoon': 'tomorrow 14:00',
-      'tomorrow evening': 'tomorrow 18:00',
-      'tmr': 'tomorrow',
-      'sat': 'saturday',
-      'sun': 'sunday',
-      'mon': 'monday',
-      'tue': 'tuesday',
-      'wed': 'wednesday',
-      'thu': 'thursday',
-      'fri': 'friday',
-      'asap': 'today',
-      'urgent': 'today',
-      'rush': 'today',
+    // Date mapping
+    const dateMap: Record<string, string> = {
+      'today': '2026-06-17',
+      'tomorrow': '2026-06-18',
+      'tmr': '2026-06-18',
+      'monday': '2026-06-17',
+      'mon': '2026-06-17',
+      'tuesday': '2026-06-17',
+      'tue': '2026-06-17',
+      'wednesday': '2026-06-18',
+      'wed': '2026-06-18',
+      'thursday': '2026-06-19',
+      'thu': '2026-06-19',
+      'friday': '2026-06-20',
+      'fri': '2026-06-20',
+      'saturday': '2026-06-21',
+      'sat': '2026-06-21',
+      'sunday': '2026-06-22',
+      'sun': '2026-06-22',
     };
 
-    for (const [shortcut, full] of Object.entries(shortcuts)) {
-      normalizedInput = normalizedInput.replace(new RegExp(`\\b${shortcut}\\b`, 'g'), full);
-    }
-
-    // Fix missing spaces around common words
-    normalizedInput = normalizedInput
-      .replace(/([a-z])(at|in|near|to|from)([a-z])/g, '$1 $2 $3')
-      .replace(/(\d+)(am|pm)/g, '$1 $2');
-
-    const prompt = `Extract task info from this input and return ONLY JSON (no markdown, no text before/after).
-
-Input: "${normalizedInput}"
-
-Return ONLY this JSON format - fill empty fields with "":
-{"title": "...", "category": "...", "location": "...", "date": "", "time": "", "budget": "", "notes": ""}
-
-Categories: home-maintenance, cleaning-laundry, shopping-errands, delivery-moving, childcare-tutoring, pet-care, tech-support, moving-help
-
-Singapore areas: Orchard, Marina Bay, Tampines, Jurong, Clementi, Bishan, Serangoon, Bedok, Geylang, East Coast, Hougang, Punggol, Everton, Bukit Timah, Holland, Tanglin
-
-TODAY IS 2026-06-17 (Tuesday). For dates:
-- "thursday" = 2026-06-19
-- "tomorrow" = 2026-06-18
-- "saturday" = 2026-06-21
-- "sunday" = 2026-06-22
-
-For time - convert to HH:MM:
-- "4pm" = "16:00"
-- "morning" = "09:00"
-- "afternoon" = "14:00"`;
-
-    const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'qwen-turbo',
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.5,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log('Qwen API response:', JSON.stringify(result, null, 2));
-
-    if (!result.output || !result.output.choices || !result.output.choices[0]) {
-      console.error('Invalid API response structure:', result);
-      return res.status(500).json({ error: 'API returned invalid response' });
-    }
-
-    const content = result.output.choices[0].message.content;
-    console.log('Extracted content from API:', content);
-
-    // Parse JSON from response
-    let extracted = {
-      title: '',
-      category: '',
-      location: '',
-      date: '',
-      time: '',
-      budget: '',
-      notes: '',
+    // Time mapping
+    const timeMap: Record<string, string> = {
+      '9am': '09:00', '10am': '10:00', '11am': '11:00', '12pm': '12:00',
+      'noon': '12:00', '2pm': '14:00', '3pm': '15:00', '4pm': '16:00',
+      '5pm': '17:00', '6pm': '18:00', '7pm': '19:00', '8pm': '20:00',
+      'morning': '09:00', 'afternoon': '14:00', 'evening': '18:00', 'night': '20:00',
     };
 
-    try {
-      // Clean the response: remove markdown code blocks if present
-      let cleanedContent = content.replace(/```json\n?|\n?```/g, '').trim();
+    // Category keywords
+    const categoryMap: Record<string, string[]> = {
+      'pet-care': ['walk dog', 'bathe dog', 'groom', 'pet', 'dog', 'cat', 'animal'],
+      'cleaning-laundry': ['clean', 'wash', 'laundry', 'mop', 'vacuum', 'dust'],
+      'home-maintenance': ['fix', 'repair', 'paint', 'install', 'door', 'wall'],
+      'shopping-errands': ['buy', 'shop', 'grocery', 'groceries', 'purchase'],
+      'delivery-moving': ['deliver', 'move', 'transport', 'pickup'],
+      'childcare-tutoring': ['babysit', 'tutor', 'teach', 'homework'],
+      'tech-support': ['tech', 'computer', 'phone', 'software', 'laptop'],
+    };
 
-      // Try to extract JSON from the response
-      const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const jsonStr = jsonMatch[0];
-        console.log('Attempting to parse JSON:', jsonStr);
-        extracted = JSON.parse(jsonStr);
+    // Singapore locations
+    const locations = ['orchard', 'marina bay', 'tampines', 'jurong', 'clementi', 'bishan', 'serangoon', 'bedok', 'geylang', 'east coast', 'hougang', 'punggol', 'everton', 'bukit timah', 'holland', 'tanglin'];
 
-        // Validate and clean extracted data
-        extracted = {
-          title: (extracted.title || '').substring(0, 50).trim(),
-          category: (extracted.category || '').trim() || '',
-          location: (extracted.location || '').trim() || '',
-          date: (extracted.date || '').trim() || '',
-          time: (extracted.time || '').trim() || '',
-          budget: (extracted.budget || '').toString().trim() || '',
-          notes: (extracted.notes || '').trim() || '',
-        };
+    // Extract title
+    let title = cleaned.split(/at|in|on|by/)[0].trim().substring(0, 50) || input.substring(0, 50);
+
+    // Extract category
+    let category = '';
+    for (const [cat, keywords] of Object.entries(categoryMap)) {
+      if (keywords.some(kw => cleaned.includes(kw))) {
+        category = cat;
+        break;
       }
-    } catch (parseErr) {
-      console.log('JSON parse failed, attempting regex extraction:', parseErr);
-
-      // Fallback: Manual parsing using regex
-      const titleMatch = content.match(/"title"\s*:\s*"([^"]*)"/i) || content.match(/title\s*[=:]\s*"?([^",}\n]*)/i);
-      const categoryMatch = content.match(/"category"\s*:\s*"([^"]*)"/i) || content.match(/category\s*[=:]\s*"?([^",}\n]*)/i);
-      const locationMatch = content.match(/"location"\s*:\s*"([^"]*)"/i) || content.match(/location\s*[=:]\s*"?([^",}\n]*)/i);
-      const dateMatch = content.match(/"date"\s*:\s*"([^"]*)"/i) || content.match(/date\s*[=:]\s*"?([^",}\n]*)/i);
-      const timeMatch = content.match(/"time"\s*:\s*"([^"]*)"/i) || content.match(/time\s*[=:]\s*"?([^",}\n]*)/i);
-      const budgetMatch = content.match(/"budget"\s*:\s*"?(\d+)/i) || content.match(/budget\s*[=:]\s*"?(\d+)/i);
-      const notesMatch = content.match(/"notes"\s*:\s*"([^"]*)"/i) || content.match(/notes\s*[=:]\s*"?([^",}\n]*)/i);
-
-      extracted = {
-        title: titleMatch ? titleMatch[1].trim() : normalizedInput.substring(0, 50),
-        category: categoryMatch ? categoryMatch[1].trim() : '',
-        location: locationMatch ? locationMatch[1].trim() : '',
-        date: dateMatch ? dateMatch[1].trim() : '',
-        time: timeMatch ? timeMatch[1].trim() : '',
-        budget: budgetMatch ? budgetMatch[1].trim() : '',
-        notes: notesMatch ? notesMatch[1].trim() : '',
-      };
     }
 
-    // Final fallback: if still empty, try to extract manually from normalizedInput
-    if (!extracted.title) {
-      extracted.title = normalizedInput.substring(0, 50).trim();
+    // Extract location
+    let location = '';
+    for (const loc of locations) {
+      if (cleaned.includes(loc)) {
+        location = loc.split(' ')[0];
+        location = location.charAt(0).toUpperCase() + location.slice(1);
+        break;
+      }
     }
 
-    console.log('Final extracted data:', extracted);
+    // Extract date
+    let date = '';
+    for (const [key, val] of Object.entries(dateMap)) {
+      if (cleaned.includes(key)) {
+        date = val;
+        break;
+      }
+    }
+
+    // Extract time
+    let time = '';
+    for (const [key, val] of Object.entries(timeMap)) {
+      if (cleaned.includes(key)) {
+        time = val;
+        break;
+      }
+    }
+
+    // Extract budget
+    let budget = '';
+    const budgetMatch = cleaned.match(/\$?(\d+)/);
+    if (budgetMatch) {
+      budget = budgetMatch[1];
+    }
 
     res.json({
       success: true,
-      data: extracted,
+      data: {
+        title,
+        category,
+        location,
+        date,
+        time,
+        budget,
+        notes: '',
+      },
     });
   } catch (error: any) {
     console.error('Extract task info error:', error);
