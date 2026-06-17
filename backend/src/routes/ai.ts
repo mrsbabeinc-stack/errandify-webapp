@@ -1000,32 +1000,56 @@ Return ONLY valid JSON in this exact format:
     };
 
     try {
+      // Clean the response: remove markdown code blocks if present
+      let cleanedContent = content.replace(/```json\n?|\n?```/g, '').trim();
+
       // Try to extract JSON from the response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        extracted = JSON.parse(jsonMatch[0]);
+        const jsonStr = jsonMatch[0];
+        console.log('Attempting to parse JSON:', jsonStr);
+        extracted = JSON.parse(jsonStr);
+
+        // Validate and clean extracted data
+        extracted = {
+          title: (extracted.title || '').substring(0, 50).trim(),
+          category: (extracted.category || '').trim() || '',
+          location: (extracted.location || '').trim() || '',
+          date: (extracted.date || '').trim() || '',
+          time: (extracted.time || '').trim() || '',
+          budget: (extracted.budget || '').toString().trim() || '',
+          notes: (extracted.notes || '').trim() || '',
+        };
       }
     } catch (parseErr) {
-      console.log('JSON parse failed, using partial extraction');
-      // Fallback: try to extract values using regex
-      const titleMatch = content.match(/"title"\s*:\s*"([^"]*)"/);
-      const categoryMatch = content.match(/"category"\s*:\s*"([^"]*)"/);
-      const locationMatch = content.match(/"location"\s*:\s*"([^"]*)"/);
-      const dateMatch = content.match(/"date"\s*:\s*"([^"]*)"/);
-      const timeMatch = content.match(/"time"\s*:\s*"([^"]*)"/);
-      const budgetMatch = content.match(/"budget"\s*:\s*"([^"]*)"/);
-      const notesMatch = content.match(/"notes"\s*:\s*"([^"]*)"/);
+      console.log('JSON parse failed, attempting regex extraction:', parseErr);
+
+      // Fallback: Manual parsing using regex
+      const titleMatch = content.match(/"title"\s*:\s*"([^"]*)"/i) || content.match(/title\s*[=:]\s*"?([^",}\n]*)/i);
+      const categoryMatch = content.match(/"category"\s*:\s*"([^"]*)"/i) || content.match(/category\s*[=:]\s*"?([^",}\n]*)/i);
+      const locationMatch = content.match(/"location"\s*:\s*"([^"]*)"/i) || content.match(/location\s*[=:]\s*"?([^",}\n]*)/i);
+      const dateMatch = content.match(/"date"\s*:\s*"([^"]*)"/i) || content.match(/date\s*[=:]\s*"?([^",}\n]*)/i);
+      const timeMatch = content.match(/"time"\s*:\s*"([^"]*)"/i) || content.match(/time\s*[=:]\s*"?([^",}\n]*)/i);
+      const budgetMatch = content.match(/"budget"\s*:\s*"?(\d+)/i) || content.match(/budget\s*[=:]\s*"?(\d+)/i);
+      const notesMatch = content.match(/"notes"\s*:\s*"([^"]*)"/i) || content.match(/notes\s*[=:]\s*"?([^",}\n]*)/i);
 
       extracted = {
-        title: titleMatch ? titleMatch[1] : input.substring(0, 50),
-        category: categoryMatch ? categoryMatch[1] : '',
-        location: locationMatch ? locationMatch[1] : '',
-        date: dateMatch ? dateMatch[1] : '',
-        time: timeMatch ? timeMatch[1] : '',
-        budget: budgetMatch ? budgetMatch[1] : '',
-        notes: notesMatch ? notesMatch[1] : '',
+        title: titleMatch ? titleMatch[1].trim() : normalizedInput.substring(0, 50),
+        category: categoryMatch ? categoryMatch[1].trim() : '',
+        location: locationMatch ? locationMatch[1].trim() : '',
+        date: dateMatch ? dateMatch[1].trim() : '',
+        time: timeMatch ? timeMatch[1].trim() : '',
+        budget: budgetMatch ? budgetMatch[1].trim() : '',
+        notes: notesMatch ? notesMatch[1].trim() : '',
       };
     }
+
+    // Final fallback: if still empty, try to extract manually from normalizedInput
+    if (!extracted.title) {
+      extracted.title = normalizedInput.substring(0, 50).trim();
+    }
+
+    console.log('Final extracted data:', extracted);
 
     res.json({
       success: true,
