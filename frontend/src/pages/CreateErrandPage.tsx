@@ -366,9 +366,9 @@ export default function CreateErrandPage() {
 
       // For title: call extraction with raw input AND fetch AI description
       if (name === 'title' && value.length > 3) {
-        // Call extraction with the RAW input - debounced
-        debouncedExtractFields(value);
-        // Also fetch AI-generated description
+        // Call extraction with the RAW input immediately
+        extractFieldsFromTitle(value);
+        // Also fetch AI-generated description (debounced)
         fetchAiDescription(value, formData.description);
       } else if (name === 'description' && value.length > 5) {
         fetchAiDescription(formData.title, value);
