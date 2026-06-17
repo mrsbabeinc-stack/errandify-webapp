@@ -222,26 +222,35 @@ export default function HanaCustomerService() {
 
     // Get available voices
     const voices = window.speechSynthesis.getVoices();
-    console.log('[Hana] ALL Available voices:',voices.map(v => ({ name: v.name, lang: v.lang })));
+    console.log('[Hana] Available voices for', language + ':', voices.filter(v => v.lang.includes(languageMap[language].split('-')[0])).map(v => v.name));
 
     const targetLang = languageMap[language].split('-')[0];
+    const matchingVoices = voices.filter(v => v.lang.toLowerCase().startsWith(targetLang.toLowerCase()));
 
-    // For Chinese/Cantonese, use ANY voice that matches the language (since female indicators don't work)
-    let selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetLang.toLowerCase()));
+    // For Chinese, prefer female voices (Mei-Jia, Sin-Ji, Victoria, etc.) - avoid male names
+    const maleNames = ['Li-Mu', 'Lü-Si', 'Lu-Si', 'Ting-Ting', 'Fang-Fang'];
+    let selectedVoice = matchingVoices.find(v => !maleNames.some(m => v.name.includes(m)));
+
+    // If no female voice found, try to skip the first one (often male)
+    if (!selectedVoice && matchingVoices.length > 1) {
+      selectedVoice = matchingVoices[1];
+    } else if (!selectedVoice && matchingVoices.length > 0) {
+      selectedVoice = matchingVoices[0];
+    }
 
     if (selectedVoice) {
       utterance.voice = selectedVoice;
-      console.log('[Hana] Selected voice for', language + ':', selectedVoice.name);
+      console.log('[Hana] Selected female voice for', language + ':', selectedVoice.name);
     } else {
       console.log('[Hana] No voice found for language:', language);
     }
 
     utterance.rate = 1.0;
-    utterance.pitch = 1.0;
+    utterance.pitch = 1.2; // Slightly higher pitch to sound more feminine
     utterance.volume = 1.0;
 
     utterance.onstart = () => {
-      console.log('[Hana] TTS started with:', utterance.voice?.name);
+      console.log('[Hana] TTS started with voice:', utterance.voice?.name);
       setIsSpeaking(true);
     };
 
