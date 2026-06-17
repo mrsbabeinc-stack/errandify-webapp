@@ -30,6 +30,7 @@ export default function CreateErrandPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [skillInput, setSkillInput] = useState('');
   const [postalCode, setPostalCode] = useState('');
+  const [fullAddress, setFullAddress] = useState('');
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const [aiSuggestions, setAiSuggestions] = useState({
@@ -565,7 +566,7 @@ export default function CreateErrandPage() {
             )}
           </div>
 
-          {/* Section 3: Location - Special note moved to confirmation only */}
+          {/* Section 3: Location - Only area shown here */}
           <div className="border-t pt-4 space-y-4">
             <h3 className="font-bold text-errandify-brown text-sm">Work Location</h3>
 
@@ -587,11 +588,10 @@ export default function CreateErrandPage() {
                       const areaPrefix = code.substring(0, 2);
                       const area = postalCodeAreas[areaPrefix] || 'Singapore';
 
-                      // Full address: Area + Postal Code
-                      // This is what will be stored and shown to doer
+                      // Store: area + postal code (shown to public)
                       setFormData((prev) => ({
                         ...prev,
-                        location: `${area} Singapore ${code}`,
+                        location: `${area}`,
                       }));
                     } else if (code.length === 0) {
                       // Clear address if postal code is cleared
@@ -607,22 +607,11 @@ export default function CreateErrandPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                  Full Address
+                  Area (Shown to Potential Doers)
                 </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={(e) => {
-                    // Allow user to edit the full address
-                    setFormData((prev) => ({
-                      ...prev,
-                      location: e.target.value,
-                    }));
-                  }}
-                  placeholder="e.g., Block 123 Tanjong Pagar Road Singapore 082001"
-                  className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
-                />
+                <div className="w-full px-3 py-2 border-b-2 border-gray-300 bg-gray-50 text-gray-600 text-base">
+                  {formData.location || 'Enter postal code above'}
+                </div>
               </div>
             </div>
 
@@ -641,7 +630,7 @@ export default function CreateErrandPage() {
             </label>
 
             <p className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-              💡 Access instructions (unit number, building name) can be added in the confirmation step - only the confirmed doer will see these.
+              💡 Full address and unit number can be added in the confirmation step - only the confirmed doer will see these details.
             </p>
           </div>
 
@@ -957,16 +946,27 @@ export default function CreateErrandPage() {
               )}
             </div>
 
-            {/* Special Note - Only editable in confirmation */}
+            {/* Full Address - Only editable in confirmation */}
             <div className="border-t pt-4">
               <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Special Note <span className="text-xs text-red-600">(shown only to confirmed doer)</span>
+                Full Address <span className="text-xs text-red-600">(shown only to confirmed doer)</span>
+              </label>
+              <input
+                type="text"
+                value={fullAddress}
+                onChange={(e) => setFullAddress(e.target.value)}
+                placeholder="e.g., 1 Tanjong Pagar Plaza, Singapore 082001"
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm mb-4"
+              />
+
+              <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                Unit Number & Access Instructions <span className="text-xs text-red-600">(shown only to confirmed doer)</span>
               </label>
               <textarea
                 name="specialNote"
                 value={formData.specialNote}
                 onChange={handleChange}
-                placeholder="Unit number, building name, access instructions, etc."
+                placeholder="Unit #5-10, Lobby access code 1234, Call upon arrival, etc."
                 rows={2}
                 className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
               />
