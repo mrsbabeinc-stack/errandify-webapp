@@ -313,6 +313,11 @@ export default function CreateErrandPage() {
       }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
+
+      // Trigger AI suggestions when description changes
+      if (name === 'description' && value.length > 5) {
+        debouncedFetchAiSuggestions(formData.title, value);
+      }
     }
   };
 
