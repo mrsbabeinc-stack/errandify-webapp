@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+interface Tooltip {
+  [key: string]: string;
+}
+
 export default function CreateErrandPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
@@ -11,7 +15,7 @@ export default function CreateErrandPage() {
     description: '',
     startDate: '',
     duration: '',
-    durationUnit: 'Min' as 'Min' | 'Hr' | 'Week' | 'Month',
+    durationUnit: 'Hr' as 'Min' | 'Hr' | 'Week' | 'Month',
     budget: '',
     isRecurring: false,
     recurringSchedule: '',
@@ -19,6 +23,7 @@ export default function CreateErrandPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [hoveredTooltip, setHoveredTooltip] = useState<string | null>(null);
 
   const categoryNames: Record<string, string> = {
     'home-maintenance': 'Home Maintenance',
@@ -29,6 +34,12 @@ export default function CreateErrandPage() {
     'pet-care': 'Pet Care',
     'tech-support': 'Tech Support',
     'moving-help': 'Moving Help',
+  };
+
+  const tooltips: Tooltip = {
+    startDate: 'When do you need this task done?',
+    duration: 'How long will this task take?',
+    isRecurring: 'Does this task repeat regularly?',
   };
 
   const durationUnits = ['Min', 'Hr', 'Week', 'Month'];
@@ -53,7 +64,6 @@ export default function CreateErrandPage() {
     try {
       const token = localStorage.getItem('token');
 
-      // Convert duration to deadline date
       let deadline = null;
       if (formData.startDate) {
         const startDate = new Date(formData.startDate);
@@ -102,23 +112,41 @@ export default function CreateErrandPage() {
     }
   };
 
+  const InfoTooltip = ({ field }: { field: string }) => (
+    <div className="relative inline-block ml-1">
+      <button
+        type="button"
+        onMouseEnter={() => setHoveredTooltip(field)}
+        onMouseLeave={() => setHoveredTooltip(null)}
+        className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600 transition-colors"
+        title={tooltips[field]}
+      >
+        ?
+      </button>
+      {hoveredTooltip === field && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg whitespace-nowrap z-50">
+          {tooltips[field]}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-errandify-bg px-4 py-6">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <button
             onClick={() => navigate(-1)}
-            className="text-errandify-orange font-semibold mb-3"
+            className="text-errandify-orange font-semibold mb-3 text-sm"
           >
             ← Back
           </button>
-          <h1 className="text-3xl font-bold text-errandify-brown mb-2">
+          <h1 className="text-2xl font-bold text-errandify-brown mb-2">
             Create Your Errand
           </h1>
-
-          {/* Progress Bar */}
-          <div className="flex gap-1 mt-4">
+          <div className="flex gap-1 mt-3">
             <div className="flex-1 h-1 bg-errandify-orange rounded"></div>
             <div className="flex-1 h-1 bg-gray-300 rounded"></div>
             <div className="flex-1 h-1 bg-gray-300 rounded"></div>
@@ -127,15 +155,15 @@ export default function CreateErrandPage() {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+          <div className="mb-4 p-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6 pb-24">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* Errand Title */}
           <div>
-            <label className="block text-lg font-semibold text-errandify-brown mb-2">
+            <label className="block text-sm font-semibold text-errandify-brown mb-1">
               Errand Title
             </label>
             <input
@@ -145,139 +173,136 @@ export default function CreateErrandPage() {
               onChange={handleChange}
               placeholder="Enter Errand Title"
               required
-              className="w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg"
+              className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
             />
           </div>
 
           {/* Category */}
           <div>
-            <label className="block text-lg font-semibold text-errandify-brown mb-2 flex items-center gap-1">
-              Category <span className="text-blue-500">●</span>
+            <label className="block text-sm font-semibold text-errandify-brown mb-1 flex items-center">
+              Category
+              <InfoTooltip field="category" />
             </label>
             <select
               name="category"
               value={categoryId || ''}
               disabled
-              className="w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none text-gray-500 text-lg"
+              className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none text-gray-500 text-sm"
             >
-              <option value="">Select Category</option>
-              {Object.entries(categoryNames).map(([id, name]) => (
-                <option key={id} value={id}>
-                  {name}
-                </option>
-              ))}
+              <option value="">{categoryNames[categoryId || ''] || 'Select Category'}</option>
             </select>
           </div>
 
           {/* Errand Description */}
           <div>
-            <label className="block text-lg font-semibold text-errandify-brown mb-2">
-              Errand Description
+            <label className="block text-sm font-semibold text-errandify-brown mb-1">
+              Description
             </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder="Enter Errand Description"
-              rows={4}
-              className="w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg resize-none"
+              placeholder="Describe your task..."
+              rows={2}
+              className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm resize-none"
             />
           </div>
 
-          {/* Start Errand Date */}
-          <div>
-            <label className="block text-lg font-semibold text-errandify-brown mb-2 flex items-center gap-1">
-              Start Errand Date <span className="text-blue-500">●</span>
-            </label>
-            <input
-              type="date"
-              name="startDate"
-              value={formData.startDate}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg"
-            />
-          </div>
-
-          {/* Expected Duration */}
-          <div>
-            <label className="block text-lg font-semibold text-errandify-brown mb-2">
-              Expected Duration
-            </label>
-            <div className="flex gap-3">
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Start Date */}
+            <div>
+              <label className="block text-sm font-semibold text-errandify-brown mb-1 flex items-center">
+                Start Date
+                <InfoTooltip field="startDate" />
+              </label>
               <input
-                type="number"
-                name="duration"
-                value={formData.duration}
+                type="date"
+                name="startDate"
+                value={formData.startDate}
                 onChange={handleChange}
-                placeholder="Enter Value"
-                min="0"
-                className="flex-1 px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg"
+                required
+                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
               />
-              <select
-                name="durationUnit"
-                value={formData.durationUnit}
-                onChange={handleChange}
-                className="px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg"
-              >
-                {durationUnits.map((unit) => (
-                  <option key={unit} value={unit}>
-                    {unit}
-                  </option>
-                ))}
-              </select>
             </div>
-          </div>
 
-          {/* Total Fee */}
-          <div>
-            <label className="block text-lg font-semibold text-errandify-brown mb-2">
-              Total Fee
-            </label>
-            <div className="flex gap-3">
+            {/* Budget */}
+            <div>
+              <label className="block text-sm font-semibold text-errandify-brown mb-1">
+                Budget (SGD)
+              </label>
               <input
                 type="number"
                 name="budget"
                 value={formData.budget}
                 onChange={handleChange}
-                placeholder="Enter amount"
+                placeholder="0.00"
                 min="0"
                 step="0.01"
-                className="flex-1 px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg"
+                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
               />
-              <div className="px-4 py-3 border-b-2 border-gray-300 text-lg font-semibold text-errandify-brown">
-                SGD
+            </div>
+
+            {/* Duration */}
+            <div>
+              <label className="block text-sm font-semibold text-errandify-brown mb-1 flex items-center">
+                Duration
+                <InfoTooltip field="duration" />
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  name="duration"
+                  value={formData.duration}
+                  onChange={handleChange}
+                  placeholder="0"
+                  min="0"
+                  className="flex-1 px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                />
+                <select
+                  name="durationUnit"
+                  value={formData.durationUnit}
+                  onChange={handleChange}
+                  className="px-2 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                >
+                  {durationUnits.map((unit) => (
+                    <option key={unit} value={unit}>
+                      {unit}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
-          </div>
 
-          {/* Recurring Errand */}
-          <div>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="isRecurring"
-                checked={formData.isRecurring}
-                onChange={handleChange}
-                className="w-5 h-5 cursor-pointer"
-              />
-              <span className="text-lg font-semibold text-errandify-brown">
-                Do you want this errand to repeat on a regular schedule?
-              </span>
-            </label>
+            {/* Recurring */}
+            <div className="flex items-end">
+              <label className="flex items-center gap-2 cursor-pointer text-sm">
+                <input
+                  type="checkbox"
+                  name="isRecurring"
+                  checked={formData.isRecurring}
+                  onChange={handleChange}
+                  className="w-4 h-4 cursor-pointer"
+                />
+                <span className="font-semibold text-errandify-brown">
+                  Recurring
+                </span>
+                <InfoTooltip field="isRecurring" />
+              </label>
+            </div>
           </div>
 
           {/* Recurring Schedule (conditional) */}
           {formData.isRecurring && (
             <div>
-              <label className="block text-lg font-semibold text-errandify-brown mb-2">
-                Recurring Schedule
+              <label className="block text-sm font-semibold text-errandify-brown mb-1">
+                Schedule
               </label>
               <select
                 name="recurringSchedule"
                 value={formData.recurringSchedule}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg"
+                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
               >
                 <option value="">Select schedule</option>
                 <option value="daily">Daily</option>
@@ -289,11 +314,18 @@ export default function CreateErrandPage() {
           )}
 
           {/* Submit Button */}
-          <div className="fixed bottom-6 left-0 right-0 px-4 bg-gradient-to-t from-errandify-bg via-errandify-bg to-transparent pt-4">
+          <div className="pt-4 flex gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex-1 bg-gray-200 text-errandify-brown py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-sm"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={loading || !formData.title.trim() || !formData.startDate}
-              className="w-full bg-errandify-orange text-white py-4 rounded-xl font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+              className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               {loading ? '⏳ Creating...' : '✨ Post Errand'}
             </button>
