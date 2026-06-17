@@ -11,6 +11,7 @@ export default function CreateErrandPage() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
+    category: categoryId || '',
     title: '',
     description: '',
     startDate: '',
@@ -91,7 +92,7 @@ export default function CreateErrandPage() {
         {
           title: formData.title,
           description: formData.description,
-          category: categoryId,
+          category: formData.category,
           budget: formData.budget ? parseFloat(formData.budget) : null,
           deadline,
           isRecurring: formData.isRecurring,
@@ -179,17 +180,22 @@ export default function CreateErrandPage() {
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-semibold text-errandify-brown mb-1 flex items-center">
+            <label className="block text-sm font-semibold text-errandify-brown mb-1">
               Category
-              <InfoTooltip field="category" />
             </label>
             <select
               name="category"
-              value={categoryId || ''}
-              disabled
-              className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none text-gray-500 text-sm"
+              value={formData.category}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
             >
-              <option value="">{categoryNames[categoryId || ''] || 'Select Category'}</option>
+              <option value="">Select a category...</option>
+              {Object.entries(categoryNames).map(([id, name]) => (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              ))}
             </select>
           </div>
 

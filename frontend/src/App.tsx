@@ -57,31 +57,31 @@ export default function App() {
           path="/login"
           element={
             isAuthenticated ? (
-              <Navigate to="/category" replace />
+              <Navigate to="/" replace />
             ) : (
               <LoginPage onLogin={handleLogin} />
             )
           }
         />
 
-        {/* Category selection (post-auth, pre-dashboard) */}
+        {/* Create errand - direct, no category page needed */}
         <Route
-          path="/category"
+          path="/create-errand"
           element={
             isAuthenticated ? (
-              <CategorySelectionPage userRole={userRole} />
+              <CreateErrandPage />
             ) : (
               <Navigate to="/login" replace />
             )
           }
         />
 
-        {/* Create errand (asker flow) */}
+        {/* Category selection (kept for backward compatibility) */}
         <Route
-          path="/create-errand/:categoryId"
+          path="/category"
           element={
             isAuthenticated ? (
-              <CreateErrandPage />
+              <Navigate to="/create-errand" replace />
             ) : (
               <Navigate to="/login" replace />
             )
