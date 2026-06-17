@@ -291,18 +291,18 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
     console.log('[Hana TTS] Converting text to speech:', { language, textLength: text.length });
 
     // Map language to SSML voice name
-    // Using Azure Speech Synthesis voices optimized for Singapore
+    // Using Azure Speech Synthesis voices - all FEMALE voices
     const voiceMap: Record<string, { voice: string; lang: string }> = {
       en: {
-        voice: 'en-SG-LunaNeural', // Singapore English - Young female (age 20s)
+        voice: 'en-SG-LunaNeural', // Singapore English - Female (young, natural)
         lang: 'en-SG',
       },
       zh: {
-        voice: 'zh-CN-XiaohanNeural', // Mandarin - Young female (age 20s)
+        voice: 'zh-CN-XiaohanNeural', // Mandarin Chinese - Female (natural, warm)
         lang: 'zh-CN',
       },
       yue: {
-        voice: 'zh-HK-HiuGaaiNeural', // Cantonese - Young female (age 20s)
+        voice: 'zh-HK-HiuGaaiNeural', // Cantonese - Female (natural, friendly)
         lang: 'zh-HK',
       },
     };

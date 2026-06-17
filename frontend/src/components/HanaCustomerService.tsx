@@ -164,14 +164,14 @@ export default function HanaCustomerService() {
 
       // Female voice selection for warm, friendly Singaporean assistant
       const voiceMap: Record<Language, string> = {
-        en: 'Singapore Female', // Natural Singapore English female
-        zh: 'Chinese Female', // Mandarin Chinese - natural female
-        yue: 'Chinese Female', // Cantonese - natural female
+        en: 'Singapore Female', // Natural Singapore English - female
+        zh: 'Mandarin Female', // Mandarin Chinese - natural female voice
+        yue: 'Cantonese Female', // Cantonese - natural female voice
       };
 
       const voice = voiceMap[language] || voiceMap['en'];
 
-      console.log('[Hana] Speaking with voice:', voice);
+      console.log('[Hana] Speaking with voice:', voice, 'for language:', language);
 
       responsiveVoice.speak(text, voice, {
         rate: 1.0, // Natural speaking rate
