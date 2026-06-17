@@ -799,21 +799,26 @@ export default function CreateErrandPage() {
               </div>
             )}
 
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addSkill()}
-                placeholder="Add a skill (press Enter)"
-                className="flex-1 px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
-              />
-              <button
-                onClick={addSkill}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded font-semibold hover:bg-gray-200 text-sm"
-              >
-                Add
-              </button>
+            <div>
+              <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                Add a Skill
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addSkill()}
+                  placeholder="Add a skill (press Enter)"
+                  className="flex-1 px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                />
+                <button
+                  onClick={addSkill}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded font-semibold hover:bg-gray-200 text-sm"
+                >
+                  Add
+                </button>
+              </div>
             </div>
 
             {formData.skills.length > 0 && (
