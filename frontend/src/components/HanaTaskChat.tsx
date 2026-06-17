@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import HanaAvatar from './HanaAvatar';
 
 interface TaskData {
   title: string;
@@ -48,6 +49,7 @@ export default function HanaTaskChat({
   const [loading, setLoading] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -82,6 +84,11 @@ export default function HanaTaskChat({
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, message]);
+
+    // Simulate speaking duration based on content length
+    setIsSpeaking(true);
+    const speakingDuration = Math.min(content.length * 30, 3000); // 30ms per character, max 3s
+    setTimeout(() => setIsSpeaking(false), speakingDuration);
   };
 
   const addUserMessage = (content: string) => {
@@ -273,11 +280,10 @@ Ready to post this task?`;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full h-[600px] flex flex-col overflow-hidden">
-        {/* Header */}
+      <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full h-[700px] flex flex-col overflow-hidden">
+        {/* Header with Avatar */}
         <div className="bg-gradient-to-r from-pink-400 to-pink-500 p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">🌸</span>
+          <div className="flex items-center gap-3 flex-1">
             <div>
               <h2 className="font-bold text-white text-lg">Hana (Your AI Sister)</h2>
               <p className="text-pink-100 text-xs">Chat With Hana</p>
@@ -291,8 +297,13 @@ Ready to post this task?`;
           </button>
         </div>
 
+        {/* Animated Avatar */}
+        <div className="bg-gradient-to-b from-pink-50 to-white p-4 border-b border-pink-100">
+          <HanaAvatar isSpeaking={isSpeaking} isThinking={loading} />
+        </div>
+
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4 animate-fadeIn" style={{ maxHeight: 'calc(700px - 320px)' }}>
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -410,6 +421,32 @@ Ready to post this task?`;
             </div>
           </div>
         )}
+
+        <style>{`
+          @keyframes slideUp {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+            }
+            to {
+              opacity: 1;
+            }
+          }
+
+          .animate-fadeIn {
+            animation: fadeIn 0.3s ease-in;
+          }
+        `}</style>
       </div>
     </div>
   );
