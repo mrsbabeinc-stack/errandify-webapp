@@ -83,7 +83,7 @@ export default function HomePage({ userRole }: HomePageProps) {
               {categories.map((category) => (
                 <button
                   key={category.id}
-                  onClick={() => navigate(`/create-errand`)}
+                  onClick={() => navigate(`/create-errand?category=${category.id}`)}
                   className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:shadow-md bg-gradient-to-r ${category.color}`}
                   title={category.name}
                 >
