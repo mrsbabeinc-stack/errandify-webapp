@@ -8,13 +8,13 @@ export default function NotificationIcon({ unreadCount = 0 }: NotificationIconPr
   const [showDropdown, setShowDropdown] = useState(false);
 
   return (
-    <div className="fixed top-16 right-4 z-50">
+    <div className="relative">
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         className="relative flex items-center justify-center w-10 h-10 text-gray-600 hover:text-errandify-orange transition-colors"
         title="Notifications"
       >
-        <span className="text-2xl">💬</span>
+        <span className="text-xl">💬</span>
         {unreadCount > 0 && (
           <span className="absolute top-0 right-0 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full">
             {unreadCount > 9 ? '9+' : unreadCount}

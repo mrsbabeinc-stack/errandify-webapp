@@ -134,7 +134,7 @@ export default function CreateErrandPage() {
   );
 
   return (
-    <div className="min-h-screen bg-errandify-bg pt-4">
+    <div className="min-h-screen bg-errandify-bg">
       <div className="max-w-2xl mx-auto px-4">
         {/* Header */}
         <div className="mb-6">

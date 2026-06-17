@@ -13,12 +13,14 @@ interface LayoutProps {
 export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps) {
   return (
     <div className="flex flex-col h-screen bg-errandify-bg">
-      {/* Role Toggle - Top Left & Notification - Top Right */}
-      <RoleToggle currentRole={userRole} onRoleChange={onRoleChange} />
-      <NotificationIcon unreadCount={0} />
+      {/* Top Bar with Role Toggle & Notifications */}
+      <div className="bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center sticky top-0 z-50">
+        <RoleToggle currentRole={userRole} onRoleChange={onRoleChange} />
+        <NotificationIcon unreadCount={0} />
+      </div>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pb-20 pt-2">
+      <main className="flex-1 overflow-y-auto pb-20">
         <Outlet />
       </main>
 
