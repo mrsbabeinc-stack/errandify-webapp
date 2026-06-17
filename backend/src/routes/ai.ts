@@ -924,11 +924,24 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
     // Singapore locations
     const locations = ['orchard', 'marina bay', 'tampines', 'jurong', 'clementi', 'bishan', 'serangoon', 'bedok', 'geylang', 'east coast', 'hougang', 'punggol', 'everton', 'bukit timah', 'holland', 'tanglin'];
 
-    // Extract title - remove locations and prepositions first
+    // Extract title - remove locations, times, and dates first
     let titleText = cleaned;
+
+    // Remove locations
     for (const loc of locations) {
       titleText = titleText.replace(new RegExp(`\\s*(?:at|in|near|to)?\\s*${loc}\\b`, 'gi'), '');
     }
+
+    // Remove day names (monday, tuesday, etc. and abbreviations)
+    titleText = titleText.replace(/\s+(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun|today|tomorrow|tmr)\b/gi, '');
+
+    // Remove time patterns (9am, 4pm, morning, afternoon, etc.)
+    titleText = titleText.replace(/\s+(\d{1,2}(?:am|pm|:\d{2})|morning|afternoon|evening|night)\b/gi, '');
+
+    // Remove budget patterns ($50, budget 50, etc.)
+    titleText = titleText.replace(/\s*\$\s*\d+\b/g, '');
+    titleText = titleText.replace(/\s+budget\s+\d+\b/gi, '');
+
     let title = titleText.split(/at|in|on|by/)[0].trim().substring(0, 50) || input.substring(0, 50);
 
     // Extract category
