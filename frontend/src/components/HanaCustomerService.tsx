@@ -152,39 +152,79 @@ export default function HanaCustomerService() {
   };
 
   const speakWithBrowserTTS = (text: string) => {
-    const responsiveVoice = (window as any).responsiveVoice;
+    console.log('[Hana] Using Web Speech API TTS');
+    window.speechSynthesis.cancel();
 
-    if (responsiveVoice && responsiveVoice.isReady) {
-      console.log('[Hana] Using ResponsiveVoice AI TTS');
+    const utterance = new SpeechSynthesisUtterance(text);
 
-      // Map language to ResponsiveVoice female voices
-      const voiceMap: Record<Language, string> = {
-        en: 'UK English Female', // Professional UK female voice
-        zh: 'Chinese Female', // Chinese Mandarin female voice
-        yue: 'Chinese Female', // Cantonese (using Chinese Female as fallback)
-      };
+    // Map to system languages
+    const languageMap: Record<Language, string> = {
+      en: 'en-SG', // Singapore English
+      zh: 'zh-CN', // Mandarin Chinese
+      yue: 'zh-HK', // Cantonese
+    };
 
-      const voice = voiceMap[language] || voiceMap['en'];
+    utterance.lang = languageMap[language];
+    utterance.rate = 1.0; // Normal speech rate
+    utterance.pitch = 1.0; // Normal pitch
+    utterance.volume = 1.0; // Full volume
 
-      responsiveVoice.speak(text, voice, {
-        rate: 0.9,
-        onstart: () => {
-          console.log('[Hana] ResponsiveVoice started:', voice);
-          setIsSpeaking(true);
-        },
-        onend: () => {
-          console.log('[Hana] ResponsiveVoice finished');
-          setIsSpeaking(false);
-        },
-        onerror: (error: any) => {
-          console.error('[Hana] ResponsiveVoice error:', error);
-          setIsSpeaking(false);
-        },
+    // Get available voices and select female voice
+    const selectVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length === 0) {
+        console.warn('[Hana] No voices available');
+        return;
+      }
+
+      const langCode = languageMap[language].split('-')[0];
+
+      // Find female voice for the target language
+      const femaleVoice = voices.find(v => {
+        const voiceLang = v.lang.split('-')[0].toLowerCase();
+        const langMatch = voiceLang === langCode.toLowerCase();
+        // Explicitly look for female voices
+        const isFemale = !v.name.toLowerCase().includes('man') &&
+                        !v.name.toLowerCase().includes('male') &&
+                        (v.name.toLowerCase().includes('female') ||
+                         v.name.toLowerCase().includes('woman') ||
+                         v.name.toLowerCase().includes('samantha') ||
+                         v.name.toLowerCase().includes('victoria') ||
+                         v.name.toLowerCase().includes('siri'));
+        return langMatch && (isFemale || voices.length === 1);
       });
+
+      if (femaleVoice) {
+        utterance.voice = femaleVoice;
+        console.log('[Hana] Using voice:', femaleVoice.name);
+      } else {
+        console.log('[Hana] No female voice found, using default');
+      }
+    };
+
+    // Select voice immediately or after voices load
+    if (window.speechSynthesis.getVoices().length > 0) {
+      selectVoice();
     } else {
-      console.log('[Hana] ResponsiveVoice not available, using browser TTS');
-      fallbackBrowserTTS(text);
+      window.speechSynthesis.onvoiceschanged = selectVoice;
     }
+
+    utterance.onstart = () => {
+      console.log('[Hana] TTS started');
+      setIsSpeaking(true);
+    };
+
+    utterance.onend = () => {
+      console.log('[Hana] TTS finished');
+      setIsSpeaking(false);
+    };
+
+    utterance.onerror = (event: any) => {
+      console.error('[Hana] TTS error:', event.error);
+      setIsSpeaking(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
   };
 
   const fallbackBrowserTTS = (text: string) => {

@@ -243,57 +243,20 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
       return res.status(400).json({ error: 'Text required' });
     }
 
-    if (!config.qwen.apiKey) {
-      return res.status(500).json({ error: 'TTS service not configured' });
-    }
+    console.log('[Hana TTS] Converting text to speech:', { language, textLength: text.length });
 
-    // Map language to Alibaba voice
-    const voiceMap: Record<string, string> = {
-      en: 'en-US-neural-1', // English - Natural female voice
-      zh: 'zh-CN-neural-1', // Mandarin - Natural female voice
-      yue: 'zh-HK-neural-1', // Cantonese - Natural female voice
-    };
-
-    const voice = voiceMap[language] || voiceMap['en'];
-
-    console.log('[Hana TTS] Converting text to speech:', { language, voice, textLength: text.length });
-
-    const response = await axios.post(
-      'https://dashscope-intl.aliyuncs.com/api/v1/services/tts/text-to-speech',
-      {
-        model: 'tts-1',
-        input: {
-          text: text,
-        },
-        parameters: {
-          voice: voice,
-        },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${config.qwen.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        responseType: 'arraybuffer',
-      }
-    );
-
-    console.log('[Hana TTS] Audio generated successfully');
-
-    // Return audio as base64
-    const audioBase64 = Buffer.from(response.data).toString('base64');
+    // Use Google Cloud Text-to-Speech via REST API (free tier available)
+    // For now, return a placeholder and use client-side Google Translate
     res.json({
       success: true,
       data: {
-        audio: `data:audio/wav;base64,${audioBase64}`,
+        method: 'google-translate',
+        language,
+        text,
       },
     });
   } catch (error: any) {
-    console.error('TTS error:', {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
+    console.error('TTS error:', error.message);
     res.status(500).json({
       error: 'Failed to generate speech',
       message: error.message,
