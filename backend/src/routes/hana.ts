@@ -294,11 +294,11 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
     // Using Azure Speech Synthesis voices - all FEMALE voices
     const voiceMap: Record<string, { voice: string; lang: string }> = {
       en: {
-        voice: 'en-SG-LunaNeural', // Singapore English - Female (young, natural)
+        voice: 'en-SG-LunaNeural', // Singapore English - Younger, energetic female
         lang: 'en-SG',
       },
       zh: {
-        voice: 'zh-CN-XiaoxuanNeural', // Mandarin Chinese - Female (young, natural)
+        voice: 'zh-CN-XiaomoNeural', // Mandarin Chinese - FEMALE, young, energetic
         lang: 'zh-CN',
       },
       yue: {
@@ -309,11 +309,16 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
 
     const voiceConfig = voiceMap[language] || voiceMap['en'];
 
-    // Generate SSML with voice parameters for warm, passionate 20-year-old young female
-    // Add prosody for natural warmth and passion
+    // Generate SSML with voice parameters
+    // English: younger, more energetic
+    // Others: warm and friendly
+    const prosodySettings = language === 'en'
+      ? 'pitch="+15%" rate="1.05" contour="(0%,+25%) (100%,+20%)"' // Energetic, youthful
+      : 'pitch="+10%" rate="0.95" contour="(0%,+20%) (100%,+15%)"'; // Warm, friendly
+
     const ssml = `<speak version="1.0" xml:lang="${voiceConfig.lang}">
       <voice name="${voiceConfig.voice}">
-        <prosody pitch="+10%" rate="0.92" contour="(0%,+20%) (100%,+15%)">
+        <prosody ${prosodySettings}>
           ${text}
         </prosody>
       </voice>
