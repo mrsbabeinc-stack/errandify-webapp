@@ -148,7 +148,8 @@ CREATE TABLE disputes (
   opened_by INTEGER NOT NULL REFERENCES users(id),
   reason TEXT NOT NULL,
   status VARCHAR(50) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'resolved', 'settled')),
-  resolution TEXT,
+  ai_recommendation JSONB,
+  resolution JSONB,
   resolved_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
