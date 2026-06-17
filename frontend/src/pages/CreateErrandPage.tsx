@@ -102,19 +102,24 @@ export default function CreateErrandPage() {
         };
         setFormData(newFormData);
 
-        // Set postal code from prefilled data and trigger location update
+        // Set postal code and full address from prefilled data
         if (prefilledData.postalCode) {
           const code = prefilledData.postalCode;
           setPostalCode(code);
-          // Update location and address based on postal code
-          if (code.length === 6 && /^\d+$/.test(code)) {
-            const areaPrefix = code.substring(0, 2);
-            const areaData = postalCodeAreas[areaPrefix];
-            if (areaData) {
-              setFormData((prev) => ({
-                ...prev,
-                location: areaData.area,
-              }));
+
+          // Use full address from API if available
+          if (prefilledData.fullAddress) {
+            setFullAddress(prefilledData.fullAddress);
+          } else {
+            // Fallback: Update location and address based on postal code prefix
+            if (code.length === 6 && /^\d+$/.test(code)) {
+              const areaPrefix = code.substring(0, 2);
+              const areaData = postalCodeAreas[areaPrefix];
+              if (areaData) {
+                setFormData((prev) => ({
+                  ...prev,
+                  location: areaData.area,
+                }));
               setFullAddress(`1 ${areaData.building}, Unit: __, Singapore ${code}`);
             }
           }
