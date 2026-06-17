@@ -753,7 +753,7 @@ export default function CreateErrandPage() {
 
           {/* Section 3: Location - Only area shown here */}
           <div className="border-t pt-4 space-y-4">
-            <h3 className="font-bold text-errandify-brown text-sm">Location</h3>
+            <h3 className="font-bold text-errandify-brown text-sm">Errand Location</h3>
 
             {/* Remote Work Checkbox */}
             <label className="flex items-center gap-2">
@@ -773,78 +773,6 @@ export default function CreateErrandPage() {
               />
               <span className="text-sm text-gray-700">This is remote work (no specific location)</span>
             </label>
-
-            {/* Start Location Toggle and Fields - Only shown when NOT remote work */}
-            {!isRemoteWork && (
-              <>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={showStartLocation}
-                    onChange={(e) => setShowStartLocation(e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm text-gray-700">Start Location (Optional: If Location not Current Point)</span>
-                </label>
-
-                {/* Start Location - Only shown when toggled */}
-                {showStartLocation && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                        Where Errand Starts
-                      </label>
-                      <input
-                        type="text"
-                        name="startLocation"
-                        value={formData.startLocation}
-                        onChange={handleChange}
-                        placeholder="e.g., My home in Orchard, Office in Jurong"
-                        className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
-                      />
-                    </div>
-
-                    {/* Start Location Postal Code */}
-                    <div>
-                      <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                        Start Location Postal Code (Singapore)
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g., 082001"
-                        value={startLocationPostalCode}
-                        onChange={(e) => {
-                          const code = e.target.value.trim();
-                          setStartLocationPostalCode(code);
-                          if (code.length === 6 && /^\d+$/.test(code)) {
-                            const areaPrefix = code.substring(0, 2);
-                            const areaData = postalCodeAreas[areaPrefix];
-                            if (areaData) {
-                              setStartLocationFullAddress(`${areaData.area}, Singapore ${code}`);
-                            }
-                          }
-                        }}
-                        className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
-                      />
-                    </div>
-
-                    {/* Start Location Full Address */}
-                    <div>
-                      <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                        Start Location Full Address (Shown to Confirmed Doer - Add Unit Number if Required)
-                      </label>
-                      <textarea
-                        value={startLocationFullAddress}
-                        onChange={(e) => setStartLocationFullAddress(e.target.value)}
-                        placeholder="e.g., Block 1, Tanjong Pagar Plaza, Unit #5-10, Singapore 082001"
-                        rows={2}
-                        className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
-                      />
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
 
             {/* Postal Code and Full Address - Only shown when NOT remote work */}
             {!isRemoteWork && (
