@@ -12,13 +12,6 @@ interface TaskData {
   notes: string;
 }
 
-interface Message {
-  id: string;
-  role: 'hana' | 'user';
-  content: string;
-  timestamp: Date;
-}
-
 type TaskStep = 'start' | 'title' | 'location' | 'date' | 'budget' | 'notes' | 'review';
 
 interface HanaTaskCreationProps {
@@ -48,15 +41,7 @@ export default function HanaTaskCreation({
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [hanaMessage, setHanaMessage] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [hanaMessage]);
+  const [isExpressing, setIsExpressing] = useState(false);
 
   useEffect(() => {
     if (isOpen && !hanaMessage) {
@@ -67,6 +52,12 @@ export default function HanaTaskCreation({
   const initializeChat = () => {
     setHanaMessage("Hello! 🌸 I'm Hana. Let's create your task together!\n\nShare what you need done, your location, timing, and budget. I'll take care of the rest.");
     setCurrentStep('title');
+    triggerExpression();
+  };
+
+  const triggerExpression = () => {
+    setIsExpressing(true);
+    setTimeout(() => setIsExpressing(false), 2000);
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -76,6 +67,7 @@ export default function HanaTaskCreation({
     const userInput = input.trim();
     setInput('');
     setLoading(true);
+    triggerExpression();
 
     try {
       switch (currentStep) {
@@ -106,7 +98,6 @@ export default function HanaTaskCreation({
   const processTitle = async (input: string) => {
     setTaskData((prev) => ({ ...prev, title: input, description: input }));
 
-    // Detect category
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/detect-category`,
@@ -125,7 +116,7 @@ export default function HanaTaskCreation({
 
   const processLocation = async (input: string) => {
     setTaskData((prev) => ({ ...prev, location: input }));
-    setHanaMessage("Great! 📅 When do you need it done?\n(e.g., Tomorrow, Next Saturday, 25 Dec at 2pm)");
+    setHanaMessage("Great! 📅 When do you need it done?\n(e.g., Tomorrow, Saturday, 25 Dec at 2pm)");
     setCurrentStep('date');
   };
 
@@ -144,14 +135,14 @@ export default function HanaTaskCreation({
       setTaskData((prev) => ({ ...prev, date: input, time: '10:00' }));
     }
 
-    setHanaMessage("Perfect! 💰 What's your budget?\n(in SGD, e.g., 50, 100, 200)");
+    setHanaMessage("Perfect! 💰 What's your budget? (in SGD)");
     setCurrentStep('budget');
   };
 
   const processBudget = async (input: string) => {
     const budget = input.replace(/[^\d.]/g, '');
     setTaskData((prev) => ({ ...prev, budget }));
-    setHanaMessage("Excellent! 📝 Any special requirements or notes?\n(You can type 'skip' if none)");
+    setHanaMessage("Any special notes? (type 'skip' if none)");
     setCurrentStep('notes');
   };
 
@@ -160,15 +151,7 @@ export default function HanaTaskCreation({
       setTaskData((prev) => ({ ...prev, notes: input }));
     }
 
-    const summary = `Perfect! Here's your task summary:
-
-📝 ${taskData.title}
-📍 ${taskData.location}
-📅 ${new Date(taskData.date).toLocaleDateString('en-SG')} at ${taskData.time}
-💰 SGD $${taskData.budget}
-${taskData.notes ? `📌 ${taskData.notes}` : ''}
-
-Ready to post?`;
+    const summary = `✓ ${taskData.title}\n📍 ${taskData.location}\n📅 ${new Date(taskData.date).toLocaleDateString('en-SG')} ${taskData.time}\n💰 SGD $${taskData.budget}\n\nReady to post?`;
 
     setHanaMessage(summary);
     setCurrentStep('review');
@@ -177,7 +160,6 @@ Ready to post?`;
   const handleConfirmTask = async () => {
     setLoading(true);
     try {
-      // Content filter check
       const filterResponse = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/content-filter`,
         {
@@ -187,12 +169,11 @@ Ready to post?`;
       );
 
       if (filterResponse.data.data.status === 'FLAG') {
-        setHanaMessage('⚠️ This task needs review before it goes live. Our team will check it shortly.');
+        setHanaMessage('⚠️ This task needs review. Our team will check it shortly.');
         setCurrentStep('start');
         return;
       }
 
-      // Post the task
       const token = localStorage.getItem('token');
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
@@ -210,7 +191,7 @@ Ready to post?`;
         }
       );
 
-      setHanaMessage('✅ Task posted successfully!\n\nWould you like to create another task?');
+      setHanaMessage('✅ Task posted!\n\nCreate another?');
       setCurrentStep('start');
       setTaskData({
         title: '',
@@ -227,7 +208,7 @@ Ready to post?`;
         onTaskCreated(response.data.data.id);
       }
     } catch (err: any) {
-      setHanaMessage(`❌ Error: ${err.response?.data?.error || 'Failed to create task'}`);
+      setHanaMessage(`❌ ${err.response?.data?.error || 'Failed to create task'}`);
     } finally {
       setLoading(false);
     }
@@ -236,115 +217,115 @@ Ready to post?`;
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-errandify-orange to-orange-500 px-8 py-6 flex items-center justify-between">
+    <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-end justify-center p-0">
+      {/* Compact Half-Page Modal */}
+      <div className="bg-white rounded-t-3xl shadow-2xl w-full h-[95vh] max-w-2xl flex flex-col overflow-hidden">
+        {/* Header - Compact */}
+        <div className="bg-errandify-orange px-6 py-4 flex items-center justify-between flex-shrink-0">
           <div>
-            <h1 className="text-2xl font-bold text-white">Hana (Your AI Sister)</h1>
-            <p className="text-orange-100 text-sm mt-1">Chat With Hana</p>
+            <h1 className="text-xl font-bold text-white">Hana (Your AI Sister)</h1>
+            <p className="text-orange-100 text-xs">Chat With Hana</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={onSwitchToManual}
-              className="text-white hover:text-orange-100 font-semibold text-sm transition-colors underline"
+              className="text-white hover:text-orange-100 font-semibold text-sm underline"
             >
               Manual Input
             </button>
             <button
               onClick={onClose}
-              className="text-white hover:text-orange-100 text-3xl font-light leading-none"
+              className="text-white hover:text-orange-100 text-2xl font-light"
             >
               ✕
             </button>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-12">
-          {/* Hana Avatar Section */}
-          <div className="flex justify-center items-start">
-            <div className="relative">
-              {/* Speech Bubble */}
-              {hanaMessage && (
-                <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-96 z-10">
-                  <div className="bg-errandify-bg border-2 border-errandify-orange rounded-3xl px-8 py-6 shadow-xl">
-                    <p className="text-gray-800 text-center whitespace-pre-line leading-relaxed text-base">
-                      {hanaMessage}
-                    </p>
-                    {/* Tail */}
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full">
-                      <div className="w-0 h-0 border-l-12 border-r-12 border-t-12 border-l-transparent border-r-transparent border-t-errandify-bg"></div>
-                    </div>
-                  </div>
-                </div>
-              )}
+        {/* Main Content - Compact Layout */}
+        <div className="flex-1 overflow-y-auto flex flex-col">
+          {/* Top Section: Speech Bubble */}
+          {hanaMessage && (
+            <div className="px-6 pt-4 flex-shrink-0">
+              <div className="bg-errandify-bg border-2 border-errandify-orange rounded-3xl px-6 py-4 shadow-md animate-slideDown">
+                <p className="text-gray-800 text-center whitespace-pre-line leading-relaxed text-sm">
+                  {hanaMessage}
+                </p>
+              </div>
+            </div>
+          )}
 
-              {/* Hana Avatar Image - Half Body */}
+          {/* Middle Section: Hana Image - Compressed */}
+          <div className="flex-1 flex items-center justify-center overflow-hidden px-4 py-4">
+            <div
+              className={`transition-all duration-500 ${
+                isExpressing ? 'scale-105' : 'scale-100'
+              }`}
+            >
               <img
                 src="/images/Hana_Pose_2_4K.png"
                 alt="Hana"
-                className="w-80 h-auto object-contain drop-shadow-2xl"
+                className="h-96 w-auto object-contain drop-shadow-xl"
               />
             </div>
           </div>
 
-          {/* Input Area */}
-          <div className="mt-8" ref={messagesEndRef}>
+          {/* Bottom Section: Input - Always Visible */}
+          <div className="bg-white border-t border-gray-200 px-6 py-4 flex-shrink-0">
             {currentStep !== 'review' && currentStep !== 'start' && (
-              <form onSubmit={handleSendMessage} className="flex gap-4">
+              <form onSubmit={handleSendMessage} className="flex gap-3">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type your answer here..."
-                  className="flex-1 px-6 py-4 border-2 border-errandify-orange border-opacity-30 rounded-full focus:outline-none focus:border-errandify-orange text-lg"
+                  placeholder="Type here..."
+                  className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-full focus:outline-none focus:border-opacity-100 text-sm"
                   disabled={loading}
                   autoFocus
                 />
                 <button
                   type="submit"
                   disabled={loading || !input.trim()}
-                  className="px-8 py-4 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-lg"
+                  className="px-6 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
                 >
-                  {loading ? '...' : '→'}
+                  {loading ? '•••' : '→'}
                 </button>
               </form>
             )}
 
             {currentStep === 'review' && (
-              <div className="flex gap-4 justify-center">
+              <div className="flex gap-3">
                 <button
                   onClick={handleConfirmTask}
                   disabled={loading}
-                  className="px-8 py-4 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 disabled:opacity-50 text-lg"
+                  className="flex-1 px-4 py-3 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 disabled:opacity-50 text-sm"
                 >
-                  {loading ? 'Posting...' : '✓ Post Task'}
+                  {loading ? 'Posting...' : '✓ Post'}
                 </button>
                 <button
                   onClick={() => {
                     setCurrentStep('notes');
-                    setHanaMessage("Let me know if you'd like to change anything.");
+                    setHanaMessage("Let me know what to change.");
                   }}
                   disabled={loading}
-                  className="px-8 py-4 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 text-lg"
+                  className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 text-sm"
                 >
                   Edit
                 </button>
               </div>
             )}
 
-            {currentStep === 'start' && hanaMessage.includes('successfully') && (
-              <div className="flex gap-4 justify-center">
+            {currentStep === 'start' && hanaMessage.includes('✅') && (
+              <div className="flex gap-3">
                 <button
                   onClick={initializeChat}
-                  className="px-8 py-4 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 text-lg"
+                  className="flex-1 px-4 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 text-sm"
                 >
-                  + Create New Task
+                  + New Task
                 </button>
                 <button
                   onClick={onClose}
-                  className="px-8 py-4 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 text-lg"
+                  className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 text-sm"
                 >
                   Close
                 </button>
@@ -353,6 +334,23 @@ Ready to post?`;
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-slideDown {
+          animation: slideDown 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
