@@ -36,38 +36,26 @@ export default function LandingPage() {
             <h2 className="text-3xl font-bold text-gray-900 mb-3">Meet Our Friends</h2>
             <p className="text-gray-700 font-semibold mb-6">Esha, Lian, Hana & Piers are here to help!</p>
 
-            {/* Character Avatars Grid */}
-            <div className="grid grid-cols-2 gap-4 mt-6 w-full">
-              {/* Esha */}
-              <div className="flex flex-col items-center">
-                <div className="w-20 h-20 rounded-full border-3 border-errandify-orange overflow-hidden bg-gray-200">
-                  <img src="/images/Esha_Sora_4K.png" alt="Esha" className="w-full h-full object-cover" />
-                </div>
-                <p className="text-xs text-gray-700 font-semibold mt-2">Esha</p>
+            {/* Family Photo - Layered Composition */}
+            <div className="relative w-full h-48 mt-6 flex justify-center items-end">
+              {/* Back layer: Lian (far back-left) */}
+              <div className="absolute left-0 bottom-12 z-10 w-20 h-28 rounded-lg border-3 border-errandify-orange overflow-hidden bg-gray-200 opacity-80">
+                <img src="/images/Lian_4K.png" alt="Lian" className="w-full h-full object-cover object-top" />
               </div>
 
-              {/* Lian */}
-              <div className="flex flex-col items-center">
-                <div className="w-20 h-20 rounded-full border-3 border-errandify-orange overflow-hidden bg-gray-200">
-                  <img src="/images/Lian_4K.png" alt="Lian" className="w-full h-full object-cover" />
-                </div>
-                <p className="text-xs text-gray-700 font-semibold mt-2">Lian</p>
+              {/* Back layer: Piers (far back-right) */}
+              <div className="absolute right-0 bottom-12 z-10 w-20 h-28 rounded-lg border-3 border-errandify-orange overflow-hidden bg-gray-200 opacity-80">
+                <img src="/images/Piers_4K.png" alt="Piers" className="w-full h-full object-cover object-top" />
               </div>
 
-              {/* Hana */}
-              <div className="flex flex-col items-center">
-                <div className="w-20 h-20 rounded-full border-3 border-errandify-orange overflow-hidden bg-gray-200">
-                  <img src="/images/Hana_Pose_1_4K.png" alt="Hana" className="w-full h-full object-cover" />
-                </div>
-                <p className="text-xs text-gray-700 font-semibold mt-2">Hana</p>
+              {/* Front layer: Esha (front-left) */}
+              <div className="relative z-20 -mr-2 w-24 h-36 rounded-lg border-3 border-errandify-orange overflow-hidden bg-gray-200">
+                <img src="/images/Esha_Sora_4K.png" alt="Esha" className="w-full h-full object-cover object-top" />
               </div>
 
-              {/* Piers */}
-              <div className="flex flex-col items-center">
-                <div className="w-20 h-20 rounded-full border-3 border-errandify-orange overflow-hidden bg-gray-200">
-                  <img src="/images/Piers_4K.png" alt="Piers" className="w-full h-full object-cover" />
-                </div>
-                <p className="text-xs text-gray-700 font-semibold mt-2">Piers</p>
+              {/* Front layer: Hana (front-center/right) */}
+              <div className="relative z-20 -ml-2 w-24 h-36 rounded-lg border-3 border-errandify-orange overflow-hidden bg-gray-200">
+                <img src="/images/Hana_Pose_1_4K.png" alt="Hana" className="w-full h-full object-cover object-top" />
               </div>
             </div>
           </div>
