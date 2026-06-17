@@ -187,53 +187,60 @@ export default function HanaCustomerService() {
       zh: 'zh-CN',
       yue: 'zh-HK',
     };
-    utterance.lang = languageMap[language];
+
+    const targetLang = languageMap[language];
+    utterance.lang = targetLang;
 
     // Get available voices
     const voices = window.speechSynthesis.getVoices();
-    console.log('[Hana] Available voices for', language + ':', voices.filter(v => v.lang.includes(languageMap[language].split('-')[0])).map(v => v.name));
 
-    const targetLang = languageMap[language].split('-')[0];
-    const matchingVoices = voices.filter(v => v.lang.toLowerCase().startsWith(targetLang.toLowerCase()));
+    // Filter voices for exact language match
+    const matchingVoices = voices.filter(v => {
+      const voiceLang = v.lang.toLowerCase();
+      return voiceLang.startsWith(targetLang.split('-')[0].toLowerCase());
+    });
 
-    // For Chinese, prefer female voices (Mei-Jia, Sin-Ji, Victoria, etc.) - avoid male names
-    const maleNames = ['Li-Mu', 'Lü-Si', 'Lu-Si', 'Ting-Ting', 'Fang-Fang'];
-    let selectedVoice = matchingVoices.find(v => !maleNames.some(m => v.name.includes(m)));
+    console.log('[Hana] Language:', language, 'Target Lang:', targetLang);
+    console.log('[Hana] Matching voices:', matchingVoices.map(v => ({ name: v.name, lang: v.lang })));
 
-    // If no female voice found, try to skip the first one (often male)
-    if (!selectedVoice && matchingVoices.length > 1) {
-      selectedVoice = matchingVoices[1];
-    } else if (!selectedVoice && matchingVoices.length > 0) {
-      selectedVoice = matchingVoices[0];
-    }
+    // Blacklist male voices and select female
+    const malePatterns = ['Li-Mu', 'Lü-Si', 'Lu-Si', 'male', 'man'];
+    const femaleVoices = matchingVoices.filter(v =>
+      !malePatterns.some(pattern => v.name.toLowerCase().includes(pattern.toLowerCase()))
+    );
+
+    let selectedVoice = femaleVoices[0] || matchingVoices[0];
 
     if (selectedVoice) {
       utterance.voice = selectedVoice;
-      console.log('[Hana] Selected female voice for', language + ':', selectedVoice.name);
-    } else {
-      console.log('[Hana] No voice found for language:', language);
+      console.log('[Hana] SELECTED voice for', language + ':', selectedVoice.name, 'lang:', selectedVoice.lang);
     }
 
     // Adjust voice settings by language
-    if (language === 'zh' || language === 'yue') {
-      // Warm, passionate 20-year-old Chinese voice (not sharp, very caring)
-      utterance.rate = 0.85; // Much slower for warmth and passion
-      utterance.pitch = 1.15; // Lower pitch (less sharp), more natural and warm
+    if (language === 'zh') {
+      // Mandarin: warm, passionate, not sharp
+      utterance.rate = 0.85;
+      utterance.pitch = 1.15;
+      utterance.volume = 1.0;
+    } else if (language === 'yue') {
+      // Cantonese: warm, passionate, not sharp
+      utterance.rate = 0.85;
+      utterance.pitch = 1.15;
       utterance.volume = 1.0;
     } else {
-      // English: energetic, youthful, warm female
-      utterance.rate = 1.1; // Energetic but not too fast
-      utterance.pitch = 1.25; // Higher pitch for young female sound
+      // English: energetic, youthful, warm
+      utterance.rate = 1.1;
+      utterance.pitch = 1.25;
       utterance.volume = 1.0;
     }
 
     utterance.onstart = () => {
-      console.log('[Hana] TTS started with voice:', utterance.voice?.name);
+      console.log('[Hana] Speaking in', language, 'with voice:', utterance.voice?.name);
       setIsSpeaking(true);
     };
 
     utterance.onend = () => {
-      console.log('[Hana] TTS finished');
+      console.log('[Hana] Finished speaking');
       setIsSpeaking(false);
     };
 
