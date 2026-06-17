@@ -12,6 +12,7 @@ import paymentRoutes from './routes/payment.js';
 import jobsRoutes from './routes/jobs.js';
 import messagesRoutes from './routes/messages.js';
 import disputesRoutes from './routes/disputes.js';
+import notificationsRoutes from './routes/notifications.js';
 import { startCrons } from './cron.js';
 
 const app = express();
@@ -36,6 +37,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/disputes', disputesRoutes);
+app.use('/api/notifications', notificationsRoutes);
 app.use('/api', hanaRoutes);
 
 // Error handling

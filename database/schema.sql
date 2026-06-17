@@ -120,6 +120,18 @@ CREATE TABLE task_messages (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Notifications table
+CREATE TABLE notifications (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  title VARCHAR(255) NOT NULL,
+  body TEXT NOT NULL,
+  type VARCHAR(50) NOT NULL,
+  read BOOLEAN DEFAULT FALSE,
+  action_url VARCHAR(500),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Task execution photos table (for proof of work)
 CREATE TABLE task_photos (
   id SERIAL PRIMARY KEY,
@@ -179,3 +191,6 @@ CREATE INDEX idx_disputes_status ON disputes(status);
 CREATE INDEX idx_task_messages_task_id ON task_messages(task_id);
 CREATE INDEX idx_task_messages_sender_id ON task_messages(sender_id);
 CREATE INDEX idx_task_messages_created_at ON task_messages(created_at);
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX idx_notifications_read ON notifications(read);
+CREATE INDEX idx_notifications_created_at ON notifications(created_at);
