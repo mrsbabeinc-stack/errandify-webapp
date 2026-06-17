@@ -339,8 +339,8 @@ export default function CreateErrandPage() {
 
   // Auto-apply AI suggestions when they arrive
   useEffect(() => {
-    // Update category if AI has a suggestion
-    if (aiSuggestions.suggestedCategory) {
+    // Update category if AI has a suggestion and user hasn't selected one yet
+    if (aiSuggestions.suggestedCategory && !formData.category) {
       setFormData((prev) => ({
         ...prev,
         category: aiSuggestions.suggestedCategory,
@@ -349,20 +349,16 @@ export default function CreateErrandPage() {
 
     // Description: show as suggestion only, don't auto-apply (user must approve)
 
-    // Update budget if AI has a suggestion
-    if (aiSuggestions.suggestedBudget) {
-      setFormData((prev) => ({
-        ...prev,
-        budget: aiSuggestions.suggestedBudget?.toString() || '',
-      }));
-    }
+    // Budget: show as suggestion only - don't auto-apply since extraction already handles it
+    // (The frontend extraction in handleTitleChange gets budget from raw input,
+    //  so we don't want backend suggestion to overwrite it)
 
     // Notes: show as suggestion only, don't auto-apply (user must approve)
 
     // Skills: show as suggestions only, don't auto-apply (user must approve)
 
     // Certifications: show as suggestions only, don't auto-apply (user must approve)
-  }, [aiSuggestions]);
+  }, [aiSuggestions, formData.category]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
