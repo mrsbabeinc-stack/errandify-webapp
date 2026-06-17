@@ -30,8 +30,13 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
   const handleHanaComplete = (taskData: TaskData) => {
     setTaskDataFromHana(taskData);
     setShowHanaChat(false);
-    // Navigate to create errand page and let it know about pre-filled data
-    window.location.href = `/create-errand?prefilled=${encodeURIComponent(JSON.stringify(taskData))}`;
+
+    // Switch to asker role and navigate to create errand with prefilled data
+    onRoleChange('asker');
+
+    setTimeout(() => {
+      window.location.href = `/create-errand?prefilled=${encodeURIComponent(JSON.stringify(taskData))}`;
+    }, 100);
   };
 
   return (
