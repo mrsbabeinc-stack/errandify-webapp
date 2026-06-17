@@ -39,8 +39,8 @@ export default function HanaAnimatedAvatar({
   }, [isSpeaking, message, onSpeakingEnd]);
 
   const selectFemaleVoice = (utterance: SpeechSynthesisUtterance, allVoices: SpeechSynthesisVoice[]) => {
-    // Explicit female voice names
-    const femaleNames = ['Moira', 'Samantha', 'Victoria', 'Fiona', 'Karen', 'Susan', 'Zira', 'Cortana'];
+    // Prioritize Diana, then other female voices
+    const femaleNames = ['Diana', 'Moira', 'Samantha', 'Victoria', 'Fiona', 'Karen', 'Susan', 'Zira', 'Cortana'];
 
     let selectedVoice = null;
 
