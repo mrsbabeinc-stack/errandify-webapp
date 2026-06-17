@@ -10,6 +10,7 @@ interface ErrandDetail {
   status: string;
   budget?: number;
   deadline?: string;
+  askerId?: number;
   asker?: { name: string; mobile: string };
   createdAt: string;
 }
@@ -20,6 +21,15 @@ export default function ErrandDetailPage() {
   const [errand, setErrand] = useState<ErrandDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setCurrentUserId(user.id);
+    }
+  }, []);
 
   useEffect(() => {
     fetchErrandDetail();
@@ -95,7 +105,7 @@ export default function ErrandDetailPage() {
           ← Back
         </button>
 
-        {/* Main Task Card */}
+        {/* Main Errand Card */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header Section */}
           <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-4">
@@ -136,7 +146,7 @@ export default function ErrandDetailPage() {
             {errand.description && (
               <div>
                 <h2 className="font-semibold text-errandify-brown mb-2 text-base">
-                  About This Task
+                  About This Errand
                 </h2>
                 <p className="text-sm text-gray-700 leading-relaxed">
                   {errand.description}
@@ -203,11 +213,15 @@ export default function ErrandDetailPage() {
             </div>
 
             {/* Action Button */}
-            {errand.status === 'open' && (
+            {errand.status === 'open' && currentUserId !== errand.askerId ? (
               <button className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2">
-                Accept This Task
+                Accept This Errand
               </button>
-            )}
+            ) : errand.status === 'open' && currentUserId === errand.askerId ? (
+              <div className="w-full bg-blue-100 text-blue-700 py-3 rounded-lg font-semibold text-center text-base mt-2">
+                You posted this errand
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

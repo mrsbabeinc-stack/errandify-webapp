@@ -70,7 +70,7 @@ export default function BrowseErrandsPage() {
           ← Back
         </button>
         <h1 className="text-3xl font-bold text-errandify-brown mb-2">
-          Available Tasks
+          Available Errands
         </h1>
         <p className="text-gray-600">
           Category: <span className="font-semibold">{categoryNames[categoryId || ''] || categoryId}</span>
@@ -85,11 +85,11 @@ export default function BrowseErrandsPage() {
 
       {loading ? (
         <div className="text-center py-8">
-          <p className="text-gray-600">Loading tasks...</p>
+          <p className="text-gray-600">Loading errands...</p>
         </div>
       ) : errands.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-600 mb-4">No tasks available in this category yet.</p>
+          <p className="text-gray-600 mb-4">No errands available in this category yet.</p>
           <button
             onClick={() => navigate('/browse-errands')}
             className="text-errandify-orange font-semibold"

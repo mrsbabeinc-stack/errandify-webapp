@@ -18,7 +18,7 @@ export default function HanaAssistant({ isOpen: initialOpen = false }: HanaAssis
     {
       id: '1',
       role: 'assistant',
-      content: "Hello! I'm Hana. 🌸 I'm here to help you post tasks or answer questions. What do you need?",
+      content: "Hello! I'm Hana. 🌸 I'm here to help you post errands or answer questions. What do you need?",
       timestamp: new Date(),
     },
   ]);

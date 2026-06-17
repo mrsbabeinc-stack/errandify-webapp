@@ -106,12 +106,12 @@ export default function CategorySelectionPage({ userRole }: CategorySelectionPag
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-errandify-brown mb-2">
-          {userRole === 'asker' ? 'What do you need help with?' : 'What tasks interest you?'}
+          {userRole === 'asker' ? 'What do you need help with?' : 'What errands interest you?'}
         </h1>
         <p className="text-gray-600">
           {userRole === 'asker'
             ? 'Select a category to post your errand'
-            : 'Choose what kind of tasks you want to help with'}
+            : 'Choose what kind of errands you want to help with'}
         </p>
       </div>
 

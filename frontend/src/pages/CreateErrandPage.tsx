@@ -52,9 +52,9 @@ export default function CreateErrandPage() {
   };
 
   const tooltips: Tooltip = {
-    startDate: 'When do you need this task done?',
-    duration: 'How long will this task take?',
-    isRecurring: 'Does this task repeat regularly?',
+    startDate: 'When do you need this errand done?',
+    duration: 'How long will this errand take?',
+    isRecurring: 'Does this errand repeat regularly?',
   };
 
   const durationUnits = ['Min', 'Hr', 'Week', 'Month'];
@@ -419,7 +419,7 @@ export default function CreateErrandPage() {
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder={aiSuggestions.suggestedDescription || 'Describe your task...'}
+              placeholder={aiSuggestions.suggestedDescription || 'Describe your errand...'}
               rows={2}
               className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm resize-none"
             />

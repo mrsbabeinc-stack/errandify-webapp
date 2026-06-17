@@ -113,7 +113,7 @@ export default function HomePage({ userRole }: HomePageProps) {
                 onClick={() => navigate(userRole === 'asker' ? '/create-errand' : '/errands')}
                 className="bg-errandify-orange text-white px-6 py-2 rounded-lg font-semibold hover:bg-opacity-90 text-sm inline-block"
               >
-                {userRole === 'asker' ? 'Post an Errand' : 'Browse Tasks'}
+                {userRole === 'asker' ? 'Post an Errand' : 'Browse Errands'}
               </button>
             </div>
           ) : (
@@ -211,7 +211,7 @@ export default function HomePage({ userRole }: HomePageProps) {
                       onClick={() => navigate(`/errand/${errand.id}`)}
                       className="w-full bg-errandify-orange text-white py-2 rounded-lg font-semibold hover:bg-opacity-90 text-sm mt-2"
                     >
-                      {userRole === 'asker' ? 'View Details' : 'Accept Task'}
+                      {userRole === 'asker' ? 'View Details' : 'Accept Errand'}
                     </button>
                   </div>
                 )}

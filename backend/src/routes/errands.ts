@@ -113,6 +113,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         isRecurring: errand.is_recurring,
         recurringConfig: errand.recurring_config ? JSON.parse(errand.recurring_config) : null,
         sessions: sessions.length > 0 ? sessions : undefined,
+        askerId: errand.asker_id,
         asker: askerResult.rows[0],
         createdAt: errand.created_at,
       },
