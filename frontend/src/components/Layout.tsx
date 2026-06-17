@@ -16,7 +16,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
       <RoleToggle currentRole={userRole} onRoleChange={onRoleChange} />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pb-20">
+      <main className="flex-1 overflow-y-auto pb-32">
         <Outlet />
       </main>
 
