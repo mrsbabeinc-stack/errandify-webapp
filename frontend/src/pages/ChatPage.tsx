@@ -4,16 +4,16 @@ interface ChatPageProps {
 
 export default function ChatPage({ userRole }: ChatPageProps) {
   return (
-    <div className="px-4 py-6">
-      <h1 className="text-3xl font-bold text-errandify-brown mb-4">Messages</h1>
-      <p className="text-gray-600 mb-6">
+    <div className="px-4 py-4 max-w-3xl mx-auto">
+      <h1 className="text-lg font-bold text-errandify-brown mb-2">Messages</h1>
+      <p className="text-xs text-gray-600 mb-4">
         Chat with users about errands
       </p>
 
       {/* TODO: Implement real-time chat with Qwen AI integration */}
-      <div className="grid gap-4">
-        <div className="bg-white rounded-lg p-4 shadow">
-          <p className="text-gray-500">Chat interface coming soon...</p>
+      <div className="grid gap-2">
+        <div className="bg-white rounded-lg p-3 shadow-sm">
+          <p className="text-sm text-gray-500">Chat interface coming soon...</p>
         </div>
       </div>
     </div>
