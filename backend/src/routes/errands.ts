@@ -160,11 +160,26 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { title, description, category, location, budget, deadline, certifications, isRecurring, repeatEvery, repeatUnit, occurrences } = req.body;
+    const askerId = parseInt(req.userId || '0', 10);
+
+    console.log('[DEBUG] POST /api/errands called:', {
+      userId: askerId,
+      title,
+      category,
+      budget,
+      deadline,
+    });
 
     if (!title || !category) {
+      console.error('[DEBUG] Missing required fields:', { title, category });
       return res
         .status(400)
         .json({ error: 'title and category required' });
+    }
+
+    if (!askerId || askerId === 0) {
+      console.error('[DEBUG] Invalid userId:', askerId);
+      return res.status(400).json({ error: 'Invalid user ID' });
     }
 
     // Extract postal code from location for matching/filtering
@@ -184,7 +199,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          RETURNING id, title, description, category, status, budget, deadline, certifications, is_recurring, recurring_config, created_at`,
         [
-          req.userId,
+          askerId,
           title,
           description || null,
           category,
@@ -261,9 +276,18 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     } finally {
       client.release();
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create errand error:', error);
-    res.status(500).json({ error: 'Failed to create errand' });
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack,
+    });
+    res.status(500).json({
+      error: 'Failed to create errand',
+      details: error.message
+    });
   }
 });
 
