@@ -6,9 +6,10 @@ export default function CreateErrandPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const urlCategory = searchParams.get('category') || categoryId || '';
 
   const [formData, setFormData] = useState({
-    category: categoryId || '',
+    category: urlCategory,
     title: '',
     description: '',
     location: '',
