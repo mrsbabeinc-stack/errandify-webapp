@@ -108,11 +108,14 @@ export default function HanaTaskCreation({
 
       setTaskData(updatedTaskData);
 
-      // Show summary for confirmation
-      const summary = buildSummary(updatedTaskData);
-      setHanaMessage(summary + "\n\nDoes this look good?");
-      setCurrentStep('confirm');
+      // Auto-proceed to form - skip confirmation
+      setHanaMessage('✅ Got it! Taking you to the form now...');
       triggerSpeaking();
+
+      // Auto-fill form and proceed after a short delay
+      setTimeout(() => {
+        onComplete(updatedTaskData);
+      }, 1000);
     } catch (err: any) {
       console.error('Extraction error:', err);
       const errorMsg = err.response?.data?.error || err.message || 'Unknown error';
