@@ -127,7 +127,7 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
             {/* Quick Demo Accounts */}
             <div className="mt-6 pt-6 border-t border-gray-200">
               <p className="text-xs text-gray-600 text-center mb-3 font-semibold">
-                🧪 Quick Demo Accounts:
+                🧪 Quick Demo Accounts (Can be both Asker & Doer):
               </p>
               <div className="space-y-2">
                 <button
@@ -139,7 +139,7 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
                   disabled={loading}
                   className="w-full py-2 px-3 bg-blue-50 border border-blue-300 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-100 transition-colors disabled:opacity-50"
                 >
-                  👩 Sarah (Asker)
+                  👩 Sarah - (98765432)
                 </button>
                 <button
                   type="button"
@@ -150,9 +150,12 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
                   disabled={loading}
                   className="w-full py-2 px-3 bg-green-50 border border-green-300 text-green-700 rounded-lg text-sm font-semibold hover:bg-green-100 transition-colors disabled:opacity-50"
                 >
-                  👨 John (Doer)
+                  👨 John - (87654321)
                 </button>
               </div>
+              <p className="text-xs text-gray-500 text-center mt-3 italic">
+                💡 Switch roles anytime from Profile → Role Toggle (top)
+              </p>
             </div>
           </form>
         ) : (
