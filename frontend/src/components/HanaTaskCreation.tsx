@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import HanaAnimatedAvatar from './HanaAnimatedAvatar';
 
 interface TaskData {
   title: string;
@@ -42,6 +43,10 @@ export default function HanaTaskCreation({
   const [loading, setLoading] = useState(false);
   const [hanaMessage, setHanaMessage] = useState('');
   const [isExpressing, setIsExpressing] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     if (isOpen && !hanaMessage) {
@@ -56,15 +61,77 @@ export default function HanaTaskCreation({
   };
 
   const triggerExpression = () => {
-    setIsExpressing(true);
-    setTimeout(() => setIsExpressing(false), 2000);
+    setIsSpeaking(true);
+    // Calculate speaking duration based on message length
+    const duration = Math.max(2000, Math.min(hanaMessage.length * 50, 8000));
+    setTimeout(() => setIsSpeaking(false), duration);
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || loading) return;
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
 
-    const userInput = input.trim();
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        await transcribeAudio(blob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      setHanaMessage('Could not access microphone. Please use text input.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'recording.webm');
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/transcribe-and-extract`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+
+      const userInput = response.data.data.title || response.data.data.description || '';
+      if (userInput) {
+        setInput(userInput);
+        handleSendMessage({ preventDefault: () => {} } as React.FormEvent, userInput);
+      }
+    } catch (err: any) {
+      setHanaMessage('Could not understand audio. Please try again or use text.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendMessage = async (e: React.FormEvent, voiceInput?: string) => {
+    e.preventDefault();
+    const userInput = voiceInput || input.trim();
+    if (!userInput || loading) return;
+
     setInput('');
     setLoading(true);
     triggerExpression();
@@ -255,18 +322,10 @@ export default function HanaTaskCreation({
             </div>
           )}
 
-          {/* Middle Section: Hana Image - Compressed */}
+          {/* Middle Section: Hana Image with Animation */}
           <div className="flex-1 flex items-center justify-center overflow-hidden px-4 py-4">
-            <div
-              className={`transition-all duration-500 ${
-                isExpressing ? 'scale-105' : 'scale-100'
-              }`}
-            >
-              <img
-                src="/images/Hana_Pose_2_4K.png"
-                alt="Hana"
-                className="h-96 w-auto object-contain drop-shadow-xl"
-              />
+            <div className="h-96 w-auto">
+              <HanaAnimatedAvatar isSpeaking={isSpeaking} message={hanaMessage} />
             </div>
           </div>
 
@@ -280,12 +339,28 @@ export default function HanaTaskCreation({
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Type here..."
                   className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-full focus:outline-none focus:border-opacity-100 text-sm"
-                  disabled={loading}
+                  disabled={loading || isRecording}
                   autoFocus
                 />
+
+                {/* Mic Button for Audio Input */}
+                <button
+                  type="button"
+                  onClick={isRecording ? stopRecording : startRecording}
+                  disabled={loading}
+                  className={`px-4 py-3 rounded-full font-bold transition-all text-sm flex items-center justify-center ${
+                    isRecording
+                      ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+                  title={isRecording ? 'Stop recording' : 'Start voice input'}
+                >
+                  {isRecording ? '⏹' : '🎤'}
+                </button>
+
                 <button
                   type="submit"
-                  disabled={loading || !input.trim()}
+                  disabled={loading || (!input.trim() && !isRecording)}
                   className="px-6 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
                 >
                   {loading ? '•••' : '→'}
