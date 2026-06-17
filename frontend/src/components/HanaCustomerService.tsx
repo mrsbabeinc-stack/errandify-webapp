@@ -95,7 +95,7 @@ export default function HanaCustomerService() {
             setIsOpen(true);
             setIsMinimized(false);
           }}
-          className="fixed bottom-24 right-6 w-14 h-14 bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center text-2xl z-40"
+          className="fixed bottom-20 right-6 w-14 h-14 bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center text-2xl z-50"
           title="Chat with Hana"
         >
           🤖
@@ -104,7 +104,7 @@ export default function HanaCustomerService() {
 
       {/* Modal */}
       {isOpen && !isMinimized && (
-        <div className="fixed bottom-24 right-6 z-50 max-h-96 overflow-hidden">
+        <div className="fixed bottom-20 right-6 z-50 max-h-96 overflow-hidden">
           {/* Close Button */}
           <button
             onClick={handleClose}
@@ -187,7 +187,7 @@ export default function HanaCustomerService() {
       {isOpen && isMinimized && (
         <button
           onClick={() => setIsMinimized(false)}
-          className="fixed bottom-24 right-6 w-14 h-14 bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center text-2xl z-40 ring-2 ring-orange-300"
+          className="fixed bottom-20 right-6 w-14 h-14 bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center text-2xl z-50 ring-2 ring-orange-300"
           title="Chat with Hana"
         >
           🤖
