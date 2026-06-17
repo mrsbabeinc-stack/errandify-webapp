@@ -149,7 +149,8 @@ export default function HanaAnimatedAvatar({
           className="h-full w-auto object-contain z-0"
         />
 
-        {/* Animated Overlay SVG - Arms and Mouth */}
+        {/* Animated Overlay SVG - Arms and Mouth (only show when speaking) */}
+        {isSpeaking && (
         <svg
           viewBox="0 0 200 200"
           className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
@@ -157,6 +158,8 @@ export default function HanaAnimatedAvatar({
           style={{
             transform: `translateY(${shoulderTranslate}px)`,
             transition: 'transform 0.1s ease-out',
+            opacity: isSpeaking ? 1 : 0,
+            pointerEvents: 'none',
           }}
         >
           {/* Left Arm - Animated */}
@@ -237,6 +240,7 @@ export default function HanaAnimatedAvatar({
             </>
           )}
         </svg>
+        )}
       </div>
 
       <style>{`
