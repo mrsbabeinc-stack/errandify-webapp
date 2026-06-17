@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import BottomNav from './BottomNav';
 import RoleToggle from './RoleToggle';
 import NotificationIcon from './NotificationIcon';
@@ -11,6 +11,11 @@ interface LayoutProps {
 }
 
 export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps) {
+  const navigate = useNavigate();
+
+  const handleCreateTask = () => {
+    navigate('/create-errand-hana');
+  };
 
   return (
     <div className="flex flex-col h-screen bg-errandify-bg">
@@ -32,6 +37,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
       <BottomNav
         onLogout={onLogout}
         userRole={userRole}
+        onCreateTask={handleCreateTask}
       />
     </div>
   );
