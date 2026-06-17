@@ -267,6 +267,63 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Mark errand as completed by doer
+router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const doerId = parseInt(req.userId || '0', 10);
+
+    // Check if errand is confirmed
+    const errandResult = await db.query(
+      'SELECT status, accepted_bid_id, stripe_payment_intent_id FROM errands WHERE id = $1',
+      [id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    if (errand.status !== 'confirmed') {
+      return res.status(400).json({ error: 'Errand must be confirmed before completion' });
+    }
+
+    // Verify this doer accepted the bid
+    if (errand.accepted_bid_id) {
+      const bidResult = await db.query(
+        'SELECT doer_id FROM bids WHERE id = $1',
+        [errand.accepted_bid_id]
+      );
+
+      if (bidResult.rows[0]?.doer_id !== doerId) {
+        return res.status(403).json({ error: 'Only the assigned doer can mark as completed' });
+      }
+    }
+
+    // Mark as completed
+    const result = await db.query(
+      'UPDATE errands SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, status',
+      ['completed', id]
+    );
+
+    // TODO: Release escrowed payment to doer
+    // TODO: Prompt asker for rating
+
+    res.json({
+      success: true,
+      data: {
+        id: result.rows[0].id,
+        status: result.rows[0].status,
+        message: 'Errand marked as completed. Awaiting rating from asker.',
+      },
+    });
+  } catch (error) {
+    console.error('Complete errand error:', error);
+    res.status(500).json({ error: 'Failed to complete errand' });
+  }
+});
+
 // Update errand
 router.put('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {

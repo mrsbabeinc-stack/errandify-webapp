@@ -61,8 +61,22 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
         }
       );
 
-      // Open payment modal or redirect to payment
-      console.log('Stripe intent:', response.data.data.stripeIntent);
+      const stripeIntent = response.data.data.stripeIntent;
+      console.log('Stripe intent created:', stripeIntent);
+
+      // In dummy mode, auto-confirm payment
+      if (stripeIntent) {
+        await axios.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payment/confirm`,
+          { intentId: stripeIntent.id },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        alert('✓ Bid accepted! Payment confirmed and amount held in escrow.');
+      }
+
       onBidAccepted();
       fetchBids();
     } catch (err: any) {

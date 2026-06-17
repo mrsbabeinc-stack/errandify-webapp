@@ -23,6 +23,11 @@ interface UserProfile {
   role: 'asker' | 'doer';
 }
 
+interface AcceptedBid {
+  id: number;
+  doerId: number;
+}
+
 export default function ErrandDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -116,6 +121,28 @@ export default function ErrandDetailPage() {
     } catch (error) {
       console.error('Failed to cancel errand:', error);
       alert('Failed to cancel errand. Please try again.');
+    }
+  };
+
+  const handleCompleteErrand = async () => {
+    if (!window.confirm('Mark this errand as completed?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/complete`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert('✓ Errand marked as completed! Awaiting asker rating.');
+      fetchErrandDetail();
+    } catch (error: any) {
+      console.error('Failed to complete errand:', error);
+      alert(error.response?.data?.error || 'Failed to complete errand. Please try again.');
     }
   };
 
@@ -302,6 +329,18 @@ export default function ErrandDetailPage() {
                 >
                   Cancel Errand
                 </button>
+              </div>
+            ) : errand.status === 'confirmed' && currentUser && currentUser.role === 'doer' ? (
+              <button
+                onClick={handleCompleteErrand}
+                className="w-full bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
+              >
+                ✓ Mark as Completed
+              </button>
+            ) : errand.status === 'completed' ? (
+              <div className="w-full bg-green-50 border border-green-200 rounded-lg p-3 mt-2 text-center">
+                <p className="text-green-800 font-semibold">✓ Completed</p>
+                <p className="text-xs text-green-600">Awaiting asker rating</p>
               </div>
             ) : null}
           </div>

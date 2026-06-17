@@ -28,7 +28,7 @@ export default function BidSubmissionModal({
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(
+      const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids`,
         {
           task_id: taskId,
@@ -40,7 +40,11 @@ export default function BidSubmissionModal({
         }
       );
 
-      onSuccess();
+      // Show success message
+      if (response.data.success) {
+        alert(`✓ Bid submitted for $${bidAmount}!`);
+        onSuccess();
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to submit bid');
     } finally {
