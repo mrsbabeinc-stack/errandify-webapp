@@ -198,7 +198,7 @@ export default function HanaAssistant({ isOpen: initialOpen = false }: HanaAssis
           >
             Send
           </button>
-        </form
+        </form>
 
         {/* SOS Button */}
         <button

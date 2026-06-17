@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { config } from '../config.js';
@@ -217,6 +217,17 @@ router.get('/me', authMiddleware, async (req: any, res: Response) => {
   } catch (error) {
     console.error('Get me error:', error);
     res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+
+// Debug: Get current OTP (development only)
+router.get('/debug/otp/:mobile', (req: any, res: Response) => {
+  const { mobile } = req.params;
+  const stored = otpStore[mobile];
+  if (stored && stored.expiresAt > Date.now()) {
+    res.json({ otp: stored.code, expiresAt: new Date(stored.expiresAt) });
+  } else {
+    res.status(404).json({ error: 'No valid OTP for this mobile' });
   }
 });
 

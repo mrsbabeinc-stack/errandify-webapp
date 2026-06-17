@@ -12,6 +12,7 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
   const [step, setStep] = useState<'mobile' | 'otp'>('mobile');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [debugOtp, setDebugOtp] = useState('');
 
   const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,10 +25,17 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
         { mobile }
       );
 
-      // For demo: show OTP in console
-      console.log(
-        '📱 OTP sent to console (real SMS in production). Use: 123456'
-      );
+      // Fetch the debug OTP
+      try {
+        const debugResponse = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/debug/otp/${mobile}`
+        );
+        setDebugOtp(debugResponse.data.otp);
+        console.log('📱 OTP for testing:', debugResponse.data.otp);
+      } catch (debugErr) {
+        console.log('Could not fetch debug OTP');
+        setDebugOtp('');
+      }
 
       setStep('otp');
     } catch (err: any) {
@@ -132,9 +140,13 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
               />
             </div>
 
-            <p className="text-xs text-gray-500 text-center">
-              💡 Demo: Use OTP <span className="font-mono">123456</span>
-            </p>
+            {debugOtp && (
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <p className="text-xs text-gray-600 text-center">
+                  💡 Demo: Use OTP <span className="font-mono font-bold text-lg text-blue-600">{debugOtp}</span>
+                </p>
+              </div>
+            )}
 
             <div className="flex gap-3 pt-4">
               <button
