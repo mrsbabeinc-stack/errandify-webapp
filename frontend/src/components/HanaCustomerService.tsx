@@ -37,7 +37,12 @@ export default function HanaCustomerService() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -46,6 +51,93 @@ export default function HanaCustomerService() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+
+      // Set language based on selected language
+      const languageMap: Record<Language, string> = {
+        en: 'en-US',
+        zh: 'zh-CN',
+        yue: 'zh-HK',
+      };
+      recognitionRef.current.lang = languageMap[language];
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+        setInput(transcript);
+        console.log('[Hana] Speech recognized:', transcript);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('[Hana] Speech recognition error:', event.error);
+        setIsRecording(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsRecording(false);
+      };
+    }
+  }, [language]);
+
+  const handleStartRecording = () => {
+    if (recognitionRef.current) {
+      console.log('[Hana] Starting speech recognition');
+      setIsRecording(true);
+      recognitionRef.current.start();
+    } else {
+      alert('Speech recognition not supported in your browser');
+    }
+  };
+
+  const handleStopRecording = () => {
+    if (recognitionRef.current) {
+      console.log('[Hana] Stopping speech recognition');
+      recognitionRef.current.stop();
+    }
+  };
+
+  const handleSpeak = (text: string) => {
+    // Stop any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    // Set language based on selected language
+    const languageMap: Record<Language, string> = {
+      en: 'en-US',
+      zh: 'zh-CN',
+      yue: 'zh-HK',
+    };
+    utterance.lang = languageMap[language];
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    utterance.onstart = () => {
+      console.log('[Hana] Speaking:', text.substring(0, 50));
+      setIsSpeaking(true);
+    };
+
+    utterance.onend = () => {
+      console.log('[Hana] Finished speaking');
+      setIsSpeaking(false);
+    };
+
+    utterance.onerror = (event: any) => {
+      console.error('[Hana] Speech synthesis error:', event.error);
+      setIsSpeaking(false);
+    };
+
+    synthRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  };
 
   const handleSendMessage = async () => {
     console.log('[Hana] Send button clicked, input:', input);
@@ -87,6 +179,13 @@ export default function HanaCustomerService() {
       };
 
       setMessages((prev) => [...prev, hanaMessage]);
+
+      // Auto-play Hana's response if enabled
+      if (autoSpeak) {
+        setTimeout(() => {
+          handleSpeak(reply);
+        }, 500);
+      }
     } catch (error: any) {
       console.error('Failed to get Hana response:', error.response?.data || error.message);
       const errorMessage: Message = {
@@ -137,10 +236,23 @@ export default function HanaCustomerService() {
             ✕
           </button>
 
+          {/* Speaker Toggle Button */}
+          <button
+            onClick={() => setAutoSpeak(!autoSpeak)}
+            className={`absolute top-2 right-9 z-10 w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${
+              autoSpeak
+                ? 'bg-errandify-orange text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+            title={autoSpeak ? 'Disable audio' : 'Enable audio'}
+          >
+            {autoSpeak ? '🔊' : '🔇'}
+          </button>
+
           {/* Minimize Button */}
           <button
             onClick={() => setIsMinimized(true)}
-            className="absolute top-2 right-9 z-10 w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-gray-700 font-bold text-sm"
+            className="absolute top-2 right-16 z-10 w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-gray-700 font-bold text-sm"
           >
             −
           </button>
@@ -229,8 +341,21 @@ export default function HanaCustomerService() {
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                 placeholder="Ask Hana..."
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-errandify-orange"
-                disabled={isLoading}
+                disabled={isLoading || isRecording}
               />
+              {/* Audio Input Button */}
+              <button
+                onClick={isRecording ? handleStopRecording : handleStartRecording}
+                className={`px-3 py-2 rounded-lg text-white font-semibold transition-all ${
+                  isRecording
+                    ? 'bg-red-500 hover:bg-red-600 animate-pulse'
+                    : 'bg-blue-500 hover:bg-blue-600'
+                } disabled:opacity-50`}
+                title={isRecording ? 'Stop recording' : 'Start voice input'}
+              >
+                🎤
+              </button>
+              {/* Send Button */}
               <button
                 onClick={handleSendMessage}
                 disabled={isLoading || !input.trim()}
