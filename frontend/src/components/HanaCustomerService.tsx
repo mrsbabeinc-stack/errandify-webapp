@@ -173,40 +173,9 @@ export default function HanaCustomerService() {
   };
 
   const speakWithBrowserTTS = (text: string) => {
-    // For Chinese, ALWAYS use native Web Speech API (better female voice)
-    if (language === 'zh' || language === 'yue') {
-      console.log('[Hana] Using native Web Speech for Chinese/Cantonese - skipping ResponsiveVoice');
-      fallbackBrowserTTS(text);
-      return;
-    }
-
-    // For English, use ResponsiveVoice
-    const responsiveVoice = (window as any).responsiveVoice;
-
-    if (responsiveVoice && responsiveVoice.isReady) {
-      console.log('[Hana] Using ResponsiveVoice for English');
-
-      responsiveVoice.speak(text, 'Singapore Female', {
-        rate: 1.1, // Slightly slower for warmth
-        pitch: 1.2, // High but natural pitch
-        volume: 1.0,
-        onstart: () => {
-          console.log('[Hana] Speaking');
-          setIsSpeaking(true);
-        },
-        onend: () => {
-          console.log('[Hana] Done');
-          setIsSpeaking(false);
-        },
-        onerror: (error: any) => {
-          console.error('[Hana] Error:', error);
-          setIsSpeaking(false);
-        },
-      });
-    } else {
-      console.log('[Hana] ResponsiveVoice not ready');
-      fallbackBrowserTTS(text);
-    }
+    // All languages use native Web Speech API for guaranteed female voice control
+    console.log('[Hana] Using native Web Speech for all languages');
+    fallbackBrowserTTS(text);
   };
 
   const fallbackBrowserTTS = (text: string) => {
@@ -245,14 +214,16 @@ export default function HanaCustomerService() {
       console.log('[Hana] No voice found for language:', language);
     }
 
-    // Warm, passionate 20-year-old Chinese voice (not sharp, very caring)
+    // Adjust voice settings by language
     if (language === 'zh' || language === 'yue') {
+      // Warm, passionate 20-year-old Chinese voice (not sharp, very caring)
       utterance.rate = 0.85; // Much slower for warmth and passion
       utterance.pitch = 1.15; // Lower pitch (less sharp), more natural and warm
       utterance.volume = 1.0;
     } else {
-      utterance.rate = 0.95;
-      utterance.pitch = 1.3;
+      // English: energetic, youthful, warm female
+      utterance.rate = 1.1; // Energetic but not too fast
+      utterance.pitch = 1.25; // Higher pitch for young female sound
       utterance.volume = 1.0;
     }
 
