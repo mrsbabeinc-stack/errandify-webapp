@@ -8,10 +8,25 @@ interface Message {
   timestamp: Date;
 }
 
+type Language = 'en' | 'zh' | 'yue';
+
+const LANGUAGE_NAMES: Record<Language, string> = {
+  en: '🇬🇧 English',
+  zh: '🇨🇳 中文',
+  yue: '🇭🇰 粵語',
+};
+
+const LANGUAGE_PROMPTS: Record<Language, string> = {
+  en: 'Reply in English.',
+  zh: '用中文回复。',
+  yue: '用粵語回復。',
+};
+
 export default function HanaCustomerService() {
   console.log('[Hana] Component mounted');
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [language, setLanguage] = useState<Language>('en');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -54,10 +69,10 @@ export default function HanaCustomerService() {
         headers.Authorization = `Bearer ${token}`;
       }
 
-      console.log('[Hana] Making API call to /api/chat/hana/customer-service');
+      console.log('[Hana] Making API call to /api/chat/hana/customer-service with language:', language);
       const response = await axios.post(
         '/api/chat/hana/customer-service',
-        { message: input },
+        { message: input, language },
         { headers }
       );
 
@@ -142,6 +157,23 @@ export default function HanaCustomerService() {
                 <h2 className="font-bold text-sm">Sister Hana</h2>
                 <p className="text-xs opacity-90">How can I help you today?</p>
               </div>
+            </div>
+
+            {/* Language Selector */}
+            <div className="border-b border-gray-200 px-3 py-2 bg-gray-50 flex gap-2">
+              {(Object.keys(LANGUAGE_NAMES) as Language[]).map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setLanguage(lang)}
+                  className={`text-xs px-2 py-1 rounded-full transition-all ${
+                    language === lang
+                      ? 'bg-errandify-orange text-white font-semibold'
+                      : 'bg-white border border-gray-300 text-gray-700 hover:border-errandify-orange'
+                  }`}
+                >
+                  {LANGUAGE_NAMES[lang]}
+                </button>
+              ))}
             </div>
 
             {/* Messages */}
