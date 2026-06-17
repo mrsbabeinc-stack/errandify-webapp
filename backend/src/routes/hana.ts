@@ -249,9 +249,9 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
 
     // Map language to Alibaba voice
     const voiceMap: Record<string, string> = {
-      en: 'siyunenus', // English - Natural female voice (US)
-      zh: 'siying', // Mandarin - Natural female voice
-      yue: 'siyueyue', // Cantonese - Natural female voice
+      en: 'en-US-neural-1', // English - Natural female voice
+      zh: 'zh-CN-neural-1', // Mandarin - Natural female voice
+      yue: 'zh-HK-neural-1', // Cantonese - Natural female voice
     };
 
     const voice = voiceMap[language] || voiceMap['en'];
@@ -259,24 +259,20 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
     console.log('[Hana TTS] Converting text to speech:', { language, voice, textLength: text.length });
 
     const response = await axios.post(
-      'https://dashscope.aliyuncs.com/api/v1/services/tts/text-to-speech',
+      'https://dashscope-intl.aliyuncs.com/api/v1/services/tts/text-to-speech',
       {
-        model: 'cosyvoice-v1',
+        model: 'tts-1',
         input: {
           text: text,
         },
         parameters: {
           voice: voice,
-          rate: 0.9,
-          pitch: 1.0,
-          volume: 50,
         },
       },
       {
         headers: {
           Authorization: `Bearer ${config.qwen.apiKey}`,
           'Content-Type': 'application/json',
-          'X-DashScope-DataInspection': 'enable',
         },
         responseType: 'arraybuffer',
       }
