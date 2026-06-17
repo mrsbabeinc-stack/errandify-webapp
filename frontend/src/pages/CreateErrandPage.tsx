@@ -294,21 +294,9 @@ export default function CreateErrandPage() {
 
     // Notes: show as suggestion only, don't auto-apply (user must approve)
 
-    // Update skills if AI has suggestions
-    if (aiSuggestions.skills.length > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        skills: aiSuggestions.skills,
-      }));
-    }
+    // Skills: show as suggestions only, don't auto-apply (user must approve)
 
-    // Update certifications if AI has suggestions
-    if (aiSuggestions.certifications.required.length > 0 || aiSuggestions.certifications.optional.length > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        certifications: aiSuggestions.certifications,
-      }));
-    }
+    // Certifications: show as suggestions only, don't auto-apply (user must approve)
   }, [aiSuggestions]);
 
   const handleChange = (
