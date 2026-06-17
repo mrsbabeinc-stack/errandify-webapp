@@ -99,10 +99,21 @@ router.post('/create-intent', authMiddleware, async (req: AuthRequest, res: Resp
       return res.status(400).json({ error: 'amount and bidId required' });
     }
 
-    // Check if user has a payment method
-    const userMethods = paymentMethods.get(userId) || [];
+    // Auto-create dummy payment method if none exists
+    let userMethods = paymentMethods.get(userId) || [];
     if (userMethods.length === 0) {
-      return res.status(400).json({ error: 'No payment method on file' });
+      const dummyPaymentMethod: DummyPaymentMethod = {
+        id: `pm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId,
+        type: 'card',
+        last4: '4242',
+        brand: 'visa',
+        expiryMonth: 12,
+        expiryYear: 2025,
+        default: true,
+      };
+      userMethods = [dummyPaymentMethod];
+      paymentMethods.set(userId, userMethods);
     }
 
     const dummyIntent = {
