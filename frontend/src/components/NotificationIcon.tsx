@@ -8,7 +8,7 @@ export default function NotificationIcon({ unreadCount = 0 }: NotificationIconPr
   const [showDropdown, setShowDropdown] = useState(false);
 
   return (
-    <div className="fixed top-1 right-4 z-50">
+    <div className="fixed top-16 right-4 z-50">
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         className="relative flex items-center justify-center w-10 h-10 text-gray-600 hover:text-errandify-orange transition-colors"
