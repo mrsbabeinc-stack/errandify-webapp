@@ -86,12 +86,12 @@ export default function HomePage({ userRole }: HomePageProps) {
   return (
     <div className="min-h-screen bg-errandify-bg">
       {/* Safe Area - prevents overlap with top icons */}
-      <div className="h-12"></div>
+      <div className="h-20"></div>
 
       {/* Page Container */}
       <div className="max-w-3xl mx-auto px-4">
         {/* Welcome Section */}
-        <div className="mb-6">
+        <div className="mb-8">
           <h1 className="text-3xl font-bold text-errandify-brown">
             Welcome, {userName}! 👋
           </h1>

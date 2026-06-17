@@ -86,7 +86,7 @@ export default function ErrandDetailPage() {
   return (
     <div className="min-h-screen bg-errandify-bg">
       {/* Safe Area */}
-      <div className="h-12"></div>
+      <div className="h-20"></div>
 
       {/* Page Container */}
       <div className="max-w-3xl mx-auto px-4">
