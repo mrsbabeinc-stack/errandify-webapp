@@ -173,9 +173,13 @@ export default function HanaCustomerService() {
 
       console.log('[Hana] Speaking with voice:', voice, 'for language:', language);
 
+      // Adjust rate and pitch based on language
+      const rate = language === 'en' ? 1.1 : 1.0; // Faster for English (more energetic)
+      const pitch = language === 'en' ? 1.15 : 1.0; // Higher pitch for English (younger)
+
       responsiveVoice.speak(text, voice, {
-        rate: 1.0, // Natural speaking rate
-        pitch: 1.0, // Natural pitch
+        rate, // Faster for English, normal for others
+        pitch, // Higher for English, normal for others
         volume: 1.0, // Full volume
         onstart: () => {
           console.log('[Hana] Speaking');
