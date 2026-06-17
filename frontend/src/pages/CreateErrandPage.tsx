@@ -271,13 +271,7 @@ export default function CreateErrandPage() {
       }));
     }
 
-    // Update notes if AI has a suggestion
-    if (aiSuggestions.suggestedNotes) {
-      setFormData((prev) => ({
-        ...prev,
-        specialNote: aiSuggestions.suggestedNotes,
-      }));
-    }
+    // Notes: show as suggestion only, don't auto-apply (user must approve)
 
     // Update skills if AI has suggestions
     if (aiSuggestions.skills.length > 0) {
@@ -438,10 +432,30 @@ export default function CreateErrandPage() {
                 placeholder="What do you need help with?"
                 className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
               />
-              {aiSuggestions.hasCorrections && (
-                <p className="text-xs text-blue-600 mt-1">
-                  💡 Suggested: {aiSuggestions.correctedTitle}
-                </p>
+
+              {/* AI Suggestion for Title Correction */}
+              {aiSuggestions.hasCorrections && aiSuggestions.correctedTitle && (
+                <div className="mt-2 p-2 bg-blue-50 border-l-4 border-blue-400 rounded">
+                  <div className="flex justify-between items-center gap-2">
+                    <div className="flex-1">
+                      <p className="text-xs text-blue-900">
+                        💡 Corrected: <span className="font-semibold">{aiSuggestions.correctedTitle}</span>
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          title: aiSuggestions.correctedTitle,
+                        }));
+                      }}
+                      className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 whitespace-nowrap flex-shrink-0"
+                    >
+                      ✓ Use
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
 
@@ -1028,10 +1042,34 @@ export default function CreateErrandPage() {
                   name="specialNote"
                   value={formData.specialNote}
                   onChange={handleChange}
-                  placeholder={aiSuggestions.suggestedNotes || "Lobby access code 1234, Call upon arrival, Pet-friendly handlers needed, etc."}
+                  placeholder="Lobby access code 1234, Call upon arrival, Pet-friendly handlers needed, etc."
                   rows={2}
                   className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
                 />
+
+                {/* AI Suggestion for Notes */}
+                {aiSuggestions.suggestedNotes && !formData.specialNote && (
+                  <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-blue-900 mb-1">💡 AI Suggestion:</p>
+                        <p className="text-sm text-blue-800">{aiSuggestions.suggestedNotes}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            specialNote: aiSuggestions.suggestedNotes,
+                          }));
+                        }}
+                        className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 whitespace-nowrap flex-shrink-0"
+                      >
+                        ✓ Use
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
