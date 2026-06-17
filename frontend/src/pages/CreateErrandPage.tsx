@@ -755,6 +755,25 @@ export default function CreateErrandPage() {
           <div className="border-t pt-4 space-y-4">
             <h3 className="font-bold text-errandify-brown text-sm">Work Location</h3>
 
+            {/* Remote Work Checkbox */}
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={isRemoteWork}
+                onChange={(e) => {
+                  setIsRemoteWork(e.target.checked);
+                  if (e.target.checked) {
+                    setFormData((prev) => ({ ...prev, location: 'Remote' }));
+                    setShowStartLocation(false);
+                  } else {
+                    setFormData((prev) => ({ ...prev, location: '' }));
+                  }
+                }}
+                className="w-4 h-4"
+              />
+              <span className="text-sm text-gray-700">This is remote work (no specific location)</span>
+            </label>
+
             {/* Start Location Toggle */}
             <label className="flex items-center gap-2">
               <input
@@ -875,24 +894,6 @@ export default function CreateErrandPage() {
                 </div>
               </div>
             </div>
-
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={formData.location.toLowerCase() === 'remote' || !formData.location}
-                onChange={(e) => {
-                  setIsRemoteWork(e.target.checked);
-                  if (e.target.checked) {
-                    setFormData((prev) => ({ ...prev, location: 'Remote' }));
-                    setShowStartLocation(false);
-                  } else {
-                    setFormData((prev) => ({ ...prev, location: '' }));
-                  }
-                }}
-                className="w-4 h-4"
-              />
-              <span className="text-sm text-gray-700">This is remote work (no specific location)</span>
-            </label>
 
             {/* Full Address - Shown only to confirmed doer */}
             <div>
