@@ -9,32 +9,37 @@ const inappropriateTerms = [
   'illegal', 'stolen', 'weapon', 'gun', 'knife', 'bomb',
 ];
 
-// Discriminatory/biased language filter
+// Legitimate gender requirement contexts (culturally/professionally necessary)
+const legitimateGenderContexts = ['childcare', 'eldercare', 'elderly care', 'bathing', 'bathroom', 'personal care', 'intimate care', 'muslim', 'religious', 'religious requirement', 'cultural requirement'];
+
+// Discriminatory/biased language filter (with exceptions for legitimate needs)
 const discriminatoryTerms = [
-  // Race/ethnicity
-  { term: 'only hire', reason: 'discriminatory hiring' },
-  { term: 'no asian', reason: 'racial discrimination' },
-  { term: 'no black', reason: 'racial discrimination' },
-  { term: 'no white', reason: 'racial discrimination' },
-  { term: 'no indian', reason: 'racial discrimination' },
-  { term: 'no latino', reason: 'racial discrimination' },
-  { term: 'no muslim', reason: 'religious discrimination' },
-  { term: 'no christian', reason: 'religious discrimination' },
-  { term: 'no jewish', reason: 'religious discrimination' },
-  // Age/gender
-  { term: 'young only', reason: 'age discrimination' },
-  { term: 'no old', reason: 'age discrimination' },
-  { term: 'men only', reason: 'gender discrimination' },
-  { term: 'women only', reason: 'gender discrimination' },
-  { term: 'no gay', reason: 'sexual orientation discrimination' },
-  { term: 'no transgender', reason: 'gender identity discrimination' },
-  // Disability
-  { term: 'no disabled', reason: 'disability discrimination' },
-  { term: 'able bodied only', reason: 'disability discrimination' },
-  // Appearance
-  { term: 'must be attractive', reason: 'appearance discrimination' },
-  { term: 'good looking', reason: 'appearance discrimination' },
-  { term: 'attractive only', reason: 'appearance discrimination' },
+  // Race/ethnicity - NO EXCEPTIONS
+  { term: 'only hire', reason: 'discriminatory hiring', allowException: false },
+  { term: 'no asian', reason: 'racial discrimination', allowException: false },
+  { term: 'no black', reason: 'racial discrimination', allowException: false },
+  { term: 'no white', reason: 'racial discrimination', allowException: false },
+  { term: 'no indian', reason: 'racial discrimination', allowException: false },
+  { term: 'no latino', reason: 'racial discrimination', allowException: false },
+  { term: 'no muslim', reason: 'religious discrimination', allowException: false },
+  { term: 'no christian', reason: 'religious discrimination', allowException: false },
+  { term: 'no jewish', reason: 'religious discrimination', allowException: false },
+  // Age/gender - WITH EXCEPTIONS for legitimate contexts
+  { term: 'young only', reason: 'age discrimination', allowException: false },
+  { term: 'no old', reason: 'age discrimination', allowException: false },
+  { term: 'men only', reason: 'gender discrimination', allowException: true },
+  { term: 'women only', reason: 'gender discrimination', allowException: true },
+  { term: 'female', reason: 'gender specification', allowException: true },
+  { term: 'male', reason: 'gender specification', allowException: true },
+  { term: 'no gay', reason: 'sexual orientation discrimination', allowException: false },
+  { term: 'no transgender', reason: 'gender identity discrimination', allowException: false },
+  // Disability - NO EXCEPTIONS
+  { term: 'no disabled', reason: 'disability discrimination', allowException: false },
+  { term: 'able bodied only', reason: 'disability discrimination', allowException: false },
+  // Appearance - NO EXCEPTIONS
+  { term: 'must be attractive', reason: 'appearance discrimination', allowException: false },
+  { term: 'good looking', reason: 'appearance discrimination', allowException: false },
+  { term: 'attractive only', reason: 'appearance discrimination', allowException: false },
 ];
 
 // Detail keywords that require specification
@@ -81,13 +86,29 @@ function checkContentSafety(text: string): { safe: boolean; issue: string } {
   return { safe: true, issue: '' };
 }
 
-// Check for discriminatory/biased language
+// Check for discriminatory/biased language (with exceptions for legitimate needs)
 function checkBiasAndDiscrimination(text: string): { safe: boolean; issue: string } {
   const lowerText = text.toLowerCase();
 
-  for (const { term, reason } of discriminatoryTerms) {
+  for (const { term, reason, allowException } of discriminatoryTerms) {
     if (lowerText.includes(term)) {
-      return { safe: false, issue: `Discriminatory content detected (${reason}). This violates fair hiring practices.` };
+      // If this term allows exceptions, check if it's in a legitimate context
+      if (allowException) {
+        const hasLegitimateContext = legitimateGenderContexts.some(context =>
+          lowerText.includes(context)
+        );
+
+        if (hasLegitimateContext) {
+          // Allow gender specification in legitimate contexts (childcare, elderly care, etc.)
+          continue;
+        }
+      }
+
+      // No legitimate exception found - block it
+      return {
+        safe: false,
+        issue: `Discriminatory content detected (${reason}). This violates fair hiring practices.`
+      };
     }
   }
 
