@@ -924,8 +924,12 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
     // Singapore locations
     const locations = ['orchard', 'marina bay', 'tampines', 'jurong', 'clementi', 'bishan', 'serangoon', 'bedok', 'geylang', 'east coast', 'hougang', 'punggol', 'everton', 'bukit timah', 'holland', 'tanglin'];
 
-    // Extract title
-    let title = cleaned.split(/at|in|on|by/)[0].trim().substring(0, 50) || input.substring(0, 50);
+    // Extract title - remove locations and prepositions first
+    let titleText = cleaned;
+    for (const loc of locations) {
+      titleText = titleText.replace(new RegExp(`\\s*(?:at|in|near|to)?\\s*${loc}\\b`, 'gi'), '');
+    }
+    let title = titleText.split(/at|in|on|by/)[0].trim().substring(0, 50) || input.substring(0, 50);
 
     // Extract category
     let category = '';
