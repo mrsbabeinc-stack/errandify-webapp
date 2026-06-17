@@ -13,7 +13,7 @@ interface TaskData {
   notes: string;
 }
 
-type CollectionStep = 'title' | 'location' | 'date' | 'budget' | 'confirm' | 'complete';
+type CollectionStep = 'input' | 'confirm' | 'complete';
 
 interface HanaTaskCreationProps {
   isOpen: boolean;
@@ -28,7 +28,7 @@ export default function HanaTaskCreation({
   onComplete,
   onSkipToManual,
 }: HanaTaskCreationProps) {
-  const [currentStep, setCurrentStep] = useState<CollectionStep>('title');
+  const [currentStep, setCurrentStep] = useState<CollectionStep>('input');
   const [taskData, setTaskData] = useState<TaskData>({
     title: '',
     description: '',
@@ -54,14 +54,136 @@ export default function HanaTaskCreation({
   }, [isOpen]);
 
   const initializeChat = () => {
-    setHanaMessage("Hello! I'm Hana. Let's create your task together!\n\nShare what you need done, your location, timing, and budget. I'll help you fill in some details.");
-    setCurrentStep('title');
+    setHanaMessage("Hi! 👋 Tell me about the errand you need done.\n\nYou can type it all at once, like:\n'I need help cleaning my house in Orchard on Saturday at 2pm, budget $100'");
+    setCurrentStep('input');
     triggerSpeaking();
   };
 
   const triggerSpeaking = () => {
     setIsSpeaking(true);
     setTimeout(() => setIsSpeaking(false), 4000);
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || loading) return;
+
+    const userInput = input.trim();
+    setInput('');
+    setLoading(true);
+
+    try {
+      // Send user input to AI to extract all info at once
+      await extractTaskInfo(userInput);
+    } catch (error) {
+      console.error('Chat error:', error);
+      setHanaMessage('Sorry, I had trouble understanding. Can you try again?');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const extractTaskInfo = async (userInput: string) => {
+    try {
+      // Use AI to extract structured task info from freeform input
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
+        { input: userInput }
+      );
+
+      const extracted = response.data.data;
+
+      // Update task data with extracted info
+      const updatedTaskData: TaskData = {
+        title: extracted.title || userInput.substring(0, 50),
+        description: userInput,
+        category: extracted.category || '',
+        location: extracted.location || '',
+        date: extracted.date || '',
+        time: extracted.time || '10:00',
+        budget: extracted.budget || '',
+        notes: extracted.notes || '',
+      };
+
+      setTaskData(updatedTaskData);
+
+      // Show summary for confirmation
+      const summary = buildSummary(updatedTaskData);
+      setHanaMessage(summary + "\n\nDoes this look good?");
+      setCurrentStep('confirm');
+      triggerSpeaking();
+    } catch (err: any) {
+      console.error('Extraction error:', err);
+      setHanaMessage('I could not extract the details. Please provide more specific info (title, location, date, budget).');
+    }
+  };
+
+  const buildSummary = (data: TaskData) => {
+    let summary = '✓ Task Summary:\n\n';
+    if (data.title) summary += `📝 ${data.title}\n`;
+    if (data.location) summary += `📍 ${data.location}\n`;
+    if (data.date) {
+      const dateStr = new Date(data.date).toLocaleDateString('en-SG');
+      summary += `📅 ${dateStr}`;
+      if (data.time) summary += ` at ${data.time}`;
+      summary += '\n';
+    }
+    if (data.budget) summary += `💰 SGD $${data.budget}\n`;
+    if (data.notes) summary += `📌 ${data.notes}`;
+    return summary;
+  };
+
+  const handleConfirmAndProceed = async () => {
+    setLoading(true);
+    try {
+      // Content filter check
+      const filterResponse = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/content-filter`,
+        {
+          title: taskData.title,
+          description: taskData.description,
+        }
+      );
+
+      if (filterResponse.data.data.status === 'FLAG') {
+        setHanaMessage('⚠️ This task needs review. Our team will check it shortly.');
+        return;
+      }
+
+      // Get AI suggestions before closing
+      try {
+        const suggestionsResponse = await axios.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+          {
+            title: taskData.title,
+            description: taskData.description,
+          }
+        );
+
+        const suggestions = suggestionsResponse.data.data;
+        setTaskData((prev) => ({
+          ...prev,
+          category: suggestions.category || prev.category,
+          description: suggestions.description || prev.description,
+          budget: suggestions.suggestedBudget?.toString() || prev.budget,
+          notes: suggestions.notes || prev.notes,
+        }));
+      } catch (err) {
+        console.log('Could not fetch suggestions');
+      }
+
+      setHanaMessage('✅ Perfect! Let me fill in the form for you...');
+      triggerSpeaking();
+
+      // Auto-fill form and proceed after a short delay
+      setTimeout(() => {
+        onComplete(taskData);
+      }, 2000);
+    } catch (err: any) {
+      setHanaMessage(`❌ ${err.response?.data?.error || 'Failed to process'}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const startRecording = async () => {
@@ -123,153 +245,6 @@ export default function HanaTaskCreation({
     mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || loading) return;
-
-    const userInput = input.trim();
-    setInput('');
-    setLoading(true);
-
-    try {
-      await processUserInput(userInput);
-    } catch (error) {
-      console.error('Chat error:', error);
-      setHanaMessage('Sorry, I had trouble understanding. Can you try again?');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const processUserInput = async (userInput: string) => {
-    switch (currentStep) {
-      case 'title':
-        await handleTitle(userInput);
-        break;
-      case 'location':
-        await handleLocation(userInput);
-        break;
-      case 'date':
-        await handleDate(userInput);
-        break;
-      case 'budget':
-        await handleBudget(userInput);
-        break;
-    }
-  };
-
-  const handleTitle = async (input: string) => {
-    setTaskData((prev) => ({ ...prev, title: input, description: input }));
-
-    // Detect category
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/detect-category`,
-        { title: input, description: input }
-      );
-      if (response.data.data.category) {
-        setTaskData((prev) => ({ ...prev, category: response.data.data.category }));
-      }
-    } catch (err) {
-      console.log('Category detection failed');
-    }
-
-    setHanaMessage("Great! 📍 Now, where do you need this done?");
-    setCurrentStep('location');
-    triggerSpeaking();
-  };
-
-  const handleLocation = async (input: string) => {
-    setTaskData((prev) => ({ ...prev, location: input }));
-    setHanaMessage("Perfect! 📅 When do you need it done?\n(e.g., Tomorrow, Saturday, 25 Dec at 2pm)");
-    setCurrentStep('date');
-    triggerSpeaking();
-  };
-
-  const handleDate = async (input: string) => {
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/parse-datetime`,
-        { input }
-      );
-      setTaskData((prev) => ({
-        ...prev,
-        date: response.data.data.date,
-        time: response.data.data.time,
-      }));
-    } catch (err) {
-      setTaskData((prev) => ({ ...prev, date: input, time: '10:00' }));
-    }
-
-    setHanaMessage("Excellent! 💰 What's your budget? (in SGD)");
-    setCurrentStep('budget');
-    triggerSpeaking();
-  };
-
-  const handleBudget = async (input: string) => {
-    const budget = input.replace(/[^\d.]/g, '');
-    setTaskData((prev) => ({ ...prev, budget }));
-
-    const summary = `Perfect! Here's your task summary:\n\n✓ ${taskData.title}\n📍 ${taskData.location}\n📅 ${new Date(taskData.date).toLocaleDateString('en-SG')} ${taskData.time}\n💰 SGD $${budget}`;
-
-    setHanaMessage(summary + "\n\nReady to post and get suggestions?");
-    setCurrentStep('confirm');
-    triggerSpeaking();
-  };
-
-  const handleConfirmAndProceed = async () => {
-    setLoading(true);
-    try {
-      // Content filter check
-      const filterResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/content-filter`,
-        {
-          title: taskData.title,
-          description: taskData.description,
-        }
-      );
-
-      if (filterResponse.data.data.status === 'FLAG') {
-        setHanaMessage('⚠️ This task needs review. Our team will check it shortly.');
-        return;
-      }
-
-      // Get AI suggestions before closing
-      try {
-        const suggestionsResponse = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
-          {
-            title: taskData.title,
-            description: taskData.description,
-          }
-        );
-
-        const suggestions = suggestionsResponse.data.data;
-        setTaskData((prev) => ({
-          ...prev,
-          category: suggestions.category || prev.category,
-          description: suggestions.description || prev.description,
-          budget: suggestions.suggestedBudget?.toString() || prev.budget,
-          notes: suggestions.notes || prev.notes,
-        }));
-      } catch (err) {
-        console.log('Could not fetch suggestions');
-      }
-
-      setHanaMessage('✅ Perfect! Let me fill in the details for you...');
-      triggerSpeaking();
-
-      // Auto-fill form and proceed after a short delay
-      setTimeout(() => {
-        onComplete(taskData);
-      }, 2000);
-    } catch (err: any) {
-      setHanaMessage(`❌ ${err.response?.data?.error || 'Failed to process'}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -312,7 +287,7 @@ export default function HanaTaskCreation({
             </div>
           )}
 
-          {/* Middle Section: Hana Half-Body Image with Animation */}
+          {/* Middle Section: Hana Half-Body Image */}
           <div className="flex-1 flex items-center justify-center overflow-hidden px-2 py-2">
             <div className="h-80 w-auto">
               <HanaAnimatedAvatar
@@ -324,13 +299,13 @@ export default function HanaTaskCreation({
 
           {/* Bottom Section: Input - Always Visible */}
           <div className="bg-white border-t border-gray-200 px-6 py-4 flex-shrink-0">
-            {currentStep !== 'confirm' && currentStep !== 'complete' && (
+            {currentStep === 'input' && (
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type here..."
+                  placeholder="Type all details here..."
                   className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-full focus:outline-none focus:border-opacity-100 text-sm"
                   disabled={loading || isRecording}
                   autoFocus
@@ -364,12 +339,13 @@ export default function HanaTaskCreation({
                   disabled={loading}
                   className="flex-1 px-4 py-3 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 disabled:opacity-50 text-sm"
                 >
-                  {loading ? 'Processing...' : '✓ Post Task'}
+                  {loading ? 'Processing...' : '✓ Post Errand'}
                 </button>
                 <button
                   onClick={() => {
-                    setCurrentStep('budget');
-                    setHanaMessage("What's your budget? (in SGD)");
+                    setCurrentStep('input');
+                    setInput('');
+                    setHanaMessage('Let me know what errand you need done!');
                   }}
                   disabled={loading}
                   className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 text-sm"

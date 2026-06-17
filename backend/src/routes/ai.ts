@@ -867,4 +867,107 @@ router.post('/suggest-completion', async (req: Request, res: Response) => {
   }
 });
 
+// Extract task info from freeform input
+router.post('/extract-task-info', async (req: Request, res: Response) => {
+  try {
+    const { input } = req.body;
+
+    if (!input || input.length < 5) {
+      return res.status(400).json({ error: 'Input too short' });
+    }
+
+    const apiKey = process.env.QWEN_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'API key not configured' });
+    }
+
+    const prompt = `You are an AI that extracts structured errand information from freeform user input.
+
+Given the user's input, extract and return ONLY valid JSON (no markdown, no code blocks) with these fields:
+- title: Brief task title (max 50 chars)
+- category: One of: home-maintenance, cleaning-laundry, shopping-errands, delivery-moving, childcare-tutoring, pet-care, tech-support, moving-help (or empty string if unclear)
+- location: Location/area name (e.g., Orchard, Marina Bay, Ang Mo Kio)
+- date: ISO date string (YYYY-MM-DD) or empty if not mentioned
+- time: Time in HH:MM format (24-hour) or empty if not mentioned
+- budget: Numeric budget in SGD or empty if not mentioned
+- notes: Any additional details or requirements
+
+User input: "${input}"
+
+Return ONLY valid JSON, no other text:`;
+
+    const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'qwen-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.5,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const result = await response.json();
+    const content = result.output.choices[0].message.content;
+
+    // Parse JSON from response
+    let extracted = {
+      title: '',
+      category: '',
+      location: '',
+      date: '',
+      time: '',
+      budget: '',
+      notes: '',
+    };
+
+    try {
+      // Try to extract JSON from the response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        extracted = JSON.parse(jsonMatch[0]);
+      }
+    } catch (parseErr) {
+      console.log('JSON parse failed, using partial extraction');
+      // Fallback: try to extract values using regex
+      const titleMatch = content.match(/"title"\s*:\s*"([^"]*)"/);
+      const categoryMatch = content.match(/"category"\s*:\s*"([^"]*)"/);
+      const locationMatch = content.match(/"location"\s*:\s*"([^"]*)"/);
+      const dateMatch = content.match(/"date"\s*:\s*"([^"]*)"/);
+      const timeMatch = content.match(/"time"\s*:\s*"([^"]*)"/);
+      const budgetMatch = content.match(/"budget"\s*:\s*"([^"]*)"/);
+      const notesMatch = content.match(/"notes"\s*:\s*"([^"]*)"/);
+
+      extracted = {
+        title: titleMatch ? titleMatch[1] : input.substring(0, 50),
+        category: categoryMatch ? categoryMatch[1] : '',
+        location: locationMatch ? locationMatch[1] : '',
+        date: dateMatch ? dateMatch[1] : '',
+        time: timeMatch ? timeMatch[1] : '',
+        budget: budgetMatch ? budgetMatch[1] : '',
+        notes: notesMatch ? notesMatch[1] : '',
+      };
+    }
+
+    res.json({
+      success: true,
+      data: extracted,
+    });
+  } catch (error: any) {
+    console.error('Extract task info error:', error);
+    res.status(500).json({ error: 'Failed to extract task information' });
+  }
+});
+
 export default router;
