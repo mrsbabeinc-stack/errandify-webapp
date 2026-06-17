@@ -24,38 +24,29 @@ export default function LandingPage() {
           </p>
         </div>
 
-        {/* Meet Our Friends Section */}
-        <div className="w-full mb-8 bg-gradient-to-b from-yellow-100 via-yellow-50 to-yellow-100 rounded-3xl p-8 shadow-lg flex items-center justify-center min-h-80 relative overflow-hidden">
-          {/* Decorative background */}
-          <div className="absolute inset-0 opacity-5">
-            <span className="text-9xl">🌴</span>
-          </div>
+        {/* Meet Our Friends Section - Family Photo */}
+        <div className="w-full mb-8 bg-gradient-to-b from-yellow-100 via-yellow-50 to-yellow-100 rounded-3xl p-6 shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
+          {/* Decorative background with palm trees */}
+          <div className="absolute top-0 left-0 text-6xl opacity-20">🌴</div>
+          <div className="absolute top-0 right-0 text-6xl opacity-20">🌴</div>
 
-          {/* Team representation */}
-          <div className="text-center relative z-10 w-full">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">Meet Our Friends</h2>
-            <p className="text-gray-700 font-semibold mb-6">Esha, Lian, Hana & Piers are here to help!</p>
+          {/* Title */}
+          <h2 className="text-3xl font-bold text-gray-900 mb-3 relative z-10">Meet Our Friends</h2>
+          <p className="text-gray-700 font-semibold mb-4 relative z-10">Real neighbours helping real neighbours</p>
 
-            {/* Family Photo - Layered Composition */}
-            <div className="relative w-full h-48 mt-6 flex justify-center items-end">
-              {/* Back layer: Lian (far back-left) */}
-              <div className="absolute left-0 bottom-12 z-10 w-20 h-28 rounded-lg border-3 border-errandify-orange overflow-hidden bg-gray-200 opacity-80">
-                <img src="/images/Lian_4K.png" alt="Lian" className="w-full h-full object-cover object-top" />
-              </div>
+          {/* Family Photo Container */}
+          <div className="w-full max-w-xs relative z-10 rounded-2xl overflow-hidden shadow-lg bg-gradient-to-b from-orange-50 to-yellow-50 border-4 border-errandify-orange">
+            {/* Placeholder for family photo - real people (diverse family) */}
+            <div className="w-full aspect-square bg-gradient-to-br from-orange-100 via-yellow-100 to-orange-100 flex items-center justify-center relative">
+              {/* Palm tree decorations */}
+              <div className="absolute top-2 left-2 text-2xl opacity-30">🌴</div>
+              <div className="absolute top-2 right-2 text-2xl opacity-30">🌴</div>
 
-              {/* Back layer: Piers (far back-right) */}
-              <div className="absolute right-0 bottom-12 z-10 w-20 h-28 rounded-lg border-3 border-errandify-orange overflow-hidden bg-gray-200 opacity-80">
-                <img src="/images/Piers_4K.png" alt="Piers" className="w-full h-full object-cover object-top" />
-              </div>
-
-              {/* Front layer: Esha (front-left) */}
-              <div className="relative z-20 -mr-2 w-24 h-36 rounded-lg border-3 border-errandify-orange overflow-hidden bg-gray-200">
-                <img src="/images/Esha_Sora_4K.png" alt="Esha" className="w-full h-full object-cover object-top" />
-              </div>
-
-              {/* Front layer: Hana (front-center/right) */}
-              <div className="relative z-20 -ml-2 w-24 h-36 rounded-lg border-3 border-errandify-orange overflow-hidden bg-gray-200">
-                <img src="/images/Hana_Pose_1_4K.png" alt="Hana" className="w-full h-full object-cover object-top" />
+              {/* Family illustration placeholder */}
+              <div className="text-center">
+                <p className="text-6xl mb-2">👨‍👩‍👧‍👦</p>
+                <p className="text-gray-600 text-sm font-semibold">Community Family Photo</p>
+                <p className="text-gray-500 text-xs mt-1">Diverse, Helpful, United</p>
               </div>
             </div>
           </div>
