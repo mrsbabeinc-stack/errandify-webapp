@@ -98,7 +98,7 @@ export default function CategorySelectionPage({ userRole }: CategorySelectionPag
 
   const handleSkip = () => {
     // Skip and go to home/dashboard
-    navigate('/');
+    navigate('/home');
   };
 
   return (

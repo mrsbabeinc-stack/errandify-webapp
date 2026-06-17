@@ -352,7 +352,7 @@ export default function CreateErrandPage() {
       );
 
       if (response.data.success) {
-        navigate('/');
+        navigate('/home');
       }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create errand');

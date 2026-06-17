@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Layout from './components/Layout';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import CategorySelectionPage from './pages/CategorySelectionPage';
@@ -57,11 +58,23 @@ export default function App() {
   return (
     <Router>
       <Routes>
+        {/* Landing page - shown first to unauthenticated users */}
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/home" replace />
+            ) : (
+              <LandingPage />
+            )
+          }
+        />
+
         <Route
           path="/login"
           element={
             isAuthenticated ? (
-              <Navigate to="/" replace />
+              <Navigate to="/home" replace />
             ) : (
               <LoginPage onLogin={handleLogin} />
             )
@@ -122,11 +135,11 @@ export default function App() {
             isAuthenticated ? (
               <Layout userRole={userRole} onRoleChange={setUserRole} onLogout={handleLogout} />
             ) : (
-              <Navigate to="/login" replace />
+              <Navigate to="/" replace />
             )
           }
         >
-          <Route path="/" element={<HomePage userRole={userRole} />} />
+          <Route path="/home" element={<HomePage userRole={userRole} />} />
           <Route path="/errands" element={<ErrandsPage userRole={userRole} />} />
           <Route path="/errand/:id" element={<ErrandDetailPage />} />
           <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole} />} />

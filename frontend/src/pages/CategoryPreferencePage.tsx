@@ -85,7 +85,7 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
       if (onComplete) {
         onComplete();
       } else {
-        navigate('/');
+        navigate('/home');
       }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save preferences');
