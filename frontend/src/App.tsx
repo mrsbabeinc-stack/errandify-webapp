@@ -8,7 +8,7 @@ import CategorySelectionPage from './pages/CategorySelectionPage';
 import CategoryPreferencePage from './pages/CategoryPreferencePage';
 import CreateErrandPage from './pages/CreateErrandPage';
 import EditErrandPage from './pages/EditErrandPage';
-import HanaTaskCreationPage from './pages/HanaTaskCreationPage';
+import HanaPage from './pages/HanaPage';
 import BrowseErrandsPage from './pages/BrowseErrandsPage';
 import DoerBrowsePage from './pages/DoerBrowsePage';
 import ErrandsPage from './pages/ErrandsPage';
@@ -88,7 +88,7 @@ export default function App() {
           path="/create-errand-hana"
           element={
             isAuthenticated ? (
-              <HanaTaskCreationPage userRole={userRole} />
+              <HanaPage />
             ) : (
               <Navigate to="/login" replace />
             )
