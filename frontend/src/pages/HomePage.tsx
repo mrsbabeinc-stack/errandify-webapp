@@ -40,16 +40,20 @@ export default function HomePage({ userRole }: HomePageProps) {
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <button
-            onClick={() => navigate('/create-errand')}
+            onClick={() => navigate(userRole === 'asker' ? '/create-errand' : '/')}
             className="bg-errandify-orange text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
           >
-            <span className="text-3xl mb-2 block">📝</span>
-            <span className="font-semibold text-sm">Post an Errand</span>
+            <span className="text-3xl mb-2 block">
+              {userRole === 'asker' ? '📝' : '🔍'}
+            </span>
+            <span className="font-semibold text-sm">
+              {userRole === 'asker' ? 'Post an Errand' : 'Browse ToHelp'}
+            </span>
           </button>
 
           <button
             onClick={() => navigate('/errands')}
-            className="bg-blue-500 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+            className="bg-errandify-brown text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
           >
             <span className="text-3xl mb-2 block">
               {userRole === 'asker' ? '📋' : '✓'}
