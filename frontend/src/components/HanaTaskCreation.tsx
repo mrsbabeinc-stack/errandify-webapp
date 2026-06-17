@@ -19,12 +19,14 @@ interface HanaTaskCreationProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (taskData: TaskData) => void;
+  onSkipToManual?: () => void;
 }
 
 export default function HanaTaskCreation({
   isOpen,
   onClose,
   onComplete,
+  onSkipToManual,
 }: HanaTaskCreationProps) {
   const [currentStep, setCurrentStep] = useState<CollectionStep>('title');
   const [taskData, setTaskData] = useState<TaskData>({
@@ -41,6 +43,9 @@ export default function HanaTaskCreation({
   const [loading, setLoading] = useState(false);
   const [hanaMessage, setHanaMessage] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     if (isOpen && !hanaMessage) {
@@ -57,6 +62,65 @@ export default function HanaTaskCreation({
   const triggerSpeaking = () => {
     setIsSpeaking(true);
     setTimeout(() => setIsSpeaking(false), 4000);
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Microphone access denied:', err);
+      alert('Please allow microphone access to use voice input');
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!mediaRecorderRef.current) return;
+
+    mediaRecorderRef.current.stop();
+    setIsRecording(false);
+
+    mediaRecorderRef.current.onstop = async () => {
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+
+      // Convert to base64 and send to Qwen API for transcription
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Audio = (reader.result as string).split(',')[1];
+
+        try {
+          const response = await axios.post(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/transcribe`,
+            { audio: base64Audio }
+          );
+
+          const transcribedText = response.data.data.text;
+          setInput(transcribedText);
+
+          // Auto-submit the transcribed text
+          setTimeout(() => {
+            handleSendMessage({ preventDefault: () => {} } as any);
+          }, 500);
+        } catch (err) {
+          console.error('Transcription failed:', err);
+          alert('Could not transcribe audio. Please try again.');
+        }
+      };
+
+      reader.readAsDataURL(audioBlob);
+    };
+
+    // Stop all tracks
+    mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -218,12 +282,21 @@ export default function HanaTaskCreation({
             <h1 className="text-xl font-bold text-white">Hana (Your AI Sister)</h1>
             <p className="text-orange-100 text-xs">Chat With Hana</p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-white hover:text-orange-100 text-2xl font-light"
-          >
-            ✕
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onSkipToManual}
+              className="text-sm text-white hover:text-orange-100 underline font-medium"
+              title="Skip to manual form"
+            >
+              Manual Input
+            </button>
+            <button
+              onClick={onClose}
+              className="text-white hover:text-orange-100 text-2xl font-light"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Main Content - Compact Layout */}
@@ -252,16 +325,28 @@ export default function HanaTaskCreation({
           {/* Bottom Section: Input - Always Visible */}
           <div className="bg-white border-t border-gray-200 px-6 py-4 flex-shrink-0">
             {currentStep !== 'confirm' && currentStep !== 'complete' && (
-              <form onSubmit={handleSendMessage} className="flex gap-3">
+              <form onSubmit={handleSendMessage} className="flex gap-2">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Type here..."
                   className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-full focus:outline-none focus:border-opacity-100 text-sm"
-                  disabled={loading}
+                  disabled={loading || isRecording}
                   autoFocus
                 />
+                <button
+                  type="button"
+                  onClick={isRecording ? stopRecording : startRecording}
+                  className={`px-4 py-3 rounded-full font-bold transition-all text-sm ${
+                    isRecording
+                      ? 'bg-red-500 hover:bg-red-600 text-white'
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                  }`}
+                  title={isRecording ? 'Stop recording' : 'Start voice input'}
+                >
+                  {isRecording ? '⏹️' : '🎤'}
+                </button>
                 <button
                   type="submit"
                   disabled={loading || !input.trim()}
