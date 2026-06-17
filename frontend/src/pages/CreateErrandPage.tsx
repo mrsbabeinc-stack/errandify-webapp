@@ -127,6 +127,27 @@ export default function CreateErrandPage() {
         ...prev,
         title: aiSuggestions.correctedTitle,
       }));
+      // Clear the suggestion after accepting
+      setAiSuggestions((prev) => ({
+        ...prev,
+        hasCorrections: false,
+        correctedTitle: '',
+      }));
+    }
+  };
+
+  const autoCorrectTitle = () => {
+    // Auto-apply correction on blur or after debounce
+    if (aiSuggestions.correctedTitle && formData.title !== aiSuggestions.correctedTitle) {
+      setFormData((prev) => ({
+        ...prev,
+        title: aiSuggestions.correctedTitle,
+      }));
+      setAiSuggestions((prev) => ({
+        ...prev,
+        hasCorrections: false,
+        correctedTitle: '',
+      }));
     }
   };
 
@@ -317,6 +338,7 @@ export default function CreateErrandPage() {
               name="title"
               value={formData.title}
               onChange={handleChange}
+              onBlur={autoCorrectTitle}
               placeholder="Enter Errand Title"
               required
               className={`w-full px-3 py-2 border-b-2 bg-transparent focus:outline-none text-sm ${
@@ -333,17 +355,25 @@ export default function CreateErrandPage() {
               </p>
             )}
             {aiSuggestions.hasCorrections && !aiSuggestions.blocked && (
-              <div className="mt-2 text-xs">
-                <p className="text-blue-600 flex items-center gap-1">
-                  ✏️ Spelling/Punctuation: <span className="font-semibold">{aiSuggestions.correctedTitle}</span>
-                  <button
-                    type="button"
-                    onClick={acceptCorrectedTitle}
-                    className="ml-1 text-blue-700 hover:text-blue-800 font-bold"
-                  >
-                    Use
-                  </button>
-                </p>
+              <div className="mt-2 space-y-2">
+                <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                  <p className="text-xs text-blue-900 font-semibold mb-2">✏️ Auto-correction available:</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-xs">
+                      <p className="text-gray-600">Your text:</p>
+                      <p className="font-mono text-blue-700">{formData.title}</p>
+                      <p className="text-gray-600 mt-1">Corrected to:</p>
+                      <p className="font-mono text-green-700 font-semibold">{aiSuggestions.correctedTitle}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={acceptCorrectedTitle}
+                      className="px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
