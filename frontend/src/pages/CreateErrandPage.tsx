@@ -227,13 +227,17 @@ export default function CreateErrandPage() {
     if (!title.trim() || title.length < 2) return;
 
     try {
+      console.log('[EXTRACT] Calling /extract-task-info with:', title);
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
         { input: title }
       );
 
+      console.log('[EXTRACT] Response:', response.data);
+
       if (response.data.success && response.data.data) {
         const extracted = response.data.data;
+        console.log('[EXTRACT] Setting form data with:', extracted);
         setFormData((prev) => ({
           ...prev,
           ...(extracted.time && { time: extracted.time }),
@@ -246,6 +250,7 @@ export default function CreateErrandPage() {
         }));
         // Set postal code separately (it's not in formData, it's a separate state)
         if (extracted.postalCode) {
+          console.log('[EXTRACT] Setting postal code:', extracted.postalCode);
           setPostalCode(extracted.postalCode);
         }
       }
@@ -303,17 +308,6 @@ export default function CreateErrandPage() {
   };
 
 
-  // Call backend extraction when title changes (with debounce)
-  useEffect(() => {
-    if (!formData.title || formData.title.length <= 3 || formData.title === lastExtractedTitle) return;
-
-    const timer = setTimeout(() => {
-      setLastExtractedTitle(formData.title);
-      extractFieldsFromTitle(formData.title);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [formData.title, lastExtractedTitle]);
 
   // Auto-apply AI suggestions when they arrive
   useEffect(() => {
@@ -339,8 +333,11 @@ export default function CreateErrandPage() {
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
 
-      // Trigger AI suggestions for title and description
+      // For title: call extraction with raw input AND AI suggestions
       if (name === 'title' && value.length > 3) {
+        // Call extraction with the RAW input (before AI cleaning)
+        extractFieldsFromTitle(value);
+        // Also get AI suggestions for description
         debouncedFetchAiSuggestions(value, formData.description);
       } else if (name === 'description' && value.length > 5) {
         debouncedFetchAiSuggestions(formData.title, value);
