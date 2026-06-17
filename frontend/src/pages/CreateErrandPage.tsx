@@ -702,30 +702,28 @@ export default function CreateErrandPage() {
                     const code = e.target.value.trim();
                     setPostalCode(code);
 
+                    // Only update location if postal code is exactly 6 digits
                     if (code.length === 6 && /^\d+$/.test(code)) {
-                      // Get area and building from postal code (first 2 digits)
                       const areaPrefix = code.substring(0, 2);
                       const areaData = postalCodeAreas[areaPrefix];
-                      const area = areaData?.area || 'Singapore';
-                      const building = areaData?.building || 'Singapore';
 
-                      // Store: area (shown to public)
-                      setFormData((prev) => ({
-                        ...prev,
-                        location: area,
-                      }));
-
-                      // Auto-fill full address with building name and postal code
-                      // User can edit to add block/unit number
-                      setFullAddress(`1 ${building}, Unit: __, Singapore ${code}`);
+                      if (areaData) {
+                        // Only update if we have valid area data for this prefix
+                        setFormData((prev) => ({
+                          ...prev,
+                          location: areaData.area,
+                        }));
+                        setFullAddress(`1 ${areaData.building}, Unit: __, Singapore ${code}`);
+                      }
                     } else if (code.length === 0) {
-                      // Clear addresses if postal code is cleared
+                      // Clear addresses only if postal code is completely cleared
                       setFormData((prev) => ({
                         ...prev,
                         location: '',
                       }));
                       setFullAddress('');
                     }
+                    // Otherwise: don't update location (partial postal codes won't modify anything)
                   }}
                   className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
                 />
