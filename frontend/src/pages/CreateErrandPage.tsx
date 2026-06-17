@@ -773,7 +773,7 @@ export default function CreateErrandPage() {
             {/* AI Suggestions */}
             {aiSuggestions.skills.length > 0 && (
               <div>
-                <p className="text-xs text-gray-600 font-semibold mb-2">🤖 AI Suggested Skills (auto-added):</p>
+                <p className="text-xs text-gray-600 font-semibold mb-2">🤖 AI Suggested Skills — Please select:</p>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {aiSuggestions.skills.map((skill) => (
                     <button
@@ -848,7 +848,7 @@ export default function CreateErrandPage() {
             {aiSuggestions.certifications.required.length > 0 && (
               <div>
                 <p className="text-xs text-gray-600 font-semibold mb-2">
-                  🤖 Required Certifications (auto-added):
+                  🤖 Required Certifications — Please select:
                 </p>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {aiSuggestions.certifications.required.map((cert) => (
@@ -872,7 +872,7 @@ export default function CreateErrandPage() {
             {aiSuggestions.certifications.optional.length > 0 && (
               <div>
                 <p className="text-xs text-gray-600 font-semibold mb-2">
-                  🤖 Optional Certifications (auto-added):
+                  🤖 Optional Certifications — Please select:
                 </p>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {aiSuggestions.certifications.optional.map((cert) => (
