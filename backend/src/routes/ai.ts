@@ -1033,6 +1033,13 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
     // Extract title - remove locations, times, dates, postal codes, and numbers
     let titleText = cleaned;
 
+    // Remove common natural language artifacts (extra commas, spaces)
+    titleText = titleText.replace(/\s*,\s*/g, ' '); // Replace commas with spaces
+    titleText = titleText.replace(/\s+/g, ' '); // Collapse multiple spaces
+
+    // Remove possessive phrases (my, your, his, her, the)
+    titleText = titleText.replace(/^(wash|clean|help|need|get|find|do)\s+(my|your|his|her|the)\s+/i, '$1 ');
+
     // Remove postal codes (6-digit numbers like 082001)
     titleText = titleText.replace(/\b\d{6}\b/g, '');
 
@@ -1059,6 +1066,9 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
 
     // Remove any remaining trailing numbers (likely budget or postal fragments)
     titleText = titleText.replace(/\s+\d+\s*$/, '');
+
+    // Clean up double spaces again
+    titleText = titleText.replace(/\s+/g, ' ').trim();
 
     let title = titleText.split(/at|in|on|by/)[0].trim().substring(0, 50) || input.substring(0, 50);
 
