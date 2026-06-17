@@ -1214,11 +1214,13 @@ export default function CreateErrandPage() {
 
       {/* Confirmation Modal */}
       {showConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-errandify-brown">Confirm & Post</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 pointer-events-auto">
+          <div className="bg-white rounded-lg shadow-lg max-w-sm w-full flex flex-col max-h-[90vh] pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 pb-0">
+              <h2 className="text-xl font-bold text-errandify-brown">Confirm & Post</h2>
+            </div>
 
-            <div className="space-y-3 text-sm text-gray-700">
+            <div className="p-6 pt-4 flex-1 overflow-y-auto space-y-3 text-sm text-gray-700">
               <p>
                 <span className="font-semibold">Title:</span> {formData.title}
               </p>
@@ -1270,24 +1272,27 @@ export default function CreateErrandPage() {
               )}
             </div>
 
-
-            <div className="flex gap-2 pt-4">
+            <div className="border-t px-6 py-4 flex gap-2 pointer-events-auto">
               <button
-                onClick={() => setShowConfirm(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50"
+                onClick={() => {
+                  console.log('[DEBUG] Edit button clicked');
+                  setShowConfirm(false);
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer pointer-events-auto"
               >
                 Edit
               </button>
               <button
-                onClick={(e) => {
-                  console.log('[DEBUG] *** POST BUTTON onClick FIRED ***', { loading, disabled: loading });
-                  e.preventDefault();
+                type="button"
+                onClick={() => {
+                  console.log('[DEBUG] *** POST BUTTON CLICKED - DIRECT HANDLER ***');
+                  console.log('[DEBUG] Current loading state:', loading);
                   handleSubmit();
                 }}
                 disabled={loading}
-                className="flex-1 px-4 py-2 bg-errandify-orange text-white rounded-lg font-semibold hover:bg-opacity-90 disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-errandify-orange text-white rounded-lg font-semibold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer pointer-events-auto"
               >
-                {loading ? 'Posting...' : 'Post'}
+                {loading ? '⏳ Posting...' : '✓ Post'}
               </button>
             </div>
           </div>
