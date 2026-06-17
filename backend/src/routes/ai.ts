@@ -210,6 +210,9 @@ function correctSpellingAndPunctuation(text: string): { corrected: string; hasSu
     'og': 'to',
     'od': 'do',
     'fi': 'if',
+    'acare': 'care',
+    'acared': 'cared',
+    'henders': 'henders',
     // Common misspellings
     'seperate': 'separate',
     'recieve': 'receive',
