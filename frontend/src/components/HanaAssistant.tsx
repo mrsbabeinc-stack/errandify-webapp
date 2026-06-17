@@ -120,10 +120,26 @@ export default function HanaAssistant({ isOpen: initialOpen = false }: HanaAssis
       <div className="fixed bottom-24 right-4 z-40">
         <button
           onClick={() => setIsOpen(true)}
-          className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-pink-300 to-pink-400 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all transform"
+          className="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-pink-300 to-pink-400 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all transform overflow-hidden border-4 border-white"
           title="Chat with Hana"
         >
-          <span className="text-3xl">🌸</span>
+          {/* Hana Avatar - will show image or fallback to emoji */}
+          <img
+            src="/images/hana-avatar.png"
+            alt="Hana"
+            className="w-full h-full object-cover rounded-full"
+            onError={(e) => {
+              // Replace with emoji on error
+              const btn = e.currentTarget.parentElement;
+              if (btn) {
+                e.currentTarget.style.display = 'none';
+                const fallback = document.createElement('span');
+                fallback.textContent = '🌸';
+                fallback.className = 'text-3xl';
+                btn.appendChild(fallback);
+              }
+            }}
+          />
         </button>
       </div>
     );
@@ -133,10 +149,27 @@ export default function HanaAssistant({ isOpen: initialOpen = false }: HanaAssis
     <div className="fixed bottom-24 right-4 w-80 h-96 bg-white rounded-2xl shadow-2xl flex flex-col z-40 border border-pink-100">
       {/* Header */}
       <div className="bg-gradient-to-r from-pink-300 to-pink-400 rounded-t-2xl p-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">🌸</span>
+        <div className="flex items-center gap-3">
+          {/* Hana Avatar in Header */}
+          <div className="w-12 h-12 bg-white rounded-full overflow-hidden flex-shrink-0 border-2 border-white shadow">
+            <img
+              src="/images/hana-avatar.png"
+              alt="Hana"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const container = e.currentTarget.parentElement;
+                if (container) {
+                  e.currentTarget.style.display = 'none';
+                  const fallback = document.createElement('div');
+                  fallback.textContent = '🌸';
+                  fallback.className = 'w-full h-full flex items-center justify-center text-xl';
+                  container.appendChild(fallback);
+                }
+              }}
+            />
+          </div>
           <div>
-            <h3 className="font-bold text-white">Hana Assistant</h3>
+            <h3 className="font-bold text-white">Hana</h3>
             <p className="text-xs text-pink-100">Always here to help</p>
           </div>
         </div>
