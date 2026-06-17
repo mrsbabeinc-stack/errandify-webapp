@@ -29,6 +29,11 @@ export default function CreateErrandPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [hoveredTooltip, setHoveredTooltip] = useState<string | null>(null);
+  const [aiSuggestions, setAiSuggestions] = useState({
+    suggestedCategory: '',
+    suggestedDescription: '',
+  });
+  const [aiLoading, setAiLoading] = useState(false);
 
   const categoryNames: Record<string, string> = {
     'home-maintenance': 'Home Maintenance',
@@ -48,6 +53,46 @@ export default function CreateErrandPage() {
   };
 
   const durationUnits = ['Min', 'Hr', 'Week', 'Month'];
+
+  const getAiSuggestions = async (title: string) => {
+    if (!title.trim() || title.length < 5) return;
+
+    setAiLoading(true);
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+        { title }
+      );
+
+      if (response.data.success) {
+        setAiSuggestions({
+          suggestedCategory: response.data.data.category,
+          suggestedDescription: response.data.data.description,
+        });
+
+        // Auto-apply category if not already set
+        if (!formData.category && response.data.data.category) {
+          setFormData((prev) => ({
+            ...prev,
+            category: response.data.data.category,
+          }));
+        }
+      }
+    } catch (err) {
+      console.error('AI suggestion error:', err);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const acceptDescriptionSuggestion = () => {
+    if (aiSuggestions.suggestedDescription) {
+      setFormData((prev) => ({
+        ...prev,
+        description: aiSuggestions.suggestedDescription,
+      }));
+    }
+  };
 
   const calculateSessions = (startDate: string, repeatEvery: number, repeatUnit: string, occurrences: number, budget: number) => {
     if (!startDate || occurrences < 1) return [];
@@ -98,6 +143,11 @@ export default function CreateErrandPage() {
     };
 
     setFormData(newFormData);
+
+    // Trigger AI suggestions when title is entered
+    if (name === 'title' && value.length >= 5) {
+      getAiSuggestions(value);
+    }
 
     // Recalculate sessions if recurring fields change
     if (newFormData.isRecurring && newFormData.startDate && newFormData.budget) {
@@ -240,7 +290,7 @@ export default function CreateErrandPage() {
           {/* Category */}
           <div>
             <label className="block text-sm font-semibold text-errandify-brown mb-1">
-              Category
+              Category {aiLoading && <span className="text-xs text-errandify-orange">🤖 detecting...</span>}
             </label>
             <select
               name="category"
@@ -258,19 +308,33 @@ export default function CreateErrandPage() {
             </select>
           </div>
 
-          {/* Errand Description */}
+          {/* Errand Description with AI Suggestion */}
           <div>
-            <label className="block text-sm font-semibold text-errandify-brown mb-1">
-              Description
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-semibold text-errandify-brown">
+                Description
+              </label>
+              {aiSuggestions.suggestedDescription && !formData.description && (
+                <button
+                  type="button"
+                  onClick={acceptDescriptionSuggestion}
+                  className="text-xs text-errandify-orange hover:text-orange-600 font-semibold"
+                >
+                  ✨ Use AI suggestion
+                </button>
+              )}
+            </div>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder="Describe your task..."
+              placeholder={aiSuggestions.suggestedDescription || 'Describe your task...'}
               rows={2}
               className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm resize-none"
             />
+            {aiSuggestions.suggestedDescription && !formData.description && (
+              <p className="text-xs text-gray-500 mt-1">💡 Suggested: {aiSuggestions.suggestedDescription}</p>
+            )}
           </div>
 
           {/* Two Column Layout */}
@@ -338,34 +402,28 @@ export default function CreateErrandPage() {
                 </select>
               </div>
             </div>
+          </div>
 
-            {/* Recurring */}
-            <div className="flex items-end">
-              <label className="flex items-center gap-2 cursor-pointer text-sm">
-                <input
-                  type="checkbox"
-                  name="isRecurring"
-                  checked={formData.isRecurring}
-                  onChange={handleChange}
-                  className="w-4 h-4 cursor-pointer"
-                />
-                <span className="font-semibold text-errandify-brown">
-                  Recurring
-                </span>
-                <InfoTooltip field="isRecurring" />
-              </label>
-            </div>
+          {/* Recurring Checkbox - Full Width */}
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                name="isRecurring"
+                checked={formData.isRecurring}
+                onChange={handleChange}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <span className="font-semibold text-errandify-brown">
+                Do you want this errand to repeat on a regular schedule?
+              </span>
+              <InfoTooltip field="isRecurring" />
+            </label>
           </div>
 
           {/* Recurring Schedule (conditional) */}
           {formData.isRecurring && (
             <>
-              <div>
-                <h3 className="text-sm font-semibold text-errandify-brown mb-3">
-                  Do you want this errand to repeat on a regular schedule?
-                </h3>
-              </div>
-
               {/* Repeat Every */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
