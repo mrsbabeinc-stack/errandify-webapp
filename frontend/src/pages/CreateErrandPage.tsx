@@ -32,6 +32,11 @@ export default function CreateErrandPage() {
   const [aiSuggestions, setAiSuggestions] = useState({
     suggestedCategory: '',
     suggestedDescription: '',
+    correctedTitle: '',
+    hasCorrections: false,
+    missingDetails: [] as string[],
+    blocked: false,
+    error: '',
   });
   const [aiLoading, setAiLoading] = useState(false);
 
@@ -64,10 +69,25 @@ export default function CreateErrandPage() {
         { title }
       );
 
-      if (response.data.success) {
+      if (response.data.blocked) {
+        setAiSuggestions({
+          suggestedCategory: '',
+          suggestedDescription: '',
+          correctedTitle: '',
+          hasCorrections: false,
+          missingDetails: [],
+          blocked: true,
+          error: response.data.error,
+        });
+      } else if (response.data.success) {
         setAiSuggestions({
           suggestedCategory: response.data.data.category,
           suggestedDescription: response.data.data.description,
+          correctedTitle: response.data.data.correctedTitle || '',
+          hasCorrections: response.data.data.hasCorrections,
+          missingDetails: response.data.data.missingDetails || [],
+          blocked: false,
+          error: '',
         });
 
         // Auto-apply category if not already set
@@ -78,8 +98,15 @@ export default function CreateErrandPage() {
           }));
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('AI suggestion error:', err);
+      if (err.response?.data?.blocked) {
+        setAiSuggestions((prev) => ({
+          ...prev,
+          blocked: true,
+          error: err.response.data.error,
+        }));
+      }
     } finally {
       setAiLoading(false);
     }
@@ -90,6 +117,15 @@ export default function CreateErrandPage() {
       setFormData((prev) => ({
         ...prev,
         description: aiSuggestions.suggestedDescription,
+      }));
+    }
+  };
+
+  const acceptCorrectedTitle = () => {
+    if (aiSuggestions.correctedTitle) {
+      setFormData((prev) => ({
+        ...prev,
+        title: aiSuggestions.correctedTitle,
       }));
     }
   };
@@ -283,8 +319,33 @@ export default function CreateErrandPage() {
               onChange={handleChange}
               placeholder="Enter Errand Title"
               required
-              className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+              className={`w-full px-3 py-2 border-b-2 bg-transparent focus:outline-none text-sm ${
+                aiSuggestions.blocked
+                  ? 'border-red-400 focus:border-red-500'
+                  : aiSuggestions.hasCorrections
+                  ? 'border-blue-400 focus:border-blue-500'
+                  : 'border-gray-300 focus:border-errandify-orange'
+              }`}
             />
+            {aiSuggestions.blocked && (
+              <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
+                🚫 {aiSuggestions.error}
+              </p>
+            )}
+            {aiSuggestions.hasCorrections && !aiSuggestions.blocked && (
+              <div className="mt-2 text-xs">
+                <p className="text-blue-600 flex items-center gap-1">
+                  ✏️ Spelling/Punctuation: <span className="font-semibold">{aiSuggestions.correctedTitle}</span>
+                  <button
+                    type="button"
+                    onClick={acceptCorrectedTitle}
+                    className="ml-1 text-blue-700 hover:text-blue-800 font-bold"
+                  >
+                    Use
+                  </button>
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Category */}
@@ -334,6 +395,21 @@ export default function CreateErrandPage() {
             />
             {aiSuggestions.suggestedDescription && !formData.description && (
               <p className="text-xs text-gray-500 mt-1">💡 Suggested: {aiSuggestions.suggestedDescription}</p>
+            )}
+
+            {/* Missing Details Suggestions */}
+            {aiSuggestions.missingDetails.length > 0 && !aiSuggestions.blocked && (
+              <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-xs font-semibold text-yellow-800 mb-2">📋 Things to clarify:</p>
+                <ul className="space-y-1">
+                  {aiSuggestions.missingDetails.map((detail, idx) => (
+                    <li key={idx} className="text-xs text-yellow-700 flex items-start gap-2">
+                      <span>•</span>
+                      <span>{detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
 
