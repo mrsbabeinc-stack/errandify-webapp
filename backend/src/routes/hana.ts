@@ -145,7 +145,14 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
     if (config.qwen.apiKey) {
       try {
         console.log('[DEBUG] Attempting Qwen API call with language:', language);
-        const systemPrompt = `You are Hana, a helpful neighbor and AI assistant for Errandify (帮帮乐). You speak warmly and naturally, like someone who genuinely cares about helping your community. Be friendly but professional. Keep responses brief (2-3 sentences) and clear. No emoticons or icons. Sound warm, neighbourly, and trustworthy. ${languageInstruction}`;
+
+        // Detect if user is using Singlish/casual Singapore English
+        const userMessageLower = message.toLowerCase();
+        const usesSinglish = /\b(lah|lor|leh|meh|lor|lor|lor)\b|dun |dont |dont |u |ur |arent |cant |wont |havent |isnt |wasnt |shouldnt |wouldnt |couldnt /.test(userMessageLower);
+
+        const systemPrompt = usesSinglish
+          ? `You are Hana, a warm and friendly Singaporean assistant for Errandify (帮帮乐). Match the user's friendly, casual tone. Use natural conversational Singapore English with particles like lor, lah, leh when appropriate. Be genuine and caring. Keep it brief. No emoticons. ${languageInstruction}`
+          : `You are Hana, a helpful and warm AI assistant for Errandify (帮帮乐). Respond in clear, professional English. You are friendly and neighbourly, like a caring community helper. Keep responses brief (2-3 sentences). No emoticons or icons. Sound warm and genuine. ${languageInstruction}`;
 
         const response = await axios.post(
           'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
@@ -206,19 +213,34 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
           reply = '谢谢你的联系。我是帮帮乐的助手 Hana。今天有什么我可以为你效劳的吗？';
         }
       } else {
-        // English fallback responses
+        // English fallback responses - standard English unless user uses Singlish
+        const userMessageLower = message.toLowerCase();
+        const usesSinglish = /\b(lah|lor|leh|meh)\b|dun |dont |u |ur /.test(userMessageLower);
+
         if (messageLower.includes('post') || messageLower.includes('create') || messageLower.includes('errand')) {
-          reply = 'To post an errand, tap the plus button at the bottom of the screen. Fill in what you need help with, choose your budget and deadline, then submit.';
+          reply = usesSinglish
+            ? 'Super easy lor! Just tap the plus button at the bottom, fill in what you need, set your budget and deadline, then submit.'
+            : 'To post an errand, tap the plus button at the bottom of the screen. Fill in what you need help with, choose your budget and deadline, then submit.';
         } else if (messageLower.includes('bid') || messageLower.includes('accept') || messageLower.includes('job')) {
-          reply = 'You can browse available errands, check the details, and tap accept to place your bid. The person who posted will choose their preferred helper.';
+          reply = usesSinglish
+            ? 'Browse the errands, check the details, then tap accept to place your bid lor. The person will pick their favourite helper.'
+            : 'You can browse available errands, check the details, and tap accept to place your bid. The person who posted will choose their preferred helper.';
         } else if (messageLower.includes('payment') || messageLower.includes('money') || messageLower.includes('price')) {
-          reply = 'Payments are held securely until the work is completed and approved. Once the errand poster confirms your work, you receive your payment.';
+          reply = usesSinglish
+            ? 'Don\'t worry, the money is safe with us until the work is done. You get paid once they approve your work lor.'
+            : 'Payments are held securely until the work is completed and approved. Once the errand poster confirms your work, you receive your payment.';
         } else if (messageLower.includes('help') || messageLower.includes('support') || messageLower.includes('issue')) {
-          reply = 'I am here to help you with any questions about posting errands, accepting jobs, payments, or using Errandify. What do you need?';
+          reply = usesSinglish
+            ? 'I\'m here to help you lor! Tell me what you need about posting errands, accepting jobs, or payments.'
+            : 'I am here to help you with any questions about posting errands, accepting jobs, payments, or using Errandify.';
         } else if (messageLower.includes('how to') || messageLower.includes('how do')) {
-          reply = 'I can help you learn how to post errands, accept jobs, or manage your account. What would you like to know more about?';
+          reply = usesSinglish
+            ? 'Tell me what you want to know and I\'ll explain lor. Posting errands, accepting jobs, or something else?'
+            : 'I can help you learn how to post errands, accept jobs, or manage your account. What would you like to know?';
         } else {
-          reply = 'Hello, I am Hana, your Errandify assistant. How can I help you today?';
+          reply = usesSinglish
+            ? 'Hi, I\'m Hana. What can I help you with today, ah?'
+            : 'Hello, I am Hana, your Errandify assistant. How can I help you today?';
         }
       }
     }
