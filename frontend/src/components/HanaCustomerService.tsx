@@ -31,7 +31,7 @@ export default function HanaCustomerService() {
     {
       id: '1',
       sender: 'hana',
-      text: "👋 Hi! I'm Hana, your Errandify assistant. How can I help?",
+      text: "Hi there! I'm Hana, your Errandify assistant. How can I help you today?",
       timestamp: new Date(),
     },
   ]);
@@ -112,13 +112,27 @@ export default function HanaCustomerService() {
 
     // Set language based on selected language
     const languageMap: Record<Language, string> = {
-      en: 'en-US',
-      zh: 'zh-CN',
+      en: 'en-SG',
+      zh: 'zh-SG',
       yue: 'zh-HK',
     };
     utterance.lang = languageMap[language];
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
+
+    // Try to find a female voice (20+ years old, Singapore accent)
+    const voices = window.speechSynthesis.getVoices();
+    const femaleVoice = voices.find(voice =>
+      voice.lang.startsWith(languageMap[language].split('-')[0]) &&
+      voice.name.toLowerCase().includes('female')
+    ) || voices.find(voice =>
+      voice.lang.startsWith(languageMap[language].split('-')[0])
+    );
+
+    if (femaleVoice) {
+      utterance.voice = femaleVoice;
+    }
+
+    utterance.rate = 0.95;
+    utterance.pitch = 1.1;
 
     utterance.onstart = () => {
       console.log('[Hana] Speaking:', text.substring(0, 50));
