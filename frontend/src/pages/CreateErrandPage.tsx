@@ -659,8 +659,7 @@ export default function CreateErrandPage() {
                     if (code.length === 6 && /^\d+$/.test(code)) {
                       // Get area from postal code (first 2 digits)
                       const areaPrefix = code.substring(0, 2);
-                      const areaData = postalCodeAreas[areaPrefix];
-                      const area = areaData?.area || 'Singapore';
+                      const area = postalCodeAreas[areaPrefix] || 'Singapore';
 
                       // Store: area (shown to public)
                       setFormData((prev) => ({
