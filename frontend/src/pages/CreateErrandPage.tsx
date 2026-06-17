@@ -29,6 +29,8 @@ export default function CreateErrandPage() {
     certifications: { required: [] as string[], optional: [] as string[] },
   });
 
+  const [lastExtractedTitle, setLastExtractedTitle] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
@@ -221,6 +223,32 @@ export default function CreateErrandPage() {
     '82': { area: 'Sengkang', building: 'Sengkang' },
   };
 
+  const extractFieldsFromTitle = async (title: string) => {
+    if (!title.trim() || title.length < 2) return;
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract`,
+        { title }
+      );
+
+      if (response.data.success && response.data.data) {
+        const extracted = response.data.data;
+        setFormData((prev) => ({
+          ...prev,
+          ...(extracted.time && { time: extracted.time }),
+          ...(extracted.duration && { duration: extracted.duration }),
+          ...(extracted.durationUnit && { durationUnit: extracted.durationUnit }),
+          ...(extracted.budget && { budget: extracted.budget }),
+          ...(extracted.location && { location: extracted.location }),
+          ...(extracted.date && { deadline: extracted.date }),
+        }));
+      }
+    } catch (err) {
+      console.error('Extraction error:', err);
+    }
+  };
+
   const fetchAiSuggestions = async (title: string, description: string = '') => {
     if (!title.trim() || title.length < 2) return;
 
@@ -270,52 +298,17 @@ export default function CreateErrandPage() {
   };
 
 
-  // Extract time, duration, budget when title changes
+  // Call backend extraction when title changes (with debounce)
   useEffect(() => {
-    if (!formData.title || formData.title.length <= 3) return;
+    if (!formData.title || formData.title.length <= 3 || formData.title === lastExtractedTitle) return;
 
-    const rawTitle = formData.title.toLowerCase();
-    console.log('[extraction] rawTitle:', rawTitle);
+    const timer = setTimeout(() => {
+      setLastExtractedTitle(formData.title);
+      extractFieldsFromTitle(formData.title);
+    }, 300);
 
-    // Extract time: "4pm" → "16:00"
-    // ONLY if it matches am/pm pattern properly
-    const timeMatch = rawTitle.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
-    console.log('[extraction] timeMatch:', timeMatch);
-    if (timeMatch && timeMatch[3]) {
-      const hourNum = parseInt(timeMatch[1]);
-      // Validate: hour must be 1-12 for 12-hour format (will convert to 24-hour)
-      if (hourNum >= 1 && hourNum <= 12) {
-        let hours = hourNum;
-        const minutes = timeMatch[2] || '00';
-        const period = timeMatch[3].toLowerCase();
-        if (period === 'pm' && hours !== 12) hours += 12;
-        else if (period === 'am' && hours === 12) hours = 0;
-        const timeStr = `${String(hours).padStart(2, '0')}:${minutes}`;
-        // Only set if it's a valid time format (HH:MM where HH is 00-23)
-        if (hours >= 0 && hours <= 23 && minutes >= '00' && minutes <= '59') {
-          setFormData((prev) => ({ ...prev, time: timeStr }));
-        }
-      }
-    }
-
-    // Extract duration: "30min" → "30" "Min"
-    const durationMatch = rawTitle.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|minutes?|mins?|m\b|days?|d\b)/);
-    if (durationMatch && durationMatch[2]) {
-      const durationValue = durationMatch[1];
-      const unit = durationMatch[2];
-      let normalizedUnit = 'Hr' as 'Min' | 'Hr' | 'Day' | 'Week';
-      if (unit.match(/^(min|m)/)) normalizedUnit = 'Min';
-      else if (unit.match(/^(day|d)/)) normalizedUnit = 'Day';
-      setFormData((prev) => ({ ...prev, duration: durationValue, durationUnit: normalizedUnit }));
-    }
-
-    // Extract budget: last 1-3 digit number (avoid 6-digit postal codes)
-    const allNumbers = rawTitle.match(/\b(\d{1,3})\b/g);
-    if (allNumbers && allNumbers.length > 0) {
-      const lastSmallNumber = allNumbers[allNumbers.length - 1];
-      setFormData((prev) => ({ ...prev, budget: lastSmallNumber }));
-    }
-  }, [formData.title]);
+    return () => clearTimeout(timer);
+  }, [formData.title, lastExtractedTitle]);
 
   // Auto-apply AI suggestions when they arrive
   useEffect(() => {
