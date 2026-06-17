@@ -311,10 +311,13 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
 
     // Generate SSML with voice parameters
     // English: maximum energy - faster, higher pitch, dynamic expression
-    // Others: warm and friendly
+    // Cantonese: smooth, natural, no pulsing
+    // Mandarin: warm and friendly
     const prosodySettings = language === 'en'
       ? 'pitch="+20%" rate="1.15" contour="(0%,+35%) (50%,+25%) (100%,+20%)"' // High energy, dynamic
-      : 'pitch="+10%" rate="0.95" contour="(0%,+20%) (100%,+15%)"'; // Warm, friendly
+      : language === 'yue'
+      ? 'pitch="+5%" rate="1.0"' // Smooth, natural Cantonese - no contour (no pulsing)
+      : 'pitch="+10%" rate="0.95" contour="(0%,+20%) (100%,+15%)"'; // Mandarin: warm, friendly
 
     const ssml = `<speak version="1.0" xml:lang="${voiceConfig.lang}">
       <voice name="${voiceConfig.voice}">
