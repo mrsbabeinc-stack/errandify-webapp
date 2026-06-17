@@ -160,23 +160,38 @@ export default function HanaCustomerService() {
     const responsiveVoice = (window as any).responsiveVoice;
 
     if (responsiveVoice && responsiveVoice.isReady) {
-      console.log('[Hana] Using ResponsiveVoice AI TTS');
+      console.log('[Hana] Using ResponsiveVoice AI TTS with warm, passionate delivery');
 
-      // Explicit female voice selection for 20-year-old Singapore girl
+      // Explicit female voice selection for warm, passionate 20-year-old Singapore girl
       const voiceMap: Record<Language, string> = {
-        en: 'Singapore Female', // Singapore English - female
-        zh: 'Mandarin Female', // Mandarin Chinese - female
-        yue: 'Cantonese Female', // Cantonese - female
+        en: 'UK English Female', // Warmer, more natural British English female
+        zh: 'Chinese Female', // Mandarin Chinese - warmer delivery
+        yue: 'Chinese Female', // Cantonese - using Chinese Female as best option
       };
 
       const voice = voiceMap[language] || voiceMap['en'];
 
+      // Add emotional warmth to text with SSML-like markers
+      // ResponsiveVoice will interpret these for warmer delivery
+      let emotionalText = text;
+
+      // Enhance with natural pauses and emphasis for passion
+      if (language === 'en') {
+        // For English: add warmth through pacing and emphasis
+        emotionalText = text
+          .replace(/\?/g, '? ') // Natural pause after questions
+          .replace(/\!/g, '! '); // Emphasis before exclamations
+      } else if (language === 'zh') {
+        // For Mandarin: maintain natural flow with slight emphasis
+        emotionalText = text;
+      }
+
       console.log('[Hana] Speaking with voice:', voice);
 
-      responsiveVoice.speak(text, voice, {
-        rate: 1.0, // Normal speed
-        pitch: 1.2, // Slightly higher pitch for younger voice (20s)
-        volume: 1.0, // Full volume
+      responsiveVoice.speak(emotionalText, voice, {
+        rate: 0.9, // Slightly slower for warmth and clarity
+        pitch: 1.1, // Slightly higher pitch for younger voice, less artificial
+        volume: 1.0, // Full volume for passion
         onstart: () => {
           console.log('[Hana] ResponsiveVoice started');
           setIsSpeaking(true);
