@@ -62,7 +62,7 @@ export default function HanaTaskCreation({
   }, [isOpen]);
 
   const initializeChat = () => {
-    setHanaMessage("Hi! Tell me about the errand you need done.\n\nYou can type it all at once, like:\n'I need help cleaning my house in Orchard on Saturday at 2pm, budget $100'");
+    setHanaMessage("Hi! Tell me about the errand you need done.\n\nInclude: location/postal code, date, time, duration & budget\n\nExample:\n'I need help cleaning my house at 680433 on Saturday for 2 hours at 2pm, budget $100'");
     setCurrentStep('input');
     triggerSpeaking();
   };
