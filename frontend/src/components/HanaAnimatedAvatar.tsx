@@ -11,21 +11,36 @@ export default function HanaAnimatedAvatar({
   message = '',
   onSpeakingEnd
 }: HanaAnimatedAvatarProps) {
-  const [mouthOpen, setMouthOpen] = useState(false);
+  const [mouthFrame, setMouthFrame] = useState(0);
+  const [armFrame, setArmFrame] = useState(0);
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Animate mouth when speaking
   useEffect(() => {
     if (!isSpeaking) {
-      setMouthOpen(false);
+      setMouthFrame(0);
       return;
     }
 
     const mouthInterval = setInterval(() => {
-      setMouthOpen(prev => !prev);
-    }, 150);
+      setMouthFrame((f) => (f + 1) % 4);
+    }, 120);
 
     return () => clearInterval(mouthInterval);
+  }, [isSpeaking]);
+
+  // Animate arms when speaking
+  useEffect(() => {
+    if (!isSpeaking) {
+      setArmFrame(0);
+      return;
+    }
+
+    const armInterval = setInterval(() => {
+      setArmFrame((f) => (f + 1) % 60);
+    }, 100);
+
+    return () => clearInterval(armInterval);
   }, [isSpeaking]);
 
   // Speak the message using Web Speech API
@@ -37,13 +52,12 @@ export default function HanaAnimatedAvatar({
     const utterance = new SpeechSynthesisUtterance(message);
 
     // Get all available voices
-    const allVoices = window.speechSynthesis.getVoices();
+    let allVoices = window.speechSynthesis.getVoices();
 
     if (allVoices.length === 0) {
-      // Wait for voices to load
       window.speechSynthesis.onvoiceschanged = () => {
-        const voices = window.speechSynthesis.getVoices();
-        selectFemaleVoice(utterance, voices);
+        allVoices = window.speechSynthesis.getVoices();
+        selectFemaleVoice(utterance, allVoices);
       };
     } else {
       selectFemaleVoice(utterance, allVoices);
@@ -55,43 +69,24 @@ export default function HanaAnimatedAvatar({
   }, [isSpeaking, message, onSpeakingEnd]);
 
   const selectFemaleVoice = (utterance: SpeechSynthesisUtterance, allVoices: SpeechSynthesisVoice[]) => {
-    // Debug: Log all available voices
-    console.log('Available voices:');
-    allVoices.forEach((voice, idx) => {
-      console.log(`${idx}: ${voice.name} (${voice.lang}) - default: ${voice.default}`);
-    });
+    // Explicit female voice names
+    const femaleNames = ['Moira', 'Samantha', 'Victoria', 'Fiona', 'Karen', 'Susan', 'Zira', 'Cortana'];
 
     let selectedVoice = null;
-
-    // Try to find female voice - different approach for different OS
-    // macOS typically has: Moira, Samantha, Victoria, Fiona (female); Alex, Bruce (male)
-    const femaleNames = ['Moira', 'Samantha', 'Victoria', 'Fiona', 'Karen', 'Susan', 'Zira', 'Cortana'];
 
     for (const name of femaleNames) {
       const found = allVoices.find(v => v.name.includes(name));
       if (found) {
         selectedVoice = found;
-        console.log('Found female voice:', selectedVoice.name);
         break;
       }
     }
 
-    // If no specific female voice found, try to filter by other means
     if (!selectedVoice) {
       const englishVoices = allVoices.filter(v => v.lang.startsWith('en'));
-
-      // Try Singapore English first
-      selectedVoice = englishVoices.find(v => v.lang.includes('en-SG'));
-
-      // Try British English
-      if (!selectedVoice) {
-        selectedVoice = englishVoices.find(v => v.lang.includes('en-GB'));
-      }
-
-      // Take first English voice
-      if (!selectedVoice && englishVoices.length > 0) {
-        selectedVoice = englishVoices[0];
-      }
+      selectedVoice = englishVoices.find(v => v.lang.includes('en-SG')) ||
+                     englishVoices.find(v => v.lang.includes('en-GB')) ||
+                     englishVoices[0];
     }
 
     if (!selectedVoice && allVoices.length > 0) {
@@ -100,21 +95,36 @@ export default function HanaAnimatedAvatar({
 
     if (selectedVoice) {
       utterance.voice = selectedVoice;
-      console.log('Using voice:', selectedVoice.name, selectedVoice.lang);
     }
 
     utterance.rate = 0.9;
-    utterance.pitch = 1.4; // Even higher pitch for definitely female
+    utterance.pitch = 1.4;
     utterance.volume = 1;
 
     synthRef.current = utterance;
 
     utterance.onend = () => {
-      setMouthOpen(false);
+      setMouthFrame(0);
+      setArmFrame(0);
       if (onSpeakingEnd) onSpeakingEnd();
     };
 
     window.speechSynthesis.speak(utterance);
+  };
+
+  // Calculate arm positions based on frame
+  const getLeftArmRotation = () => {
+    const wave = Math.sin((armFrame / 60) * Math.PI * 2);
+    return wave * 25; // -25 to 25 degrees
+  };
+
+  const getRightArmRotation = () => {
+    const wave = Math.sin(((armFrame + 30) / 60) * Math.PI * 2);
+    return -wave * 25; // Opposite direction
+  };
+
+  const getArmLift = () => {
+    return Math.sin((armFrame / 60) * Math.PI) * 15; // 0-15px up and down
   };
 
   return (
@@ -130,31 +140,66 @@ export default function HanaAnimatedAvatar({
           }}
         />
 
-        {/* Mouth Animation Indicator - Simple glow when speaking */}
-        {isSpeaking && mouthOpen && (
-          <div
-            className="absolute pointer-events-none"
-            style={{
-              width: '40px',
-              height: '20px',
-              backgroundColor: 'rgba(200, 100, 100, 0.4)',
-              borderRadius: '50%',
-              left: '50%',
-              top: '48%',
-              transform: 'translate(-50%, -50%)',
-              filter: 'blur(8px)',
-              animation: 'pulse 0.3s ease-in-out',
-            }}
-          />
+        {/* SVG Overlay for Animations - Only when speaking */}
+        {isSpeaking && (
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            viewBox="0 0 200 300"
+            preserveAspectRatio="xMidYMid slice"
+            style={{ opacity: 1 }}
+          >
+            {/* Left Arm */}
+            <g
+              style={{
+                transformOrigin: '70px 80px',
+                transform: `rotate(${getLeftArmRotation()}deg) translateY(-${getArmLift()}px)`,
+                transition: 'transform 0.1s ease-out',
+              }}
+            >
+              <path
+                d="M 70 80 Q 50 100 45 130"
+                stroke="rgba(245, 213, 192, 0.9)"
+                strokeWidth="20"
+                fill="none"
+                strokeLinecap="round"
+              />
+              <circle cx="45" cy="130" r="12" fill="rgba(245, 213, 192, 0.9)" />
+            </g>
+
+            {/* Right Arm */}
+            <g
+              style={{
+                transformOrigin: '130px 80px',
+                transform: `rotate(${getRightArmRotation()}deg) translateY(-${getArmLift()}px)`,
+                transition: 'transform 0.1s ease-out',
+              }}
+            >
+              <path
+                d="M 130 80 Q 150 100 155 130"
+                stroke="rgba(245, 213, 192, 0.9)"
+                strokeWidth="20"
+                fill="none"
+                strokeLinecap="round"
+              />
+              <circle cx="155" cy="130" r="12" fill="rgba(245, 213, 192, 0.9)" />
+            </g>
+
+            {/* Mouth - Simple lip sync */}
+            {mouthFrame > 0 && (
+              <ellipse
+                cx="100"
+                cy="110"
+                rx={8 + mouthFrame * 2}
+                ry={4 + mouthFrame}
+                fill="rgba(200, 90, 84, 0.5)"
+                style={{
+                  transition: 'all 0.12s ease-out',
+                }}
+              />
+            )}
+          </svg>
         )}
       </div>
-
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }

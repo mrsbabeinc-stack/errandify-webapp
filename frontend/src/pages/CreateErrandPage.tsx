@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
 export default function CreateErrandPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [formData, setFormData] = useState({
     category: categoryId || '',
@@ -45,6 +46,28 @@ export default function CreateErrandPage() {
     blocked: false,
     error: '',
   });
+
+  // Load prefilled data from Hana on mount
+  useEffect(() => {
+    const prefilledJson = searchParams.get('prefilled');
+    if (prefilledJson) {
+      try {
+        const prefilledData = JSON.parse(decodeURIComponent(prefilledJson));
+        setFormData((prev) => ({
+          ...prev,
+          title: prefilledData.title || '',
+          description: prefilledData.description || '',
+          category: prefilledData.category || prev.category,
+          location: prefilledData.location || '',
+          budget: prefilledData.budget || '',
+          deadline: prefilledData.date || '',
+          specialNote: prefilledData.notes || '',
+        }));
+      } catch (err) {
+        console.error('Failed to load prefilled data:', err);
+      }
+    }
+  }, [searchParams]);
 
   const categoryNames: Record<string, string> = {
     'home-maintenance': 'Home Maintenance',

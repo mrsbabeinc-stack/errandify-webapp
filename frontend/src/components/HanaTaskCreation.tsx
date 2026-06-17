@@ -13,22 +13,20 @@ interface TaskData {
   notes: string;
 }
 
-type TaskStep = 'start' | 'title' | 'location' | 'date' | 'budget' | 'notes' | 'review';
+type CollectionStep = 'title' | 'location' | 'date' | 'budget' | 'confirm' | 'complete';
 
 interface HanaTaskCreationProps {
   isOpen: boolean;
   onClose: () => void;
-  onSwitchToManual: () => void;
-  onTaskCreated?: (taskId: string) => void;
+  onComplete: (taskData: TaskData) => void;
 }
 
 export default function HanaTaskCreation({
   isOpen,
   onClose,
-  onSwitchToManual,
-  onTaskCreated,
+  onComplete,
 }: HanaTaskCreationProps) {
-  const [currentStep, setCurrentStep] = useState<TaskStep>('start');
+  const [currentStep, setCurrentStep] = useState<CollectionStep>('title');
   const [taskData, setTaskData] = useState<TaskData>({
     title: '',
     description: '',
@@ -42,11 +40,7 @@ export default function HanaTaskCreation({
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [hanaMessage, setHanaMessage] = useState('');
-  const [isExpressing, setIsExpressing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     if (isOpen && !hanaMessage) {
@@ -57,104 +51,24 @@ export default function HanaTaskCreation({
   const initializeChat = () => {
     setHanaMessage("Hello! I'm Hana. Let's create your task together!\n\nShare what you need done, your location, timing, and budget. I'll help you fill in some details.");
     setCurrentStep('title');
-    triggerExpression();
+    triggerSpeaking();
   };
 
-  const triggerExpression = () => {
+  const triggerSpeaking = () => {
     setIsSpeaking(true);
+    setTimeout(() => setIsSpeaking(false), 4000);
   };
 
-  const handleSpeakingEnd = () => {
-    setIsSpeaking(false);
-  };
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await transcribeAudio(blob);
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      setHanaMessage('Could not access microphone. Please use text input.');
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    }
-  };
-
-  const transcribeAudio = async (audioBlob: Blob) => {
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
-
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/transcribe-and-extract`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
-
-      const userInput = response.data.data.title || response.data.data.description || '';
-      if (userInput) {
-        setInput(userInput);
-        handleSendMessage({ preventDefault: () => {} } as React.FormEvent, userInput);
-      }
-    } catch (err: any) {
-      setHanaMessage('Could not understand audio. Please try again or use text.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSendMessage = async (e: React.FormEvent, voiceInput?: string) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    const userInput = voiceInput || input.trim();
-    if (!userInput || loading) return;
+    if (!input.trim() || loading) return;
 
+    const userInput = input.trim();
     setInput('');
     setLoading(true);
-    triggerExpression();
 
     try {
-      switch (currentStep) {
-        case 'title':
-          await processTitle(userInput);
-          break;
-        case 'location':
-          await processLocation(userInput);
-          break;
-        case 'date':
-          await processDate(userInput);
-          break;
-        case 'budget':
-          await processBudget(userInput);
-          break;
-        case 'notes':
-          await processNotes(userInput);
-          break;
-      }
+      await processUserInput(userInput);
     } catch (error) {
       console.error('Chat error:', error);
       setHanaMessage('Sorry, I had trouble understanding. Can you try again?');
@@ -163,9 +77,27 @@ export default function HanaTaskCreation({
     }
   };
 
-  const processTitle = async (input: string) => {
+  const processUserInput = async (userInput: string) => {
+    switch (currentStep) {
+      case 'title':
+        await handleTitle(userInput);
+        break;
+      case 'location':
+        await handleLocation(userInput);
+        break;
+      case 'date':
+        await handleDate(userInput);
+        break;
+      case 'budget':
+        await handleBudget(userInput);
+        break;
+    }
+  };
+
+  const handleTitle = async (input: string) => {
     setTaskData((prev) => ({ ...prev, title: input, description: input }));
 
+    // Detect category
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/detect-category`,
@@ -178,17 +110,19 @@ export default function HanaTaskCreation({
       console.log('Category detection failed');
     }
 
-    setHanaMessage("Got it! 📍 Now, where do you need this done?");
+    setHanaMessage("Great! 📍 Now, where do you need this done?");
     setCurrentStep('location');
+    triggerSpeaking();
   };
 
-  const processLocation = async (input: string) => {
+  const handleLocation = async (input: string) => {
     setTaskData((prev) => ({ ...prev, location: input }));
-    setHanaMessage("Great! 📅 When do you need it done?\n(e.g., Tomorrow, Saturday, 25 Dec at 2pm)");
+    setHanaMessage("Perfect! 📅 When do you need it done?\n(e.g., Tomorrow, Saturday, 25 Dec at 2pm)");
     setCurrentStep('date');
+    triggerSpeaking();
   };
 
-  const processDate = async (input: string) => {
+  const handleDate = async (input: string) => {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/parse-datetime`,
@@ -203,31 +137,26 @@ export default function HanaTaskCreation({
       setTaskData((prev) => ({ ...prev, date: input, time: '10:00' }));
     }
 
-    setHanaMessage("Perfect! 💰 What's your budget? (in SGD)");
+    setHanaMessage("Excellent! 💰 What's your budget? (in SGD)");
     setCurrentStep('budget');
+    triggerSpeaking();
   };
 
-  const processBudget = async (input: string) => {
+  const handleBudget = async (input: string) => {
     const budget = input.replace(/[^\d.]/g, '');
     setTaskData((prev) => ({ ...prev, budget }));
-    setHanaMessage("Any special notes? (type 'skip' if none)");
-    setCurrentStep('notes');
+
+    const summary = `Perfect! Here's your task summary:\n\n✓ ${taskData.title}\n📍 ${taskData.location}\n📅 ${new Date(taskData.date).toLocaleDateString('en-SG')} ${taskData.time}\n💰 SGD $${budget}`;
+
+    setHanaMessage(summary + "\n\nReady to post and get suggestions?");
+    setCurrentStep('confirm');
+    triggerSpeaking();
   };
 
-  const processNotes = async (input: string) => {
-    if (input.toLowerCase() !== 'skip') {
-      setTaskData((prev) => ({ ...prev, notes: input }));
-    }
-
-    const summary = `✓ ${taskData.title}\n📍 ${taskData.location}\n📅 ${new Date(taskData.date).toLocaleDateString('en-SG')} ${taskData.time}\n💰 SGD $${taskData.budget}\n\nReady to post?`;
-
-    setHanaMessage(summary);
-    setCurrentStep('review');
-  };
-
-  const handleConfirmTask = async () => {
+  const handleConfirmAndProceed = async () => {
     setLoading(true);
     try {
+      // Content filter check
       const filterResponse = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/content-filter`,
         {
@@ -238,45 +167,40 @@ export default function HanaTaskCreation({
 
       if (filterResponse.data.data.status === 'FLAG') {
         setHanaMessage('⚠️ This task needs review. Our team will check it shortly.');
-        setCurrentStep('start');
         return;
       }
 
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
-        {
-          title: taskData.title,
-          description: taskData.description,
-          category: taskData.category,
-          location: taskData.location,
-          budget: parseFloat(taskData.budget) || 0,
-          deadline: new Date(`${taskData.date}T${taskData.time}`).toISOString(),
-          specialNote: taskData.notes,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      // Get AI suggestions before closing
+      try {
+        const suggestionsResponse = await axios.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+          {
+            title: taskData.title,
+            description: taskData.description,
+          }
+        );
 
-      setHanaMessage('✅ Task posted!\n\nCreate another?');
-      setCurrentStep('start');
-      setTaskData({
-        title: '',
-        description: '',
-        category: '',
-        location: '',
-        date: '',
-        time: '',
-        budget: '',
-        notes: '',
-      });
-
-      if (onTaskCreated) {
-        onTaskCreated(response.data.data.id);
+        const suggestions = suggestionsResponse.data.data;
+        setTaskData((prev) => ({
+          ...prev,
+          category: suggestions.category || prev.category,
+          description: suggestions.description || prev.description,
+          budget: suggestions.suggestedBudget?.toString() || prev.budget,
+          notes: suggestions.notes || prev.notes,
+        }));
+      } catch (err) {
+        console.log('Could not fetch suggestions');
       }
+
+      setHanaMessage('✅ Perfect! Let me fill in the details for you...');
+      triggerSpeaking();
+
+      // Auto-fill form and proceed after a short delay
+      setTimeout(() => {
+        onComplete(taskData);
+      }, 2000);
     } catch (err: any) {
-      setHanaMessage(`❌ ${err.response?.data?.error || 'Failed to create task'}`);
+      setHanaMessage(`❌ ${err.response?.data?.error || 'Failed to process'}`);
     } finally {
       setLoading(false);
     }
@@ -294,20 +218,12 @@ export default function HanaTaskCreation({
             <h1 className="text-xl font-bold text-white">Hana (Your AI Sister)</h1>
             <p className="text-orange-100 text-xs">Chat With Hana</p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onSwitchToManual}
-              className="text-white hover:text-orange-100 font-semibold text-sm underline"
-            >
-              Manual Input
-            </button>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-orange-100 text-2xl font-light"
-            >
-              ✕
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="text-white hover:text-orange-100 text-2xl font-light"
+          >
+            ✕
+          </button>
         </div>
 
         {/* Main Content - Compact Layout */}
@@ -329,14 +245,13 @@ export default function HanaTaskCreation({
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}
                 message={hanaMessage}
-                onSpeakingEnd={handleSpeakingEnd}
               />
             </div>
           </div>
 
           {/* Bottom Section: Input - Always Visible */}
           <div className="bg-white border-t border-gray-200 px-6 py-4 flex-shrink-0">
-            {currentStep !== 'review' && currentStep !== 'start' && (
+            {currentStep !== 'confirm' && currentStep !== 'complete' && (
               <form onSubmit={handleSendMessage} className="flex gap-3">
                 <input
                   type="text"
@@ -344,28 +259,12 @@ export default function HanaTaskCreation({
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Type here..."
                   className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-full focus:outline-none focus:border-opacity-100 text-sm"
-                  disabled={loading || isRecording}
+                  disabled={loading}
                   autoFocus
                 />
-
-                {/* Mic Button for Audio Input */}
-                <button
-                  type="button"
-                  onClick={isRecording ? stopRecording : startRecording}
-                  disabled={loading}
-                  className={`px-4 py-3 rounded-full font-bold transition-all text-sm flex items-center justify-center ${
-                    isRecording
-                      ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
-                  }`}
-                  title={isRecording ? 'Stop recording' : 'Start voice input'}
-                >
-                  {isRecording ? '⏹' : '🎤'}
-                </button>
-
                 <button
                   type="submit"
-                  disabled={loading || (!input.trim() && !isRecording)}
+                  disabled={loading || !input.trim()}
                   className="px-6 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
                 >
                   {loading ? '•••' : '→'}
@@ -373,41 +272,24 @@ export default function HanaTaskCreation({
               </form>
             )}
 
-            {currentStep === 'review' && (
+            {currentStep === 'confirm' && (
               <div className="flex gap-3">
                 <button
-                  onClick={handleConfirmTask}
+                  onClick={handleConfirmAndProceed}
                   disabled={loading}
                   className="flex-1 px-4 py-3 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 disabled:opacity-50 text-sm"
                 >
-                  {loading ? 'Posting...' : '✓ Post'}
+                  {loading ? 'Processing...' : '✓ Post Task'}
                 </button>
                 <button
                   onClick={() => {
-                    setCurrentStep('notes');
-                    setHanaMessage("Let me know what to change.");
+                    setCurrentStep('budget');
+                    setHanaMessage("What's your budget? (in SGD)");
                   }}
                   disabled={loading}
                   className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 text-sm"
                 >
                   Edit
-                </button>
-              </div>
-            )}
-
-            {currentStep === 'start' && hanaMessage.includes('✅') && (
-              <div className="flex gap-3">
-                <button
-                  onClick={initializeChat}
-                  className="flex-1 px-4 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 text-sm"
-                >
-                  + New Task
-                </button>
-                <button
-                  onClick={onClose}
-                  className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 text-sm"
-                >
-                  Close
                 </button>
               </div>
             )}
