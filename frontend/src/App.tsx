@@ -16,6 +16,7 @@ import ErrandDetailPage from './pages/ErrandDetailPage';
 import ChatPage from './pages/ChatPage';
 import MyVillagePage from './pages/MyVillagePage';
 import ProfilePage from './pages/ProfilePage';
+import ReviewPage from './pages/ReviewPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -172,6 +173,7 @@ export default function App() {
           <Route path="/village" element={<MyVillagePage userRole={userRole} />} />
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
           <Route path="/profile" element={<ProfilePage userRole={userRole} />} />
+          <Route path="/review/:jobId" element={<ReviewPage />} />
         </Route>
       </Routes>
     </Router>

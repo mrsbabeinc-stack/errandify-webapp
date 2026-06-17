@@ -508,9 +508,15 @@ export default function CreateErrandPage() {
       console.error('[DEBUG] Error:', err.message);
       console.error('[DEBUG] Error response:', err.response?.data);
       console.error('[DEBUG] Full error:', err);
-      const errorMsg = err.response?.data?.details || err.response?.data?.error || err.message || 'Failed to create errand';
-      console.error('[DEBUG] Final error message:', errorMsg);
-      setError(errorMsg);
+
+      // Handle duplicate errand error specifically
+      if (err.response?.status === 409) {
+        const duplicateMsg = err.response?.data?.message || 'You already have a similar open errand. Please check your existing errands or modify this one.';
+        setError(duplicateMsg);
+      } else {
+        const errorMsg = err.response?.data?.details || err.response?.data?.error || err.message || 'Failed to create errand';
+        setError(errorMsg);
+      }
     } finally {
       console.log('[DEBUG] *** FINALLY BLOCK - SETTING LOADING FALSE ***');
       setLoading(false);
@@ -568,30 +574,6 @@ export default function CreateErrandPage() {
                 className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
               />
 
-              {/* AI Suggestion for Title Correction */}
-              {aiSuggestions.hasCorrections && aiSuggestions.correctedTitle && (
-                <div className="mt-2 p-2 bg-blue-50 border-l-4 border-blue-400 rounded">
-                  <div className="flex justify-between items-center gap-2">
-                    <div className="flex-1">
-                      <p className="text-xs text-blue-900">
-                        💡 Corrected: <span className="font-semibold">{aiSuggestions.correctedTitle}</span>
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          title: aiSuggestions.correctedTitle,
-                        }));
-                      }}
-                      className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 whitespace-nowrap flex-shrink-0"
-                    >
-                      ✓ Use
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Description */}

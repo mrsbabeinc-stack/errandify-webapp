@@ -169,6 +169,40 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid user ID' });
     }
 
+    // Check for duplicate/similar errands posted by same user in last 24 hours
+    try {
+      const duplicateCheck = await db.query(
+        `SELECT id, title, category, created_at FROM errands
+         WHERE asker_id = $1
+         AND status = 'open'
+         AND created_at > NOW() - INTERVAL '24 hours'
+         AND (
+           LOWER(title) = LOWER($2)
+           OR (LOWER(title) LIKE LOWER($3) OR LOWER($2) LIKE LOWER($4))
+         )
+         LIMIT 1`,
+        [
+          askerId,
+          title,
+          `%${title.substring(0, 10)}%`, // First 10 chars for partial match
+          `%${title.substring(0, 10)}%`
+        ]
+      );
+
+      if (duplicateCheck.rows.length > 0) {
+        const existingErrand = duplicateCheck.rows[0];
+        console.log('[DEBUG] Duplicate errand detected:', existingErrand.id);
+        return res.status(409).json({
+          error: 'Duplicate errand',
+          message: `You already have an open errand with a similar title: "${existingErrand.title}". Posted ${Math.floor((Date.now() - new Date(existingErrand.created_at).getTime()) / 60000)} minutes ago.`,
+          existingErrandId: existingErrand.id
+        });
+      }
+    } catch (dupErr) {
+      console.error('Duplicate check error:', dupErr);
+      // Don't fail the request if duplicate check fails, just log it
+    }
+
     // Extract postal code from location for matching/filtering
     let postalCode: string | null = null;
     if (location) {

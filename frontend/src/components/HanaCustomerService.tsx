@@ -110,64 +110,57 @@ export default function HanaCustomerService() {
 
   const handleSpeak = async (text: string) => {
     try {
-      setIsSpeaking(true);
       console.log('[Hana] Speaking text for language:', language);
-
-      // For Chinese, use Google Translate TTS (guaranteed female voice)
-      if (language === 'zh' || language === 'yue') {
-        speakWithGoogleTranslateTTS(text);
-      } else {
-        speakWithBrowserTTS(text);
-      }
+      // Use Alibaba Qwen TTS for all languages (superior Chinese voice support)
+      await speakWithQwenTTS(text);
     } catch (error: any) {
       console.error('[Hana] Error:', error.message);
       setIsSpeaking(false);
     }
   };
 
-  const speakWithGoogleTranslateTTS = (text: string) => {
+  const speakWithQwenTTS = async (text: string) => {
     try {
       setIsSpeaking(true);
 
-      // Map language to Google Translate language code
-      const langMap: Record<Language, string> = {
-        en: 'en',
-        zh: 'zh-CN',
-        yue: 'zh-TW', // Google Translate uses zh-TW for Cantonese
-      };
+      console.log('[Hana] Using Alibaba Qwen TTS for language:', language);
 
-      const lang = langMap[language];
+      // Call backend Alibaba Qwen TTS endpoint
+      const response = await axios.post(
+        '/api/chat/hana/speak',
+        { text, language },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
 
-      // Use Google Translate's text-to-speech API
-      // Format: https://translate.google.com/translate_tts?ie=UTF-8&q=TEXT&tl=LANG&client=tw-ob
-      const encodedText = encodeURIComponent(text);
-      const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${lang}&client=tw-ob`;
+      if (response.data?.data?.audio) {
+        const audioUrl = response.data.data.audio;
+        const audio = new Audio(audioUrl);
 
-      console.log('[Hana] Using Google Translate TTS for language:', lang);
+        audio.onplay = () => {
+          console.log('[Hana] Qwen TTS playing');
+        };
 
-      const audio = new Audio(audioUrl);
+        audio.onended = () => {
+          console.log('[Hana] Qwen TTS finished');
+          setIsSpeaking(false);
+        };
 
-      audio.onplay = () => {
-        console.log('[Hana] Google TTS playing');
-      };
+        audio.onerror = (error: any) => {
+          console.error('[Hana] Qwen TTS error:', error);
+          console.log('[Hana] Falling back to native TTS');
+          fallbackBrowserTTS(text);
+        };
 
-      audio.onended = () => {
-        console.log('[Hana] Google TTS finished');
-        setIsSpeaking(false);
-      };
-
-      audio.onerror = (error: any) => {
-        console.error('[Hana] Google TTS error:', error);
-        console.log('[Hana] Falling back to native TTS');
+        audio.play().catch((error: any) => {
+          console.error('[Hana] Failed to play Qwen TTS:', error);
+          fallbackBrowserTTS(text);
+        });
+      } else {
+        console.error('[Hana] No audio in response');
         fallbackBrowserTTS(text);
-      };
-
-      audio.play().catch((error: any) => {
-        console.error('[Hana] Failed to play Google TTS:', error);
-        fallbackBrowserTTS(text);
-      });
+      }
     } catch (error: any) {
-      console.error('[Hana] Google TTS exception:', error.message);
+      console.error('[Hana] Qwen TTS exception:', error.message);
       fallbackBrowserTTS(text);
     }
   };
@@ -195,17 +188,26 @@ export default function HanaCustomerService() {
     const voices = window.speechSynthesis.getVoices();
 
     // Filter voices for exact language match
-    const matchingVoices = voices.filter(v => {
+    let matchingVoices = voices.filter(v => {
       const voiceLang = v.lang.toLowerCase();
-      return voiceLang.startsWith(targetLang.split('-')[0].toLowerCase());
+      // For Cantonese, match zh-HK specifically
+      if (language === 'yue') {
+        return voiceLang.includes('zh-hk') || voiceLang.includes('yue');
+      }
+      // For Mandarin, match any Chinese voice except HK
+      if (language === 'zh') {
+        return voiceLang.includes('zh') && !voiceLang.includes('hk');
+      }
+      // For English, match en-SG or just en
+      return voiceLang.startsWith('en');
     });
 
     console.log('[Hana] Language:', language, 'Target Lang:', targetLang);
     console.log('[Hana] Matching voices:', matchingVoices.map(v => ({ name: v.name, lang: v.lang })));
 
     // Blacklist male voices and select female
-    const malePatterns = ['Li-Mu', 'Lü-Si', 'Lu-Si', 'male', 'man', 'david', 'google uk english', 'moira', 'alex', 'bruce', 'junior'];
-    const femalePatterns = ['victoria', 'karen', 'samantha', 'zira', 'susan', 'mei-jia', 'sin-ji', 'female', 'woman'];
+    const malePatterns = ['Li-Mu', 'Lü-Si', 'Lu-Si', 'male', 'man', 'david', 'google uk english', 'alex', 'bruce', 'junior'];
+    const femalePatterns = ['victoria', 'karen', 'samantha', 'zira', 'susan', 'mei-jia', 'sin-ji', 'female', 'woman', 'hui-shan', 'yating', 'ting-ting', 'sirine'];
 
     // First try to find voices with explicit female patterns
     let selectedVoice = matchingVoices.find(v =>
@@ -232,14 +234,14 @@ export default function HanaCustomerService() {
 
     // Adjust voice settings by language
     if (language === 'zh' || language === 'yue') {
-      // Chinese (Mandarin & Cantonese): warm, passionate, not sharp
-      utterance.rate = 0.85;
-      utterance.pitch = 1.15;
+      // Chinese (Mandarin & Cantonese): motherly, passionate, warm
+      utterance.rate = 0.9;
+      utterance.pitch = 1.05;
       utterance.volume = 1.0;
     } else {
-      // English: energetic, youthful, warm
-      utterance.rate = 1.1;
-      utterance.pitch = 1.25;
+      // English: motherly, passionate, warm female - faster to avoid delay
+      utterance.rate = 1.2;
+      utterance.pitch = 1.15;
       utterance.volume = 1.0;
     }
 

@@ -266,7 +266,7 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
 });
 
 // Text-to-Speech endpoint - Convert Hana's text response to audio
-// Using Microsoft Azure Speech Services for Singapore English with female voice
+// Using Alibaba Qwen TTS for superior Chinese voice support (motherly, warm, passionate)
 router.post('/chat/hana/speak', async (req: any, res: any) => {
   try {
     const { text, language = 'en' } = req.body;
@@ -293,74 +293,68 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
 
     console.log('[Hana TTS] Converting text to speech:', { language, textLength: text.length });
 
-    // Map language to SSML voice name
-    // Using Azure Speech Synthesis voices - all FEMALE voices
+    // Map language to Alibaba Qwen TTS voice
+    // All FEMALE voices with motherly, warm, passionate tone
     const voiceMap: Record<string, { voice: string; lang: string }> = {
       en: {
-        voice: 'en-SG-LunaNeural', // Singapore English - Younger, energetic female
+        voice: 'Joanna', // Natural US female - warm, conversational
         lang: 'en-SG',
       },
       zh: {
-        voice: 'zh-CN-XiaozhenNeural', // Mandarin Chinese - Confirmed FEMALE voice
+        voice: 'Siqi', // Mandarin Chinese - natural, warm female voice (帮帮乐助手 tone)
         lang: 'zh-CN',
       },
       yue: {
-        voice: 'zh-HK-HiuMaanNeural', // Cantonese - Younger Female (bright, youthful)
+        voice: 'Hui', // Cantonese - warm, natural female voice
         lang: 'zh-HK',
       },
     };
 
     const voiceConfig = voiceMap[language] || voiceMap['en'];
 
-    // Generate SSML with voice parameters
-    // English: maximum energy - faster, higher pitch, dynamic expression
-    // Cantonese: smooth, natural, no pulsing
-    // Mandarin: warm and friendly
-    const prosodySettings = language === 'en'
-      ? 'pitch="+20%" rate="1.15" contour="(0%,+35%) (50%,+25%) (100%,+20%)"' // High energy, dynamic
-      : language === 'yue'
-      ? 'pitch="+5%" rate="1.0"' // Smooth, natural Cantonese - no contour (no pulsing)
-      : 'pitch="+10%" rate="0.95" contour="(0%,+20%) (100%,+15%)"'; // Mandarin: warm, friendly
-
-    const ssml = `<speak version="1.0" xml:lang="${voiceConfig.lang}">
-      <voice name="${voiceConfig.voice}">
-        <prosody ${prosodySettings}>
-          ${text}
-        </prosody>
-      </voice>
-    </speak>`;
-
     console.log('[Hana TTS] Using voice:', voiceConfig.voice);
 
-    // Try to use Azure Speech Services if available
+    // Try to use Alibaba Qwen TTS
     try {
-      const azureResponse = await axios.post(
-        `https://southeastasia.tts.speech.microsoft.com/cognitiveservices/v1`,
-        ssml,
+      const qwenTtsResponse = await axios.post(
+        'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text2speech/synthesis',
+        {
+          model: 'cosyvoice-v1',
+          input: {
+            text: text,
+          },
+          parameters: {
+            voice: voiceConfig.voice,
+            rate: language === 'en' ? 1.0 : 0.95, // Natural speaking pace, slightly slower for Chinese warmth
+            pitch: 1.0, // Natural pitch - no robotic effect
+            volume: 50, // Standard volume
+          },
+        },
         {
           headers: {
-            'Ocp-Apim-Subscription-Key': process.env.AZURE_SPEECH_KEY || 'demo-key',
-            'Content-Type': 'application/ssml+xml',
-            'X-Microsoft-OutputFormat': 'audio-16khz-32kbitrate-mono-mp3',
+            Authorization: `Bearer ${config.qwen.apiKey}`,
+            'Content-Type': 'application/json',
           },
+          responseType: 'arraybuffer',
         }
       );
 
-      const audioBase64 = Buffer.from(azureResponse.data).toString('base64');
-      console.log('[Hana TTS] Azure TTS generated successfully');
+      const audioBase64 = Buffer.from(qwenTtsResponse.data).toString('base64');
+      console.log('[Hana TTS] Alibaba Qwen TTS generated successfully');
 
       // Cache the result
-      audioCache.set(cacheKey, { audio: `data:audio/mpeg;base64,${audioBase64}`, timestamp: Date.now() });
+      audioCache.set(cacheKey, { audio: `data:audio/wav;base64,${audioBase64}`, timestamp: Date.now() });
 
       res.json({
         success: true,
         data: {
-          audio: `data:audio/mpeg;base64,${audioBase64}`,
+          audio: `data:audio/wav;base64,${audioBase64}`,
           format: 'base64',
         },
       });
-    } catch (azureError: any) {
-      console.log('[Hana TTS] Azure TTS failed, falling back to Google TTS');
+    } catch (qwenError: any) {
+      console.log('[Hana TTS] Alibaba Qwen TTS failed, falling back to Google TTS');
+      console.log('Qwen error:', qwenError.response?.data || qwenError.message);
       // Fallback to gTTS
       fallbackToGTTS(text, voiceConfig.lang, res, cacheKey);
     }
