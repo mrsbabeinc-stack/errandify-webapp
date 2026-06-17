@@ -123,50 +123,56 @@ router.post('/hana/customer-service', authMiddleware, async (req: any, res: any)
       return res.status(400).json({ error: 'Message required' });
     }
 
-    // Call Qwen Plus for customer service response
-    const systemPrompt = `You are Hana, the friendly AI customer service assistant for Errandify (a community errand platform in Singapore).
-Your role is to help users with questions, troubleshooting, account issues, payments, disputes, and general platform usage.
+    let reply = 'How can I help you today?';
 
-Key responsibilities:
-1. Answer questions about using the platform (posting errands, bidding, accepting jobs)
-2. Help with technical issues (app crashes, login problems, payment errors)
-3. Provide account support (profile updates, verification, settings)
-4. Handle complaints professionally and empathetically
-5. Guide users through dispute resolution
-6. Explain payment and commission structures
-7. Provide emergency contact info when needed
+    // Try Qwen API if available
+    if (config.qwen.apiKey) {
+      try {
+        const systemPrompt = `You are Hana, a helpful AI assistant for Errandify. Be warm, brief (2-3 sentences), and helpful.`;
 
-Guidelines:
-- Be warm, professional, and helpful
-- Keep responses concise (2-3 sentences max)
-- If you can't resolve an issue, escalate to support@errandify.ai
-- Always prioritize user safety and satisfaction
-- Use friendly tone with occasional emojis
-- For emergencies, direct to 999 or support hotline
+        const response = await axios.post(
+          'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+          {
+            model: 'qwen-plus',
+            input: {
+              prompt: `${systemPrompt}\n\nCustomer: ${message}\nHana:`,
+            },
+            parameters: {
+              temperature: 0.7,
+              max_tokens: 512,
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${config.qwen.apiKey}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
 
-You represent the Errandify community. Make users feel heard and valued.`;
-
-    const response = await axios.post(
-      'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
-      {
-        model: 'qwen-plus',
-        input: {
-          prompt: `${systemPrompt}\n\nCustomer: ${message}\nHana:`,
-        },
-        parameters: {
-          temperature: 0.7,
-          max_tokens: 512,
-        },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${config.qwen.apiKey}`,
-          'Content-Type': 'application/json',
-        },
+        reply = response.data.output?.text?.trim() || reply;
+      } catch (apiError: any) {
+        console.error('Qwen API error:', apiError.message);
+        // Fall through to dummy responses below
       }
-    );
+    } else {
+      // Dummy responses when no API key available
+      const messageLower = message.toLowerCase();
 
-    const reply = response.data.output?.text?.trim() || 'How can I help you today?';
+      if (messageLower.includes('post') || messageLower.includes('create') || messageLower.includes('errand')) {
+        reply = '✿ To post an errand: Tap the "+" button at the bottom, fill in details, and submit! Need help with specifics?';
+      } else if (messageLower.includes('bid') || messageLower.includes('accept') || messageLower.includes('job')) {
+        reply = '✿ Browse available errands, review details, and tap Accept to place your bid. The asker will pick their favorite!';
+      } else if (messageLower.includes('payment') || messageLower.includes('money') || messageLower.includes('price')) {
+        reply = '✿ Payments are held securely until work is confirmed. You earn after the asker approves! Questions about rates?';
+      } else if (messageLower.includes('help') || messageLower.includes('support') || messageLower.includes('issue')) {
+        reply = '✿ I\'m here to help! Tell me what you need - posting, bidding, payments, or anything else about Errandify.';
+      } else if (messageLower.includes('how to') || messageLower.includes('how do')) {
+        reply = '✿ I can help! Are you asking about posting errands, bidding on jobs, payments, or something else?';
+      } else {
+        reply = '✿ Thanks for reaching out! I\'m Hana. What can I help you with today? 🌸';
+      }
+    }
 
     res.json({
       success: true,
@@ -175,11 +181,11 @@ You represent the Errandify community. Make users feel heard and valued.`;
       },
     });
   } catch (error: any) {
-    console.error('Customer service error:', error.response?.data || error.message);
+    console.error('Customer service error:', error.message);
     res.status(500).json({
       error: 'Failed to get response',
       data: {
-        reply: 'Sorry, I\'m having trouble right now. Please email support@errandify.ai or try again in a moment.',
+        reply: '✿ Sorry, I\'m having trouble right now. Please email support@errandify.ai or try again in a moment.',
       }
     });
   }
