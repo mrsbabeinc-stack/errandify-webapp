@@ -2,7 +2,7 @@ import { Outlet } from 'react-router-dom';
 import BottomNav from './BottomNav';
 import RoleToggle from './RoleToggle';
 import NotificationIcon from './NotificationIcon';
-import FloatingHana from './FloatingHana';
+import HanaCustomerService from './HanaCustomerService';
 
 interface LayoutProps {
   userRole: 'asker' | 'doer';
@@ -26,7 +26,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
       </main>
 
       {/* Floating Hana - Always Available */}
-      <FloatingHana />
+      <HanaCustomerService />
 
       {/* Bottom Navigation */}
       <BottomNav

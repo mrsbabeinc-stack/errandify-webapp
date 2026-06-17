@@ -935,6 +935,24 @@ export default function CreateErrandPage() {
             )}
 
 
+            {/* Manual Skill Input */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={skillInput}
+                onChange={(e) => setSkillInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && addSkill()}
+                placeholder="Add custom skill..."
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-errandify-orange"
+              />
+              <button
+                onClick={addSkill}
+                className="px-3 py-2 bg-errandify-orange text-white rounded-lg hover:bg-orange-600 font-semibold text-sm transition-colors"
+              >
+                +
+              </button>
+            </div>
+
             {formData.skills.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {formData.skills.map((skill) => (
