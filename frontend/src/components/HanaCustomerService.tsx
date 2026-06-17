@@ -31,7 +31,11 @@ export default function HanaCustomerService() {
     {
       id: '1',
       sender: 'hana',
-      text: "Hi there! I'm Hana, your Errandify assistant. How can I help you today?",
+      text: language === 'yue'
+        ? '你好呀! 我係Hana，帮帮乐嘅助手。有咩我可以幫你嘅呢?'
+        : language === 'zh'
+        ? '你好! 我是Hana，帮帮乐的助手。有什么我可以帮你的呢?'
+        : "Hi there! I'm Hana, your Errandify assistant. How can I help you today?",
       timestamp: new Date(),
     },
   ]);
