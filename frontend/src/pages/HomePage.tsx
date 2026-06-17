@@ -84,16 +84,16 @@ export default function HomePage({ userRole }: HomePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-errandify-bg">
+    <div className="min-h-screen bg-errandify-bg pt-2">
       {/* Header */}
-      <div className="px-4 py-6 border-b border-gray-200">
-        <h1 className="text-2xl font-bold text-errandify-brown">
+      <div className="px-4 py-4 pb-6">
+        <h1 className="text-xl font-bold text-errandify-brown">
           Welcome, {userName}! 👋
         </h1>
-        <p className="text-gray-600 text-sm mt-1">
+        <p className="text-gray-600 text-xs mt-1">
           {userRole === 'asker'
-            ? 'Here are your posted errands'
-            : 'Available errands in your area'}
+            ? 'Your posted errands'
+            : 'Available errands near you'}
         </p>
       </div>
 
