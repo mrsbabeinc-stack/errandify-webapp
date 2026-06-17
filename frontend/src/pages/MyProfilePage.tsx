@@ -1,54 +1,34 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function MyProfilePage() {
   const navigate = useNavigate();
-  const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState({
-    name: 'John Doe',
-    email: 'john@example.com',
-    phone: '+65 8123 4567',
-    address: '123 Main St, Singapore 123456',
-    bio: 'Friendly and reliable helper',
-    avatar: '👤',
-  });
-
-  const handleSave = () => {
-    setIsEditing(false);
-    alert('Profile updated successfully!');
-  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-errandify-brown">My Profile</h1>
-          <button onClick={() => navigate(-1)} className="text-gray-600 text-2xl">‹</button>
-        </div>
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-6 text-lg text-gray-600 font-bold"
+        >
+          ‹ Back
+        </button>
+
+        <h1 className="text-3xl font-bold text-errandify-brown mb-6">My Profile</h1>
 
         {/* Profile Card */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="text-6xl">{profile.avatar}</div>
-            <div className="flex-1">
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={profile.name}
-                  onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                  className="text-2xl font-bold text-errandify-brown w-full border-b-2 border-errandify-orange"
-                />
-              ) : (
-                <h2 className="text-2xl font-bold text-errandify-brown">{profile.name}</h2>
-              )}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="text-6xl">👤</div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">John Doe</h2>
               <p className="text-gray-600">✅ Verified User</p>
               <p className="text-sm text-gray-500">Member since Jan 2026</p>
             </div>
           </div>
 
-          {/* Profile Stats */}
-          <div className="grid grid-cols-3 gap-4 py-4 border-t border-b border-gray-200 mb-6">
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-4 py-4 border-y border-gray-200 mb-6">
             <div className="text-center">
               <p className="text-2xl font-bold text-errandify-orange">24</p>
               <p className="text-xs text-gray-600">Errands Posted</p>
@@ -63,91 +43,30 @@ export default function MyProfilePage() {
             </div>
           </div>
 
-          {/* Personal Information */}
+          {/* Info */}
           <div className="space-y-4">
             <div>
-              <label className="text-sm text-gray-600">Email</label>
-              {isEditing ? (
-                <input
-                  type="email"
-                  value={profile.email}
-                  onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                />
-              ) : (
-                <p className="text-gray-900">{profile.email}</p>
-              )}
+              <label className="text-sm text-gray-600 font-bold">Email</label>
+              <p className="text-gray-900">john@example.com</p>
             </div>
-
             <div>
-              <label className="text-sm text-gray-600">Phone</label>
-              {isEditing ? (
-                <input
-                  type="tel"
-                  value={profile.phone}
-                  onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                />
-              ) : (
-                <p className="text-gray-900">{profile.phone}</p>
-              )}
+              <label className="text-sm text-gray-600 font-bold">Phone</label>
+              <p className="text-gray-900">+65 8123 4567</p>
             </div>
-
             <div>
-              <label className="text-sm text-gray-600">Address</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={profile.address}
-                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                />
-              ) : (
-                <p className="text-gray-900">{profile.address}</p>
-              )}
+              <label className="text-sm text-gray-600 font-bold">Address</label>
+              <p className="text-gray-900">123 Main St, Singapore 123456</p>
             </div>
-
             <div>
-              <label className="text-sm text-gray-600">Bio</label>
-              {isEditing ? (
-                <textarea
-                  value={profile.bio}
-                  onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  rows={3}
-                />
-              ) : (
-                <p className="text-gray-900">{profile.bio}</p>
-              )}
+              <label className="text-sm text-gray-600 font-bold">Bio</label>
+              <p className="text-gray-900">Friendly and reliable helper</p>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 mt-6">
-            {isEditing ? (
-              <>
-                <button
-                  onClick={handleSave}
-                  className="flex-1 bg-errandify-orange text-white py-2 rounded-lg font-bold"
-                >
-                  Save Changes
-                </button>
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg font-bold"
-                >
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="w-full bg-errandify-orange text-white py-2 rounded-lg font-bold"
-              >
-                Edit Profile
-              </button>
-            )}
-          </div>
+          {/* Edit Button */}
+          <button className="w-full mt-6 bg-errandify-orange text-white py-2 rounded-lg font-bold">
+            Edit Profile
+          </button>
         </div>
       </div>
     </div>
