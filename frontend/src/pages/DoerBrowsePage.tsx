@@ -21,6 +21,7 @@ export default function DoerBrowsePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const categoryNames: Record<string, string> = {
     'home-maintenance': 'Home Maintenance',
@@ -75,9 +76,18 @@ export default function DoerBrowsePage() {
     fetchErrands();
   }, [selectedCategory]);
 
-  const filteredErrands = selectedCategory
-    ? errands.filter((e) => e.category === selectedCategory)
-    : errands;
+  const filteredErrands = errands.filter((errand) => {
+    // Filter by category
+    const matchesCategory = !selectedCategory || errand.category === selectedCategory;
+
+    // Filter by search query (search title and description)
+    const matchesSearch =
+      !searchQuery ||
+      errand.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      errand.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="min-h-screen bg-errandify-bg px-4 py-6">
@@ -95,6 +105,17 @@ export default function DoerBrowsePage() {
         <p className="text-gray-600">
           Find errands you can help with and earn money
         </p>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Search errands (title, description)..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange text-base"
+        />
       </div>
 
       {/* Category Filter */}
@@ -129,8 +150,16 @@ export default function DoerBrowsePage() {
       ) : filteredErrands.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-600 mb-4">
-            No errands available{selectedCategory ? ' in this category' : ''} yet.
+            No errands found{selectedCategory ? ' in this category' : ''}{searchQuery ? ` matching "${searchQuery}"` : ''}.
           </p>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="text-errandify-orange font-semibold"
+            >
+              Clear search
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4 pb-8">
