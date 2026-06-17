@@ -622,7 +622,7 @@ export default function CreateErrandPage() {
                   name="budget"
                   value={formData.budget}
                   onChange={handleChange}
-                  placeholder="100"
+                  placeholder="Enter amount"
                   className={`w-full px-3 py-2 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-base ${
                     aiSuggestions.suggestedBudget
                       ? 'border-gray-200 text-gray-500'
