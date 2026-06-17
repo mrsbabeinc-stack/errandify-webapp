@@ -1114,24 +1114,34 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
       // Only accept if it's a valid postal code prefix
       if (validPostalPrefixes.includes(firstTwo)) {
         postalCode = code;
+        // Accurate Singapore postal code area mapping
         const postalCodeAreas: Record<string, string> = {
+          // 01-09: Central Business District & Surroundings
           '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
-          '05': 'Outram', '06': 'People\'s Park', '07': 'Chinatown', '08': 'Sengkang', '09': 'Tanjong Pagar',
+          '05': 'Outram', '06': 'People\'s Park', '07': 'Chinatown', '08': 'Fort Canning', '09': 'Tanjong Pagar',
+          // 10-19: Orchard & Central
           '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
-          '15': 'Henderson Crescent', '16': 'Serangoon', '17': 'Serangoon', '18': 'Macpherson', '19': 'Paya Lebar',
+          '15': 'Henderson', '16': 'Henderson', '17': 'Balestier', '18': 'Macpherson', '19': 'Paya Lebar',
+          // 20-29: East
           '20': 'Paya Lebar', '21': 'Geylang', '22': 'Geylang', '23': 'Geylang', '24': 'Eunos',
-          '25': 'Bedok', '26': 'Bedok', '27': 'Bedok', '28': 'Tampines', '29': 'Tampines', '30': 'Tampines',
-          '31': 'Pasir Ris', '32': 'Pasir Ris', '33': 'Punggol', '34': 'Punggol', '35': 'Hougang',
-          '36': 'Hougang', '37': 'Sengkang', '38': 'Sengkang', '39': 'Sengkang', '40': 'Jurong West',
-          '41': 'Jurong West', '42': 'Jurong', '43': 'Jurong East', '44': 'Clementi', '45': 'Clementi',
-          '46': 'Clementi', '47': 'Bukit Merah', '48': 'Bukit Merah', '49': 'Tiong Bahru', '50': 'Redhill',
-          '51': 'Queenstown', '52': 'Commonwealth', '53': 'Pasir Panjang', '54': 'Pasir Panjang',
+          '25': 'Bedok', '26': 'Bedok', '27': 'Bedok', '28': 'Tampines', '29': 'Tampines',
+          // 30-39: East & North-East
+          '30': 'Tampines', '31': 'Pasir Ris', '32': 'Pasir Ris', '33': 'Punggol', '34': 'Punggol',
+          '35': 'Hougang', '36': 'Hougang', '37': 'Sengkang', '38': 'Sengkang', '39': 'Sengkang',
+          // 40-49: West
+          '40': 'Jurong West', '41': 'Jurong West', '42': 'Jurong', '43': 'Jurong East', '44': 'Clementi',
+          '45': 'Clementi', '46': 'Clementi', '47': 'Bukit Merah', '48': 'Bukit Merah', '49': 'Tiong Bahru',
+          // 50-59: Central West
+          '50': 'Redhill', '51': 'Queenstown', '52': 'Commonwealth', '53': 'Pasir Panjang', '54': 'Pasir Panjang',
           '55': 'Bukit Timah', '56': 'Bukit Timah', '57': 'Holland', '58': 'Tanglin', '59': 'Clementi',
+          // 60-69: North & North-East
           '60': 'Bukit Timah', '61': 'Bishan', '62': 'Bishan', '63': 'Serangoon', '64': 'Serangoon',
           '65': 'Serangoon', '66': 'Serangoon', '67': 'Aljunied', '68': 'Aljunied', '69': 'Geylang',
-          '70': 'Bedok', '71': 'Bedok', '72': 'Bedok', '73': 'Bedok', '74': 'Tampines', '75': 'Tampines',
-          '76': 'Tampines', '77': 'Tampines', '78': 'Tampines', '79': 'Sengkang', '80': 'Sengkang',
-          '81': 'Sengkang', '82': 'Sengkang',
+          // 70-79: East
+          '70': 'Bedok', '71': 'Bedok', '72': 'Bedok', '73': 'Bedok', '74': 'Tampines',
+          '75': 'Tampines', '76': 'Tampines', '77': 'Tampines', '78': 'Tampines', '79': 'Sengkang',
+          // 80-82: North-East
+          '80': 'Sengkang', '81': 'Sengkang', '82': 'Sengkang',
         };
         location = postalCodeAreas[firstTwo] || '';
       }
