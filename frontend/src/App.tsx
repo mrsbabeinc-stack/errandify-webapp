@@ -26,6 +26,7 @@ import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import ErrandifyPointsPage from './pages/ErrandifyPointsPage';
 import MyRewardsPage from './pages/MyRewardsPage';
 import PointsHistoryPage from './pages/PointsHistoryPage';
+import TestPage from './pages/TestPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -164,6 +165,9 @@ export default function App() {
             )
           }
         />
+
+        {/* TEST ROUTE - to verify routing works */}
+        <Route path="/test" element={<TestPage />} />
 
         {/* Profile sub-pages (outside layout for simpler rendering) */}
         <Route path="/my-profile" element={isAuthenticated ? <MyProfilePage /> : <Navigate to="/login" replace />} />
