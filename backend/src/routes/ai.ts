@@ -990,6 +990,9 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
     // Remove time patterns (9am, 4pm, morning, afternoon, etc.)
     titleText = titleText.replace(/\s+(\d{1,2}(?:am|pm|:\d{2})|morning|afternoon|evening|night)\b/gi, '');
 
+    // Remove duration patterns (1hour, 2 hours, 30min, etc.)
+    titleText = titleText.replace(/\s+\d+(?:\.\d+)?\s*(hour|hr|min|minute|day|d)\b/gi, '');
+
     // Remove budget patterns ($50, budget 50, etc.)
     titleText = titleText.replace(/\s*\$\s*\d+\b/g, '');
     titleText = titleText.replace(/\s+budget\s+\d+\b/gi, '');
