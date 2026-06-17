@@ -702,9 +702,19 @@ export default function CreateErrandPage() {
               <span className="text-sm text-gray-700">This is remote work (no specific location)</span>
             </label>
 
-            <p className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-              💡 Full address and unit number can be added in the confirmation step - only the confirmed doer will see these details.
-            </p>
+            {/* Full Address - Shown only to confirmed doer */}
+            <div>
+              <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                Full Address & Unit Number <span className="text-xs text-red-600">(shown only to confirmed doer)</span>
+              </label>
+              <textarea
+                value={fullAddress}
+                onChange={(e) => setFullAddress(e.target.value)}
+                placeholder="e.g., Block 1, Tanjong Pagar Plaza, Unit #5-10, Singapore 082001"
+                rows={2}
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
+              />
+            </div>
           </div>
 
           {/* Section 4: Skills Required */}
@@ -772,7 +782,8 @@ export default function CreateErrandPage() {
             )}
           </div>
 
-          {/* Section 5: Certifications Required */}
+          {/* Section 5: Certifications Required - Only show if category needs them or AI has suggestions */}
+          {(aiSuggestions.certifications.required.length > 0 || aiSuggestions.certifications.optional.length > 0) && (
           <div className="border-t pt-4 space-y-4">
             <h3 className="font-bold text-errandify-brown text-sm">
               Certifications Required {formData.certifications.required.length > 0 ? '✓' : ''}
@@ -939,6 +950,7 @@ export default function CreateErrandPage() {
               </div>
             )}
           </div>
+          )}
         </div>
 
         {/* Quick Summary & Post Button */}
@@ -1019,21 +1031,8 @@ export default function CreateErrandPage() {
               )}
             </div>
 
-            {/* Full Address - Only editable in confirmation */}
+            {/* Notes for Confirmed Doer */}
             <div className="border-t pt-4 space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                  Full Address, Unit Number & Building Name <span className="text-xs text-red-600">(shown only to confirmed doer)</span>
-                </label>
-                <textarea
-                  value={fullAddress}
-                  onChange={(e) => setFullAddress(e.target.value)}
-                  placeholder="e.g., 1 Tanjong Pagar Plaza, Unit #5-10, Singapore 082001"
-                  rows={2}
-                  className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
-                />
-              </div>
-
               <div>
                 <label className="block text-sm font-semibold text-errandify-brown mb-2">
                   Notes for Confirmed Doer <span className="text-xs text-gray-600">(e.g., access instructions, special requirements)</span>
