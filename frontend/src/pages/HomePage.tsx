@@ -84,9 +84,9 @@ export default function HomePage({ userRole }: HomePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-errandify-bg pt-2">
+    <div className="min-h-screen bg-errandify-bg pt-16">
       {/* Header */}
-      <div className="px-4 py-4 pb-6">
+      <div className="px-4 py-4 pb-4">
         <h1 className="text-xl font-bold text-errandify-brown">
           Welcome, {userName}! 👋
         </h1>

@@ -146,7 +146,7 @@ export default function HanaAssistant({ isOpen: initialOpen = false }: HanaAssis
   }
 
   return (
-    <div className="fixed bottom-24 right-4 w-80 h-96 bg-white rounded-2xl shadow-2xl flex flex-col z-40 border border-pink-100">
+    <div className="fixed bottom-20 right-4 w-72 h-80 bg-white rounded-2xl shadow-3xl flex flex-col z-40 border border-pink-100" style={{transform: 'perspective(1000px) rotateX(2deg) rotateY(-2deg)'}}>
       {/* Header */}
       <div className="bg-gradient-to-r from-pink-300 to-pink-400 rounded-t-2xl p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
