@@ -231,6 +231,84 @@ router.get('/debug/otp/:mobile', (req: any, res: Response) => {
   }
 });
 
+// Demo login - Quick access for testing
+router.post('/demo-login', async (req: Request, res: Response) => {
+  try {
+    const { account } = req.body;
+
+    if (!account) {
+      return res.status(400).json({ error: 'Account required' });
+    }
+
+    // Demo account mapping
+    const demoAccounts: Record<string, { mobile: string; name: string; nric: string }> = {
+      sarah: { mobile: '98765432', name: 'Sarah Tan', nric: 'S1234567A' },
+      john: { mobile: '87654321', name: 'John Lee', nric: 'S7654321B' },
+    };
+
+    const demoUser = demoAccounts[account.toLowerCase()];
+    if (!demoUser) {
+      return res.status(400).json({ error: 'Invalid demo account' });
+    }
+
+    // Check if user exists, if not create them
+    let result = await db.query(
+      'SELECT id, display_name, mobile, role FROM users WHERE mobile = $1',
+      [demoUser.mobile]
+    );
+
+    let user;
+    if (result.rows.length === 0) {
+      // Create demo user
+      const referralCode = generateReferralCode();
+      const createResult = await db.query(
+        `INSERT INTO users (
+          nric_hash, display_name, mobile, address,
+          font_size_pref, language_pref, role, kyc_status, referral_code
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING id, display_name, mobile, role`,
+        [
+          hashNric(demoUser.nric),
+          demoUser.name,
+          demoUser.mobile,
+          '123 Demo Street, Singapore 123456',
+          16,
+          'en',
+          'asker',
+          'verified',
+          referralCode,
+        ]
+      );
+      user = createResult.rows[0];
+    } else {
+      user = result.rows[0];
+    }
+
+    // Generate token
+    const token = jwt.sign(
+      { userId: user.id, mobile: user.mobile, role: user.role },
+      config.jwtSecret,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      data: {
+        accessToken: token,
+        user: {
+          id: user.id,
+          name: user.display_name,
+          mobile: user.mobile,
+          role: user.role,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Demo login error:', error);
+    res.status(500).json({ error: 'Demo login failed' });
+  }
+});
+
 // SingPass login endpoint (when USE_SINGPASS is true)
 router.post('/singpass/login', (req: any, res: Response) => {
   if (!config.singpass.useSingpass) {
