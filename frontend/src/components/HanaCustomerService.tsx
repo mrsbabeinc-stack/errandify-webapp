@@ -111,51 +111,12 @@ export default function HanaCustomerService() {
   const handleSpeak = async (text: string) => {
     try {
       setIsSpeaking(true);
-      console.log('[Hana TTS] Requesting audio for:', text.substring(0, 50));
+      console.log('[Hana] Speaking text for language:', language);
 
-      // Try cloud TTS service first
-      try {
-        const response = await axios.post('/api/chat/hana/speak', {
-          text,
-          language,
-        });
-
-        const audioUrl = response.data?.data?.audio;
-        if (audioUrl) {
-          console.log('[Hana TTS] Playing cloud TTS audio');
-          const audio = new Audio(audioUrl);
-
-          audio.oncanplay = () => {
-            console.log('[Hana] Audio ready to play');
-          };
-
-          audio.onended = () => {
-            console.log('[Hana] Audio finished');
-            setIsSpeaking(false);
-          };
-
-          audio.onerror = (error: any) => {
-            console.error('[Hana] Audio playback error:', error);
-            console.log('[Hana] Falling back to browser TTS');
-            speakWithBrowserTTS(text);
-          };
-
-          audio.play().catch((error: any) => {
-            console.error('[Hana] Failed to play cloud TTS audio:', error);
-            // Fallback to browser TTS
-            speakWithBrowserTTS(text);
-          });
-          return;
-        }
-      } catch (apiError: any) {
-        console.error('[Hana TTS] Cloud TTS error:', apiError.message);
-        // Fallback to browser TTS
-      }
-
-      // Fallback: Use browser speech synthesis
+      // Use ResponsiveVoice.JS directly - it provides better female voice control
       speakWithBrowserTTS(text);
     } catch (error: any) {
-      console.error('[Hana TTS] Error:', error.message);
+      console.error('[Hana] Error:', error.message);
       setIsSpeaking(false);
     }
   };
@@ -181,20 +142,22 @@ export default function HanaCustomerService() {
       const rate = language === 'en' ? 1.2 : 1.0; // Much faster for English (high energy), normal for others
       const pitch = language === 'en' ? 1.25 : language === 'yue' ? 1.05 : 1.0; // Higher for English, slightly higher for Cantonese (natural), normal for Mandarin
 
+      console.log('[Hana] ResponsiveVoice speaking with:', { voice, rate, pitch, language });
+
       responsiveVoice.speak(text, voice, {
-        rate, // Much faster for English, normal for others
-        pitch, // Adjusted per language
-        volume: 1.0, // Full volume
+        rate,
+        pitch,
+        volume: 1.0,
         onstart: () => {
-          console.log('[Hana] Speaking');
+          console.log('[Hana] Voice started - voice name:', voice);
           setIsSpeaking(true);
         },
         onend: () => {
-          console.log('[Hana] Finished speaking');
+          console.log('[Hana] Voice ended');
           setIsSpeaking(false);
         },
         onerror: (error: any) => {
-          console.error('[Hana] Error:', error);
+          console.error('[Hana] Voice error:', error);
           setIsSpeaking(false);
         },
       });
