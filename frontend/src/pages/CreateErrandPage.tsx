@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
 export default function CreateErrandPage() {
+  console.log('===== CreateErrandPage LOADED =====');
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -275,74 +276,13 @@ export default function CreateErrandPage() {
     // Trigger AI suggestions with debounce (wait 300ms after user stops typing)
     if (value.length > 3) {
       debouncedFetchAiSuggestions(value, formData.description);
-
-      // Extract time, duration, and budget from the raw input
-      const lowerValue = value.toLowerCase();
-
-      // Extract time: patterns like "4pm", "14:00", "2:30pm"
-      // Must have am/pm to avoid matching duration numbers (30min looks like "30" + something)
-      const timeMatch = lowerValue.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
-      if (timeMatch && timeMatch[3]) {
-        let hours = parseInt(timeMatch[1]);
-        const minutes = timeMatch[2] || '00';
-        const period = timeMatch[3].toLowerCase();
-
-        if (period === 'pm' && hours !== 12) {
-          hours += 12;
-        } else if (period === 'am' && hours === 12) {
-          hours = 0;
-        }
-
-        const timeStr = `${String(hours).padStart(2, '0')}:${minutes}`;
-        setFormData((prev) => ({
-          ...prev,
-          time: timeStr,
-        }));
-      }
-
-      // Extract duration: patterns like "30min", "1hour", "2 hours", "30m"
-      const durationMatch = lowerValue.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|minutes?|mins?|m\b|days?|d\b)/);
-      if (durationMatch && durationMatch[2]) {
-        const durationValue = durationMatch[1];
-        const unit = durationMatch[2];
-
-        let normalizedUnit = 'Hr' as 'Min' | 'Hr' | 'Day' | 'Week';
-        if (unit.match(/^(min|m)/) ) normalizedUnit = 'Min';
-        else if (unit.match(/^(day|d)/) ) normalizedUnit = 'Day';
-        else if (unit.match(/^(week|w)/) ) normalizedUnit = 'Week';
-
-        setFormData((prev) => ({
-          ...prev,
-          duration: durationValue,
-          durationUnit: normalizedUnit,
-        }));
-      }
-
-      // Extract budget: look for $ prefix, or 2-3 digit numbers (avoid 6-digit postal codes)
-      const dollarMatch = lowerValue.match(/\$\s*(\d+)/);
-      if (dollarMatch) {
-        setFormData((prev) => ({
-          ...prev,
-          budget: dollarMatch[1],
-        }));
-      } else {
-        // Find all numbers that are 1-3 digits (typical budget amounts)
-        // Avoid 6-digit numbers (postal codes)
-        const allNumbers = lowerValue.match(/\b(\d{1,3})\b/g);
-        if (allNumbers && allNumbers.length > 0) {
-          // Use the last 1-3 digit number found (likely the budget)
-          const lastSmallNumber = allNumbers[allNumbers.length - 1];
-          setFormData((prev) => ({
-            ...prev,
-            budget: lastSmallNumber,
-          }));
-        }
-      }
     }
   };
 
   // Auto-apply AI suggestions when they arrive
   useEffect(() => {
+    if (!aiSuggestions.suggestedCategory && !formData.title) return;
+
     // Update category if AI has a suggestion and user hasn't selected one yet
     if (aiSuggestions.suggestedCategory && !formData.category) {
       setFormData((prev) => ({
@@ -351,18 +291,54 @@ export default function CreateErrandPage() {
       }));
     }
 
+    // Extract time, duration, budget from the RAW TITLE (before correction)
+    if (formData.title && formData.title.length > 3) {
+      const rawTitle = formData.title.toLowerCase();
+      console.log('[useEffect] Extracting from raw title:', formData.title);
+
+      // Extract time
+      const timeMatch = rawTitle.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+      if (timeMatch && timeMatch[3]) {
+        const hourNum = parseInt(timeMatch[1]);
+        if (hourNum >= 1 && hourNum <= 23) {
+          let hours = hourNum;
+          const minutes = timeMatch[2] || '00';
+          const period = timeMatch[3].toLowerCase();
+          if (period === 'pm' && hours !== 12) hours += 12;
+          else if (period === 'am' && hours === 12) hours = 0;
+          const timeStr = `${String(hours).padStart(2, '0')}:${minutes}`;
+          console.log('[useEffect] Setting time:', timeStr);
+          setFormData((prev) => ({ ...prev, time: timeStr }));
+        }
+      }
+
+      // Extract duration
+      const durationMatch = rawTitle.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|minutes?|mins?|m\b|days?|d\b)/);
+      if (durationMatch && durationMatch[2]) {
+        const durationValue = durationMatch[1];
+        const unit = durationMatch[2];
+        let normalizedUnit = 'Hr' as 'Min' | 'Hr' | 'Day' | 'Week';
+        if (unit.match(/^(min|m)/)) normalizedUnit = 'Min';
+        else if (unit.match(/^(day|d)/)) normalizedUnit = 'Day';
+        console.log('[useEffect] Setting duration:', durationValue, normalizedUnit);
+        setFormData((prev) => ({ ...prev, duration: durationValue, durationUnit: normalizedUnit }));
+      }
+
+      // Extract budget (1-3 digit numbers only, avoid postal codes)
+      const allNumbers = rawTitle.match(/\b(\d{1,3})\b/g);
+      if (allNumbers && allNumbers.length > 0) {
+        const lastSmallNumber = allNumbers[allNumbers.length - 1];
+        console.log('[useEffect] Setting budget:', lastSmallNumber);
+        setFormData((prev) => ({ ...prev, budget: lastSmallNumber }));
+      }
+    }
+
     // Description: show as suggestion only, don't auto-apply (user must approve)
-
     // Budget: show as suggestion only - don't auto-apply since extraction already handles it
-    // (The frontend extraction in handleTitleChange gets budget from raw input,
-    //  so we don't want backend suggestion to overwrite it)
-
     // Notes: show as suggestion only, don't auto-apply (user must approve)
-
     // Skills: show as suggestions only, don't auto-apply (user must approve)
-
     // Certifications: show as suggestions only, don't auto-apply (user must approve)
-  }, [aiSuggestions, formData.category]);
+  }, [formData.title, aiSuggestions.suggestedCategory]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
