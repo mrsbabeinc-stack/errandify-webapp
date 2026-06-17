@@ -39,6 +39,15 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
     }, 100);
   };
 
+  const handleSkipToManual = () => {
+    setShowHanaChat(false);
+    // Switch to asker role and navigate directly to manual form
+    onRoleChange('asker');
+    setTimeout(() => {
+      window.location.href = '/create-errand';
+    }, 100);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-errandify-bg">
       {/* Top Bar with Role Toggle & Notifications */}
@@ -60,6 +69,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
         isOpen={showHanaChat}
         onClose={() => setShowHanaChat(false)}
         onComplete={handleHanaComplete}
+        onSkipToManual={handleSkipToManual}
       />
 
       {/* Bottom Navigation */}
