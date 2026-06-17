@@ -189,12 +189,9 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       postalCode = postalMatch ? postalMatch[0] : null;
     }
 
-    const client = await db.getClient();
     try {
-      await client.query('BEGIN');
-
-      // Create parent errand
-      const errandResult = await client.query(
+      // Create parent errand (simplified, no transactions for now)
+      const errandResult = await db.query(
         `INSERT INTO errands (asker_id, title, description, category, location, postal_code, budget, deadline, certifications, is_recurring, recurring_config, status)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          RETURNING id, title, description, category, status, budget, deadline, certifications, is_recurring, recurring_config, created_at`,
@@ -205,7 +202,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           category,
           location || null,
           postalCode,
-          budget || null,
+          budget ? parseFloat(String(budget)) : null,
           deadline || null,
           certifications ? JSON.stringify(certifications) : null,
           isRecurring || false,
@@ -215,12 +212,14 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       );
 
       const errand = errandResult.rows[0];
+      console.log('[DEBUG] Errand created successfully:', errand.id);
+
       let sessions = [];
 
       // Generate sessions if recurring
       if (isRecurring && repeatEvery && repeatUnit && occurrences) {
         const startDate = new Date(deadline);
-        const budgetPerSession = budget ? parseFloat(budget) / occurrences : null;
+        const budgetPerSession = budget ? parseFloat(String(budget)) / occurrences : null;
 
         for (let i = 1; i <= occurrences; i++) {
           const sessionStart = new Date(startDate);
@@ -238,7 +237,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
               break;
           }
 
-          const sessionResult = await client.query(
+          const sessionResult = await db.query(
             `INSERT INTO errand_sessions (errand_id, session_number, start_date, deadline, budget, status)
              VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING id, session_number, start_date, deadline, budget, status`,
@@ -248,8 +247,6 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           sessions.push(sessionResult.rows[0]);
         }
       }
-
-      await client.query('COMMIT');
 
       res.status(201).json({
         success: true,
@@ -271,10 +268,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         },
       });
     } catch (err) {
-      await client.query('ROLLBACK');
       throw err;
-    } finally {
-      client.release();
     }
   } catch (error: any) {
     console.error('Create errand error:', error);
