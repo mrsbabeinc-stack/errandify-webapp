@@ -489,6 +489,7 @@ export default function CreateErrandPage() {
         console.log('[DEBUG] Errand posted successfully!');
         // Show dummy payment confirmation
         setPaymentRequired(false);
+        setShowConfirm(false);
         alert('✓ Errand posted successfully! Dummy payment confirmed.');
         navigate('/home');
       } else {
@@ -501,7 +502,6 @@ export default function CreateErrandPage() {
       setError(err.response?.data?.error || 'Failed to create errand');
     } finally {
       setLoading(false);
-      setShowConfirm(false);
     }
   };
 
