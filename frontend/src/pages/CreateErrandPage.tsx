@@ -543,7 +543,7 @@ export default function CreateErrandPage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                  Needed By
+                  Needed By (Date)
                 </label>
                 <input
                   type="date"
@@ -555,9 +555,28 @@ export default function CreateErrandPage() {
               </div>
             </div>
 
+            {/* Time Field */}
             <div>
               <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Duration
+                Time Needed
+              </label>
+              <input
+                type="time"
+                name="time"
+                value={formData.duration}
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    duration: e.target.value,
+                  }));
+                }}
+                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                Duration (How Long It Will Take)
               </label>
               <div className="flex gap-2 items-end">
                 <div className="flex-1 flex gap-2">
