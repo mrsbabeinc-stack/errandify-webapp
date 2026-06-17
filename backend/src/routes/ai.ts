@@ -732,78 +732,42 @@ router.post('/suggestions', (req: Request, res: Response) => {
       });
     }
 
-    // Correct spelling and punctuation (but remove period for now - will re-add after cleaning)
+    // Keep the title as-is without aggressive cleaning
+    // Only apply spell/punctuation corrections
     let correctedTitle = title.trim();
-
-    // Apply spell/punctuation corrections manually to avoid period interference
     const { corrected: spellCorrected } = correctSpellingAndPunctuation(title);
-    // Use the spell-corrected version but remove trailing period if present
-    correctedTitle = spellCorrected.replace(/\.$/, '');
 
-    // Clean up title: remove time, duration, budget, locations, and dates
-    let cleanedTitle = correctedTitle;
+    // Just use the spell-corrected version without aggressive cleaning
+    correctedTitle = spellCorrected;
 
-    // Remove time patterns (9am, 4pm, 14:00, morning, afternoon, etc.)
-    cleanedTitle = cleanedTitle.replace(/\s+(\d{1,2}(?:am|pm|:\d{2})|morning|afternoon|evening|night)\b/gi, '');
+    const hasCorrections = spellCorrected !== title;
 
-    // Remove duration patterns (1hour, 2 hours, 30min, 30 m, etc.)
-    cleanedTitle = cleanedTitle.replace(/\s+\d+(?:\.\d+)?\s*(hour|hr|min|minute|m|day|d)\b/gi, '');
-
-    // Remove budget patterns ($50, budget 50, etc.) and trailing numbers (before period)
-    cleanedTitle = cleanedTitle.replace(/\s*\$\s*\d+\b/g, '');
-    cleanedTitle = cleanedTitle.replace(/\s+budget\s+\d+\b/gi, '');
-    cleanedTitle = cleanedTitle.replace(/\s+\d+\s*$/, '');
-
-    // Remove common locations
-    const locations = ['orchard', 'marina bay', 'tampines', 'jurong', 'clementi', 'bishan', 'serangoon', 'bedok', 'geylang', 'east coast', 'hougang', 'punggol', 'everton', 'bukit timah', 'holland', 'tanglin'];
-    for (const loc of locations) {
-      cleanedTitle = cleanedTitle.replace(new RegExp(`\\s*(?:at|in|near|to)?\\s*${loc}\\b`, 'gi'), '');
-    }
-
-    // Remove day names
-    cleanedTitle = cleanedTitle.replace(/\s+(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun|today|tomorrow|tmr)\b/gi, '');
-
-    // Clean up any double spaces
-    cleanedTitle = cleanedTitle.replace(/\s+/g, ' ').trim();
-
-    // Capitalize first letter
-    if (cleanedTitle && cleanedTitle[0] === cleanedTitle[0].toLowerCase()) {
-      cleanedTitle = cleanedTitle[0].toUpperCase() + cleanedTitle.slice(1);
-    }
-
-    // Re-ensure proper punctuation on cleaned title
-    if (cleanedTitle && !/[.!?]$/.test(cleanedTitle)) {
-      cleanedTitle += '.';
-    }
-
-    const hasCorrections = spellCorrected !== title || cleanedTitle !== correctedTitle;
-
-    // Detect category
-    const suggestedCategory = detectCategory(cleanedTitle);
+    // Detect category using the spell-corrected title
+    const suggestedCategory = detectCategory(correctedTitle);
 
     // Generate description
-    const suggestedDescription = generateDescription(suggestedCategory, cleanedTitle);
+    const suggestedDescription = generateDescription(suggestedCategory, correctedTitle);
 
     // Detect missing important details
-    const missingDetails = detectMissingDetails(cleanedTitle);
+    const missingDetails = detectMissingDetails(correctedTitle);
 
     // Suggest certifications
-    const suggestedCerts = suggestCertifications(suggestedCategory, cleanedTitle);
+    const suggestedCerts = suggestCertifications(suggestedCategory, correctedTitle);
 
     // Suggest skills
-    const suggestedSkillsList = suggestSkills(suggestedCategory, cleanedTitle);
+    const suggestedSkillsList = suggestSkills(suggestedCategory, correctedTitle);
 
     // Suggest budget
-    const suggestedBudgetAmount = suggestBudget(suggestedCategory, cleanedTitle);
+    const suggestedBudgetAmount = suggestBudget(suggestedCategory, correctedTitle);
 
     // Suggest notes for doer
-    const suggestedNotes = suggestNotes(suggestedCategory, cleanedTitle);
+    const suggestedNotes = suggestNotes(suggestedCategory, correctedTitle);
 
     res.json({
       success: true,
       data: {
         originalTitle: title,
-        correctedTitle: hasCorrections ? cleanedTitle : null,
+        correctedTitle: hasCorrections ? correctedTitle : null,
         hasCorrections,
         category: suggestedCategory,
         description: suggestedDescription,
