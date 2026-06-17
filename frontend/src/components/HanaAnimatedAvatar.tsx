@@ -39,10 +39,14 @@ export default function HanaAnimatedAvatar({
   }, [isSpeaking, message, onSpeakingEnd]);
 
   const selectFemaleVoice = (utterance: SpeechSynthesisUtterance, allVoices: SpeechSynthesisVoice[]) => {
+    // Log available voices for debugging
+    console.log('Available voices:', allVoices.map(v => ({ name: v.name, lang: v.lang })));
+
     // First try Singapore English voices
     let selectedVoice = null;
 
     const sgVoices = allVoices.filter(v => v.lang.includes('en-SG'));
+    console.log('SG voices found:', sgVoices.length);
     if (sgVoices.length > 0) {
       selectedVoice = sgVoices.find(v => v.name.includes('Female')) || sgVoices[0];
     }
@@ -53,6 +57,7 @@ export default function HanaAnimatedAvatar({
       for (const name of femaleNames) {
         const found = allVoices.find(v => v.name.includes(name));
         if (found) {
+          console.log('Using voice:', name);
           selectedVoice = found;
           break;
         }
@@ -72,6 +77,7 @@ export default function HanaAnimatedAvatar({
     }
 
     if (selectedVoice) {
+      console.log('Final voice selected:', selectedVoice.name, selectedVoice.lang);
       utterance.voice = selectedVoice;
     }
 
