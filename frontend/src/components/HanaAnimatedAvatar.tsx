@@ -142,14 +142,15 @@ export default function HanaAnimatedAvatar({
 
       {/* Hana Image Container - Half Body Only */}
       <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-        {/* Base Image - Cropped to half-body (head to waist) */}
+        {/* Base Image - Cropped to half-body (full head to waist) */}
         <img
           src="/images/Hana_Pose_2_4K.png"
           alt="Hana"
-          className="h-full w-auto object-cover z-0"
+          className="w-full h-auto object-cover z-0"
           style={{
-            objectPosition: 'center top',
-            clipPath: 'inset(0 0 50% 0)', // Show only top 50% (head to waist)
+            objectPosition: 'center 20%',
+            maxHeight: '100%',
+            minHeight: '100%',
           }}
         />
 
