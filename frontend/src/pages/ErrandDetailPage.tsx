@@ -317,9 +317,9 @@ export default function ErrandDetailPage() {
             />
           </div>
         )}
-          </div>
-        </div>
       </div>
+
+      {/* Page Container End */}
 
       {/* Bottom Spacing */}
       <div className="h-8"></div>
