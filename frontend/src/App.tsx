@@ -196,7 +196,7 @@ export default function App() {
           <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole} />} />
           <Route path="/village" element={<MyVillagePage userRole={userRole} />} />
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
-          <Route path="/profile" element={<ProfilePage userRole={userRole} />} />
+          <Route path="/profile" element={<ProfilePage userRole={userRole} onLogout={handleLogout} />} />
           <Route path="/review/:jobId" element={<ReviewPage />} />
         </Route>
       </Routes>
