@@ -89,6 +89,9 @@ const certificationSuggestions: Record<string, { required: string[]; optional: s
 function cleanTitleForDescription(title: string): string {
   let cleaned = title.trim();
 
+  // Remove ending period for cleaner insertion into sentence
+  cleaned = cleaned.replace(/\.$/, '');
+
   // Remove common prefixes
   cleaned = cleaned.replace(/^(help me |help with |need |wash |clean |need to |i need |can you )/, '');
   cleaned = cleaned.replace(/^(my|a|the) /, '');
