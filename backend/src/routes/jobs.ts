@@ -1,0 +1,327 @@
+import { Router, Request, Response } from 'express';
+import { AuthRequest, authMiddleware } from '../middleware/auth.js';
+import db from '../db.js';
+
+const router = Router();
+
+// POST /api/jobs/:taskId/start - Doer starts job
+router.post('/:taskId/start', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const doerId = parseInt(req.userId || '0', 10);
+    const { latitude, longitude } = req.body; // Optional GPS
+
+    // Get task and verify doer is assigned
+    const taskResult = await db.query(
+      `SELECT e.*, b.doer_id FROM errands e
+       LEFT JOIN bids b ON e.accepted_bid_id = b.id
+       WHERE e.id = $1`,
+      [taskId]
+    );
+
+    if (taskResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const task = taskResult.rows[0];
+
+    if (task.status !== 'confirmed') {
+      return res.status(400).json({ error: 'Task must be confirmed before starting' });
+    }
+
+    if (task.doer_id !== doerId) {
+      return res.status(403).json({ error: 'Only the assigned doer can start this task' });
+    }
+
+    // Update task status
+    const updateResult = await db.query(
+      `UPDATE errands
+       SET status = $1, started_at = NOW(), updated_at = NOW()
+       WHERE id = $2
+       RETURNING id, status, started_at`,
+      ['in_progress', taskId]
+    );
+
+    // Get asker info for notification
+    const askerResult = await db.query(
+      'SELECT id, display_name FROM users WHERE id = $1',
+      [task.asker_id]
+    );
+
+    const doerResult = await db.query(
+      'SELECT display_name FROM users WHERE id = $1',
+      [doerId]
+    );
+
+    // TODO: Send push notification to asker
+    // Message: "Your Doer [Doer Name] has started '[task title]'. They're on their way! ⏰"
+
+    res.json({
+      success: true,
+      data: {
+        taskId: updateResult.rows[0].id,
+        status: updateResult.rows[0].status,
+        startedAt: updateResult.rows[0].started_at,
+        message: `Job started! Asker notified.`,
+        gpsRecorded: latitude && longitude ? true : false,
+      },
+    });
+  } catch (error) {
+    console.error('Start job error:', error);
+    res.status(500).json({ error: 'Failed to start job' });
+  }
+});
+
+// POST /api/jobs/:taskId/complete - Doer completes job (with optional photos)
+router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const doerId = parseInt(req.userId || '0', 10);
+    const { photoUrls } = req.body; // Array of photo URLs (pre-uploaded to cloud)
+
+    // Get task and verify doer is assigned
+    const taskResult = await db.query(
+      `SELECT e.*, b.doer_id, b.amount FROM errands e
+       LEFT JOIN bids b ON e.accepted_bid_id = b.id
+       WHERE e.id = $1`,
+      [taskId]
+    );
+
+    if (taskResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const task = taskResult.rows[0];
+
+    if (task.status !== 'in_progress') {
+      return res.status(400).json({ error: 'Task must be in progress to complete' });
+    }
+
+    if (task.doer_id !== doerId) {
+      return res.status(403).json({ error: 'Only the assigned doer can complete this task' });
+    }
+
+    // Validate photo count (max 5)
+    if (photoUrls && photoUrls.length > 5) {
+      return res.status(400).json({ error: 'Maximum 5 photos allowed' });
+    }
+
+    const client = await db.query('BEGIN TRANSACTION');
+
+    try {
+      // Calculate payment release time (48 hours from now)
+      const paymentReleaseAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+
+      // Update task status
+      const updateResult = await db.query(
+        `UPDATE errands
+         SET status = $1,
+             completed_at = NOW(),
+             payment_release_at = $2,
+             updated_at = NOW()
+         WHERE id = $3
+         RETURNING id, status, completed_at, payment_release_at`,
+        ['completed_unconfirmed', paymentReleaseAt, taskId]
+      );
+
+      // Store photos if provided
+      if (photoUrls && photoUrls.length > 0) {
+        for (const photoUrl of photoUrls) {
+          await db.query(
+            `INSERT INTO task_photos (task_id, photo_url, uploaded_by, uploaded_at)
+             VALUES ($1, $2, $3, NOW())`,
+            [taskId, photoUrl, doerId]
+          );
+        }
+      }
+
+      await db.query('COMMIT');
+
+      // Get asker info for notification
+      const askerResult = await db.query(
+        'SELECT id, display_name FROM users WHERE id = $1',
+        [task.asker_id]
+      );
+
+      // Format payment release time for user display
+      const releaseDate = new Date(paymentReleaseAt);
+      const releaseTimeStr = releaseDate.toLocaleString('en-SG');
+
+      // TODO: Send push notification to asker
+      // Message: "Hi [Name] 🌸 [Doer] has completed '[task title]'. Please confirm or raise a dispute before [payment_release_at time]. Otherwise payment releases automatically."
+
+      res.status(201).json({
+        success: true,
+        data: {
+          taskId: updateResult.rows[0].id,
+          status: updateResult.rows[0].status,
+          completedAt: updateResult.rows[0].completed_at,
+          paymentReleaseAt: updateResult.rows[0].payment_release_at,
+          photosUploaded: photoUrls ? photoUrls.length : 0,
+          message: `Job completed! Payment will be released automatically in 48 hours unless asker raises a dispute.`,
+        },
+      });
+    } catch (err) {
+      await db.query('ROLLBACK');
+      throw err;
+    }
+  } catch (error) {
+    console.error('Complete job error:', error);
+    res.status(500).json({ error: 'Failed to complete job' });
+  }
+});
+
+// POST /api/jobs/:taskId/confirm - Asker confirms completion (early payment release)
+router.post('/:taskId/confirm', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const askerId = parseInt(req.userId || '0', 10);
+
+    // Get task and verify asker
+    const taskResult = await db.query(
+      `SELECT e.*, b.doer_id, b.amount FROM errands e
+       LEFT JOIN bids b ON e.accepted_bid_id = b.id
+       WHERE e.id = $1`,
+      [taskId]
+    );
+
+    if (taskResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const task = taskResult.rows[0];
+
+    if (task.asker_id !== askerId) {
+      return res.status(403).json({ error: 'Only the asker can confirm completion' });
+    }
+
+    if (task.status !== 'completed_unconfirmed') {
+      return res.status(400).json({ error: 'Task must be awaiting confirmation' });
+    }
+
+    // Release payment immediately
+    await releasePayment(taskId, task, 'early_confirm');
+
+    // Update task status
+    await db.query(
+      `UPDATE errands
+       SET status = $1, payment_released_at = NOW(), updated_at = NOW()
+       WHERE id = $2`,
+      ['completed_confirmed', taskId]
+    );
+
+    // TODO: Send notifications to both parties
+    // TODO: Schedule rating reminder for 1 hour later
+
+    res.json({
+      success: true,
+      data: {
+        taskId,
+        status: 'completed_confirmed',
+        paymentReleased: true,
+        message: 'Payment released successfully!',
+      },
+    });
+  } catch (error) {
+    console.error('Confirm job error:', error);
+    res.status(500).json({ error: 'Failed to confirm completion' });
+  }
+});
+
+// GET /api/jobs/:taskId/photos - Get task completion photos
+router.get('/:taskId/photos', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Verify user is involved in task
+    const taskResult = await db.query(
+      'SELECT asker_id, accepted_bid_id FROM errands WHERE id = $1',
+      [taskId]
+    );
+
+    if (taskResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    // Check authorization
+    const task = taskResult.rows[0];
+    if (task.accepted_bid_id) {
+      const bidResult = await db.query(
+        'SELECT doer_id FROM bids WHERE id = $1',
+        [task.accepted_bid_id]
+      );
+      const doerId = bidResult.rows[0]?.doer_id;
+
+      if (task.asker_id !== userId && doerId !== userId) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+    } else if (task.asker_id !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Get photos
+    const photosResult = await db.query(
+      'SELECT id, photo_url, uploaded_by, uploaded_at FROM task_photos WHERE task_id = $1 ORDER BY uploaded_at ASC',
+      [taskId]
+    );
+
+    res.json({
+      success: true,
+      data: photosResult.rows,
+    });
+  } catch (error) {
+    console.error('Get photos error:', error);
+    res.status(500).json({ error: 'Failed to fetch photos' });
+  }
+});
+
+// Helper function to release payment
+async function releasePayment(taskId: string, task: any, reason: 'early_confirm' | 'auto_release') {
+  try {
+    const bidAmount = parseFloat(task.amount);
+    const platformFee = bidAmount * 0.20; // 20% platform fee
+    const doerPayout = bidAmount - platformFee;
+
+    // Check for penalties on doer
+    const doerResult = await db.query(
+      'SELECT penalty_owed FROM users WHERE id = $1',
+      [task.doer_id]
+    );
+
+    const penaltyOwed = doerResult.rows[0]?.penalty_owed || 0;
+    const finalPayout = doerPayout - penaltyOwed;
+
+    // TODO: Execute Stripe transfer to doer's Connect account
+    // const stripeTransferId = await stripe.transfers.create({...});
+
+    // Record payment release
+    const releaseResult = await db.query(
+      `INSERT INTO payment_releases (task_id, bid_amount, platform_fee, doer_payout, stripe_transfer_id, released_at, release_reason)
+       VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+       RETURNING id, released_at`,
+      [taskId, bidAmount, platformFee, finalPayout, null, reason] // TODO: add real stripeTransferId
+    );
+
+    // Deduct penalty if applied
+    if (penaltyOwed > 0) {
+      await db.query(
+        'UPDATE users SET penalty_owed = 0 WHERE id = $1',
+        [task.doer_id]
+      );
+    }
+
+    // TODO: Send notifications to both parties
+    // Asker: "Payment released for '[task]'."
+    // Doer: "Your payment of $[amount] is in your wallet! 🎊"
+
+    // TODO: Generate and send eReceipt to both parties
+
+    return releaseResult.rows[0];
+  } catch (error) {
+    console.error('Release payment error:', error);
+    throw error;
+  }
+}
+
+export default router;
