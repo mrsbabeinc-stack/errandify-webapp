@@ -137,14 +137,14 @@ export default function CreateErrandPage() {
     <div className="min-h-screen bg-errandify-bg">
       <div className="max-w-2xl mx-auto px-4">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-4">
           <button
             onClick={() => navigate(-1)}
-            className="text-errandify-orange font-semibold mb-3 text-sm"
+            className="text-errandify-orange font-semibold mb-2 text-xs"
           >
             ← Back
           </button>
-          <h1 className="text-2xl font-bold text-errandify-brown mb-2">
+          <h1 className="text-lg font-bold text-errandify-brown mb-2">
             Create Your Errand
           </h1>
           <div className="flex gap-1 mt-3">
@@ -161,7 +161,7 @@ export default function CreateErrandPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-2">
           {/* Errand Title */}
           <div>
             <label className="block text-sm font-semibold text-errandify-brown mb-1">

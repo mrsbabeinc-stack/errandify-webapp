@@ -89,11 +89,11 @@ export default function HomePage({ userRole }: HomePageProps) {
       {/* Page Container */}
       <div className="max-w-3xl mx-auto px-4">
         {/* Welcome Section */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-errandify-brown">
+        <div className="mb-4">
+          <h1 className="text-lg font-bold text-errandify-brown">
             Welcome, {userName}! 👋
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-xs text-gray-600 mt-0.5">
             {userRole === 'asker'
               ? 'Your posted errands'
               : 'Available errands near you'}
@@ -101,7 +101,7 @@ export default function HomePage({ userRole }: HomePageProps) {
         </div>
 
         {/* Content Section */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {loading ? (
             <div className="text-center py-12 text-gray-500">
               Loading errands...

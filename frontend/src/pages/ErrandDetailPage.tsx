@@ -98,8 +98,8 @@ export default function ErrandDetailPage() {
         {/* Main Task Card */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-6">
-            <h1 className="text-3xl font-bold mb-3">{errand.title}</h1>
+          <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-4">
+            <h1 className="text-xl font-bold mb-2">{errand.title}</h1>
             <div className="flex flex-wrap items-center gap-3">
               <span
                 className={`${getCategoryColor(
@@ -121,12 +121,12 @@ export default function ErrandDetailPage() {
           </div>
 
           {/* Content Section */}
-          <div className="p-6 space-y-6">
+          <div className="p-4 space-y-4">
             {/* Budget Highlight */}
             {errand.budget && (
-              <div className="bg-orange-50 border-l-4 border-errandify-orange p-4 rounded">
-                <p className="text-sm text-gray-600 mb-1">Budget</p>
-                <p className="text-3xl font-bold text-errandify-orange">
+              <div className="bg-orange-50 border-l-4 border-errandify-orange p-3 rounded">
+                <p className="text-xs text-gray-600 mb-1">Budget</p>
+                <p className="text-2xl font-bold text-errandify-orange">
                   SGD ${errand.budget.toFixed(2)}
                 </p>
               </div>
@@ -135,10 +135,10 @@ export default function ErrandDetailPage() {
             {/* Description */}
             {errand.description && (
               <div>
-                <h2 className="font-semibold text-errandify-brown mb-3 text-lg">
+                <h2 className="font-semibold text-errandify-brown mb-2 text-base">
                   About This Task
                 </h2>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-sm text-gray-700 leading-relaxed">
                   {errand.description}
                 </p>
               </div>
@@ -169,30 +169,30 @@ export default function ErrandDetailPage() {
 
             {/* Asker Info */}
             {errand.asker && (
-              <div className="border-t border-gray-200 pt-6">
-                <h2 className="font-semibold text-errandify-brown mb-4 text-lg">
+              <div className="border-t border-gray-200 pt-4">
+                <h2 className="font-semibold text-errandify-brown mb-2 text-base">
                   Posted By
                 </h2>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="bg-gray-50 rounded-lg p-3 space-y-1">
                   <div>
-                    <p className="text-xs text-gray-600 font-semibold mb-1">
+                    <p className="text-xs text-gray-600 font-semibold mb-0.5">
                       Name
                     </p>
-                    <p className="text-gray-700">{errand.asker.name}</p>
+                    <p className="text-sm text-gray-700">{errand.asker.name}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-semibold mb-1">
+                    <p className="text-xs text-gray-600 font-semibold mb-0.5">
                       Contact
                     </p>
-                    <p className="text-gray-700">{errand.asker.mobile}</p>
+                    <p className="text-sm text-gray-700">{errand.asker.mobile}</p>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Posted Date */}
-            <div className="text-center border-t border-gray-200 pt-4">
-              <p className="text-xs text-gray-500">
+            <div className="text-center border-t border-gray-200 pt-3">
+              <p className="text-xs text-gray-500 text-xs">
                 Posted on{' '}
                 {new Date(errand.createdAt).toLocaleDateString('en-SG', {
                   year: 'numeric',
@@ -204,7 +204,7 @@ export default function ErrandDetailPage() {
 
             {/* Action Button */}
             {errand.status === 'open' && (
-              <button className="w-full bg-errandify-orange text-white py-4 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-lg">
+              <button className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2">
                 Accept This Task
               </button>
             )}
