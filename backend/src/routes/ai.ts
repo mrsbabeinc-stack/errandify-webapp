@@ -964,12 +964,21 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
       }
     }
 
-    // Extract budget
+    // Extract budget (look for $ symbol or "budget" keyword, avoid times like 4pm)
     let budget = '';
-    const budgetMatch = cleaned.match(/\$?(\d+)/);
-    if (budgetMatch) {
-      budget = budgetMatch[1];
+
+    // First try to find $ symbol
+    const dollarMatch = cleaned.match(/\$\s*(\d+)/);
+    if (dollarMatch) {
+      budget = dollarMatch[1];
+    } else {
+      // Look for budget keyword
+      const budgetKeywordMatch = cleaned.match(/budget\s*[:\s]*(\d+)/i);
+      if (budgetKeywordMatch) {
+        budget = budgetKeywordMatch[1];
+      }
     }
+    // Don't extract numbers that are part of time (2pm, 4pm, etc)
 
     res.json({
       success: true,
