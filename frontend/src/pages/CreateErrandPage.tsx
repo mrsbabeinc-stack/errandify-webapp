@@ -845,83 +845,88 @@ export default function CreateErrandPage() {
               </div>
             )}
 
-            <div className="space-y-2">
-              <div>
-                <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                  Postal Code (Singapore)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., 082001"
-                  value={postalCode}
-                  onChange={(e) => {
-                    const code = e.target.value.trim();
-                    setPostalCode(code);
+            {/* Postal Code and Full Address - Only shown when NOT remote work */}
+            {!isRemoteWork && (
+              <>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                      Postal Code (Singapore)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., 082001"
+                      value={postalCode}
+                      onChange={(e) => {
+                        const code = e.target.value.trim();
+                        setPostalCode(code);
 
-                    // Only update location if postal code is exactly 6 digits
-                    if (code.length === 6 && /^\d+$/.test(code)) {
-                      const areaPrefix = code.substring(0, 2);
-                      const areaData = postalCodeAreas[areaPrefix];
+                        // Only update location if postal code is exactly 6 digits
+                        if (code.length === 6 && /^\d+$/.test(code)) {
+                          const areaPrefix = code.substring(0, 2);
+                          const areaData = postalCodeAreas[areaPrefix];
 
-                      if (areaData) {
-                        // Only update if we have valid area data for this prefix
-                        setFormData((prev) => ({
-                          ...prev,
-                          location: areaData.area,
-                        }));
-                        setFullAddress(`1 ${areaData.building}, Unit: __, Singapore ${code}`);
-                      }
-                    } else if (code.length === 0) {
-                      // Clear addresses only if postal code is completely cleared
-                      setFormData((prev) => ({
-                        ...prev,
-                        location: '',
-                      }));
-                      setFullAddress('');
-                    }
-                    // Otherwise: don't update location (partial postal codes won't modify anything)
-                  }}
-                  className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
-                />
-              </div>
+                          if (areaData) {
+                            // Only update if we have valid area data for this prefix
+                            setFormData((prev) => ({
+                              ...prev,
+                              location: areaData.area,
+                            }));
+                            setFullAddress(`1 ${areaData.building}, Unit: __, Singapore ${code}`);
+                          }
+                        } else if (code.length === 0) {
+                          // Clear addresses only if postal code is completely cleared
+                          setFormData((prev) => ({
+                            ...prev,
+                            location: '',
+                          }));
+                          setFullAddress('');
+                        }
+                        // Otherwise: don't update location (partial postal codes won't modify anything)
+                      }}
+                      className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                  Area (Shown to Potential Doers)
-                </label>
-                <div className="w-full px-3 py-2 border-b-2 border-gray-300 bg-gray-50 text-gray-600 text-base">
-                  {formData.location || 'Enter postal code above'}
+                  <div>
+                    <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                      Area (Shown to Potential Doers)
+                    </label>
+                    <div className="w-full px-3 py-2 border-b-2 border-gray-300 bg-gray-50 text-gray-600 text-base">
+                      {formData.location || 'Enter postal code above'}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Full Address - Shown only to confirmed doer */}
-            <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Full Address <span className="text-xs text-gray-600">(Shown to Confirmed Doer - Add Unit Number if Required)</span>
-              </label>
-              <textarea
-                value={fullAddress}
-                onChange={(e) => setFullAddress(e.target.value)}
-                placeholder="e.g., Block 1, Tanjong Pagar Plaza, Unit #5-10, Singapore 082001"
-                rows={2}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
-              />
+                {/* Full Address - Shown only to confirmed doer */}
+                <div>
+                  <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                    Full Address <span className="text-xs text-gray-600">(Shown to Confirmed Doer - Add Unit Number if Required)</span>
+                  </label>
+                  <textarea
+                    value={fullAddress}
+                    onChange={(e) => setFullAddress(e.target.value)}
+                    placeholder="e.g., Block 1, Tanjong Pagar Plaza, Unit #5-10, Singapore 082001"
+                    rows={2}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
+                  />
 
-              {/* GPS Location Notice */}
-              {gpsEnabled && gpsLocation && (
-                <div className="mt-2 p-2 bg-blue-50 border-l-4 border-blue-400 rounded text-xs">
-                  <p className="text-blue-900">
-                    📍 <span className="font-semibold">Your current location detected:</span> {gpsLocation.latitude.toFixed(4)}, {gpsLocation.longitude.toFixed(4)}
-                  </p>
-                  {formData.location && (
-                    <p className="text-blue-800 mt-1">
-                      ℹ️ Task location: <span className="font-semibold">{formData.location}</span> — Make sure this is different from your current location if the doer needs to travel.
-                    </p>
+                  {/* GPS Location Notice */}
+                  {gpsEnabled && gpsLocation && (
+                    <div className="mt-2 p-2 bg-blue-50 border-l-4 border-blue-400 rounded text-xs">
+                      <p className="text-blue-900">
+                        📍 <span className="font-semibold">Your current location detected:</span> {gpsLocation.latitude.toFixed(4)}, {gpsLocation.longitude.toFixed(4)}
+                      </p>
+                      {formData.location && (
+                        <p className="text-blue-800 mt-1">
+                          ℹ️ Task location: <span className="font-semibold">{formData.location}</span> — Make sure this is different from your current location if the doer needs to travel.
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
 
           </div>
 
