@@ -10,6 +10,7 @@ interface ErrandDetail {
   status: string;
   budget?: number;
   deadline?: string;
+  location?: string;
   askerId?: number;
   asker?: { name: string; mobile: string };
   createdAt: string;
@@ -64,6 +65,28 @@ export default function ErrandDetailPage() {
       'moving-help': 'bg-red-100 text-red-700',
     };
     return colors[category] || 'bg-gray-100 text-gray-700';
+  };
+
+  const getMaskedLocation = (location?: string) => {
+    if (!location) return null;
+
+    // If it's "Remote", show as is
+    if (location.toLowerCase() === 'remote') return 'Remote';
+
+    // Extract postal code (6 digits) or area name
+    const postalMatch = location.match(/\d{6}/);
+    if (postalMatch) {
+      return `Singapore ${postalMatch[0]}`;
+    }
+
+    // If it contains "Singapore", show only that + postal or area
+    if (location.toLowerCase().includes('singapore')) {
+      return location.split(',')[0]; // Show first part (area/postal)
+    }
+
+    // Otherwise, show only the last part (should be area/postal)
+    const parts = location.split(',');
+    return parts[parts.length - 1].trim();
   };
 
   if (loading) {
@@ -173,6 +196,21 @@ export default function ErrandDetailPage() {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}
+                </p>
+              </div>
+            )}
+
+            {/* Location - Masked for Privacy */}
+            {errand.location && (
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h2 className="font-semibold text-errandify-brown mb-2">
+                  Location
+                </h2>
+                <p className="text-gray-700">
+                  📍 {getMaskedLocation(errand.location)}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Exact address shown to confirmed doer only
                 </p>
               </div>
             )}

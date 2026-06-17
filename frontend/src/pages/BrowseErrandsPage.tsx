@@ -32,6 +32,28 @@ export default function BrowseErrandsPage() {
     'moving-help': 'Moving Help',
   };
 
+  const getMaskedLocation = (location?: string) => {
+    if (!location) return null;
+
+    // If it's "Remote", show as is
+    if (location.toLowerCase() === 'remote') return 'Remote';
+
+    // Extract postal code (6 digits) or area name
+    const postalMatch = location.match(/\d{6}/);
+    if (postalMatch) {
+      return `Singapore ${postalMatch[0]}`;
+    }
+
+    // If it contains "Singapore", show only that + postal or area
+    if (location.toLowerCase().includes('singapore')) {
+      return location.split(',')[0]; // Show first part (area/postal)
+    }
+
+    // Otherwise, show only the last part (should be area/postal)
+    const parts = location.split(',');
+    return parts[parts.length - 1].trim();
+  };
+
   useEffect(() => {
     const fetchErrands = async () => {
       try {
@@ -125,10 +147,10 @@ export default function BrowseErrandsPage() {
                   </div>
                 )}
 
-                {/* Location */}
+                {/* Location - Masked for Privacy */}
                 {errand.location && (
                   <div className="flex items-center gap-2 text-gray-600">
-                    <span>📍 {errand.location}</span>
+                    <span>📍 {getMaskedLocation(errand.location)}</span>
                   </div>
                 )}
 
