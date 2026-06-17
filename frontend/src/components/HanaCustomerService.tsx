@@ -113,15 +113,62 @@ export default function HanaCustomerService() {
       setIsSpeaking(true);
       console.log('[Hana] Speaking text for language:', language);
 
-      // Always use native Web Speech API for Chinese (ResponsiveVoice doesn't have proper female voices)
+      // For Chinese, use Google Translate TTS (guaranteed female voice)
       if (language === 'zh' || language === 'yue') {
-        fallbackBrowserTTS(text);
+        speakWithGoogleTranslateTTS(text);
       } else {
         speakWithBrowserTTS(text);
       }
     } catch (error: any) {
       console.error('[Hana] Error:', error.message);
       setIsSpeaking(false);
+    }
+  };
+
+  const speakWithGoogleTranslateTTS = (text: string) => {
+    try {
+      setIsSpeaking(true);
+
+      // Map language to Google Translate language code
+      const langMap: Record<Language, string> = {
+        en: 'en',
+        zh: 'zh-CN',
+        yue: 'zh-TW', // Google Translate uses zh-TW for Cantonese
+      };
+
+      const lang = langMap[language];
+
+      // Use Google Translate's text-to-speech API
+      // Format: https://translate.google.com/translate_tts?ie=UTF-8&q=TEXT&tl=LANG&client=tw-ob
+      const encodedText = encodeURIComponent(text);
+      const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${lang}&client=tw-ob`;
+
+      console.log('[Hana] Using Google Translate TTS for language:', lang);
+
+      const audio = new Audio(audioUrl);
+
+      audio.onplay = () => {
+        console.log('[Hana] Google TTS playing');
+      };
+
+      audio.onended = () => {
+        console.log('[Hana] Google TTS finished');
+        setIsSpeaking(false);
+      };
+
+      audio.onerror = (error: any) => {
+        console.error('[Hana] Google TTS error:', error);
+        console.log('[Hana] Falling back to native TTS');
+        fallbackBrowserTTS(text);
+      };
+
+      audio.play().catch((error: any) => {
+        console.error('[Hana] Failed to play Google TTS:', error);
+        fallbackBrowserTTS(text);
+      });
+    } catch (error: any) {
+      console.error('[Hana] Google TTS exception:', error.message);
+      fallbackBrowserTTS(text);
     }
   };
 
