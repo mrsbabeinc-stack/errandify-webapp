@@ -5,7 +5,7 @@ interface RoleToggleProps {
 
 export default function RoleToggle({ currentRole, onRoleChange }: RoleToggleProps) {
   return (
-    <div className="fixed top-2 left-4 z-50 bg-white rounded-lg shadow-sm p-1 flex gap-1 border border-gray-200">
+    <div className="fixed top-0 left-4 z-50 bg-white rounded-b-lg shadow-sm p-1 flex gap-1 border border-gray-200 border-t-0">
       <button
         onClick={() => onRoleChange('asker')}
         className={`px-3 py-1 rounded-md font-semibold text-sm transition-colors ${

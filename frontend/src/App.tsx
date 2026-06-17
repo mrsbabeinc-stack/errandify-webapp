@@ -7,6 +7,7 @@ import CategorySelectionPage from './pages/CategorySelectionPage';
 import CreateErrandPage from './pages/CreateErrandPage';
 import BrowseErrandsPage from './pages/BrowseErrandsPage';
 import ErrandsPage from './pages/ErrandsPage';
+import ErrandDetailPage from './pages/ErrandDetailPage';
 import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage';
 
@@ -112,6 +113,7 @@ export default function App() {
         >
           <Route path="/" element={<HomePage userRole={userRole} />} />
           <Route path="/errands" element={<ErrandsPage userRole={userRole} />} />
+          <Route path="/errand/:id" element={<ErrandDetailPage />} />
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
           <Route path="/profile" element={<ProfilePage userRole={userRole} />} />
         </Route>
