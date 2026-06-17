@@ -515,12 +515,17 @@ function suggestBudget(category: string, title: string): number | null {
 function suggestNotes(category: string, title: string): string {
   const lowerTitle = title.toLowerCase();
 
+  // Check for elderly/parent care scenarios
+  const isEldercareSituation = /\b(mom|dad|mother|father|parent|elderly|senior|grandma|grandpa|grandmother|grandfather)\b/.test(lowerTitle);
+
   const noteTemplates: Record<string, string> = {
     'home-maintenance': 'Please bring your own tools. Ensure work is completed safely and professionally. Lock up properly when done.',
     'cleaning-laundry': 'Please use eco-friendly cleaning products if available. Vacuum and mop all areas. Handle delicate items carefully.',
     'shopping-errands': 'Keep all receipts for reimbursement. Call if items are out of stock. Pack fragile items carefully.',
     'delivery-moving': 'Handle with care, especially fragile items. Please take photos before and after. Ensure safe delivery.',
-    'childcare-tutoring': 'Emergency contact numbers will be provided. Please arrive 10 minutes early. Follow house rules and bedtime routine.',
+    'childcare-tutoring': isEldercareSituation
+      ? 'Please be patient and attentive. Emergency contact numbers will be provided. Report any health concerns immediately. Handle mobility assistance carefully if needed.'
+      : 'Emergency contact numbers will be provided. Please arrive 10 minutes early. Follow house rules and bedtime routine.',
     'pet-care': 'All pet instructions will be provided. Please keep gates/doors secure. Report any health concerns immediately.',
     'tech-support': 'Please backup data before any major changes. Test all functionality after completion. Document any issues found.',
     'moving-help': 'Wear appropriate footwear. Take breaks as needed. Use proper lifting techniques. Furniture padding provided.',
