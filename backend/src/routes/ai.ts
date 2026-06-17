@@ -902,14 +902,14 @@ function parseTimeFromInput(text: string): string | null {
 function parseDurationFromInput(text: string): { duration: string; unit: string } | null {
   const lowerText = text.toLowerCase();
 
-  // Match patterns like "1hour", "2 hours", "30min", "1.5hr"
-  const durationMatch = lowerText.match(/(\d+(?:\.\d+)?)\s*(hour|hr|min|minute|day|d)?/);
+  // Match patterns like "1hour", "2 hours", "30min", "30 m", "1.5hr"
+  const durationMatch = lowerText.match(/(\d+(?:\.\d+)?)\s*(hour|hr|min|minute|m|day|d)?/);
   if (durationMatch) {
     const value = durationMatch[1];
     const unit = durationMatch[2] || 'hour';
 
     let normalizedUnit = 'Hr';
-    if (unit.includes('min')) normalizedUnit = 'Min';
+    if (unit.includes('min') || unit === 'm') normalizedUnit = 'Min';
     else if (unit.includes('day') || unit === 'd') normalizedUnit = 'Day';
     else if (unit.includes('week')) normalizedUnit = 'Week';
 
@@ -990,8 +990,8 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
     // Remove time patterns (9am, 4pm, morning, afternoon, etc.)
     titleText = titleText.replace(/\s+(\d{1,2}(?:am|pm|:\d{2})|morning|afternoon|evening|night)\b/gi, '');
 
-    // Remove duration patterns (1hour, 2 hours, 30min, etc.)
-    titleText = titleText.replace(/\s+\d+(?:\.\d+)?\s*(hour|hr|min|minute|day|d)\b/gi, '');
+    // Remove duration patterns (1hour, 2 hours, 30min, 30 m, etc.)
+    titleText = titleText.replace(/\s+\d+(?:\.\d+)?\s*(hour|hr|min|minute|m|day|d)\b/gi, '');
 
     // Remove budget patterns ($50, budget 50, etc.)
     titleText = titleText.replace(/\s*\$\s*\d+\b/g, '');
