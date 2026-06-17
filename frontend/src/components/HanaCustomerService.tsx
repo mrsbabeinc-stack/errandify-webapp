@@ -187,8 +187,8 @@ export default function HanaCustomerService() {
       console.log('[Hana] Using ResponsiveVoice for English');
 
       responsiveVoice.speak(text, 'Singapore Female', {
-        rate: 1.2,
-        pitch: 1.25,
+        rate: 1.1, // Slightly slower for warmth
+        pitch: 1.2, // High but natural pitch
         volume: 1.0,
         onstart: () => {
           console.log('[Hana] Speaking');
@@ -245,8 +245,9 @@ export default function HanaCustomerService() {
       console.log('[Hana] No voice found for language:', language);
     }
 
-    utterance.rate = 1.0;
-    utterance.pitch = 1.2; // Slightly higher pitch to sound more feminine
+    // Warm, youthful 20-year-old voice settings
+    utterance.rate = 0.95; // Slightly slower for warmth and clarity
+    utterance.pitch = 1.3; // Higher pitch for younger sound
     utterance.volume = 1.0;
 
     utterance.onstart = () => {
