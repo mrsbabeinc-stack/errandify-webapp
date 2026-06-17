@@ -279,10 +279,48 @@ export default function CreateErrandPage() {
     }
   };
 
+  // Extract time, duration, budget when title changes
+  useEffect(() => {
+    if (!formData.title || formData.title.length <= 3) return;
+
+    const rawTitle = formData.title.toLowerCase();
+
+    // Extract time: "4pm" → "16:00"
+    const timeMatch = rawTitle.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+    if (timeMatch && timeMatch[3]) {
+      const hourNum = parseInt(timeMatch[1]);
+      if (hourNum >= 1 && hourNum <= 23) {
+        let hours = hourNum;
+        const minutes = timeMatch[2] || '00';
+        const period = timeMatch[3].toLowerCase();
+        if (period === 'pm' && hours !== 12) hours += 12;
+        else if (period === 'am' && hours === 12) hours = 0;
+        const timeStr = `${String(hours).padStart(2, '0')}:${minutes}`;
+        setFormData((prev) => ({ ...prev, time: timeStr }));
+      }
+    }
+
+    // Extract duration: "30min" → "30" "Min"
+    const durationMatch = rawTitle.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|minutes?|mins?|m\b|days?|d\b)/);
+    if (durationMatch && durationMatch[2]) {
+      const durationValue = durationMatch[1];
+      const unit = durationMatch[2];
+      let normalizedUnit = 'Hr' as 'Min' | 'Hr' | 'Day' | 'Week';
+      if (unit.match(/^(min|m)/)) normalizedUnit = 'Min';
+      else if (unit.match(/^(day|d)/)) normalizedUnit = 'Day';
+      setFormData((prev) => ({ ...prev, duration: durationValue, durationUnit: normalizedUnit }));
+    }
+
+    // Extract budget: last 1-3 digit number (avoid 6-digit postal codes)
+    const allNumbers = rawTitle.match(/\b(\d{1,3})\b/g);
+    if (allNumbers && allNumbers.length > 0) {
+      const lastSmallNumber = allNumbers[allNumbers.length - 1];
+      setFormData((prev) => ({ ...prev, budget: lastSmallNumber }));
+    }
+  }, [formData.title]);
+
   // Auto-apply AI suggestions when they arrive
   useEffect(() => {
-    if (!aiSuggestions.suggestedCategory && !formData.title) return;
-
     // Update category if AI has a suggestion and user hasn't selected one yet
     if (aiSuggestions.suggestedCategory && !formData.category) {
       setFormData((prev) => ({
@@ -290,55 +328,7 @@ export default function CreateErrandPage() {
         category: aiSuggestions.suggestedCategory,
       }));
     }
-
-    // Extract time, duration, budget from the RAW TITLE (before correction)
-    if (formData.title && formData.title.length > 3) {
-      const rawTitle = formData.title.toLowerCase();
-      console.log('[useEffect] Extracting from raw title:', formData.title);
-
-      // Extract time
-      const timeMatch = rawTitle.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
-      if (timeMatch && timeMatch[3]) {
-        const hourNum = parseInt(timeMatch[1]);
-        if (hourNum >= 1 && hourNum <= 23) {
-          let hours = hourNum;
-          const minutes = timeMatch[2] || '00';
-          const period = timeMatch[3].toLowerCase();
-          if (period === 'pm' && hours !== 12) hours += 12;
-          else if (period === 'am' && hours === 12) hours = 0;
-          const timeStr = `${String(hours).padStart(2, '0')}:${minutes}`;
-          console.log('[useEffect] Setting time:', timeStr);
-          setFormData((prev) => ({ ...prev, time: timeStr }));
-        }
-      }
-
-      // Extract duration
-      const durationMatch = rawTitle.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|minutes?|mins?|m\b|days?|d\b)/);
-      if (durationMatch && durationMatch[2]) {
-        const durationValue = durationMatch[1];
-        const unit = durationMatch[2];
-        let normalizedUnit = 'Hr' as 'Min' | 'Hr' | 'Day' | 'Week';
-        if (unit.match(/^(min|m)/)) normalizedUnit = 'Min';
-        else if (unit.match(/^(day|d)/)) normalizedUnit = 'Day';
-        console.log('[useEffect] Setting duration:', durationValue, normalizedUnit);
-        setFormData((prev) => ({ ...prev, duration: durationValue, durationUnit: normalizedUnit }));
-      }
-
-      // Extract budget (1-3 digit numbers only, avoid postal codes)
-      const allNumbers = rawTitle.match(/\b(\d{1,3})\b/g);
-      if (allNumbers && allNumbers.length > 0) {
-        const lastSmallNumber = allNumbers[allNumbers.length - 1];
-        console.log('[useEffect] Setting budget:', lastSmallNumber);
-        setFormData((prev) => ({ ...prev, budget: lastSmallNumber }));
-      }
-    }
-
-    // Description: show as suggestion only, don't auto-apply (user must approve)
-    // Budget: show as suggestion only - don't auto-apply since extraction already handles it
-    // Notes: show as suggestion only, don't auto-apply (user must approve)
-    // Skills: show as suggestions only, don't auto-apply (user must approve)
-    // Certifications: show as suggestions only, don't auto-apply (user must approve)
-  }, [formData.title, aiSuggestions.suggestedCategory]);
+  }, [aiSuggestions.suggestedCategory, formData.category]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
