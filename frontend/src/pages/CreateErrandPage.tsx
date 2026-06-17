@@ -821,10 +821,9 @@ export default function CreateErrandPage() {
                     <label className="block text-sm font-semibold text-errandify-brown mb-2">
                       Area (Shown to Potential Doers)
                     </label>
-                    <div className="w-full px-3 py-2 border-b-2 border-gray-300 bg-gray-50">
-                      <span className={formData.location ? 'text-gray-600 text-base' : 'text-gray-400 text-xs'}>
-                        {formData.location || 'Enter postal code above'}
-                      </span>
+                    <div className="w-full px-3 py-2 border-b-2 border-gray-300 bg-gray-50 text-base"
+                         style={{color: formData.location ? '#4A3221' : '#D1D5DB'}}>
+                      {formData.location || 'Enter postal code above'}
                     </div>
                   </div>
                 </div>
