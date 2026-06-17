@@ -17,11 +17,6 @@ export default function ProfilePage({ userRole }: ProfilePageProps) {
 
   return (
     <div className="px-4 py-4 max-w-3xl mx-auto">
-      <h1 className="text-lg font-bold text-errandify-brown mb-2">Profile</h1>
-      <p className="text-xs text-gray-600 mb-4">
-        Manage your account and preferences
-      </p>
-
       {/* MyAccount Section */}
       <div className="mb-6">
         <h2 className="text-sm font-bold text-errandify-brown mb-3 flex items-center gap-2">
