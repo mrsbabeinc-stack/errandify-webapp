@@ -25,31 +25,13 @@ export default function LandingPage() {
         </div>
 
         {/* Meet Our Friends Section - Family Photo */}
-        <div className="w-full mb-8 bg-gradient-to-b from-yellow-100 via-yellow-50 to-yellow-100 rounded-3xl p-6 shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
-          {/* Decorative background with palm trees */}
-          <div className="absolute top-0 left-0 text-6xl opacity-20">🌴</div>
-          <div className="absolute top-0 right-0 text-6xl opacity-20">🌴</div>
-
-          {/* Title */}
-          <h2 className="text-3xl font-bold text-gray-900 mb-3 relative z-10">Meet Our Friends</h2>
-          <p className="text-gray-700 font-semibold mb-4 relative z-10">Real neighbours helping real neighbours</p>
-
-          {/* Family Photo Container */}
-          <div className="w-full max-w-xs relative z-10 rounded-2xl overflow-hidden shadow-lg bg-gradient-to-b from-orange-50 to-yellow-50 border-4 border-errandify-orange">
-            {/* Placeholder for family photo - real people (diverse family) */}
-            <div className="w-full aspect-square bg-gradient-to-br from-orange-100 via-yellow-100 to-orange-100 flex items-center justify-center relative">
-              {/* Palm tree decorations */}
-              <div className="absolute top-2 left-2 text-2xl opacity-30">🌴</div>
-              <div className="absolute top-2 right-2 text-2xl opacity-30">🌴</div>
-
-              {/* Family illustration placeholder */}
-              <div className="text-center">
-                <p className="text-6xl mb-2">👨‍👩‍👧‍👦</p>
-                <p className="text-gray-600 text-sm font-semibold">Community Family Photo</p>
-                <p className="text-gray-500 text-xs mt-1">Diverse, Helpful, United</p>
-              </div>
-            </div>
-          </div>
+        <div className="w-full mb-8 rounded-3xl overflow-hidden shadow-lg relative">
+          {/* Family Photo */}
+          <img
+            src="/images/family.jpeg"
+            alt="Our Community Family"
+            className="w-full h-auto object-cover"
+          />
         </div>
 
         {/* Value Proposition */}
