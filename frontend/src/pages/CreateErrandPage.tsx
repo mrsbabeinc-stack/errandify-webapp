@@ -120,7 +120,8 @@ export default function CreateErrandPage() {
                   ...prev,
                   location: areaData.area,
                 }));
-              setFullAddress(`1 ${areaData.building}, Unit: __, Singapore ${code}`);
+                setFullAddress(`1 ${areaData.building}, Unit: __, Singapore ${code}`);
+              }
             }
           }
         }
