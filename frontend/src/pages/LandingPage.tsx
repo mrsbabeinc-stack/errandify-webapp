@@ -54,7 +54,7 @@ export default function LandingPage() {
 
         {/* Footer Text */}
         <p className="text-xs text-gray-500 text-center">
-          Singapore's community errand platform
+          Singapore AI Powered Community Platform
         </p>
       </div>
     </div>
