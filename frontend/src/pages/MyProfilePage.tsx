@@ -4,67 +4,84 @@ export default function MyProfilePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
+    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', padding: '20px' }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <button
           onClick={() => navigate(-1)}
-          className="mb-6 text-lg text-gray-600 font-bold"
+          style={{
+            marginBottom: '24px',
+            fontSize: '18px',
+            color: '#4b5563',
+            fontWeight: 'bold',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+          }}
         >
           ‹ Back
         </button>
 
-        <h1 className="text-3xl font-bold text-errandify-brown mb-6">My Profile</h1>
+        <h1 style={{ fontSize: '30px', fontWeight: 'bold', color: '#8b5a3c', marginBottom: '24px' }}>
+          My Profile
+        </h1>
 
-        {/* Profile Card */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="text-6xl">👤</div>
+        <div style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '24px' }}>
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ fontSize: '48px' }}>👤</div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">John Doe</h2>
-              <p className="text-gray-600">✅ Verified User</p>
-              <p className="text-sm text-gray-500">Member since Jan 2026</p>
+              <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827' }}>John Doe</h2>
+              <p style={{ color: '#4b5563' }}>✅ Verified User</p>
+              <p style={{ fontSize: '12px', color: '#6b7280' }}>Member since Jan 2026</p>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 py-4 border-y border-gray-200 mb-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-errandify-orange">24</p>
-              <p className="text-xs text-gray-600">Errands Posted</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', paddingY: '16px', borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb', marginBottom: '24px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#f97316' }}>24</p>
+              <p style={{ fontSize: '12px', color: '#4b5563' }}>Errands Posted</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-errandify-orange">18</p>
-              <p className="text-xs text-gray-600">Completed</p>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#f97316' }}>18</p>
+              <p style={{ fontSize: '12px', color: '#4b5563' }}>Completed</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-errandify-orange">4.9</p>
-              <p className="text-xs text-gray-600">Rating</p>
-            </div>
-          </div>
-
-          {/* Info */}
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm text-gray-600 font-bold">Email</label>
-              <p className="text-gray-900">john@example.com</p>
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 font-bold">Phone</label>
-              <p className="text-gray-900">+65 8123 4567</p>
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 font-bold">Address</label>
-              <p className="text-gray-900">123 Main St, Singapore 123456</p>
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 font-bold">Bio</label>
-              <p className="text-gray-900">Friendly and reliable helper</p>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#f97316' }}>4.9</p>
+              <p style={{ fontSize: '12px', color: '#4b5563' }}>Rating</p>
             </div>
           </div>
 
-          {/* Edit Button */}
-          <button className="w-full mt-6 bg-errandify-orange text-white py-2 rounded-lg font-bold">
+          <div style={{ marginTop: '16px', space: '16px' }}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: '#4b5563', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Email</label>
+              <p style={{ color: '#111827' }}>john@example.com</p>
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: '#4b5563', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Phone</label>
+              <p style={{ color: '#111827' }}>+65 8123 4567</p>
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: '#4b5563', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Address</label>
+              <p style={{ color: '#111827' }}>123 Main St, Singapore 123456</p>
+            </div>
+            <div>
+              <label style={{ fontSize: '12px', color: '#4b5563', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Bio</label>
+              <p style={{ color: '#111827' }}>Friendly and reliable helper</p>
+            </div>
+          </div>
+
+          <button
+            style={{
+              width: '100%',
+              marginTop: '24px',
+              backgroundColor: '#f97316',
+              color: 'white',
+              padding: '8px 0',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
             Edit Profile
           </button>
         </div>
