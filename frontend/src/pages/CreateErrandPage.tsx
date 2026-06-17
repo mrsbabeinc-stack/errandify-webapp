@@ -278,7 +278,7 @@ export default function CreateErrandPage() {
       const lowerValue = value.toLowerCase();
 
       // Extract time: patterns like "4pm", "14:00", "2:30pm"
-      const timeMatch = lowerValue.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/);
+      const timeMatch = lowerValue.match(/\b(\d{1,2}):?(\d{2})?\s*(am|pm)\b/i);
       if (timeMatch) {
         let hours = parseInt(timeMatch[1]);
         const minutes = timeMatch[2] || '00';
@@ -293,7 +293,7 @@ export default function CreateErrandPage() {
         const timeStr = `${String(hours).padStart(2, '0')}:${minutes}`;
         setFormData((prev) => ({
           ...prev,
-          duration: timeStr,
+          deadline: timeStr,
         }));
       }
 

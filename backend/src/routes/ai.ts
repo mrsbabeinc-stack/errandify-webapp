@@ -644,33 +644,64 @@ router.post('/suggestions', (req: Request, res: Response) => {
     // Correct spelling and punctuation
     const { corrected: correctedTitle, hasSuggestions: hasCorrections } = correctSpellingAndPunctuation(title);
 
+    // Clean up title: remove time, duration, budget, locations, and dates from correctedTitle
+    let cleanedTitle = correctedTitle;
+
+    // Remove time patterns (9am, 4pm, 14:00, morning, afternoon, etc.)
+    cleanedTitle = cleanedTitle.replace(/\s+(\d{1,2}(?:am|pm|:\d{2})|morning|afternoon|evening|night)\b/gi, '');
+
+    // Remove duration patterns (1hour, 2 hours, 30min, 30 m, etc.)
+    cleanedTitle = cleanedTitle.replace(/\s+\d+(?:\.\d+)?\s*(hour|hr|min|minute|m|day|d)\b/gi, '');
+
+    // Remove budget patterns ($50, budget 50, etc.) and trailing numbers
+    cleanedTitle = cleanedTitle.replace(/\s*\$\s*\d+\b/g, '');
+    cleanedTitle = cleanedTitle.replace(/\s+budget\s+\d+\b/gi, '');
+    cleanedTitle = cleanedTitle.replace(/\s+\d+\s*$/, '');
+
+    // Remove common locations
+    const locations = ['orchard', 'marina bay', 'tampines', 'jurong', 'clementi', 'bishan', 'serangoon', 'bedok', 'geylang', 'east coast', 'hougang', 'punggol', 'everton', 'bukit timah', 'holland', 'tanglin'];
+    for (const loc of locations) {
+      cleanedTitle = cleanedTitle.replace(new RegExp(`\\s*(?:at|in|near|to)?\\s*${loc}\\b`, 'gi'), '');
+    }
+
+    // Remove day names
+    cleanedTitle = cleanedTitle.replace(/\s+(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun|today|tomorrow|tmr)\b/gi, '');
+
+    // Clean up any double spaces
+    cleanedTitle = cleanedTitle.replace(/\s+/g, ' ').trim();
+
+    // Re-ensure proper punctuation on cleaned title
+    if (cleanedTitle && !/[.!?]$/.test(cleanedTitle)) {
+      cleanedTitle += '.';
+    }
+
     // Detect category
-    const suggestedCategory = detectCategory(correctedTitle);
+    const suggestedCategory = detectCategory(cleanedTitle);
 
     // Generate description
-    const suggestedDescription = generateDescription(suggestedCategory, correctedTitle);
+    const suggestedDescription = generateDescription(suggestedCategory, cleanedTitle);
 
     // Detect missing important details
-    const missingDetails = detectMissingDetails(correctedTitle);
+    const missingDetails = detectMissingDetails(cleanedTitle);
 
     // Suggest certifications
-    const suggestedCerts = suggestCertifications(suggestedCategory, correctedTitle);
+    const suggestedCerts = suggestCertifications(suggestedCategory, cleanedTitle);
 
     // Suggest skills
-    const suggestedSkillsList = suggestSkills(suggestedCategory, correctedTitle);
+    const suggestedSkillsList = suggestSkills(suggestedCategory, cleanedTitle);
 
     // Suggest budget
-    const suggestedBudgetAmount = suggestBudget(suggestedCategory, correctedTitle);
+    const suggestedBudgetAmount = suggestBudget(suggestedCategory, cleanedTitle);
 
     // Suggest notes for doer
-    const suggestedNotes = suggestNotes(suggestedCategory, correctedTitle);
+    const suggestedNotes = suggestNotes(suggestedCategory, cleanedTitle);
 
     res.json({
       success: true,
       data: {
         originalTitle: title,
-        correctedTitle: hasCorrections ? correctedTitle : null,
-        hasCorrections,
+        correctedTitle: (hasCorrections || cleanedTitle !== title) ? cleanedTitle : null,
+        hasCorrections: hasCorrections || cleanedTitle !== correctedTitle,
         category: suggestedCategory,
         description: suggestedDescription,
         budget: suggestedBudgetAmount,
