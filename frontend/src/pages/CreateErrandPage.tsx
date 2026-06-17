@@ -514,7 +514,10 @@ export default function CreateErrandPage() {
                 type="text"
                 name="title"
                 value={formData.title}
-                onChange={handleChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  debouncedFetchAiSuggestions(e.target.value, formData.description);
+                }}
                 placeholder="What do you need help with?"
                 className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
               />
