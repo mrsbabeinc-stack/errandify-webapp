@@ -40,6 +40,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
         { label: 'MyErrands', path: '/errands', icon: '📋' },
       ]
     : [
+        { label: 'Home', path: '/', icon: '🏠' },
         { label: 'MyErrands', path: '/errands', icon: '📋' },
       ];
 
