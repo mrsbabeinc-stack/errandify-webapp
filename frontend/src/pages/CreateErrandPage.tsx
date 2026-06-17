@@ -125,19 +125,33 @@ export default function CreateErrandPage() {
 
   // Auto-apply AI suggestions to form when they arrive
   useEffect(() => {
-    if (aiSuggestions.suggestedCategory && !formData.category) {
+    if (aiSuggestions.suggestedCategory) {
       setFormData((prev) => ({
         ...prev,
         category: aiSuggestions.suggestedCategory,
       }));
     }
-    if (aiSuggestions.suggestedDescription && !formData.description) {
+    if (aiSuggestions.suggestedDescription) {
       setFormData((prev) => ({
         ...prev,
         description: aiSuggestions.suggestedDescription,
       }));
     }
-  }, [aiSuggestions.suggestedCategory, aiSuggestions.suggestedDescription]);
+    // Auto-apply suggested skills
+    if (aiSuggestions.skills.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        skills: [...new Set([...prev.skills, ...aiSuggestions.skills])], // Avoid duplicates
+      }));
+    }
+    // Auto-apply suggested certifications
+    if (aiSuggestions.certifications.required.length > 0 || aiSuggestions.certifications.optional.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        certifications: aiSuggestions.certifications,
+      }));
+    }
+  }, [aiSuggestions.suggestedCategory, aiSuggestions.suggestedDescription, aiSuggestions.skills, aiSuggestions.certifications]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -194,19 +208,6 @@ export default function CreateErrandPage() {
     });
   };
 
-  const applySuggestedCertifications = () => {
-    setFormData((prev) => ({
-      ...prev,
-      certifications: aiSuggestions.certifications,
-    }));
-  };
-
-  const applySuggestedSkills = () => {
-    setFormData((prev) => ({
-      ...prev,
-      skills: [...new Set([...prev.skills, ...aiSuggestions.skills])], // Avoid duplicates
-    }));
-  };
 
   const handleSubmit = async () => {
     if (!formData.title || !formData.category) {
@@ -524,13 +525,7 @@ export default function CreateErrandPage() {
             {/* AI Suggestions */}
             {aiSuggestions.skills.length > 0 && (
               <div>
-                <button
-                  onClick={applySuggestedSkills}
-                  className="text-sm text-errandify-orange hover:text-orange-600 font-semibold mb-2"
-                >
-                  ✨ Apply AI suggestions
-                </button>
-                <p className="text-xs text-gray-600 font-semibold mb-2">AI Suggested Skills:</p>
+                <p className="text-xs text-gray-600 font-semibold mb-2">🤖 AI Suggested Skills (auto-added):</p>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {aiSuggestions.skills.map((skill) => (
                     <button
@@ -594,22 +589,12 @@ export default function CreateErrandPage() {
               Certifications Required {formData.certifications.required.length > 0 ? '✓' : ''}
             </h3>
 
-            {/* AI Suggestion Button */}
-            {(aiSuggestions.certifications.required.length > 0 ||
-              aiSuggestions.certifications.optional.length > 0) && (
-              <button
-                onClick={applySuggestedCertifications}
-                className="text-sm text-errandify-orange hover:text-orange-600 font-semibold mb-2"
-              >
-                ✨ Apply AI suggestions
-              </button>
-            )}
 
             {/* Required Certifications from AI */}
             {aiSuggestions.certifications.required.length > 0 && (
               <div>
                 <p className="text-xs text-gray-600 font-semibold mb-2">
-                  AI Suggested (Required):
+                  🤖 Required Certifications (auto-added):
                 </p>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {aiSuggestions.certifications.required.map((cert) => (
@@ -633,7 +618,7 @@ export default function CreateErrandPage() {
             {aiSuggestions.certifications.optional.length > 0 && (
               <div>
                 <p className="text-xs text-gray-600 font-semibold mb-2">
-                  AI Suggested (Optional):
+                  🤖 Optional Certifications (auto-added):
                 </p>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {aiSuggestions.certifications.optional.map((cert) => (
