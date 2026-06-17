@@ -552,7 +552,7 @@ export default function CreateErrandPage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                  Needed By (Date)
+                  Errand Date
                 </label>
                 <input
                   type="date"
@@ -567,7 +567,7 @@ export default function CreateErrandPage() {
             {/* Time Field */}
             <div>
               <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Time Needed
+                Errand Time
               </label>
               <input
                 type="time"
