@@ -160,53 +160,38 @@ export default function HanaCustomerService() {
     const responsiveVoice = (window as any).responsiveVoice;
 
     if (responsiveVoice && responsiveVoice.isReady) {
-      console.log('[Hana] Using ResponsiveVoice AI TTS with warm, passionate delivery');
+      console.log('[Hana] Using ResponsiveVoice for warm, neighbourly delivery');
 
-      // Explicit female voice selection for warm, passionate 20-year-old Singapore girl
+      // Female voice selection for warm, friendly Singaporean assistant
       const voiceMap: Record<Language, string> = {
-        en: 'UK English Female', // Warmer, more natural British English female
-        zh: 'Chinese Female', // Mandarin Chinese - warmer delivery
-        yue: 'Chinese Female', // Cantonese - using Chinese Female as best option
+        en: 'Singapore Female', // Natural Singapore English female
+        zh: 'Chinese Female', // Mandarin Chinese - natural female
+        yue: 'Chinese Female', // Cantonese - natural female
       };
 
       const voice = voiceMap[language] || voiceMap['en'];
 
-      // Add emotional warmth to text with SSML-like markers
-      // ResponsiveVoice will interpret these for warmer delivery
-      let emotionalText = text;
-
-      // Enhance with natural pauses and emphasis for passion
-      if (language === 'en') {
-        // For English: add warmth through pacing and emphasis
-        emotionalText = text
-          .replace(/\?/g, '? ') // Natural pause after questions
-          .replace(/\!/g, '! '); // Emphasis before exclamations
-      } else if (language === 'zh') {
-        // For Mandarin: maintain natural flow with slight emphasis
-        emotionalText = text;
-      }
-
       console.log('[Hana] Speaking with voice:', voice);
 
-      responsiveVoice.speak(emotionalText, voice, {
-        rate: 0.9, // Slightly slower for warmth and clarity
-        pitch: 1.1, // Slightly higher pitch for younger voice, less artificial
-        volume: 1.0, // Full volume for passion
+      responsiveVoice.speak(text, voice, {
+        rate: 1.0, // Natural speaking rate
+        pitch: 1.0, // Natural pitch
+        volume: 1.0, // Full volume
         onstart: () => {
-          console.log('[Hana] ResponsiveVoice started');
+          console.log('[Hana] Speaking');
           setIsSpeaking(true);
         },
         onend: () => {
-          console.log('[Hana] ResponsiveVoice finished');
+          console.log('[Hana] Finished speaking');
           setIsSpeaking(false);
         },
         onerror: (error: any) => {
-          console.error('[Hana] ResponsiveVoice error:', error);
+          console.error('[Hana] Error:', error);
           setIsSpeaking(false);
         },
       });
     } else {
-      console.log('[Hana] ResponsiveVoice not ready, using browser TTS fallback');
+      console.log('[Hana] ResponsiveVoice not ready, using browser TTS');
       fallbackBrowserTTS(text);
     }
   };

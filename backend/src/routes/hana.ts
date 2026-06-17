@@ -145,9 +145,7 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
     if (config.qwen.apiKey) {
       try {
         console.log('[DEBUG] Attempting Qwen API call with language:', language);
-        const systemPrompt = language === 'en'
-          ? `You are Hana, a warm and friendly AI assistant for Errandify (帮帮乐), Singapore's community errand platform. You speak like a young 20-year-old Singaporean girl with natural warmth and passion. Use conversational Singlish (Singapore English) - it's okay to drop subjects, use particles like "lor", "lah", "meh", "leh", and be casual and friendly. Keep responses brief (2-3 sentences), genuine, and helpful. No emoticons. Sound like you genuinely care about helping!`
-          : `You are Hana, a warm and friendly AI assistant for Errandify (帮帮乐), Singapore's community errand platform. Respond with genuine warmth and passion. Be brief (2-3 sentences) and helpful. Sound natural and caring, like a young 20-year-old Singaporean girl. No emoticons. ${languageInstruction}`;
+        const systemPrompt = `You are Hana, a helpful neighbor and AI assistant for Errandify (帮帮乐). You speak warmly and naturally, like someone who genuinely cares about helping your community. Be friendly but professional. Keep responses brief (2-3 sentences) and clear. No emoticons or icons. Sound warm, neighbourly, and trustworthy. ${languageInstruction}`;
 
         const response = await axios.post(
           'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
@@ -208,19 +206,19 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
           reply = '谢谢你的联系。我是帮帮乐的助手 Hana。今天有什么我可以为你效劳的吗？';
         }
       } else {
-        // English fallback responses (warm, Singlish style)
+        // English fallback responses
         if (messageLower.includes('post') || messageLower.includes('create') || messageLower.includes('errand')) {
-          reply = 'Super easy lah! Just tap the plus button at the bottom, fill in what you need help with, and submit lor. I can help you step by step if you need!';
+          reply = 'To post an errand, tap the plus button at the bottom of the screen. Fill in what you need help with, choose your budget and deadline, then submit.';
         } else if (messageLower.includes('bid') || messageLower.includes('accept') || messageLower.includes('job')) {
-          reply = 'Browse the errands, see which ones you like, then tap accept to submit your bid lor. The person will pick their favorite helper - could be you!';
+          reply = 'You can browse available errands, check the details, and tap accept to place your bid. The person who posted will choose their preferred helper.';
         } else if (messageLower.includes('payment') || messageLower.includes('money') || messageLower.includes('price')) {
-          reply = 'Don\'t worry, the money is safe with us until the work is done and confirmed properly. You get paid once they approve your work lor!';
+          reply = 'Payments are held securely until the work is completed and approved. Once the errand poster confirms your work, you receive your payment.';
         } else if (messageLower.includes('help') || messageLower.includes('support') || messageLower.includes('issue')) {
-          reply = 'I\'m here to help you, lah! Tell me what you need - posting errands, accepting jobs, payments, or anything about Errandify. I got you!';
+          reply = 'I am here to help you with any questions about posting errands, accepting jobs, payments, or using Errandify. What do you need?';
         } else if (messageLower.includes('how to') || messageLower.includes('how do')) {
-          reply = 'You asking about posting errands, bidding on jobs, or something else? Tell me and I\'ll explain lor!';
+          reply = 'I can help you learn how to post errands, accept jobs, or manage your account. What would you like to know more about?';
         } else {
-          reply = 'Hi! I\'m Hana, your Errandify assistant. What can I help you with today, ah?';
+          reply = 'Hello, I am Hana, your Errandify assistant. How can I help you today?';
         }
       }
     }
