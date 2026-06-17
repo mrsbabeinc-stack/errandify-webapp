@@ -19,8 +19,12 @@ export default function CreateErrandPage() {
     durationUnit: 'Hr' as 'Min' | 'Hr' | 'Week' | 'Month',
     budget: '',
     isRecurring: false,
-    recurringSchedule: '',
+    repeatEvery: '1',
+    repeatUnit: 'day' as 'day' | 'week' | 'month',
+    occurrences: '1',
   });
+
+  const [sessions, setSessions] = useState<Array<{ sessionNumber: number; startDate: string; budget: string }>>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -45,16 +49,69 @@ export default function CreateErrandPage() {
 
   const durationUnits = ['Min', 'Hr', 'Week', 'Month'];
 
+  const calculateSessions = (startDate: string, repeatEvery: number, repeatUnit: string, occurrences: number, budget: number) => {
+    if (!startDate || occurrences < 1) return [];
+
+    const sessions = [];
+    const budgetPerSession = occurrences > 0 ? (budget / occurrences).toFixed(2) : '0.00';
+
+    for (let i = 1; i <= occurrences; i++) {
+      const sessionDate = new Date(startDate);
+
+      switch (repeatUnit) {
+        case 'day':
+          sessionDate.setDate(sessionDate.getDate() + (i - 1) * repeatEvery);
+          break;
+        case 'week':
+          sessionDate.setDate(sessionDate.getDate() + (i - 1) * repeatEvery * 7);
+          break;
+        case 'month':
+          sessionDate.setMonth(sessionDate.getMonth() + (i - 1) * repeatEvery);
+          break;
+      }
+
+      sessions.push({
+        sessionNumber: i,
+        startDate: sessionDate.toLocaleDateString('en-SG', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        budget: budgetPerSession,
+      });
+    }
+
+    return sessions;
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
 
-    setFormData((prev) => ({
-      ...prev,
+    const newFormData = {
+      ...formData,
       [name]: type === 'checkbox' ? checked : value,
-    }));
+    };
+
+    setFormData(newFormData);
+
+    // Recalculate sessions if recurring fields change
+    if (newFormData.isRecurring && newFormData.startDate && newFormData.budget) {
+      const sessions = calculateSessions(
+        newFormData.startDate,
+        parseInt(newFormData.repeatEvery) || 1,
+        newFormData.repeatUnit,
+        parseInt(newFormData.occurrences) || 1,
+        parseFloat(newFormData.budget) || 0
+      );
+      setSessions(sessions);
+    } else if (!newFormData.isRecurring) {
+      setSessions([]);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,7 +153,9 @@ export default function CreateErrandPage() {
           budget: formData.budget ? parseFloat(formData.budget) : null,
           deadline,
           isRecurring: formData.isRecurring,
-          recurringSchedule: formData.recurringSchedule || null,
+          repeatEvery: formData.isRecurring ? parseInt(formData.repeatEvery) : null,
+          repeatUnit: formData.isRecurring ? formData.repeatUnit : null,
+          occurrences: formData.isRecurring ? parseInt(formData.occurrences) : null,
         },
         {
           headers: {
@@ -300,23 +359,106 @@ export default function CreateErrandPage() {
 
           {/* Recurring Schedule (conditional) */}
           {formData.isRecurring && (
-            <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-1">
-                Schedule
-              </label>
-              <select
-                name="recurringSchedule"
-                value={formData.recurringSchedule}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
-              >
-                <option value="">Select schedule</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="biweekly">Bi-weekly</option>
-                <option value="monthly">Monthly</option>
-              </select>
-            </div>
+            <>
+              <div>
+                <h3 className="text-sm font-semibold text-errandify-brown mb-3">
+                  Do you want this errand to repeat on a regular schedule?
+                </h3>
+              </div>
+
+              {/* Repeat Every */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-errandify-brown mb-1">
+                    Repeat Every
+                  </label>
+                  <input
+                    type="number"
+                    name="repeatEvery"
+                    value={formData.repeatEvery}
+                    onChange={handleChange}
+                    min="1"
+                    className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-errandify-brown mb-1">
+                    Unit
+                  </label>
+                  <select
+                    name="repeatUnit"
+                    value={formData.repeatUnit}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                  >
+                    <option value="day">Day(s)</option>
+                    <option value="week">Week(s)</option>
+                    <option value="month">Month(s)</option>
+                  </select>
+                </div>
+
+                {/* For X Occurrences */}
+                <div>
+                  <label className="block text-sm font-semibold text-errandify-brown mb-1">
+                    For
+                  </label>
+                  <input
+                    type="number"
+                    name="occurrences"
+                    value={formData.occurrences}
+                    onChange={handleChange}
+                    min="1"
+                    max="52"
+                    className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-errandify-brown mb-1">
+                    &nbsp;
+                  </label>
+                  <select
+                    disabled
+                    className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent text-gray-500 text-sm"
+                  >
+                    <option>Session(s)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Errand Schedule Preview */}
+              {sessions.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-sm font-semibold text-errandify-brown mb-3">
+                    Errand Schedule ({sessions.length})
+                  </h3>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {sessions.map((session) => (
+                      <div
+                        key={session.sessionNumber}
+                        className="bg-white rounded-lg p-3 shadow-sm flex items-center justify-between border border-gray-100"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-blue-500 font-semibold">□</span>
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">
+                              Session {session.sessionNumber}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              📅 {session.startDate}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-errandify-orange font-bold text-sm">
+                          SGD ${session.budget}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Submit Button */}

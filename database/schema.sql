@@ -28,6 +28,21 @@ CREATE TABLE errands (
   budget DECIMAL(10, 2),
   deadline TIMESTAMP,
   location VARCHAR(500),
+  is_recurring BOOLEAN DEFAULT FALSE,
+  recurring_config JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Errand Sessions table (for recurring errands)
+CREATE TABLE errand_sessions (
+  id SERIAL PRIMARY KEY,
+  errand_id INTEGER NOT NULL REFERENCES errands(id) ON DELETE CASCADE,
+  session_number INTEGER NOT NULL,
+  start_date TIMESTAMP NOT NULL,
+  deadline TIMESTAMP,
+  budget DECIMAL(10, 2),
+  status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'assigned', 'in_progress', 'completed', 'cancelled')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -70,6 +85,9 @@ CREATE INDEX idx_users_nric_hash ON users(nric_hash);
 CREATE INDEX idx_users_referral_code ON users(referral_code);
 CREATE INDEX idx_errands_asker_id ON errands(asker_id);
 CREATE INDEX idx_errands_status ON errands(status);
+CREATE INDEX idx_errands_is_recurring ON errands(is_recurring);
+CREATE INDEX idx_sessions_errand_id ON errand_sessions(errand_id);
+CREATE INDEX idx_sessions_status ON errand_sessions(status);
 CREATE INDEX idx_assignments_errand_id ON errand_assignments(errand_id);
 CREATE INDEX idx_assignments_doer_id ON errand_assignments(doer_id);
 CREATE INDEX idx_chat_messages_conversation_id ON chat_messages(conversation_id);

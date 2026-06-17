@@ -89,6 +89,16 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
       [errand.asker_id]
     );
 
+    // Get sessions if recurring
+    let sessions = [];
+    if (errand.is_recurring) {
+      const sessionsResult = await db.query(
+        'SELECT id, session_number, start_date, deadline, budget, status FROM errand_sessions WHERE errand_id = $1 ORDER BY session_number ASC',
+        [errand.id]
+      );
+      sessions = sessionsResult.rows;
+    }
+
     res.json({
       success: true,
       data: {
@@ -100,6 +110,9 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         budget: errand.budget,
         location: errand.location,
         deadline: errand.deadline,
+        isRecurring: errand.is_recurring,
+        recurringConfig: errand.recurring_config ? JSON.parse(errand.recurring_config) : null,
+        sessions: sessions.length > 0 ? sessions : undefined,
         asker: askerResult.rows[0],
         createdAt: errand.created_at,
       },
@@ -113,7 +126,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
 // Create errand (asker only)
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, category, budget, deadline, isRecurring, recurringSchedule } = req.body;
+    const { title, description, category, budget, deadline, isRecurring, repeatEvery, repeatUnit, occurrences } = req.body;
 
     if (!title || !category) {
       return res
@@ -121,30 +134,87 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         .json({ error: 'title and category required' });
     }
 
-    const result = await db.query(
-      `INSERT INTO errands (asker_id, title, description, category, budget, deadline, is_recurring, recurring_schedule, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING id, title, description, category, status, budget, deadline, is_recurring, recurring_schedule, created_at`,
-      [req.userId, title, description || null, category, budget || null, deadline || null, isRecurring || false, recurringSchedule || null, 'open']
-    );
+    const client = await db.getClient();
+    try {
+      await client.query('BEGIN');
 
-    const errand = result.rows[0];
+      // Create parent errand
+      const errandResult = await client.query(
+        `INSERT INTO errands (asker_id, title, description, category, budget, deadline, is_recurring, recurring_config, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING id, title, description, category, status, budget, deadline, is_recurring, recurring_config, created_at`,
+        [
+          req.userId,
+          title,
+          description || null,
+          category,
+          budget || null,
+          deadline || null,
+          isRecurring || false,
+          isRecurring ? JSON.stringify({ repeatEvery, repeatUnit, occurrences }) : null,
+          'open'
+        ]
+      );
 
-    res.status(201).json({
-      success: true,
-      data: {
-        id: errand.id,
-        title: errand.title,
-        description: errand.description,
-        category: errand.category,
-        status: errand.status,
-        budget: errand.budget,
-        deadline: errand.deadline,
-        isRecurring: errand.is_recurring,
-        recurringSchedule: errand.recurring_schedule,
-        createdAt: errand.created_at,
-      },
-    });
+      const errand = errandResult.rows[0];
+      let sessions = [];
+
+      // Generate sessions if recurring
+      if (isRecurring && repeatEvery && repeatUnit && occurrences) {
+        const startDate = new Date(deadline);
+        const budgetPerSession = budget ? parseFloat(budget) / occurrences : null;
+
+        for (let i = 1; i <= occurrences; i++) {
+          const sessionStart = new Date(startDate);
+
+          // Add interval based on unit
+          switch (repeatUnit) {
+            case 'day':
+              sessionStart.setDate(sessionStart.getDate() + (i - 1) * repeatEvery);
+              break;
+            case 'week':
+              sessionStart.setDate(sessionStart.getDate() + (i - 1) * repeatEvery * 7);
+              break;
+            case 'month':
+              sessionStart.setMonth(sessionStart.getMonth() + (i - 1) * repeatEvery);
+              break;
+          }
+
+          const sessionResult = await client.query(
+            `INSERT INTO errand_sessions (errand_id, session_number, start_date, deadline, budget, status)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING id, session_number, start_date, deadline, budget, status`,
+            [errand.id, i, sessionStart.toISOString(), sessionStart.toISOString(), budgetPerSession, 'pending']
+          );
+
+          sessions.push(sessionResult.rows[0]);
+        }
+      }
+
+      await client.query('COMMIT');
+
+      res.status(201).json({
+        success: true,
+        data: {
+          id: errand.id,
+          title: errand.title,
+          description: errand.description,
+          category: errand.category,
+          status: errand.status,
+          budget: errand.budget,
+          deadline: errand.deadline,
+          isRecurring: errand.is_recurring,
+          recurringConfig: errand.recurring_config ? JSON.parse(errand.recurring_config) : null,
+          sessions: sessions.length > 0 ? sessions : undefined,
+          createdAt: errand.created_at,
+        },
+      });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   } catch (error) {
     console.error('Create errand error:', error);
     res.status(500).json({ error: 'Failed to create errand' });
