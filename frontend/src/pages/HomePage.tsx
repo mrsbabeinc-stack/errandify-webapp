@@ -8,6 +8,7 @@ interface HomePageProps {
 export default function HomePage({ userRole }: HomePageProps) {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('Friend');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const categories = [
     { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50' },
@@ -19,6 +20,23 @@ export default function HomePage({ userRole }: HomePageProps) {
     { id: 'tech-support', name: 'Tech Support', icon: '💻', color: 'from-indigo-100 to-indigo-50' },
     { id: 'moving-help', name: 'Moving Help', icon: '🚚', color: 'from-red-100 to-red-50' },
   ];
+
+  const handleCategoryToggle = (categoryId: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const handleViewJobs = () => {
+    if (selectedCategories.length > 0) {
+      const categoryQuery = selectedCategories.join(',');
+      navigate(`/browse?categories=${categoryQuery}`);
+    } else {
+      navigate('/browse');
+    }
+  };
 
   useEffect(() => {
     const user = localStorage.getItem('user');
@@ -77,25 +95,47 @@ export default function HomePage({ userRole }: HomePageProps) {
 
         {/* Category Tabs & How It Works - Combined Section */}
         <div className="bg-white rounded-lg p-5 border border-gray-200">
-          {/* Category Tabs for Asker */}
-          {userRole === 'asker' && (
-            <div className="mb-5 pb-5 border-b border-gray-200">
-              <h3 className="text-xs font-semibold text-errandify-brown mb-3 uppercase tracking-wide">Quick Categories</h3>
-              <div className="flex flex-wrap gap-2">
-                {categories.map((category) => (
+          {/* Category Tabs - For both Asker and Doer */}
+          <div className="mb-5 pb-5 border-b border-gray-200">
+            <h3 className="text-xs font-semibold text-errandify-brown mb-3 uppercase tracking-wide">
+              Quick Categories {userRole === 'doer' && '(To Select)'}
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => {
+                const isSelected = selectedCategories.includes(category.id);
+                return (
                   <button
                     key={category.id}
-                    onClick={() => navigate(`/create-errand?category=${category.id}`)}
-                    className={`px-2.5 py-1.5 rounded text-xs font-medium transition-all hover:shadow-md bg-gradient-to-r ${category.color}`}
+                    onClick={() => {
+                      if (userRole === 'asker') {
+                        navigate(`/create-errand?category=${category.id}`);
+                      } else {
+                        handleCategoryToggle(category.id);
+                      }
+                    }}
+                    className={`px-2.5 py-1.5 rounded text-xs font-medium transition-all hover:shadow-md ${
+                      userRole === 'doer' && isSelected
+                        ? 'bg-errandify-orange text-white shadow-md ring-2 ring-orange-300'
+                        : `bg-gradient-to-r ${category.color}`
+                    }`}
                     title={category.name}
                   >
                     <span className="mr-1">{category.icon}</span>
                     {category.name}
+                    {userRole === 'doer' && isSelected && ' ✓'}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          )}
+            {userRole === 'doer' && (
+              <button
+                onClick={handleViewJobs}
+                className="mt-4 w-full bg-errandify-orange text-white py-2 rounded font-semibold text-sm hover:bg-opacity-90 transition-colors"
+              >
+                View Jobs {selectedCategories.length > 0 && `(${selectedCategories.length})`}
+              </button>
+            )}
+          </div>
 
           {/* How It Works */}
           <div>
