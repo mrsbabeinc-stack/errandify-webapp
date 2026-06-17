@@ -17,6 +17,7 @@ export default function CreateErrandPage() {
     specialNote: '',
     budget: '',
     deadline: '',
+    time: '',
     duration: '',
     durationUnit: 'Hr' as 'Min' | 'Hr' | 'Day' | 'Week',
     isRecurring: false,
@@ -85,7 +86,8 @@ export default function CreateErrandPage() {
           startLocation: '',
           budget: prefilledData.budget || '',
           deadline: prefilledData.date || '',
-          duration: prefilledData.time ? '1' : '',
+          time: prefilledData.time || '',
+          duration: '',
           durationUnit: 'Hr' as 'Min' | 'Hr' | 'Day' | 'Week',
           isRecurring: false,
           repeatEvery: '1',
@@ -293,7 +295,7 @@ export default function CreateErrandPage() {
         const timeStr = `${String(hours).padStart(2, '0')}:${minutes}`;
         setFormData((prev) => ({
           ...prev,
-          deadline: timeStr,
+          time: timeStr,
         }));
       }
 
@@ -702,11 +704,11 @@ export default function CreateErrandPage() {
               <input
                 type="time"
                 name="time"
-                value={formData.duration}
+                value={formData.time}
                 onChange={(e) => {
                   setFormData((prev) => ({
                     ...prev,
-                    duration: e.target.value,
+                    time: e.target.value,
                   }));
                 }}
                 placeholder="HH:MM"
