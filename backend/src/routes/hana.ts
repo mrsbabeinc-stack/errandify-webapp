@@ -14,15 +14,8 @@ router.post('/chat/hana', authMiddleware, async (req: any, res: any) => {
       return res.status(400).json({ error: 'Message required' });
     }
 
-    // Call Qwen 3.7 Plus for conversational response
-    const response = await axios.post(
-      'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions',
-      {
-        model: 'qwen-3.7-plus',
-        messages: [
-          {
-            role: 'system',
-            content: `You are Hana, a helpful AI assistant for Errandify, a community task platform in Singapore.
+    // Call Qwen Plus for conversational response
+    const systemPrompt = `You are Hana, a helpful AI assistant for Errandify, a community task platform in Singapore.
 You help users:
 1. Understand how to use the platform
 2. Post tasks easily (as Askers)
@@ -31,15 +24,19 @@ You help users:
 5. Provide emergency support when needed
 
 Be warm, friendly, and concise. Use simple language. Always be helpful and empathetic.
-You represent Hana (🌸) - the helpful neighbor who gets things done.`,
-          },
-          {
-            role: 'user',
-            content: message,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 512,
+You represent Hana (🌸) - the helpful neighbor who gets things done.`;
+
+    const response = await axios.post(
+      'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+      {
+        model: 'qwen-plus',
+        input: {
+          prompt: `${systemPrompt}\n\nUser: ${message}\nHana:`,
+        },
+        parameters: {
+          temperature: 0.7,
+          max_tokens: 512,
+        },
       },
       {
         headers: {
@@ -49,7 +46,7 @@ You represent Hana (🌸) - the helpful neighbor who gets things done.`,
       }
     );
 
-    const assistantResponse = response.data.choices?.[0]?.message?.content || 'How can I help you?';
+    const assistantResponse = response.data.output?.text?.trim() || 'How can I help you?';
 
     res.json({
       success: true,
@@ -58,8 +55,8 @@ You represent Hana (🌸) - the helpful neighbor who gets things done.`,
         conversationId,
       },
     });
-  } catch (error) {
-    console.error('Hana chat error:', error);
+  } catch (error: any) {
+    console.error('Hana chat error:', error.response?.data || error.message);
     res.status(500).json({
       error: 'Failed to process message',
       data: {
