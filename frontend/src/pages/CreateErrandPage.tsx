@@ -297,6 +297,27 @@ export default function CreateErrandPage() {
     }
   };
 
+  // Fetch AI description from suggestions endpoint
+  const fetchAiDescription = async (title: string, description: string = '') => {
+    if (!title.trim() || title.length < 2) return;
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+        { title, description }
+      );
+
+      if (response.data.success && response.data.data.description) {
+        setFormData((prev) => ({
+          ...prev,
+          description: response.data.data.description,
+        }));
+      }
+    } catch (err) {
+      console.error('AI description error:', err);
+    }
+  };
+
   const debouncedFetchAiSuggestions = (value: string, desc: string = '') => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
@@ -305,6 +326,16 @@ export default function CreateErrandPage() {
     debounceTimer.current = setTimeout(() => {
       fetchAiSuggestions(value, desc);
     }, 300); // Wait 300ms after user stops typing
+  };
+
+  const debouncedExtractFields = (value: string) => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      extractFieldsFromTitle(value);
+    }, 100); // Extract faster than AI suggestions
   };
 
 
@@ -333,14 +364,14 @@ export default function CreateErrandPage() {
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
 
-      // For title: call extraction with raw input AND AI suggestions
+      // For title: call extraction with raw input AND fetch AI description
       if (name === 'title' && value.length > 3) {
-        // Call extraction with the RAW input (before AI cleaning)
-        extractFieldsFromTitle(value);
-        // Also get AI suggestions for description
-        debouncedFetchAiSuggestions(value, formData.description);
+        // Call extraction with the RAW input - debounced
+        debouncedExtractFields(value);
+        // Also fetch AI-generated description
+        fetchAiDescription(value, formData.description);
       } else if (name === 'description' && value.length > 5) {
-        debouncedFetchAiSuggestions(formData.title, value);
+        fetchAiDescription(formData.title, value);
       }
     }
   };
