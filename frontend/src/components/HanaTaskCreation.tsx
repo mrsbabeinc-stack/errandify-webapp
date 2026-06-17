@@ -60,8 +60,8 @@ export default function HanaTaskCreation({
   };
 
   const triggerSpeaking = () => {
-    setIsSpeaking(true);
-    setTimeout(() => setIsSpeaking(false), 4000);
+    // Voice disabled - removed
+    setIsSpeaking(false);
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
