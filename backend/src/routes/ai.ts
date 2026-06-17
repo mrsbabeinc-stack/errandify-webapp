@@ -309,16 +309,21 @@ function detectMissingDetails(title: string): string[] {
 
   // CLEANING/LAUNDRY - What doers need to know
   if ((lowerTitle.includes('clean') || lowerTitle.includes('wash') || lowerTitle.includes('laundry'))) {
-    const hasArea = /(whole house|apartment|bedroom|bathroom|kitchen|office|windows|carpet|sofa|car)/.test(lowerTitle);
-    if (!hasArea) {
-      missingDetails.push('Area/room size (helps doer estimate time and prepare supplies)');
+    const isClothesWashing = /(wash|laundry|clothes|fabric|iron)/.test(lowerTitle) && !/(house|apartment|bedroom|bathroom|kitchen|office|floor|window|carpet|sofa|wall)/.test(lowerTitle);
+
+    if (!isClothesWashing) {
+      const hasArea = /(whole house|apartment|bedroom|bathroom|kitchen|office|windows|carpet|sofa|car)/.test(lowerTitle);
+      if (!hasArea) {
+        missingDetails.push('Area/room size (helps doer estimate time and prepare supplies)');
+      }
+      const hasCondition = /(dirty|very dirty|stained|pet mess|deep clean|light clean)/.test(lowerTitle);
+      if (!hasCondition) {
+        missingDetails.push('Cleaning level needed (light clean, deep clean, pet mess - affects effort)');
+      }
     }
-    const hasCondition = /(dirty|very dirty|stained|pet mess|deep clean|light clean)/.test(lowerTitle);
-    if (!hasCondition) {
-      missingDetails.push('Cleaning level needed (light clean, deep clean, pet mess - affects effort)');
-    }
-    const hasSpecial = /(special request|allergy|pet|kids|sensitive|fragrance)/.test(lowerTitle);
-    if (!hasSpecial) {
+
+    const hasSpecial = /(special request|allergy|pet|kids|sensitive|fragrance|delicate|dry clean|wool)/.test(lowerTitle);
+    if (!hasSpecial && !isClothesWashing) {
       missingDetails.push('Any allergies, pets, or special product requirements?');
     }
   }
