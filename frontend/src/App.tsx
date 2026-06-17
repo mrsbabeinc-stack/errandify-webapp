@@ -165,6 +165,17 @@ export default function App() {
           }
         />
 
+        {/* Profile sub-pages (outside layout for simpler rendering) */}
+        <Route path="/my-profile" element={isAuthenticated ? <MyProfilePage /> : <Navigate to="/login" replace />} />
+        <Route path="/referral" element={isAuthenticated ? <ReferralPage /> : <Navigate to="/login" replace />} />
+        <Route path="/trusted-users" element={isAuthenticated ? <TrustedUsersPage /> : <Navigate to="/login" replace />} />
+        <Route path="/block-list" element={isAuthenticated ? <BlockListPage /> : <Navigate to="/login" replace />} />
+        <Route path="/payout-settings" element={isAuthenticated ? <PayoutSettingsPage /> : <Navigate to="/login" replace />} />
+        <Route path="/transaction-history" element={isAuthenticated ? <TransactionHistoryPage /> : <Navigate to="/login" replace />} />
+        <Route path="/errandify-points" element={isAuthenticated ? <ErrandifyPointsPage /> : <Navigate to="/login" replace />} />
+        <Route path="/my-rewards" element={isAuthenticated ? <MyRewardsPage /> : <Navigate to="/login" replace />} />
+        <Route path="/points-history" element={isAuthenticated ? <PointsHistoryPage /> : <Navigate to="/login" replace />} />
+
         {/* Main dashboard layout */}
         <Route
           element={
@@ -183,15 +194,6 @@ export default function App() {
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
           <Route path="/profile" element={<ProfilePage userRole={userRole} />} />
           <Route path="/review/:jobId" element={<ReviewPage />} />
-          <Route path="/my-profile" element={<MyProfilePage />} />
-          <Route path="/referral" element={<ReferralPage />} />
-          <Route path="/trusted-users" element={<TrustedUsersPage />} />
-          <Route path="/block-list" element={<BlockListPage />} />
-          <Route path="/payout-settings" element={<PayoutSettingsPage />} />
-          <Route path="/transaction-history" element={<TransactionHistoryPage />} />
-          <Route path="/errandify-points" element={<ErrandifyPointsPage />} />
-          <Route path="/my-rewards" element={<MyRewardsPage />} />
-          <Route path="/points-history" element={<PointsHistoryPage />} />
         </Route>
       </Routes>
     </Router>
