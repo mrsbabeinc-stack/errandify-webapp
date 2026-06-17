@@ -27,9 +27,11 @@ html {
 }
 
 body {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: #FFFAF6;
   color: #4A3221;
+  font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
 /* Safe area for notches and home indicators */

@@ -297,10 +297,40 @@ export default function HanaTaskCreation({
           {/* Top Section: Speech Bubble */}
           {hanaMessage && (
             <div className="px-6 pt-4 flex-shrink-0">
-              <div className="bg-errandify-bg border-2 border-errandify-orange rounded-3xl px-6 py-4 shadow-md animate-slideDown">
-                <p className="text-gray-800 text-center whitespace-pre-line leading-relaxed text-sm">
+              <div className="relative animate-slideDown"
+                   style={{
+                     background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
+                     border: '3px solid #FF8C42',
+                     borderRadius: '24px',
+                     padding: '24px',
+                     boxShadow: '0 8px 16px rgba(255, 140, 66, 0.2), 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+                     transform: 'perspective(1000px) rotateX(2deg)',
+                   }}>
+                <p className="text-center whitespace-pre-line leading-relaxed text-sm font-medium"
+                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.7', letterSpacing: '0.2px'}}>
                   {hanaMessage}
                 </p>
+                {/* Speech bubble tail */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-12px',
+                  left: '30px',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '12px solid transparent',
+                  borderRight: '0 solid transparent',
+                  borderTop: '12px solid #FF8C42',
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-8px',
+                  left: '32px',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '10px solid transparent',
+                  borderRight: '0 solid transparent',
+                  borderTop: '10px solid #FFF8F0',
+                }} />
               </div>
             </div>
           )}
