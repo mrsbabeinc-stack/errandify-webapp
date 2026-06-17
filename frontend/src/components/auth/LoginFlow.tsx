@@ -14,21 +14,25 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
   const [error, setError] = useState('');
   const [debugOtp, setDebugOtp] = useState('');
 
-  const handleRequestOtp = async (e: React.FormEvent) => {
+  const handleRequestOtp = async (e: React.FormEvent, phone?: string) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+    const phoneToUse = phone || mobile;
+
     try {
       await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/request-otp`,
-        { mobile }
+        { mobile: phoneToUse }
       );
+
+      if (!phone) setMobile(phoneToUse);
 
       // Fetch the debug OTP
       try {
         const debugResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/debug/otp/${mobile}`
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/debug/otp/${phoneToUse}`
         );
         setDebugOtp(debugResponse.data.otp);
         console.log('📱 OTP for testing:', debugResponse.data.otp);
@@ -38,6 +42,7 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
       }
 
       setStep('otp');
+      if (phone) setMobile(phone);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to request OTP');
     } finally {
@@ -117,6 +122,37 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
               >
                 {loading ? 'Sending...' : 'Send OTP'}
               </button>
+            </div>
+
+            {/* Quick Demo Accounts */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-xs text-gray-600 text-center mb-3 font-semibold">
+                🧪 Quick Demo Accounts:
+              </p>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={(e: any) => {
+                    setMobile('98765432');
+                    handleRequestOtp(e, '98765432');
+                  }}
+                  disabled={loading}
+                  className="w-full py-2 px-3 bg-blue-50 border border-blue-300 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-100 transition-colors disabled:opacity-50"
+                >
+                  👩 Sarah (Asker)
+                </button>
+                <button
+                  type="button"
+                  onClick={(e: any) => {
+                    setMobile('87654321');
+                    handleRequestOtp(e, '87654321');
+                  }}
+                  disabled={loading}
+                  className="w-full py-2 px-3 bg-green-50 border border-green-300 text-green-700 rounded-lg text-sm font-semibold hover:bg-green-100 transition-colors disabled:opacity-50"
+                >
+                  👨 John (Doer)
+                </button>
+              </div>
             </div>
           </form>
         ) : (
