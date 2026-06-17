@@ -7,6 +7,7 @@ interface TaskData {
   description: string;
   category: string;
   location: string;
+  fullAddress: string;
   date: string;
   time: string;
   duration: string;
@@ -106,6 +107,7 @@ export default function HanaTaskCreation({
         description: extracted.description || '',
         category: extracted.category || '',
         location: extracted.location || '',
+        fullAddress: extracted.fullAddress || extracted.location || '',
         date: extracted.date || '',
         time: extracted.time || '10:00',
         duration: extracted.duration || '',

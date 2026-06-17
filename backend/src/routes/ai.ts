@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import axios from 'axios';
 
 const router = Router();
 
@@ -84,6 +85,38 @@ const certificationSuggestions: Record<string, { required: string[]; optional: s
     optional: ['Driving License', 'Heavy Vehicle License'],
   },
 };
+
+// Lookup full address from OneMap Singapore API using postal code
+async function getFullAddressFromPostalCode(postalCode: string): Promise<string> {
+  try {
+    const response = await axios.get('https://www.onemap.gov.sg/api/common/elastic/search', {
+      params: {
+        searchVal: postalCode,
+        returnGeom: 'Y',
+        getAddrDetails: 'Y',
+      },
+      timeout: 5000,
+    });
+
+    if (response.data.results && response.data.results.length > 0) {
+      const result = response.data.results[0];
+      // Build full address from components
+      const block = result.BLK_NO ? `Block ${result.BLK_NO}` : '';
+      const road = result.ROAD_NAME || '';
+      const building = result.BUILDING_NAME ? `, ${result.BUILDING_NAME}` : '';
+
+      const parts = [block, road, building].filter(p => p);
+      const fullAddress = parts.join(', ').replace(/^, /, '');
+
+      return fullAddress || `Singapore ${postalCode}`;
+    }
+  } catch (error) {
+    console.log(`OneMap lookup failed for postal code ${postalCode}:`, error instanceof Error ? error.message : 'unknown error');
+  }
+
+  // Fallback if API fails
+  return `Singapore ${postalCode}`;
+}
 
 // Clean title for use in description (remove "wash my", "help me", etc.)
 function cleanTitleForDescription(title: string): string {
@@ -974,7 +1007,7 @@ function parseDurationFromInput(text: string): { duration: string; unit: string 
 }
 
 // Extract task info from freeform input using local pattern matching
-router.post('/extract-task-info', (req: Request, res: Response) => {
+router.post('/extract-task-info', async (req: Request, res: Response) => {
   try {
     const { input } = req.body;
 
@@ -1245,12 +1278,19 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
       description = categoryDescMap[category] || `Help needed with ${cleanedTitle}.`;
     }
 
+    // Get full address from postal code if available
+    let fullAddress = location;
+    if (postalCode) {
+      fullAddress = await getFullAddressFromPostalCode(postalCode);
+    }
+
     res.json({
       success: true,
       data: {
         title,
         category,
         location,
+        fullAddress,
         postalCode,
         date,
         time,
