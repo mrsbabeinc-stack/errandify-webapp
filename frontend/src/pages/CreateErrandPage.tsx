@@ -90,8 +90,8 @@ export default function CreateErrandPage() {
           budget: prefilledData.budget || '',
           deadline: prefilledData.date || '',
           time: prefilledData.time || '',
-          duration: '',
-          durationUnit: 'Hr' as 'Min' | 'Hr' | 'Day' | 'Week',
+          duration: prefilledData.duration || '',
+          durationUnit: (prefilledData.durationUnit || 'Hr') as 'Min' | 'Hr' | 'Day' | 'Week',
           isRecurring: false,
           repeatEvery: '1',
           repeatUnit: 'week' as 'day' | 'week' | 'month',
@@ -101,6 +101,11 @@ export default function CreateErrandPage() {
           certifications: { required: [] as string[], optional: [] as string[] },
         };
         setFormData(newFormData);
+
+        // Set postal code from prefilled data
+        if (prefilledData.postalCode) {
+          setPostalCode(prefilledData.postalCode);
+        }
 
         // Auto-fetch AI suggestions for the prefilled title
         if (newFormData.title) {

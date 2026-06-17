@@ -9,7 +9,10 @@ interface TaskData {
   location: string;
   date: string;
   time: string;
+  duration: string;
+  durationUnit: string;
   budget: string;
+  postalCode: string;
   notes: string;
 }
 
@@ -36,7 +39,10 @@ export default function HanaTaskCreation({
     location: '',
     date: '',
     time: '',
+    duration: '',
+    durationUnit: 'Hr',
     budget: '',
+    postalCode: '',
     notes: '',
   });
   const [input, setInput] = useState('');
@@ -97,12 +103,15 @@ export default function HanaTaskCreation({
       // Update task data with extracted info
       const updatedTaskData: TaskData = {
         title: extracted.title || userInput.substring(0, 50),
-        description: '', // Don't auto-fill description, let AI suggest it
+        description: extracted.description || '',
         category: extracted.category || '',
         location: extracted.location || '',
         date: extracted.date || '',
         time: extracted.time || '10:00',
+        duration: extracted.duration || '',
+        durationUnit: extracted.durationUnit || 'Hr',
         budget: extracted.budget || '',
+        postalCode: extracted.postalCode || '',
         notes: extracted.notes || '',
       };
 
