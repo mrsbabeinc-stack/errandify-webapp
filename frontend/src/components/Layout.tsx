@@ -4,7 +4,7 @@ import BottomNav from './BottomNav';
 import RoleToggle from './RoleToggle';
 import NotificationIcon from './NotificationIcon';
 import HanaAssistant from './HanaAssistant';
-import HanaTaskChat from './HanaTaskChat';
+import HanaTaskCreation from './HanaTaskCreation';
 
 interface LayoutProps {
   userRole: 'asker' | 'doer';
@@ -31,10 +31,14 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
       {/* Hana Assistant - Floating Button */}
       <HanaAssistant />
 
-      {/* Hana Task Chat Modal */}
-      <HanaTaskChat
+      {/* Hana Task Creation Modal */}
+      <HanaTaskCreation
         isOpen={showHanaChat}
         onClose={() => setShowHanaChat(false)}
+        onSwitchToManual={() => {
+          setShowHanaChat(false);
+          // Navigate to manual form if needed
+        }}
       />
 
       {/* Bottom Navigation */}
