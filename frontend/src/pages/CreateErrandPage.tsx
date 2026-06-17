@@ -733,7 +733,7 @@ export default function CreateErrandPage() {
                 onChange={(e) => setShowStartLocation(e.target.checked)}
                 className="w-4 h-4"
               />
-              <span className="text-sm text-gray-700">Specify where errand starts (optional)</span>
+              <span className="text-sm text-gray-700">Start Location (Optional: If Location not Current Point)</span>
             </label>
 
             {/* Start Location - Only shown when toggled */}
