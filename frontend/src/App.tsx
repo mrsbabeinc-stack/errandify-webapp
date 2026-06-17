@@ -8,6 +8,7 @@ import CategorySelectionPage from './pages/CategorySelectionPage';
 import CategoryPreferencePage from './pages/CategoryPreferencePage';
 import CreateErrandPage from './pages/CreateErrandPage';
 import EditErrandPage from './pages/EditErrandPage';
+import HanaTaskCreationPage from './pages/HanaTaskCreationPage';
 import BrowseErrandsPage from './pages/BrowseErrandsPage';
 import ErrandsPage from './pages/ErrandsPage';
 import ErrandDetailPage from './pages/ErrandDetailPage';
@@ -77,6 +78,18 @@ export default function App() {
               <Navigate to="/home" replace />
             ) : (
               <LoginPage onLogin={handleLogin} />
+            )
+          }
+        />
+
+        {/* Hana task creation - AI-powered errand posting */}
+        <Route
+          path="/create-errand-hana"
+          element={
+            isAuthenticated ? (
+              <HanaTaskCreationPage userRole={userRole} />
+            ) : (
+              <Navigate to="/login" replace />
             )
           }
         />

@@ -673,4 +673,198 @@ router.post('/suggestions', (req: Request, res: Response) => {
   }
 });
 
+// Content filter - check for inappropriate content
+router.post('/content-filter', async (req: Request, res: Response) => {
+  try {
+    const { title, description } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ error: 'Title required' });
+    }
+
+    const content = `${title} ${description || ''}`.toLowerCase();
+
+    // Check for inappropriate terms
+    for (const term of inappropriateTerms) {
+      if (content.includes(term)) {
+        return res.json({
+          success: true,
+          data: { status: 'FLAG', reason: 'Inappropriate content detected' },
+        });
+      }
+    }
+
+    // Check for discrimination (with exceptions)
+    for (const { term, allowException } of discriminatoryTerms) {
+      if (content.includes(term)) {
+        if (!allowException) {
+          return res.json({
+            success: true,
+            data: { status: 'FLAG', reason: 'Discriminatory language detected' },
+          });
+        }
+        // For allowed exceptions (gender in legitimate context), check if context is valid
+        if (allowException) {
+          let isLegitimate = false;
+          for (const context of legitimateGenderContexts) {
+            if (content.includes(context)) {
+              isLegitimate = true;
+              break;
+            }
+          }
+          if (!isLegitimate) {
+            return res.json({
+              success: true,
+              data: { status: 'FLAG', reason: 'Gender specification requires legitimate context' },
+            });
+          }
+        }
+      }
+    }
+
+    // Content is safe
+    res.json({
+      success: true,
+      data: { status: 'SAFE' },
+    });
+  } catch (error) {
+    console.error('Content filter error:', error);
+    res.status(500).json({ error: 'Failed to check content' });
+  }
+});
+
+// Detect category from text
+router.post('/detect-category', async (req: Request, res: Response) => {
+  try {
+    const { title, description } = req.body;
+    const text = `${title} ${description || ''}`;
+    const category = detectCategory(text);
+
+    res.json({
+      success: true,
+      data: { category: category || '' },
+    });
+  } catch (error) {
+    console.error('Category detection error:', error);
+    res.status(500).json({ error: 'Failed to detect category' });
+  }
+});
+
+// Parse natural language date/time
+router.post('/parse-datetime', async (req: Request, res: Response) => {
+  try {
+    const { input } = req.body;
+
+    if (!input) {
+      return res.status(400).json({ error: 'Input required' });
+    }
+
+    // Simple natural language parsing
+    const now = new Date();
+    let date = now.toISOString().split('T')[0];
+    let time = '10:00';
+
+    const lowerInput = input.toLowerCase();
+
+    // Parse date
+    if (lowerInput.includes('tomorrow')) {
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      date = tomorrow.toISOString().split('T')[0];
+    } else if (lowerInput.includes('today')) {
+      date = now.toISOString().split('T')[0];
+    } else if (lowerInput.includes('next week')) {
+      const nextWeek = new Date(now);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      date = nextWeek.toISOString().split('T')[0];
+    } else {
+      // Try to extract date pattern (e.g., "25/12" or "December 25")
+      const dateMatch = input.match(/(\d{1,2})[/-](\d{1,2})/);
+      if (dateMatch) {
+        const [, day, month] = dateMatch;
+        const parsedDate = new Date(now.getFullYear(), parseInt(month) - 1, parseInt(day));
+        date = parsedDate.toISOString().split('T')[0];
+      }
+    }
+
+    // Parse time
+    const timeMatch = input.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/i);
+    if (timeMatch) {
+      let hours = parseInt(timeMatch[1]);
+      const minutes = timeMatch[2] || '00';
+      const period = timeMatch[3]?.toLowerCase();
+
+      if (period === 'pm' && hours !== 12) hours += 12;
+      if (period === 'am' && hours === 12) hours = 0;
+
+      time = `${String(hours).padStart(2, '0')}:${minutes}`;
+    }
+
+    res.json({
+      success: true,
+      data: { date, time },
+    });
+  } catch (error) {
+    console.error('DateTime parsing error:', error);
+    res.status(500).json({ error: 'Failed to parse date/time' });
+  }
+});
+
+// Suggest completion for title input
+router.post('/suggest-completion', async (req: Request, res: Response) => {
+  try {
+    const { title } = req.body;
+
+    if (!title || title.length < 3) {
+      return res.json({ success: true, data: { suggestions: [] } });
+    }
+
+    // Common task suggestions based on keywords
+    const suggestions: string[] = [];
+
+    for (const [category, keywords] of Object.entries(categoryMapping)) {
+      for (const keyword of keywords) {
+        if (title.toLowerCase().includes(keyword)) {
+          // Add some common tasks for this category
+          const commonTasks: Record<string, string[]> = {
+            'home-maintenance': [
+              `Help me with ${title}`,
+              `Repair: ${title}`,
+              `Fix my ${title}`,
+              `Install ${title}`,
+            ],
+            'cleaning-laundry': [
+              `Clean my ${title}`,
+              `Wash ${title}`,
+              `Laundry: ${title}`,
+              `Deep clean: ${title}`,
+            ],
+            'pet-care': [
+              `${title} for my pet`,
+              `Pet ${title} service`,
+              `Need ${title} for dog/cat`,
+            ],
+          };
+
+          if (commonTasks[category]) {
+            suggestions.push(...commonTasks[category].slice(0, 2));
+          }
+          break;
+        }
+      }
+    }
+
+    // Remove duplicates and limit to 3
+    const uniqueSuggestions = [...new Set(suggestions)].slice(0, 3);
+
+    res.json({
+      success: true,
+      data: { suggestions: uniqueSuggestions },
+    });
+  } catch (error) {
+    console.error('Completion suggestion error:', error);
+    res.status(500).json({ error: 'Failed to suggest completion' });
+  }
+});
+
 export default router;
