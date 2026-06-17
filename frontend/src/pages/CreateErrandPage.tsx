@@ -355,6 +355,7 @@ export default function CreateErrandPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
+    console.log('[handleChange] FIRED - name:', name, 'value:', value, 'type:', type);
 
     if (type === 'checkbox') {
       setFormData((prev) => ({
