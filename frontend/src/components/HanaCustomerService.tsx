@@ -245,10 +245,16 @@ export default function HanaCustomerService() {
       console.log('[Hana] No voice found for language:', language);
     }
 
-    // Warm, youthful 20-year-old voice settings
-    utterance.rate = 0.95; // Slightly slower for warmth and clarity
-    utterance.pitch = 1.3; // Higher pitch for younger sound
-    utterance.volume = 1.0;
+    // Warm, passionate 20-year-old Chinese voice (not sharp, very caring)
+    if (language === 'zh' || language === 'yue') {
+      utterance.rate = 0.85; // Much slower for warmth and passion
+      utterance.pitch = 1.15; // Lower pitch (less sharp), more natural and warm
+      utterance.volume = 1.0;
+    } else {
+      utterance.rate = 0.95;
+      utterance.pitch = 1.3;
+      utterance.volume = 1.0;
+    }
 
     utterance.onstart = () => {
       console.log('[Hana] TTS started with voice:', utterance.voice?.name);
