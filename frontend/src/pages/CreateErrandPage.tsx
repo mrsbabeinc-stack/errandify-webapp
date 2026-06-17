@@ -651,7 +651,7 @@ export default function CreateErrandPage() {
             {/* Time Field */}
             <div className="relative">
               <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Errand Time
+                Errand Time <span className="text-xs text-gray-400 font-normal">e.g. HH:MM AM/PM</span>
               </label>
               <div className="relative">
                 <input
