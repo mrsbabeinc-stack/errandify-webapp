@@ -298,7 +298,7 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
         lang: 'en-SG',
       },
       zh: {
-        voice: 'zh-CN-YunyeNeural', // Mandarin Chinese - FEMALE voice (confirmed female)
+        voice: 'zh-CN-XiaozhenNeural', // Mandarin Chinese - Confirmed FEMALE voice
         lang: 'zh-CN',
       },
       yue: {
