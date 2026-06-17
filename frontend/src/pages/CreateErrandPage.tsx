@@ -489,15 +489,20 @@ export default function CreateErrandPage() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g., 138667"
+                  placeholder="e.g., 082001"
                   onChange={(e) => {
                     const postalCode = e.target.value.trim();
                     if (postalCode.length === 6 && /^\d+$/.test(postalCode)) {
-                      // For now, just accept the postal code
-                      // In a real app, you'd call a Singapore postal code API
+                      // Auto-fill full address with postal code
                       setFormData((prev) => ({
                         ...prev,
                         location: `Singapore ${postalCode}`,
+                      }));
+                    } else if (postalCode.length === 0) {
+                      // Clear address if postal code is cleared
+                      setFormData((prev) => ({
+                        ...prev,
+                        location: '',
                       }));
                     }
                   }}
@@ -513,8 +518,14 @@ export default function CreateErrandPage() {
                   type="text"
                   name="location"
                   value={formData.location}
-                  onChange={handleChange}
-                  placeholder="Street address or area (auto-filled from postal code)"
+                  onChange={(e) => {
+                    // Allow user to edit the full address
+                    setFormData((prev) => ({
+                      ...prev,
+                      location: e.target.value,
+                    }));
+                  }}
+                  placeholder="e.g., Block 123 Tanjong Pagar Road Singapore 082001"
                   className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
                 />
               </div>
