@@ -134,8 +134,11 @@ export default function CreateErrandPage() {
   );
 
   return (
-    <div className="min-h-screen bg-errandify-bg px-4 py-6">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-errandify-bg">
+      {/* Safe Area */}
+      <div className="h-12"></div>
+
+      <div className="max-w-2xl mx-auto px-4">
         {/* Header */}
         <div className="mb-6">
           <button
@@ -337,6 +340,9 @@ export default function CreateErrandPage() {
             </button>
           </div>
         </form>
+
+        {/* Bottom Spacing */}
+        <div className="h-8"></div>
       </div>
     </div>
   );

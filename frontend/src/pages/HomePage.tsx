@@ -79,37 +79,41 @@ export default function HomePage({ userRole }: HomePageProps) {
 
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
   };
 
   return (
     <div className="min-h-screen bg-errandify-bg">
-      {/* Header */}
-      <div className="px-4 py-2 pb-2">
-        <h1 className="text-xl font-bold text-errandify-brown">
-          Welcome, {userName}! 👋
-        </h1>
-        <p className="text-gray-600 text-xs mt-1">
-          {userRole === 'asker'
-            ? 'Your posted errands'
-            : 'Available errands near you'}
-        </p>
-      </div>
+      {/* Safe Area - prevents overlap with top icons */}
+      <div className="h-12"></div>
 
-      {/* Errands List */}
-      <div className="px-4 py-4">
+      {/* Page Container */}
+      <div className="max-w-3xl mx-auto px-4">
+        {/* Welcome Section */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-errandify-brown">
+            Welcome, {userName}! 👋
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">
+            {userRole === 'asker'
+              ? 'Your posted errands'
+              : 'Available errands near you'}
+          </p>
+        </div>
+
+        {/* Content Section */}
         <div className="space-y-3">
           {loading ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-12 text-gray-500">
               Loading errands...
             </div>
           ) : errands.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 mb-4">No errands yet</p>
+            <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+              <p className="text-gray-500 mb-4 text-sm">No errands yet</p>
               <button
                 onClick={() => navigate(userRole === 'asker' ? '/create-errand' : '/errands')}
-                className="bg-errandify-orange text-white px-6 py-2 rounded-lg font-semibold hover:bg-opacity-90 text-sm"
+                className="bg-errandify-orange text-white px-6 py-2 rounded-lg font-semibold hover:bg-opacity-90 text-sm inline-block"
               >
                 {userRole === 'asker' ? 'Post an Errand' : 'Browse Tasks'}
               </button>
@@ -120,7 +124,7 @@ export default function HomePage({ userRole }: HomePageProps) {
                 key={errand.id}
                 className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
               >
-                {/* Compact Header - Always Visible */}
+                {/* Compact Header */}
                 <button
                   onClick={() =>
                     setExpandedErrandId(
@@ -130,65 +134,58 @@ export default function HomePage({ userRole }: HomePageProps) {
                   className="w-full p-4 text-left hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-3">
+                    {/* Left: Title & Quick Info */}
                     <div className="flex-1 min-w-0">
-                      {/* Task Name */}
-                      <h3 className="font-bold text-errandify-brown text-base mb-2 truncate">
+                      <h3 className="font-bold text-errandify-brown mb-2 truncate text-base">
                         {errand.title}
                       </h3>
 
-                      {/* Quick Info Row */}
-                      <div className="flex flex-wrap items-center gap-2 text-xs">
-                        {/* Time Posted */}
-                        <span className="text-gray-500">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-gray-500 text-xs">
                           ⏱ {formatDate(errand.createdAt)}
                         </span>
 
-                        {/* Category */}
                         <span
                           className={`${getCategoryColor(
                             errand.category
-                          )} px-2 py-1 rounded-full text-xs font-semibold`}
+                          )} px-2 py-0.5 rounded-full text-xs font-semibold`}
                         >
                           {errand.category}
                         </span>
 
-                        {/* Budget */}
                         {errand.budget && (
-                          <span className="text-errandify-orange font-bold">
-                            ${errand.budget}
+                          <span className="text-errandify-orange font-bold text-xs">
+                            SGD ${errand.budget}
                           </span>
                         )}
 
-                        {/* Status */}
-                        <span className="text-blue-600 font-semibold">
+                        <span className="text-blue-600 font-semibold text-xs">
                           {errand.status}
                         </span>
                       </div>
                     </div>
 
-                    {/* Expand Arrow */}
-                    <div className="text-gray-400 text-lg">
+                    {/* Right: Expand Arrow */}
+                    <div className="text-gray-400 text-lg flex-shrink-0 pt-1">
                       {expandedErrandId === errand.id ? '▼' : '▶'}
                     </div>
                   </div>
                 </button>
 
-                {/* Expanded Details - Collapsible */}
+                {/* Expanded Details */}
                 {expandedErrandId === errand.id && (
                   <div className="border-t border-gray-100 px-4 py-4 bg-gray-50 space-y-3">
-                    {/* Description */}
                     {errand.description && (
                       <div>
                         <p className="text-xs font-semibold text-gray-600 mb-1">
                           Details
                         </p>
-                        <p className="text-sm text-gray-700">
+                        <p className="text-sm text-gray-700 line-clamp-3">
                           {errand.description}
                         </p>
                       </div>
                     )}
 
-                    {/* Deadline */}
                     {errand.deadline && (
                       <div>
                         <p className="text-xs font-semibold text-gray-600 mb-1">
@@ -200,7 +197,6 @@ export default function HomePage({ userRole }: HomePageProps) {
                       </div>
                     )}
 
-                    {/* Asker Name (for doers) */}
                     {userRole === 'doer' && errand.askerName && (
                       <div>
                         <p className="text-xs font-semibold text-gray-600 mb-1">
@@ -213,14 +209,12 @@ export default function HomePage({ userRole }: HomePageProps) {
                     )}
 
                     {/* Action Button */}
-                    <div className="pt-2">
-                      <button
-                        onClick={() => navigate(`/errand/${errand.id}`)}
-                        className="w-full bg-errandify-orange text-white py-2 rounded-lg font-semibold hover:bg-opacity-90 text-sm"
-                      >
-                        {userRole === 'asker' ? 'View Details' : 'Accept Task'}
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => navigate(`/errand/${errand.id}`)}
+                      className="w-full bg-errandify-orange text-white py-2 rounded-lg font-semibold hover:bg-opacity-90 text-sm mt-2"
+                    >
+                      {userRole === 'asker' ? 'View Details' : 'Accept Task'}
+                    </button>
                   </div>
                 )}
               </div>
@@ -228,6 +222,9 @@ export default function HomePage({ userRole }: HomePageProps) {
           )}
         </div>
       </div>
+
+      {/* Bottom Spacing */}
+      <div className="h-8"></div>
     </div>
   );
 }
