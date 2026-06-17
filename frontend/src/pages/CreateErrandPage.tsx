@@ -465,22 +465,60 @@ export default function CreateErrandPage() {
           <div className="border-t pt-4 space-y-4">
             <h3 className="font-bold text-errandify-brown text-sm">Work Location</h3>
 
-            <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Where is the work?
-              </label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                placeholder="Address or 'Remote' if not needed"
-                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
-              />
+            <div className="space-y-2">
+              <div>
+                <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                  Postal Code (Singapore)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., 138667"
+                  onChange={(e) => {
+                    const postalCode = e.target.value.trim();
+                    if (postalCode.length === 6 && /^\d+$/.test(postalCode)) {
+                      // For now, just accept the postal code
+                      // In a real app, you'd call a Singapore postal code API
+                      setFormData((prev) => ({
+                        ...prev,
+                        location: `Singapore ${postalCode}`,
+                      }));
+                    }
+                  }}
+                  className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                  Full Address
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  placeholder="Street address or area (auto-filled from postal code)"
+                  className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
+                />
+              </div>
             </div>
 
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.location.toLowerCase() === 'remote' || !formData.location}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setFormData((prev) => ({ ...prev, location: 'Remote' }));
+                  }
+                }}
+                className="w-4 h-4"
+              />
+              <span className="text-sm text-gray-700">This is remote work (no specific location)</span>
+            </label>
+
             <p className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-              💡 You can add access instructions (unit number, building name) in the confirmation step - these will only be shown to the doer after they accept.
+              💡 Access instructions (unit number, building name) can be added in the confirmation step - only the confirmed doer will see these.
             </p>
           </div>
 
