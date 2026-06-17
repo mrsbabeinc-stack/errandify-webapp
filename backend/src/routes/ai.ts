@@ -928,12 +928,15 @@ router.post('/suggest-completion', async (req: Request, res: Response) => {
 function parseTimeFromInput(text: string): string | null {
   const lowerText = text.toLowerCase();
 
-  // Match patterns like "4pm", "4 pm", "14:00", "2:30pm"
-  const timeMatch = lowerText.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/);
+  // Match patterns like "4pm", "4 pm" - REQUIRE am/pm to avoid false matches
+  const timeMatch = lowerText.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/);
   if (timeMatch) {
     let hours = parseInt(timeMatch[1]);
     const minutes = timeMatch[2] || '00';
     const period = timeMatch[3];
+
+    // Validate 12-hour format
+    if (hours < 1 || hours > 12) return null;
 
     if (period === 'pm' && hours !== 12) {
       hours += 12;
@@ -951,16 +954,16 @@ function parseTimeFromInput(text: string): string | null {
 function parseDurationFromInput(text: string): { duration: string; unit: string } | null {
   const lowerText = text.toLowerCase();
 
-  // Match patterns like "1hour", "2 hours", "30min", "30 m", "1.5hr"
-  const durationMatch = lowerText.match(/(\d+(?:\.\d+)?)\s*(hour|hr|min|minute|m|day|d)?/);
+  // Match patterns like "30min", "2 hours", "1.5hr" - REQUIRE unit keyword
+  const durationMatch = lowerText.match(/\b(\d+(?:\.\d+)?)\s*(hours?|hrs?|minutes?|mins?|m\b|days?|d\b)/);
   if (durationMatch) {
     const value = durationMatch[1];
-    const unit = durationMatch[2] || 'hour';
+    const unit = durationMatch[2];
 
     let normalizedUnit = 'Hr';
-    if (unit.includes('min') || unit === 'm') normalizedUnit = 'Min';
-    else if (unit.includes('day') || unit === 'd') normalizedUnit = 'Day';
-    else if (unit.includes('week')) normalizedUnit = 'Week';
+    if (unit.match(/^(min|m)/i)) normalizedUnit = 'Min';
+    else if (unit.match(/^(day|d)/i)) normalizedUnit = 'Day';
+    else if (unit.match(/week/i)) normalizedUnit = 'Week';
 
     return { duration: value, unit: normalizedUnit };
   }
