@@ -137,8 +137,15 @@ export default function HanaCustomerService() {
               {messages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
+                  {msg.sender === 'hana' && (
+                    <img
+                      src="/images/hana-avatar.png"
+                      alt="Hana"
+                      className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-1"
+                    />
+                  )}
                   <div
                     className={`max-w-xs px-4 py-2 rounded-lg text-sm ${
                       msg.sender === 'user'
@@ -151,7 +158,12 @@ export default function HanaCustomerService() {
                 </div>
               ))}
               {isLoading && (
-                <div className="flex justify-start">
+                <div className="flex gap-2 justify-start">
+                  <img
+                    src="/images/hana-avatar.png"
+                    alt="Hana"
+                    className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-1"
+                  />
                   <div className="bg-white text-gray-800 px-4 py-2 rounded-lg border border-gray-200">
                     <div className="flex space-x-2">
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
