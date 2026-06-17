@@ -106,12 +106,12 @@ export default function App() {
           }
         />
 
-        {/* Category selection (kept for backward compatibility) */}
+        {/* Category selection - for both asker and doer */}
         <Route
           path="/category"
           element={
             isAuthenticated ? (
-              <Navigate to="/create-errand" replace />
+              <CategorySelectionPage userRole={userRole} />
             ) : (
               <Navigate to="/login" replace />
             )
