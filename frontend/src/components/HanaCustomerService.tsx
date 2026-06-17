@@ -231,13 +231,8 @@ export default function HanaCustomerService() {
     }
 
     // Adjust voice settings by language
-    if (language === 'zh') {
-      // Mandarin: warm, passionate, not sharp
-      utterance.rate = 0.85;
-      utterance.pitch = 1.15;
-      utterance.volume = 1.0;
-    } else if (language === 'yue') {
-      // Cantonese: warm, passionate, not sharp
+    if (language === 'zh' || language === 'yue') {
+      // Chinese (Mandarin & Cantonese): warm, passionate, not sharp
       utterance.rate = 0.85;
       utterance.pitch = 1.15;
       utterance.volume = 1.0;
