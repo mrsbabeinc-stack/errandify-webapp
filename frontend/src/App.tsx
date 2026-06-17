@@ -17,6 +17,15 @@ import ChatPage from './pages/ChatPage';
 import MyVillagePage from './pages/MyVillagePage';
 import ProfilePage from './pages/ProfilePage';
 import ReviewPage from './pages/ReviewPage';
+import MyProfilePage from './pages/MyProfilePage';
+import ReferralPage from './pages/ReferralPage';
+import TrustedUsersPage from './pages/TrustedUsersPage';
+import BlockListPage from './pages/BlockListPage';
+import PayoutSettingsPage from './pages/PayoutSettingsPage';
+import TransactionHistoryPage from './pages/TransactionHistoryPage';
+import ErrandifyPointsPage from './pages/ErrandifyPointsPage';
+import MyRewardsPage from './pages/MyRewardsPage';
+import PointsHistoryPage from './pages/PointsHistoryPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -174,6 +183,15 @@ export default function App() {
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
           <Route path="/profile" element={<ProfilePage userRole={userRole} />} />
           <Route path="/review/:jobId" element={<ReviewPage />} />
+          <Route path="/my-profile" element={<MyProfilePage />} />
+          <Route path="/referral" element={<ReferralPage />} />
+          <Route path="/trusted-users" element={<TrustedUsersPage />} />
+          <Route path="/block-list" element={<BlockListPage />} />
+          <Route path="/payout-settings" element={<PayoutSettingsPage />} />
+          <Route path="/transaction-history" element={<TransactionHistoryPage />} />
+          <Route path="/errandify-points" element={<ErrandifyPointsPage />} />
+          <Route path="/my-rewards" element={<MyRewardsPage />} />
+          <Route path="/points-history" element={<PointsHistoryPage />} />
         </Route>
       </Routes>
     </Router>
