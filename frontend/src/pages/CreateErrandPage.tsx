@@ -53,16 +53,29 @@ export default function CreateErrandPage() {
     if (prefilledJson) {
       try {
         const prefilledData = JSON.parse(decodeURIComponent(prefilledJson));
-        setFormData((prev) => ({
-          ...prev,
+        const newFormData = {
           title: prefilledData.title || '',
           description: prefilledData.description || '',
-          category: prefilledData.category || prev.category,
+          category: prefilledData.category || '',
           location: prefilledData.location || '',
           budget: prefilledData.budget || '',
           deadline: prefilledData.date || '',
+          duration: prefilledData.time ? '1' : '',
+          durationUnit: 'Hr' as 'Min' | 'Hr' | 'Day' | 'Week',
+          isRecurring: false,
+          repeatEvery: '1',
+          repeatUnit: 'week' as 'day' | 'week' | 'month',
+          occurrences: '1',
           specialNote: prefilledData.notes || '',
-        }));
+          skills: [] as string[],
+          certifications: { required: [] as string[], optional: [] as string[] },
+        };
+        setFormData(newFormData);
+
+        // Auto-fetch AI suggestions for the prefilled title
+        if (newFormData.title) {
+          fetchAiSuggestions(newFormData.title, newFormData.description);
+        }
       } catch (err) {
         console.error('Failed to load prefilled data:', err);
       }
@@ -180,14 +193,14 @@ export default function CreateErrandPage() {
     '82': 'Sengkang',
   };
 
-  const getAiSuggestions = async (title: string) => {
-    if (!title.trim() || title.length < 4) return;
+  const fetchAiSuggestions = async (title: string, description: string = '') => {
+    if (!title.trim() || title.length < 2) return;
 
     setAiLoading(true);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
-        { title }
+        { title, description }
       );
 
       if (response.data.success) {
@@ -218,13 +231,13 @@ export default function CreateErrandPage() {
     }
   };
 
-  const debouncedGetAiSuggestions = (value: string) => {
+  const debouncedFetchAiSuggestions = (value: string, desc: string = '') => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
 
     debounceTimer.current = setTimeout(() => {
-      getAiSuggestions(value);
+      fetchAiSuggestions(value, desc);
     }, 300); // Wait 300ms after user stops typing
   };
 
@@ -234,7 +247,7 @@ export default function CreateErrandPage() {
 
     // Trigger AI suggestions with debounce (wait 300ms after user stops typing)
     if (value.length > 3) {
-      debouncedGetAiSuggestions(value);
+      debouncedFetchAiSuggestions(value, formData.description);
     }
   };
 
