@@ -928,14 +928,15 @@ router.post('/suggest-completion', async (req: Request, res: Response) => {
 function parseTimeFromInput(text: string): string | null {
   const lowerText = text.toLowerCase();
 
-  // Match patterns like "4pm", "4 pm" - REQUIRE am/pm to avoid false matches
-  const timeMatch = lowerText.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/);
+  // Match patterns like "4pm", "4 pm", "3pm", "2:30pm" - word boundary before but not after
+  // (because "3pm" might follow other text like "20min 3pm")
+  const timeMatch = lowerText.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/);
   if (timeMatch) {
     let hours = parseInt(timeMatch[1]);
     const minutes = timeMatch[2] || '00';
     const period = timeMatch[3];
 
-    // Validate 12-hour format
+    // Validate 12-hour format (1-12)
     if (hours < 1 || hours > 12) return null;
 
     if (period === 'pm' && hours !== 12) {
@@ -1028,8 +1029,11 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
     // Singapore locations
     const locations = ['orchard', 'marina bay', 'tampines', 'jurong', 'clementi', 'bishan', 'serangoon', 'bedok', 'geylang', 'east coast', 'hougang', 'punggol', 'everton', 'bukit timah', 'holland', 'tanglin'];
 
-    // Extract title - remove locations, times, and dates first
+    // Extract title - remove locations, times, dates, postal codes, and numbers
     let titleText = cleaned;
+
+    // Remove postal codes (6-digit numbers like 082001)
+    titleText = titleText.replace(/\b\d{6}\b/g, '');
 
     // Remove locations
     for (const loc of locations) {
@@ -1039,17 +1043,20 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
     // Remove day names (monday, tuesday, etc. and abbreviations)
     titleText = titleText.replace(/\s+(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun|today|tomorrow|tmr)\b/gi, '');
 
+    // Remove month names and dates (19 jun, 19 june, etc.)
+    titleText = titleText.replace(/\s+\d{1,2}\s+(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|september|oct|october|nov|november|dec|december)\b/gi, '');
+
     // Remove time patterns (9am, 4pm, morning, afternoon, etc.)
     titleText = titleText.replace(/\s+(\d{1,2}(?:am|pm|:\d{2})|morning|afternoon|evening|night)\b/gi, '');
 
     // Remove duration patterns (1hour, 2 hours, 30min, 30 m, etc.)
     titleText = titleText.replace(/\s+\d+(?:\.\d+)?\s*(hour|hr|min|minute|m|day|d)\b/gi, '');
 
-    // Remove budget patterns ($50, budget 50, etc.) - also standalone numbers at end
+    // Remove budget patterns ($50, budget 50, etc.)
     titleText = titleText.replace(/\s*\$\s*\d+\b/g, '');
     titleText = titleText.replace(/\s+budget\s+\d+\b/gi, '');
 
-    // Remove trailing standalone numbers (likely budget)
+    // Remove any remaining trailing numbers (likely budget or postal fragments)
     titleText = titleText.replace(/\s+\d+\s*$/, '');
 
     let title = titleText.split(/at|in|on|by/)[0].trim().substring(0, 50) || input.substring(0, 50);
@@ -1072,7 +1079,7 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
       }
     }
 
-    // Extract location
+    // Extract location - first try named locations, then postal code
     let location = '';
     for (const loc of locations) {
       if (cleaned.includes(loc)) {
@@ -1082,12 +1089,55 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
       }
     }
 
+    // If no named location found, try to extract postal code
+    if (!location) {
+      const postalMatch = cleaned.match(/\b(\d{6})\b/);
+      if (postalMatch) {
+        const postalCode = postalMatch[1];
+        const firstTwo = postalCode.substring(0, 2);
+        const postalCodeAreas: Record<string, string> = {
+          '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
+          '05': 'Outram', '06': 'People\'s Park', '07': 'Chinatown', '08': 'Sengkang', '09': 'Tanjong Pagar',
+          '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
+          '15': 'Serangoon', '16': 'Serangoon', '17': 'Serangoon', '18': 'Macpherson', '19': 'Paya Lebar',
+          '20': 'Paya Lebar', '21': 'Geylang', '22': 'Geylang', '23': 'Geylang', '24': 'Eunos',
+          '25': 'Bedok', '26': 'Bedok', '27': 'Bedok', '28': 'Tampines', '29': 'Tampines', '30': 'Tampines',
+          '31': 'Pasir Ris', '32': 'Pasir Ris', '33': 'Punggol', '34': 'Punggol', '35': 'Hougang',
+          '36': 'Hougang', '37': 'Sengkang', '38': 'Sengkang', '39': 'Sengkang', '40': 'Jurong West',
+        };
+        location = postalCodeAreas[firstTwo] || '';
+      }
+    }
+
     // Extract date
     let date = '';
+
+    // First try hardcoded date map (today, tomorrow, etc.)
     for (const [key, val] of Object.entries(dateMap)) {
       if (cleaned.includes(key)) {
         date = val;
         break;
+      }
+    }
+
+    // If not found, try parsing date like "19 Jun" or "19 june"
+    if (!date) {
+      const monthMap: Record<string, string> = {
+        'jan': '01', 'january': '01', 'feb': '02', 'february': '02', 'mar': '03', 'march': '03',
+        'apr': '04', 'april': '04', 'may': '05', 'jun': '06', 'june': '06', 'jul': '07', 'july': '07',
+        'aug': '08', 'august': '08', 'sep': '09', 'september': '09', 'oct': '10', 'october': '10',
+        'nov': '11', 'november': '11', 'dec': '12', 'december': '12',
+      };
+
+      const dateRegex = /(\d{1,2})\s+(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|september|oct|october|nov|november|dec|december)/i;
+      const dateMatch = cleaned.match(dateRegex);
+      if (dateMatch) {
+        const day = dateMatch[1].padStart(2, '0');
+        const monthStr = dateMatch[2].toLowerCase();
+        const month = monthMap[monthStr];
+        if (month) {
+          date = `2026-${month}-${day}`;
+        }
       }
     }
 
@@ -1130,6 +1180,22 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
       }
     }
 
+    // Generate AI description based on cleaned title and category
+    let description = '';
+    if (title && category) {
+      const cleanedTitle = title.replace(/\.$/, '');
+      const categoryDescMap: Record<string, string> = {
+        'pet-care': `Help needed with ${cleanedTitle}. Pet-friendly and experienced handlers only.`,
+        'cleaning-laundry': `Help needed with ${cleanedTitle}. Professional cleaning services required.`,
+        'home-maintenance': `Help needed with ${cleanedTitle}. Skilled and experienced workers preferred.`,
+        'shopping-errands': `Help needed with ${cleanedTitle}. Quick and reliable errand runner needed.`,
+        'delivery-moving': `Help needed with ${cleanedTitle}. Strong and efficient helpers needed.`,
+        'childcare-tutoring': `Help needed with ${cleanedTitle}. Qualified and experienced caregivers only.`,
+        'tech-support': `Help needed with ${cleanedTitle}. Technical expertise required.`,
+      };
+      description = categoryDescMap[category] || `Help needed with ${cleanedTitle}.`;
+    }
+
     res.json({
       success: true,
       data: {
@@ -1141,6 +1207,7 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
         duration,
         durationUnit,
         budget,
+        description,
         notes: '',
       },
     });
