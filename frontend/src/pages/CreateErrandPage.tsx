@@ -508,7 +508,9 @@ export default function CreateErrandPage() {
       console.error('[DEBUG] Error:', err.message);
       console.error('[DEBUG] Error response:', err.response?.data);
       console.error('[DEBUG] Full error:', err);
-      setError(err.response?.data?.error || 'Failed to create errand');
+      const errorMsg = err.response?.data?.details || err.response?.data?.error || err.message || 'Failed to create errand';
+      console.error('[DEBUG] Final error message:', errorMsg);
+      setError(errorMsg);
     } finally {
       console.log('[DEBUG] *** FINALLY BLOCK - SETTING LOADING FALSE ***');
       setLoading(false);
