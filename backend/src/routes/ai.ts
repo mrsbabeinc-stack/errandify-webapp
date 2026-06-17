@@ -1118,7 +1118,7 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
         const postalCodeAreas: Record<string, string> = {
           // 01-09: Central Business District & Surroundings
           '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
-          '05': 'Outram', '06': 'People\'s Park', '07': 'Chinatown', '08': 'Fort Canning', '09': 'Tanjong Pagar',
+          '05': 'Outram', '06': 'People\'s Park', '07': 'Chinatown', '08': 'Tanjong Pagar', '09': 'Tanjong Pagar',
           // 10-19: Orchard & Central
           '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
           '15': 'Henderson', '16': 'Henderson', '17': 'Balestier', '18': 'Macpherson', '19': 'Paya Lebar',
