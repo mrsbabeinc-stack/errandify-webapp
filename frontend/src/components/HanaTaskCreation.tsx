@@ -296,40 +296,40 @@ export default function HanaTaskCreation({
         <div className="flex-1 overflow-y-auto flex flex-col">
           {/* Top Section: Speech Bubble */}
           {hanaMessage && (
-            <div className="px-6 pt-4 flex-shrink-0">
-              <div className="relative animate-slideDown"
+            <div className="px-6 pt-2 flex-shrink-0">
+              <div className="relative animate-slideDown max-w-xs mx-auto"
                    style={{
                      background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
-                     border: '3px solid #FF8C42',
-                     borderRadius: '24px',
-                     padding: '24px',
-                     boxShadow: '0 8px 16px rgba(255, 140, 66, 0.2), 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+                     border: '2px solid #FF8C42',
+                     borderRadius: '18px',
+                     padding: '14px 16px',
+                     boxShadow: '0 6px 12px rgba(255, 140, 66, 0.15), 0 2px 4px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
                      transform: 'perspective(1000px) rotateX(2deg)',
                    }}>
-                <p className="text-center whitespace-pre-line leading-relaxed text-sm font-medium"
-                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.7', letterSpacing: '0.2px'}}>
+                <p className="text-center whitespace-pre-line text-xs font-medium"
+                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.5', letterSpacing: '0.1px'}}>
                   {hanaMessage}
                 </p>
                 {/* Speech bubble tail */}
                 <div style={{
                   position: 'absolute',
-                  bottom: '-12px',
-                  left: '30px',
+                  bottom: '-8px',
+                  left: '24px',
                   width: '0',
                   height: '0',
-                  borderLeft: '12px solid transparent',
+                  borderLeft: '8px solid transparent',
                   borderRight: '0 solid transparent',
-                  borderTop: '12px solid #FF8C42',
+                  borderTop: '8px solid #FF8C42',
                 }} />
                 <div style={{
                   position: 'absolute',
-                  bottom: '-8px',
-                  left: '32px',
+                  bottom: '-6px',
+                  left: '25px',
                   width: '0',
                   height: '0',
-                  borderLeft: '10px solid transparent',
+                  borderLeft: '7px solid transparent',
                   borderRight: '0 solid transparent',
-                  borderTop: '10px solid #FFF8F0',
+                  borderTop: '7px solid #FFF8F0',
                 }} />
               </div>
             </div>
