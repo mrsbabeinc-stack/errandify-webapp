@@ -117,11 +117,20 @@ We'll mobilize our community helpers immediately. What specific help do you need
 // Customer Service - Hana AI assistant for support
 router.post('/chat/hana/customer-service', async (req: any, res: any) => {
   try {
-    const { message } = req.body;
+    const { message, language = 'en' } = req.body;
 
     if (!message) {
       return res.status(400).json({ error: 'Message required' });
     }
+
+    // Map language codes to language instructions
+    const languageMap: Record<string, string> = {
+      en: 'Reply in English.',
+      zh: '用中文回复。',
+      yue: '用粵語回復。',
+    };
+
+    const languageInstruction = languageMap[language] || languageMap['en'];
 
     let reply = 'How can I help you today?';
 
@@ -129,8 +138,8 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
     console.log('[DEBUG] Config check - Has API key?', !!config.qwen.apiKey, 'Key preview:', config.qwen.apiKey?.substring(0, 20));
     if (config.qwen.apiKey) {
       try {
-        console.log('[DEBUG] Attempting Qwen API call with key:', config.qwen.apiKey.substring(0, 20) + '...');
-        const systemPrompt = `You are Hana, a helpful AI assistant for Errandify. Be warm, brief (2-3 sentences), and helpful.`;
+        console.log('[DEBUG] Attempting Qwen API call with language:', language);
+        const systemPrompt = `You are Hana, a helpful AI assistant for Errandify. Be warm, brief (2-3 sentences), and helpful. ${languageInstruction}`;
 
         const response = await axios.post(
           'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
