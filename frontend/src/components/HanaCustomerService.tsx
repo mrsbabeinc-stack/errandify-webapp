@@ -109,7 +109,7 @@ export default function HanaCustomerService() {
       setIsSpeaking(true);
       console.log('[Hana TTS] Requesting audio for:', text.substring(0, 50));
 
-      // Try Alibaba TTS first
+      // Try cloud TTS service first
       try {
         const response = await axios.post('/api/chat/hana/speak', {
           text,
@@ -118,8 +118,12 @@ export default function HanaCustomerService() {
 
         const audioUrl = response.data?.data?.audio;
         if (audioUrl) {
-          console.log('[Hana TTS] Playing Alibaba audio');
+          console.log('[Hana TTS] Playing cloud TTS audio');
           const audio = new Audio(audioUrl);
+
+          audio.oncanplay = () => {
+            console.log('[Hana] Audio ready to play');
+          };
 
           audio.onended = () => {
             console.log('[Hana] Audio finished');
@@ -128,18 +132,19 @@ export default function HanaCustomerService() {
 
           audio.onerror = (error: any) => {
             console.error('[Hana] Audio playback error:', error);
-            setIsSpeaking(false);
+            console.log('[Hana] Falling back to browser TTS');
+            speakWithBrowserTTS(text);
           };
 
           audio.play().catch((error: any) => {
-            console.error('[Hana] Failed to play Alibaba audio:', error);
+            console.error('[Hana] Failed to play cloud TTS audio:', error);
             // Fallback to browser TTS
             speakWithBrowserTTS(text);
           });
           return;
         }
       } catch (apiError: any) {
-        console.error('[Hana TTS] Alibaba TTS error:', apiError.message);
+        console.error('[Hana TTS] Cloud TTS error:', apiError.message);
         // Fallback to browser TTS
       }
 
