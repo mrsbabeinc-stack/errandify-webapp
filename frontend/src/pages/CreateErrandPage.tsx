@@ -753,7 +753,7 @@ export default function CreateErrandPage() {
 
           {/* Section 3: Location - Only area shown here */}
           <div className="border-t pt-4 space-y-4">
-            <h3 className="font-bold text-errandify-brown text-sm">Work Location</h3>
+            <h3 className="font-bold text-errandify-brown text-sm">Location</h3>
 
             {/* Remote Work Checkbox */}
             <label className="flex items-center gap-2">
