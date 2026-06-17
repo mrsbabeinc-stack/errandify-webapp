@@ -7,8 +7,8 @@ export default function LandingPage() {
 
       {/* Main Container - Maximize Photo + Text */}
       <div className="w-full flex flex-col items-center justify-between h-full">
-        {/* Family Photo - Fill Top */}
-        <div className="w-full flex-1 overflow-hidden rounded-b-3xl shadow-lg">
+        {/* Family Photo - Narrower & Proportionate */}
+        <div className="max-w-xs w-full flex-1 overflow-hidden rounded-b-3xl shadow-lg mx-auto">
           {/* Family Photo - No Button */}
           <img
             src="/images/family_no_button.jpeg"
