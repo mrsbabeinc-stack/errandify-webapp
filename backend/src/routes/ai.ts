@@ -105,14 +105,38 @@ function cleanTitleForDescription(title: string): string {
 }
 
 const descriptionTemplates: Record<string, (title: string) => string> = {
-  'home-maintenance': (title: string) => `Need help with ${cleanTitleForDescription(title)}. Please ensure the work is done professionally and safely.`,
-  'cleaning-laundry': (title: string) => `Looking for someone to help with ${cleanTitleForDescription(title)}. Please bring own supplies if needed.`,
-  'shopping-errands': (title: string) => `Need someone to ${cleanTitleForDescription(title)}. Receipt required for reimbursement.`,
-  'delivery-moving': (title: string) => `Assistance needed with ${cleanTitleForDescription(title)}. Careful handling is important.`,
-  'childcare-tutoring': (title: string) => `Seeking help with ${cleanTitleForDescription(title)}. References and experience preferred.`,
-  'pet-care': (title: string) => `Help needed with ${cleanTitleForDescription(title)}. Pet-friendly and experienced handlers only.`,
-  'tech-support': (title: string) => `Need technical assistance with ${cleanTitleForDescription(title)}. Problem diagnosis required.`,
-  'moving-help': (title: string) => `Help with ${cleanTitleForDescription(title)}. Physical ability and reliability important.`,
+  'home-maintenance': (title: string) => {
+    const cleaned = cleanTitleForDescription(title);
+    return `Need help with ${cleaned}. Please bring own tools and materials. Work must be completed professionally and safely.`;
+  },
+  'cleaning-laundry': (title: string) => {
+    const cleaned = cleanTitleForDescription(title);
+    return `Looking for someone to help with ${cleaned}. Please specify if you prefer eco-friendly products or have any restrictions (allergies, pets, sensitive materials).`;
+  },
+  'shopping-errands': (title: string) => {
+    const cleaned = cleanTitleForDescription(title);
+    return `Need someone to ${cleaned}. Will provide shopping list/specific brands. Please keep receipts for reimbursement.`;
+  },
+  'delivery-moving': (title: string) => {
+    const cleaned = cleanTitleForDescription(title);
+    return `Assistance needed with ${cleaned}. Careful and proper handling required. Please inform about any fragile or special items needing extra care.`;
+  },
+  'childcare-tutoring': (title: string) => {
+    const cleaned = cleanTitleForDescription(title);
+    return `Seeking help with ${cleaned}. References and relevant experience required. Will provide detailed instructions and emergency contact information.`;
+  },
+  'pet-care': (title: string) => {
+    const cleaned = cleanTitleForDescription(title);
+    return `Help needed with ${cleaned}. Pet-friendly and experienced handlers only. Will provide pet care instructions, emergency vet info, and animal behavior notes.`;
+  },
+  'tech-support': (title: string) => {
+    const cleaned = cleanTitleForDescription(title);
+    return `Need technical assistance with ${cleaned}. Please diagnose and document issues found. Data backup may be required before any major changes.`;
+  },
+  'moving-help': (title: string) => {
+    const cleaned = cleanTitleForDescription(title);
+    return `Help with ${cleaned}. Physical capability and reliability are important. Will provide furniture padding and access details (stairs, elevator, parking).`;
+  },
 };
 
 // Check for inappropriate content
@@ -484,6 +508,24 @@ function suggestBudget(category: string, title: string): number | null {
   return defaultBudgets[category] || 50;
 }
 
+// Suggest notes/details for doer based on category and keywords
+function suggestNotes(category: string, title: string): string {
+  const lowerTitle = title.toLowerCase();
+
+  const noteTemplates: Record<string, string> = {
+    'home-maintenance': 'Please bring your own tools. Ensure work is completed safely and professionally. Lock up properly when done.',
+    'cleaning-laundry': 'Please use eco-friendly cleaning products if available. Vacuum and mop all areas. Handle delicate items carefully.',
+    'shopping-errands': 'Keep all receipts for reimbursement. Call if items are out of stock. Pack fragile items carefully.',
+    'delivery-moving': 'Handle with care, especially fragile items. Please take photos before and after. Ensure safe delivery.',
+    'childcare-tutoring': 'Emergency contact numbers will be provided. Please arrive 10 minutes early. Follow house rules and bedtime routine.',
+    'pet-care': 'All pet instructions will be provided. Please keep gates/doors secure. Report any health concerns immediately.',
+    'tech-support': 'Please backup data before any major changes. Test all functionality after completion. Document any issues found.',
+    'moving-help': 'Wear appropriate footwear. Take breaks as needed. Use proper lifting techniques. Furniture padding provided.',
+  };
+
+  return noteTemplates[category] || 'Please ensure all work is completed as discussed. Contact if any issues arise.';
+}
+
 // Suggest skills based on category and keywords
 function suggestSkills(category: string, title: string): string[] {
   const lowerTitle = title.toLowerCase();
@@ -496,7 +538,7 @@ function suggestSkills(category: string, title: string): string[] {
     'delivery-moving': ['Heavy lifting', 'Packing', 'Transportation', 'Logistics', 'Physical fitness'],
     'childcare-tutoring': ['Childcare', 'Teaching', 'Patience', 'CPR/First Aid', 'Subject expertise'],
     'pet-care': ['Dog walking', 'Dog training', 'Pet grooming', 'Animal care', 'Pet sitting'],
-    'tech-support': ['Computer repair', 'Troubleshooting', 'Software installation', 'Hardware setup', 'IT support'],
+    'tech-support': ['Computer repair', 'Troubleshooting', 'Software installation', 'Hardware setup', 'Social media management'],
     'moving-help': ['Heavy lifting', 'Organization', 'Packing', 'Furniture assembly', 'Logistics'],
   };
 
@@ -606,6 +648,9 @@ router.post('/suggestions', (req: Request, res: Response) => {
     // Suggest budget
     const suggestedBudgetAmount = suggestBudget(suggestedCategory, correctedTitle);
 
+    // Suggest notes for doer
+    const suggestedNotes = suggestNotes(suggestedCategory, correctedTitle);
+
     res.json({
       success: true,
       data: {
@@ -618,6 +663,7 @@ router.post('/suggestions', (req: Request, res: Response) => {
         missingDetails,
         certifications: suggestedCerts,
         skills: suggestedSkillsList,
+        notes: suggestedNotes,
         contentSafe: true,
       },
     });

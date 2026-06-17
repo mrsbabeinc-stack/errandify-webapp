@@ -11,6 +11,7 @@ interface LayoutProps {
 }
 
 export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps) {
+
   return (
     <div className="flex flex-col h-screen bg-errandify-bg">
       {/* Top Bar with Role Toggle & Notifications */}
@@ -28,7 +29,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
       <HanaAssistant />
 
       {/* Bottom Navigation */}
-      <BottomNav onLogout={onLogout} />
+      <BottomNav onLogout={onLogout} userRole={userRole} />
     </div>
   );
 }

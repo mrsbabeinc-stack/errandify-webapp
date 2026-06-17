@@ -7,32 +7,62 @@ const router = Router();
 // Get all errands (with filters)
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { category, status, sort } = req.query;
+    const { category, status, sort, myOnly, accepted } = req.query;
+    const currentUserId = req.userId ? parseInt(req.userId, 10) : null;
 
-    let query = 'SELECT * FROM errands WHERE status = $1';
-    const params: any[] = ['open'];
-    let paramIndex = 2;
+    if (!currentUserId) {
+      return res.status(400).json({ error: 'User ID not found in token' });
+    }
+
+    let query: string;
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    const isMyOnly = myOnly === 'true' || myOnly === true;
+    const isAccepted = accepted === 'true' || accepted === true;
+
+    if (isMyOnly) {
+      // Show errands posted by current user (for askers)
+      query = 'SELECT * FROM errands WHERE asker_id = $1';
+      params.push(currentUserId);
+      paramIndex = 2;
+    } else if (isAccepted) {
+      // Show errands accepted by current user (for doers) - join with assignments
+      query = `SELECT e.* FROM errands e
+               INNER JOIN errand_assignments ea ON e.id = ea.errand_id
+               WHERE ea.doer_id = $1 AND ea.status = 'accepted'`;
+      params.push(currentUserId);
+      paramIndex = 2;
+    } else {
+      // Show all open errands excluding ones posted by current user
+      query = 'SELECT * FROM errands WHERE status = $1 AND asker_id != $2';
+      params.push('open', currentUserId);
+      paramIndex = 3;
+    }
 
     // Filter by category
     if (category) {
-      query += ` AND category = $${paramIndex}`;
+      const tablePrefix = isAccepted ? 'e.' : '';
+      query += ` AND ${tablePrefix}category = $${paramIndex}`;
       params.push(category);
       paramIndex++;
     }
 
-    // Filter by status
-    if (status) {
-      query = query.replace('status = $1', 'status = $1');
-      params[0] = status;
+    // Filter by status (additional status filter for myOnly)
+    if (status && isMyOnly) {
+      query += ` AND status = $${paramIndex}`;
+      params.push(status);
+      paramIndex++;
     }
 
     // Sorting
+    const tablePrefix = isAccepted ? 'e.' : '';
     if (sort === 'budget-high') {
-      query += ' ORDER BY budget DESC NULLS LAST';
+      query += ` ORDER BY ${tablePrefix}budget DESC NULLS LAST`;
     } else if (sort === 'deadline') {
-      query += ' ORDER BY deadline ASC NULLS LAST';
+      query += ` ORDER BY ${tablePrefix}deadline ASC NULLS LAST`;
     } else {
-      query += ' ORDER BY created_at DESC';
+      query += ` ORDER BY ${tablePrefix}created_at DESC`;
     }
 
     const result = await db.query(query, params);

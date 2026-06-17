@@ -4,11 +4,14 @@ import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import CategorySelectionPage from './pages/CategorySelectionPage';
+import CategoryPreferencePage from './pages/CategoryPreferencePage';
 import CreateErrandPage from './pages/CreateErrandPage';
+import EditErrandPage from './pages/EditErrandPage';
 import BrowseErrandsPage from './pages/BrowseErrandsPage';
 import ErrandsPage from './pages/ErrandsPage';
 import ErrandDetailPage from './pages/ErrandDetailPage';
 import ChatPage from './pages/ChatPage';
+import MyVillagePage from './pages/MyVillagePage';
 import ProfilePage from './pages/ProfilePage';
 
 export default function App() {
@@ -89,6 +92,18 @@ export default function App() {
           }
         />
 
+        {/* Category preferences */}
+        <Route
+          path="/category-preferences"
+          element={
+            isAuthenticated ? (
+              <CategoryPreferencePage userRole={userRole} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
         {/* Browse errands (doer flow) */}
         <Route
           path="/browse-errands/:categoryId"
@@ -114,6 +129,8 @@ export default function App() {
           <Route path="/" element={<HomePage userRole={userRole} />} />
           <Route path="/errands" element={<ErrandsPage userRole={userRole} />} />
           <Route path="/errand/:id" element={<ErrandDetailPage />} />
+          <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole} />} />
+          <Route path="/village" element={<MyVillagePage userRole={userRole} />} />
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
           <Route path="/profile" element={<ProfilePage userRole={userRole} />} />
         </Route>

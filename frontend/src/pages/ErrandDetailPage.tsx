@@ -89,6 +89,27 @@ export default function ErrandDetailPage() {
     return parts[parts.length - 1].trim();
   };
 
+  const handleCancelErrand = async () => {
+    if (!window.confirm('Are you sure you want to cancel this errand?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}`,
+        { status: 'cancelled' },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      navigate('/errands');
+    } catch (error) {
+      console.error('Failed to cancel errand:', error);
+      alert('Failed to cancel errand. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-errandify-bg flex items-center justify-center">
@@ -256,8 +277,19 @@ export default function ErrandDetailPage() {
                 Accept This Errand
               </button>
             ) : errand.status === 'open' && currentUserId === errand.askerId ? (
-              <div className="w-full bg-blue-100 text-blue-700 py-3 rounded-lg font-semibold text-center text-base mt-2">
-                You posted this errand
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => navigate(`/errand/${id}/edit`)}
+                  className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
+                >
+                  Edit Errand
+                </button>
+                <button
+                  onClick={handleCancelErrand}
+                  className="flex-1 bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
+                >
+                  Cancel Errand
+                </button>
               </div>
             ) : null}
           </div>

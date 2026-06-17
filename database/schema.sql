@@ -13,6 +13,7 @@ CREATE TABLE users (
   role VARCHAR(50) NOT NULL DEFAULT 'asker' CHECK (role IN ('asker', 'doer')),
   kyc_status VARCHAR(50) DEFAULT 'verified' CHECK (kyc_status IN ('pending', 'verified', 'rejected')),
   referral_code VARCHAR(20) UNIQUE,
+  category_preferences JSONB,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

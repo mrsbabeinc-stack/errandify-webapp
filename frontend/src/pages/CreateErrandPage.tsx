@@ -39,6 +39,7 @@ export default function CreateErrandPage() {
     correctedTitle: '',
     hasCorrections: false,
     suggestedBudget: null as number | null,
+    suggestedNotes: '',
     certifications: { required: [] as string[], optional: [] as string[] },
     skills: [] as string[],
     blocked: false,
@@ -173,6 +174,7 @@ export default function CreateErrandPage() {
           correctedTitle: response.data.data.correctedTitle || '',
           hasCorrections: response.data.data.hasCorrections,
           suggestedBudget: response.data.data.budget || null,
+          suggestedNotes: response.data.data.notes || '',
           certifications: response.data.data.certifications || { required: [], optional: [] },
           skills: response.data.data.skills || [],
           blocked: false,
@@ -236,6 +238,14 @@ export default function CreateErrandPage() {
       setFormData((prev) => ({
         ...prev,
         budget: aiSuggestions.suggestedBudget?.toString() || '',
+      }));
+    }
+
+    // Update notes if AI has a suggestion
+    if (aiSuggestions.suggestedNotes) {
+      setFormData((prev) => ({
+        ...prev,
+        specialNote: aiSuggestions.suggestedNotes,
       }));
     }
 
@@ -479,12 +489,12 @@ export default function CreateErrandPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                  Duration
-                </label>
-                <div className="flex gap-2">
+            <div>
+              <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                Duration
+              </label>
+              <div className="flex gap-2 items-end">
+                <div className="flex-1 flex gap-2">
                   <input
                     type="number"
                     name="duration"
@@ -505,18 +515,15 @@ export default function CreateErrandPage() {
                     <option>Week</option>
                   </select>
                 </div>
-              </div>
-
-              <div className="flex items-end">
-                <label className="flex items-center gap-2 cursor-pointer h-full">
+                <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
                   <input
                     type="checkbox"
                     name="isRecurring"
                     checked={formData.isRecurring}
                     onChange={handleChange}
-                    className="w-4 h-4 mt-0"
+                    className="w-4 h-4"
                   />
-                  <span className="text-sm font-semibold text-errandify-brown">Recurring errand?</span>
+                  <span className="text-sm font-semibold text-errandify-brown">Recurring?</span>
                 </label>
               </div>
             </div>
@@ -947,29 +954,33 @@ export default function CreateErrandPage() {
             </div>
 
             {/* Full Address - Only editable in confirmation */}
-            <div className="border-t pt-4">
-              <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Full Address <span className="text-xs text-red-600">(shown only to confirmed doer)</span>
-              </label>
-              <input
-                type="text"
-                value={fullAddress}
-                onChange={(e) => setFullAddress(e.target.value)}
-                placeholder="e.g., 1 Tanjong Pagar Plaza, Singapore 082001"
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm mb-4"
-              />
+            <div className="border-t pt-4 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                  Full Address, Unit Number & Building Name <span className="text-xs text-red-600">(shown only to confirmed doer)</span>
+                </label>
+                <textarea
+                  value={fullAddress}
+                  onChange={(e) => setFullAddress(e.target.value)}
+                  placeholder="e.g., 1 Tanjong Pagar Plaza, Unit #5-10, Singapore 082001"
+                  rows={2}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
+                />
+              </div>
 
-              <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Unit Number & Access Instructions <span className="text-xs text-red-600">(shown only to confirmed doer)</span>
-              </label>
-              <textarea
-                name="specialNote"
-                value={formData.specialNote}
-                onChange={handleChange}
-                placeholder="Unit #5-10, Lobby access code 1234, Call upon arrival, etc."
-                rows={2}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
-              />
+              <div>
+                <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                  Notes for Confirmed Doer <span className="text-xs text-gray-600">(e.g., access instructions, special requirements)</span>
+                </label>
+                <textarea
+                  name="specialNote"
+                  value={formData.specialNote}
+                  onChange={handleChange}
+                  placeholder={aiSuggestions.suggestedNotes || "Lobby access code 1234, Call upon arrival, Pet-friendly handlers needed, etc."}
+                  rows={2}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
+                />
+              </div>
             </div>
 
             <div className="flex gap-2 pt-4">

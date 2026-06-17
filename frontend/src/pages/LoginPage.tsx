@@ -13,11 +13,31 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [screen, setScreen] = useState<AuthScreen>('splash');
 
   const handleSignupComplete = () => {
-    onLogin('asker');
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        onLogin(userData.role || 'asker');
+      } catch {
+        onLogin('asker');
+      }
+    } else {
+      onLogin('asker');
+    }
   };
 
   const handleLoginComplete = () => {
-    onLogin('asker');
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        onLogin(userData.role || 'asker');
+      } catch {
+        onLogin('asker');
+      }
+    } else {
+      onLogin('asker');
+    }
   };
 
   return (
