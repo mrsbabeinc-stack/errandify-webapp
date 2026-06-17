@@ -95,10 +95,14 @@ export default function HanaCustomerService() {
             setIsOpen(true);
             setIsMinimized(false);
           }}
-          className="fixed bottom-20 right-6 w-14 h-14 bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center text-2xl z-50"
+          className="fixed bottom-20 right-6 w-14 h-14 bg-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange"
           title="Chat with Hana"
         >
-          🌸
+          <img
+            src="/images/hana-avatar.png"
+            alt="Hana"
+            className="w-full h-full object-cover"
+          />
         </button>
       )}
 
@@ -124,8 +128,8 @@ export default function HanaCustomerService() {
           <div className="w-80 h-96 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-errandify-orange to-orange-600 text-white p-4">
-              <h2 className="font-bold text-sm">Hana Customer Service 🌸</h2>
-              <p className="text-xs opacity-90">AI Assistant • Always here to help</p>
+              <h2 className="font-bold text-sm">✿ Hana's Assistant</h2>
+              <p className="text-xs opacity-90">How can I help you today?</p>
             </div>
 
             {/* Messages */}
@@ -187,10 +191,14 @@ export default function HanaCustomerService() {
       {isOpen && isMinimized && (
         <button
           onClick={() => setIsMinimized(false)}
-          className="fixed bottom-20 right-6 w-14 h-14 bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center text-2xl z-50 ring-2 ring-orange-300"
+          className="fixed bottom-20 right-6 w-14 h-14 bg-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange ring-2 ring-orange-300"
           title="Chat with Hana"
         >
-          🌸
+          <img
+            src="/images/hana-avatar.png"
+            alt="Hana"
+            className="w-full h-full object-cover"
+          />
         </button>
       )}
     </>
