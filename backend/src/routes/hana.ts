@@ -115,7 +115,7 @@ We'll mobilize our community helpers immediately. What specific help do you need
 });
 
 // Customer Service - Hana AI assistant for support
-router.post('/hana/customer-service', authMiddleware, async (req: any, res: any) => {
+router.post('/chat/hana/customer-service', authMiddleware, async (req: any, res: any) => {
   try {
     const { message } = req.body;
 
