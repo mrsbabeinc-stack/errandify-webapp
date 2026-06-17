@@ -45,6 +45,7 @@ export default function CreateErrandPage() {
   const [gpsEnabled, setGpsEnabled] = useState(false);
   const [showStartLocation, setShowStartLocation] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [paymentRequired, setPaymentRequired] = useState(false);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const [aiSuggestions, setAiSuggestions] = useState({
@@ -442,6 +443,29 @@ export default function CreateErrandPage() {
       return;
     }
 
+    // Check payment method before posting
+    if (!paymentRequired) {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/payment-method`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (!response.data.data.hasPaymentMethod) {
+          setPaymentRequired(true);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        setError('Could not verify payment method');
+        setLoading(false);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -475,6 +499,32 @@ export default function CreateErrandPage() {
       setShowConfirm(false);
     }
   };
+
+  // Show payment setup modal if required
+  if (paymentRequired) {
+    return (
+      <div className="min-h-screen bg-errandify-bg flex flex-col items-center justify-center px-4">
+        <div className="max-w-sm w-full bg-white rounded-lg shadow-lg p-6">
+          <h1 className="text-2xl font-bold text-errandify-brown mb-4">Add Payment Method</h1>
+          <p className="text-gray-600 mb-6">
+            To post errands on Errandify, you need to add a payment method to pay for services. This is a one-time setup.
+          </p>
+          <button
+            onClick={() => navigate('/payment-setup')}
+            className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 mb-2"
+          >
+            Add Payment Method
+          </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="w-full border border-gray-300 py-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-50"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-errandify-bg">
