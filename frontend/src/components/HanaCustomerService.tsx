@@ -12,8 +12,8 @@ type Language = 'en' | 'zh' | 'yue';
 
 const LANGUAGE_NAMES: Record<Language, string> = {
   en: '🇬🇧 English',
-  zh: '🇨🇳 中文',
-  yue: '🇭🇰 粵語',
+  zh: '🇨🇳 中文 (帮帮乐)',
+  yue: '🇭🇰 粵語 (廣東話)',
 };
 
 const LANGUAGE_PROMPTS: Record<Language, string> = {
