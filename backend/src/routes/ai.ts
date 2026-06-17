@@ -459,6 +459,31 @@ function extractPostalCode(location: string): string | null {
   return null;
 }
 
+// Suggest budget based on category and keywords
+function suggestBudget(category: string, title: string): number | null {
+  const lowerTitle = title.toLowerCase();
+
+  // Check if budget is already mentioned
+  const budgetMatch = lowerTitle.match(/\$?(\d+(?:\.\d{2})?)/);
+  if (budgetMatch) {
+    return parseFloat(budgetMatch[1]);
+  }
+
+  // Default budget suggestions by category (SGD)
+  const defaultBudgets: Record<string, number> = {
+    'home-maintenance': 100,
+    'cleaning-laundry': 50,
+    'shopping-errands': 30,
+    'delivery-moving': 60,
+    'childcare-tutoring': 80,
+    'pet-care': 40,
+    'tech-support': 75,
+    'moving-help': 150,
+  };
+
+  return defaultBudgets[category] || 50;
+}
+
 // Suggest skills based on category and keywords
 function suggestSkills(category: string, title: string): string[] {
   const lowerTitle = title.toLowerCase();
@@ -578,6 +603,9 @@ router.post('/suggestions', (req: Request, res: Response) => {
     // Suggest skills
     const suggestedSkillsList = suggestSkills(suggestedCategory, correctedTitle);
 
+    // Suggest budget
+    const suggestedBudgetAmount = suggestBudget(suggestedCategory, correctedTitle);
+
     res.json({
       success: true,
       data: {
@@ -586,6 +614,7 @@ router.post('/suggestions', (req: Request, res: Response) => {
         hasCorrections,
         category: suggestedCategory,
         description: suggestedDescription,
+        budget: suggestedBudgetAmount,
         missingDetails,
         certifications: suggestedCerts,
         skills: suggestedSkillsList,

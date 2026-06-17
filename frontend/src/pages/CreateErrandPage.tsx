@@ -36,6 +36,7 @@ export default function CreateErrandPage() {
     suggestedDescription: '',
     correctedTitle: '',
     hasCorrections: false,
+    suggestedBudget: null as number | null,
     certifications: { required: [] as string[], optional: [] as string[] },
     skills: [] as string[],
     blocked: false,
@@ -83,6 +84,7 @@ export default function CreateErrandPage() {
           suggestedDescription: response.data.data.description,
           correctedTitle: response.data.data.correctedTitle || '',
           hasCorrections: response.data.data.hasCorrections,
+          suggestedBudget: response.data.data.budget || null,
           certifications: response.data.data.certifications || { required: [], optional: [] },
           skills: response.data.data.skills || [],
           blocked: false,
@@ -123,35 +125,50 @@ export default function CreateErrandPage() {
     }
   };
 
-  // Auto-apply AI suggestions to form when they arrive
+  // Auto-apply AI suggestions dynamically when title changes
   useEffect(() => {
+    if (!formData.title || formData.title.length < 4) return;
+
+    // Always update category from AI
     if (aiSuggestions.suggestedCategory) {
       setFormData((prev) => ({
         ...prev,
         category: aiSuggestions.suggestedCategory,
       }));
     }
+
+    // Always update description from AI
     if (aiSuggestions.suggestedDescription) {
       setFormData((prev) => ({
         ...prev,
         description: aiSuggestions.suggestedDescription,
       }));
     }
-    // Auto-apply suggested skills
+
+    // Auto-apply suggested skills (replace old suggestions with new ones)
     if (aiSuggestions.skills.length > 0) {
       setFormData((prev) => ({
         ...prev,
-        skills: [...new Set([...prev.skills, ...aiSuggestions.skills])], // Avoid duplicates
+        skills: aiSuggestions.skills, // Replace, don't merge
       }));
     }
-    // Auto-apply suggested certifications
+
+    // Auto-apply suggested certifications (always update)
     if (aiSuggestions.certifications.required.length > 0 || aiSuggestions.certifications.optional.length > 0) {
       setFormData((prev) => ({
         ...prev,
         certifications: aiSuggestions.certifications,
       }));
     }
-  }, [aiSuggestions.suggestedCategory, aiSuggestions.suggestedDescription, aiSuggestions.skills, aiSuggestions.certifications]);
+
+    // Auto-apply suggested budget
+    if (aiSuggestions.suggestedBudget) {
+      setFormData((prev) => ({
+        ...prev,
+        budget: aiSuggestions.suggestedBudget?.toString() || '',
+      }));
+    }
+  }, [formData.title, aiSuggestions.suggestedCategory, aiSuggestions.suggestedDescription, aiSuggestions.skills, aiSuggestions.certifications, aiSuggestions.suggestedBudget]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -347,7 +364,7 @@ export default function CreateErrandPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                  Budget (SGD)
+                  Budget (SGD) {aiSuggestions.suggestedBudget && <span className="text-xs text-gray-400">(suggested)</span>}
                 </label>
                 <input
                   type="number"
@@ -355,7 +372,11 @@ export default function CreateErrandPage() {
                   value={formData.budget}
                   onChange={handleChange}
                   placeholder="100"
-                  className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
+                  className={`w-full px-3 py-2 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-base ${
+                    aiSuggestions.suggestedBudget
+                      ? 'border-gray-200 text-gray-500'
+                      : 'border-gray-300 text-gray-900'
+                  }`}
                 />
               </div>
               <div>
