@@ -234,4 +234,75 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
   }
 });
 
+// Text-to-Speech endpoint - Convert Hana's text response to audio
+router.post('/chat/hana/speak', async (req: any, res: any) => {
+  try {
+    const { text, language = 'en' } = req.body;
+
+    if (!text) {
+      return res.status(400).json({ error: 'Text required' });
+    }
+
+    if (!config.qwen.apiKey) {
+      return res.status(500).json({ error: 'TTS service not configured' });
+    }
+
+    // Map language to Alibaba voice
+    const voiceMap: Record<string, string> = {
+      en: 'siyunenus', // English - Natural female voice (US)
+      zh: 'siying', // Mandarin - Natural female voice
+      yue: 'siyueyue', // Cantonese - Natural female voice
+    };
+
+    const voice = voiceMap[language] || voiceMap['en'];
+
+    console.log('[Hana TTS] Converting text to speech:', { language, voice, textLength: text.length });
+
+    const response = await axios.post(
+      'https://dashscope.aliyuncs.com/api/v1/services/tts/text-to-speech',
+      {
+        model: 'cosyvoice-v1',
+        input: {
+          text: text,
+        },
+        parameters: {
+          voice: voice,
+          rate: 0.9,
+          pitch: 1.0,
+          volume: 50,
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${config.qwen.apiKey}`,
+          'Content-Type': 'application/json',
+          'X-DashScope-DataInspection': 'enable',
+        },
+        responseType: 'arraybuffer',
+      }
+    );
+
+    console.log('[Hana TTS] Audio generated successfully');
+
+    // Return audio as base64
+    const audioBase64 = Buffer.from(response.data).toString('base64');
+    res.json({
+      success: true,
+      data: {
+        audio: `data:audio/wav;base64,${audioBase64}`,
+      },
+    });
+  } catch (error: any) {
+    console.error('TTS error:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+    res.status(500).json({
+      error: 'Failed to generate speech',
+      message: error.message,
+    });
+  }
+});
+
 export default router;

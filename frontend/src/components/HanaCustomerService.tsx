@@ -104,53 +104,42 @@ export default function HanaCustomerService() {
     }
   };
 
-  const handleSpeak = (text: string) => {
-    // Stop any ongoing speech
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-
-    // Set language based on selected language
-    const languageMap: Record<Language, string> = {
-      en: 'en-SG',
-      zh: 'zh-SG',
-      yue: 'zh-HK',
-    };
-    utterance.lang = languageMap[language];
-
-    // Try to find a female voice (20+ years old, Singapore accent)
-    const voices = window.speechSynthesis.getVoices();
-    const femaleVoice = voices.find(voice =>
-      voice.lang.startsWith(languageMap[language].split('-')[0]) &&
-      voice.name.toLowerCase().includes('female')
-    ) || voices.find(voice =>
-      voice.lang.startsWith(languageMap[language].split('-')[0])
-    );
-
-    if (femaleVoice) {
-      utterance.voice = femaleVoice;
-    }
-
-    utterance.rate = 0.95;
-    utterance.pitch = 1.1;
-
-    utterance.onstart = () => {
-      console.log('[Hana] Speaking:', text.substring(0, 50));
+  const handleSpeak = async (text: string) => {
+    try {
       setIsSpeaking(true);
-    };
+      console.log('[Hana TTS] Requesting audio for:', text.substring(0, 50));
 
-    utterance.onend = () => {
-      console.log('[Hana] Finished speaking');
+      const response = await axios.post('/api/chat/hana/speak', {
+        text,
+        language,
+      });
+
+      const audioUrl = response.data?.data?.audio;
+      if (!audioUrl) {
+        throw new Error('No audio data received');
+      }
+
+      console.log('[Hana TTS] Playing audio');
+      const audio = new Audio(audioUrl);
+
+      audio.onended = () => {
+        console.log('[Hana] Audio finished');
+        setIsSpeaking(false);
+      };
+
+      audio.onerror = (error: any) => {
+        console.error('[Hana] Audio playback error:', error);
+        setIsSpeaking(false);
+      };
+
+      audio.play().catch((error: any) => {
+        console.error('[Hana] Failed to play audio:', error);
+        setIsSpeaking(false);
+      });
+    } catch (error: any) {
+      console.error('[Hana TTS] Error:', error.response?.data || error.message);
       setIsSpeaking(false);
-    };
-
-    utterance.onerror = (event: any) => {
-      console.error('[Hana] Speech synthesis error:', event.error);
-      setIsSpeaking(false);
-    };
-
-    synthRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
+    }
   };
 
   const handleSendMessage = async () => {
