@@ -263,31 +263,44 @@ Ready to post?`;
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-12">
           {/* Hana Avatar Section */}
-          <div className="flex justify-center">
+          <div className="flex justify-center items-start">
             <div className="relative">
-              {/* Avatar Image Placeholder - will use real image */}
-              <div className="w-64 h-80 bg-gradient-to-br from-errandify-bg to-orange-100 rounded-2xl flex items-center justify-center border-4 border-errandify-orange shadow-lg">
-                <div className="text-center">
-                  <p className="text-6xl mb-4">👩</p>
-                  <p className="text-gray-600 text-sm">Hana Avatar</p>
-                  <p className="text-gray-500 text-xs mt-2">(Add real image)</p>
-                </div>
-              </div>
-
               {/* Speech Bubble */}
               {hanaMessage && (
-                <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-96">
+                <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-96 z-10">
                   <div className="bg-errandify-bg border-2 border-errandify-orange rounded-3xl px-8 py-6 shadow-xl">
-                    <p className="text-gray-800 text-center whitespace-pre-line leading-relaxed">
+                    <p className="text-gray-800 text-center whitespace-pre-line leading-relaxed text-base">
                       {hanaMessage}
                     </p>
                     {/* Tail */}
                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full">
-                      <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-errandify-bg"></div>
+                      <div className="w-0 h-0 border-l-12 border-r-12 border-t-12 border-l-transparent border-r-transparent border-t-errandify-bg"></div>
                     </div>
                   </div>
                 </div>
               )}
+
+              {/* Hana Avatar Image - Half Body */}
+              <img
+                src="/images/hana-half-body.png"
+                alt="Hana"
+                className="w-96 h-auto object-contain drop-shadow-2xl"
+                onError={(e) => {
+                  // Fallback if image doesn't exist
+                  const img = e.currentTarget;
+                  img.style.display = 'none';
+                  const fallback = document.createElement('div');
+                  fallback.className = 'w-96 h-80 bg-gradient-to-br from-errandify-bg to-orange-100 rounded-2xl flex items-center justify-center border-4 border-errandify-orange shadow-lg';
+                  fallback.innerHTML = `
+                    <div class="text-center">
+                      <p class="text-6xl mb-4">👩</p>
+                      <p class="text-gray-600 text-sm">Hana Avatar</p>
+                      <p class="text-gray-500 text-xs mt-2">(Place hana-half-body.png in public/images/)</p>
+                    </div>
+                  `;
+                  img.parentElement?.appendChild(fallback);
+                }}
+              />
             </div>
           </div>
 
