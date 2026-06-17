@@ -97,7 +97,7 @@ export default function HanaTaskCreation({
       // Update task data with extracted info
       const updatedTaskData: TaskData = {
         title: extracted.title || userInput.substring(0, 50),
-        description: userInput,
+        description: '', // Don't auto-fill description, let AI suggest it
         category: extracted.category || '',
         location: extracted.location || '',
         date: extracted.date || '',
