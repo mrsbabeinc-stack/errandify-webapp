@@ -38,6 +38,7 @@ export default function HanaTaskCreation({
     description: '',
     category: '',
     location: '',
+    fullAddress: '',
     date: '',
     time: '',
     duration: '',
