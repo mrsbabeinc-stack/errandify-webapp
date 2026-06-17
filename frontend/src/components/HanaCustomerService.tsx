@@ -122,47 +122,38 @@ export default function HanaCustomerService() {
   };
 
   const speakWithBrowserTTS = (text: string) => {
+    // For Chinese, ALWAYS use native Web Speech API (better female voice)
+    if (language === 'zh' || language === 'yue') {
+      console.log('[Hana] Using native Web Speech for Chinese/Cantonese - skipping ResponsiveVoice');
+      fallbackBrowserTTS(text);
+      return;
+    }
+
+    // For English, use ResponsiveVoice
     const responsiveVoice = (window as any).responsiveVoice;
 
     if (responsiveVoice && responsiveVoice.isReady) {
-      console.log('[Hana] Using ResponsiveVoice for warm, neighbourly delivery');
+      console.log('[Hana] Using ResponsiveVoice for English');
 
-      // Female voice selection for warm, friendly Singaporean assistant
-      const voiceMap: Record<Language, string> = {
-        en: 'Singapore Female', // Natural Singapore English - female
-        zh: 'Mandarin Female', // Mandarin Chinese - natural female voice
-        yue: 'Cantonese Female', // Cantonese - natural female voice
-      };
-
-      const voice = voiceMap[language] || voiceMap['en'];
-
-      console.log('[Hana] Speaking with voice:', voice, 'for language:', language);
-
-      // Adjust rate and pitch based on language
-      const rate = language === 'en' ? 1.2 : 1.0; // Much faster for English (high energy), normal for others
-      const pitch = language === 'en' ? 1.25 : language === 'yue' ? 1.05 : 1.0; // Higher for English, slightly higher for Cantonese (natural), normal for Mandarin
-
-      console.log('[Hana] ResponsiveVoice speaking with:', { voice, rate, pitch, language });
-
-      responsiveVoice.speak(text, voice, {
-        rate,
-        pitch,
+      responsiveVoice.speak(text, 'Singapore Female', {
+        rate: 1.2,
+        pitch: 1.25,
         volume: 1.0,
         onstart: () => {
-          console.log('[Hana] Voice started - voice name:', voice);
+          console.log('[Hana] Speaking');
           setIsSpeaking(true);
         },
         onend: () => {
-          console.log('[Hana] Voice ended');
+          console.log('[Hana] Done');
           setIsSpeaking(false);
         },
         onerror: (error: any) => {
-          console.error('[Hana] Voice error:', error);
+          console.error('[Hana] Error:', error);
           setIsSpeaking(false);
         },
       });
     } else {
-      console.log('[Hana] ResponsiveVoice not ready, using browser TTS');
+      console.log('[Hana] ResponsiveVoice not ready');
       fallbackBrowserTTS(text);
     }
   };
@@ -178,42 +169,52 @@ export default function HanaCustomerService() {
     };
     utterance.lang = languageMap[language];
 
-    // Find female voice
+    // Get available voices
     const voices = window.speechSynthesis.getVoices();
-    const targetLang = languageMap[language];
+    console.log('[Hana] Available voices for', language + ':', voices.map(v => v.name));
 
-    // Filter for female voices in the target language
+    const targetLang = languageMap[language].split('-')[0];
+
+    // Filter for female voices - STRICT filtering for Chinese
     const femaleVoices = voices.filter(voice => {
       const voiceLang = voice.lang.toLowerCase();
-      const langMatch = voiceLang.startsWith(targetLang.split('-')[0]);
+      const langMatch = voiceLang.startsWith(targetLang);
+
+      // For Chinese, prefer voices with female indicators
       const isFemale = voice.name.toLowerCase().includes('female') ||
                        voice.name.toLowerCase().includes('woman') ||
-                       voice.name.toLowerCase().includes('samantha') ||
-                       voice.name.toLowerCase().includes('victoria') ||
-                       voice.name.toLowerCase().includes('karen') ||
-                       voice.name.toLowerCase().includes('moira') ||
-                       voice.name.toLowerCase().includes('fiona');
+                       voice.name.toLowerCase().includes('female') ||
+                       // Exclude male voices explicitly
+                       (!voice.name.toLowerCase().includes('male') &&
+                        !voice.name.toLowerCase().includes('man'));
+
       return langMatch && isFemale;
     });
 
+    console.log('[Hana] Female voices found:', femaleVoices.map(v => v.name));
+
     if (femaleVoices.length > 0) {
       utterance.voice = femaleVoices[0];
+      console.log('[Hana] Selected voice:', femaleVoices[0].name);
+    } else {
+      console.log('[Hana] No female voice found, using system default');
     }
 
-    utterance.rate = 0.95;
-    utterance.pitch = 1.2;
+    utterance.rate = language === 'zh' ? 0.9 : 0.95;
+    utterance.pitch = language === 'zh' ? 1.3 : 1.2; // Higher pitch for Chinese to sound younger/more female
 
     utterance.onstart = () => {
-      console.log('[Hana] Browser TTS started');
+      console.log('[Hana] Native TTS started with voice:', utterance.voice?.name);
       setIsSpeaking(true);
     };
 
     utterance.onend = () => {
-      console.log('[Hana] Browser TTS finished');
+      console.log('[Hana] Native TTS finished');
       setIsSpeaking(false);
     };
 
-    utterance.onerror = () => {
+    utterance.onerror = (event: any) => {
+      console.error('[Hana] Native TTS error:', event.error);
       setIsSpeaking(false);
     };
 
