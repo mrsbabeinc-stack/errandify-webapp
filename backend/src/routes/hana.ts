@@ -245,14 +245,15 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
 
     console.log('[Hana TTS] Converting text to speech:', { language, textLength: text.length });
 
-    // Use Google Cloud Text-to-Speech via REST API (free tier available)
-    // For now, return a placeholder and use client-side Google Translate
+    // For free TTS, we return a signal to use browser TTS
+    // This allows the frontend to use Web Speech API with proper voice selection
+
     res.json({
       success: true,
       data: {
-        method: 'google-translate',
+        method: 'browser-tts',
         language,
-        text,
+        message: 'Use browser TTS with system voices',
       },
     });
   } catch (error: any) {
