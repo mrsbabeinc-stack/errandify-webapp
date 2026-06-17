@@ -1,10 +1,8 @@
 import { Outlet } from 'react-router-dom';
-import { useState } from 'react';
 import BottomNav from './BottomNav';
 import RoleToggle from './RoleToggle';
 import NotificationIcon from './NotificationIcon';
-import HanaAssistant from './HanaAssistant';
-import HanaTaskCreation from './HanaTaskCreation';
+import FloatingHana from './FloatingHana';
 
 interface LayoutProps {
   userRole: 'asker' | 'doer';
@@ -12,41 +10,7 @@ interface LayoutProps {
   onLogout: () => void;
 }
 
-interface TaskData {
-  title: string;
-  description: string;
-  category: string;
-  location: string;
-  date: string;
-  time: string;
-  budget: string;
-  notes: string;
-}
-
 export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps) {
-  const [showHanaChat, setShowHanaChat] = useState(false);
-  const [taskDataFromHana, setTaskDataFromHana] = useState<TaskData | null>(null);
-
-  const handleHanaComplete = (taskData: TaskData) => {
-    setTaskDataFromHana(taskData);
-    setShowHanaChat(false);
-
-    // Switch to asker role and navigate to create errand with prefilled data
-    onRoleChange('asker');
-
-    setTimeout(() => {
-      window.location.href = `/create-errand?prefilled=${encodeURIComponent(JSON.stringify(taskData))}`;
-    }, 100);
-  };
-
-  const handleSkipToManual = () => {
-    setShowHanaChat(false);
-    // Switch to asker role and navigate directly to manual form
-    onRoleChange('asker');
-    setTimeout(() => {
-      window.location.href = '/create-errand';
-    }, 100);
-  };
 
   return (
     <div className="flex flex-col h-screen bg-errandify-bg">
@@ -61,22 +25,13 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
         <Outlet />
       </main>
 
-      {/* Hana Assistant - Floating Button */}
-      <HanaAssistant />
-
-      {/* Hana Task Creation Modal */}
-      <HanaTaskCreation
-        isOpen={showHanaChat}
-        onClose={() => setShowHanaChat(false)}
-        onComplete={handleHanaComplete}
-        onSkipToManual={handleSkipToManual}
-      />
+      {/* Floating Hana - Always Available */}
+      <FloatingHana />
 
       {/* Bottom Navigation */}
       <BottomNav
         onLogout={onLogout}
         userRole={userRole}
-        onCreateTask={() => setShowHanaChat(true)}
       />
     </div>
   );
