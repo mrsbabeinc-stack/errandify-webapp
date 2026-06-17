@@ -128,6 +128,7 @@ router.post('/hana/customer-service', authMiddleware, async (req: any, res: any)
     // Try Qwen API if available
     if (config.qwen.apiKey) {
       try {
+        console.log('[DEBUG] Attempting Qwen API call with key:', config.qwen.apiKey.substring(0, 20) + '...');
         const systemPrompt = `You are Hana, a helpful AI assistant for Errandify. Be warm, brief (2-3 sentences), and helpful.`;
 
         const response = await axios.post(
@@ -150,12 +151,19 @@ router.post('/hana/customer-service', authMiddleware, async (req: any, res: any)
           }
         );
 
+        console.log('[DEBUG] Qwen API response received:', response.data);
         reply = response.data.output?.text?.trim() || reply;
+        console.log('[DEBUG] Qwen reply:', reply);
       } catch (apiError: any) {
-        console.error('Qwen API error:', apiError.message);
+        console.error('Qwen API error:', {
+          message: apiError.message,
+          status: apiError.response?.status,
+          data: apiError.response?.data,
+        });
         // Fall through to dummy responses below
       }
     } else {
+      console.log('[DEBUG] No Qwen API key configured, using fallback responses');
       // Dummy responses when no API key available
       const messageLower = message.toLowerCase();
 
