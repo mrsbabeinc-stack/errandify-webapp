@@ -10,6 +10,7 @@ import CreateErrandPage from './pages/CreateErrandPage';
 import EditErrandPage from './pages/EditErrandPage';
 import HanaTaskCreationPage from './pages/HanaTaskCreationPage';
 import BrowseErrandsPage from './pages/BrowseErrandsPage';
+import DoerBrowsePage from './pages/DoerBrowsePage';
 import ErrandsPage from './pages/ErrandsPage';
 import ErrandDetailPage from './pages/ErrandDetailPage';
 import ChatPage from './pages/ChatPage';
@@ -130,7 +131,19 @@ export default function App() {
           }
         />
 
-        {/* Browse errands (doer flow) */}
+        {/* Browse all errands (doer quick access) */}
+        <Route
+          path="/browse"
+          element={
+            isAuthenticated ? (
+              <DoerBrowsePage />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        {/* Browse errands by category (doer flow) */}
         <Route
           path="/browse-errands/:categoryId"
           element={
