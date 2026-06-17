@@ -438,14 +438,31 @@ export default function CreateErrandPage() {
 
 
   const handleSubmit = async () => {
+    console.log('[DEBUG] handleSubmit called with formData:', formData);
+
     if (!formData.title || !formData.category) {
       setError('Title and category are required');
+      console.error('[DEBUG] Missing title or category');
       return;
     }
 
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
+      console.log('[DEBUG] Token exists:', !!token);
+
+      if (!token) {
+        setError('Authentication required. Please log in again.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('[DEBUG] Posting errand with:', {
+        title: formData.title,
+        category: formData.category,
+        budget: formData.budget,
+      });
+
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
         {
@@ -466,13 +483,21 @@ export default function CreateErrandPage() {
         }
       );
 
+      console.log('[DEBUG] Response:', response.data);
+
       if (response.data.success) {
+        console.log('[DEBUG] Errand posted successfully!');
         // Show dummy payment confirmation
         setPaymentRequired(false);
         alert('✓ Errand posted successfully! Dummy payment confirmed.');
         navigate('/home');
+      } else {
+        console.error('[DEBUG] Response not successful:', response.data);
+        setError('Failed to post errand');
       }
     } catch (err: any) {
+      console.error('[DEBUG] Error caught:', err);
+      console.error('[DEBUG] Error response:', err.response?.data);
       setError(err.response?.data?.error || 'Failed to create errand');
     } finally {
       setLoading(false);
