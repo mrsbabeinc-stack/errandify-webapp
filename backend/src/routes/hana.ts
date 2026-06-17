@@ -126,6 +126,7 @@ router.post('/hana/customer-service', authMiddleware, async (req: any, res: any)
     let reply = 'How can I help you today?';
 
     // Try Qwen API if available
+    console.log('[DEBUG] Config check - Has API key?', !!config.qwen.apiKey, 'Key preview:', config.qwen.apiKey?.substring(0, 20));
     if (config.qwen.apiKey) {
       try {
         console.log('[DEBUG] Attempting Qwen API call with key:', config.qwen.apiKey.substring(0, 20) + '...');
@@ -158,7 +159,13 @@ router.post('/hana/customer-service', authMiddleware, async (req: any, res: any)
         console.error('Qwen API error:', {
           message: apiError.message,
           status: apiError.response?.status,
+          statusText: apiError.response?.statusText,
           data: apiError.response?.data,
+          config: apiError.config ? {
+            url: apiError.config.url,
+            method: apiError.config.method,
+            headers: apiError.config.headers,
+          } : undefined,
         });
         // Fall through to dummy responses below
       }
