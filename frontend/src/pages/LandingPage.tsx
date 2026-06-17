@@ -8,17 +8,17 @@ export default function LandingPage() {
       {/* Main Container - Maximize Photo + Text */}
       <div className="w-full flex flex-col items-center justify-between h-full">
         {/* Family Photo - Narrower & Proportionate */}
-        <div className="max-w-xs w-full flex-1 overflow-hidden rounded-b-3xl shadow-lg mx-auto">
-          {/* Family Photo - No Button */}
+        <div className="max-w-xs w-full flex-1 rounded-b-3xl shadow-lg mx-auto overflow-hidden flex items-center justify-center bg-gray-100">
+          {/* Family Photo - No Button - Contain to preserve logo */}
           <img
             src="/images/family_no_button.jpeg"
             alt="Our Community Family"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
         </div>
 
         {/* Bottom Section - Text & Button */}
-        <div className="w-full bg-gradient-to-b from-orange-50 to-orange-100 px-4 py-4 flex flex-col justify-end items-center">
+        <div className="w-full bg-gradient-to-b from-orange-50 to-orange-100 px-4 py-4 flex flex-col justify-end items-center flex-shrink-0">
           {/* Value Proposition - Compact */}
           <div className="max-w-xs w-full space-y-1 mb-3">
             <div className="flex items-start gap-2">
