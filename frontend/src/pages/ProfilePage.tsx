@@ -21,7 +21,7 @@ export default function ProfilePage({ userRole }: ProfilePageProps) {
       <div className="mb-6">
         <h2 className="text-sm font-bold text-errandify-brown mb-3 flex items-center gap-2">
           <span>👤</span>
-          <span>My Account</span>
+          <span>MyAccount</span>
         </h2>
         <div className="space-y-2">
           {/* View Profile */}
