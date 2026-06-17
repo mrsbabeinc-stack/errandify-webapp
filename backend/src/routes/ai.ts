@@ -1134,9 +1134,9 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
           // 50-59: Central West
           '50': 'Redhill', '51': 'Queenstown', '52': 'Commonwealth', '53': 'Pasir Panjang', '54': 'Pasir Panjang',
           '55': 'Bukit Timah', '56': 'Bukit Timah', '57': 'Holland', '58': 'Tanglin', '59': 'Clementi',
-          // 60-69: North & North-East
-          '60': 'Bukit Timah', '61': 'Bishan', '62': 'Bishan', '63': 'Serangoon', '64': 'Serangoon',
-          '65': 'Serangoon', '66': 'Serangoon', '67': 'Aljunied', '68': 'Aljunied', '69': 'Geylang',
+          // 60-69: North & North-East (Bishan, Ang Mo Kio, Serangoon, Choa Chu Kang, Geylang)
+          '60': 'Bukit Timah', '61': 'Bishan', '62': 'Bishan', '63': 'Ang Mo Kio', '64': 'Ang Mo Kio',
+          '65': 'Serangoon', '66': 'Serangoon', '67': 'Ang Mo Kio', '68': 'Choa Chu Kang', '69': 'Geylang',
           // 70-79: East
           '70': 'Bedok', '71': 'Bedok', '72': 'Bedok', '73': 'Bedok', '74': 'Tampines',
           '75': 'Tampines', '76': 'Tampines', '77': 'Tampines', '78': 'Tampines', '79': 'Sengkang',
