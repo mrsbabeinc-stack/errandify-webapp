@@ -318,7 +318,7 @@ export default function CreateErrandPage() {
         }));
       }
 
-      // Extract budget: look for $ or trailing number
+      // Extract budget: look for $ prefix, or 2-3 digit numbers (avoid 6-digit postal codes)
       const dollarMatch = lowerValue.match(/\$\s*(\d+)/);
       if (dollarMatch) {
         setFormData((prev) => ({
@@ -326,12 +326,15 @@ export default function CreateErrandPage() {
           budget: dollarMatch[1],
         }));
       } else {
-        // Try trailing number
-        const trailingNum = lowerValue.match(/(\d+)\s*$/);
-        if (trailingNum) {
+        // Find all numbers that are 1-3 digits (typical budget amounts)
+        // Avoid 6-digit numbers (postal codes)
+        const allNumbers = lowerValue.match(/\b(\d{1,3})\b/g);
+        if (allNumbers && allNumbers.length > 0) {
+          // Use the last 1-3 digit number found (likely the budget)
+          const lastSmallNumber = allNumbers[allNumbers.length - 1];
           setFormData((prev) => ({
             ...prev,
-            budget: trailingNum[1],
+            budget: lastSmallNumber,
           }));
         }
       }
