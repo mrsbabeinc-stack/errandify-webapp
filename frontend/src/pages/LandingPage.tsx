@@ -7,23 +7,6 @@ export default function LandingPage() {
 
       {/* Main Container */}
       <div className="w-full max-w-sm flex flex-col items-center justify-center">
-        {/* Logo Section */}
-        <div className="mb-6 text-center">
-          <div className="flex flex-col items-center gap-2 mb-2">
-            <img
-              src="/images/Errandify Logo.png"
-              alt="Errandify Logo"
-              className="w-24 h-24 object-contain"
-            />
-            <h1 className="text-2xl font-bold text-errandify-brown">
-              ERRANDIFY
-            </h1>
-          </div>
-          <p className="text-gray-600 text-xs">
-            Simplifying lives. Amplifying humanity.
-          </p>
-        </div>
-
         {/* Meet Our Friends Section - Family Photo */}
         <div className="w-full mb-4 rounded-2xl overflow-hidden shadow-lg relative">
           {/* Family Photo - No Button */}
