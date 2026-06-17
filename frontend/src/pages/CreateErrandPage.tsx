@@ -6,17 +6,17 @@ export default function CreateErrandPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState<'quick' | 'details' | 'review'>('quick');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    startDate: '',
+    duration: '',
+    durationUnit: 'Min' as 'Min' | 'Hr' | 'Week' | 'Month',
     budget: '',
-    deadline: '',
-    location: '',
-    urgency: 'normal' as 'low' | 'normal' | 'urgent',
+    isRecurring: false,
+    recurringSchedule: '',
   });
 
-  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -31,67 +31,18 @@ export default function CreateErrandPage() {
     'moving-help': 'Moving Help',
   };
 
-  // Smart suggestions based on category
-  const categoryHints: Record<string, { hint: string; examples: string[] }> = {
-    'pet-care': {
-      hint: 'Need help with your pet?',
-      examples: ['Dog walking', 'Pet sitting', 'Grooming', 'Vet visit help'],
-    },
-    'cleaning-laundry': {
-      hint: 'Tell us what needs cleaning',
-      examples: ['Apartment cleaning', 'Office cleaning', 'Laundry service', 'Deep clean'],
-    },
-    'shopping-errands': {
-      hint: 'What groceries or items?',
-      examples: ['Grocery shopping', 'Mall shopping', 'Pharmacy run', 'Market errands'],
-    },
-    'tech-support': {
-      hint: 'What tech issue?',
-      examples: ['Phone setup', 'Computer repair', 'Internet setup', 'App help'],
-    },
-    'childcare-tutoring': {
-      hint: 'What kind of help?',
-      examples: ['Babysitting', 'Tutoring', 'Homework help', 'After-school care'],
-    },
-    'home-maintenance': {
-      hint: 'What needs fixing?',
-      examples: ['Painting', 'Plumbing', 'Electrical', 'General repair'],
-    },
-    'delivery-moving': {
-      hint: 'What needs delivery?',
-      examples: ['Furniture delivery', 'Package pickup', 'Small moves', 'Item transport'],
-    },
-    'moving-help': {
-      hint: 'Moving help needed?',
-      examples: ['Packing help', 'Heavy lifting', 'Furniture moving', 'Loading boxes'],
-    },
-  };
-
-  const getCurrentHint = () => categoryHints[categoryId || ''] || { hint: 'Describe your task', examples: [] };
-
-  const handleQuickInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setFormData((prev) => ({ ...prev, title: value }));
-
-    // Auto-generate suggestions based on input
-    if (value.length > 2) {
-      const hints = getCurrentHint().examples.filter((ex) =>
-        ex.toLowerCase().includes(value.toLowerCase())
-      );
-      setSuggestions(hints);
-    }
-  };
-
-  const selectSuggestion = (suggestion: string) => {
-    setFormData((prev) => ({ ...prev, title: suggestion }));
-    setSuggestions([]);
-  };
+  const durationUnits = ['Min', 'Hr', 'Week', 'Month'];
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,6 +53,29 @@ export default function CreateErrandPage() {
     try {
       const token = localStorage.getItem('token');
 
+      // Convert duration to deadline date
+      let deadline = null;
+      if (formData.startDate) {
+        const startDate = new Date(formData.startDate);
+        const duration = parseInt(formData.duration) || 0;
+
+        switch (formData.durationUnit) {
+          case 'Min':
+            startDate.setMinutes(startDate.getMinutes() + duration);
+            break;
+          case 'Hr':
+            startDate.setHours(startDate.getHours() + duration);
+            break;
+          case 'Week':
+            startDate.setDate(startDate.getDate() + duration * 7);
+            break;
+          case 'Month':
+            startDate.setMonth(startDate.getMonth() + duration);
+            break;
+        }
+        deadline = startDate.toISOString();
+      }
+
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
         {
@@ -109,9 +83,9 @@ export default function CreateErrandPage() {
           description: formData.description,
           category: categoryId,
           budget: formData.budget ? parseFloat(formData.budget) : null,
-          deadline: formData.deadline || null,
-          location: formData.location,
-          urgency: formData.urgency,
+          deadline,
+          isRecurring: formData.isRecurring,
+          recurringSchedule: formData.recurringSchedule || null,
         },
         {
           headers: {
@@ -128,10 +102,10 @@ export default function CreateErrandPage() {
     }
   };
 
-  // Step 1: Quick Input
-  if (step === 'quick') {
-    return (
-      <div className="min-h-screen bg-errandify-bg px-4 py-6">
+  return (
+    <div className="min-h-screen bg-errandify-bg px-4 py-6">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
@@ -140,261 +114,192 @@ export default function CreateErrandPage() {
             ← Back
           </button>
           <h1 className="text-3xl font-bold text-errandify-brown mb-2">
-            {getCurrentHint().hint}
+            Create Your Errand
           </h1>
-          <p className="text-gray-600">
-            {categoryNames[categoryId || '']} • Let's keep it quick!
-          </p>
+
+          {/* Progress Bar */}
+          <div className="flex gap-1 mt-4">
+            <div className="flex-1 h-1 bg-errandify-orange rounded"></div>
+            <div className="flex-1 h-1 bg-gray-300 rounded"></div>
+            <div className="flex-1 h-1 bg-gray-300 rounded"></div>
+            <div className="flex-1 h-1 bg-gray-300 rounded"></div>
+          </div>
         </div>
 
-        <form onSubmit={(e) => { e.preventDefault(); setStep('details'); }} className="space-y-6 pb-24">
-          {/* Quick Task Title Input */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6 pb-24">
+          {/* Errand Title */}
           <div>
+            <label className="block text-lg font-semibold text-errandify-brown mb-2">
+              Errand Title
+            </label>
             <input
               type="text"
-              placeholder="What do you need help with?"
+              name="title"
               value={formData.title}
-              onChange={handleQuickInput}
-              autoFocus
-              className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-errandify-orange focus:border-transparent"
+              onChange={handleChange}
+              placeholder="Enter Errand Title"
+              required
+              className="w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg"
             />
           </div>
 
-          {/* Smart Suggestions */}
-          {suggestions.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs text-gray-500 font-semibold">SUGGESTIONS</p>
-              <div className="grid gap-2">
-                {suggestions.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    onClick={() => selectSuggestion(suggestion)}
-                    className="text-left px-4 py-3 bg-white border border-pink-200 rounded-lg hover:bg-pink-50 transition-colors text-errandify-brown"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Quick Examples */}
-          {suggestions.length === 0 && getCurrentHint().examples.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs text-gray-500 font-semibold">EXAMPLES</p>
-              <div className="grid grid-cols-2 gap-2">
-                {getCurrentHint().examples.slice(0, 4).map((example) => (
-                  <button
-                    key={example}
-                    type="button"
-                    onClick={() => selectSuggestion(example)}
-                    className="text-left px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-errandify-brown"
-                  >
-                    {example}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Next Button */}
-          <div className="fixed bottom-24 left-0 right-0 px-4 bg-gradient-to-t from-errandify-bg via-errandify-bg to-transparent pt-4">
-            <button
-              type="submit"
-              disabled={!formData.title.trim()}
-              className="w-full bg-errandify-orange text-white py-4 rounded-xl font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
-            >
-              Continue → Add Details
-            </button>
-          </div>
-        </form>
-      </div>
-    );
-  }
-
-  // Step 2: Details
-  if (step === 'details') {
-    return (
-      <div className="min-h-screen bg-errandify-bg px-4 py-6">
-        <div className="mb-6">
-          <button
-            onClick={() => setStep('quick')}
-            className="text-errandify-orange font-semibold mb-3"
-          >
-            ← Back
-          </button>
-          <h1 className="text-3xl font-bold text-errandify-brown mb-2">
-            Tell us more
-          </h1>
-          <p className="text-gray-600">Help doers understand your task better</p>
-        </div>
-
-        <form onSubmit={(e) => { e.preventDefault(); setStep('review'); }} className="space-y-4 pb-32">
-          {/* Description */}
+          {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-errandify-brown mb-2">
-              Description
+            <label className="block text-lg font-semibold text-errandify-brown mb-2 flex items-center gap-1">
+              Category <span className="text-blue-500">●</span>
+            </label>
+            <select
+              name="category"
+              value={categoryId || ''}
+              disabled
+              className="w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none text-gray-500 text-lg"
+            >
+              <option value="">Select Category</option>
+              {Object.entries(categoryNames).map(([id, name]) => (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Errand Description */}
+          <div>
+            <label className="block text-lg font-semibold text-errandify-brown mb-2">
+              Errand Description
             </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder="Add any details that would help..."
+              placeholder="Enter Errand Description"
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange resize-none"
+              className="w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg resize-none"
             />
           </div>
 
-          {/* Location */}
+          {/* Start Errand Date */}
           <div>
-            <label className="block text-sm font-medium text-errandify-brown mb-2">
-              Location
+            <label className="block text-lg font-semibold text-errandify-brown mb-2 flex items-center gap-1">
+              Start Errand Date <span className="text-blue-500">●</span>
             </label>
             <input
-              type="text"
-              name="location"
-              value={formData.location}
+              type="date"
+              name="startDate"
+              value={formData.startDate}
               onChange={handleChange}
-              placeholder="e.g. Bukit Merah, Singapore"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+              required
+              className="w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg"
             />
           </div>
 
-          {/* Urgency */}
+          {/* Expected Duration */}
           <div>
-            <label className="block text-sm font-medium text-errandify-brown mb-2">
-              How urgent?
+            <label className="block text-lg font-semibold text-errandify-brown mb-2">
+              Expected Duration
             </label>
-            <select
-              name="urgency"
-              value={formData.urgency}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
-            >
-              <option value="low">Not urgent (flexible on timing)</option>
-              <option value="normal">Normal (within a few days)</option>
-              <option value="urgent">Urgent (ASAP)</option>
-            </select>
+            <div className="flex gap-3">
+              <input
+                type="number"
+                name="duration"
+                value={formData.duration}
+                onChange={handleChange}
+                placeholder="Enter Value"
+                min="0"
+                className="flex-1 px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg"
+              />
+              <select
+                name="durationUnit"
+                value={formData.durationUnit}
+                onChange={handleChange}
+                className="px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg"
+              >
+                {durationUnits.map((unit) => (
+                  <option key={unit} value={unit}>
+                    {unit}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {/* Budget */}
+          {/* Total Fee */}
           <div>
-            <label className="block text-sm font-medium text-errandify-brown mb-2">
-              Budget (SGD) - Optional
+            <label className="block text-lg font-semibold text-errandify-brown mb-2">
+              Total Fee
             </label>
-            <input
-              type="number"
-              name="budget"
-              value={formData.budget}
-              onChange={handleChange}
-              placeholder="0.00"
-              step="0.01"
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
-            />
+            <div className="flex gap-3">
+              <input
+                type="number"
+                name="budget"
+                value={formData.budget}
+                onChange={handleChange}
+                placeholder="Enter amount"
+                min="0"
+                step="0.01"
+                className="flex-1 px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg"
+              />
+              <div className="px-4 py-3 border-b-2 border-gray-300 text-lg font-semibold text-errandify-brown">
+                SGD
+              </div>
+            </div>
           </div>
 
-          {/* Deadline */}
+          {/* Recurring Errand */}
           <div>
-            <label className="block text-sm font-medium text-errandify-brown mb-2">
-              When do you need this? - Optional
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="isRecurring"
+                checked={formData.isRecurring}
+                onChange={handleChange}
+                className="w-5 h-5 cursor-pointer"
+              />
+              <span className="text-lg font-semibold text-errandify-brown">
+                Do you want this errand to repeat on a regular schedule?
+              </span>
             </label>
-            <input
-              type="datetime-local"
-              name="deadline"
-              value={formData.deadline}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
-            />
           </div>
 
-          {/* Next Button */}
-          <div className="fixed bottom-24 left-0 right-0 px-4 bg-gradient-to-t from-errandify-bg via-errandify-bg to-transparent pt-4">
+          {/* Recurring Schedule (conditional) */}
+          {formData.isRecurring && (
+            <div>
+              <label className="block text-lg font-semibold text-errandify-brown mb-2">
+                Recurring Schedule
+              </label>
+              <select
+                name="recurringSchedule"
+                value={formData.recurringSchedule}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-lg"
+              >
+                <option value="">Select schedule</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Bi-weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <div className="fixed bottom-6 left-0 right-0 px-4 bg-gradient-to-t from-errandify-bg via-errandify-bg to-transparent pt-4">
             <button
               type="submit"
-              className="w-full bg-errandify-orange text-white py-4 rounded-xl font-bold hover:bg-opacity-90 transition-colors text-lg"
+              disabled={loading || !formData.title.trim() || !formData.startDate}
+              className="w-full bg-errandify-orange text-white py-4 rounded-xl font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
             >
-              Review & Post
+              {loading ? '⏳ Creating...' : '✨ Post Errand'}
             </button>
           </div>
         </form>
       </div>
-    );
-  }
-
-  // Step 3: Review
-  return (
-    <div className="min-h-screen bg-errandify-bg px-4 py-6">
-      <div className="mb-6">
-        <button
-          onClick={() => setStep('details')}
-          className="text-errandify-orange font-semibold mb-3"
-        >
-          ← Edit
-        </button>
-        <h1 className="text-3xl font-bold text-errandify-brown mb-2">
-          Ready to post?
-        </h1>
-        <p className="text-gray-600">Here's what doers will see</p>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4 pb-32">
-        {/* Preview Card */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <h2 className="text-2xl font-bold text-errandify-brown mb-4">{formData.title}</h2>
-
-          {formData.description && (
-            <p className="text-gray-700 mb-4">{formData.description}</p>
-          )}
-
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            {formData.location && (
-              <div>
-                <p className="text-gray-500">Location</p>
-                <p className="font-semibold text-errandify-brown">{formData.location}</p>
-              </div>
-            )}
-            {formData.budget && (
-              <div>
-                <p className="text-gray-500">Budget</p>
-                <p className="font-semibold text-errandify-orange">SGD ${parseFloat(formData.budget).toFixed(2)}</p>
-              </div>
-            )}
-            <div>
-              <p className="text-gray-500">Urgency</p>
-              <p className="font-semibold text-errandify-brown capitalize">
-                {formData.urgency === 'urgent' ? '🔴 Urgent' : formData.urgency === 'normal' ? '🟡 Normal' : '🟢 Flexible'}
-              </p>
-            </div>
-            {formData.deadline && (
-              <div>
-                <p className="text-gray-500">Deadline</p>
-                <p className="font-semibold text-errandify-brown">
-                  {new Date(formData.deadline).toLocaleDateString()}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Post Button */}
-        <div className="fixed bottom-24 left-0 right-0 px-4 bg-gradient-to-t from-errandify-bg via-errandify-bg to-transparent pt-4">
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-errandify-orange text-white py-4 rounded-xl font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
-          >
-            {loading ? '⏳ Posting...' : '✨ Post Errand'}
-          </button>
-        </div>
-      </form>
     </div>
   );
 }

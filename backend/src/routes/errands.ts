@@ -113,19 +113,19 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
 // Create errand (asker only)
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, category, budget, deadline, location } = req.body;
+    const { title, description, category, budget, deadline, isRecurring, recurringSchedule } = req.body;
 
-    if (!title || !description || !category) {
+    if (!title || !category) {
       return res
         .status(400)
-        .json({ error: 'title, description, and category required' });
+        .json({ error: 'title and category required' });
     }
 
     const result = await db.query(
-      `INSERT INTO errands (asker_id, title, description, category, budget, deadline, location, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING id, title, description, category, status, created_at`,
-      [req.userId, title, description, category, budget || null, deadline || null, location || null, 'open']
+      `INSERT INTO errands (asker_id, title, description, category, budget, deadline, is_recurring, recurring_schedule, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING id, title, description, category, status, budget, deadline, is_recurring, recurring_schedule, created_at`,
+      [req.userId, title, description || null, category, budget || null, deadline || null, isRecurring || false, recurringSchedule || null, 'open']
     );
 
     const errand = result.rows[0];
@@ -138,6 +138,10 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         description: errand.description,
         category: errand.category,
         status: errand.status,
+        budget: errand.budget,
+        deadline: errand.deadline,
+        isRecurring: errand.is_recurring,
+        recurringSchedule: errand.recurring_schedule,
         createdAt: errand.created_at,
       },
     });
