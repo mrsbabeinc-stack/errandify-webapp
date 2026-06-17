@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -29,6 +29,7 @@ export default function CreateErrandPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [skillInput, setSkillInput] = useState('');
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const [aiSuggestions, setAiSuggestions] = useState({
     suggestedCategory: '',
@@ -36,6 +37,7 @@ export default function CreateErrandPage() {
     correctedTitle: '',
     hasCorrections: false,
     certifications: { required: [] as string[], optional: [] as string[] },
+    skills: [] as string[],
     blocked: false,
     error: '',
   });
@@ -66,7 +68,7 @@ export default function CreateErrandPage() {
   ];
 
   const getAiSuggestions = async (title: string) => {
-    if (!title.trim() || title.length < 5) return;
+    if (!title.trim() || title.length < 4) return;
 
     setAiLoading(true);
     try {
@@ -82,23 +84,10 @@ export default function CreateErrandPage() {
           correctedTitle: response.data.data.correctedTitle || '',
           hasCorrections: response.data.data.hasCorrections,
           certifications: response.data.data.certifications || { required: [], optional: [] },
+          skills: response.data.data.skills || [],
           blocked: false,
           error: '',
         });
-
-        if (!formData.category && response.data.data.category) {
-          setFormData((prev) => ({
-            ...prev,
-            category: response.data.data.category,
-          }));
-        }
-
-        if (!formData.description && response.data.data.description) {
-          setFormData((prev) => ({
-            ...prev,
-            description: response.data.data.description,
-          }));
-        }
       }
     } catch (err: any) {
       console.error('AI suggestion error:', err);
@@ -114,14 +103,41 @@ export default function CreateErrandPage() {
     }
   };
 
+  const debouncedGetAiSuggestions = (value: string) => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      getAiSuggestions(value);
+    }, 300); // Wait 300ms after user stops typing
+  };
+
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFormData((prev) => ({ ...prev, title: value }));
 
-    if (value.length > 5) {
-      getAiSuggestions(value);
+    // Trigger AI suggestions with debounce (wait 300ms after user stops typing)
+    if (value.length > 3) {
+      debouncedGetAiSuggestions(value);
     }
   };
+
+  // Auto-apply AI suggestions to form when they arrive
+  useEffect(() => {
+    if (aiSuggestions.suggestedCategory && !formData.category) {
+      setFormData((prev) => ({
+        ...prev,
+        category: aiSuggestions.suggestedCategory,
+      }));
+    }
+    if (aiSuggestions.suggestedDescription && !formData.description) {
+      setFormData((prev) => ({
+        ...prev,
+        description: aiSuggestions.suggestedDescription,
+      }));
+    }
+  }, [aiSuggestions.suggestedCategory, aiSuggestions.suggestedDescription]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -182,6 +198,13 @@ export default function CreateErrandPage() {
     setFormData((prev) => ({
       ...prev,
       certifications: aiSuggestions.certifications,
+    }));
+  };
+
+  const applySuggestedSkills = () => {
+    setFormData((prev) => ({
+      ...prev,
+      skills: [...new Set([...prev.skills, ...aiSuggestions.skills])], // Avoid duplicates
     }));
   };
 
@@ -438,42 +461,67 @@ export default function CreateErrandPage() {
             )}
           </div>
 
-          {/* Section 3: Location & Special Notes */}
+          {/* Section 3: Location - Special note moved to confirmation only */}
           <div className="border-t pt-4 space-y-4">
-            <h3 className="font-bold text-errandify-brown text-sm">Where & Special Details</h3>
+            <h3 className="font-bold text-errandify-brown text-sm">Work Location</h3>
 
             <div>
               <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Location
+                Where is the work?
               </label>
               <input
                 type="text"
                 name="location"
                 value={formData.location}
                 onChange={handleChange}
-                placeholder="Where should the doer go? (or leave blank if remote)"
+                placeholder="Address or 'Remote' if not needed"
                 className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Special Note <span className="text-xs text-gray-500">(only shown to confirmed doer)</span>
-              </label>
-              <textarea
-                name="specialNote"
-                value={formData.specialNote}
-                onChange={handleChange}
-                placeholder="Unit number, building name, access instructions, etc."
-                rows={2}
-                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base resize-none"
-              />
-            </div>
+            <p className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
+              💡 You can add access instructions (unit number, building name) in the confirmation step - these will only be shown to the doer after they accept.
+            </p>
           </div>
 
           {/* Section 4: Skills Required */}
           <div className="border-t pt-4 space-y-4">
             <h3 className="font-bold text-errandify-brown text-sm">Skills Required (Optional)</h3>
+
+            {/* AI Suggestions */}
+            {aiSuggestions.skills.length > 0 && (
+              <div>
+                <button
+                  onClick={applySuggestedSkills}
+                  className="text-sm text-errandify-orange hover:text-orange-600 font-semibold mb-2"
+                >
+                  ✨ Apply AI suggestions
+                </button>
+                <p className="text-xs text-gray-600 font-semibold mb-2">AI Suggested Skills:</p>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {aiSuggestions.skills.map((skill) => (
+                    <button
+                      key={skill}
+                      onClick={() => {
+                        if (!formData.skills.includes(skill)) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            skills: [...prev.skills, skill],
+                          }));
+                        }
+                      }}
+                      className={`text-xs px-3 py-1 rounded-full font-semibold transition-colors ${
+                        formData.skills.includes(skill)
+                          ? 'bg-errandify-orange text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {skill}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-2">
               <input
@@ -611,28 +659,76 @@ export default function CreateErrandPage() {
             {/* Selected Certifications Display */}
             {(formData.certifications.required.length > 0 ||
               formData.certifications.optional.length > 0) && (
-              <div className="p-2 bg-blue-50 rounded text-sm mt-3">
-                <p className="font-semibold text-blue-900 mb-1">Selected:</p>
-                <div className="flex flex-wrap gap-2">
-                  {formData.certifications.required.map((cert) => (
-                    <button
-                      key={cert}
-                      onClick={() => toggleCertification(cert, 'required')}
-                      className="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded hover:bg-blue-300"
-                    >
-                      {cert} ✕
-                    </button>
-                  ))}
-                  {formData.certifications.optional.map((cert) => (
-                    <button
-                      key={cert}
-                      onClick={() => toggleCertification(cert, 'optional')}
-                      className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-200"
-                    >
-                      {cert} ✕
-                    </button>
-                  ))}
-                </div>
+              <div className="p-3 bg-blue-50 rounded text-sm mt-3 space-y-3">
+                <p className="font-semibold text-blue-900">Selected Certifications:</p>
+
+                {formData.certifications.required.length > 0 && (
+                  <div>
+                    <p className="text-xs text-blue-800 font-semibold mb-2">Required:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.certifications.required.map((cert) => (
+                        <div
+                          key={cert}
+                          className="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded flex items-center gap-2"
+                        >
+                          <span>{cert}</span>
+                          <label className="flex items-center gap-1 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={true}
+                              onChange={() => {
+                                toggleCertification(cert, 'required');
+                                toggleCertification(cert, 'optional');
+                              }}
+                              className="w-3 h-3"
+                            />
+                            <span className="text-xs">Optional?</span>
+                          </label>
+                          <button
+                            onClick={() => toggleCertification(cert, 'required')}
+                            className="hover:opacity-70 ml-1"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {formData.certifications.optional.length > 0 && (
+                  <div>
+                    <p className="text-xs text-blue-700 font-semibold mb-2">Optional:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.certifications.optional.map((cert) => (
+                        <div
+                          key={cert}
+                          className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded flex items-center gap-2"
+                        >
+                          <span>{cert}</span>
+                          <label className="flex items-center gap-1 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={false}
+                              onChange={() => {
+                                toggleCertification(cert, 'optional');
+                                toggleCertification(cert, 'required');
+                              }}
+                              className="w-3 h-3"
+                            />
+                            <span className="text-xs">Required?</span>
+                          </label>
+                          <button
+                            onClick={() => toggleCertification(cert, 'optional')}
+                            className="hover:opacity-70 ml-1"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -662,9 +758,9 @@ export default function CreateErrandPage() {
       {showConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-errandify-brown">Confirm & Post?</h2>
+            <h2 className="text-xl font-bold text-errandify-brown">Confirm & Post</h2>
 
-            <div className="space-y-2 text-sm text-gray-700">
+            <div className="space-y-3 text-sm text-gray-700">
               <p>
                 <span className="font-semibold">Title:</span> {formData.title}
               </p>
@@ -714,6 +810,21 @@ export default function CreateErrandPage() {
                   ].join(', ')}
                 </p>
               )}
+            </div>
+
+            {/* Special Note - Only editable in confirmation */}
+            <div className="border-t pt-4">
+              <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                Special Note <span className="text-xs text-red-600">(shown only to confirmed doer)</span>
+              </label>
+              <textarea
+                name="specialNote"
+                value={formData.specialNote}
+                onChange={handleChange}
+                placeholder="Unit number, building name, access instructions, etc."
+                rows={2}
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
+              />
             </div>
 
             <div className="flex gap-2 pt-4">

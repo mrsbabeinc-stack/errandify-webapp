@@ -427,6 +427,42 @@ function generateDescription(category: string, title: string): string {
   return `Help needed with: ${title}`;
 }
 
+// Suggest skills based on category and keywords
+function suggestSkills(category: string, title: string): string[] {
+  const lowerTitle = title.toLowerCase();
+  const suggestedSkills: Set<string> = new Set();
+
+  const skillsByCategory: Record<string, string[]> = {
+    'home-maintenance': ['Carpentry', 'Plumbing', 'Electrical work', 'Drywall repair', 'Painting'],
+    'cleaning-laundry': ['House cleaning', 'Deep cleaning', 'Laundry service', 'Organization', 'Decluttering'],
+    'shopping-errands': ['Shopping', 'Delivery', 'Time management', 'Budget management'],
+    'delivery-moving': ['Heavy lifting', 'Packing', 'Transportation', 'Logistics', 'Physical fitness'],
+    'childcare-tutoring': ['Childcare', 'Teaching', 'Patience', 'CPR/First Aid', 'Subject expertise'],
+    'pet-care': ['Dog walking', 'Dog training', 'Pet grooming', 'Animal care', 'Pet sitting'],
+    'tech-support': ['Computer repair', 'Troubleshooting', 'Software installation', 'Hardware setup', 'IT support'],
+    'moving-help': ['Heavy lifting', 'Organization', 'Packing', 'Furniture assembly', 'Logistics'],
+  };
+
+  // Add category-based skills
+  if (skillsByCategory[category]) {
+    skillsByCategory[category].forEach((skill) => suggestedSkills.add(skill));
+  }
+
+  // Add keyword-based skills
+  if (lowerTitle.includes('paint')) suggestedSkills.add('Painting');
+  if (lowerTitle.includes('electric') || lowerTitle.includes('wiring')) suggestedSkills.add('Electrical work');
+  if (lowerTitle.includes('plumb')) suggestedSkills.add('Plumbing');
+  if (lowerTitle.includes('clean')) suggestedSkills.add('Cleaning');
+  if (lowerTitle.includes('organize') || lowerTitle.includes('declutter')) suggestedSkills.add('Organization');
+  if (lowerTitle.includes('tutor') || lowerTitle.includes('teach')) suggestedSkills.add('Teaching');
+  if (lowerTitle.includes('babysit') || lowerTitle.includes('childcare')) suggestedSkills.add('Childcare');
+  if (lowerTitle.includes('walk') && (lowerTitle.includes('dog') || lowerTitle.includes('pet'))) suggestedSkills.add('Dog walking');
+  if (lowerTitle.includes('move') || lowerTitle.includes('pack')) suggestedSkills.add('Heavy lifting');
+  if (lowerTitle.includes('computer') || lowerTitle.includes('tech') || lowerTitle.includes('software')) suggestedSkills.add('Technical support');
+
+  return Array.from(suggestedSkills).slice(0, 5); // Return top 5 suggestions
+}
+
 // Suggest certifications based on category and keywords
 function suggestCertifications(category: string, title: string): { required: string[]; optional: string[] } {
   const suggestions = certificationSuggestions[category] || { required: [], optional: [] };
@@ -507,6 +543,9 @@ router.post('/suggestions', (req: Request, res: Response) => {
     // Suggest certifications
     const suggestedCerts = suggestCertifications(suggestedCategory, correctedTitle);
 
+    // Suggest skills
+    const suggestedSkillsList = suggestSkills(suggestedCategory, correctedTitle);
+
     res.json({
       success: true,
       data: {
@@ -517,6 +556,7 @@ router.post('/suggestions', (req: Request, res: Response) => {
         description: suggestedDescription,
         missingDetails,
         certifications: suggestedCerts,
+        skills: suggestedSkillsList,
         contentSafe: true,
       },
     });
