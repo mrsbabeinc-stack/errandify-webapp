@@ -38,11 +38,13 @@ export default function HanaAssistant({ isOpen: initialOpen = false }: HanaAssis
     e.preventDefault();
     if (!input.trim() || loading) return;
 
+    const userInput = input;
+
     // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input,
+      content: userInput,
       timestamp: new Date(),
     };
 
@@ -51,11 +53,17 @@ export default function HanaAssistant({ isOpen: initialOpen = false }: HanaAssis
     setLoading(true);
 
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/chat/hana`,
         {
-          message: input,
+          message: userInput,
           conversationId: 'hana-assistant',
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -93,10 +101,16 @@ export default function HanaAssistant({ isOpen: initialOpen = false }: HanaAssis
     setLoading(true);
 
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/chat/hana/sos`,
         {
           conversationId: 'hana-assistant',
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
