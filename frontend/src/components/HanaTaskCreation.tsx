@@ -282,24 +282,9 @@ Ready to post?`;
 
               {/* Hana Avatar Image - Half Body */}
               <img
-                src="/images/hana-half-body.png"
+                src="/images/Hana_Pose_2_4K.png"
                 alt="Hana"
-                className="w-96 h-auto object-contain drop-shadow-2xl"
-                onError={(e) => {
-                  // Fallback if image doesn't exist
-                  const img = e.currentTarget;
-                  img.style.display = 'none';
-                  const fallback = document.createElement('div');
-                  fallback.className = 'w-96 h-80 bg-gradient-to-br from-errandify-bg to-orange-100 rounded-2xl flex items-center justify-center border-4 border-errandify-orange shadow-lg';
-                  fallback.innerHTML = `
-                    <div class="text-center">
-                      <p class="text-6xl mb-4">👩</p>
-                      <p class="text-gray-600 text-sm">Hana Avatar</p>
-                      <p class="text-gray-500 text-xs mt-2">(Place hana-half-body.png in public/images/)</p>
-                    </div>
-                  `;
-                  img.parentElement?.appendChild(fallback);
-                }}
+                className="w-80 h-auto object-contain drop-shadow-2xl"
               />
             </div>
           </div>
