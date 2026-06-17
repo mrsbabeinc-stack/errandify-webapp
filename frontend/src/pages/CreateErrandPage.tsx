@@ -844,7 +844,7 @@ export default function CreateErrandPage() {
             {/* Full Address - Shown only to confirmed doer */}
             <div>
               <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Full Address <span className="text-xs text-gray-600">(Add Unit Number - Shown to Confirmed Doer)</span>
+                Full Address <span className="text-xs text-gray-600">(Shown to Confirmed Doer - Add Unit Number if Required)</span>
               </label>
               <textarea
                 value={fullAddress}
