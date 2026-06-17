@@ -93,7 +93,7 @@ function cleanTitleForDescription(title: string): string {
   cleaned = cleaned.replace(/\.$/, '');
 
   // Remove action verb + possessive combos (wash my, walk my, help me, etc.)
-  cleaned = cleaned.replace(/^(help|wash|clean|walk|groom|feed|babysit|tutor|repair|fix|install|deliver|move|shop|buy|teach|need) (me |my |him |his |her |your )/i, '');
+  cleaned = cleaned.replace(/^(help|wash|clean|walk|groom|feed|bathe|bath|babysit|tutor|repair|fix|install|deliver|move|shop|buy|teach|need) (me |my |him |his |her |your )/i, '');
 
   // Remove remaining common prefixes
   cleaned = cleaned.replace(/^(need |help with |help me |i need |can you |need to |need help )/, '');
