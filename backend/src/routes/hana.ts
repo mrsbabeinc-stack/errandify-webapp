@@ -3,6 +3,9 @@ import axios from 'axios';
 import { config } from '../config.js';
 import { authMiddleware } from '../middleware/auth.js';
 import gTTS from 'gtts';
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 import crypto from 'crypto';
 
 const router = Router();
