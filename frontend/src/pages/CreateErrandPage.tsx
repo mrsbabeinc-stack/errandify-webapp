@@ -261,13 +261,7 @@ export default function CreateErrandPage() {
       }));
     }
 
-    // Update description if AI has a suggestion
-    if (aiSuggestions.suggestedDescription) {
-      setFormData((prev) => ({
-        ...prev,
-        description: aiSuggestions.suggestedDescription,
-      }));
-    }
+    // Description: show as suggestion only, don't auto-apply (user must approve)
 
     // Update budget if AI has a suggestion
     if (aiSuggestions.suggestedBudget) {
@@ -451,7 +445,7 @@ export default function CreateErrandPage() {
               )}
             </div>
 
-            {/* Description - Auto-filled from AI */}
+            {/* Description */}
             <div>
               <label className="block text-sm font-semibold text-errandify-brown mb-2">
                 Description
@@ -460,12 +454,34 @@ export default function CreateErrandPage() {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder={
-                  aiSuggestions.suggestedDescription || 'Describe your errand in detail...'
-                }
+                placeholder="Describe your errand in detail..."
                 rows={2}
                 className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base resize-none"
               />
+
+              {/* AI Suggestion for Description */}
+              {aiSuggestions.suggestedDescription && !formData.description && (
+                <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-blue-900 mb-1">💡 AI Suggestion:</p>
+                      <p className="text-sm text-blue-800">{aiSuggestions.suggestedDescription}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          description: aiSuggestions.suggestedDescription,
+                        }));
+                      }}
+                      className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 whitespace-nowrap flex-shrink-0"
+                    >
+                      ✓ Use
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Category - Auto-detected */}
