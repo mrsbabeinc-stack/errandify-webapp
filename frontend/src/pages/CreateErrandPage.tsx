@@ -242,6 +242,7 @@ export default function CreateErrandPage() {
           ...(extracted.budget && { budget: extracted.budget }),
           ...(extracted.location && { location: extracted.location }),
           ...(extracted.date && { deadline: extracted.date }),
+          ...(extracted.description && { description: extracted.description }),
         }));
       }
     } catch (err) {
