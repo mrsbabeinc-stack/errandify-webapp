@@ -667,8 +667,9 @@ export default function CreateErrandPage() {
                         location: area,
                       }));
 
-                      // Auto-fill full address field with correct postal code only
-                      setFullAddress(`${area}, Unit: [Block/Unit number], Singapore ${code}`);
+                      // Auto-fill full address with area name and postal code
+                      // User can edit to add block/unit number
+                      setFullAddress(`1 ${area}, Unit: __, Singapore ${code}`);
                     } else if (code.length === 0) {
                       // Clear addresses if postal code is cleared
                       setFormData((prev) => ({
