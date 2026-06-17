@@ -140,13 +140,17 @@ export default function HanaAnimatedAvatar({
     <div className="relative w-full h-full flex items-center justify-center">
       <audio ref={audioRef} />
 
-      {/* Hana Image Container */}
-      <div className="relative w-full h-full flex items-center justify-center overflow-visible">
-        {/* Base Image */}
+      {/* Hana Image Container - Half Body Only */}
+      <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+        {/* Base Image - Cropped to half-body (head to waist) */}
         <img
           src="/images/Hana_Pose_2_4K.png"
           alt="Hana"
-          className="h-full w-auto object-contain z-0"
+          className="h-full w-auto object-cover z-0"
+          style={{
+            objectPosition: 'center top',
+            clipPath: 'inset(0 0 50% 0)', // Show only top 50% (head to waist)
+          }}
         />
 
         {/* Animated Overlay SVG - Arms and Mouth (only show when speaking) */}
