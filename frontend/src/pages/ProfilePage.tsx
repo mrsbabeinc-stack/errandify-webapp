@@ -15,6 +15,22 @@ export default function ProfilePage({ userRole }: ProfilePageProps) {
     navigate('/login');
   };
 
+  // Navigation handlers for profile sections
+  const handleViewProfile = () => navigate('/my-profile');
+  const handleReferral = () => navigate('/referral');
+  const handleTrustedUsers = () => navigate('/trusted-users');
+  const handleBlockList = () => navigate('/block-list');
+  const handlePayoutSetting = () => navigate('/payout-settings');
+  const handleTransactionHistory = () => navigate('/transaction-history');
+  const handleErrandifyPoints = () => navigate('/errandify-points');
+  const handleMyRewards = () => navigate('/my-rewards');
+  const handlePointsHistory = () => navigate('/points-history');
+  const handleDeleteAccount = () => {
+    if (window.confirm('Are you sure you want to delete your account? This cannot be undone.')) {
+      navigate('/delete-account');
+    }
+  };
+
   return (
     <div className="px-4 py-4 max-w-3xl mx-auto">
       {/* MyAccount Section */}
@@ -25,7 +41,7 @@ export default function ProfilePage({ userRole }: ProfilePageProps) {
         </h2>
         <div className="space-y-2">
           {/* View Profile */}
-          <button className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+          <button onClick={handleViewProfile} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
             <div className="flex items-center gap-2 text-left">
               <span className="text-lg">✏️</span>
               <span className="text-sm font-medium text-gray-700">View Profile</span>
@@ -34,7 +50,7 @@ export default function ProfilePage({ userRole }: ProfilePageProps) {
           </button>
 
           {/* Referral */}
-          <button className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+          <button onClick={handleReferral} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
             <div className="flex items-center gap-2 text-left">
               <span className="text-lg">🔗</span>
               <span className="text-sm font-medium text-gray-700">Referral</span>
@@ -52,7 +68,7 @@ export default function ProfilePage({ userRole }: ProfilePageProps) {
         </h2>
         <div className="space-y-2">
           {/* Trusted Users */}
-          <button className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+          <button onClick={handleTrustedUsers} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
             <div className="flex items-center gap-2 text-left">
               <span className="text-lg">❤️</span>
               <span className="text-sm font-medium text-gray-700">Trusted Users</span>
@@ -61,7 +77,7 @@ export default function ProfilePage({ userRole }: ProfilePageProps) {
           </button>
 
           {/* Block List */}
-          <button className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+          <button onClick={handleBlockList} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
             <div className="flex items-center gap-2 text-left">
               <span className="text-lg">🚫</span>
               <span className="text-sm font-medium text-gray-700">Block List</span>
@@ -79,7 +95,7 @@ export default function ProfilePage({ userRole }: ProfilePageProps) {
         </h2>
         <div className="space-y-2">
           {/* Payout Setting */}
-          <button className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+          <button onClick={handlePayoutSetting} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
             <div className="flex items-center gap-2 text-left">
               <span className="text-lg">💳</span>
               <span className="text-sm font-medium text-gray-700">Payout Setting</span>
@@ -88,7 +104,7 @@ export default function ProfilePage({ userRole }: ProfilePageProps) {
           </button>
 
           {/* Transaction History */}
-          <button className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+          <button onClick={handleTransactionHistory} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
             <div className="flex items-center gap-2 text-left">
               <span className="text-lg">📊</span>
               <span className="text-sm font-medium text-gray-700">Transaction History</span>
@@ -126,7 +142,7 @@ export default function ProfilePage({ userRole }: ProfilePageProps) {
         </h2>
         <div className="space-y-2">
           {/* Errandify Points */}
-          <button className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+          <button onClick={handleErrandifyPoints} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
             <div className="flex items-center gap-2 text-left">
               <span className="text-lg">⭐</span>
               <span className="text-sm font-medium text-gray-700">Errandify Points</span>
@@ -135,7 +151,7 @@ export default function ProfilePage({ userRole }: ProfilePageProps) {
           </button>
 
           {/* MyRewards */}
-          <button className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+          <button onClick={handleMyRewards} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
             <div className="flex items-center gap-2 text-left">
               <span className="text-lg">💎</span>
               <span className="text-sm font-medium text-gray-700">MyRewards</span>
@@ -144,7 +160,7 @@ export default function ProfilePage({ userRole }: ProfilePageProps) {
           </button>
 
           {/* Point Transaction History */}
-          <button className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+          <button onClick={handlePointsHistory} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
             <div className="flex items-center gap-2 text-left">
               <span className="text-lg">📈</span>
               <span className="text-sm font-medium text-gray-700">Point Transaction History</span>
@@ -156,7 +172,7 @@ export default function ProfilePage({ userRole }: ProfilePageProps) {
 
       {/* Delete Account */}
       <div className="mb-4">
-        <button className="text-xs font-medium text-red-600 hover:text-red-700">
+        <button onClick={handleDeleteAccount} className="text-xs font-medium text-red-600 hover:text-red-700">
           Delete Account
         </button>
       </div>
