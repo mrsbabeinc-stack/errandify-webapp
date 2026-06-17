@@ -69,6 +69,92 @@ export default function CreateErrandPage() {
     'Animal First Aid',
   ];
 
+  // Singapore postal code to area mapping (first 2 digits)
+  const postalCodeAreas: Record<string, string> = {
+    '01': 'Raffles Place',
+    '02': 'Cecil Street',
+    '03': 'Tanjong Pagar',
+    '04': 'Tanjong Pagar',
+    '05': 'Outram',
+    '06': 'People\'s Park',
+    '07': 'Chinatown',
+    '08': 'Tanjong Pagar',
+    '09': 'Tanjong Pagar',
+    '10': 'Orchard',
+    '11': 'Orchard',
+    '12': 'Novena',
+    '13': 'Newton',
+    '14': 'Farrer Park',
+    '15': 'Serangoon',
+    '16': 'Serangoon',
+    '17': 'Serangoon',
+    '18': 'Macpherson',
+    '19': 'Paya Lebar',
+    '20': 'Paya Lebar',
+    '21': 'Geylang',
+    '22': 'Geylang',
+    '23': 'Geylang',
+    '24': 'Eunos',
+    '25': 'Bedok',
+    '26': 'Bedok',
+    '27': 'Bedok',
+    '28': 'Tampines',
+    '29': 'Tampines',
+    '30': 'Tampines',
+    '31': 'Pasir Ris',
+    '32': 'Pasir Ris',
+    '33': 'Punggol',
+    '34': 'Punggol',
+    '35': 'Hougang',
+    '36': 'Hougang',
+    '37': 'Sengkang',
+    '38': 'Sengkang',
+    '39': 'Sengkang',
+    '40': 'Jurong West',
+    '41': 'Jurong West',
+    '42': 'Jurong',
+    '43': 'Jurong East',
+    '44': 'Clementi',
+    '45': 'Clementi',
+    '46': 'Clementi',
+    '47': 'Bukit Merah',
+    '48': 'Bukit Merah',
+    '49': 'Tiong Bahru',
+    '50': 'Redhill',
+    '51': 'Queenstown',
+    '52': 'Commonwealth',
+    '53': 'Pasir Panjang',
+    '54': 'Pasir Panjang',
+    '55': 'Bukit Timah',
+    '56': 'Bukit Timah',
+    '57': 'Holland',
+    '58': 'Tanglin',
+    '59': 'Clementi',
+    '60': 'Bukit Timah',
+    '61': 'Bishan',
+    '62': 'Bishan',
+    '63': 'Serangoon',
+    '64': 'Serangoon',
+    '65': 'Serangoon',
+    '66': 'Serangoon',
+    '67': 'Aljunied',
+    '68': 'Aljunied',
+    '69': 'Geylang',
+    '70': 'Bedok',
+    '71': 'Bedok',
+    '72': 'Bedok',
+    '73': 'Bedok',
+    '74': 'Tampines',
+    '75': 'Tampines',
+    '76': 'Tampines',
+    '77': 'Tampines',
+    '78': 'Tampines',
+    '79': 'Sengkang',
+    '80': 'Sengkang',
+    '81': 'Sengkang',
+    '82': 'Sengkang',
+  };
+
   const getAiSuggestions = async (title: string) => {
     if (!title.trim() || title.length < 4) return;
 
@@ -420,14 +506,14 @@ export default function CreateErrandPage() {
                 </div>
               </div>
 
-              <div className="flex items-center">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <div className="flex items-end">
+                <label className="flex items-center gap-2 cursor-pointer h-full">
                   <input
                     type="checkbox"
                     name="isRecurring"
                     checked={formData.isRecurring}
                     onChange={handleChange}
-                    className="w-4 h-4"
+                    className="w-4 h-4 mt-0"
                   />
                   <span className="text-sm font-semibold text-errandify-brown">Recurring errand?</span>
                 </label>
@@ -497,10 +583,15 @@ export default function CreateErrandPage() {
                     setPostalCode(code);
 
                     if (code.length === 6 && /^\d+$/.test(code)) {
-                      // Auto-fill full address with postal code
+                      // Get area from postal code (first 2 digits)
+                      const areaPrefix = code.substring(0, 2);
+                      const area = postalCodeAreas[areaPrefix] || 'Singapore';
+
+                      // Full address: Area + Postal Code
+                      // This is what will be stored and shown to doer
                       setFormData((prev) => ({
                         ...prev,
-                        location: `Singapore ${code}`,
+                        location: `${area} Singapore ${code}`,
                       }));
                     } else if (code.length === 0) {
                       // Clear address if postal code is cleared
