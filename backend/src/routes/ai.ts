@@ -993,11 +993,23 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
     // Remove duration patterns (1hour, 2 hours, 30min, 30 m, etc.)
     titleText = titleText.replace(/\s+\d+(?:\.\d+)?\s*(hour|hr|min|minute|m|day|d)\b/gi, '');
 
-    // Remove budget patterns ($50, budget 50, etc.)
+    // Remove budget patterns ($50, budget 50, etc.) - also standalone numbers at end
     titleText = titleText.replace(/\s*\$\s*\d+\b/g, '');
     titleText = titleText.replace(/\s+budget\s+\d+\b/gi, '');
 
+    // Remove trailing standalone numbers (likely budget)
+    titleText = titleText.replace(/\s+\d+\s*$/, '');
+
     let title = titleText.split(/at|in|on|by/)[0].trim().substring(0, 50) || input.substring(0, 50);
+
+    // Capitalize first letter and clean up punctuation
+    if (title) {
+      title = title.charAt(0).toUpperCase() + title.slice(1);
+      // Add period if missing
+      if (!/[.!?]$/.test(title)) {
+        title += '.';
+      }
+    }
 
     // Extract category
     let category = '';
@@ -1045,7 +1057,7 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
     let duration = durationParse?.duration || '';
     let durationUnit = durationParse?.unit || 'Hr';
 
-    // Extract budget (look for $ symbol or "budget" keyword, avoid times like 4pm)
+    // Extract budget (look for $ symbol, "budget" keyword, or standalone number at end)
     let budget = '';
 
     // First try to find $ symbol
@@ -1057,9 +1069,14 @@ router.post('/extract-task-info', (req: Request, res: Response) => {
       const budgetKeywordMatch = cleaned.match(/budget\s*[:\s]*(\d+)/i);
       if (budgetKeywordMatch) {
         budget = budgetKeywordMatch[1];
+      } else {
+        // Try to extract standalone number at the end (after removing time patterns)
+        const trailingNumberMatch = cleaned.match(/(\d+)\s*$/);
+        if (trailingNumberMatch) {
+          budget = trailingNumberMatch[1];
+        }
       }
     }
-    // Don't extract numbers that are part of time (2pm, 4pm, etc)
 
     res.json({
       success: true,
