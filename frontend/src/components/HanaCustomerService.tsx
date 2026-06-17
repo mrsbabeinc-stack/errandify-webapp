@@ -48,7 +48,7 @@ export default function HanaCustomerService() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        '/api/hana/customer-service',
+        '/api/chat/hana/customer-service',
         { message: input },
         {
           headers: {
