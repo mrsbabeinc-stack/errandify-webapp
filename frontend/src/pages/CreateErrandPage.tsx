@@ -44,6 +44,7 @@ export default function CreateErrandPage() {
   const [gpsLocation, setGpsLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [gpsEnabled, setGpsEnabled] = useState(false);
   const [showStartLocation, setShowStartLocation] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const [aiSuggestions, setAiSuggestions] = useState({
@@ -648,7 +649,7 @@ export default function CreateErrandPage() {
             </div>
 
             {/* Time Field */}
-            <div>
+            <div className="relative">
               <label className="block text-sm font-semibold text-errandify-brown mb-2">
                 Errand Time
               </label>
@@ -662,9 +663,18 @@ export default function CreateErrandPage() {
                     time: e.target.value,
                   }));
                 }}
+                onFocus={() => setShowTimePicker(true)}
+                onBlur={() => setTimeout(() => setShowTimePicker(false), 200)}
                 placeholder="HH:MM"
-                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base placeholder:text-gray-400"
+                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base placeholder:text-gray-400 cursor-pointer"
               />
+
+              {/* Visual time picker indicator */}
+              {showTimePicker && (
+                <div className="absolute right-0 top-full mt-1 text-xs text-errandify-orange font-semibold">
+                  🕐 Clock active
+                </div>
+              )}
             </div>
 
             <div>
