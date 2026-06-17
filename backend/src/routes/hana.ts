@@ -15,7 +15,7 @@ router.post('/chat/hana', authMiddleware, async (req: any, res: any) => {
     }
 
     // Call Qwen Plus for conversational response
-    const systemPrompt = `You are Hana, a helpful AI assistant for Errandify, a community errand platform in Singapore.
+    const systemPrompt = `You are Hana, a helpful AI assistant for Errandify (帮帮乐), a community errand platform in Singapore.
 IMPORTANT: Be proactive, friendly, and give direct answers. Don't ask clarifying questions unless absolutely necessary.
 
 You help users:
@@ -139,7 +139,7 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
     if (config.qwen.apiKey) {
       try {
         console.log('[DEBUG] Attempting Qwen API call with language:', language);
-        const systemPrompt = `You are Hana, a helpful AI assistant for Errandify. Be warm, brief (2-3 sentences), and helpful. ${languageInstruction}`;
+        const systemPrompt = `You are Hana, a helpful AI assistant for Errandify (帮帮乐), Singapore's community errand platform. Be warm, brief (2-3 sentences), and helpful. ${languageInstruction}`;
 
         const response = await axios.post(
           'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
@@ -180,21 +180,40 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
       }
     } else {
       console.log('[DEBUG] No Qwen API key configured, using fallback responses');
-      // Dummy responses when no API key available
+      // Fallback responses based on language
       const messageLower = message.toLowerCase();
+      const messageZh = message;
 
-      if (messageLower.includes('post') || messageLower.includes('create') || messageLower.includes('errand')) {
-        reply = '✿ To post an errand: Tap the "+" button at the bottom, fill in details, and submit! Need help with specifics?';
-      } else if (messageLower.includes('bid') || messageLower.includes('accept') || messageLower.includes('job')) {
-        reply = '✿ Browse available errands, review details, and tap Accept to place your bid. The asker will pick their favorite!';
-      } else if (messageLower.includes('payment') || messageLower.includes('money') || messageLower.includes('price')) {
-        reply = '✿ Payments are held securely until work is confirmed. You earn after the asker approves! Questions about rates?';
-      } else if (messageLower.includes('help') || messageLower.includes('support') || messageLower.includes('issue')) {
-        reply = '✿ I\'m here to help! Tell me what you need - posting, bidding, payments, or anything else about Errandify.';
-      } else if (messageLower.includes('how to') || messageLower.includes('how do')) {
-        reply = '✿ I can help! Are you asking about posting errands, bidding on jobs, payments, or something else?';
+      if (language === 'zh' || language === 'yue') {
+        // Chinese/Cantonese fallback responses
+        if (messageZh.includes('发布') || messageZh.includes('发贴') || messageZh.includes('任务') || messageZh.includes('帮') || messageZh.includes('帮帮')) {
+          reply = '✿ 发布帮帮：点击底部的"+"按钮，填写详情，然后提交！需要帮助吗？';
+        } else if (messageZh.includes('接受') || messageZh.includes('竞标') || messageZh.includes('工作')) {
+          reply = '✿ 浏览可用的帮帮，查看详情，然后点击接受出价。发布者会选择他们最喜欢的！';
+        } else if (messageZh.includes('支付') || messageZh.includes('钱') || messageZh.includes('价格') || messageZh.includes('費用')) {
+          reply = '✿ 款项会安全地保留，直到工作确认。批准后您就能获利！有关费率的问题吗？';
+        } else if (messageZh.includes('帮助') || messageZh.includes('支持') || messageZh.includes('问题')) {
+          reply = '✿ 我在这里帮助您！告诉我您需要什么 - 发布、竞标、支付，或帮帮乐的任何其他问题。';
+        } else if (messageZh.includes('如何') || messageZh.includes('怎么')) {
+          reply = '✿ 我可以帮助！您在询问有关发布帮帮、竞标工作、支付或其他内容吗？';
+        } else {
+          reply = '✿ 谢谢您的联系！我是帮帮乐助手 Hana。今天有什么我可以帮助您的吗？🌸';
+        }
       } else {
-        reply = '✿ Thanks for reaching out! I\'m Hana. What can I help you with today? 🌸';
+        // English fallback responses
+        if (messageLower.includes('post') || messageLower.includes('create') || messageLower.includes('errand')) {
+          reply = '✿ To post an errand: Tap the "+" button at the bottom, fill in details, and submit! Need help with specifics?';
+        } else if (messageLower.includes('bid') || messageLower.includes('accept') || messageLower.includes('job')) {
+          reply = '✿ Browse available errands, review details, and tap Accept to place your bid. The asker will pick their favorite!';
+        } else if (messageLower.includes('payment') || messageLower.includes('money') || messageLower.includes('price')) {
+          reply = '✿ Payments are held securely until work is confirmed. You earn after the asker approves! Questions about rates?';
+        } else if (messageLower.includes('help') || messageLower.includes('support') || messageLower.includes('issue')) {
+          reply = '✿ I\'m here to help! Tell me what you need - posting, bidding, payments, or anything else about Errandify.';
+        } else if (messageLower.includes('how to') || messageLower.includes('how do')) {
+          reply = '✿ I can help! Are you asking about posting errands, bidding on jobs, payments, or something else?';
+        } else {
+          reply = '✿ Thanks for reaching out! I\'m Hana. What can I help you with today? 🌸';
+        }
       }
     }
 
