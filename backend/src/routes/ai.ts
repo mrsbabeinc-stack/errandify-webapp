@@ -233,7 +233,7 @@ function correctSpellingAndPunctuation(text: string): { corrected: string; hasSu
     suggestions.push('Fixed repeated characters');
   }
 
-  // Fix common spelling mistakes (extensive list)
+  // Fix common spelling mistakes (comprehensive list)
   const commonMistakes: Record<string, string> = {
     // Common typos
     'teh': 'the',
@@ -245,7 +245,6 @@ function correctSpellingAndPunctuation(text: string): { corrected: string; hasSu
     'fi': 'if',
     'acare': 'care',
     'acared': 'cared',
-    'henders': 'henders',
     // Common misspellings
     'seperate': 'separate',
     'recieve': 'receive',
@@ -257,7 +256,6 @@ function correctSpellingAndPunctuation(text: string): { corrected: string; hasSu
     'accomodate': 'accommodate',
     'dissapear': 'disappear',
     'definitly': 'definitely',
-    'occured': 'occurred',
     'reccieve': 'receive',
     'occassionally': 'occasionally',
     'adress': 'address',
@@ -269,18 +267,32 @@ function correctSpellingAndPunctuation(text: string): { corrected: string; hasSu
     'ther': 'there',
     'recieved': 'received',
     'begining': 'beginning',
-    'occured': 'occurred',
     'realy': 'really',
     'succeded': 'succeeded',
     'writting': 'writing',
-    'acommodate': 'accommodate',
     'reccommend': 'recommend',
     'reccomend': 'recommend',
     'ocurrence': 'occurrence',
-    'untill': 'until',
     'neccessary': 'necessary',
     'succesful': 'successful',
-    'writting': 'writing',
+    // Additional common mistakes
+    'clothesss': 'clothes',
+    'clothess': 'clothes',
+    'waalk': 'walk',
+    'waaalk': 'walk',
+    'heelp': 'help',
+    'halp': 'help',
+    'bussiness': 'business',
+    'choise': 'choice',
+    'practise': 'practice',
+    'loose': 'lose',
+    'their\'s': 'theirs',
+    'your\'s': 'yours',
+    'your': 'your',
+    'teh': 'the',
+    'becuase': 'because',
+    'occured': 'occurred',
+    'seperete': 'separate',
   };
 
   for (const [wrong, right] of Object.entries(commonMistakes)) {
@@ -360,6 +372,52 @@ function correctSpellingAndPunctuation(text: string): { corrected: string; hasSu
 
   // Fix double punctuation
   corrected = corrected.replace(/([.!?]){2,}/g, '$1');
+
+  // Fix common grammar issues
+  const grammarFixes: Record<string, string> = {
+    'i need': 'I need',
+    'i want': 'I want',
+    'i have': 'I have',
+    'i am': 'I am',
+    'i have': 'I have',
+    'its ': 'it\'s ',  // its → it's
+    'theyre': 'they\'re',
+    'youre': 'you\'re',
+    'were': 'were',
+    'their looking': 'they\'re looking',
+    'were looking': 'were looking',
+  };
+
+  for (const [wrong, right] of Object.entries(grammarFixes)) {
+    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
+    if (regex.test(corrected)) {
+      corrected = corrected.replace(regex, right);
+      suggestions.push(`Grammar: "${wrong}"→"${right}"`);
+    }
+  }
+
+  // Fix common word choice mistakes
+  const wordChoiceFixes: Record<string, string> = {
+    'a lot': 'a lot',
+    'alot': 'a lot',
+    'everyday': 'every day',
+    'someday': 'some day',
+    'maybe': 'maybe',
+    'atleast': 'at least',
+    'aswell': 'as well',
+    'alright': 'all right',
+  };
+
+  for (const [wrong, right] of Object.entries(wordChoiceFixes)) {
+    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
+    if (regex.test(corrected)) {
+      corrected = corrected.replace(regex, right);
+      suggestions.push(`Word choice: "${wrong}"→"${right}"`);
+    }
+  }
+
+  // Trim extra spaces
+  corrected = corrected.trim();
 
   return {
     corrected,
