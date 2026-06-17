@@ -209,35 +209,118 @@ function correctSpellingAndPunctuation(text: string): { corrected: string; hasSu
   };
 }
 
-// Detect missing important details
+// Detect missing important details (what the doer needs to know)
 function detectMissingDetails(title: string): string[] {
   const lowerTitle = title.toLowerCase();
   const missingDetails: string[] = [];
 
-  // Check for size/type specification
-  if (lowerTitle.includes('dog') && !/(small|medium|large|big|tiny|puppy|breed)/.test(lowerTitle)) {
-    missingDetails.push('Consider specifying dog size/breed (small, medium, large)');
-  }
-  if (lowerTitle.includes('cat') && !/(small|medium|large|kitten|breed)/.test(lowerTitle)) {
-    missingDetails.push('Consider specifying cat size/type (indoor, outdoor, kitten)');
-  }
-
-  // Check for color/type in car/furniture
-  if (lowerTitle.includes('car') && !/(color|type|model)/.test(lowerTitle)) {
-    missingDetails.push('Consider mentioning car color or type');
-  }
-  if ((lowerTitle.includes('furniture') || lowerTitle.includes('chair') || lowerTitle.includes('table')) && !/(size|color|material)/.test(lowerTitle)) {
-    missingDetails.push('Consider specifying furniture size, color, or material');
-  }
-
-  // Check for quantity
-  if ((lowerTitle.includes('boxes') || lowerTitle.includes('items') || lowerTitle.includes('packages')) && !/\d+/.test(lowerTitle)) {
-    missingDetails.push('Consider stating the quantity/number of items');
+  // PET CARE - What doers need to know
+  if (lowerTitle.includes('dog')) {
+    const hasDetails = /(small|medium|large|toy|giant|breed|aggressive|friendly|energetic|calm|puppy|senior)/.test(lowerTitle);
+    if (!hasDetails) {
+      missingDetails.push('Dog size/breed (affects walking pace, control, and safety precautions)');
+    }
+    const hasTemperament = /(friendly|aggressive|calm|anxious|energetic|timid)/.test(lowerTitle);
+    if (!hasTemperament) {
+      missingDetails.push('Dog temperament (friendly, anxious, aggressive - helps doer prepare)');
+    }
+    const hasSpecialNeeds = /(medical|medication|special diet|training|behavioral|leash|muzzle)/.test(lowerTitle);
+    if (!hasSpecialNeeds) {
+      missingDetails.push('Any special needs (medication, behavioral issues, training level)');
+    }
   }
 
-  // Check for condition in repair jobs
-  if ((lowerTitle.includes('repair') || lowerTitle.includes('fix')) && !/(broken|damage|issue|problem)/.test(lowerTitle)) {
-    missingDetails.push('Briefly describe what needs repair (broken, damaged, etc.)');
+  if (lowerTitle.includes('cat')) {
+    const hasDetails = /(indoor|outdoor|senior|kitten|persian|siamese|long.?hair|short.?hair)/.test(lowerTitle);
+    if (!hasDetails) {
+      missingDetails.push('Cat type/age (affects handling, indoors vs outdoors)');
+    }
+    const hasTemperament = /(friendly|aggressive|shy|affectionate|independent)/.test(lowerTitle);
+    if (!hasTemperament) {
+      missingDetails.push('Cat temperament (shy, friendly, independent - helps doer approach safely)');
+    }
+  }
+
+  // HOME MAINTENANCE - What doers need to know
+  if ((lowerTitle.includes('repair') || lowerTitle.includes('fix') || lowerTitle.includes('maintenance'))) {
+    const hasProblem = /(broken|damage|leak|crack|stuck|loose|rusty|worn|malfunction|not working)/.test(lowerTitle);
+    if (!hasProblem) {
+      missingDetails.push('What\'s the problem? (broken, leaking, stuck, not working - helps doer diagnose)');
+    }
+    const hasLocation = /(kitchen|bathroom|bedroom|living|roof|door|window|wall|floor)/.test(lowerTitle);
+    if (!hasLocation) {
+      missingDetails.push('Location in house (helps doer prepare tools and estimate time)');
+    }
+    const hasUrgency = /(urgent|asap|today|emergency|leak|safety|flooding)/.test(lowerTitle);
+    if (!hasUrgency) {
+      missingDetails.push('Urgency level (emergency repairs vs routine maintenance)');
+    }
+  }
+
+  // CLEANING/LAUNDRY - What doers need to know
+  if ((lowerTitle.includes('clean') || lowerTitle.includes('wash') || lowerTitle.includes('laundry'))) {
+    const hasArea = /(whole house|apartment|bedroom|bathroom|kitchen|office|windows|carpet|sofa|car)/.test(lowerTitle);
+    if (!hasArea) {
+      missingDetails.push('Area/room size (helps doer estimate time and prepare supplies)');
+    }
+    const hasCondition = /(dirty|very dirty|stained|pet mess|deep clean|light clean)/.test(lowerTitle);
+    if (!hasCondition) {
+      missingDetails.push('Cleaning level needed (light clean, deep clean, pet mess - affects effort)');
+    }
+    const hasSpecial = /(special request|allergy|pet|kids|sensitive|fragrance)/.test(lowerTitle);
+    if (!hasSpecial) {
+      missingDetails.push('Any allergies, pets, or special product requirements?');
+    }
+  }
+
+  // SHOPPING/ERRANDS - What doers need to know
+  if ((lowerTitle.includes('buy') || lowerTitle.includes('shop') || lowerTitle.includes('grocery') || lowerTitle.includes('shopping'))) {
+    const hasList = /(list|items|specific|brands)/.test(lowerTitle);
+    if (!hasList) {
+      missingDetails.push('Will you provide a shopping list or brands/specific items?');
+    }
+    const hasBudget = /(\d+.*sgd|budget|amount|spend)/.test(lowerTitle);
+    if (!hasBudget) {
+      missingDetails.push('Budget/spending limit (helps doer make smart choices)');
+    }
+    const hasStore = /(supermarket|mall|specific store|online)/.test(lowerTitle);
+    if (!hasStore) {
+      missingDetails.push('Where to shop? (specific store, mall, supermarket)');
+    }
+  }
+
+  // DELIVERY/MOVING - What doers need to know
+  if ((lowerTitle.includes('move') || lowerTitle.includes('deliver') || lowerTitle.includes('transport') || lowerTitle.includes('pickup'))) {
+    const hasWeight = /(heavy|light|fragile|big|small|furniture|box)/.test(lowerTitle);
+    if (!hasWeight) {
+      missingDetails.push('Item weight/size (affects equipment needed and safety)');
+    }
+    const hasDistance = /(distance|location|floor|stairs|lift|elevator)/.test(lowerTitle);
+    if (!hasDistance) {
+      missingDetails.push('Distance & access (stairs, elevator, ground floor - affects difficulty)');
+    }
+    const hasSpecial = /(fragile|careful|insured|valuable|special handling)/.test(lowerTitle);
+    if (!hasSpecial) {
+      missingDetails.push('Any fragile items or special handling needed?');
+    }
+  }
+
+  // CHILDCARE/TUTORING - What doers need to know
+  if ((lowerTitle.includes('childcare') || lowerTitle.includes('babysit') || lowerTitle.includes('tutor') || lowerTitle.includes('teach'))) {
+    const hasAge = /(\d+.*year|infant|toddler|preschool|school.?age|teenager)/.test(lowerTitle);
+    if (!hasAge) {
+      missingDetails.push('Child age (affects activities, supervision level, care approach)');
+    }
+    const hasNeeds = /(special needs|allergies|dietary|medical|behavioral)/.test(lowerTitle);
+    if (!hasNeeds) {
+      missingDetails.push('Any special needs, allergies, or behavioral considerations?');
+    }
+    if (lowerTitle.includes('tutor') || lowerTitle.includes('teach')) {
+      const hasSubject = /(math|english|science|language|subject|level)/.test(lowerTitle);
+      if (!hasSubject) {
+        missingDetails.push('Subject/level (helps tutor prepare curriculum)');
+      }
+    }
   }
 
   return missingDetails;
