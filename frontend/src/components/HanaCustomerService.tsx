@@ -9,6 +9,7 @@ interface Message {
 }
 
 export default function HanaCustomerService() {
+  console.log('[Hana] Component mounted');
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -32,6 +33,7 @@ export default function HanaCustomerService() {
   }, [messages]);
 
   const handleSendMessage = async () => {
+    console.log('[Hana] Send button clicked, input:', input);
     if (!input.trim()) return;
 
     const userMessage: Message = {
@@ -52,13 +54,16 @@ export default function HanaCustomerService() {
         headers.Authorization = `Bearer ${token}`;
       }
 
+      console.log('[Hana] Making API call to /api/chat/hana/customer-service');
       const response = await axios.post(
         '/api/chat/hana/customer-service',
         { message: input },
         { headers }
       );
 
+      console.log('[Hana] Got response:', response.data);
       const reply = response.data?.data?.reply || response.data?.reply || 'How else can I help?';
+      console.log('[Hana] Reply text:', reply);
       const hanaMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'hana',
