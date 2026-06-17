@@ -32,6 +32,8 @@ export default function CreateErrandPage() {
   const [skillInput, setSkillInput] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [fullAddress, setFullAddress] = useState('');
+  const [gpsLocation, setGpsLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [gpsEnabled, setGpsEnabled] = useState(false);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const [aiSuggestions, setAiSuggestions] = useState({
@@ -46,6 +48,25 @@ export default function CreateErrandPage() {
     blocked: false,
     error: '',
   });
+
+  // Request GPS location on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setGpsLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+          setGpsEnabled(true);
+        },
+        (error) => {
+          console.log('GPS not available:', error.message);
+          setGpsEnabled(false);
+        }
+      );
+    }
+  }, []);
 
   // Load prefilled data from Hana on mount
   useEffect(() => {
@@ -740,6 +761,20 @@ export default function CreateErrandPage() {
                 rows={2}
                 className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
               />
+
+              {/* GPS Location Notice */}
+              {gpsEnabled && gpsLocation && (
+                <div className="mt-2 p-2 bg-blue-50 border-l-4 border-blue-400 rounded text-xs">
+                  <p className="text-blue-900">
+                    📍 <span className="font-semibold">Your current location detected:</span> {gpsLocation.latitude.toFixed(4)}, {gpsLocation.longitude.toFixed(4)}
+                  </p>
+                  {formData.location && (
+                    <p className="text-blue-800 mt-1">
+                      ℹ️ Task location: <span className="font-semibold">{formData.location}</span> — Make sure this is different from your current location if the doer needs to travel.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
