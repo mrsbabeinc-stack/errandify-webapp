@@ -12,8 +12,27 @@ interface LayoutProps {
   onLogout: () => void;
 }
 
+interface TaskData {
+  title: string;
+  description: string;
+  category: string;
+  location: string;
+  date: string;
+  time: string;
+  budget: string;
+  notes: string;
+}
+
 export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps) {
   const [showHanaChat, setShowHanaChat] = useState(false);
+  const [taskDataFromHana, setTaskDataFromHana] = useState<TaskData | null>(null);
+
+  const handleHanaComplete = (taskData: TaskData) => {
+    setTaskDataFromHana(taskData);
+    setShowHanaChat(false);
+    // Navigate to create errand page and let it know about pre-filled data
+    window.location.href = `/create-errand?prefilled=${encodeURIComponent(JSON.stringify(taskData))}`;
+  };
 
   return (
     <div className="flex flex-col h-screen bg-errandify-bg">
@@ -35,10 +54,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
       <HanaTaskCreation
         isOpen={showHanaChat}
         onClose={() => setShowHanaChat(false)}
-        onSwitchToManual={() => {
-          setShowHanaChat(false);
-          // Navigate to manual form if needed
-        }}
+        onComplete={handleHanaComplete}
       />
 
       {/* Bottom Navigation */}
