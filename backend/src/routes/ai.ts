@@ -876,27 +876,22 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Input too short' });
     }
 
-    const apiKey = process.env.QWEN_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: 'API key not configured' });
-    }
-
-    // Normalize input: handle common Singlish patterns before sending to AI
+    // Normalize input: handle common Singlish patterns
     let normalizedInput = input.toLowerCase().trim();
 
-    // Remove Singlish particles that don't add meaning
-    normalizedInput = normalizedInput.replace(/\s+(lor|lah|leh|lor|meh|lor|lor|lor|lor)\s*/g, ' ');
-    normalizedInput = normalizedInput.replace(/\s+(lor|lah|leh|lor|meh)$/g, '');
+    // Remove Singlish particles
+    normalizedInput = normalizedInput.replace(/\s+(lor|lah|leh|meh)\s*/g, ' ');
+    normalizedInput = normalizedInput.replace(/\s+(lor|lah|leh|meh)$/g, '');
 
-    // Replace common shortcuts
+    // Replace common shortcuts - do longer ones first to avoid conflicts
     const shortcuts: Record<string, string> = {
-      'tmr': 'tomorrow',
-      'tomorrow morning': 'tomorrow 09:00',
-      'tomorrow afternoon': 'tomorrow 14:00',
-      'tomorrow evening': 'tomorrow 18:00',
       'tmr morning': 'tomorrow 09:00',
       'tmr afternoon': 'tomorrow 14:00',
       'tmr evening': 'tomorrow 18:00',
+      'tomorrow morning': 'tomorrow 09:00',
+      'tomorrow afternoon': 'tomorrow 14:00',
+      'tomorrow evening': 'tomorrow 18:00',
+      'tmr': 'tomorrow',
       'sat': 'saturday',
       'sun': 'sunday',
       'mon': 'monday',
@@ -904,21 +899,9 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       'wed': 'wednesday',
       'thu': 'thursday',
       'fri': 'friday',
-      'asap': 'urgent today',
-      'urgent': 'urgent today',
-      'rush': 'urgent today',
-      'morning': '09:00',
-      'afternoon': '14:00',
-      'evening': '18:00',
-      'night': '20:00',
-      'pls': 'please',
-      'thanx': 'thanks',
-      'thx': 'thanks',
-      'tq': 'thanks',
-      'ok': 'okay',
-      'nah': 'no',
-      'yeah': 'yes',
-      'yep': 'yes',
+      'asap': 'today',
+      'urgent': 'today',
+      'rush': 'today',
     };
 
     for (const [shortcut, full] of Object.entries(shortcuts)) {
@@ -928,40 +911,29 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Fix missing spaces around common words
     normalizedInput = normalizedInput
       .replace(/([a-z])(at|in|near|to|from)([a-z])/g, '$1 $2 $3')
-      .replace(/(\d+)(am|pm|morning|afternoon|evening|night)/g, '$1 $2');
+      .replace(/(\d+)(am|pm)/g, '$1 $2');
 
-    const prompt = `You are an AI assistant that understands Singlish, Singapore slang, and casual shorthand.
-You extract structured errand information from user input in Singapore context.
+    const prompt = `Extract task info from this input and return ONLY JSON (no markdown, no text before/after).
 
-CONTEXT:
-- Today's date is 2026-06-17 (Tuesday)
-- Common Singapore areas: Orchard, Marina Bay, Tampines, Jurong, Clementi, Bishan, Serangoon, Bedok, Geylang, Bukit Timah, Holland, Tanglin, East Coast, Hougang, Punggol, Pasir Ris, Sengkang, Ang Mo Kio, Tiong Bahru, Redhill, Queenstown, Commonwealth, Pasir Panjang, Outram, Tanjong Pagar, Chinatown, Kallang, Lavender
+Input: "${normalizedInput}"
 
-TASK EXAMPLES:
-- "clean house at tampines tomorrow afternoon 50" → title: Clean house at Tampines, location: Tampines, date: 2026-06-18, time: 14:00, budget: 50
-- "help me fix broken door" → title: Fix broken door, category: home-maintenance
-- "buy groceries at ntuc" → title: Buy groceries at NTUC, category: shopping-errands
-- "walk dog east coast park" → title: Walk dog at East Coast Park, category: pet-care, location: East Coast
-- "babysit child weekend" → title: Babysit child, category: childcare-tutoring
-- "paint bedroom blue" → title: Paint bedroom blue, category: home-maintenance
-- "deliver package to serangoon" → title: Deliver package, category: delivery-moving, location: Serangoon
-- "tutor maths tmr 100" → title: Tutor Maths, date: 2026-06-18, budget: 100, category: childcare-tutoring
+Return ONLY this JSON format - fill empty fields with "":
+{"title": "...", "category": "...", "location": "...", "date": "", "time": "", "budget": "", "notes": ""}
 
-EXTRACTION RULES:
-1. TITLE: Extract what work needs to be done (max 50 chars)
-2. CATEGORY: Match to one of these: home-maintenance, cleaning-laundry, shopping-errands, delivery-moving, childcare-tutoring, pet-care, tech-support, moving-help
-3. LOCATION: Singapore area names only
-4. DATE: ISO format (YYYY-MM-DD). If "tomorrow" use 2026-06-18. If Saturday use next occurrence.
-5. TIME: HH:MM format (24-hour). 09:00=morning, 14:00=afternoon, 18:00=evening, 20:00=night
-6. BUDGET: Numbers only, no currency symbols
-7. NOTES: Any special requirements or details
+Categories: home-maintenance, cleaning-laundry, shopping-errands, delivery-moving, childcare-tutoring, pet-care, tech-support, moving-help
 
-Given this user input, extract and return ONLY valid JSON (no markdown, no code blocks):
+Singapore areas: Orchard, Marina Bay, Tampines, Jurong, Clementi, Bishan, Serangoon, Bedok, Geylang, East Coast, Hougang, Punggol, Everton, Bukit Timah, Holland, Tanglin
 
-User input: "${normalizedInput}"
+TODAY IS 2026-06-17 (Tuesday). For dates:
+- "thursday" = 2026-06-19
+- "tomorrow" = 2026-06-18
+- "saturday" = 2026-06-21
+- "sunday" = 2026-06-22
 
-Return ONLY valid JSON in this exact format:
-{"title": "...", "category": "...", "location": "...", "date": "...", "time": "...", "budget": "...", "notes": "..."}`;
+For time - convert to HH:MM:
+- "4pm" = "16:00"
+- "morning" = "09:00"
+- "afternoon" = "14:00"`;
 
     const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
       method: 'POST',
