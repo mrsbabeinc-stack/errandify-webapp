@@ -87,30 +87,12 @@ export default function HanaAnimatedAvatar({
         <img
           src="/images/Hana_Pose_2_4K.png"
           alt="Hana"
-          className={`w-full h-full object-cover transition-all duration-300 ${
-            isSpeaking ? 'animate-speak-pulse' : ''
-          }`}
+          className="w-full h-full object-cover"
           style={{
             objectPosition: 'center 25%',
-            filter: isSpeaking ? 'brightness(1.05)' : 'brightness(1)',
           }}
         />
       </div>
-
-      <style>{`
-        @keyframes speakPulse {
-          0%, 100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.02);
-          }
-        }
-
-        .animate-speak-pulse {
-          animation: speakPulse 0.6s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }
