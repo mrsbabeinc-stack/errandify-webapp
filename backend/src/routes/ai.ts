@@ -9,6 +9,34 @@ const inappropriateTerms = [
   'illegal', 'stolen', 'weapon', 'gun', 'knife', 'bomb',
 ];
 
+// Discriminatory/biased language filter
+const discriminatoryTerms = [
+  // Race/ethnicity
+  { term: 'only hire', reason: 'discriminatory hiring' },
+  { term: 'no asian', reason: 'racial discrimination' },
+  { term: 'no black', reason: 'racial discrimination' },
+  { term: 'no white', reason: 'racial discrimination' },
+  { term: 'no indian', reason: 'racial discrimination' },
+  { term: 'no latino', reason: 'racial discrimination' },
+  { term: 'no muslim', reason: 'religious discrimination' },
+  { term: 'no christian', reason: 'religious discrimination' },
+  { term: 'no jewish', reason: 'religious discrimination' },
+  // Age/gender
+  { term: 'young only', reason: 'age discrimination' },
+  { term: 'no old', reason: 'age discrimination' },
+  { term: 'men only', reason: 'gender discrimination' },
+  { term: 'women only', reason: 'gender discrimination' },
+  { term: 'no gay', reason: 'sexual orientation discrimination' },
+  { term: 'no transgender', reason: 'gender identity discrimination' },
+  // Disability
+  { term: 'no disabled', reason: 'disability discrimination' },
+  { term: 'able bodied only', reason: 'disability discrimination' },
+  // Appearance
+  { term: 'must be attractive', reason: 'appearance discrimination' },
+  { term: 'good looking', reason: 'appearance discrimination' },
+  { term: 'attractive only', reason: 'appearance discrimination' },
+];
+
 // Detail keywords that require specification
 const detailKeywords: Record<string, string[]> = {
   'size/weight': ['dog', 'cat', 'pet', 'furniture', 'package', 'item', 'box', 'load', 'cargo'],
@@ -53,14 +81,35 @@ function checkContentSafety(text: string): { safe: boolean; issue: string } {
   return { safe: true, issue: '' };
 }
 
-// Basic spelling/punctuation correction
+// Check for discriminatory/biased language
+function checkBiasAndDiscrimination(text: string): { safe: boolean; issue: string } {
+  const lowerText = text.toLowerCase();
+
+  for (const { term, reason } of discriminatoryTerms) {
+    if (lowerText.includes(term)) {
+      return { safe: false, issue: `Discriminatory content detected (${reason}). This violates fair hiring practices.` };
+    }
+  }
+
+  return { safe: true, issue: '' };
+}
+
+// Comprehensive spelling/punctuation correction
 function correctSpellingAndPunctuation(text: string): { corrected: string; hasSuggestions: boolean } {
   let corrected = text.trim();
   const suggestions: string[] = [];
 
-  // Fix common spelling mistakes
+  // Fix common spelling mistakes (extensive list)
   const commonMistakes: Record<string, string> = {
+    // Common typos
     'teh': 'the',
+    'taht': 'that',
+    'hte': 'the',
+    'adn': 'and',
+    'og': 'to',
+    'od': 'do',
+    'fi': 'if',
+    // Common misspellings
     'seperate': 'separate',
     'recieve': 'receive',
     'occured': 'occurred',
@@ -69,15 +118,51 @@ function correctSpellingAndPunctuation(text: string): { corrected: string; hasSu
     'necesary': 'necessary',
     'occassion': 'occasion',
     'accomodate': 'accommodate',
+    'dissapear': 'disappear',
+    'definitly': 'definitely',
+    'occured': 'occurred',
+    'reccieve': 'receive',
+    'occassionally': 'occasionally',
+    'adress': 'address',
+    'calender': 'calendar',
+    'dosen\'t': 'doesn\'t',
+    'doesnt': 'doesn\'t',
+    'dont': 'don\'t',
+    'thier': 'their',
+    'ther': 'there',
+    'recieved': 'received',
+    'begining': 'beginning',
+    'occured': 'occurred',
+    'realy': 'really',
+    'succeded': 'succeeded',
+    'writting': 'writing',
+    'acommodate': 'accommodate',
+    'reccommend': 'recommend',
+    'reccomend': 'recommend',
+    'ocurrence': 'occurrence',
+    'untill': 'until',
+    'neccessary': 'necessary',
+    'succesful': 'successful',
+    'writting': 'writing',
   };
 
   for (const [wrong, right] of Object.entries(commonMistakes)) {
     const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
     if (regex.test(corrected)) {
       corrected = corrected.replace(regex, right);
-      suggestions.push(`Changed "${wrong}" to "${right}"`);
+      suggestions.push(`Corrected "${wrong}"→"${right}"`);
     }
   }
+
+  // Fix multiple spaces
+  if (/ {2,}/.test(corrected)) {
+    corrected = corrected.replace(/ {2,}/g, ' ');
+    suggestions.push('Removed extra spaces');
+  }
+
+  // Fix spacing around punctuation
+  corrected = corrected.replace(/\s+([.,!?;:])/g, '$1');
+  corrected = corrected.replace(/([.,!?;:])\s+([a-z])/g, '$1 $2');
 
   // Ensure proper capitalization at start
   if (corrected.length > 0 && corrected[0] === corrected[0].toLowerCase()) {
@@ -85,11 +170,17 @@ function correctSpellingAndPunctuation(text: string): { corrected: string; hasSu
     suggestions.push('Capitalized first letter');
   }
 
-  // Add period if missing at end
+  // Capitalize 'I' pronoun
+  corrected = corrected.replace(/\bi\b/g, 'I');
+
+  // Add period if missing at end and no other punctuation
   if (corrected.length > 0 && !/[.!?]$/.test(corrected)) {
     corrected += '.';
     suggestions.push('Added period at end');
   }
+
+  // Fix double punctuation
+  corrected = corrected.replace(/([.!?]){2,}/g, '$1');
 
   return {
     corrected,
@@ -169,6 +260,16 @@ router.post('/suggestions', (req: Request, res: Response) => {
       return res.status(400).json({
         success: false,
         error: safetyCheck.issue,
+        blocked: true,
+      });
+    }
+
+    // Check for discriminatory/biased content
+    const biasCheck = checkBiasAndDiscrimination(title);
+    if (!biasCheck.safe) {
+      return res.status(400).json({
+        success: false,
+        error: biasCheck.issue,
         blocked: true,
       });
     }
