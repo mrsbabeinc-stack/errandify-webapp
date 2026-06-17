@@ -204,12 +204,26 @@ export default function HanaCustomerService() {
     console.log('[Hana] Matching voices:', matchingVoices.map(v => ({ name: v.name, lang: v.lang })));
 
     // Blacklist male voices and select female
-    const malePatterns = ['Li-Mu', 'Lü-Si', 'Lu-Si', 'male', 'man'];
-    const femaleVoices = matchingVoices.filter(v =>
-      !malePatterns.some(pattern => v.name.toLowerCase().includes(pattern.toLowerCase()))
+    const malePatterns = ['Li-Mu', 'Lü-Si', 'Lu-Si', 'male', 'man', 'david', 'google uk english', 'moira', 'alex', 'bruce', 'junior'];
+    const femalePatterns = ['victoria', 'karen', 'samantha', 'zira', 'susan', 'mei-jia', 'sin-ji', 'female', 'woman'];
+
+    // First try to find voices with explicit female patterns
+    let selectedVoice = matchingVoices.find(v =>
+      femalePatterns.some(pattern => v.name.toLowerCase().includes(pattern.toLowerCase()))
     );
 
-    let selectedVoice = femaleVoices[0] || matchingVoices[0];
+    // If not found, filter out male voices
+    if (!selectedVoice) {
+      const femaleVoices = matchingVoices.filter(v =>
+        !malePatterns.some(pattern => v.name.toLowerCase().includes(pattern.toLowerCase()))
+      );
+      selectedVoice = femaleVoices[0];
+    }
+
+    // Last resort - use any voice
+    if (!selectedVoice) {
+      selectedVoice = matchingVoices[0];
+    }
 
     if (selectedVoice) {
       utterance.voice = selectedVoice;
