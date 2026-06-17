@@ -62,9 +62,10 @@ export default function HanaTaskCreation({
 
   const triggerExpression = () => {
     setIsSpeaking(true);
-    // Calculate speaking duration based on message length
-    const duration = Math.max(2000, Math.min(hanaMessage.length * 50, 8000));
-    setTimeout(() => setIsSpeaking(false), duration);
+  };
+
+  const handleSpeakingEnd = () => {
+    setIsSpeaking(false);
   };
 
   const startRecording = async () => {
@@ -325,7 +326,11 @@ export default function HanaTaskCreation({
           {/* Middle Section: Hana Image with Animation */}
           <div className="flex-1 flex items-center justify-center overflow-hidden px-4 py-4">
             <div className="h-96 w-auto">
-              <HanaAnimatedAvatar isSpeaking={isSpeaking} message={hanaMessage} />
+              <HanaAnimatedAvatar
+                isSpeaking={isSpeaking}
+                message={hanaMessage}
+                onSpeakingEnd={handleSpeakingEnd}
+              />
             </div>
           </div>
 
