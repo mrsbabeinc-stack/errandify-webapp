@@ -164,7 +164,7 @@ export default function CreateErrandPage() {
     '05': { area: 'Outram', building: 'Outram Park' },
     '06': { area: 'People\'s Park', building: 'People\'s Park Centre' },
     '07': { area: 'Chinatown', building: 'Chinatown Complex' },
-    '08': { area: 'Fort Canning', building: 'Fort Canning' },
+    '08': { area: 'Tanjong Pagar', building: 'Tanjong Pagar Plaza' },
     '09': { area: 'Tanjong Pagar', building: 'Tanjong Pagar Plaza' },
     '10': { area: 'Orchard', building: 'Orchard Road' },
     '11': { area: 'Orchard', building: 'Orchard Road' },
