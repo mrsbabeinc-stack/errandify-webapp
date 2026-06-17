@@ -4,6 +4,11 @@ import axios from 'axios';
 import App from './App';
 import './index.css';
 
+// Load ResponsiveVoice.JS for high-quality TTS
+const script = document.createElement('script');
+script.src = 'https://code.responsivevoice.org/responsivevoice.js';
+document.head.appendChild(script);
+
 // Set up axios to use the API URL from environment
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 

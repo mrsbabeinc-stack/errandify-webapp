@@ -152,9 +152,43 @@ export default function HanaCustomerService() {
   };
 
   const speakWithBrowserTTS = (text: string) => {
-    console.log('[Hana] Using browser TTS as fallback');
-    window.speechSynthesis.cancel();
+    const responsiveVoice = (window as any).responsiveVoice;
 
+    if (responsiveVoice && responsiveVoice.isReady) {
+      console.log('[Hana] Using ResponsiveVoice AI TTS');
+
+      // Map language to ResponsiveVoice female voices
+      const voiceMap: Record<Language, string> = {
+        en: 'UK English Female', // Professional UK female voice
+        zh: 'Chinese Female', // Chinese Mandarin female voice
+        yue: 'Chinese Female', // Cantonese (using Chinese Female as fallback)
+      };
+
+      const voice = voiceMap[language] || voiceMap['en'];
+
+      responsiveVoice.speak(text, voice, {
+        rate: 0.9,
+        onstart: () => {
+          console.log('[Hana] ResponsiveVoice started:', voice);
+          setIsSpeaking(true);
+        },
+        onend: () => {
+          console.log('[Hana] ResponsiveVoice finished');
+          setIsSpeaking(false);
+        },
+        onerror: (error: any) => {
+          console.error('[Hana] ResponsiveVoice error:', error);
+          setIsSpeaking(false);
+        },
+      });
+    } else {
+      console.log('[Hana] ResponsiveVoice not available, using browser TTS');
+      fallbackBrowserTTS(text);
+    }
+  };
+
+  const fallbackBrowserTTS = (text: string) => {
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
 
     const languageMap: Record<Language, string> = {
@@ -178,29 +212,19 @@ export default function HanaCustomerService() {
                        voice.name.toLowerCase().includes('victoria') ||
                        voice.name.toLowerCase().includes('karen') ||
                        voice.name.toLowerCase().includes('moira') ||
-                       voice.name.toLowerCase().includes('fiona') ||
-                       !voice.name.toLowerCase().includes('male');
+                       voice.name.toLowerCase().includes('fiona');
       return langMatch && isFemale;
     });
 
     if (femaleVoices.length > 0) {
-      console.log('[Hana] Found female voices:', femaleVoices.map(v => v.name));
       utterance.voice = femaleVoices[0];
-    } else {
-      // Fallback: any voice matching language
-      const langVoices = voices.filter(v => v.lang.toLowerCase().startsWith(targetLang.split('-')[0]));
-      if (langVoices.length > 0) {
-        console.log('[Hana] Using language-matching voice:', langVoices[0].name);
-        utterance.voice = langVoices[0];
-      }
     }
 
     utterance.rate = 0.95;
     utterance.pitch = 1.2;
-    utterance.volume = 1;
 
     utterance.onstart = () => {
-      console.log('[Hana] Browser TTS started with voice:', utterance.voice?.name);
+      console.log('[Hana] Browser TTS started');
       setIsSpeaking(true);
     };
 
@@ -209,8 +233,7 @@ export default function HanaCustomerService() {
       setIsSpeaking(false);
     };
 
-    utterance.onerror = (event: any) => {
-      console.error('[Hana] Browser TTS error:', event.error);
+    utterance.onerror = () => {
       setIsSpeaking(false);
     };
 
