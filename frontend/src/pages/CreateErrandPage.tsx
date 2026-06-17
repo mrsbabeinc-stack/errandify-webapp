@@ -653,28 +653,30 @@ export default function CreateErrandPage() {
               <label className="block text-sm font-semibold text-errandify-brown mb-2">
                 Errand Time
               </label>
-              <input
-                type="time"
-                name="time"
-                value={formData.time}
-                onChange={(e) => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    time: e.target.value,
-                  }));
-                }}
-                onFocus={() => setShowTimePicker(true)}
-                onBlur={() => setTimeout(() => setShowTimePicker(false), 200)}
-                placeholder="HH:MM"
-                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base placeholder:text-gray-400 cursor-pointer"
-              />
+              <div className="relative">
+                <input
+                  type="time"
+                  name="time"
+                  value={formData.time}
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      time: e.target.value,
+                    }));
+                  }}
+                  onFocus={() => setShowTimePicker(true)}
+                  onBlur={() => setTimeout(() => setShowTimePicker(false), 200)}
+                  placeholder="HH:MM"
+                  className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base placeholder:text-gray-400 cursor-pointer"
+                />
 
-              {/* Visual time picker indicator */}
-              {showTimePicker && (
-                <div className="absolute right-0 top-full mt-1 text-xs text-errandify-orange font-semibold">
-                  🕐 Clock active
-                </div>
-              )}
+                {/* Clock icon indicator */}
+                {showTimePicker && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xl animate-pulse">
+                    🕐
+                  </div>
+                )}
+              </div>
             </div>
 
             <div>
