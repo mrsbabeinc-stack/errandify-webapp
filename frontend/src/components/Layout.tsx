@@ -1,8 +1,10 @@
 import { Outlet } from 'react-router-dom';
+import { useState } from 'react';
 import BottomNav from './BottomNav';
 import RoleToggle from './RoleToggle';
 import NotificationIcon from './NotificationIcon';
 import HanaAssistant from './HanaAssistant';
+import HanaTaskChat from './HanaTaskChat';
 
 interface LayoutProps {
   userRole: 'asker' | 'doer';
@@ -11,6 +13,7 @@ interface LayoutProps {
 }
 
 export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps) {
+  const [showHanaChat, setShowHanaChat] = useState(false);
 
   return (
     <div className="flex flex-col h-screen bg-errandify-bg">
@@ -28,8 +31,18 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
       {/* Hana Assistant - Floating Button */}
       <HanaAssistant />
 
+      {/* Hana Task Chat Modal */}
+      <HanaTaskChat
+        isOpen={showHanaChat}
+        onClose={() => setShowHanaChat(false)}
+      />
+
       {/* Bottom Navigation */}
-      <BottomNav onLogout={onLogout} userRole={userRole} />
+      <BottomNav
+        onLogout={onLogout}
+        userRole={userRole}
+        onCreateTask={() => setShowHanaChat(true)}
+      />
     </div>
   );
 }
