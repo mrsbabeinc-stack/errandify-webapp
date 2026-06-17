@@ -2,6 +2,7 @@ import { Router } from 'express';
 import axios from 'axios';
 import { config } from '../config.js';
 import { authMiddleware } from '../middleware/auth.js';
+import gTTS from 'gtts';
 
 const router = Router();
 
@@ -234,7 +235,7 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
   }
 });
 
-// Text-to-Speech endpoint - Convert Hana's text response to audio
+// Text-to-Speech endpoint - Convert Hana's text response to audio using Google TTS
 router.post('/chat/hana/speak', async (req: any, res: any) => {
   try {
     const { text, language = 'en' } = req.body;
@@ -245,15 +246,41 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
 
     console.log('[Hana TTS] Converting text to speech:', { language, textLength: text.length });
 
-    // For free TTS, we return a signal to use browser TTS
-    // This allows the frontend to use Web Speech API with proper voice selection
+    // Map language codes to gTTS language codes
+    const languageMap: Record<string, string> = {
+      en: 'en', // English
+      zh: 'zh-CN', // Simplified Chinese / Mandarin
+      yue: 'zh-TW', // Traditional Chinese / Cantonese
+    };
+
+    const lang = languageMap[language] || 'en';
+
+    // Generate speech using gTTS (Google Text-to-Speech)
+    const gtts = new gTTS(text, { lang, slow: false });
+
+    // Create audio buffer
+    const audioBuffer = await new Promise<Buffer>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+
+      gtts.stream().on('data', (chunk: Buffer) => {
+        chunks.push(chunk);
+      }).on('end', () => {
+        resolve(Buffer.concat(chunks));
+      }).on('error', (error: any) => {
+        reject(error);
+      });
+    });
+
+    console.log('[Hana TTS] Audio generated successfully, size:', audioBuffer.length);
+
+    // Convert to base64
+    const audioBase64 = audioBuffer.toString('base64');
 
     res.json({
       success: true,
       data: {
-        method: 'browser-tts',
-        language,
-        message: 'Use browser TTS with system voices',
+        audio: `data:audio/mpeg;base64,${audioBase64}`,
+        format: 'base64',
       },
     });
   } catch (error: any) {
