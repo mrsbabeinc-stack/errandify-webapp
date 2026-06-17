@@ -49,14 +49,25 @@ export default function LandingPage() {
           {/* CTA Button */}
           <button
             onClick={() => window.location.href = '/login'}
-            className="w-full max-w-xs bg-errandify-orange text-white py-3 rounded-full font-bold text-sm hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl mb-2"
+            className="w-full max-w-xs bg-errandify-orange text-white py-3 rounded-full font-bold text-sm hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl mb-3"
           >
             Get Started
           </button>
 
-          {/* Footer Text */}
-          <p className="text-xs text-gray-500 text-center">
-            Singapore AI Powered Community Platform
+          {/* Sign In Link */}
+          <p className="text-sm text-gray-700 text-center mb-4">
+            Already have an account?{' '}
+            <a href="/login" className="text-errandify-orange font-bold hover:underline">
+              Sign in
+            </a>
+          </p>
+
+          {/* Divider */}
+          <div className="w-full max-w-xs border-t border-gray-300 mb-3"></div>
+
+          {/* SingPass Footer */}
+          <p className="text-xs text-gray-600 text-center">
+            Powered by SingPass
           </p>
         </div>
       </div>
