@@ -862,44 +862,6 @@ export default function CreateErrandPage() {
               )}
             </div>
 
-            {/* Notes - Shown only to confirmed doer */}
-            <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Notes (Shown to Confirmed Doer) <span className="text-xs text-gray-600">(optional)</span>
-              </label>
-              <textarea
-                name="specialNote"
-                value={formData.specialNote}
-                onChange={handleChange}
-                placeholder="e.g., access instructions, special requirements, or preferences"
-                rows={2}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
-              />
-
-              {/* AI Suggestion for Notes */}
-              {aiSuggestions.suggestedNotes && !formData.specialNote && (
-                <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="flex-1">
-                      <p className="text-xs font-semibold text-blue-900 mb-1">💡 AI Suggested Notes:</p>
-                      <p className="text-sm text-blue-800">{aiSuggestions.suggestedNotes}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          specialNote: aiSuggestions.suggestedNotes,
-                        }));
-                      }}
-                      className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 whitespace-nowrap flex-shrink-0"
-                    >
-                      ✓ Use
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Section 4: Skills Required */}
@@ -1120,6 +1082,49 @@ export default function CreateErrandPage() {
             )}
           </div>
           )}
+        </div>
+
+        {/* Section 6: Notes - At end of form */}
+        <div className="border-t pt-4 space-y-4">
+          <h3 className="font-bold text-errandify-brown text-sm">Additional Notes</h3>
+
+          <div>
+            <label className="block text-sm font-semibold text-errandify-brown mb-2">
+              Notes (Shown to Confirmed Doer) <span className="text-xs text-gray-600">(optional)</span>
+            </label>
+            <textarea
+              name="specialNote"
+              value={formData.specialNote}
+              onChange={handleChange}
+              placeholder="e.g., access instructions, special requirements, or preferences"
+              rows={2}
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
+            />
+
+            {/* AI Suggestion for Notes */}
+            {aiSuggestions.suggestedNotes && !formData.specialNote && (
+              <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-blue-900 mb-1">💡 AI Suggested Notes:</p>
+                    <p className="text-sm text-blue-800">{aiSuggestions.suggestedNotes}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        specialNote: aiSuggestions.suggestedNotes,
+                      }));
+                    }}
+                    className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 whitespace-nowrap flex-shrink-0"
+                  >
+                    ✓ Use
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Quick Summary & Post Button */}
