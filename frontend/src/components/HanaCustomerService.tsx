@@ -163,11 +163,44 @@ export default function HanaCustomerService() {
       yue: 'zh-HK',
     };
     utterance.lang = languageMap[language];
+
+    // Find female voice
+    const voices = window.speechSynthesis.getVoices();
+    const targetLang = languageMap[language];
+
+    // Filter for female voices in the target language
+    const femaleVoices = voices.filter(voice => {
+      const voiceLang = voice.lang.toLowerCase();
+      const langMatch = voiceLang.startsWith(targetLang.split('-')[0]);
+      const isFemale = voice.name.toLowerCase().includes('female') ||
+                       voice.name.toLowerCase().includes('woman') ||
+                       voice.name.toLowerCase().includes('samantha') ||
+                       voice.name.toLowerCase().includes('victoria') ||
+                       voice.name.toLowerCase().includes('karen') ||
+                       voice.name.toLowerCase().includes('moira') ||
+                       voice.name.toLowerCase().includes('fiona') ||
+                       !voice.name.toLowerCase().includes('male');
+      return langMatch && isFemale;
+    });
+
+    if (femaleVoices.length > 0) {
+      console.log('[Hana] Found female voices:', femaleVoices.map(v => v.name));
+      utterance.voice = femaleVoices[0];
+    } else {
+      // Fallback: any voice matching language
+      const langVoices = voices.filter(v => v.lang.toLowerCase().startsWith(targetLang.split('-')[0]));
+      if (langVoices.length > 0) {
+        console.log('[Hana] Using language-matching voice:', langVoices[0].name);
+        utterance.voice = langVoices[0];
+      }
+    }
+
     utterance.rate = 0.95;
-    utterance.pitch = 1.1;
+    utterance.pitch = 1.2;
+    utterance.volume = 1;
 
     utterance.onstart = () => {
-      console.log('[Hana] Browser TTS started');
+      console.log('[Hana] Browser TTS started with voice:', utterance.voice?.name);
       setIsSpeaking(true);
     };
 
