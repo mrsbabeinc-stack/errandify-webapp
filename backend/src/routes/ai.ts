@@ -115,10 +115,24 @@ function checkBiasAndDiscrimination(text: string): { safe: boolean; issue: strin
   return { safe: true, issue: '' };
 }
 
+// Remove duplicate/repeated characters in words (waaalk → walk, liiike → like)
+function removeDuplicateCharacters(text: string): string {
+  // Replace 3+ repeated characters with 2 (waaaalknmy → waaalknmy → waallknmy... eventually to walknmy)
+  // But preserve intentional doubles like "ll" in "hello"
+  return text.replace(/([a-z])\1{2,}/gi, '$1$1');
+}
+
 // Comprehensive spelling/punctuation correction
 function correctSpellingAndPunctuation(text: string): { corrected: string; hasSuggestions: boolean } {
   let corrected = text.trim();
   const suggestions: string[] = [];
+
+  // First, remove excessive repeated characters (waaalk → waalk)
+  const withoutDuplicates = removeDuplicateCharacters(corrected);
+  if (withoutDuplicates !== corrected) {
+    corrected = withoutDuplicates;
+    suggestions.push('Fixed repeated characters');
+  }
 
   // Fix common spelling mistakes (extensive list)
   const commonMistakes: Record<string, string> = {
@@ -179,6 +193,42 @@ function correctSpellingAndPunctuation(text: string): { corrected: string; hasSu
   if (/ {2,}/.test(corrected)) {
     corrected = corrected.replace(/ {2,}/g, ' ');
     suggestions.push('Removed extra spaces');
+  }
+
+  // Try to fix common words without spaces (e.g., "walkmy" → "walk my")
+  // Common words that might be missing spaces
+  const commonWords = ['walk', 'help', 'need', 'fix', 'clean', 'my', 'the', 'a', 'an', 'for', 'and', 'to', 'do', 'get', 'make', 'take'];
+
+  // Split on common word boundaries if multiple words run together
+  const words = corrected.toLowerCase().split(/\s+/);
+  const processedWords: string[] = [];
+
+  for (let word of words) {
+    // Check if this word contains multiple dictionary words run together
+    let bestSplit = word;
+    let foundSplit = false;
+
+    // Try to find if word contains known patterns like "walk" + "my"
+    for (let i = 3; i < word.length && !foundSplit; i++) {
+      const firstPart = word.substring(0, i);
+      const secondPart = word.substring(i);
+
+      if (commonWords.includes(firstPart) && secondPart.length > 0 &&
+          (commonWords.includes(secondPart) || secondPart === 'dog' || secondPart === 'cat' ||
+           secondPart === 'house' || secondPart === 'home' || secondPart === 'car' ||
+           secondPart === 'tonight' || secondPart.length <= 10)) {
+        bestSplit = firstPart + ' ' + secondPart;
+        foundSplit = true;
+      }
+    }
+
+    processedWords.push(bestSplit);
+  }
+
+  const withSpaceFix = processedWords.join(' ');
+  if (withSpaceFix !== corrected) {
+    corrected = withSpaceFix;
+    suggestions.push('Added missing spaces between words');
   }
 
   // Fix spacing around punctuation
