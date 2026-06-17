@@ -269,15 +269,6 @@ export default function CreateErrandPage() {
     }, 300); // Wait 300ms after user stops typing
   };
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setFormData((prev) => ({ ...prev, title: value }));
-
-    // Trigger AI suggestions with debounce (wait 300ms after user stops typing)
-    if (value.length > 3) {
-      debouncedFetchAiSuggestions(value, formData.description);
-    }
-  };
 
   // Extract time, duration, budget when title changes
   useEffect(() => {
@@ -350,8 +341,10 @@ export default function CreateErrandPage() {
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
 
-      // Trigger AI suggestions when description changes
-      if (name === 'description' && value.length > 5) {
+      // Trigger AI suggestions for title and description
+      if (name === 'title' && value.length > 3) {
+        debouncedFetchAiSuggestions(value, formData.description);
+      } else if (name === 'description' && value.length > 5) {
         debouncedFetchAiSuggestions(formData.title, value);
       }
     }
@@ -480,7 +473,7 @@ export default function CreateErrandPage() {
                 type="text"
                 name="title"
                 value={formData.title}
-                onChange={handleTitleChange}
+                onChange={handleChange}
                 placeholder="What do you need help with?"
                 className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
               />
