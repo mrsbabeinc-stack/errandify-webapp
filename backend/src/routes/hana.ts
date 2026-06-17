@@ -3,8 +3,13 @@ import axios from 'axios';
 import { config } from '../config.js';
 import { authMiddleware } from '../middleware/auth.js';
 import gTTS from 'gtts';
+import crypto from 'crypto';
 
 const router = Router();
+
+// Audio cache to avoid regenerating same text
+const audioCache = new Map<string, { audio: string; timestamp: number }>();
+const CACHE_TTL = 3600000; // 1 hour in milliseconds
 
 // Hana AI Assistant - Process user messages
 router.post('/chat/hana', authMiddleware, async (req: any, res: any) => {
@@ -235,7 +240,8 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
   }
 });
 
-// Text-to-Speech endpoint - Convert Hana's text response to audio using Google TTS
+// Text-to-Speech endpoint - Convert Hana's text response to audio
+// Using Microsoft Azure Speech Services for Singapore English with female voice
 router.post('/chat/hana/speak', async (req: any, res: any) => {
   try {
     const { text, language = 'en' } = req.body;
@@ -244,21 +250,110 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
       return res.status(400).json({ error: 'Text required' });
     }
 
+    // Check cache first
+    const cacheKey = `${language}:${crypto.createHash('md5').update(text).digest('hex')}`;
+    const cached = audioCache.get(cacheKey);
+
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
+      console.log('[Hana TTS] Returning cached audio');
+      return res.json({
+        success: true,
+        data: {
+          audio: cached.audio,
+          format: 'base64',
+          cached: true,
+        },
+      });
+    }
+
     console.log('[Hana TTS] Converting text to speech:', { language, textLength: text.length });
 
-    // Map language codes to gTTS language codes
-    const languageMap: Record<string, string> = {
-      en: 'en', // English
-      zh: 'zh-CN', // Simplified Chinese / Mandarin
-      yue: 'zh-TW', // Traditional Chinese / Cantonese
+    // Map language to SSML voice name
+    // Using Azure Speech Synthesis voices optimized for Singapore
+    const voiceMap: Record<string, { voice: string; lang: string }> = {
+      en: {
+        voice: 'en-SG-LunaNeural', // Singapore English - Young female (age 20s)
+        lang: 'en-SG',
+      },
+      zh: {
+        voice: 'zh-CN-XiaohanNeural', // Mandarin - Young female (age 20s)
+        lang: 'zh-CN',
+      },
+      yue: {
+        voice: 'zh-HK-HiuGaaiNeural', // Cantonese - Young female (age 20s)
+        lang: 'zh-HK',
+      },
     };
 
-    const lang = languageMap[language] || 'en';
+    const voiceConfig = voiceMap[language] || voiceMap['en'];
 
-    // Generate speech using gTTS (Google Text-to-Speech)
-    const gtts = new gTTS(text, { lang, slow: false });
+    // Generate SSML with voice parameters for 20-year-old young female
+    const ssml = `<speak version="1.0" xml:lang="${voiceConfig.lang}">
+      <voice name="${voiceConfig.voice}">
+        <prosody pitch="+15%" rate="0.95">
+          ${text}
+        </prosody>
+      </voice>
+    </speak>`;
 
-    // Create audio buffer
+    console.log('[Hana TTS] Using voice:', voiceConfig.voice);
+
+    // Try to use Azure Speech Services if available
+    try {
+      const azureResponse = await axios.post(
+        `https://southeastasia.tts.speech.microsoft.com/cognitiveservices/v1`,
+        ssml,
+        {
+          headers: {
+            'Ocp-Apim-Subscription-Key': process.env.AZURE_SPEECH_KEY || 'demo-key',
+            'Content-Type': 'application/ssml+xml',
+            'X-Microsoft-OutputFormat': 'audio-16khz-32kbitrate-mono-mp3',
+          },
+        }
+      );
+
+      const audioBase64 = Buffer.from(azureResponse.data).toString('base64');
+      console.log('[Hana TTS] Azure TTS generated successfully');
+
+      // Cache the result
+      audioCache.set(cacheKey, { audio: `data:audio/mpeg;base64,${audioBase64}`, timestamp: Date.now() });
+
+      res.json({
+        success: true,
+        data: {
+          audio: `data:audio/mpeg;base64,${audioBase64}`,
+          format: 'base64',
+        },
+      });
+    } catch (azureError: any) {
+      console.log('[Hana TTS] Azure TTS failed, falling back to Google TTS');
+      // Fallback to gTTS
+      fallbackToGTTS(text, voiceConfig.lang, res, cacheKey);
+    }
+  } catch (error: any) {
+    console.error('TTS error:', error.message);
+    res.status(500).json({
+      error: 'Failed to generate speech',
+      message: error.message,
+    });
+  }
+});
+
+// Fallback function using Google TTS
+const fallbackToGTTS = async (text: string, lang: string, res: any, cacheKey: string) => {
+  try {
+    // Map to gTTS language codes
+    const gttsLangMap: Record<string, string> = {
+      'en-SG': 'en',
+      'zh-CN': 'zh-CN',
+      'zh-HK': 'zh-TW',
+    };
+
+    const gttsLang = gttsLangMap[lang] || 'en';
+
+    // Generate speech using gTTS
+    const gtts = new gTTS(text, { lang: gttsLang, slow: false });
+
     const audioBuffer = await new Promise<Buffer>((resolve, reject) => {
       const chunks: Buffer[] = [];
 
@@ -271,25 +366,28 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
       });
     });
 
-    console.log('[Hana TTS] Audio generated successfully, size:', audioBuffer.length);
+    console.log('[Hana TTS] Google TTS fallback generated successfully');
 
-    // Convert to base64
     const audioBase64 = audioBuffer.toString('base64');
+    const audioUrl = `data:audio/mpeg;base64,${audioBase64}`;
+
+    // Cache the result
+    audioCache.set(cacheKey, { audio: audioUrl, timestamp: Date.now() });
 
     res.json({
       success: true,
       data: {
-        audio: `data:audio/mpeg;base64,${audioBase64}`,
+        audio: audioUrl,
         format: 'base64',
       },
     });
   } catch (error: any) {
-    console.error('TTS error:', error.message);
+    console.error('Fallback TTS error:', error.message);
     res.status(500).json({
       error: 'Failed to generate speech',
       message: error.message,
     });
   }
-});
+};
 
 export default router;
