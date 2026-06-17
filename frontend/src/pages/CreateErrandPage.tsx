@@ -438,29 +438,37 @@ export default function CreateErrandPage() {
 
 
   const handleSubmit = async () => {
-    console.log('[DEBUG] handleSubmit called with formData:', formData);
+    console.log('[DEBUG] *** POST BUTTON CLICKED - handleSubmit STARTED ***');
+    console.log('[DEBUG] Current state - loading:', loading, 'showConfirm:', showConfirm);
+    console.log('[DEBUG] formData:', formData);
 
     if (!formData.title || !formData.category) {
+      console.error('[DEBUG] *** VALIDATION FAILED - Missing title or category ***');
       setError('Title and category are required');
-      console.error('[DEBUG] Missing title or category');
       return;
     }
 
+    console.log('[DEBUG] *** VALIDATION PASSED - SETTING LOADING TRUE ***');
     setLoading(true);
+    console.log('[DEBUG] After setLoading(true) - loading will update asynchronously');
+
     try {
       const token = localStorage.getItem('token');
-      console.log('[DEBUG] Token exists:', !!token);
+      console.log('[DEBUG] Token from localStorage:', !!token);
 
       if (!token) {
+        console.error('[DEBUG] *** NO TOKEN FOUND ***');
         setError('Authentication required. Please log in again.');
         setLoading(false);
         return;
       }
 
-      console.log('[DEBUG] Posting errand with:', {
+      console.log('[DEBUG] *** ABOUT TO POST ERRAND TO /api/errands ***');
+      console.log('[DEBUG] Payload:', {
         title: formData.title,
         category: formData.category,
         budget: formData.budget,
+        description: formData.description,
       });
 
       const response = await axios.post(
@@ -483,24 +491,26 @@ export default function CreateErrandPage() {
         }
       );
 
-      console.log('[DEBUG] Response:', response.data);
+      console.log('[DEBUG] *** API RESPONSE RECEIVED ***:', response.data);
 
       if (response.data.success) {
-        console.log('[DEBUG] Errand posted successfully!');
-        // Show dummy payment confirmation
+        console.log('[DEBUG] *** SUCCESS - ERRAND POSTED ***');
         setPaymentRequired(false);
         setShowConfirm(false);
         alert('✓ Errand posted successfully! Dummy payment confirmed.');
         navigate('/home');
       } else {
-        console.error('[DEBUG] Response not successful:', response.data);
+        console.error('[DEBUG] *** API RETURNED success:false ***:', response.data);
         setError('Failed to post errand');
       }
     } catch (err: any) {
-      console.error('[DEBUG] Error caught:', err);
+      console.error('[DEBUG] *** EXCEPTION CAUGHT ***');
+      console.error('[DEBUG] Error:', err.message);
       console.error('[DEBUG] Error response:', err.response?.data);
+      console.error('[DEBUG] Full error:', err);
       setError(err.response?.data?.error || 'Failed to create errand');
     } finally {
+      console.log('[DEBUG] *** FINALLY BLOCK - SETTING LOADING FALSE ***');
       setLoading(false);
     }
   };
@@ -1269,7 +1279,11 @@ export default function CreateErrandPage() {
                 Edit
               </button>
               <button
-                onClick={handleSubmit}
+                onClick={(e) => {
+                  console.log('[DEBUG] *** POST BUTTON onClick FIRED ***', { loading, disabled: loading });
+                  e.preventDefault();
+                  handleSubmit();
+                }}
                 disabled={loading}
                 className="flex-1 px-4 py-2 bg-errandify-orange text-white rounded-lg font-semibold hover:bg-opacity-90 disabled:opacity-50"
               >
