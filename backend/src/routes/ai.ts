@@ -62,6 +62,29 @@ const categoryMapping: Record<string, string> = {
   'moving-help': ['move', 'movers', 'packing', 'relocation', 'heavy lifting'],
 };
 
+const certificationSuggestions: Record<string, { required: string[]; optional: string[] }> = {
+  'childcare-tutoring': {
+    required: ['Enhanced DBS Check', 'First Aid (Pediatric)'],
+    optional: ['Safeguarding Training', 'Teaching Qualification'],
+  },
+  'home-maintenance': {
+    required: [],
+    optional: ['Gas Safe Register', 'Electrical Safety'],
+  },
+  'pet-care': {
+    required: [],
+    optional: ['Animal First Aid', 'Pet Care Certification'],
+  },
+  'tech-support': {
+    required: [],
+    optional: ['CompTIA A+', 'Microsoft Certified'],
+  },
+  'delivery-moving': {
+    required: [],
+    optional: ['Driving License', 'Heavy Vehicle License'],
+  },
+};
+
 const descriptionTemplates: Record<string, (title: string) => string> = {
   'home-maintenance': (title: string) => `Need help with ${title}. Please ensure the work is done professionally and safely.`,
   'cleaning-laundry': (title: string) => `Looking for someone to help with ${title}. Please bring own supplies if needed.`,
@@ -404,6 +427,42 @@ function generateDescription(category: string, title: string): string {
   return `Help needed with: ${title}`;
 }
 
+// Suggest certifications based on category and keywords
+function suggestCertifications(category: string, title: string): { required: string[]; optional: string[] } {
+  const suggestions = certificationSuggestions[category] || { required: [], optional: [] };
+  const lowerTitle = title.toLowerCase();
+
+  // Additional keyword-based certification detection
+  const certifications = { required: [...suggestions.required], optional: [...suggestions.optional] };
+
+  // Plumbing-related
+  if (lowerTitle.includes('plumb') && !certifications.optional.includes('Plumbing License')) {
+    certifications.optional.push('Plumbing License');
+  }
+
+  // Electrical
+  if ((lowerTitle.includes('electric') || lowerTitle.includes('wiring')) && !certifications.optional.includes('Electrical Safety')) {
+    certifications.optional.push('Electrical Safety');
+  }
+
+  // Gas work
+  if ((lowerTitle.includes('gas') || lowerTitle.includes('boiler')) && !certifications.optional.includes('Gas Safe Register')) {
+    certifications.optional.push('Gas Safe Register');
+  }
+
+  // Driving
+  if ((lowerTitle.includes('drive') || lowerTitle.includes('transport')) && !certifications.optional.includes('Driving License')) {
+    certifications.optional.push('Driving License');
+  }
+
+  // First Aid general
+  if ((lowerTitle.includes('first aid') || lowerTitle.includes('medical') || lowerTitle.includes('health')) && !certifications.optional.includes('First Aid')) {
+    certifications.optional.push('First Aid');
+  }
+
+  return certifications;
+}
+
 // Get AI suggestions for title
 router.post('/suggestions', (req: Request, res: Response) => {
   try {
@@ -445,6 +504,9 @@ router.post('/suggestions', (req: Request, res: Response) => {
     // Detect missing important details
     const missingDetails = detectMissingDetails(correctedTitle);
 
+    // Suggest certifications
+    const suggestedCerts = suggestCertifications(suggestedCategory, correctedTitle);
+
     res.json({
       success: true,
       data: {
@@ -454,6 +516,7 @@ router.post('/suggestions', (req: Request, res: Response) => {
         category: suggestedCategory,
         description: suggestedDescription,
         missingDetails,
+        certifications: suggestedCerts,
         contentSafe: true,
       },
     });

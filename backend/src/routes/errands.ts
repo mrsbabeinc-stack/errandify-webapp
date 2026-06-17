@@ -110,6 +110,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         budget: errand.budget,
         location: errand.location,
         deadline: errand.deadline,
+        certifications: errand.certifications ? JSON.parse(errand.certifications) : undefined,
         isRecurring: errand.is_recurring,
         recurringConfig: errand.recurring_config ? JSON.parse(errand.recurring_config) : null,
         sessions: sessions.length > 0 ? sessions : undefined,
@@ -127,7 +128,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
 // Create errand (asker only)
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, category, budget, deadline, isRecurring, repeatEvery, repeatUnit, occurrences } = req.body;
+    const { title, description, category, budget, deadline, certifications, isRecurring, repeatEvery, repeatUnit, occurrences } = req.body;
 
     if (!title || !category) {
       return res
@@ -141,9 +142,9 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
       // Create parent errand
       const errandResult = await client.query(
-        `INSERT INTO errands (asker_id, title, description, category, budget, deadline, is_recurring, recurring_config, status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-         RETURNING id, title, description, category, status, budget, deadline, is_recurring, recurring_config, created_at`,
+        `INSERT INTO errands (asker_id, title, description, category, budget, deadline, certifications, is_recurring, recurring_config, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         RETURNING id, title, description, category, status, budget, deadline, certifications, is_recurring, recurring_config, created_at`,
         [
           req.userId,
           title,
@@ -151,6 +152,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           category,
           budget || null,
           deadline || null,
+          certifications ? JSON.stringify(certifications) : null,
           isRecurring || false,
           isRecurring ? JSON.stringify({ repeatEvery, repeatUnit, occurrences }) : null,
           'open'
@@ -204,6 +206,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           status: errand.status,
           budget: errand.budget,
           deadline: errand.deadline,
+          certifications: errand.certifications ? JSON.parse(errand.certifications) : undefined,
           isRecurring: errand.is_recurring,
           recurringConfig: errand.recurring_config ? JSON.parse(errand.recurring_config) : null,
           sessions: sessions.length > 0 ? sessions : undefined,

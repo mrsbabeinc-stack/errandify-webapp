@@ -28,6 +28,7 @@ CREATE TABLE errands (
   budget DECIMAL(10, 2),
   deadline TIMESTAMP,
   location VARCHAR(500),
+  certifications JSONB,
   is_recurring BOOLEAN DEFAULT FALSE,
   recurring_config JSONB,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

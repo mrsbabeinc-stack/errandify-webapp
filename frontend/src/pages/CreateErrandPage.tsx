@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-interface Tooltip {
-  [key: string]: string;
+interface Certification {
+  required: string[];
+  optional: string[];
 }
 
 export default function CreateErrandPage() {
@@ -14,31 +15,29 @@ export default function CreateErrandPage() {
     category: categoryId || '',
     title: '',
     description: '',
-    startDate: '',
-    duration: '',
-    durationUnit: 'Hr' as 'Min' | 'Hr' | 'Week' | 'Month',
     budget: '',
-    isRecurring: false,
-    repeatEvery: '1',
-    repeatUnit: 'day' as 'day' | 'week' | 'month',
-    occurrences: '1',
+    deadline: '',
+    certifications: { required: [] as string[], optional: [] as string[] },
   });
-
-  const [sessions, setSessions] = useState<Array<{ sessionNumber: number; startDate: string; budget: string }>>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [hoveredTooltip, setHoveredTooltip] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    location: false,
+    certifications: false,
+  });
+
   const [aiSuggestions, setAiSuggestions] = useState({
     suggestedCategory: '',
     suggestedDescription: '',
     correctedTitle: '',
     hasCorrections: false,
-    missingDetails: [] as string[],
+    certifications: { required: [] as string[], optional: [] as string[] },
     blocked: false,
     error: '',
   });
-  const [aiLoading, setAiLoading] = useState(false);
 
   const categoryNames: Record<string, string> = {
     'home-maintenance': 'Home Maintenance',
@@ -51,13 +50,19 @@ export default function CreateErrandPage() {
     'moving-help': 'Moving Help',
   };
 
-  const tooltips: Tooltip = {
-    startDate: 'When do you need this errand done?',
-    duration: 'How long will this errand take?',
-    isRecurring: 'Does this errand repeat regularly?',
-  };
-
-  const durationUnits = ['Min', 'Hr', 'Week', 'Month'];
+  const commonCertifications = [
+    'First Aid',
+    'CPR / AED',
+    'Enhanced DBS Check',
+    'Driving License',
+    'Gas Safe Register',
+    'Electrical Safety',
+    'Plumbing License',
+    'Forklift Operator',
+    'Teaching Qualification',
+    'Pet Care Certification',
+    'Animal First Aid',
+  ];
 
   const getAiSuggestions = async (title: string) => {
     if (!title.trim() || title.length < 5) return;
@@ -69,32 +74,28 @@ export default function CreateErrandPage() {
         { title }
       );
 
-      if (response.data.blocked) {
-        setAiSuggestions({
-          suggestedCategory: '',
-          suggestedDescription: '',
-          correctedTitle: '',
-          hasCorrections: false,
-          missingDetails: [],
-          blocked: true,
-          error: response.data.error,
-        });
-      } else if (response.data.success) {
+      if (response.data.success) {
         setAiSuggestions({
           suggestedCategory: response.data.data.category,
           suggestedDescription: response.data.data.description,
           correctedTitle: response.data.data.correctedTitle || '',
           hasCorrections: response.data.data.hasCorrections,
-          missingDetails: response.data.data.missingDetails || [],
+          certifications: response.data.data.certifications || { required: [], optional: [] },
           blocked: false,
           error: '',
         });
 
-        // Auto-apply category if not already set
         if (!formData.category && response.data.data.category) {
           setFormData((prev) => ({
             ...prev,
             category: response.data.data.category,
+          }));
+        }
+
+        if (!formData.description && response.data.data.description) {
+          setFormData((prev) => ({
+            ...prev,
+            description: response.data.data.description,
           }));
         }
       }
@@ -112,145 +113,61 @@ export default function CreateErrandPage() {
     }
   };
 
-  const acceptDescriptionSuggestion = () => {
-    if (aiSuggestions.suggestedDescription) {
-      setFormData((prev) => ({
-        ...prev,
-        description: aiSuggestions.suggestedDescription,
-      }));
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData((prev) => ({ ...prev, title: value }));
+
+    if (value.length > 5) {
+      getAiSuggestions(value);
     }
-  };
-
-  const acceptCorrectedTitle = () => {
-    if (aiSuggestions.correctedTitle) {
-      setFormData((prev) => ({
-        ...prev,
-        title: aiSuggestions.correctedTitle,
-      }));
-      // Clear the suggestion after accepting
-      setAiSuggestions((prev) => ({
-        ...prev,
-        hasCorrections: false,
-        correctedTitle: '',
-      }));
-    }
-  };
-
-  const autoCorrectTitle = () => {
-    // Auto-apply correction on blur or after debounce
-    if (aiSuggestions.correctedTitle && formData.title !== aiSuggestions.correctedTitle) {
-      setFormData((prev) => ({
-        ...prev,
-        title: aiSuggestions.correctedTitle,
-      }));
-      setAiSuggestions((prev) => ({
-        ...prev,
-        hasCorrections: false,
-        correctedTitle: '',
-      }));
-    }
-  };
-
-  const calculateSessions = (startDate: string, repeatEvery: number, repeatUnit: string, occurrences: number, budget: number) => {
-    if (!startDate || occurrences < 1) return [];
-
-    const sessions = [];
-    const budgetPerSession = occurrences > 0 ? (budget / occurrences).toFixed(2) : '0.00';
-
-    for (let i = 1; i <= occurrences; i++) {
-      const sessionDate = new Date(startDate);
-
-      switch (repeatUnit) {
-        case 'day':
-          sessionDate.setDate(sessionDate.getDate() + (i - 1) * repeatEvery);
-          break;
-        case 'week':
-          sessionDate.setDate(sessionDate.getDate() + (i - 1) * repeatEvery * 7);
-          break;
-        case 'month':
-          sessionDate.setMonth(sessionDate.getMonth() + (i - 1) * repeatEvery);
-          break;
-      }
-
-      sessions.push({
-        sessionNumber: i,
-        startDate: sessionDate.toLocaleDateString('en-SG', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        budget: budgetPerSession,
-      });
-    }
-
-    return sessions;
   };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-
-    const newFormData = {
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    };
-
-    setFormData(newFormData);
-
-    // Trigger AI suggestions when title is entered
-    if (name === 'title' && value.length >= 5) {
-      getAiSuggestions(value);
-    }
-
-    // Recalculate sessions if recurring fields change
-    if (newFormData.isRecurring && newFormData.startDate && newFormData.budget) {
-      const sessions = calculateSessions(
-        newFormData.startDate,
-        parseInt(newFormData.repeatEvery) || 1,
-        newFormData.repeatUnit,
-        parseInt(newFormData.occurrences) || 1,
-        parseFloat(newFormData.budget) || 0
-      );
-      setSessions(sessions);
-    } else if (!newFormData.isRecurring) {
-      setSessions([]);
-    }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  const toggleCertification = (cert: string, type: 'required' | 'optional') => {
+    setFormData((prev) => {
+      const certList = prev.certifications[type];
+      if (certList.includes(cert)) {
+        return {
+          ...prev,
+          certifications: {
+            ...prev.certifications,
+            [type]: certList.filter((c) => c !== cert),
+          },
+        };
+      } else {
+        return {
+          ...prev,
+          certifications: {
+            ...prev.certifications,
+            [type]: [...certList, cert],
+          },
+        };
+      }
+    });
+  };
 
+  const applySuggestedCertifications = () => {
+    setFormData((prev) => ({
+      ...prev,
+      certifications: aiSuggestions.certifications,
+    }));
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.title || !formData.category) {
+      setError('Title and category are required');
+      return;
+    }
+
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
-
-      let deadline = null;
-      if (formData.startDate) {
-        const startDate = new Date(formData.startDate);
-        const duration = parseInt(formData.duration) || 0;
-
-        switch (formData.durationUnit) {
-          case 'Min':
-            startDate.setMinutes(startDate.getMinutes() + duration);
-            break;
-          case 'Hr':
-            startDate.setHours(startDate.getHours() + duration);
-            break;
-          case 'Week':
-            startDate.setDate(startDate.getDate() + duration * 7);
-            break;
-          case 'Month':
-            startDate.setMonth(startDate.getMonth() + duration);
-            break;
-        }
-        deadline = startDate.toISOString();
-      }
-
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
         {
@@ -258,212 +175,109 @@ export default function CreateErrandPage() {
           description: formData.description,
           category: formData.category,
           budget: formData.budget ? parseFloat(formData.budget) : null,
-          deadline,
-          isRecurring: formData.isRecurring,
-          repeatEvery: formData.isRecurring ? parseInt(formData.repeatEvery) : null,
-          repeatUnit: formData.isRecurring ? formData.repeatUnit : null,
-          occurrences: formData.isRecurring ? parseInt(formData.occurrences) : null,
+          deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
+          certifications:
+            formData.certifications.required.length > 0 ||
+            formData.certifications.optional.length > 0
+              ? formData.certifications
+              : undefined,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      navigate(`/errand/${response.data.data.id}`);
+      if (response.data.success) {
+        navigate('/');
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create errand');
     } finally {
       setLoading(false);
+      setShowConfirm(false);
     }
   };
 
-  const InfoTooltip = ({ field }: { field: string }) => (
-    <div className="relative inline-block ml-1">
-      <button
-        type="button"
-        onMouseEnter={() => setHoveredTooltip(field)}
-        onMouseLeave={() => setHoveredTooltip(null)}
-        className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600 transition-colors"
-        title={tooltips[field]}
-      >
-        ?
-      </button>
-      {hoveredTooltip === field && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg whitespace-nowrap z-50">
-          {tooltips[field]}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
-        </div>
-      )}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-errandify-bg">
-      <div className="max-w-2xl mx-auto px-4">
+      <div className="max-w-2xl mx-auto px-4 py-4">
         {/* Header */}
-        <div className="mb-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-errandify-orange font-semibold mb-2 text-xs"
-          >
-            ← Back
-          </button>
-          <h1 className="text-lg font-bold text-errandify-brown mb-2">
-            Create Your Errand
-          </h1>
-          <div className="flex gap-1 mt-3">
-            <div className="flex-1 h-1 bg-errandify-orange rounded"></div>
-            <div className="flex-1 h-1 bg-gray-300 rounded"></div>
-            <div className="flex-1 h-1 bg-gray-300 rounded"></div>
-            <div className="flex-1 h-1 bg-gray-300 rounded"></div>
-          </div>
-        </div>
+        <button
+          onClick={() => navigate(-1)}
+          className="text-errandify-orange font-semibold mb-4 text-sm"
+        >
+          ← Back
+        </button>
 
+        <h1 className="text-2xl font-bold text-errandify-brown mb-6">Create Your Errand</h1>
+
+        {/* Error Display */}
         {error && (
-          <div className="mb-4 p-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-2">
-          {/* Errand Title */}
+        {/* Blocked Content Alert */}
+        {aiSuggestions.blocked && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            {aiSuggestions.error}
+          </div>
+        )}
+
+        {/* Main Form */}
+        <div className="bg-white rounded-lg shadow-sm space-y-4 p-4">
+          {/* Title - Required */}
           <div>
-            <label className="block text-sm font-semibold text-errandify-brown mb-1">
-              Errand Title
+            <label className="block text-sm font-semibold text-errandify-brown mb-2">
+              Errand Title *
             </label>
             <input
               type="text"
               name="title"
               value={formData.title}
-              onChange={handleChange}
-              onBlur={autoCorrectTitle}
-              placeholder="Enter Errand Title"
-              required
-              className={`w-full px-3 py-2 border-b-2 bg-transparent focus:outline-none text-sm ${
-                aiSuggestions.blocked
-                  ? 'border-red-400 focus:border-red-500'
-                  : aiSuggestions.hasCorrections
-                  ? 'border-blue-400 focus:border-blue-500'
-                  : 'border-gray-300 focus:border-errandify-orange'
-              }`}
+              onChange={handleTitleChange}
+              placeholder="What do you need help with?"
+              className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
             />
-            {aiSuggestions.blocked && (
-              <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
-                🚫 {aiSuggestions.error}
+            {aiSuggestions.hasCorrections && (
+              <p className="text-xs text-blue-600 mt-1">
+                💡 Suggested: {aiSuggestions.correctedTitle}
               </p>
             )}
-            {aiSuggestions.hasCorrections && !aiSuggestions.blocked && (
-              <div className="mt-2 space-y-2">
-                <div className="bg-blue-50 p-2 rounded border border-blue-200">
-                  <p className="text-xs text-blue-900 font-semibold mb-2">✏️ Auto-correction available:</p>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="text-xs">
-                      <p className="text-gray-600">Your text:</p>
-                      <p className="font-mono text-blue-700">{formData.title}</p>
-                      <p className="text-gray-600 mt-1">Corrected to:</p>
-                      <p className="font-mono text-green-700 font-semibold">{aiSuggestions.correctedTitle}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={acceptCorrectedTitle}
-                      className="px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Category */}
+          {/* Description - Auto-filled from AI */}
           <div>
-            <label className="block text-sm font-semibold text-errandify-brown mb-1">
-              Category {aiLoading && <span className="text-xs text-errandify-orange">🤖 detecting...</span>}
+            <label className="block text-sm font-semibold text-errandify-brown mb-2">
+              Description
             </label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
-            >
-              <option value="">Select a category...</option>
-              {Object.entries(categoryNames).map(([id, name]) => (
-                <option key={id} value={id}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Errand Description with AI Suggestion */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm font-semibold text-errandify-brown">
-                Description
-              </label>
-              {aiSuggestions.suggestedDescription && !formData.description && (
-                <button
-                  type="button"
-                  onClick={acceptDescriptionSuggestion}
-                  className="text-xs text-errandify-orange hover:text-orange-600 font-semibold"
-                >
-                  ✨ Use AI suggestion
-                </button>
-              )}
-            </div>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder={aiSuggestions.suggestedDescription || 'Describe your errand...'}
+              placeholder={
+                aiSuggestions.suggestedDescription || 'Describe your errand...'
+              }
               rows={2}
-              className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm resize-none"
+              className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base resize-none"
             />
-            {aiSuggestions.suggestedDescription && !formData.description && (
-              <p className="text-xs text-gray-500 mt-1">💡 Suggested: {aiSuggestions.suggestedDescription}</p>
-            )}
-
-            {/* Missing Details Suggestions */}
-            {aiSuggestions.missingDetails.length > 0 && !aiSuggestions.blocked && (
-              <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-xs font-semibold text-yellow-800 mb-2">📋 Things to clarify:</p>
-                <ul className="space-y-1">
-                  {aiSuggestions.missingDetails.map((detail, idx) => (
-                    <li key={idx} className="text-xs text-yellow-700 flex items-start gap-2">
-                      <span>•</span>
-                      <span>{detail}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
 
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Start Date */}
-            <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-1 flex items-center">
-                Start Date
-                <InfoTooltip field="startDate" />
-              </label>
-              <input
-                type="date"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
-              />
+          {/* Category - Auto-detected */}
+          <div>
+            <label className="block text-sm font-semibold text-errandify-brown mb-2">
+              Category *
+            </label>
+            <div className="px-3 py-2 border-b-2 border-gray-300 text-base text-gray-700">
+              {formData.category ? categoryNames[formData.category] : 'Auto-detected'}
             </div>
+          </div>
 
-            {/* Budget */}
+          {/* Budget & Date - Side by side */}
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-1">
+              <label className="block text-sm font-semibold text-errandify-brown mb-2">
                 Budget (SGD)
               </label>
               <input
@@ -471,182 +285,247 @@ export default function CreateErrandPage() {
                 name="budget"
                 value={formData.budget}
                 onChange={handleChange}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                placeholder="100"
+                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
               />
             </div>
-
-            {/* Duration */}
             <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-1 flex items-center">
-                Duration
-                <InfoTooltip field="duration" />
+              <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                Needed By
               </label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  name="duration"
-                  value={formData.duration}
-                  onChange={handleChange}
-                  placeholder="0"
-                  min="0"
-                  className="flex-1 px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
-                />
-                <select
-                  name="durationUnit"
-                  value={formData.durationUnit}
-                  onChange={handleChange}
-                  className="px-2 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
-                >
-                  {durationUnits.map((unit) => (
-                    <option key={unit} value={unit}>
-                      {unit}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <input
+                type="date"
+                name="deadline"
+                value={formData.deadline}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
+              />
             </div>
           </div>
 
-          {/* Recurring Checkbox - Full Width */}
-          <div>
-            <label className="flex items-center gap-2 cursor-pointer text-sm">
-              <input
-                type="checkbox"
-                name="isRecurring"
-                checked={formData.isRecurring}
-                onChange={handleChange}
-                className="w-4 h-4 cursor-pointer"
-              />
-              <span className="font-semibold text-errandify-brown">
-                Do you want this errand to repeat on a regular schedule?
+          {/* Certifications Section - Collapsible */}
+          <div className="border-t pt-4">
+            <button
+              onClick={() =>
+                setExpandedSections((prev) => ({
+                  ...prev,
+                  certifications: !prev.certifications,
+                }))
+              }
+              className="w-full flex items-center justify-between text-left"
+            >
+              <h3 className="font-semibold text-errandify-brown">
+                Certifications {formData.certifications.required.length > 0 ? '✓' : ''}
+              </h3>
+              <span className="text-gray-400">
+                {expandedSections.certifications ? '▼' : '▶'}
               </span>
-              <InfoTooltip field="isRecurring" />
-            </label>
-          </div>
+            </button>
 
-          {/* Recurring Schedule (conditional) */}
-          {formData.isRecurring && (
-            <>
-              {/* Repeat Every */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-errandify-brown mb-1">
-                    Repeat Every
-                  </label>
-                  <input
-                    type="number"
-                    name="repeatEvery"
-                    value={formData.repeatEvery}
-                    onChange={handleChange}
-                    min="1"
-                    className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-errandify-brown mb-1">
-                    Unit
-                  </label>
-                  <select
-                    name="repeatUnit"
-                    value={formData.repeatUnit}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+            {expandedSections.certifications && (
+              <div className="mt-3 space-y-3">
+                {/* AI Suggestion Button */}
+                {aiSuggestions.certifications.required.length > 0 ||
+                aiSuggestions.certifications.optional.length > 0 ? (
+                  <button
+                    onClick={applySuggestedCertifications}
+                    className="text-xs text-errandify-orange hover:text-orange-600 font-semibold mb-2"
                   >
-                    <option value="day">Day(s)</option>
-                    <option value="week">Week(s)</option>
-                    <option value="month">Month(s)</option>
-                  </select>
-                </div>
+                    ✨ Apply AI suggestions
+                  </button>
+                ) : null}
 
-                {/* For X Occurrences */}
-                <div>
-                  <label className="block text-sm font-semibold text-errandify-brown mb-1">
-                    For
-                  </label>
-                  <input
-                    type="number"
-                    name="occurrences"
-                    value={formData.occurrences}
-                    onChange={handleChange}
-                    min="1"
-                    max="52"
-                    className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-errandify-brown mb-1">
-                    &nbsp;
-                  </label>
-                  <select
-                    disabled
-                    className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent text-gray-500 text-sm"
-                  >
-                    <option>Session(s)</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Errand Schedule Preview */}
-              {sessions.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="text-sm font-semibold text-errandify-brown mb-3">
-                    Errand Schedule ({sessions.length})
-                  </h3>
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {sessions.map((session) => (
-                      <div
-                        key={session.sessionNumber}
-                        className="bg-white rounded-lg p-3 shadow-sm flex items-center justify-between border border-gray-100"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-blue-500 font-semibold">□</span>
-                          <div>
-                            <p className="text-sm font-medium text-gray-700">
-                              Session {session.sessionNumber}
-                            </p>
-                            <p className="text-xs text-gray-600">
-                              📅 {session.startDate}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-errandify-orange font-bold text-sm">
-                          SGD ${session.budget}
-                        </span>
-                      </div>
-                    ))}
+                {/* Required Certifications */}
+                {aiSuggestions.certifications.required.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-600 font-semibold mb-2">
+                      AI Suggested (Required):
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {aiSuggestions.certifications.required.map((cert) => (
+                        <button
+                          key={cert}
+                          onClick={() => toggleCertification(cert, 'required')}
+                          className={`text-xs px-3 py-1 rounded-full font-semibold transition-colors ${
+                            formData.certifications.required.includes(cert)
+                              ? 'bg-errandify-orange text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {cert}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </>
-          )}
+                )}
 
-          {/* Submit Button */}
-          <div className="pt-4 flex gap-3">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="flex-1 bg-gray-200 text-errandify-brown py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-sm"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !formData.title.trim() || !formData.startDate}
-              className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
-              {loading ? '⏳ Creating...' : '✨ Post Errand'}
-            </button>
+                {/* Optional Certifications */}
+                {aiSuggestions.certifications.optional.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-600 font-semibold mb-2">
+                      AI Suggested (Optional):
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {aiSuggestions.certifications.optional.map((cert) => (
+                        <button
+                          key={cert}
+                          onClick={() => toggleCertification(cert, 'optional')}
+                          className={`text-xs px-3 py-1 rounded-full font-semibold transition-colors ${
+                            formData.certifications.optional.includes(cert)
+                              ? 'bg-errandify-orange text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {cert}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Common Certs if no suggestions yet */}
+                {aiSuggestions.certifications.required.length === 0 &&
+                  aiSuggestions.certifications.optional.length === 0 && (
+                    <div>
+                      <p className="text-xs text-gray-600 font-semibold mb-2">
+                        Common Certifications:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {commonCertifications.map((cert) => (
+                          <button
+                            key={cert}
+                            onClick={() => {
+                              if (formData.certifications.required.includes(cert)) {
+                                toggleCertification(cert, 'required');
+                              } else if (
+                                formData.certifications.optional.includes(cert)
+                              ) {
+                                toggleCertification(cert, 'optional');
+                              } else {
+                                toggleCertification(cert, 'optional');
+                              }
+                            }}
+                            className={`text-xs px-3 py-1 rounded-full font-semibold transition-colors ${
+                              formData.certifications.required.includes(cert) ||
+                              formData.certifications.optional.includes(cert)
+                                ? 'bg-errandify-orange text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            {cert}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Selected Certifications Display */}
+                {(formData.certifications.required.length > 0 ||
+                  formData.certifications.optional.length > 0) && (
+                  <div className="mt-3 p-2 bg-blue-50 rounded text-sm">
+                    <p className="font-semibold text-blue-900 mb-1">Selected:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.certifications.required.map((cert) => (
+                        <button
+                          key={cert}
+                          onClick={() => toggleCertification(cert, 'required')}
+                          className="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded hover:bg-blue-300"
+                        >
+                          {cert} ✕
+                        </button>
+                      ))}
+                      {formData.certifications.optional.map((cert) => (
+                        <button
+                          key={cert}
+                          onClick={() => toggleCertification(cert, 'optional')}
+                          className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-200"
+                        >
+                          {cert} ✕
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        </form>
+        </div>
 
-        {/* Bottom Spacing */}
-        <div className="h-8"></div>
+        {/* Quick Summary & Post Button */}
+        <div className="mt-6 space-y-3">
+          <div className="bg-orange-50 border-l-4 border-errandify-orange p-3 rounded text-sm">
+            <p className="font-semibold text-errandify-brown mb-1">Ready to post?</p>
+            <p className="text-gray-700">
+              {formData.title} • {categoryNames[formData.category] || 'No category'} •{' '}
+              {formData.budget ? `SGD $${formData.budget}` : 'No budget set'}
+            </p>
+          </div>
+
+          <button
+            onClick={() => setShowConfirm(true)}
+            disabled={!formData.title || !formData.category || loading}
+            className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base"
+          >
+            {loading ? 'Posting...' : 'Post Now'}
+          </button>
+        </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 space-y-4">
+            <h2 className="text-xl font-bold text-errandify-brown">Confirm & Post?</h2>
+
+            <div className="space-y-2 text-sm text-gray-700">
+              <p>
+                <span className="font-semibold">Title:</span> {formData.title}
+              </p>
+              <p>
+                <span className="font-semibold">Category:</span>{' '}
+                {categoryNames[formData.category]}
+              </p>
+              {formData.budget && (
+                <p>
+                  <span className="font-semibold">Budget:</span> SGD ${formData.budget}
+                </p>
+              )}
+              {formData.deadline && (
+                <p>
+                  <span className="font-semibold">Deadline:</span>{' '}
+                  {new Date(formData.deadline).toLocaleDateString()}
+                </p>
+              )}
+              {(formData.certifications.required.length > 0 ||
+                formData.certifications.optional.length > 0) && (
+                <p>
+                  <span className="font-semibold">Certifications:</span>{' '}
+                  {[
+                    ...formData.certifications.required,
+                    ...formData.certifications.optional,
+                  ].join(', ')}
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                Edit
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="flex-1 px-4 py-2 bg-errandify-orange text-white rounded-lg font-semibold hover:bg-opacity-90 disabled:opacity-50"
+              >
+                {loading ? 'Posting...' : 'Post'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -29,6 +29,10 @@ export interface Errand {
   budget?: number;
   deadline?: Date;
   location?: string;
+  certifications?: {
+    required?: string[];
+    optional?: string[];
+  };
   createdAt: Date;
   updatedAt: Date;
 }
