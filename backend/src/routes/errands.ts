@@ -119,16 +119,6 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
       [errand.asker_id]
     );
 
-    // Get sessions if recurring
-    let sessions = [];
-    if (errand.is_recurring) {
-      const sessionsResult = await db.query(
-        'SELECT id, session_number, start_date, deadline, budget, status FROM errand_sessions WHERE errand_id = $1 ORDER BY session_number ASC',
-        [errand.id]
-      );
-      sessions = sessionsResult.rows;
-    }
-
     res.json({
       success: true,
       data: {
@@ -141,10 +131,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         location: errand.location,
         postalCode: errand.postal_code,
         deadline: errand.deadline,
-        certifications: errand.certifications ? JSON.parse(errand.certifications) : undefined,
         isRecurring: errand.is_recurring,
-        recurringConfig: errand.recurring_config ? JSON.parse(errand.recurring_config) : null,
-        sessions: sessions.length > 0 ? sessions : undefined,
         askerId: errand.asker_id,
         asker: askerResult.rows[0],
         createdAt: errand.created_at,
