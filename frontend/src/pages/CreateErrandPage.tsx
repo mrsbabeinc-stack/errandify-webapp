@@ -421,16 +421,18 @@ export default function CreateErrandPage() {
                 </div>
               </div>
 
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="isRecurring"
-                  checked={formData.isRecurring}
-                  onChange={handleChange}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm font-semibold text-errandify-brown">Recurring errand?</span>
-              </label>
+              <div className="flex items-center">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="isRecurring"
+                    checked={formData.isRecurring}
+                    onChange={handleChange}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm font-semibold text-errandify-brown">Recurring errand?</span>
+                </label>
+              </div>
             </div>
 
             {formData.isRecurring && (
