@@ -191,6 +191,13 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     try {
       // Create parent errand (simplified, no transactions for now)
+      console.log('[DEBUG] About to insert errand with params:', {
+        askerId,
+        title,
+        category,
+        postalCode,
+      });
+
       const errandResult = await db.query(
         `INSERT INTO errands (asker_id, title, description, category, location, postal_code, budget, deadline, certifications, is_recurring, recurring_config, status)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
@@ -201,7 +208,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           description || null,
           category,
           location || null,
-          postalCode,
+          postalCode || null,
           budget ? parseFloat(String(budget)) : null,
           deadline || null,
           certifications ? JSON.stringify(certifications) : null,
