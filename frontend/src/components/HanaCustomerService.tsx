@@ -6,6 +6,7 @@ interface Message {
   sender: 'user' | 'hana';
   text: string;
   timestamp: Date;
+  suggestedCategory?: string;
 }
 
 type Language = 'en' | 'zh' | 'yue';
@@ -320,11 +321,27 @@ export default function HanaCustomerService() {
       console.log('[Hana] Got response:', response.data);
       const reply = response.data?.data?.reply || response.data?.reply || 'How else can I help?';
       console.log('[Hana] Reply text:', reply);
+
+      // Try to detect category from user input
+      let suggestedCategory = undefined;
+      try {
+        const categoryRes = await axios.post(
+          '/api/ai/detect-category',
+          { title: input },
+          { headers: { 'Content-Type': 'application/json' } }
+        );
+        suggestedCategory = categoryRes.data?.data?.category;
+        console.log('[Hana] Detected category:', suggestedCategory);
+      } catch (err) {
+        console.log('[Hana] Could not detect category');
+      }
+
       const hanaMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'hana',
         text: reply,
         timestamp: new Date(),
+        suggestedCategory,
       };
 
       setMessages((prev) => [...prev, hanaMessage]);
@@ -451,14 +468,28 @@ export default function HanaCustomerService() {
                       className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-1"
                     />
                   )}
-                  <div
-                    className={`max-w-xs px-4 py-2 rounded-lg text-sm ${
-                      msg.sender === 'user'
-                        ? 'bg-errandify-orange text-white'
-                        : 'bg-white text-gray-800 border border-gray-200'
-                    }`}
-                  >
-                    {msg.text}
+                  <div>
+                    <div
+                      className={`max-w-xs px-4 py-2 rounded-lg text-sm ${
+                        msg.sender === 'user'
+                          ? 'bg-errandify-orange text-white'
+                          : 'bg-white text-gray-800 border border-gray-200'
+                      }`}
+                    >
+                      {msg.text}
+                    </div>
+                    {msg.suggestedCategory && msg.sender === 'hana' && (
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          onClick={() => {
+                            window.location.href = `/create-errand?category=${msg.suggestedCategory}`;
+                          }}
+                          className="text-xs bg-orange-100 hover:bg-errandify-orange hover:text-white text-errandify-orange px-3 py-1 rounded-full font-semibold transition-colors"
+                        >
+                          📝 Post {msg.suggestedCategory}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
