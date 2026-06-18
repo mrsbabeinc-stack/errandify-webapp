@@ -471,21 +471,33 @@ export default function CreateErrandPage() {
         description: formData.description,
       });
 
+      const payload: any = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        location: formData.location || null,
+        budget: formData.budget ? parseFloat(formData.budget) : null,
+        deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
+        certifications:
+          formData.certifications.required.length > 0 ||
+          formData.certifications.optional.length > 0
+            ? formData.certifications
+            : undefined,
+      };
+
+      // Add recurring config if enabled
+      if (formData.isRecurring) {
+        payload.isRecurring = true;
+        payload.repeatEvery = parseInt(formData.repeatEvery, 10);
+        payload.repeatUnit = formData.repeatUnit;
+        if (formData.occurrences) {
+          payload.occurrences = parseInt(formData.occurrences, 10);
+        }
+      }
+
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
-        {
-          title: formData.title,
-          description: formData.description,
-          category: formData.category,
-          location: formData.location || null,
-          budget: formData.budget ? parseFloat(formData.budget) : null,
-          deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
-          certifications:
-            formData.certifications.required.length > 0 ||
-            formData.certifications.optional.length > 0
-              ? formData.certifications
-              : undefined,
-        },
+        payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
