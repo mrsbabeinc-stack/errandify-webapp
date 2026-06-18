@@ -237,7 +237,7 @@ export default function ErrandDetailPage() {
               <div className="bg-orange-50 border-l-4 border-errandify-orange p-3 rounded">
                 <p className="text-xs text-gray-600 mb-1">Budget</p>
                 <p className="text-2xl font-bold text-errandify-orange">
-                  SGD ${errand.budget.toFixed(2)}
+                  SGD ${parseFloat(String(errand.budget)).toFixed(2)}
                 </p>
               </div>
             )}
