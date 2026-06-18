@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
+import { notifyBidReceived, notifyBidAccepted, notifyBidRejected } from './notifications.js';
 
 const router = Router();
 
@@ -73,8 +74,10 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       'SELECT display_name FROM users WHERE id = $1',
       [doerId]
     );
+    const doerName = doerNameResult.rows[0]?.display_name || 'A user';
 
-    // TODO: Send notification to asker: "You have a new bid from [Doer name] for $[amount]!"
+    // Send notification to asker
+    await notifyBidReceived(errand.asker_id, doerName, amount);
 
     res.status(201).json({
       success: true,
@@ -205,7 +208,15 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
       ['rejected', bid.task_id, id]
     );
 
-    // TODO: Notify doer: "Great news! [Asker] has chosen you for '[task title]'. 🎉"
+    // Get errand title for notification
+    const errandTitleResult = await db.query(
+      'SELECT title FROM errands WHERE id = $1',
+      [bid.task_id]
+    );
+    const errandTitle = errandTitleResult.rows[0]?.title || 'a task';
+
+    // Notify accepted doer
+    await notifyBidAccepted(bid.doer_id, errandTitle, bid.amount);
 
     res.json({
       success: true,
@@ -256,7 +267,15 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Respons
       ['rejected', id]
     );
 
-    // TODO: Notify doer: "Your bid wasn't selected. Would you like to revise?"
+    // Get errand title for notification
+    const errandTitleResult = await db.query(
+      'SELECT title FROM errands WHERE id = $1',
+      [bid.task_id]
+    );
+    const errandTitle = errandTitleResult.rows[0]?.title || 'a task';
+
+    // Notify rejected doer
+    await notifyBidRejected(bid.doer_id, errandTitle);
 
     res.json({
       success: true,
