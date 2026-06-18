@@ -456,16 +456,16 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       data: {
         title: input.substring(0, 100),
         description: input,
-        location,
-        fullAddress: location,
+        location: location || 'Singapore',
+        fullAddress: location || 'Singapore',
         date,
         time,
         duration,
         durationUnit: 'Hr',
         budget,
-        category: 'other',
-        postalCode,
-        notes: '',
+        category: 'cleaning-laundry',
+        postalCode: postalCode || location || '',
+        notes: input,
       },
     });
   } catch (error) {
