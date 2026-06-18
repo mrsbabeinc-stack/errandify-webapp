@@ -263,9 +263,34 @@ export default function HanaCustomerService() {
     window.speechSynthesis.speak(utterance);
   };
 
+  // Detect if user is using Singlish or other languages
+  const detectLanguage = (text: string): Language => {
+    const lower = text.toLowerCase();
+    // Singlish markers: lah, lor, leh, meh, what, lor lor
+    const singlishMarkers = /\b(lah|lor|leh|meh|lor\s+lor|what|lor\s*,|mah|lor\s+lor|lor\s*\?|lor\s+lor\s+lor)\b/i;
+    if (singlishMarkers.test(text)) {
+      return 'en'; // Respond in English for Singlish
+    }
+
+    // Chinese markers
+    if (/[一-鿿]/.test(text)) {
+      // Check for Cantonese
+      if (/[呀嗎啦嘅佢嗰度啦]/i.test(text)) {
+        return 'yue'; // Cantonese
+      }
+      return 'zh'; // Mandarin
+    }
+
+    return language; // Use selected language
+  };
+
   const handleSendMessage = async () => {
     console.log('[Hana] Send button clicked, input:', input);
     if (!input.trim()) return;
+
+    // Detect language from user input
+    const detectedLang = detectLanguage(input);
+    console.log('[Hana] Detected language:', detectedLang, 'Selected:', language);
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -285,10 +310,10 @@ export default function HanaCustomerService() {
         headers.Authorization = `Bearer ${token}`;
       }
 
-      console.log('[Hana] Making API call to /api/chat/hana/customer-service with language:', language);
+      console.log('[Hana] Making API call with detected language:', detectedLang);
       const response = await axios.post(
         '/api/chat/hana/customer-service',
-        { message: input, language },
+        { message: input, language: detectedLang },
         { headers }
       );
 
