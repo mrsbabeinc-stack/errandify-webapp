@@ -410,20 +410,61 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const { input } = req.body;
     if (!input) return res.status(400).json({ error: 'input required' });
 
+    // Parse user input like: "Clean my house at 680433 on Saturday for 2 hours at 2pm, budget $100"
+    const locationMatch = input.match(/at\s+(\d{6}|\S+?)(?:\s+on|\s+at|,)/i);
+    const location = locationMatch ? locationMatch[1].trim() : '';
+    const postalCode = location.match(/\d{6}/) ? location : '';
+
+    const dateMatch = input.match(/on\s+([a-zA-Z]+day|\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})/i);
+    let date = '';
+    if (dateMatch) {
+      const dayStr = dateMatch[1].toLowerCase();
+      if (dayStr.includes('day')) {
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayIndex = days.findIndex(d => dayStr.includes(d));
+        if (dayIndex >= 0) {
+          const today = new Date();
+          const current = today.getDay();
+          let diff = dayIndex - current;
+          if (diff <= 0) diff += 7;
+          const result = new Date(today);
+          result.setDate(result.getDate() + diff);
+          date = result.toISOString().split('T')[0];
+        }
+      }
+    }
+
+    const timeMatch = input.match(/at\s+(\d{1,2}):?(\d{2})?\s*(am|pm)/i);
+    let time = '10:00';
+    if (timeMatch) {
+      let hours = parseInt(timeMatch[1]);
+      const mins = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+      const period = timeMatch[3]?.toLowerCase();
+      if (period === 'pm' && hours !== 12) hours += 12;
+      if (period === 'am' && hours === 12) hours = 0;
+      time = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    }
+
+    const durationMatch = input.match(/for\s+(\d+)\s*(hour|hr)/i);
+    const duration = durationMatch ? durationMatch[1] : '';
+
+    const budgetMatch = input.match(/budget\s*\$?(\d+)/i);
+    const budget = budgetMatch ? budgetMatch[1] : '';
+
     res.json({
       success: true,
       data: {
-        title: input.substring(0, 50),
+        title: input.substring(0, 100),
         description: input,
-        location: '',
-        fullAddress: '',
-        date: '',
-        time: '10:00',
-        duration: '',
+        location,
+        fullAddress: location,
+        date,
+        time,
+        duration,
         durationUnit: 'Hr',
-        budget: '',
+        budget,
         category: 'other',
-        postalCode: '',
+        postalCode,
         notes: '',
       },
     });
