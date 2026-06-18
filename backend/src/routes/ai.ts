@@ -432,4 +432,33 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
   }
 });
 
+router.post('/content-filter', async (req: Request, res: Response) => {
+  try {
+    const { title, description } = req.body;
+    res.json({
+      success: true,
+      data: { status: 'SAFE' },
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to filter' });
+  }
+});
+
+router.post('/suggestions', async (req: Request, res: Response) => {
+  try {
+    const { title, description } = req.body;
+    res.json({
+      success: true,
+      data: {
+        category: 'other',
+        description: description || title,
+        suggestedBudget: 50,
+        notes: '',
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get suggestions' });
+  }
+});
+
 export default router;
