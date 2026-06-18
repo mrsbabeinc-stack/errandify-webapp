@@ -8,7 +8,7 @@ const router = Router();
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, display_name, mobile, role, category_preferences FROM users WHERE id = $1',
+      'SELECT id, display_name, mobile, role, category_preferences, monthly_household_income, chas_card_color, chas_subsidy_percentage FROM users WHERE id = $1',
       [req.userId]
     );
 
@@ -25,6 +25,9 @@ router.get('/profile', authMiddleware, async (req, res) => {
         mobile: user.mobile,
         role: user.role,
         categories: user.category_preferences || [],
+        monthlyHouseholdIncome: user.monthly_household_income,
+        chasCardColor: user.chas_card_color,
+        chasSubsidyPercentage: user.chas_subsidy_percentage,
       },
     });
   } catch (error) {
@@ -36,12 +39,66 @@ router.get('/profile', authMiddleware, async (req, res) => {
 // Update user profile
 router.put('/profile', authMiddleware, async (req, res) => {
   try {
-    // TODO: Implement profile update
+    const { display_name, mobile, monthly_household_income } = req.body;
+    const userId = req.userId;
+
+    let updateFields = [];
+    let updateValues = [userId];
+    let paramCount = 1;
+
+    if (display_name) {
+      updateFields.push(`display_name = $${++paramCount}`);
+      updateValues.push(display_name);
+    }
+    if (mobile) {
+      updateFields.push(`mobile = $${++paramCount}`);
+      updateValues.push(mobile);
+    }
+    if (monthly_household_income !== undefined) {
+      updateFields.push(`monthly_household_income = $${++paramCount}`);
+      updateValues.push(monthly_household_income);
+
+      // Auto-calculate CHAS card color based on income
+      let chasColor = 'none';
+      let chasPercent = 0;
+      if (monthly_household_income <= 1900) {
+        chasColor = 'blue';
+        chasPercent = 25;
+      } else if (monthly_household_income <= 3900) {
+        chasColor = 'green';
+        chasPercent = 15;
+      }
+
+      updateFields.push(`chas_card_color = $${++paramCount}`);
+      updateValues.push(chasColor);
+      updateFields.push(`chas_subsidy_percentage = $${++paramCount}`);
+      updateValues.push(chasPercent);
+      updateFields.push(`chas_verified = $${++paramCount}`);
+      updateValues.push(true);
+      updateFields.push(`chas_verified_at = $${++paramCount}`);
+      updateValues.push(new Date());
+      updateFields.push(`chas_verification_method = $${++paramCount}`);
+      updateValues.push('income_self_declared');
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    const query = `UPDATE users SET ${updateFields.join(', ')}, updated_at = NOW() WHERE id = $1 RETURNING id, display_name, mobile, monthly_household_income, chas_card_color, chas_subsidy_percentage`;
+
+    const result = await db.query(query, updateValues);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     res.json({
       success: true,
-      data: null,
+      data: result.rows[0],
     });
   } catch (error) {
+    console.error('Profile update error:', error);
     res.status(500).json({ error: 'Failed to update profile' });
   }
 });
@@ -79,15 +136,38 @@ router.patch('/categories', authMiddleware, async (req, res) => {
 // Get user ratings/history
 router.get('/:id/ratings', async (req, res) => {
   try {
-    // TODO: Implement ratings fetch
+    const { id } = req.params;
+    const userId = parseInt(id, 10);
+
+    const result = await db.query(
+      `SELECT
+        AVG(CAST(rating_score AS FLOAT)) as average_rating,
+        COUNT(*) as review_count,
+        json_agg(json_build_object(
+          'score', rating_score,
+          'comment', rating_comment,
+          'taskId', task_id,
+          'createdAt', created_at
+        ) ORDER BY created_at DESC) as reviews
+       FROM errand_assignments
+       WHERE doer_id = $1 AND rating_score IS NOT NULL`,
+      [userId]
+    );
+
+    const data = result.rows[0];
+    const averageRating = data.average_rating ? Math.round(data.average_rating * 10) / 10 : 0;
+    const reviews = data.reviews && data.reviews[0].score ? data.reviews : [];
+
     res.json({
       success: true,
       data: {
-        averageRating: 0,
-        reviews: [],
+        averageRating,
+        reviewCount: parseInt(data.review_count, 10),
+        reviews,
       },
     });
   } catch (error) {
+    console.error('Ratings fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch ratings' });
   }
 });

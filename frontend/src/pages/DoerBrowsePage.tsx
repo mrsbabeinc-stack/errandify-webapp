@@ -104,7 +104,8 @@ export default function DoerBrowsePage() {
     const matchesSearch =
       !searchQuery ||
       errand.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      errand.description.toLowerCase().includes(searchQuery.toLowerCase());
+      errand.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      categoryNames[errand.category]?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
