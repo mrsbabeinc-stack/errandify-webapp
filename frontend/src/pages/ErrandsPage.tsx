@@ -15,6 +15,7 @@ interface Errand {
   budget?: number;
   deadline?: string;
   location?: string;
+  isRecurring?: boolean;
   createdAt: string;
 }
 
@@ -170,6 +171,12 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                         >
                           {errand.category}
                         </span>
+
+                        {errand.isRecurring && (
+                          <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-semibold">
+                            🔄 Recurring
+                          </span>
+                        )}
 
                         {errand.budget && (
                           <span className="text-errandify-orange font-bold text-xs">

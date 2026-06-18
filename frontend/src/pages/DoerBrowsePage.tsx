@@ -23,6 +23,7 @@ export default function DoerBrowsePage() {
   const [error, setError] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [showRecommended, setShowRecommended] = useState(false);
 
   const categories = [
     { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50' },
@@ -80,8 +81,9 @@ export default function DoerBrowsePage() {
     const fetchErrands = async () => {
       try {
         const token = localStorage.getItem('token');
+        const params = showRecommended ? '?recommended=true' : '';
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands${params}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -97,7 +99,7 @@ export default function DoerBrowsePage() {
     };
 
     fetchErrands();
-  }, []);
+  }, [showRecommended]);
 
   const filteredErrands = errands.filter((errand) => {
     const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(errand.category);
@@ -122,6 +124,30 @@ export default function DoerBrowsePage() {
           </button>
           <h1 className="text-2xl font-bold text-errandify-brown">Browse ToHelp</h1>
           <p className="text-gray-600 text-sm">Find errands you can help with and earn money</p>
+        </div>
+
+        {/* Tab Selection */}
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setShowRecommended(false)}
+            className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition-all ${
+              !showRecommended
+                ? 'bg-errandify-orange text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Browse All
+          </button>
+          <button
+            onClick={() => setShowRecommended(true)}
+            className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition-all ${
+              showRecommended
+                ? 'bg-errandify-orange text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            For You
+          </button>
         </div>
 
         {/* Search Bar */}

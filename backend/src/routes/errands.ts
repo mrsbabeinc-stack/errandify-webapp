@@ -7,7 +7,7 @@ const router = Router();
 // Get all errands (with filters)
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { category, status, sort, myOnly, accepted } = req.query;
+    const { category, status, sort, myOnly, accepted, recommended } = req.query;
     const currentUserId = req.userId ? parseInt(req.userId, 10) : null;
 
     if (!currentUserId) {
@@ -20,6 +20,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     const isMyOnly = myOnly === 'true' || myOnly === true;
     const isAccepted = accepted === 'true' || accepted === true;
+    const isRecommended = recommended === 'true' || recommended === true;
 
     if (isMyOnly) {
       // Show errands posted by current user (for askers)
@@ -33,6 +34,16 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
                WHERE ea.doer_id = $1 AND ea.status = 'accepted'`;
       params.push(currentUserId);
       paramIndex = 2;
+    } else if (isRecommended) {
+      // Show open errands that match user's category preferences
+      query = `SELECT e.* FROM errands e
+               WHERE e.status = $1
+               AND e.asker_id != $2
+               AND e.category = ANY(
+                 COALESCE((SELECT category_preferences FROM users WHERE id = $2), ARRAY[]::text[])
+               )`;
+      params.push('open', currentUserId);
+      paramIndex = 3;
     } else {
       // Show all open errands excluding ones posted by current user
       query = 'SELECT * FROM errands WHERE status = $1 AND asker_id != $2';
@@ -220,10 +231,20 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         postalCode,
       });
 
+      // Build recurring config if provided
+      let recurringConfig = null;
+      if (isRecurring && repeatEvery && repeatUnit) {
+        recurringConfig = JSON.stringify({
+          repeatEvery: parseInt(String(repeatEvery), 10),
+          repeatUnit: repeatUnit,
+          occurrences: occurrences ? parseInt(String(occurrences), 10) : null,
+        });
+      }
+
       const errandResult = await db.query(
-        `INSERT INTO errands (asker_id, title, description, category, location, postal_code, budget, deadline, is_recurring, status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-         RETURNING id, title, description, category, status, budget, deadline, is_recurring, created_at`,
+        `INSERT INTO errands (asker_id, title, description, category, location, postal_code, budget, deadline, is_recurring, recurring_config, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         RETURNING id, title, description, category, status, budget, deadline, is_recurring, recurring_config, created_at`,
         [
           askerId,
           title,
@@ -234,6 +255,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           budget ? parseFloat(String(budget)) : null,
           deadline || null,
           isRecurring || false,
+          recurringConfig,
           'open'
         ]
       );
@@ -254,6 +276,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           location: location || null,
           postalCode: postalCode,
           isRecurring: errand.is_recurring,
+          recurringConfig: errand.recurring_config,
           createdAt: errand.created_at,
         },
       });
