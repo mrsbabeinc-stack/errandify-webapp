@@ -140,3 +140,4 @@ NODE_ENV=development
 ---
 
 Built with ❤️ for Singapore's community
+# Vercel Deployment
