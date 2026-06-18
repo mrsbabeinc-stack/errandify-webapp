@@ -1,1331 +1,407 @@
 import { Router, Request, Response } from 'express';
-import axios from 'axios';
+import { AuthRequest, authMiddleware } from '../middleware/auth.js';
+import db from '../db.js';
+import * as biasDetector from '../modules/bias-detector.js';
+import * as contentMod from '../modules/content-moderation.js';
+import * as privacyLogger from '../modules/privacy-logger.js';
+import * as explainability from '../modules/explainability.js';
 
 const router = Router();
 
-// Content safety filter - inappropriate/explicit terms
-const inappropriateTerms = [
-  'sex', 'xxx', 'porn', 'adult only', 'nude', 'naked', 'sexual', 'explicit',
-  'drugs', 'cocaine', 'heroin', 'meth', 'weed', 'cannabis',
-  'illegal', 'stolen', 'weapon', 'gun', 'knife', 'bomb',
-];
-
-// Legitimate gender requirement contexts (culturally/professionally necessary)
-const legitimateGenderContexts = ['childcare', 'eldercare', 'elderly care', 'bathing', 'bathroom', 'personal care', 'intimate care', 'muslim', 'religious', 'religious requirement', 'cultural requirement'];
-
-// Discriminatory/biased language filter (with exceptions for legitimate needs)
-const discriminatoryTerms = [
-  // Race/ethnicity - NO EXCEPTIONS
-  { term: 'only hire', reason: 'discriminatory hiring', allowException: false },
-  { term: 'no asian', reason: 'racial discrimination', allowException: false },
-  { term: 'no black', reason: 'racial discrimination', allowException: false },
-  { term: 'no white', reason: 'racial discrimination', allowException: false },
-  { term: 'no indian', reason: 'racial discrimination', allowException: false },
-  { term: 'no latino', reason: 'racial discrimination', allowException: false },
-  { term: 'no muslim', reason: 'religious discrimination', allowException: false },
-  { term: 'no christian', reason: 'religious discrimination', allowException: false },
-  { term: 'no jewish', reason: 'religious discrimination', allowException: false },
-  // Age/gender - WITH EXCEPTIONS for legitimate contexts
-  { term: 'young only', reason: 'age discrimination', allowException: false },
-  { term: 'no old', reason: 'age discrimination', allowException: false },
-  { term: 'men only', reason: 'gender discrimination', allowException: true },
-  { term: 'women only', reason: 'gender discrimination', allowException: true },
-  { term: 'female', reason: 'gender specification', allowException: true },
-  { term: 'male', reason: 'gender specification', allowException: true },
-  { term: 'no gay', reason: 'sexual orientation discrimination', allowException: false },
-  { term: 'no transgender', reason: 'gender identity discrimination', allowException: false },
-  // Disability - NO EXCEPTIONS
-  { term: 'no disabled', reason: 'disability discrimination', allowException: false },
-  { term: 'able bodied only', reason: 'disability discrimination', allowException: false },
-  // Appearance - NO EXCEPTIONS
-  { term: 'must be attractive', reason: 'appearance discrimination', allowException: false },
-  { term: 'good looking', reason: 'appearance discrimination', allowException: false },
-  { term: 'attractive only', reason: 'appearance discrimination', allowException: false },
-];
-
-// Detail keywords that require specification
-const detailKeywords: Record<string, string[]> = {
-  'size/weight': ['dog', 'cat', 'pet', 'furniture', 'package', 'item', 'box', 'load', 'cargo'],
-  'color': ['car', 'vehicle', 'paint', 'dye', 'color', 'fabric'],
-  'quantity': ['boxes', 'items', 'plants', 'books', 'pieces', 'bags'],
-  'condition': ['repair', 'fix', 'broken', 'damage', 'restore', 'refurbish'],
-  'urgency': ['asap', 'urgent', 'emergency', 'rush', 'immediately', 'today'],
-};
-
-const categoryMapping: Record<string, string> = {
-  'home-maintenance': ['repair', 'fix', 'maintenance', 'install', 'build', 'construction', 'furniture', 'wall', 'door', 'window', 'roof', 'floor'],
-  'cleaning-laundry': ['clean', 'wash', 'laundry', 'mop', 'vacuum', 'dust', 'scrub', 'organize', 'declutter'],
-  'shopping-errands': ['buy', 'shop', 'purchase', 'grocery', 'mall', 'store', 'gift', 'supplies'],
-  'delivery-moving': ['deliver', 'move', 'transport', 'pickup', 'collect', 'send', 'shipping', 'courier'],
-  'childcare-tutoring': ['babysit', 'tutor', 'teach', 'homework', 'childcare', 'lesson', 'school'],
-  'pet-care': ['pet', 'dog', 'cat', 'walk', 'groom', 'vet', 'feed', 'animal'],
-  'tech-support': ['computer', 'tech', 'software', 'phone', 'installation', 'setup', 'wifi', 'printer', 'technical'],
-  'moving-help': ['move', 'movers', 'packing', 'relocation', 'heavy lifting'],
-};
-
-const certificationSuggestions: Record<string, { required: string[]; optional: string[] }> = {
-  'childcare-tutoring': {
-    required: ['Enhanced DBS Check', 'First Aid (Pediatric)'],
-    optional: ['Safeguarding Training', 'Teaching Qualification'],
-  },
-  'home-maintenance': {
-    required: [],
-    optional: ['Gas Safe Register', 'Electrical Safety'],
-  },
-  'pet-care': {
-    required: [],
-    optional: ['Animal First Aid', 'Pet Care Certification'],
-  },
-  'tech-support': {
-    required: [],
-    optional: ['CompTIA A+', 'Microsoft Certified'],
-  },
-  'delivery-moving': {
-    required: [],
-    optional: ['Driving License', 'Heavy Vehicle License'],
-  },
-};
-
-// Lookup full address from OneMap Singapore API using postal code
-async function getFullAddressFromPostalCode(postalCode: string): Promise<string> {
+// POST /api/ai/verify-chas-eligibility - Verify CHAS eligibility with AI check
+router.post('/verify-chas-eligibility', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const response = await axios.get('https://www.onemap.gov.sg/api/common/elastic/search', {
-      params: {
-        searchVal: postalCode,
-        returnGeom: 'Y',
-        getAddrDetails: 'Y',
+    const { monthly_household_income } = req.body;
+    const userId = parseInt(req.userId || '0', 10);
+
+    if (!monthly_household_income || monthly_household_income < 0) {
+      return res.status(400).json({ error: 'Invalid income value' });
+    }
+
+    // Basic income-based calculation
+    let chasColor = 'none';
+    let subsidy = 0;
+    let reasonCode = 'income_above_limit';
+
+    if (monthly_household_income <= 1900) {
+      chasColor = 'blue';
+      subsidy = 25;
+      reasonCode = 'chas_blue_eligible';
+    } else if (monthly_household_income <= 3900) {
+      chasColor = 'green';
+      subsidy = 15;
+      reasonCode = 'chas_green_eligible';
+    }
+
+    // Check for suspicious patterns (AI verification)
+    let verificationStatus = 'verified';
+    let requiresReview = false;
+
+    // Simple heuristic: extreme income values
+    if (monthly_household_income > 50000) {
+      verificationStatus = 'requires_review';
+      requiresReview = true;
+      reasonCode = 'income_verification_pending';
+    }
+
+    // Log the decision
+    const auditLogId = await privacyLogger.logAiDecision({
+      userId,
+      action: 'verify_chas_eligibility',
+      aiModel: 'rule_based',
+      reasonCode,
+      resultSummary: {
+        monthly_household_income,
+        chas_color: chasColor,
+        subsidy_percentage: subsidy,
+        verification_status: verificationStatus,
+        requires_review: requiresReview,
       },
-      timeout: 5000,
     });
 
-    if (response.data.results && response.data.results.length > 0) {
-      const result = response.data.results[0];
-      // Build full address from components
-      const block = result.BLK_NO ? `Block ${result.BLK_NO}` : '';
-      const road = result.ROAD_NAME || '';
-      const building = result.BUILDING_NAME ? `, ${result.BUILDING_NAME}` : '';
-
-      const parts = [block, road, building].filter(p => p);
-      const fullAddress = parts.join(', ').replace(/^, /, '');
-
-      return fullAddress || `Singapore ${postalCode}`;
-    }
-  } catch (error) {
-    console.log(`OneMap lookup failed for postal code ${postalCode}:`, error instanceof Error ? error.message : 'unknown error');
-  }
-
-  // Fallback if API fails
-  return `Singapore ${postalCode}`;
-}
-
-// Clean title for use in description (remove "wash my", "help me", etc.)
-function cleanTitleForDescription(title: string): string {
-  let cleaned = title.trim();
-
-  // Remove ending period for cleaner insertion into sentence
-  cleaned = cleaned.replace(/\.$/, '');
-
-  // Remove action verb + possessive combos (wash my, walk my, help me, etc.)
-  cleaned = cleaned.replace(/^(help|wash|clean|walk|groom|feed|bathe|bath|babysit|tutor|repair|fix|install|deliver|move|shop|buy|teach|need) (me |my |him |his |her |your )/i, '');
-
-  // Remove remaining common prefixes
-  cleaned = cleaned.replace(/^(need |help with |help me |i need |can you |need to |need help )/, '');
-
-  // Remove articles and remaining possessives at start
-  cleaned = cleaned.replace(/^(my |a |the |your |his |her )/, '');
-
-  return cleaned;
-}
-
-const descriptionTemplates: Record<string, (title: string) => string> = {
-  'home-maintenance': (title: string) => {
-    const cleaned = cleanTitleForDescription(title);
-    return `Need help with ${cleaned}. Please bring own tools and materials. Work must be completed professionally and safely.`;
-  },
-  'cleaning-laundry': (title: string) => {
-    const cleaned = cleanTitleForDescription(title);
-    return `Looking for someone to help with ${cleaned}. Please specify if you prefer eco-friendly products or have any restrictions (allergies, pets, sensitive materials).`;
-  },
-  'shopping-errands': (title: string) => {
-    const cleaned = cleanTitleForDescription(title);
-    return `Need someone to ${cleaned}. Will provide shopping list/specific brands. Please keep receipts for reimbursement.`;
-  },
-  'delivery-moving': (title: string) => {
-    const cleaned = cleanTitleForDescription(title);
-    return `Assistance needed with ${cleaned}. Careful and proper handling required. Please inform about any fragile or special items needing extra care.`;
-  },
-  'childcare-tutoring': (title: string) => {
-    const cleaned = cleanTitleForDescription(title);
-    return `Seeking help with ${cleaned}. References and relevant experience required. Will provide detailed instructions and emergency contact information.`;
-  },
-  'pet-care': (title: string) => {
-    const cleaned = cleanTitleForDescription(title);
-    return `Help needed with ${cleaned}. Pet-friendly and experienced handlers only. Will provide pet care instructions, emergency vet info, and animal behavior notes.`;
-  },
-  'tech-support': (title: string) => {
-    const cleaned = cleanTitleForDescription(title);
-    return `Need technical assistance with ${cleaned}. Please diagnose and document issues found. Data backup may be required before any major changes.`;
-  },
-  'moving-help': (title: string) => {
-    const cleaned = cleanTitleForDescription(title);
-    return `Help with ${cleaned}. Physical capability and reliability are important. Will provide furniture padding and access details (stairs, elevator, parking).`;
-  },
-};
-
-// Check for inappropriate content
-function checkContentSafety(text: string): { safe: boolean; issue: string } {
-  const lowerText = text.toLowerCase();
-
-  for (const term of inappropriateTerms) {
-    if (lowerText.includes(term)) {
-      return { safe: false, issue: `Content contains restricted term: "${term}"` };
-    }
-  }
-
-  return { safe: true, issue: '' };
-}
-
-// Check for discriminatory/biased language (with exceptions for legitimate needs)
-function checkBiasAndDiscrimination(text: string): { safe: boolean; issue: string } {
-  const lowerText = text.toLowerCase();
-
-  for (const { term, reason, allowException } of discriminatoryTerms) {
-    if (lowerText.includes(term)) {
-      // If this term allows exceptions, check if it's in a legitimate context
-      if (allowException) {
-        const hasLegitimateContext = legitimateGenderContexts.some(context =>
-          lowerText.includes(context)
-        );
-
-        if (hasLegitimateContext) {
-          // Allow gender specification in legitimate contexts (childcare, elderly care, etc.)
-          continue;
-        }
-      }
-
-      // No legitimate exception found - block it
-      return {
-        safe: false,
-        issue: `Discriminatory content detected (${reason}). This violates fair hiring practices.`
-      };
-    }
-  }
-
-  return { safe: true, issue: '' };
-}
-
-// Remove duplicate/repeated characters in words (waaalk → walk, liiike → like)
-function removeDuplicateCharacters(text: string): string {
-  // Replace 3+ repeated characters with 2 (waaaalknmy → waaalknmy → waallknmy... eventually to walknmy)
-  // But preserve intentional doubles like "ll" in "hello"
-  return text.replace(/([a-z])\1{2,}/gi, '$1$1');
-}
-
-// Comprehensive spelling/punctuation correction
-function correctSpellingAndPunctuation(text: string): { corrected: string; hasSuggestions: boolean } {
-  let corrected = text.trim();
-  const suggestions: string[] = [];
-
-  // First, remove excessive repeated characters (waaalk → waalk)
-  const withoutDuplicates = removeDuplicateCharacters(corrected);
-  if (withoutDuplicates !== corrected) {
-    corrected = withoutDuplicates;
-    suggestions.push('Fixed repeated characters');
-  }
-
-  // Fix common spelling mistakes (comprehensive list)
-  const commonMistakes: Record<string, string> = {
-    // Common typos
-    'teh': 'the',
-    'taht': 'that',
-    'hte': 'the',
-    'adn': 'and',
-    'og': 'to',
-    'od': 'do',
-    'fi': 'if',
-    'acare': 'care',
-    'acared': 'cared',
-    // Common misspellings
-    'seperate': 'separate',
-    'recieve': 'receive',
-    'occured': 'occurred',
-    'untill': 'until',
-    'wich': 'which',
-    'necesary': 'necessary',
-    'occassion': 'occasion',
-    'accomodate': 'accommodate',
-    'dissapear': 'disappear',
-    'definitly': 'definitely',
-    'reccieve': 'receive',
-    'occassionally': 'occasionally',
-    'adress': 'address',
-    'calender': 'calendar',
-    'dosen\'t': 'doesn\'t',
-    'doesnt': 'doesn\'t',
-    'dont': 'don\'t',
-    'thier': 'their',
-    'ther': 'there',
-    'recieved': 'received',
-    'begining': 'beginning',
-    'realy': 'really',
-    'succeded': 'succeeded',
-    'writting': 'writing',
-    'reccommend': 'recommend',
-    'reccomend': 'recommend',
-    'ocurrence': 'occurrence',
-    'neccessary': 'necessary',
-    'succesful': 'successful',
-    // Additional common mistakes
-    'clothesss': 'clothes',
-    'clothess': 'clothes',
-    'waalk': 'walk',
-    'waaalk': 'walk',
-    'heelp': 'help',
-    'halp': 'help',
-    'bussiness': 'business',
-    'choise': 'choice',
-    'practise': 'practice',
-    'loose': 'lose',
-    'their\'s': 'theirs',
-    'your\'s': 'yours',
-    'your': 'your',
-    'teh': 'the',
-    'becuase': 'because',
-    'occured': 'occurred',
-    'seperete': 'separate',
-  };
-
-  for (const [wrong, right] of Object.entries(commonMistakes)) {
-    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
-    if (regex.test(corrected)) {
-      corrected = corrected.replace(regex, right);
-      suggestions.push(`Corrected "${wrong}"→"${right}"`);
-    }
-  }
-
-  // Fix multiple spaces
-  if (/ {2,}/.test(corrected)) {
-    corrected = corrected.replace(/ {2,}/g, ' ');
-    suggestions.push('Removed extra spaces');
-  }
-
-  // Try to fix common words without spaces (e.g., "walkmy" → "walk my")
-  // Common words that might be missing spaces
-  const commonWords = ['walk', 'help', 'need', 'fix', 'clean', 'my', 'the', 'a', 'an', 'for', 'and', 'to', 'do', 'get', 'make', 'take'];
-
-  // Split on common word boundaries if multiple words run together
-  const words = corrected.toLowerCase().split(/\s+/);
-  const processedWords: string[] = [];
-
-  for (let word of words) {
-    // Check if this word contains multiple dictionary words run together
-    let bestSplit = word;
-    let foundSplit = false;
-
-    // Try to find if word contains known patterns like "walk" + "my"
-    for (let i = 3; i < word.length && !foundSplit; i++) {
-      const firstPart = word.substring(0, i);
-      const secondPart = word.substring(i);
-
-      if (commonWords.includes(firstPart) && secondPart.length > 0 &&
-          (commonWords.includes(secondPart) || secondPart === 'dog' || secondPart === 'cat' ||
-           secondPart === 'house' || secondPart === 'home' || secondPart === 'car' ||
-           secondPart === 'tonight' || secondPart.length <= 10)) {
-        bestSplit = firstPart + ' ' + secondPart;
-        foundSplit = true;
-      }
-    }
-
-    processedWords.push(bestSplit);
-  }
-
-  const withSpaceFix = processedWords.join(' ');
-  if (withSpaceFix !== corrected) {
-    corrected = withSpaceFix;
-    suggestions.push('Added missing spaces between words');
-  }
-
-  // Fix spacing around punctuation
-  corrected = corrected.replace(/\s+([.,!?;:])/g, '$1');
-  corrected = corrected.replace(/([.,!?;:])\s+([a-z])/g, '$1 $2');
-
-  // Remove trailing standalone numbers (likely budget that shouldn't be in title)
-  if (/\s+\d+\s*$/.test(corrected)) {
-    corrected = corrected.replace(/\s+\d+\s*$/, '');
-    suggestions.push('Removed trailing budget number');
-  }
-
-  // Ensure proper capitalization at start
-  if (corrected.length > 0 && corrected[0] === corrected[0].toLowerCase()) {
-    corrected = corrected[0].toUpperCase() + corrected.slice(1);
-    suggestions.push('Capitalized first letter');
-  }
-
-  // Capitalize 'I' pronoun
-  corrected = corrected.replace(/\bi\b/g, 'I');
-
-  // Add period if missing at end and no other punctuation
-  if (corrected.length > 0 && !/[.!?]$/.test(corrected)) {
-    corrected += '.';
-    suggestions.push('Added period at end');
-  }
-
-  // Fix double punctuation
-  corrected = corrected.replace(/([.!?]){2,}/g, '$1');
-
-  // Fix common grammar issues
-  const grammarFixes: Record<string, string> = {
-    'i need': 'I need',
-    'i want': 'I want',
-    'i have': 'I have',
-    'i am': 'I am',
-    'i have': 'I have',
-    'its ': 'it\'s ',  // its → it's
-    'theyre': 'they\'re',
-    'youre': 'you\'re',
-    'were': 'were',
-    'their looking': 'they\'re looking',
-    'were looking': 'were looking',
-  };
-
-  for (const [wrong, right] of Object.entries(grammarFixes)) {
-    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
-    if (regex.test(corrected)) {
-      corrected = corrected.replace(regex, right);
-      suggestions.push(`Grammar: "${wrong}"→"${right}"`);
-    }
-  }
-
-  // Fix common word choice mistakes
-  const wordChoiceFixes: Record<string, string> = {
-    'a lot': 'a lot',
-    'alot': 'a lot',
-    'everyday': 'every day',
-    'someday': 'some day',
-    'maybe': 'maybe',
-    'atleast': 'at least',
-    'aswell': 'as well',
-    'alright': 'all right',
-  };
-
-  for (const [wrong, right] of Object.entries(wordChoiceFixes)) {
-    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
-    if (regex.test(corrected)) {
-      corrected = corrected.replace(regex, right);
-      suggestions.push(`Word choice: "${wrong}"→"${right}"`);
-    }
-  }
-
-  // Trim extra spaces
-  corrected = corrected.trim();
-
-  return {
-    corrected,
-    hasSuggestions: suggestions.length > 0,
-  };
-}
-
-// Detect missing important details (what the doer needs to know)
-function detectMissingDetails(title: string): string[] {
-  const lowerTitle = title.toLowerCase();
-  const missingDetails: string[] = [];
-
-  // PET CARE - What doers need to know
-  if (lowerTitle.includes('dog')) {
-    const hasDetails = /(small|medium|large|toy|giant|breed|aggressive|friendly|energetic|calm|puppy|senior)/.test(lowerTitle);
-    if (!hasDetails) {
-      missingDetails.push('Dog size/breed (affects walking pace, control, and safety precautions)');
-    }
-    const hasTemperament = /(friendly|aggressive|calm|anxious|energetic|timid)/.test(lowerTitle);
-    if (!hasTemperament) {
-      missingDetails.push('Dog temperament (friendly, anxious, aggressive - helps doer prepare)');
-    }
-    const hasSpecialNeeds = /(medical|medication|special diet|training|behavioral|leash|muzzle)/.test(lowerTitle);
-    if (!hasSpecialNeeds) {
-      missingDetails.push('Any special needs (medication, behavioral issues, training level)');
-    }
-  }
-
-  if (lowerTitle.includes('cat')) {
-    const hasDetails = /(indoor|outdoor|senior|kitten|persian|siamese|long.?hair|short.?hair)/.test(lowerTitle);
-    if (!hasDetails) {
-      missingDetails.push('Cat type/age (affects handling, indoors vs outdoors)');
-    }
-    const hasTemperament = /(friendly|aggressive|shy|affectionate|independent)/.test(lowerTitle);
-    if (!hasTemperament) {
-      missingDetails.push('Cat temperament (shy, friendly, independent - helps doer approach safely)');
-    }
-  }
-
-  // HOME MAINTENANCE - What doers need to know
-  if ((lowerTitle.includes('repair') || lowerTitle.includes('fix') || lowerTitle.includes('maintenance'))) {
-    const hasProblem = /(broken|damage|leak|crack|stuck|loose|rusty|worn|malfunction|not working)/.test(lowerTitle);
-    if (!hasProblem) {
-      missingDetails.push('What\'s the problem? (broken, leaking, stuck, not working - helps doer diagnose)');
-    }
-    const hasLocation = /(kitchen|bathroom|bedroom|living|roof|door|window|wall|floor)/.test(lowerTitle);
-    if (!hasLocation) {
-      missingDetails.push('Location in house (helps doer prepare tools and estimate time)');
-    }
-    const hasUrgency = /(urgent|asap|today|emergency|leak|safety|flooding)/.test(lowerTitle);
-    if (!hasUrgency) {
-      missingDetails.push('Urgency level (emergency repairs vs routine maintenance)');
-    }
-  }
-
-  // CLEANING/LAUNDRY - What doers need to know
-  if ((lowerTitle.includes('clean') || lowerTitle.includes('wash') || lowerTitle.includes('laundry'))) {
-    const isClothesWashing = /(wash|laundry|clothes|fabric|iron)/.test(lowerTitle) && !/(house|apartment|bedroom|bathroom|kitchen|office|floor|window|carpet|sofa|wall)/.test(lowerTitle);
-
-    if (!isClothesWashing) {
-      const hasArea = /(whole house|apartment|bedroom|bathroom|kitchen|office|windows|carpet|sofa|car)/.test(lowerTitle);
-      if (!hasArea) {
-        missingDetails.push('Area/room size (helps doer estimate time and prepare supplies)');
-      }
-      const hasCondition = /(dirty|very dirty|stained|pet mess|deep clean|light clean)/.test(lowerTitle);
-      if (!hasCondition) {
-        missingDetails.push('Cleaning level needed (light clean, deep clean, pet mess - affects effort)');
-      }
-    }
-
-    const hasSpecial = /(special request|allergy|pet|kids|sensitive|fragrance|delicate|dry clean|wool)/.test(lowerTitle);
-    if (!hasSpecial && !isClothesWashing) {
-      missingDetails.push('Any allergies, pets, or special product requirements?');
-    }
-  }
-
-  // SHOPPING/ERRANDS - What doers need to know
-  if ((lowerTitle.includes('buy') || lowerTitle.includes('shop') || lowerTitle.includes('grocery') || lowerTitle.includes('shopping'))) {
-    const hasList = /(list|items|specific|brands)/.test(lowerTitle);
-    if (!hasList) {
-      missingDetails.push('Will you provide a shopping list or brands/specific items?');
-    }
-    const hasBudget = /(\d+.*sgd|budget|amount|spend)/.test(lowerTitle);
-    if (!hasBudget) {
-      missingDetails.push('Budget/spending limit (helps doer make smart choices)');
-    }
-    const hasStore = /(supermarket|mall|specific store|online)/.test(lowerTitle);
-    if (!hasStore) {
-      missingDetails.push('Where to shop? (specific store, mall, supermarket)');
-    }
-  }
-
-  // DELIVERY/MOVING - What doers need to know
-  if ((lowerTitle.includes('move') || lowerTitle.includes('deliver') || lowerTitle.includes('transport') || lowerTitle.includes('pickup'))) {
-    const hasWeight = /(heavy|light|fragile|big|small|furniture|box)/.test(lowerTitle);
-    if (!hasWeight) {
-      missingDetails.push('Item weight/size (affects equipment needed and safety)');
-    }
-    const hasDistance = /(distance|location|floor|stairs|lift|elevator)/.test(lowerTitle);
-    if (!hasDistance) {
-      missingDetails.push('Distance & access (stairs, elevator, ground floor - affects difficulty)');
-    }
-    const hasSpecial = /(fragile|careful|insured|valuable|special handling)/.test(lowerTitle);
-    if (!hasSpecial) {
-      missingDetails.push('Any fragile items or special handling needed?');
-    }
-  }
-
-  // CHILDCARE/TUTORING - What doers need to know
-  if ((lowerTitle.includes('childcare') || lowerTitle.includes('babysit') || lowerTitle.includes('tutor') || lowerTitle.includes('teach'))) {
-    const hasAge = /(\d+.*year|infant|toddler|preschool|school.?age|teenager)/.test(lowerTitle);
-    if (!hasAge) {
-      missingDetails.push('Child age (affects activities, supervision level, care approach)');
-    }
-    const hasNeeds = /(special needs|allergies|dietary|medical|behavioral)/.test(lowerTitle);
-    if (!hasNeeds) {
-      missingDetails.push('Any special needs, allergies, or behavioral considerations?');
-    }
-    if (lowerTitle.includes('tutor') || lowerTitle.includes('teach')) {
-      const hasSubject = /(math|english|science|language|subject|level)/.test(lowerTitle);
-      if (!hasSubject) {
-        missingDetails.push('Subject/level (helps tutor prepare curriculum)');
-      }
-    }
-  }
-
-  return missingDetails;
-}
-
-// Detect category from title
-function detectCategory(title: string): string {
-  const lowerTitle = title.toLowerCase();
-
-  for (const [category, keywords] of Object.entries(categoryMapping)) {
-    for (const keyword of keywords) {
-      if (lowerTitle.includes(keyword)) {
-        return category;
-      }
-    }
-  }
-
-  return '';
-}
-
-// Generate description suggestion
-function generateDescription(category: string, title: string): string {
-  if (descriptionTemplates[category]) {
-    return descriptionTemplates[category](title);
-  }
-  return `Help needed with: ${title}`;
-}
-
-// Extract postal code from location string
-function extractPostalCode(location: string): string | null {
-  if (!location) return null;
-
-  // Match 6-digit postal code
-  const postalMatch = location.match(/\d{6}/);
-  if (postalMatch) {
-    return postalMatch[0];
-  }
-
-  return null;
-}
-
-// Suggest budget based on category and keywords
-function suggestBudget(category: string, title: string): number | null {
-  const lowerTitle = title.toLowerCase();
-
-  // Check if budget is already mentioned
-  const budgetMatch = lowerTitle.match(/\$?(\d+(?:\.\d{2})?)/);
-  if (budgetMatch) {
-    return parseFloat(budgetMatch[1]);
-  }
-
-  // Default budget suggestions by category (SGD)
-  const defaultBudgets: Record<string, number> = {
-    'home-maintenance': 100,
-    'cleaning-laundry': 50,
-    'shopping-errands': 30,
-    'delivery-moving': 60,
-    'childcare-tutoring': 80,
-    'pet-care': 40,
-    'tech-support': 75,
-    'moving-help': 150,
-  };
-
-  return defaultBudgets[category] || 50;
-}
-
-// Suggest notes/details for doer based on category and keywords
-function suggestNotes(category: string, title: string): string {
-  const lowerTitle = title.toLowerCase();
-
-  // Check for elderly/parent care scenarios
-  const isEldercareSituation = /\b(mom|dad|mother|father|parent|elderly|senior|grandma|grandpa|grandmother|grandfather)\b/.test(lowerTitle);
-
-  const noteTemplates: Record<string, string> = {
-    'home-maintenance': 'Please bring your own tools. Ensure work is completed safely and professionally. Lock up properly when done.',
-    'cleaning-laundry': 'Please use eco-friendly cleaning products if available. Vacuum and mop all areas. Handle delicate items carefully.',
-    'shopping-errands': 'Keep all receipts for reimbursement. Call if items are out of stock. Pack fragile items carefully.',
-    'delivery-moving': 'Handle with care, especially fragile items. Please take photos before and after. Ensure safe delivery.',
-    'childcare-tutoring': isEldercareSituation
-      ? 'Please be patient and attentive. Emergency contact numbers will be provided. Report any health concerns immediately. Handle mobility assistance carefully if needed.'
-      : 'Emergency contact numbers will be provided. Please arrive 10 minutes early. Follow house rules and bedtime routine.',
-    'pet-care': 'All pet instructions will be provided. Please keep gates/doors secure. Report any health concerns immediately.',
-    'tech-support': 'Please backup data before any major changes. Test all functionality after completion. Document any issues found.',
-    'moving-help': 'Wear appropriate footwear. Take breaks as needed. Use proper lifting techniques. Furniture padding provided.',
-  };
-
-  return noteTemplates[category] || 'Please ensure all work is completed as discussed. Contact if any issues arise.';
-}
-
-// Suggest skills based on category and keywords
-function suggestSkills(category: string, title: string): string[] {
-  const lowerTitle = title.toLowerCase();
-  const suggestedSkills: Set<string> = new Set();
-
-  const skillsByCategory: Record<string, string[]> = {
-    'home-maintenance': ['Carpentry', 'Plumbing', 'Electrical work', 'Drywall repair', 'Painting'],
-    'cleaning-laundry': ['House cleaning', 'Deep cleaning', 'Laundry service', 'Organization', 'Decluttering'],
-    'shopping-errands': ['Shopping', 'Delivery', 'Time management', 'Budget management'],
-    'delivery-moving': ['Heavy lifting', 'Packing', 'Transportation', 'Logistics', 'Physical fitness'],
-    'childcare-tutoring': ['Childcare', 'Teaching', 'Patience', 'CPR/First Aid', 'Subject expertise'],
-    'pet-care': ['Dog walking', 'Dog training', 'Pet grooming', 'Animal care', 'Pet sitting'],
-    'tech-support': ['Computer repair', 'Troubleshooting', 'Software installation', 'Hardware setup', 'Social media management'],
-    'moving-help': ['Heavy lifting', 'Organization', 'Packing', 'Furniture assembly', 'Logistics'],
-  };
-
-  // Add category-based skills
-  if (skillsByCategory[category]) {
-    skillsByCategory[category].forEach((skill) => suggestedSkills.add(skill));
-  }
-
-  // Add keyword-based skills
-  if (lowerTitle.includes('paint')) suggestedSkills.add('Painting');
-  if (lowerTitle.includes('electric') || lowerTitle.includes('wiring')) suggestedSkills.add('Electrical work');
-  if (lowerTitle.includes('plumb')) suggestedSkills.add('Plumbing');
-  if (lowerTitle.includes('clean')) suggestedSkills.add('Cleaning');
-  if (lowerTitle.includes('organize') || lowerTitle.includes('declutter')) suggestedSkills.add('Organization');
-  if (lowerTitle.includes('tutor') || lowerTitle.includes('teach')) suggestedSkills.add('Teaching');
-  if (lowerTitle.includes('babysit') || lowerTitle.includes('childcare')) suggestedSkills.add('Childcare');
-  if (lowerTitle.includes('walk') && (lowerTitle.includes('dog') || lowerTitle.includes('pet'))) suggestedSkills.add('Dog walking');
-  if (lowerTitle.includes('move') || lowerTitle.includes('pack')) suggestedSkills.add('Heavy lifting');
-  if (lowerTitle.includes('computer') || lowerTitle.includes('tech') || lowerTitle.includes('software')) suggestedSkills.add('Technical support');
-
-  return Array.from(suggestedSkills).slice(0, 5); // Return top 5 suggestions
-}
-
-// Suggest certifications based on category and keywords
-function suggestCertifications(category: string, title: string): { required: string[]; optional: string[] } {
-  const suggestions = certificationSuggestions[category] || { required: [], optional: [] };
-  const lowerTitle = title.toLowerCase();
-
-  // Additional keyword-based certification detection
-  const certifications = { required: [...suggestions.required], optional: [...suggestions.optional] };
-
-  // Plumbing-related
-  if (lowerTitle.includes('plumb') && !certifications.optional.includes('Plumbing License')) {
-    certifications.optional.push('Plumbing License');
-  }
-
-  // Electrical
-  if ((lowerTitle.includes('electric') || lowerTitle.includes('wiring')) && !certifications.optional.includes('Electrical Safety')) {
-    certifications.optional.push('Electrical Safety');
-  }
-
-  // Gas work
-  if ((lowerTitle.includes('gas') || lowerTitle.includes('boiler')) && !certifications.optional.includes('Gas Safe Register')) {
-    certifications.optional.push('Gas Safe Register');
-  }
-
-  // Driving
-  if ((lowerTitle.includes('drive') || lowerTitle.includes('transport')) && !certifications.optional.includes('Driving License')) {
-    certifications.optional.push('Driving License');
-  }
-
-  // First Aid general
-  if ((lowerTitle.includes('first aid') || lowerTitle.includes('medical') || lowerTitle.includes('health')) && !certifications.optional.includes('First Aid')) {
-    certifications.optional.push('First Aid');
-  }
-
-  return certifications;
-}
-
-// Get AI suggestions for title
-router.post('/suggestions', (req: Request, res: Response) => {
-  try {
-    const { title } = req.body;
-
-    if (!title || title.trim().length < 5) {
-      return res.status(400).json({ error: 'Title too short' });
-    }
-
-    // Check content safety first
-    const safetyCheck = checkContentSafety(title);
-    if (!safetyCheck.safe) {
-      return res.status(400).json({
-        success: false,
-        error: safetyCheck.issue,
-        blocked: true,
+    // If bias detected, log it
+    if (requiresReview) {
+      await biasDetector.logBiasDetection(auditLogId, {
+        is_biased: false,
+        confidence: 0.5,
+        flags: ['income_extreme_value'],
+        details: { monthly_household_income },
       });
     }
-
-    // Check for discriminatory/biased content
-    const biasCheck = checkBiasAndDiscrimination(title);
-    if (!biasCheck.safe) {
-      return res.status(400).json({
-        success: false,
-        error: biasCheck.issue,
-        blocked: true,
-      });
-    }
-
-    // Keep the title as-is without aggressive cleaning
-    // Only apply spell/punctuation corrections
-    let correctedTitle = title.trim();
-    const { corrected: spellCorrected } = correctSpellingAndPunctuation(title);
-
-    // Just use the spell-corrected version without aggressive cleaning
-    correctedTitle = spellCorrected;
-
-    const hasCorrections = spellCorrected !== title;
-
-    // Detect category using the spell-corrected title
-    const suggestedCategory = detectCategory(correctedTitle);
-
-    // Generate description
-    const suggestedDescription = generateDescription(suggestedCategory, correctedTitle);
-
-    // Detect missing important details
-    const missingDetails = detectMissingDetails(correctedTitle);
-
-    // Suggest certifications
-    const suggestedCerts = suggestCertifications(suggestedCategory, correctedTitle);
-
-    // Suggest skills
-    const suggestedSkillsList = suggestSkills(suggestedCategory, correctedTitle);
-
-    // Suggest budget
-    const suggestedBudgetAmount = suggestBudget(suggestedCategory, correctedTitle);
-
-    // Suggest notes for doer
-    const suggestedNotes = suggestNotes(suggestedCategory, correctedTitle);
 
     res.json({
       success: true,
       data: {
-        originalTitle: title,
-        correctedTitle: hasCorrections ? correctedTitle : null,
-        hasCorrections,
-        category: suggestedCategory,
-        description: suggestedDescription,
-        budget: suggestedBudgetAmount,
-        missingDetails,
-        certifications: suggestedCerts,
-        skills: suggestedSkillsList,
-        notes: suggestedNotes,
-        contentSafe: true,
+        verified: !requiresReview,
+        chas_card_color: chasColor,
+        subsidy_percentage: subsidy,
+        requires_manual_review: requiresReview,
+        reason: explainability.formatReasonForUser(reasonCode),
+        audit_log_id: auditLogId,
       },
     });
   } catch (error) {
-    console.error('AI suggestions error:', error);
-    res.status(500).json({ error: 'Failed to generate suggestions' });
+    console.error('CHAS verification error:', error);
+    res.status(500).json({ error: 'Failed to verify CHAS eligibility' });
   }
 });
 
-// Content filter - check for inappropriate content
-router.post('/content-filter', async (req: Request, res: Response) => {
+// POST /api/ai/review-analyzer - Analyze review for bias
+router.post('/review-analyzer', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description } = req.body;
+    const { review_text, doer_id } = req.body;
+    const userId = parseInt(req.userId || '0', 10);
 
-    if (!title) {
-      return res.status(400).json({ error: 'Title required' });
+    if (!review_text || !doer_id) {
+      return res.status(400).json({ error: 'review_text and doer_id required' });
     }
 
-    const content = `${title} ${description || ''}`.toLowerCase();
+    // Detect proxies in review
+    const proxyResult = await biasDetector.detectProxiesInReview(review_text);
 
-    // Check for inappropriate terms
-    for (const term of inappropriateTerms) {
-      if (content.includes(term)) {
-        return res.json({
-          success: true,
-          data: { status: 'FLAG', reason: 'Inappropriate content detected' },
+    // Check historical bias trend for doer
+    const trendResult = await biasDetector.checkHistoricalBiasTrend(doer_id);
+
+    const reasonCode = proxyResult.is_biased ? 'potential_bias_detected' : 'title_keyword_match';
+
+    // Log the analysis
+    const auditLogId = await privacyLogger.logAiDecision({
+      userId,
+      action: 'review_analysis',
+      aiModel: 'bias_detector',
+      reasonCode,
+      resultSummary: {
+        proxy_result: proxyResult,
+        trend_result: trendResult,
+      },
+    });
+
+    if (proxyResult.is_biased || trendResult.is_biased) {
+      await biasDetector.logBiasDetection(auditLogId, proxyResult);
+    }
+
+    res.json({
+      success: true,
+      data: {
+        has_proxy_language: proxyResult.is_biased,
+        proxy_flags: proxyResult.flags,
+        proxy_confidence: proxyResult.confidence,
+        historical_pattern_concern: trendResult.is_biased,
+        pattern_flags: trendResult.flags,
+        overall_concern: proxyResult.is_biased || trendResult.is_biased,
+        recommendation: proxyResult.is_biased || trendResult.is_biased ? 'manual_review' : 'approved',
+        audit_log_id: auditLogId,
+      },
+    });
+  } catch (error) {
+    console.error('Review analysis error:', error);
+    res.status(500).json({ error: 'Failed to analyze review' });
+  }
+});
+
+// POST /api/ai/rank-doers - Rank doers with fairness audit
+router.post('/rank-doers', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { errand_id, candidate_doers, audit_depth = 'quick' } = req.body;
+    const userId = parseInt(req.userId || '0', 10);
+
+    if (!errand_id || !Array.isArray(candidate_doers)) {
+      return res.status(400).json({ error: 'errand_id and candidate_doers array required' });
+    }
+
+    // Simple scoring based on available data
+    const rankedDoers = await Promise.all(
+      candidate_doers.map(async (doer) => {
+        const ratingResult = await db.query(
+          `SELECT AVG(CAST(rating_score AS FLOAT)) as avg_rating, COUNT(*) as count
+           FROM errand_assignments WHERE doer_id = $1`,
+          [doer.doer_id]
+        );
+
+        const avgRating = ratingResult.rows[0]?.avg_rating
+          ? parseFloat(ratingResult.rows[0].avg_rating)
+          : 3.5;
+        const completionCount = parseInt(ratingResult.rows[0]?.count || '0', 10);
+
+        // Simple scoring (0-1)
+        let score = 0.5;
+        if (avgRating >= 4.8) score = 0.95;
+        else if (avgRating >= 4.5) score = 0.85;
+        else if (avgRating >= 4.0) score = 0.75;
+        else if (avgRating >= 3.5) score = 0.65;
+
+        // Boost for more completions
+        score *= Math.min(1, 0.5 + completionCount / 10);
+
+        return {
+          doer_id: doer.doer_id,
+          score: Math.min(score, 1),
+          score_breakdown: {
+            rating: Math.min(1, avgRating / 5),
+            completion_history: Math.min(1, completionCount / 20),
+            overall: Math.min(score, 1),
+          },
+          rank_reason: 'high_rating_history',
+        };
+      })
+    );
+
+    // Sort by score
+    rankedDoers.sort((a, b) => b.score - a.score);
+
+    // Perform fairness audit
+    const fairnessAudit = await biasDetector.auditRankingFairness(
+      rankedDoers,
+      audit_depth as 'quick' | 'thorough'
+    );
+
+    const reasonCode = fairnessAudit.is_biased ? 'potential_bias_detected' : 'high_skill_fit';
+
+    // Log the ranking decision
+    const auditLogId = await privacyLogger.logAiDecision({
+      userId,
+      action: 'rank_doers',
+      aiModel: 'skill_matcher',
+      reasonCode,
+      resultSummary: {
+        errand_id,
+        total_candidates: candidate_doers.length,
+        ranked_count: rankedDoers.length,
+        fairness_audit: fairnessAudit,
+        top_scorer: rankedDoers[0]?.score,
+      },
+    });
+
+    if (fairnessAudit.is_biased) {
+      await biasDetector.logBiasDetection(auditLogId, fairnessAudit);
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ranked_doers: rankedDoers,
+        fairness_audit: {
+          passed: !fairnessAudit.is_biased,
+          notes: fairnessAudit.details.recommendation || 'no_issues',
+          confidence: fairnessAudit.confidence,
+        },
+        audit_log_id: auditLogId,
+      },
+    });
+  } catch (error) {
+    console.error('Ranking error:', error);
+    res.status(500).json({ error: 'Failed to rank doers' });
+  }
+});
+
+// POST /api/ai/suggest-recurrence - Suggest recurrence pattern
+router.post('/suggest-recurrence', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { title, description, category } = req.body;
+    const userId = parseInt(req.userId || '0', 10);
+
+    if (!title || !category) {
+      return res.status(400).json({ error: 'title and category required' });
+    }
+
+    // Simple heuristics based on category
+    let suggestedPattern = { repeat_every: 1, repeat_unit: 'week', confidence: 0.6 };
+    let reasonCode = 'similar_errands_weekly';
+
+    const lowerTitle = title.toLowerCase();
+    const lowerDesc = (description || '').toLowerCase();
+    const fullText = `${lowerTitle} ${lowerDesc}`;
+
+    if (
+      category === 'pet-care' ||
+      fullText.includes('walk') ||
+      fullText.includes('dog') ||
+      fullText.includes('pet')
+    ) {
+      suggestedPattern = { repeat_every: 1, repeat_unit: 'day', confidence: 0.8 };
+      reasonCode = 'similar_errands_daily';
+    } else if (
+      category === 'cleaning-laundry' ||
+      fullText.includes('clean') ||
+      fullText.includes('laundry')
+    ) {
+      suggestedPattern = { repeat_every: 1, repeat_unit: 'week', confidence: 0.75 };
+      reasonCode = 'similar_errands_weekly';
+    } else if (
+      category === 'shopping-errands' ||
+      fullText.includes('grocery') ||
+      fullText.includes('shop')
+    ) {
+      suggestedPattern = { repeat_every: 2, repeat_unit: 'week', confidence: 0.65 };
+      reasonCode = 'similar_errands_weekly';
+    }
+
+    // Log the suggestion
+    const auditLogId = await privacyLogger.logAiDecision({
+      userId,
+      action: 'suggest_recurrence',
+      aiModel: 'pattern_detector',
+      reasonCode,
+      resultSummary: {
+        category,
+        suggested_pattern: suggestedPattern,
+      },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        suggested_pattern: {
+          repeat_every: suggestedPattern.repeat_every,
+          repeat_unit: suggestedPattern.repeat_unit,
+          occurrences: null,
+          confidence: suggestedPattern.confidence,
+          reason: explainability.formatReasonForUser(reasonCode),
+        },
+        validation: {
+          valid: true,
+          warnings: [],
+        },
+        audit_log_id: auditLogId,
+      },
+    });
+  } catch (error) {
+    console.error('Recurrence suggestion error:', error);
+    res.status(500).json({ error: 'Failed to suggest recurrence' });
+  }
+});
+
+// POST /api/ai/check-content - Content moderation
+router.post('/check-content', async (req: AuthRequest, res: Response) => {
+  try {
+    const { title, description, errand_id } = req.body;
+    const userId = req.userId ? parseInt(req.userId, 10) : 0;
+
+    if (!title) {
+      return res.status(400).json({ error: 'title required' });
+    }
+
+    const moderationResult = await contentMod.checkContentWithQwen(title, description);
+
+    const reasonCode = moderationResult.is_safe ? 'title_keyword_match' : 'content_moderation_warning';
+
+    if (userId > 0) {
+      const auditLogId = await privacyLogger.logAiDecision({
+        userId,
+        action: 'content_moderation',
+        aiModel: 'qwen',
+        reasonCode,
+        resultSummary: moderationResult,
+      });
+
+      if (!moderationResult.is_safe) {
+        await biasDetector.logBiasDetection(auditLogId, {
+          is_biased: false,
+          confidence: moderationResult.confidence,
+          flags: moderationResult.flags,
+          details: moderationResult.details,
         });
       }
     }
 
-    // Check for discrimination (with exceptions)
-    for (const { term, allowException } of discriminatoryTerms) {
-      if (content.includes(term)) {
-        if (!allowException) {
-          return res.json({
-            success: true,
-            data: { status: 'FLAG', reason: 'Discriminatory language detected' },
-          });
-        }
-        // For allowed exceptions (gender in legitimate context), check if context is valid
-        if (allowException) {
-          let isLegitimate = false;
-          for (const context of legitimateGenderContexts) {
-            if (content.includes(context)) {
-              isLegitimate = true;
-              break;
-            }
-          }
-          if (!isLegitimate) {
-            return res.json({
-              success: true,
-              data: { status: 'FLAG', reason: 'Gender specification requires legitimate context' },
-            });
-          }
-        }
-      }
-    }
-
-    // Content is safe
     res.json({
       success: true,
-      data: { status: 'SAFE' },
+      data: {
+        is_safe: moderationResult.is_safe,
+        issues: moderationResult.issues,
+        confidence: moderationResult.confidence,
+        flags: moderationResult.flags,
+        recommendation: moderationResult.is_safe ? 'approved' : 'manual_review',
+      },
     });
   } catch (error) {
-    console.error('Content filter error:', error);
+    console.error('Content check error:', error);
     res.status(500).json({ error: 'Failed to check content' });
   }
 });
 
-// Detect category from text
-router.post('/detect-category', async (req: Request, res: Response) => {
+// GET /api/ai/audit-log - Get audit log for current user
+router.get('/audit-log', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description } = req.body;
-    const text = `${title} ${description || ''}`;
-    const category = detectCategory(text);
-
-    res.json({
-      success: true,
-      data: { category: category || '' },
-    });
-  } catch (error) {
-    console.error('Category detection error:', error);
-    res.status(500).json({ error: 'Failed to detect category' });
-  }
-});
-
-// Parse natural language date/time
-router.post('/parse-datetime', async (req: Request, res: Response) => {
-  try {
-    const { input } = req.body;
-
-    if (!input) {
-      return res.status(400).json({ error: 'Input required' });
-    }
-
-    // Simple natural language parsing
-    const now = new Date();
-    let date = now.toISOString().split('T')[0];
-    let time = '10:00';
-
-    const lowerInput = input.toLowerCase();
-
-    // Parse date
-    if (lowerInput.includes('tomorrow')) {
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      date = tomorrow.toISOString().split('T')[0];
-    } else if (lowerInput.includes('today')) {
-      date = now.toISOString().split('T')[0];
-    } else if (lowerInput.includes('next week')) {
-      const nextWeek = new Date(now);
-      nextWeek.setDate(nextWeek.getDate() + 7);
-      date = nextWeek.toISOString().split('T')[0];
-    } else {
-      // Try to extract date pattern (e.g., "25/12" or "December 25")
-      const dateMatch = input.match(/(\d{1,2})[/-](\d{1,2})/);
-      if (dateMatch) {
-        const [, day, month] = dateMatch;
-        const parsedDate = new Date(now.getFullYear(), parseInt(month) - 1, parseInt(day));
-        date = parsedDate.toISOString().split('T')[0];
-      }
-    }
-
-    // Parse time
-    const timeMatch = input.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/i);
-    if (timeMatch) {
-      let hours = parseInt(timeMatch[1]);
-      const minutes = timeMatch[2] || '00';
-      const period = timeMatch[3]?.toLowerCase();
-
-      if (period === 'pm' && hours !== 12) hours += 12;
-      if (period === 'am' && hours === 12) hours = 0;
-
-      time = `${String(hours).padStart(2, '0')}:${minutes}`;
-    }
-
-    res.json({
-      success: true,
-      data: { date, time },
-    });
-  } catch (error) {
-    console.error('DateTime parsing error:', error);
-    res.status(500).json({ error: 'Failed to parse date/time' });
-  }
-});
-
-// Suggest completion for title input
-router.post('/suggest-completion', async (req: Request, res: Response) => {
-  try {
-    const { title } = req.body;
-
-    if (!title || title.length < 3) {
-      return res.json({ success: true, data: { suggestions: [] } });
-    }
-
-    // Common task suggestions based on keywords
-    const suggestions: string[] = [];
-
-    for (const [category, keywords] of Object.entries(categoryMapping)) {
-      for (const keyword of keywords) {
-        if (title.toLowerCase().includes(keyword)) {
-          // Add some common tasks for this category
-          const commonTasks: Record<string, string[]> = {
-            'home-maintenance': [
-              `Help me with ${title}`,
-              `Repair: ${title}`,
-              `Fix my ${title}`,
-              `Install ${title}`,
-            ],
-            'cleaning-laundry': [
-              `Clean my ${title}`,
-              `Wash ${title}`,
-              `Laundry: ${title}`,
-              `Deep clean: ${title}`,
-            ],
-            'pet-care': [
-              `${title} for my pet`,
-              `Pet ${title} service`,
-              `Need ${title} for dog/cat`,
-            ],
-          };
-
-          if (commonTasks[category]) {
-            suggestions.push(...commonTasks[category].slice(0, 2));
-          }
-          break;
-        }
-      }
-    }
-
-    // Remove duplicates and limit to 3
-    const uniqueSuggestions = [...new Set(suggestions)].slice(0, 3);
-
-    res.json({
-      success: true,
-      data: { suggestions: uniqueSuggestions },
-    });
-  } catch (error) {
-    console.error('Completion suggestion error:', error);
-    res.status(500).json({ error: 'Failed to suggest completion' });
-  }
-});
-
-// Parse time from freeform input (e.g., "4pm", "14:00", "2pm")
-function parseTimeFromInput(text: string): string | null {
-  const lowerText = text.toLowerCase();
-
-  // Match patterns like "4pm", "4 pm", "3pm", "2:30pm" - word boundary before but not after
-  // (because "3pm" might follow other text like "20min 3pm")
-  const timeMatch = lowerText.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/);
-  if (timeMatch) {
-    let hours = parseInt(timeMatch[1]);
-    const minutes = timeMatch[2] || '00';
-    const period = timeMatch[3];
-
-    // Validate 12-hour format (1-12)
-    if (hours < 1 || hours > 12) return null;
-
-    if (period === 'pm' && hours !== 12) {
-      hours += 12;
-    } else if (period === 'am' && hours === 12) {
-      hours = 0;
-    }
-
-    return `${String(hours).padStart(2, '0')}:${minutes}`;
-  }
-
-  return null;
-}
-
-// Parse duration from freeform input (e.g., "1hour", "2 hours", "30min")
-function parseDurationFromInput(text: string): { duration: string; unit: string } | null {
-  const lowerText = text.toLowerCase();
-
-  // Match patterns like "30min", "2 hours", "1.5hr", "20 m" - REQUIRE unit keyword
-  // Use negative lookahead to avoid matching postal codes like "082001"
-  const durationMatch = lowerText.match(/\b(\d+(?:\.\d+)?)\s*(hours?|hrs?|minutes?|mins?|min|m(?:in)?|days?|d(?:ay)?)\b/);
-  if (durationMatch) {
-    const value = durationMatch[1];
-    const unit = durationMatch[2];
-
-    let normalizedUnit = 'Hr';
-    if (unit.match(/^(min|m)/i)) normalizedUnit = 'Min';
-    else if (unit.match(/^(day|d)/i)) normalizedUnit = 'Day';
-    else if (unit.match(/week/i)) normalizedUnit = 'Week';
-
-    return { duration: value, unit: normalizedUnit };
-  }
-
-  return null;
-}
-
-// Extract task info from freeform input using local pattern matching
-router.post('/extract-task-info', async (req: Request, res: Response) => {
-  try {
-    const { input } = req.body;
-
-    if (!input || input.length < 2) {
-      return res.status(400).json({ error: 'Input too short' });
-    }
-
-    const text = input.toLowerCase().trim();
-
-    // Remove Singlish particles
-    const cleaned = text.replace(/\s+(lor|lah|leh|meh)\s*/g, ' ').trim();
-
-    // Date mapping
-    const dateMap: Record<string, string> = {
-      'today': '2026-06-17',
-      'tomorrow': '2026-06-18',
-      'tmr': '2026-06-18',
-      'monday': '2026-06-17',
-      'mon': '2026-06-17',
-      'tuesday': '2026-06-17',
-      'tue': '2026-06-17',
-      'wednesday': '2026-06-18',
-      'wed': '2026-06-18',
-      'thursday': '2026-06-19',
-      'thu': '2026-06-19',
-      'friday': '2026-06-20',
-      'fri': '2026-06-20',
-      'saturday': '2026-06-21',
-      'sat': '2026-06-21',
-      'sunday': '2026-06-22',
-      'sun': '2026-06-22',
-    };
-
-    // Time mapping
-    const timeMap: Record<string, string> = {
-      '9am': '09:00', '10am': '10:00', '11am': '11:00', '12pm': '12:00',
-      'noon': '12:00', '2pm': '14:00', '3pm': '15:00', '4pm': '16:00',
-      '5pm': '17:00', '6pm': '18:00', '7pm': '19:00', '8pm': '20:00',
-      'morning': '09:00', 'afternoon': '14:00', 'evening': '18:00', 'night': '20:00',
-    };
-
-    // Category keywords
-    const categoryMap: Record<string, string[]> = {
-      'pet-care': ['walk dog', 'bathe dog', 'groom', 'pet', 'dog', 'cat', 'animal'],
-      'cleaning-laundry': ['clean', 'wash', 'laundry', 'mop', 'vacuum', 'dust'],
-      'home-maintenance': ['fix', 'repair', 'paint', 'install', 'door', 'wall'],
-      'shopping-errands': ['buy', 'shop', 'grocery', 'groceries', 'purchase'],
-      'delivery-moving': ['deliver', 'move', 'transport', 'pickup'],
-      'childcare-tutoring': ['babysit', 'tutor', 'teach', 'homework'],
-      'tech-support': ['tech', 'computer', 'phone', 'software', 'laptop'],
-    };
-
-    // Singapore locations
-    const locations = ['orchard', 'marina bay', 'tampines', 'jurong', 'clementi', 'bishan', 'serangoon', 'bedok', 'geylang', 'east coast', 'hougang', 'punggol', 'everton', 'bukit timah', 'holland', 'tanglin'];
-
-    // Extract title - remove locations, times, dates, postal codes, and numbers
-    let titleText = cleaned;
-
-    // Remove common natural language artifacts (extra commas, spaces)
-    titleText = titleText.replace(/\s*,\s*/g, ' '); // Replace commas with spaces
-    titleText = titleText.replace(/\s+/g, ' '); // Collapse multiple spaces
-
-    // Remove possessive phrases (my, your, his, her, the)
-    titleText = titleText.replace(/^(wash|clean|help|need|get|find|do)\s+(my|your|his|her|the)\s+/i, '$1 ');
-
-    // Remove postal codes (6-digit numbers like 082001)
-    titleText = titleText.replace(/\b\d{6}\b/g, '');
-
-    // Remove locations
-    for (const loc of locations) {
-      titleText = titleText.replace(new RegExp(`\\s*(?:at|in|near|to)?\\s*${loc}\\b`, 'gi'), '');
-    }
-
-    // Remove day names (monday, tuesday, etc. and abbreviations)
-    titleText = titleText.replace(/\s+(monday|mon|tuesday|tue|wednesday|wed|thursday|thu|friday|fri|saturday|sat|sunday|sun|today|tomorrow|tmr)\b/gi, '');
-
-    // Remove month names and dates (19 jun, 19 june, etc.)
-    titleText = titleText.replace(/\s+\d{1,2}\s+(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|september|oct|october|nov|november|dec|december)\b/gi, '');
-
-    // Remove time patterns (9am, 4pm, morning, afternoon, etc.)
-    titleText = titleText.replace(/\s+(\d{1,2}(?:am|pm|:\d{2})|morning|afternoon|evening|night)\b/gi, '');
-
-    // Remove duration patterns (1hour, 2 hours, 30min, 30 m, etc.)
-    titleText = titleText.replace(/\s+\d+(?:\.\d+)?\s*(hour|hr|min|minute|m|day|d)\b/gi, '');
-
-    // Remove budget patterns ($50, budget 50, etc.)
-    titleText = titleText.replace(/\s*\$\s*\d+\b/g, '');
-    titleText = titleText.replace(/\s+budget\s+\d+\b/gi, '');
-
-    // Remove any remaining trailing numbers (likely budget or postal fragments)
-    titleText = titleText.replace(/\s+\d+\s*$/, '');
-
-    // Clean up double spaces again
-    titleText = titleText.replace(/\s+/g, ' ').trim();
-
-    let title = titleText.split(/at|in|on|by/)[0].trim().substring(0, 50) || input.substring(0, 50);
-
-    // Capitalize first letter and clean up punctuation
-    if (title) {
-      title = title.charAt(0).toUpperCase() + title.slice(1);
-      // Add period if missing
-      if (!/[.!?]$/.test(title)) {
-        title += '.';
-      }
-    }
-
-    // Extract category
-    let category = '';
-    for (const [cat, keywords] of Object.entries(categoryMap)) {
-      if (keywords.some(kw => cleaned.includes(kw))) {
-        category = cat;
-        break;
-      }
-    }
-
-    // Extract location and postal code
-    let location = '';
-    let postalCode = '';
-
-    // Valid Singapore postal code prefixes (01-82)
-    const validPostalPrefixes = ['01', '02', '03', '04', '05', '06', '07', '08', '09',
-      '10', '11', '12', '13', '14', '15', '16', '17', '18', '19',
-      '20', '21', '22', '23', '24', '25', '26', '27', '28', '29',
-      '30', '31', '32', '33', '34', '35', '36', '37', '38', '39',
-      '40', '41', '42', '43', '44', '45', '46', '47', '48', '49',
-      '50', '51', '52', '53', '54', '55', '56', '57', '58', '59',
-      '60', '61', '62', '63', '64', '65', '66', '67', '68', '69',
-      '70', '71', '72', '73', '74', '75', '76', '77', '78', '79',
-      '80', '81', '82'];
-
-    // First try to extract postal code (6-digit Singapore postal code)
-    const postalMatch = cleaned.match(/\b(\d{6})\b/);
-    if (postalMatch) {
-      const code = postalMatch[1];
-      const firstTwo = code.substring(0, 2);
-
-      // Only accept if it's a valid postal code prefix
-      if (validPostalPrefixes.includes(firstTwo)) {
-        postalCode = code;
-        // Accurate Singapore postal code area mapping
-        const postalCodeAreas: Record<string, string> = {
-          // 01-09: Central Business District & Surroundings
-          '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
-          '05': 'Outram', '06': 'People\'s Park', '07': 'Chinatown', '08': 'Tanjong Pagar', '09': 'Tanjong Pagar',
-          // 10-19: Orchard & Central
-          '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
-          '15': 'Henderson', '16': 'Henderson', '17': 'Balestier', '18': 'Macpherson', '19': 'Paya Lebar',
-          // 20-29: East
-          '20': 'Paya Lebar', '21': 'Geylang', '22': 'Geylang', '23': 'Geylang', '24': 'Eunos',
-          '25': 'Bedok', '26': 'Bedok', '27': 'Bedok', '28': 'Tampines', '29': 'Tampines',
-          // 30-39: East & North-East
-          '30': 'Tampines', '31': 'Pasir Ris', '32': 'Pasir Ris', '33': 'Punggol', '34': 'Punggol',
-          '35': 'Hougang', '36': 'Hougang', '37': 'Sengkang', '38': 'Sengkang', '39': 'Sengkang',
-          // 40-49: West
-          '40': 'Jurong West', '41': 'Jurong West', '42': 'Jurong', '43': 'Jurong East', '44': 'Clementi',
-          '45': 'Clementi', '46': 'Clementi', '47': 'Bukit Merah', '48': 'Bukit Merah', '49': 'Tiong Bahru',
-          // 50-59: Central West
-          '50': 'Redhill', '51': 'Queenstown', '52': 'Commonwealth', '53': 'Pasir Panjang', '54': 'Pasir Panjang',
-          '55': 'Bukit Timah', '56': 'Bukit Timah', '57': 'Holland', '58': 'Tanglin', '59': 'Clementi',
-          // 60-69: North & North-East (Bishan, Ang Mo Kio, Serangoon, Choa Chu Kang, Geylang)
-          '60': 'Bukit Timah', '61': 'Bishan', '62': 'Bishan', '63': 'Ang Mo Kio', '64': 'Ang Mo Kio',
-          '65': 'Serangoon', '66': 'Serangoon', '67': 'Ang Mo Kio', '68': 'Choa Chu Kang', '69': 'Geylang',
-          // 70-79: East
-          '70': 'Bedok', '71': 'Bedok', '72': 'Bedok', '73': 'Bedok', '74': 'Tampines',
-          '75': 'Tampines', '76': 'Tampines', '77': 'Tampines', '78': 'Tampines', '79': 'Sengkang',
-          // 80-82: North-East
-          '80': 'Sengkang', '81': 'Sengkang', '82': 'Sengkang',
-        };
-        location = postalCodeAreas[firstTwo] || '';
-      }
-    }
-
-    // If no postal code found, try named locations
-    if (!location) {
-      for (const loc of locations) {
-        if (cleaned.includes(loc)) {
-          location = loc.split(' ')[0];
-          location = location.charAt(0).toUpperCase() + location.slice(1);
-          break;
-        }
-      }
-    }
-
-    // Extract date
-    let date = '';
-
-    // First try hardcoded date map (today, tomorrow, etc.)
-    for (const [key, val] of Object.entries(dateMap)) {
-      if (cleaned.includes(key)) {
-        date = val;
-        break;
-      }
-    }
-
-    // If not found, try parsing date like "19 Jun" or "19 june"
-    if (!date) {
-      const monthMap: Record<string, string> = {
-        'jan': '01', 'january': '01', 'feb': '02', 'february': '02', 'mar': '03', 'march': '03',
-        'apr': '04', 'april': '04', 'may': '05', 'jun': '06', 'june': '06', 'jul': '07', 'july': '07',
-        'aug': '08', 'august': '08', 'sep': '09', 'september': '09', 'oct': '10', 'october': '10',
-        'nov': '11', 'november': '11', 'dec': '12', 'december': '12',
-      };
-
-      const dateRegex = /(\d{1,2})\s+(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|september|oct|october|nov|november|dec|december)/i;
-      const dateMatch = cleaned.match(dateRegex);
-      if (dateMatch) {
-        const day = dateMatch[1].padStart(2, '0');
-        const monthStr = dateMatch[2].toLowerCase();
-        const month = monthMap[monthStr];
-        if (month) {
-          date = `2026-${month}-${day}`;
-        }
-      }
-    }
-
-    // Extract time - use new parser
-    let time = parseTimeFromInput(cleaned) || '';
-
-    // Fallback to timeMap lookup if new parser didn't find it
-    if (!time) {
-      for (const [key, val] of Object.entries(timeMap)) {
-        if (cleaned.includes(key)) {
-          time = val;
-          break;
-        }
-      }
-    }
-
-    // Extract duration
-    const durationParse = parseDurationFromInput(cleaned);
-    let duration = durationParse?.duration || '';
-    let durationUnit = durationParse?.unit || 'Hr';
-
-    // Extract budget (look for $ symbol, "budget" keyword, or standalone number at end)
-    let budget = '';
-
-    // First try to find $ symbol
-    const dollarMatch = cleaned.match(/\$\s*(\d+)/);
-    if (dollarMatch) {
-      budget = dollarMatch[1];
-    } else {
-      // Look for budget keyword
-      const budgetKeywordMatch = cleaned.match(/budget\s*[:\s]*(\d+)/i);
-      if (budgetKeywordMatch) {
-        budget = budgetKeywordMatch[1];
-      } else {
-        // Try to extract standalone number at the end (after removing time patterns)
-        const trailingNumberMatch = cleaned.match(/(\d+)\s*$/);
-        if (trailingNumberMatch) {
-          budget = trailingNumberMatch[1];
-        }
-      }
-    }
-
-    // Generate AI description based on cleaned title and category
-    let description = '';
-    if (title && category) {
-      const cleanedTitle = title.replace(/\.$/, '');
-      const categoryDescMap: Record<string, string> = {
-        'pet-care': `Help needed with ${cleanedTitle}. Pet-friendly and experienced handlers only.`,
-        'cleaning-laundry': `Help needed with ${cleanedTitle}. Professional cleaning services required.`,
-        'home-maintenance': `Help needed with ${cleanedTitle}. Skilled and experienced workers preferred.`,
-        'shopping-errands': `Help needed with ${cleanedTitle}. Quick and reliable errand runner needed.`,
-        'delivery-moving': `Help needed with ${cleanedTitle}. Strong and efficient helpers needed.`,
-        'childcare-tutoring': `Help needed with ${cleanedTitle}. Qualified and experienced caregivers only.`,
-        'tech-support': `Help needed with ${cleanedTitle}. Technical expertise required.`,
-      };
-      description = categoryDescMap[category] || `Help needed with ${cleanedTitle}.`;
-    }
-
-    // Get full address from postal code if available
-    let fullAddress = location;
-    if (postalCode) {
-      fullAddress = await getFullAddressFromPostalCode(postalCode);
-    }
+    const { action, limit = 50 } = req.query;
+    const userId = parseInt(req.userId || '0', 10);
+
+    const logs = await privacyLogger.getAuditLog(
+      userId,
+      action as string | undefined,
+      parseInt(limit as string, 10)
+    );
 
     res.json({
       success: true,
       data: {
-        title,
-        category,
-        location,
-        fullAddress,
-        postalCode,
-        date,
-        time,
-        duration,
-        durationUnit,
-        budget,
-        description,
-        notes: '',
+        logs,
+        total: logs.length,
       },
     });
-  } catch (error: any) {
-    console.error('Extract task info error:', error);
-    res.status(500).json({ error: 'Failed to extract task information' });
+  } catch (error) {
+    console.error('Audit log fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch audit log' });
+  }
+});
+
+// GET /api/ai/bias-audit-summary - Get bias audit summary (for admins)
+router.get('/bias-audit-summary', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await db.query(
+      `SELECT * FROM bias_audit_summary ORDER BY flagged_logs DESC LIMIT 20`
+    );
+
+    res.json({
+      success: true,
+      data: {
+        summary: result.rows,
+        total_users_flagged: result.rows.length,
+      },
+    });
+  } catch (error) {
+    console.error('Bias audit summary error:', error);
+    res.status(500).json({ error: 'Failed to fetch audit summary' });
   }
 });
 
