@@ -405,4 +405,31 @@ router.get('/bias-audit-summary', authMiddleware, async (req: AuthRequest, res: 
   }
 });
 
+router.post('/extract-task-info', async (req: Request, res: Response) => {
+  try {
+    const { input } = req.body;
+    if (!input) return res.status(400).json({ error: 'input required' });
+
+    res.json({
+      success: true,
+      data: {
+        title: input.substring(0, 50),
+        description: input,
+        location: '',
+        fullAddress: '',
+        date: '',
+        time: '10:00',
+        duration: '',
+        durationUnit: 'Hr',
+        budget: '',
+        category: 'other',
+        postalCode: '',
+        notes: '',
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to extract' });
+  }
+});
+
 export default router;
