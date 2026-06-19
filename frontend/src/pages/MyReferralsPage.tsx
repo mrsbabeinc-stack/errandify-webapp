@@ -19,7 +19,16 @@ interface ReferralUser {
   email: string;
   joinDate: string;
   status: 'active' | 'inactive';
+  jobsCompleted: number;
   earnedFromThem: number;
+  referralStatus: 'pending' | 'activated' | 'loyal';
+  firstJobDate?: string;
+  loyaltyDate?: string;
+  earningsBreakdown: {
+    joinBonus: number;
+    firstJobBonus: number;
+    loyaltyBonus: number;
+  };
 }
 
 export default function MyReferralsPage() {
@@ -58,7 +67,12 @@ export default function MyReferralsPage() {
             email: 'ahmad@example.com',
             joinDate: '2026-01-15',
             status: 'active',
-            earnedFromThem: 50,
+            jobsCompleted: 15,
+            earnedFromThem: 300,
+            referralStatus: 'loyal',
+            firstJobDate: '2026-01-20',
+            loyaltyDate: '2026-03-10',
+            earningsBreakdown: { joinBonus: 50, firstJobBonus: 150, loyaltyBonus: 100 },
           },
           {
             id: '2',
@@ -66,7 +80,11 @@ export default function MyReferralsPage() {
             email: 'priya@example.com',
             joinDate: '2026-02-10',
             status: 'active',
-            earnedFromThem: 75,
+            jobsCompleted: 3,
+            earnedFromThem: 200,
+            referralStatus: 'activated',
+            firstJobDate: '2026-02-15',
+            earningsBreakdown: { joinBonus: 50, firstJobBonus: 150, loyaltyBonus: 0 },
           },
           {
             id: '3',
@@ -74,7 +92,11 @@ export default function MyReferralsPage() {
             email: 'james@example.com',
             joinDate: '2026-03-05',
             status: 'active',
-            earnedFromThem: 60,
+            jobsCompleted: 7,
+            earnedFromThem: 200,
+            referralStatus: 'activated',
+            firstJobDate: '2026-03-12',
+            earningsBreakdown: { joinBonus: 50, firstJobBonus: 150, loyaltyBonus: 0 },
           },
           {
             id: '4',
@@ -82,7 +104,10 @@ export default function MyReferralsPage() {
             email: 'maria@example.com',
             joinDate: '2026-03-20',
             status: 'inactive',
-            earnedFromThem: 0,
+            jobsCompleted: 0,
+            earnedFromThem: 50,
+            referralStatus: 'pending',
+            earningsBreakdown: { joinBonus: 50, firstJobBonus: 0, loyaltyBonus: 0 },
           },
           {
             id: '5',
@@ -90,7 +115,12 @@ export default function MyReferralsPage() {
             email: 'david@example.com',
             joinDate: '2026-04-01',
             status: 'active',
-            earnedFromThem: 85,
+            jobsCompleted: 12,
+            earnedFromThem: 300,
+            referralStatus: 'loyal',
+            firstJobDate: '2026-04-08',
+            loyaltyDate: '2026-05-15',
+            earningsBreakdown: { joinBonus: 50, firstJobBonus: 150, loyaltyBonus: 100 },
           },
           {
             id: '6',
@@ -98,7 +128,10 @@ export default function MyReferralsPage() {
             email: 'sarah@example.com',
             joinDate: '2026-04-15',
             status: 'active',
+            jobsCompleted: 2,
             earnedFromThem: 50,
+            referralStatus: 'pending',
+            earningsBreakdown: { joinBonus: 50, firstJobBonus: 0, loyaltyBonus: 0 },
           },
           {
             id: '7',
@@ -106,7 +139,11 @@ export default function MyReferralsPage() {
             email: 'wei@example.com',
             joinDate: '2026-05-01',
             status: 'active',
-            earnedFromThem: 40,
+            jobsCompleted: 6,
+            earnedFromThem: 200,
+            referralStatus: 'activated',
+            firstJobDate: '2026-05-08',
+            earningsBreakdown: { joinBonus: 50, firstJobBonus: 150, loyaltyBonus: 0 },
           },
           {
             id: '8',
@@ -114,7 +151,10 @@ export default function MyReferralsPage() {
             email: 'sophia@example.com',
             joinDate: '2026-05-20',
             status: 'active',
-            earnedFromThem: 40,
+            jobsCompleted: 0,
+            earnedFromThem: 50,
+            referralStatus: 'pending',
+            earningsBreakdown: { joinBonus: 50, firstJobBonus: 0, loyaltyBonus: 0 },
           },
         ],
       });
@@ -211,23 +251,67 @@ export default function MyReferralsPage() {
             <p className="text-gray-600 text-center py-8">No referrals yet. Share your code to get started!</p>
           ) : (
             <div className="space-y-3">
-              {stats.referralsList.map((referral) => (
-                <div key={referral.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                  <div className="w-10 h-10 bg-errandify-orange rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                    {referral.name.charAt(0)}
+              {stats.referralsList.map((referral) => {
+                const statusIcon =
+                  referral.referralStatus === 'loyal' ? '⭐' :
+                  referral.referralStatus === 'activated' ? '🌟' :
+                  '⏳';
+                const statusLabel =
+                  referral.referralStatus === 'loyal' ? 'LOYALTY' :
+                  referral.referralStatus === 'activated' ? 'ACTIVATED' :
+                  'PENDING';
+
+                return (
+                  <div key={referral.id} className="bg-gray-50 rounded-lg border border-gray-100 overflow-hidden">
+                    {/* Header with status */}
+                    <div className="p-3 bg-white border-b border-gray-100 flex items-center gap-2">
+                      <span className="text-lg">{statusIcon}</span>
+                      <span className={`text-xs font-bold px-2 py-1 rounded ${
+                        referral.referralStatus === 'loyal' ? 'bg-yellow-100 text-yellow-700' :
+                        referral.referralStatus === 'activated' ? 'bg-blue-100 text-blue-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {statusLabel}
+                      </span>
+                    </div>
+
+                    {/* Main content */}
+                    <div className="p-3 flex items-start gap-3">
+                      <div className="w-10 h-10 bg-errandify-orange rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        {referral.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-800">{referral.name}</p>
+                        <p className="text-xs text-gray-500 mb-2">
+                          Joined {new Date(referral.joinDate).toLocaleDateString()} • {referral.jobsCompleted} jobs
+                        </p>
+
+                        {/* Earnings breakdown */}
+                        <div className="space-y-1 text-xs">
+                          {referral.earningsBreakdown.joinBonus > 0 && (
+                            <p className="text-gray-600">✓ Friend joined: <span className="font-semibold text-gray-800">+{referral.earningsBreakdown.joinBonus} EP</span></p>
+                          )}
+                          {referral.earningsBreakdown.firstJobBonus > 0 && (
+                            <p className="text-gray-600">✓ First job completed: <span className="font-semibold text-gray-800">+{referral.earningsBreakdown.firstJobBonus} EP</span></p>
+                          )}
+                          {referral.earningsBreakdown.loyaltyBonus > 0 && (
+                            <p className="text-gray-600">✓ Reached 10 jobs: <span className="font-semibold text-gray-800">+{referral.earningsBreakdown.loyaltyBonus} EP</span></p>
+                          )}
+                          {referral.referralStatus === 'pending' && referral.jobsCompleted === 0 && (
+                            <p className="text-gray-500 italic">→ Will earn +150 EP when {referral.name.split(' ')[0]} completes first job</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Total earned */}
+                      <div className="text-right flex-shrink-0 border-l border-gray-200 pl-3">
+                        <p className="text-lg font-bold text-errandify-brown">{referral.earnedFromThem}</p>
+                        <p className="text-xs text-gray-500">total EP</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-800">{referral.name}</p>
-                    <p className="text-xs text-gray-500">
-                      Joined {new Date(referral.joinDate).toLocaleDateString()} • {referral.status === 'active' ? '✓ Active' : 'Inactive'}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-errandify-brown">{referral.earnedFromThem}</p>
-                    <p className="text-xs text-gray-500">points</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
