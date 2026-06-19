@@ -416,10 +416,17 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const postalCodeMatch = input.match(/\b(\d{6})\b/);
     const postalCode = postalCodeMatch ? postalCodeMatch[1] : '';
 
-    // Extract title - take first meaningful phrase before date/time/budget/location
-    // Split on common delimiters: "at TIME", "on DAY", "for DURATION", "$AMOUNT", postal code
-    const titleParts = input.split(/\s+(?:at|on|for|,|\d{1,2}(?::|am|pm)|days?\s+(?:later|before)|[\$@]\d+|\d{6})/i);
-    let title = titleParts[0].trim().substring(0, 50);
+    // Extract title - remove all non-title info and take first part
+    let title = input
+      .replace(/\s*,\s*/g, ' ') // Replace commas with spaces
+      .replace(/\s+\d+\s+days?\s+later/gi, '') // Remove "2 days later"
+      .replace(/\s+at\s+\d{1,2}(?::|am|pm)/gi, '') // Remove "at 7pm"
+      .replace(/\s+for\s+\d+\s+(?:hour|hr|h|min|mins?|m)/gi, '') // Remove "for 30 mins"
+      .replace(/[\$@]\s*\d+/g, '') // Remove "$80"
+      .replace(/\s+at\s+\d{6}/g, '') // Remove "at 082001"
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .trim()
+      .substring(0, 50);
 
     // Auto-correct title: fix common mistakes and capitalize
     title = title
