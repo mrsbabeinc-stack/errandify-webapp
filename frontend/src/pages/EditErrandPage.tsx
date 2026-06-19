@@ -211,14 +211,16 @@ export default function EditErrandPage({ userRole }: EditErrandPageProps) {
                 className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base"
               >
                 <option value="">Select Category</option>
-                <option value="home-maintenance">Home Maintenance</option>
-                <option value="cleaning-laundry">Cleaning & Laundry</option>
-                <option value="shopping-errands">Shopping & Errands</option>
-                <option value="delivery-moving">Delivery & Moving</option>
-                <option value="childcare-tutoring">Childcare & Tutoring</option>
-                <option value="pet-care">Pet Care</option>
-                <option value="tech-support">Tech Support</option>
-                <option value="moving-help">Moving Help</option>
+                <option value="eldercare">Caregiving & Elder Companionship</option>
+                <option value="childcare">Childcare & School Pickup/Drop-off</option>
+                <option value="homehelp">Household Errands & Home Maintenance</option>
+                <option value="wellness">Wellness Support (incl. Mental Wellness)</option>
+                <option value="tripcarry">Cross-Border Errands</option>
+                <option value="petcare">Pet Care (sitting, grooming, walking)</option>
+                <option value="delivery">Delivery (local errands, parcels, food, documents)</option>
+                <option value="eventhelp">Events (setup, shopping, planning)</option>
+                <option value="donate">Donate / Giveback</option>
+                <option value="localbiz">Microservices for Local SMEs</option>
               </select>
             </div>
 

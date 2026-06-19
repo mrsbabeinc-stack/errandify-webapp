@@ -14,14 +14,16 @@ export default function TaskReviewModal({
   isSubmitting,
 }: TaskReviewModalProps) {
   const categoryEmojis: Record<string, string> = {
-    'home-maintenance': '🏠',
-    'cleaning-laundry': '🧺',
-    'shopping-errands': '🛍️',
-    'delivery-moving': '📦',
-    'childcare-tutoring': '🧒',
-    'pet-care': '🐾',
-    'tech-support': '💻',
-    'moving-help': '🚚',
+    'eldercare': '👴',
+    'childcare': '🧒',
+    'homehelp': '🏠',
+    'wellness': '🌿',
+    'tripcarry': '✈️',
+    'petcare': '🐾',
+    'delivery': '📦',
+    'eventhelp': '🎉',
+    'donate': '❤️',
+    'localbiz': '🏪',
   };
 
   return (
