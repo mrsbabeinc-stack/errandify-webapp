@@ -20,6 +20,12 @@ export default function PushNotificationManager({
   // Show prompt if push is supported but not subscribed (on first visit)
   useEffect(() => {
     if (isSupported && !isLoading && !isSubscribed) {
+      // Don't show prompt on localhost (dev environment)
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isLocalhost) {
+        return;
+      }
+
       // Check if user has dismissed this before
       const dismissed = localStorage.getItem('push-prompt-dismissed');
       if (!dismissed) {
