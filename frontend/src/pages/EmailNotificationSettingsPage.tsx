@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 interface EmailSettings {
@@ -17,6 +18,7 @@ interface EmailSettings {
 }
 
 export default function EmailNotificationSettingsPage() {
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<EmailSettings>({
     enabled: true,
     digestFrequency: 'daily',
@@ -96,6 +98,7 @@ export default function EmailNotificationSettingsPage() {
   return (
     <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-20">
       <div className="max-w-2xl mx-auto">
+        <button onClick={() => navigate(-1)} className="mb-4 text-lg text-gray-600 font-bold">‹ Back</button>
         <h1 className="text-2xl font-bold text-errandify-brown mb-2">📧 Email Notifications</h1>
         <p className="text-sm text-gray-600 mb-6">Customize how we send you updates</p>
 

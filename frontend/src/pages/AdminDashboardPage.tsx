@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 interface DashboardData {
@@ -25,6 +26,7 @@ interface DashboardData {
 }
 
 export default function AdminDashboardPage() {
+  const navigate = useNavigate();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'disputes' | 'screening' | 'users'>('overview');
@@ -73,6 +75,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-6">
       <div className="max-w-7xl mx-auto">
+        <button onClick={() => navigate(-1)} className="mb-4 text-lg text-gray-600 font-bold">‹ Back</button>
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">⚙️ Admin Dashboard</h1>
