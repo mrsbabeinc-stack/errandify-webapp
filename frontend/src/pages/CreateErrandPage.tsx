@@ -111,7 +111,7 @@ export default function CreateErrandPage() {
             certifications: { required: [] as string[], optional: [] as string[] },
           };
 
-          console.log('[CreateErrand] Setting form data - title:', newFormData.title, 'budget:', newFormData.budget);
+          console.log('[CreateErrand] Setting form data - title:', newFormData.title, 'budget:', newFormData.budget, 'prefilled budget:', prefilledData.budget);
           setFormData(newFormData);
 
           // Set postal code and full address from prefilled data

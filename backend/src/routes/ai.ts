@@ -444,15 +444,16 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const postalCodeMatch = input.match(/\b(\d{6})\b/);
     const postalCode = postalCodeMatch ? postalCodeMatch[1] : '';
 
-    // Extract title - use simple approach: extract first meaningful words before time/date/amount
+    // Extract title - keep only meaningful words, filter filler words
     console.log('[Extract] Raw input:', input);
+
+    // Filler words to remove (articles, prepositions, common function words)
+    const fillerWords = /\b(if|at|on|for|of|to|the|a|an|and|or|in|is|are|be|by|from|with|as|i|me|my|we|you|your|our|their|this|that|these|those|it|which|who|what|when|where|why|how|can|could|will|would|should|must|may|might|today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)\b/gi;
 
     let title = input
       // Remove all weird punctuation at start and throughout
       .replace(/^[^\w\s]+/, '') // Remove non-word chars at start
       .replace(/[+\-*~`!@#$%^&|\\\/=<>?:;"'.,_(){}[\]]/g, ' ') // Replace weird punctuation with spaces
-      // First, split by common delimiters that separate title from metadata
-      .split(/\s+(?:at|on|today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)/i)[0]
       // Remove postal codes
       .replace(/\s*\d{6}\s*/g, ' ')
       // Remove times (5pm, 7am, 7:00pm, etc)
@@ -464,12 +465,34 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       .replace(/[\$@]\s*\d+/g, '')
       // Remove trailing numbers
       .replace(/\s+\d{2,4}\s*$/g, '')
+      // Remove filler words (keep only meaningful words)
+      .replace(fillerWords, ' ')
       // Collapse spaces
       .replace(/\s+/g, ' ')
       .trim()
       .substring(0, 50);
 
     console.log('[Extract] After cleanup:', title);
+
+    // Reorder words for natural-sounding title
+    // Priority: (action verb, person/object, purpose/detail)
+    const words = title.split(/\s+/);
+    const actionVerbs = ['take', 'help', 'clean', 'care', 'pick', 'send', 'buy', 'cook', 'drive', 'repair', 'watch', 'babysit', 'walk', 'deliver', 'setup'];
+    const priorities = {
+      0: ['take', 'help', 'clean', 'care', 'do', 'make', 'fix', 'pick', 'send', 'buy', 'cook', 'drive', 'repair', 'watch', 'babysit', 'walk', 'deliver', 'setup'], // Verbs first
+      1: ['baby', 'kid', 'mom', 'dad', 'child', 'dog', 'cat', 'house', 'home', 'car', 'lawn', 'laundry', 'groceries', 'elderly', 'parent'], // Objects/people second
+      2: ['care', 'help', 'service', 'work', 'job', 'errand'], // Purposes last
+    };
+
+    const sortedWords = words.sort((a, b) => {
+      const aLower = a.toLowerCase();
+      const bLower = b.toLowerCase();
+      const aPriority = priorities[0].includes(aLower) ? 0 : priorities[1].includes(aLower) ? 1 : 2;
+      const bPriority = priorities[0].includes(bLower) ? 0 : priorities[1].includes(bLower) ? 1 : 2;
+      return aPriority - bPriority;
+    });
+
+    title = sortedWords.join(' ');
 
     // Auto-correct common mistakes and capitalize
     title = title
@@ -546,23 +569,35 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       }
     }
 
-    // Parse budget - look for "$100", "@100", "budget 100", or trailing 2-3 digit number
+    // Parse budget - smart, order-independent extraction
     let budget = '';
+
+    // Try explicit patterns first: $100, @100, budget 100
     let budgetMatch = input.match(/[\$@]\s*(\d+)|budget\s*[\$@]?\s*(\d+)/i);
     console.log('[Extract] Budget match (explicit):', budgetMatch);
+
     if (budgetMatch) {
       budget = budgetMatch[1] || budgetMatch[2];
-      console.log('[Extract] Budget extracted:', budget);
+      console.log('[Extract] Budget extracted (explicit):', budget);
     } else {
-      // If no explicit budget pattern, look for a trailing number (2-3 digits at end, max 999)
-      budgetMatch = input.match(/(\d{2,3})\s*$/);
-      if (budgetMatch) {
-        const trailingNum = budgetMatch[1];
-        const budgetNum = parseInt(trailingNum);
-        // Only accept if it's a reasonable budget: 8-999
-        if (budgetNum >= 8 && budgetNum <= 999) {
-          budget = trailingNum;
-          console.log('[Extract] Budget extracted from trailing number:', budget);
+      // If no explicit pattern, find ALL numbers in the input
+      const allNumbers = input.match(/\b(\d+)\b/g);
+      console.log('[Extract] All numbers found:', allNumbers);
+
+      if (allNumbers && allNumbers.length > 0) {
+        // Filter to get reasonable budget amounts (8-999)
+        // Also exclude 6-digit numbers (likely postal codes)
+        const budgetCandidates = allNumbers
+          .filter(num => num.length < 6) // Not a 6-digit postal code
+          .map(num => parseInt(num))
+          .filter(num => num >= 8 && num <= 999); // Only reasonable budget amounts
+
+        console.log('[Extract] Budget candidates:', budgetCandidates);
+
+        if (budgetCandidates.length > 0) {
+          // Use the first reasonable budget found
+          budget = budgetCandidates[0].toString();
+          console.log('[Extract] Budget extracted (order-independent):', budget);
         }
       }
     }

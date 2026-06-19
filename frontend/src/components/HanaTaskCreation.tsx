@@ -104,6 +104,7 @@ export default function HanaTaskCreation({
 
       console.log('Extract response:', response.data);
       const extracted = response.data.data;
+      console.log('[Hana] Extracted budget:', extracted.budget, 'type:', typeof extracted.budget);
 
       // Update task data with extracted info
       const updatedTaskData: TaskData = {
@@ -116,12 +117,20 @@ export default function HanaTaskCreation({
         time: extracted.time || '10:00',
         duration: extracted.duration || '',
         durationUnit: extracted.durationUnit || 'Hr',
-        budget: extracted.budget || '',
+        budget: extracted.budget ? String(extracted.budget) : '',
         postalCode: extracted.postalCode || '',
         notes: extracted.notes || '',
       };
 
       setTaskData(updatedTaskData);
+
+      // Check if budget is missing
+      if (!updatedTaskData.budget || updatedTaskData.budget.trim() === '') {
+        setHanaMessage('I need a budget amount to post this. How much are you willing to pay? (e.g., 50, 100, 200) 💰');
+        setCurrentStep('input');
+        setInput('');
+        return;
+      }
 
       // Get AI suggestions for this category
       try {
