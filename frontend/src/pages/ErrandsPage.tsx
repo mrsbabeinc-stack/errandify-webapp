@@ -143,7 +143,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
     navigate('/create-errand');
   };
 
-  const pageTitle = userRole === 'asker' ? 'MyPosted Errands' : 'ToHelp Errands';
+  const pageTitle = userRole === 'asker' ? 'MyErrands' : 'MyErrands';
   const pageSubtitle = userRole === 'asker' ? 'Errands you have posted' : 'Errands you have accepted';
 
   if (loading) {
