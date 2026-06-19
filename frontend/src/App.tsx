@@ -18,7 +18,7 @@ import DoerBrowsePage from './pages/DoerBrowsePage';
 import ErrandsPage from './pages/ErrandsPage';
 import ErrandDetailPage from './pages/ErrandDetailPage';
 import ChatPage from './pages/ChatPage';
-import MyVillagePage from './pages/MyVillagePage';
+import MyKampungPage from './pages/MyKampungPage';
 import CommunityHubPage from './pages/CommunityHubPage';
 import MyPocketPage from './pages/MyPocketPage';
 import ProfilePage from './pages/ProfilePage';
@@ -234,8 +234,8 @@ export default function App() {
           <Route path="/errands" element={<ErrandsPage userRole={userRole} />} />
           <Route path="/errand/:id" element={<ErrandDetailPage />} />
           <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole} />} />
-          <Route path="/village" element={<MyVillagePage />} />
-          <Route path="/my-village" element={<MyVillagePage />} />
+          <Route path="/kampung" element={<MyKampungPage />} />
+          <Route path="/my-kampung" element={<MyKampungPage />} />
           <Route path="/community-hub" element={<CommunityHubPage />} />
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
           <Route path="/profile" element={<ProfilePage userRole={userRole} onLogout={handleLogout} />} />
