@@ -107,7 +107,7 @@ export default function CreateErrandPage() {
             repeatUnit: 'week' as 'day' | 'week' | 'month',
             occurrences: '1',
             specialNote: prefilledData.notes || '',
-            skills: prefilledData.suggestedSkills || [], // Auto-add suggested skills from extraction
+            skills: [], // Don't auto-add suggested skills - user can add manually
             certifications: { required: [] as string[], optional: [] as string[] },
           };
 
