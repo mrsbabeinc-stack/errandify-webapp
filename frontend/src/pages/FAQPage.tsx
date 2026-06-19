@@ -81,7 +81,7 @@ export default function FAQPage() {
       id: 'd1',
       category: 'doer',
       question: 'How do I earn money on Errandify?',
-      answer: 'Browse errands (each shows the asker's budget), submit your bid at any rate you choose, get accepted by the asker, complete the work, and receive payment. Your ratings build your reputation, leading to more opportunities.',
+      answer: 'Browse errands (each shows the asker budget), submit your bid at any rate you choose, get accepted by the asker, complete the work, and receive payment. Your ratings build your reputation, leading to more opportunities.',
     },
     {
       id: 'd2',
