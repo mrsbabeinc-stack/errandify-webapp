@@ -45,7 +45,7 @@ export default function FAQPage() {
       id: 'a1',
       category: 'asker',
       question: 'How do I post an errand?',
-      answer: 'Click the "+" button in the home screen, select a category, describe what you need, set your budget, and post. Doers will submit bids within hours. You review, compare, and pick the best fit.',
+      answer: 'Click the plus button (+) in the home screen, select a category, describe what you need, set your budget, and post. Doers will submit bids within hours. You review, compare, and pick the best fit.',
     },
     {
       id: 'a2',
@@ -171,7 +171,7 @@ export default function FAQPage() {
       id: 's5',
       category: 'safety',
       question: 'Can I block or trust users?',
-      answer: 'Yes. In MyKampung, you can mark users as "Trusted" (priority matching) or "Blocked" (no future interactions). These are private to you and help customize your experience.',
+      answer: 'Yes. In MyKampung, you can mark users as Trusted (priority matching) or Blocked (no future interactions). These are private to you and help customize your experience.',
     },
     {
       id: 's6',
