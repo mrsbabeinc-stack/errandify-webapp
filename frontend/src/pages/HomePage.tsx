@@ -9,6 +9,17 @@ export default function HomePage({ userRole }: HomePageProps) {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('Friend');
 
+  const categories = [
+    { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50' },
+    { id: 'cleaning-laundry', name: 'Cleaning & Laundry', icon: '🧺', color: 'from-blue-100 to-blue-50' },
+    { id: 'shopping-errands', name: 'Shopping & Errands', icon: '🛍️', color: 'from-pink-100 to-pink-50' },
+    { id: 'delivery-moving', name: 'Delivery & Moving', icon: '📦', color: 'from-yellow-100 to-yellow-50' },
+    { id: 'childcare-tutoring', name: 'Childcare & Tutoring', icon: '🧒', color: 'from-green-100 to-green-50' },
+    { id: 'pet-care', name: 'Pet Care', icon: '🐕', color: 'from-purple-100 to-purple-50' },
+    { id: 'tech-support', name: 'Tech Support', icon: '💻', color: 'from-indigo-100 to-indigo-50' },
+    { id: 'moving-help', name: 'Moving Help', icon: '🚚', color: 'from-red-100 to-red-50' },
+  ];
+
   useEffect(() => {
     const user = localStorage.getItem('user');
     if (user) {
@@ -20,6 +31,16 @@ export default function HomePage({ userRole }: HomePageProps) {
       }
     }
   }, []);
+
+  const handleCategoryClick = (categoryId: string) => {
+    if (userRole === 'asker') {
+      // Askers: Go to create errand with category
+      navigate(`/create-errand?category=${categoryId}`);
+    } else {
+      // Doers: Go to browse with category filter
+      navigate(`/browse?category=${categoryId}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-errandify-bg">
@@ -58,6 +79,30 @@ export default function HomePage({ userRole }: HomePageProps) {
               {userRole === 'asker' ? 'My Errands' : 'My Work'}
             </span>
           </button>
+        </div>
+
+        {/* Quick Categories Section */}
+        <div className="bg-white rounded-lg p-6 mb-8 border border-gray-200">
+          <h2 className="font-bold text-errandify-brown mb-4">
+            {userRole === 'asker' ? '📋 Quick Categories' : '🔍 Browse by Category'}
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => handleCategoryClick(category.id)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-md bg-gradient-to-r ${category.color}`}
+              >
+                <span className="mr-2">{category.icon}</span>
+                {category.name}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-4">
+            {userRole === 'asker'
+              ? 'Click a category to post a new errand'
+              : 'Click a category to filter available errands'}
+          </p>
         </div>
 
         {/* Role-Specific Feature List */}
