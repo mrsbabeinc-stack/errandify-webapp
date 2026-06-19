@@ -114,7 +114,7 @@ export default function HanaManualMode({
                     key={suggestion.id}
                     type="button"
                     onClick={() => handleSuggestionClick(suggestion.text)}
-                    className="w-full text-left px-3 py-2 hover:bg-blue-50 rounded transition-colors text-sm text-gray-700"
+                    className="w-full text-left px-3 py-2 hover:bg-errandify-orange-50 rounded transition-colors text-sm text-gray-700"
                   >
                     ✨ {suggestion.text}
                   </button>

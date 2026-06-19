@@ -341,7 +341,7 @@ export default function MyKampungPage() {
       case 'success_story':
         return 'bg-green-100 text-green-700';
       case 'tip':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-errandify-orange-100 text-errandify-orange-700';
       case 'question':
         return 'bg-purple-100 text-purple-700';
       case 'help_needed':
@@ -349,7 +349,7 @@ export default function MyKampungPage() {
       case 'general':
         return 'bg-gray-100 text-gray-700';
       case 'tips':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-errandify-orange-100 text-errandify-orange-700';
       case 'issues':
         return 'bg-red-100 text-red-700';
       case 'feedback':
@@ -369,7 +369,7 @@ export default function MyKampungPage() {
       case 'workshop':
         return 'bg-purple-100 text-purple-700';
       case 'webinar':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-errandify-orange-100 text-errandify-orange-700';
       case 'meetup':
         return 'bg-pink-100 text-pink-700';
       case 'competition':
@@ -536,7 +536,7 @@ export default function MyKampungPage() {
                     >
                       {post.isLiked ? '❤️' : '🤍'} {post.likes}
                     </button>
-                    <button className="flex items-center gap-1 hover:text-blue-600 font-medium transition">
+                    <button className="flex items-center gap-1 hover:text-errandify-orange-600 font-medium transition">
                       💬 {post.comments}
                     </button>
                     <button className="flex items-center gap-1 hover:text-gray-800 font-medium transition ml-auto">

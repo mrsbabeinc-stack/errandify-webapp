@@ -21,7 +21,7 @@ export default function HomePage({ userRole }: HomePageProps) {
   const categories: Category[] = [
     // GROUP 1: HOME & HOUSEHOLD
     { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50', purpose: 'Repairs, renovations, plumbing, electrical', group: '🏠 Home & Household' },
-    { id: 'cleaning-household', name: 'Cleaning & Household', icon: '🧹', color: 'from-blue-100 to-blue-50', purpose: 'House cleaning, laundry, organizing', group: '🏠 Home & Household' },
+    { id: 'cleaning-household', name: 'Cleaning & Household', icon: '🧹', color: 'from-errandify-orange-100 to-errandify-orange-50', purpose: 'House cleaning, laundry, organizing', group: '🏠 Home & Household' },
     { id: 'food-beverage', name: 'Food & Beverage', icon: '🍕', color: 'from-red-100 to-red-50', purpose: 'Cooking, grocery shopping, meal prep', group: '🏠 Home & Household' },
     { id: 'furniture-assembly', name: 'Furniture & Assembly', icon: '🛋️', color: 'from-amber-100 to-amber-50', purpose: 'Furniture assembly, arrangement, moving', group: '🏠 Home & Household' },
 
@@ -105,7 +105,7 @@ export default function HomePage({ userRole }: HomePageProps) {
 
               <button
                 onClick={() => navigate('/errands')}
-                className="bg-blue-500 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+                className="bg-errandify-orange-500 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
                 <span className="text-3xl mb-2 block">📋</span>
                 <span className="font-semibold text-sm">My Errands</span>
@@ -123,7 +123,7 @@ export default function HomePage({ userRole }: HomePageProps) {
 
               <button
                 onClick={() => navigate('/errands')}
-                className="bg-blue-500 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+                className="bg-errandify-orange-500 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
                 <span className="text-3xl mb-2 block">✓</span>
                 <span className="font-semibold text-sm">My Work</span>

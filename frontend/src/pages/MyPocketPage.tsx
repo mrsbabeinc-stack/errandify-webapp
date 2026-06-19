@@ -180,7 +180,7 @@ export default function MyPocketPage() {
           {/* Total Spent */}
           <div className="bg-white rounded-lg p-4 border border-gray-200">
             <p className="text-xs text-gray-600 mb-2">Total Spent</p>
-            <p className="text-xl font-bold text-blue-600">{formatCurrency(wallet.totalSpent)}</p>
+            <p className="text-xl font-bold text-errandify-orange-600">{formatCurrency(wallet.totalSpent)}</p>
             <p className="text-xs text-gray-500 mt-2">On Tasks</p>
           </div>
 
@@ -254,7 +254,7 @@ export default function MyPocketPage() {
                           tx.type === 'earn'
                             ? 'text-green-600'
                             : tx.type === 'refund'
-                              ? 'text-blue-600'
+                              ? 'text-errandify-orange-600'
                               : 'text-gray-800'
                         }`}
                       >
@@ -278,8 +278,8 @@ export default function MyPocketPage() {
         </div>
 
         {/* Info Footer */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-xs text-blue-900">
+        <div className="mt-6 p-4 bg-errandify-orange-50 rounded-lg border border-errandify-orange-200">
+          <p className="text-xs text-errandify-orange-900">
             <strong>💡 Tip:</strong> Earn Errandify Points on every completed task. Redeem them for discounts, rewards, or donate to charity!
           </p>
         </div>

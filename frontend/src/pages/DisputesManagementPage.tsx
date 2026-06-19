@@ -114,7 +114,7 @@ export default function DisputesManagementPage() {
       case 'resolved':
         return 'bg-green-100 text-green-700';
       case 'appeal_pending':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-errandify-orange-100 text-errandify-orange-700';
       default:
         return 'bg-gray-100 text-gray-700';
     }
@@ -204,7 +204,7 @@ export default function DisputesManagementPage() {
                 {dispute.status === 'open' && (
                   <button
                     onClick={() => setSelectedDispute(dispute)}
-                    className="mt-3 w-full text-xs bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition font-medium"
+                    className="mt-3 w-full text-xs bg-errandify-orange-100 text-errandify-orange-700 px-3 py-2 rounded-lg hover:bg-errandify-orange-200 transition font-medium"
                   >
                     View & Update
                   </button>

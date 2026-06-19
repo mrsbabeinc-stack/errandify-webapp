@@ -107,7 +107,7 @@ export default function NotificationPreferencesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 flex items-center justify-center">
         <p className="text-gray-600">Loading preferences...</p>
       </div>
     );
@@ -136,7 +136,7 @@ export default function NotificationPreferencesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Back Button */}
         <button
@@ -236,8 +236,8 @@ export default function NotificationPreferencesPage() {
         </div>
 
         {/* Info Footer */}
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm text-blue-900">
+        <div className="mt-8 p-4 bg-errandify-orange-50 rounded-lg border border-errandify-orange-200">
+          <p className="text-sm text-errandify-orange-900">
             <strong>💡 Tip:</strong> Critical notifications cannot be disabled because they're essential for managing your tasks and payments. You can customize all other notifications to suit your preferences.
           </p>
         </div>

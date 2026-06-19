@@ -64,9 +64,9 @@ export default function CriminalScreening({ onComplete, onCancel }: CriminalScre
               safety screening before allowing access to sensitive task categories.
             </p>
 
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-              <p className="font-semibold text-blue-900 mb-2">What are \"Sensitive Categories\"?</p>
-              <p className="text-blue-800 text-sm">
+            <div className="bg-errandify-orange-50 border-l-4 border-errandify-orange-500 p-4 mb-6">
+              <p className="font-semibold text-errandify-orange-900 mb-2">What are \"Sensitive Categories\"?</p>
+              <p className="text-errandify-orange-800 text-sm">
                 Tasks involving childcare, elderly care, or home access require background screening
                 for everyone's safety. If you have a criminal conviction under certain acts, you
                 won't be able to access these categories.

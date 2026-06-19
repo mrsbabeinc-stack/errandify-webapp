@@ -149,7 +149,7 @@ export default function MyProfilePage() {
               {profile.chasCardColor && profile.chasCardColor !== 'none' && (
                 <div className="mt-2 inline-block">
                   <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${
-                    profile.chasCardColor === 'blue' ? 'bg-blue-600' : 'bg-green-600'
+                    profile.chasCardColor === 'blue' ? 'bg-errandify-orange-600' : 'bg-green-600'
                   }`}>
                     CHAS {profile.chasCardColor.toUpperCase()} ({profile.chasSubsidyPercentage}% subsidy)
                   </span>

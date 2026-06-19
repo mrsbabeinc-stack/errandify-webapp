@@ -118,7 +118,7 @@ export default function SingPassSignupPage() {
   // Step 1: SingPass Login
   if (step === 'singpass') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
           <div className="text-center mb-8">
             <div className="text-5xl mb-4">🏛️</div>
@@ -126,8 +126,8 @@ export default function SingPassSignupPage() {
             <p className="text-gray-600">Verified with SingPass</p>
           </div>
 
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-            <p className="text-blue-800 text-sm">
+          <div className="bg-errandify-orange-50 border-l-4 border-errandify-orange-500 p-4 mb-6">
+            <p className="text-errandify-orange-800 text-sm">
               <strong>Why SingPass?</strong> We verify your identity for safety and compliance.
               Your NRIC helps us screen for criminal convictions to protect vulnerable people.
             </p>
@@ -142,14 +142,14 @@ export default function SingPassSignupPage() {
           <button
             onClick={handleSingPassLogin}
             disabled={loading}
-            className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 mb-4"
+            className="w-full py-3 px-4 bg-errandify-orange-600 text-white rounded-lg font-bold hover:bg-errandify-orange-700 disabled:opacity-50 flex items-center justify-center gap-2 mb-4"
           >
             {loading ? '🔄 Redirecting...' : '🆔 Login with SingPass'}
           </button>
 
           <p className="text-center text-xs text-gray-600">
             Your data is encrypted and secure. Learn more about{' '}
-            <a href="#" className="text-blue-600 hover:underline">
+            <a href="#" className="text-errandify-orange-600 hover:underline">
               our privacy policy
             </a>
             .
@@ -158,7 +158,7 @@ export default function SingPassSignupPage() {
           <div className="mt-6 pt-6 border-t border-gray-200">
             <p className="text-xs text-gray-500 text-center">
               Don't have SingPass? Register at{' '}
-              <a href="https://www.singpass.gov.sg" className="text-blue-600 hover:underline" target="_blank" rel="noreferrer">
+              <a href="https://www.singpass.gov.sg" className="text-errandify-orange-600 hover:underline" target="_blank" rel="noreferrer">
                 singpass.gov.sg
               </a>
             </p>
@@ -207,7 +207,7 @@ export default function SingPassSignupPage() {
                 value={formData.displayName}
                 onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                 placeholder="How others will see you"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange-500"
               />
             </div>
 
@@ -221,7 +221,7 @@ export default function SingPassSignupPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="your@email.com"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange-500"
               />
             </div>
 
@@ -235,7 +235,7 @@ export default function SingPassSignupPage() {
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="+65 XXXX XXXX"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange-500"
               />
             </div>
 
@@ -284,7 +284,7 @@ export default function SingPassSignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="w-full py-3 px-4 bg-errandify-orange-600 text-white rounded-lg font-bold hover:bg-errandify-orange-700 disabled:opacity-50 transition-colors"
             >
               {loading ? 'Saving...' : 'Continue to Safety Screening'}
             </button>

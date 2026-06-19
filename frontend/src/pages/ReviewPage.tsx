@@ -138,12 +138,12 @@ export default function ReviewPage() {
 
           {/* Hana Suggestions */}
           {rating < 5 && (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6">
+            <div className="p-4 bg-errandify-orange-50 border border-errandify-orange-200 rounded-lg mb-6">
               <div className="flex gap-3">
                 <span className="text-2xl">🤖</span>
                 <div>
-                  <p className="font-semibold text-blue-900 mb-1">Hana's Tip</p>
-                  <p className="text-sm text-blue-800">
+                  <p className="font-semibold text-errandify-orange-900 mb-1">Hana's Tip</p>
+                  <p className="text-sm text-errandify-orange-800">
                     {rating <= 2 && 'Help the doer improve! Specific feedback about what went wrong is most helpful.'}
                     {rating === 3 && 'Let them know what you loved and what could be improved next time.'}
                     {rating === 4 && 'Tell them what exceeded your expectations – they\'ll love to hear it!'}
