@@ -21,6 +21,9 @@ import screeningRoutes from './routes/screening.js';
 import ratingsRoutes from './routes/ratings.js';
 import walletRoutes from './routes/wallet.js';
 import userProfileRoutes from './routes/userProfile.js';
+import userDataExportRoutes from './routes/userDataExport.js';
+import errandSearchRoutes from './routes/errandSearch.js';
+import adminRoutes from './routes/admin.js';
 import { startCrons } from './cron.js';
 
 const app = express();
@@ -54,6 +57,9 @@ app.use('/api/screening', screeningRoutes);
 app.use('/api/ratings', ratingsRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/user-profile', userProfileRoutes);
+app.use('/api/user-data', userDataExportRoutes);
+app.use('/api/errands', errandSearchRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api', hanaRoutes);
 
 // Error handling
