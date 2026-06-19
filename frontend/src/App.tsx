@@ -19,6 +19,7 @@ import ErrandsPage from './pages/ErrandsPage';
 import ErrandDetailPage from './pages/ErrandDetailPage';
 import ChatPage from './pages/ChatPage';
 import MyVillagePage from './pages/MyVillagePage';
+import MyPocketPage from './pages/MyPocketPage';
 import ProfilePage from './pages/ProfilePage';
 import ReviewPage from './pages/ReviewPage';
 import TaskExecutionPage from './pages/TaskExecutionPage';
@@ -207,7 +208,8 @@ export default function App() {
         <Route path="/my-rewards" element={isAuthenticated ? <MyRewardsPage /> : <Navigate to="/login" replace />} />
         <Route path="/points-history" element={isAuthenticated ? <PointsHistoryPage /> : <Navigate to="/login" replace />} />
         <Route path="/settings/notifications" element={isAuthenticated ? <NotificationPreferencesPage /> : <Navigate to="/login" replace />} />
-        <Route path="/wallet" element={isAuthenticated ? <WalletPage /> : <Navigate to="/login" replace />} />
+        <Route path="/wallet" element={isAuthenticated ? <MyPocketPage /> : <Navigate to="/login" replace />} />
+        <Route path="/my-pocket" element={isAuthenticated ? <MyPocketPage /> : <Navigate to="/login" replace />} />
         <Route path="/user/:userId" element={<UserProfilePage />} />
         <Route path="/edit-profile" element={isAuthenticated ? <EditProfilePage /> : <Navigate to="/login" replace />} />
         <Route path="/disputes" element={isAuthenticated ? <DisputePage /> : <Navigate to="/login" replace />} />
@@ -228,7 +230,8 @@ export default function App() {
           <Route path="/errands" element={<ErrandsPage userRole={userRole} />} />
           <Route path="/errand/:id" element={<ErrandDetailPage />} />
           <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole} />} />
-          <Route path="/village" element={<MyVillagePage userRole={userRole} />} />
+          <Route path="/village" element={<MyVillagePage />} />
+          <Route path="/my-village" element={<MyVillagePage />} />
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
           <Route path="/profile" element={<ProfilePage userRole={userRole} onLogout={handleLogout} />} />
           <Route path="/task/:id/execute" element={<TaskExecutionPage />} />
