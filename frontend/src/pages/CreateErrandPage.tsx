@@ -631,15 +631,19 @@ export default function CreateErrandPage() {
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-2">
-                Description
-              </label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-semibold text-errandify-brown">
+                  Description
+                </label>
+                <span className="text-xs text-gray-500">{formData.description.length}/500</span>
+              </div>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Describe your errand in detail..."
                 rows={2}
+                maxLength={500}
                 className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base resize-none"
               />
 
@@ -1189,15 +1193,19 @@ export default function CreateErrandPage() {
           <h3 className="font-bold text-errandify-brown text-sm">Additional Notes</h3>
 
           <div>
-            <label className="block text-sm font-semibold text-errandify-brown mb-2">
-              Notes (Shown to Confirmed Doer) <span className="text-xs text-gray-600">(optional)</span>
-            </label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-semibold text-errandify-brown">
+                Notes (Shown to Confirmed Doer) <span className="text-xs text-gray-600">(optional)</span>
+              </label>
+              <span className="text-xs text-gray-500">{formData.specialNote.length}/300</span>
+            </div>
             <textarea
               name="specialNote"
               value={formData.specialNote}
               onChange={handleChange}
               placeholder="e.g., access instructions, special requirements, or preferences"
               rows={2}
+              maxLength={300}
               className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
             />
 
