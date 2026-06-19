@@ -24,14 +24,16 @@ export default function HanaManualMode({
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const categoryMap: Record<string, string> = {
-    'home-maintenance': '🏠 Home Maintenance',
-    'cleaning-laundry': '🧺 Cleaning & Laundry',
-    'shopping-errands': '🛍️ Shopping & Errands',
-    'delivery-moving': '📦 Delivery & Moving',
-    'childcare-tutoring': '🧒 Childcare & Tutoring',
-    'pet-care': '🐾 Pet Care',
-    'tech-support': '💻 Tech Support',
-    'moving-help': '🚚 Moving Help',
+    'eldercare': '👴 Caregiving & Elder Companionship',
+    'childcare': '🧒 Childcare & School Pickup/Drop-off',
+    'homehelp': '🏠 Household Errands & Home Maintenance',
+    'wellness': '🌿 Wellness Support',
+    'tripcarry': '✈️ Cross-Border Errands',
+    'petcare': '🐾 Pet Care',
+    'delivery': '📦 Delivery',
+    'eventhelp': '🎉 Events',
+    'donate': '❤️ Donate / Giveback',
+    'localbiz': '🏪 Microservices for Local SMEs',
   };
 
   // Debounced title input to fetch suggestions
