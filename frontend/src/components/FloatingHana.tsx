@@ -24,7 +24,9 @@ export default function FloatingHana() {
   const [isMinimized, setIsMinimized] = useState(false);
 
   const handleComplete = (taskData: TaskData) => {
+    console.log('[FloatingHana] handleComplete called with:', taskData);
     const prefilledJson = encodeURIComponent(JSON.stringify(taskData));
+    console.log('[FloatingHana] Navigating with URL:', `/create-errand?prefilled=${prefilledJson.substring(0, 100)}...`);
     navigate(`/create-errand?prefilled=${prefilledJson}`);
     setIsOpen(false);
   };
