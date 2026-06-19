@@ -5,6 +5,7 @@ export default function HowItWorksPage() {
 
   const handleBack = () => {
     navigate(-1);
+    // If no back history, will stay on page, but link from pages will have history
   };
 
   return (
