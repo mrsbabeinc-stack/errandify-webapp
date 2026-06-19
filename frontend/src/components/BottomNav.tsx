@@ -58,155 +58,70 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
     <nav className="fixed bottom-0 left-0 right-0 bg-errandify-bg border-t border-gray-200 shadow-lg z-40">
       <div className="flex justify-between items-center h-16 px-2 relative">
         {/* Navigation Items - Evenly distributed for doers, left/right split for askers */}
-        {userRole === 'doer' ? (
-          // Doer: All items evenly distributed
-          <div className="flex justify-around items-center w-full gap-1">
-            {navItems.map((item) => {
-              const disabled = 'disabled' in item && item.disabled;
-              const itemClasses = disabled
-                ? 'text-gray-300 cursor-not-allowed opacity-50'
-                : isActive(item.path)
-                ? 'bg-errandify-orange text-white'
-                : 'text-gray-600 hover:text-errandify-orange';
+        {/* All items evenly distributed with center plus button for askers */}
+        <div className="flex justify-around items-center w-full gap-1 relative">
+          {navItems.map((item, index) => {
+            const disabled = 'disabled' in item && item.disabled;
+            const itemClasses = disabled
+              ? 'text-gray-300 cursor-not-allowed opacity-50'
+              : isActive(item.path)
+              ? 'bg-errandify-orange text-white'
+              : 'text-gray-600 hover:text-errandify-orange';
 
-              if (disabled) {
-                return (
-                  <div
-                    key={item.path}
-                    className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 rounded-lg transition-all text-sm ${itemClasses}`}
-                  >
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.label}
-                        className="w-6 h-6 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-lg">{item.icon}</span>
-                    )}
-                    <span className="text-xs font-medium">{item.label}</span>
-                  </div>
-                );
-              }
+            // For askers, add spacing around the center plus button (at index 3)
+            const isCenterSpace = userRole === 'asker' && index === 3;
 
+            if (disabled) {
               return (
-                <Link
+                <div
                   key={item.path}
-                  to={item.path}
                   className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 rounded-lg transition-all text-sm flex-1 ${itemClasses}`}
                 >
                   {item.image ? (
                     <img
                       src={item.image}
                       alt={item.label}
-                      className={`w-6 h-6 rounded-full object-cover ${isActive(item.path) ? 'border-2 border-white' : ''}`}
+                      className="w-6 h-6 rounded-full object-cover"
                     />
                   ) : (
                     <span className="text-lg">{item.icon}</span>
                   )}
                   <span className="text-xs font-medium">{item.label}</span>
-                </Link>
+                </div>
               );
-            })}
-          </div>
-        ) : (
-          // Asker: Left/right split with center plus button
-          <>
-            <div className="flex justify-center gap-3 flex-1">
-              {navItems.slice(0, 3).map((item) => {
-                const disabled = 'disabled' in item && item.disabled;
-                const itemClasses = disabled
-                  ? 'text-gray-300 cursor-not-allowed opacity-50'
-                  : isActive(item.path)
-                  ? 'bg-errandify-orange text-white'
-                  : 'text-gray-600 hover:text-errandify-orange';
+            }
 
-                if (disabled) {
-                  return (
-                    <div
-                      key={item.path}
-                      className={`flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-lg transition-all text-sm ${itemClasses}`}
-                    >
-                      <span className="text-lg">{item.icon}</span>
-                      <span className="text-xs font-medium">{item.label}</span>
-                    </div>
-                  );
-                }
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 rounded-lg transition-all text-sm flex-1 ${itemClasses}`}
+              >
+                {item.image ? (
+                  <img
+                    src={item.image}
+                    alt={item.label}
+                    className={`w-6 h-6 rounded-full object-cover ${isActive(item.path) ? 'border-2 border-white' : ''}`}
+                  />
+                ) : (
+                  <span className="text-lg">{item.icon}</span>
+                )}
+                <span className="text-xs font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
 
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-lg transition-all text-sm ${itemClasses}`}
-                  >
-                    <span className="text-lg">{item.icon}</span>
-                    <span className="text-xs font-medium">{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Center "+ Create" Button - Only for askers */}
+          {/* Center "+ Create" Button - Only for askers */}
+          {userRole === 'asker' && (
             <button
               onClick={onCreateTask}
-              className="absolute left-1/2 -translate-x-1/2 -top-5 w-14 h-14 bg-gradient-to-br from-errandify-orange via-orange-500 to-orange-600 text-white rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all transform flex items-center justify-center font-bold text-2xl border-4 border-errandify-bg active:scale-95"
+              className="absolute left-1/2 -translate-x-1/2 -top-5 w-14 h-14 bg-gradient-to-br from-errandify-orange via-orange-500 to-orange-600 text-white rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all transform flex items-center justify-center font-bold text-2xl border-4 border-errandify-bg active:scale-95 z-50"
               title="Create new errand"
             >
               +
             </button>
-
-            {/* Right Items */}
-            <div className="flex justify-center gap-3 flex-1">
-              {navItems.slice(3).map((item) => {
-                const disabled = 'disabled' in item && item.disabled;
-                const itemClasses = disabled
-                  ? 'text-gray-300 cursor-not-allowed opacity-50'
-                  : isActive(item.path)
-                  ? 'bg-errandify-orange text-white'
-                  : 'text-gray-600 hover:text-errandify-orange';
-
-                if (disabled) {
-                  return (
-                    <div
-                      key={item.path}
-                      className={`flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-lg transition-all text-sm ${itemClasses}`}
-                    >
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.label}
-                          className="w-6 h-6 rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-lg">{item.icon}</span>
-                      )}
-                      <span className="text-xs font-medium">{item.label}</span>
-                    </div>
-                  );
-                }
-
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-lg transition-all text-sm ${itemClasses}`}
-                  >
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.label}
-                        className={`w-6 h-6 rounded-full object-cover ${isActive(item.path) ? 'border-2 border-white' : ''}`}
-                      />
-                    ) : (
-                      <span className="text-lg">{item.icon}</span>
-                    )}
-                    <span className="text-xs font-medium">{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </nav>
   );
