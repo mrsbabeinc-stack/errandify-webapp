@@ -546,7 +546,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       }
     }
 
-    // Parse budget - look for "$100", "@100", "budget 100", or trailing number
+    // Parse budget - look for "$100", "@100", "budget 100", or trailing 2-3 digit number
     let budget = '';
     let budgetMatch = input.match(/[\$@]\s*(\d+)|budget\s*[\$@]?\s*(\d+)/i);
     console.log('[Extract] Budget match (explicit):', budgetMatch);
@@ -554,11 +554,13 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       budget = budgetMatch[1] || budgetMatch[2];
       console.log('[Extract] Budget extracted:', budget);
     } else {
-      // If no explicit budget pattern, look for a trailing number (2-4 digits at end)
-      budgetMatch = input.match(/(\d{2,4})\s*$/);
+      // If no explicit budget pattern, look for a trailing number (2-3 digits at end, max 999)
+      budgetMatch = input.match(/(\d{2,3})\s*$/);
       if (budgetMatch) {
         const trailingNum = budgetMatch[1];
-        if (parseInt(trailingNum) >= 10) {
+        const budgetNum = parseInt(trailingNum);
+        // Only accept if it's a reasonable budget: 8-999
+        if (budgetNum >= 8 && budgetNum <= 999) {
           budget = trailingNum;
           console.log('[Extract] Budget extracted from trailing number:', budget);
         }
