@@ -149,11 +149,23 @@ export default function HanaTaskCreation({
 
       setTaskData(updatedTaskData);
 
-      // Check if budget is missing
-      if (!updatedTaskData.budget || updatedTaskData.budget.trim() === '') {
-        setHanaMessage('I need a budget amount to post this. How much are you willing to pay? (e.g., 50, 100, 200) 💰');
-        setCurrentStep('input');
-        setInput('');
+      // Check if critical fields are missing - if so, go to form directly
+      // Critical fields: title, category, date, time, budget
+      const hasMissingCritical =
+        !updatedTaskData.title ||
+        !updatedTaskData.category ||
+        !updatedTaskData.date ||
+        !updatedTaskData.time ||
+        !updatedTaskData.budget;
+
+      if (hasMissingCritical) {
+        console.log('[Hana] Missing critical fields, going to form for user to complete');
+        setHanaMessage('✅ Got what I could! Let me take you to the form to fill in the details. 📝');
+        triggerSpeaking();
+
+        setTimeout(() => {
+          onComplete(updatedTaskData as any);
+        }, 1000);
         return;
       }
 
