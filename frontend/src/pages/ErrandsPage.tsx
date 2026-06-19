@@ -55,12 +55,22 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
       });
       setErrands(response.data.data || []);
     } catch (err: any) {
-      console.error('Failed to fetch errands:', err.response?.data || err.message);
+      console.error('Failed to fetch errands:', {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+        url: url,
+        token: token ? 'present' : 'missing'
+      });
       if (err.response?.status === 401) {
         setError('Your session has expired. Please log in again.');
         localStorage.removeItem('token');
+      } else if (err.response?.status === 400) {
+        setError(`Bad request: ${err.response?.data?.error || err.message}`);
+      } else if (err.response?.status === 500) {
+        setError(`Server error: ${err.response?.data?.error || 'Please try again'}`);
       } else {
-        setError(err.response?.data?.error || 'Failed to fetch errands');
+        setError(`Failed to fetch errands: ${err.response?.data?.error || err.message || 'Unknown error'}`);
       }
     } finally {
       setLoading(false);
