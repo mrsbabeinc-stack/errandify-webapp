@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import TaskChat from '../components/TaskChat';
 
 interface TaskStatus {
   id: number;
@@ -150,7 +151,7 @@ export default function TaskExecutionPage() {
   const canComplete = isAsker && task.status === 'in_progress';
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white">
+    <div className="max-w-4xl mx-auto p-6 bg-white">
       <div className="mb-6">
         <button
           onClick={() => navigate(`/errand/${id}`)}
@@ -160,7 +161,10 @@ export default function TaskExecutionPage() {
         </button>
       </div>
 
-      <h1 className="text-3xl font-bold text-gray-800 mb-4">{task.title}</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2">
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">{task.title}</h1>
 
       {/* Status Display */}
       <div className="bg-gray-50 p-4 rounded-lg mb-6">
@@ -334,7 +338,13 @@ export default function TaskExecutionPage() {
             </div>
           )}
         </div>
-      )}
+        </div>
+
+        {/* Sidebar - Task Chat */}
+        <div className="lg:col-span-1">
+          <TaskChat taskId={parseInt(id || '0', 10)} taskTitle={task.title} />
+        </div>
+      </div>
     </div>
   );
 }
