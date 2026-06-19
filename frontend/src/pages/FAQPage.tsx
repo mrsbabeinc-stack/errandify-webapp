@@ -25,7 +25,7 @@ export default function FAQPage() {
       id: 'g2',
       category: 'general',
       question: 'How much does it cost to use Errandify?',
-      answer: 'Errandify is free to join and use. We believe in supporting our doer community, so askers cover the platform fee. Doers receive exactly what they bid for – no deductions. Askers pay a 20% platform fee on top. For example: errand cost SGD $100 + SGD $20 fee = SGD $120 total for asker, and doer gets the full SGD $100.',
+      answer: 'Errandify is free to join and use. We believe in supporting our doer community, so askers cover all platform and payment processing costs. Doers receive exactly what they bid for – no deductions. Askers pay the errand amount + 20% platform fee + Stripe payment processing fees (typically 2-3%).',
     },
     {
       id: 'g3',
@@ -127,13 +127,19 @@ export default function FAQPage() {
       id: 'p3',
       category: 'payment',
       question: 'Are there any fees?',
-      answer: 'Doers receive exactly what they bid – no commission taken from doers. Askers pay a 20% platform fee on top of the errand cost. Example: If you bid SGD $100, asker pays SGD $120 total ($100 to you + $20 fee). We designed this model to support our doer community fairly.',
+      answer: 'Doers receive exactly what they bid – no fees taken from doers. Askers pay: (1) the errand amount to the doer, (2) 20% platform fee, and (3) Stripe payment processing fees (typically 2-3% depending on payment method). Example: If you bid SGD $100, asker pays approximately SGD $123-124 total ($100 to you + $20 platform fee + ~$3-4 Stripe fees).',
     },
     {
       id: 'p4',
       category: 'payment',
+      question: 'What are Stripe fees and why do askers pay them?',
+      answer: 'Stripe is the secure payment processor we use. They charge 2-3% (varies by payment method: credit card, debit card, PayNow, etc.). Since askers are the ones using payment methods to pay for errands, it's fair they cover these processing costs. Doers never pay Stripe fees.',
+    },
+    {
+      id: 'p5',
+      category: 'payment',
       question: 'How do I withdraw my earnings?',
-      answer: 'Earnings accumulate in your Errandify Pocket (wallet). You can request a payout anytime. We process payouts every Friday to your registered bank account.',
+      answer: 'Earnings accumulate in your Errandify Pocket (wallet). You can request a payout anytime. We process payouts every Friday to your registered bank account. Payout fees are minimal and covered by askers through the platform, so doers receive their full earnings.',
     },
 
     // Safety
