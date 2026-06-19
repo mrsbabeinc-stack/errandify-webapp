@@ -475,10 +475,11 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
               getAddrDetails: 'Y',
             },
             timeout: 5000,
+            validateStatus: () => true, // Accept any status code
           }
         );
 
-        console.log(`[Hana] OneMap response:`, oneMapResponse.data);
+        console.log(`[Hana] OneMap response status:`, oneMapResponse.status);
 
         if (oneMapResponse.data?.results && oneMapResponse.data.results.length > 0) {
           const result = oneMapResponse.data.results[0];
@@ -489,7 +490,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           area = result.ROAD_NAME || 'Singapore';
           console.log(`[Hana] Found address: ${fullAddress}, area: ${area}`);
         } else {
-          console.log(`[Hana] No results from OneMap`);
+          console.log(`[Hana] No results from OneMap for ${postalCode}`);
         }
       } catch (error) {
         console.error(`[Hana] OneMap API error for ${postalCode}:`, error instanceof Error ? error.message : error);
