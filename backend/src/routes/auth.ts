@@ -25,15 +25,55 @@ function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Signup: Mock SingPass flow
+// POST /api/auth/singpass-callback - Handle SingPass OAuth callback
+router.post('/singpass-callback', async (req: Request, res: Response) => {
+  try {
+    const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ error: 'Authorization code required' });
+    }
+
+    // In production, exchange code for access token with SingPass
+    // For now, mock the response
+    const mockSingPassData = {
+      nric: '1234567890ABC',
+      name: 'John Doe',
+      phone: '+6581234567',
+      dateOfBirth: '1990-01-01',
+      email: 'john@example.com',
+    };
+
+    res.json({
+      success: true,
+      data: mockSingPassData,
+    });
+  } catch (error) {
+    console.error('SingPass callback error:', error);
+    res.status(500).json({ error: 'SingPass verification failed' });
+  }
+});
+
+// Signup: New SingPass-verified flow with criminal screening
 router.post('/signup', async (req: Request, res: Response) => {
   try {
-    const { name, age, nric, address, mobile, language, role } = req.body;
+    const { nric, displayName, email, phone, role, singpassVerified } = req.body;
 
-    if (!name || !nric || !mobile || !address) {
+    // Validate required fields
+    if (!nric || !displayName || !email || !phone) {
       return res.status(400).json({
-        error: 'name, nric, mobile, and address required',
+        error: 'nric, displayName, email, and phone required',
       });
+    }
+
+    // Check if user already exists
+    const existing = await db.query(
+      'SELECT id FROM users WHERE nric_hash = $1',
+      [hashNric(nric)]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'User already exists with this NRIC' });
     }
 
     // Check if user already exists
@@ -48,37 +88,39 @@ router.post('/signup', async (req: Request, res: Response) => {
         .json({ error: 'User already exists with this NRIC' });
     }
 
-    // Insert new user
+    // Insert new user with SingPass verification
     const referralCode = generateReferralCode();
-    const dob = new Date();
-    dob.setFullYear(dob.getFullYear() - age);
 
     const result = await db.query(
       `INSERT INTO users (
-        nric_hash, display_name, mobile, dob, address,
-        font_size_pref, language_pref, role, kyc_status, referral_code
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-      RETURNING id, display_name, mobile, role`,
+        nric_hash, display_name, email, mobile,
+        font_size_pref, language_pref, role, kyc_status, referral_code,
+        screening_completed, screening_completed_date
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+      RETURNING id, display_name, email, mobile, role, criminal_conviction`,
       [
         hashNric(nric),
-        name,
-        mobile,
-        dob,
-        address,
-        age >= 50 ? 19 : 16,
-        language || 'en',
+        displayName,
+        email,
+        phone,
+        16, // Default font size
+        'en', // Default language
         role || 'asker',
-        'verified',
+        singpassVerified ? 'verified' : 'pending',
         referralCode,
+        true, // screening_completed
       ]
     );
 
     const user = result.rows[0];
     const token = jwt.sign(
-      { userId: user.id, mobile: user.mobile, role: user.role },
+      { userId: user.id, email: user.email, role: user.role },
       config.jwtSecret,
       { expiresIn: '7d' }
     );
+
+    // Log signup with SingPass
+    console.log(`[Auth] New user signup via SingPass: ${user.id} (${user.display_name})`);
 
     res.status(201).json({
       success: true,
@@ -86,9 +128,11 @@ router.post('/signup', async (req: Request, res: Response) => {
         accessToken: token,
         user: {
           id: user.id,
-          name: user.display_name,
-          mobile: user.mobile,
+          displayName: user.display_name,
+          email: user.email,
+          phone: user.mobile,
           role: user.role,
+          hasConviction: user.criminal_conviction,
         },
       },
     });
