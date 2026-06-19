@@ -124,8 +124,23 @@ export default function CreateErrandPage() {
             console.log('[CreateErrand] Full address:', prefilledData.fullAddress);
           }
 
-          // Auto-fetch AI suggestions for the prefilled title and category
-          if (newFormData.title && newFormData.category) {
+          // Set AI suggestions from prefilled data if available
+          if (prefilledData.suggestedDescription || prefilledData.suggestedNotes) {
+            console.log('[CreateErrand] Setting AI suggestions from prefilled data');
+            setAiSuggestions({
+              suggestedCategory: '',
+              suggestedDescription: prefilledData.suggestedDescription || '',
+              correctedTitle: '',
+              hasCorrections: false,
+              suggestedBudget: null,
+              suggestedNotes: prefilledData.suggestedNotes || '',
+              certifications: { required: [], optional: [] },
+              skills: prefilledData.suggestedSkills || [],
+              blocked: false,
+              error: '',
+            });
+          } else if (newFormData.title && newFormData.category) {
+            // Otherwise fetch suggestions
             console.log('[CreateErrand] Fetching suggestions for:', newFormData.title, 'category:', newFormData.category);
             try {
               const response = await axios.post(

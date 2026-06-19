@@ -16,6 +16,8 @@ interface TaskData {
   postalCode: string;
   notes: string;
   suggestedSkills?: string[];
+  suggestedDescription?: string;
+  suggestedNotes?: string;
 }
 
 type CollectionStep = 'input' | 'confirm' | 'complete';
@@ -136,11 +138,16 @@ export default function HanaTaskCreation({
         console.log('[Hana] Suggestions response:', suggestionsResponse.data);
 
         const suggestions = suggestionsResponse.data.data;
+        // Don't auto-fill description and notes - just send the suggestion data separately
+        // Form will show these as suggestion boxes for user to click and apply
         const enhancedTaskData = {
           ...updatedTaskData,
-          description: suggestions.description || updatedTaskData.description,
-          notes: suggestions.notes || updatedTaskData.notes,
+          description: '', // Keep empty - user will click "Use" button to apply
+          notes: '', // Keep empty - user will click "Use" button to apply
           suggestedSkills: suggestions.skills || [],
+          // These will be passed to form via aiSuggestions state
+          suggestedDescription: suggestions.description,
+          suggestedNotes: suggestions.notes,
         };
 
         console.log('[Hana] Enhanced task data to send:', enhancedTaskData);

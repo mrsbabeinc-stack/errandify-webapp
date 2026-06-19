@@ -16,6 +16,8 @@ interface TaskData {
   postalCode: string;
   notes: string;
   suggestedSkills?: string[];
+  suggestedDescription?: string;
+  suggestedNotes?: string;
 }
 
 export default function FloatingHana() {
