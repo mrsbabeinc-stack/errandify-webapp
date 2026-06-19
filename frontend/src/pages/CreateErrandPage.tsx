@@ -123,9 +123,37 @@ export default function CreateErrandPage() {
           console.log('[CreateErrand] Full address:', prefilledData.fullAddress);
         }
 
-        // Auto-fetch AI suggestions for the prefilled title
-        if (newFormData.title) {
-          fetchAiSuggestions(newFormData.title, newFormData.description);
+        // Auto-fetch AI suggestions for the prefilled title and category
+        if (newFormData.title && newFormData.category) {
+          console.log('[CreateErrand] Fetching suggestions for:', newFormData.title, 'category:', newFormData.category);
+          // Call suggestions API with category
+          try {
+            const response = await axios.post(
+              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+              {
+                title: newFormData.title,
+                description: newFormData.description,
+                category: newFormData.category
+              }
+            );
+            if (response.data.success) {
+              console.log('[CreateErrand] Got suggestions:', response.data.data);
+              setAiSuggestions({
+                suggestedCategory: response.data.data.category,
+                suggestedDescription: response.data.data.description,
+                correctedTitle: response.data.data.correctedTitle || '',
+                hasCorrections: response.data.data.hasCorrections,
+                suggestedBudget: response.data.data.suggestedBudget || null,
+                suggestedNotes: response.data.data.notes || '',
+                certifications: response.data.data.certifications || { required: [], optional: [] },
+                skills: response.data.data.skills || [],
+                blocked: false,
+                error: '',
+              });
+            }
+          } catch (err) {
+            console.error('Error fetching suggestions:', err);
+          }
         }
       } catch (err) {
         console.error('Failed to load prefilled data:', err);
