@@ -19,7 +19,6 @@ import ErrandsPage from './pages/ErrandsPage';
 import ErrandDetailPage from './pages/ErrandDetailPage';
 import ChatPage from './pages/ChatPage';
 import MyKampungPage from './pages/MyKampungPage';
-import CommunityHubPage from './pages/CommunityHubPage';
 import MyPocketPage from './pages/MyPocketPage';
 import ProfilePage from './pages/ProfilePage';
 import ReviewPage from './pages/ReviewPage';
@@ -236,7 +235,6 @@ export default function App() {
           <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole} />} />
           <Route path="/kampung" element={<MyKampungPage />} />
           <Route path="/my-kampung" element={<MyKampungPage />} />
-          <Route path="/community-hub" element={<CommunityHubPage />} />
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
           <Route path="/profile" element={<ProfilePage userRole={userRole} onLogout={handleLogout} />} />
           <Route path="/task/:id/execute" element={<TaskExecutionPage />} />
