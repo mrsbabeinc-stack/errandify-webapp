@@ -82,12 +82,12 @@ export default function HomePage({ userRole }: HomePageProps) {
         {/* Welcome Section */}
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-errandify-brown mb-2">
-            Welcome, {userName}! 👋
+            Welcome home, {userName}! 👋
           </h1>
           <p className="text-gray-600">
             {userRole === 'asker'
-              ? 'Post errands and find reliable doers to complete them'
-              : 'Browse ToHelp and earn by helping others'}
+              ? 'Need help with something? Post an errand and let your kampung help you out'
+              : 'Looking to help your neighbours? Browse ToHelp and earn some rewards'}
           </p>
         </div>
 
@@ -105,7 +105,7 @@ export default function HomePage({ userRole }: HomePageProps) {
 
               <button
                 onClick={() => navigate('/errands')}
-                className="bg-errandify-orange-500 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+                className="bg-orange-500 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
                 <span className="text-3xl mb-2 block">📋</span>
                 <span className="font-semibold text-sm">My Errands</span>
@@ -123,7 +123,7 @@ export default function HomePage({ userRole }: HomePageProps) {
 
               <button
                 onClick={() => navigate('/errands')}
-                className="bg-errandify-orange-500 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+                className="bg-orange-500 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
                 <span className="text-3xl mb-2 block">✓</span>
                 <span className="font-semibold text-sm">My Work</span>
@@ -135,7 +135,7 @@ export default function HomePage({ userRole }: HomePageProps) {
         {/* Quick Categories Section - Grouped with Section Headers */}
         <div className="bg-white rounded-lg p-6 mb-8 border border-gray-200">
           <h2 className="font-bold text-errandify-brown mb-4">
-            {userRole === 'asker' ? '📋 Quick Categories' : '🔍 Browse ToHelp by Category'}
+            {userRole === 'asker' ? '🎯 What do you need help with?' : '🤝 How can you help your kampung today?'}
           </h2>
 
           <div className="space-y-4">
@@ -173,8 +173,8 @@ export default function HomePage({ userRole }: HomePageProps) {
 
           <p className="text-xs text-gray-500 mt-4">
             {userRole === 'asker'
-              ? '💡 Hover for details • Click to post'
-              : '💡 Hover for details • Click to browse'}
+              ? '✨ Hover to learn more • Click to post your errand'
+              : '✨ Hover to learn more • Click to help your neighbours'}
           </p>
         </div>
 

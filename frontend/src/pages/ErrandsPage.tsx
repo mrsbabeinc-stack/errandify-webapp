@@ -84,7 +84,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
     const colors: Record<string, string> = {
       // GROUP 1: HOME & HOUSEHOLD
       'home-maintenance': 'bg-orange-100 text-orange-700',
-      'cleaning-household': 'bg-errandify-orange-100 text-errandify-orange-700',
+      'cleaning-household': 'bg-orange-100 text-errandify-orange-700',
       'food-beverage': 'bg-red-100 text-red-700',
       'furniture-assembly': 'bg-amber-100 text-amber-700',
 
@@ -107,7 +107,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
       'charity-community': 'bg-red-100 text-red-700',
 
       // Legacy category names for backwards compatibility
-      'cleaning-laundry': 'bg-errandify-orange-100 text-errandify-orange-700',
+      'cleaning-laundry': 'bg-orange-100 text-errandify-orange-700',
       'childcare-tutoring': 'bg-pink-100 text-pink-700',
       'moving-help': 'bg-red-100 text-red-700',
       'tech-support-it': 'bg-indigo-100 text-indigo-700',
@@ -283,7 +283,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                       {userRole === 'asker' && (
                         <button
                           onClick={() => handleCopyErrand(errand)}
-                          className="flex-1 bg-errandify-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-errandify-orange-600 text-sm"
+                          className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 text-sm"
                           title="Copy this errand to create a new one"
                         >
                           📋 Copy

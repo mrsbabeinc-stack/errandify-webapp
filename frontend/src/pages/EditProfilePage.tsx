@@ -247,7 +247,7 @@ export default function EditProfilePage() {
                 <button
                   type="button"
                   onClick={handleAddSkill}
-                  className="px-4 py-2 bg-errandify-orange-500 text-white rounded-lg hover:bg-errandify-orange-600 transition font-semibold"
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-semibold"
                 >
                   Add
                 </button>
@@ -259,7 +259,7 @@ export default function EditProfilePage() {
                   {formData.skills.map((skill) => (
                     <div
                       key={skill}
-                      className="flex items-center gap-2 px-3 py-1 bg-errandify-orange-100 text-errandify-orange-800 rounded-full text-sm"
+                      className="flex items-center gap-2 px-3 py-1 bg-orange-100 text-errandify-orange-800 rounded-full text-sm"
                     >
                       {skill}
                       <button

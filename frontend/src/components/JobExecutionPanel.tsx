@@ -190,7 +190,7 @@ export default function JobExecutionPanel({
   // Asker view: Job in progress (informational)
   if (!isDoer && status === 'in_progress') {
     return (
-      <div className="bg-errandify-orange-50 rounded-lg p-4 border border-errandify-orange-200">
+      <div className="bg-orange-50 rounded-lg p-4 border border-errandify-orange-200">
         <p className="text-sm text-errandify-orange-900">
           🔵 <strong>{doerName}</strong> is working on your task. They'll submit proof photos when done.
         </p>

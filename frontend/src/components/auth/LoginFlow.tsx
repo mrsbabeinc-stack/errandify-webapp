@@ -137,7 +137,7 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
                     handleRequestOtp(e, '98765432');
                   }}
                   disabled={loading}
-                  className="w-full py-2 px-3 bg-errandify-orange-50 border border-errandify-orange-300 text-errandify-orange-700 rounded-lg text-sm font-semibold hover:bg-errandify-orange-100 transition-colors disabled:opacity-50"
+                  className="w-full py-2 px-3 bg-orange-50 border border-errandify-orange-300 text-errandify-orange-700 rounded-lg text-sm font-semibold hover:bg-orange-100 transition-colors disabled:opacity-50"
                 >
                   👩 Sarah - (98765432)
                 </button>
@@ -180,7 +180,7 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
             </div>
 
             {debugOtp && (
-              <div className="bg-errandify-orange-50 p-3 rounded-lg border border-errandify-orange-200">
+              <div className="bg-orange-50 p-3 rounded-lg border border-errandify-orange-200">
                 <p className="text-xs text-gray-600 text-center">
                   💡 Demo: Use OTP <span className="font-mono font-bold text-lg text-errandify-orange-600">{debugOtp}</span>
                 </p>

@@ -108,7 +108,7 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
         </div>
 
         {/* Hana Bubble */}
-        <div className="bg-errandify-orange-50 border-l-4 border-errandify-orange-400 p-4 mb-8 rounded">
+        <div className="bg-orange-50 border-l-4 border-errandify-orange-400 p-4 mb-8 rounded">
           <p className="text-sm text-gray-700">
             <span className="text-lg mr-2">🌸</span>
             Pick what matters to you — I'll find the right neighbours to help! 🌸

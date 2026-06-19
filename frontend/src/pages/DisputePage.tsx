@@ -96,7 +96,7 @@ export default function DisputePage() {
       case 'resolved':
         return 'bg-green-100 text-green-800';
       case 'appeal_pending':
-        return 'bg-errandify-orange-100 text-errandify-orange-800';
+        return 'bg-orange-100 text-errandify-orange-800';
       case 'rejected':
         return 'bg-red-100 text-red-800';
       default:
@@ -242,7 +242,7 @@ export default function DisputePage() {
                           setSelectedDispute(dispute);
                           setShowDetail(true);
                         }}
-                        className="px-4 py-2 bg-errandify-orange-500 text-white rounded-lg hover:bg-errandify-orange-600 transition font-semibold ml-4"
+                        className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-semibold ml-4"
                       >
                         View Details →
                       </button>
@@ -329,7 +329,7 @@ export default function DisputePage() {
                       <button
                         onClick={() => handleAddEvidence(selectedDispute.id)}
                         disabled={submitting || !newEvidence.trim()}
-                        className="px-4 py-2 bg-errandify-orange-500 text-white rounded-lg hover:bg-errandify-orange-600 disabled:opacity-50 transition font-semibold"
+                        className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 transition font-semibold"
                       >
                         {submitting ? '📤 Uploading...' : '📤 Add Evidence'}
                       </button>
@@ -351,7 +351,7 @@ export default function DisputePage() {
 
               {/* Admin Notes */}
               {selectedDispute.adminNotes && selectedDispute.status !== 'resolved' && (
-                <div className="p-4 bg-errandify-orange-50 rounded-lg">
+                <div className="p-4 bg-orange-50 rounded-lg">
                   <p className="text-sm font-bold text-errandify-orange-900 mb-2">Admin Notes</p>
                   <p className="text-errandify-orange-800">{selectedDispute.adminNotes}</p>
                 </div>
@@ -374,9 +374,9 @@ export default function DisputePage() {
 
               {/* Actions */}
               {selectedDispute.status === 'resolved' && (
-                <div className="p-4 bg-errandify-orange-50 border-2 border-errandify-orange-300 rounded-lg">
+                <div className="p-4 bg-orange-50 border-2 border-errandify-orange-300 rounded-lg">
                   <p className="text-sm text-errandify-orange-900 font-semibold mb-3">Options</p>
-                  <button className="w-full px-4 py-2 bg-errandify-orange-600 text-white rounded-lg hover:bg-errandify-orange-700 font-semibold">
+                  <button className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-semibold">
                     📢 Appeal Decision
                   </button>
                 </div>

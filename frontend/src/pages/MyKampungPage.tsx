@@ -341,7 +341,7 @@ export default function MyKampungPage() {
       case 'success_story':
         return 'bg-green-100 text-green-700';
       case 'tip':
-        return 'bg-errandify-orange-100 text-errandify-orange-700';
+        return 'bg-orange-100 text-errandify-orange-700';
       case 'question':
         return 'bg-purple-100 text-purple-700';
       case 'help_needed':
@@ -349,7 +349,7 @@ export default function MyKampungPage() {
       case 'general':
         return 'bg-gray-100 text-gray-700';
       case 'tips':
-        return 'bg-errandify-orange-100 text-errandify-orange-700';
+        return 'bg-orange-100 text-errandify-orange-700';
       case 'issues':
         return 'bg-red-100 text-red-700';
       case 'feedback':
@@ -369,7 +369,7 @@ export default function MyKampungPage() {
       case 'workshop':
         return 'bg-purple-100 text-purple-700';
       case 'webinar':
-        return 'bg-errandify-orange-100 text-errandify-orange-700';
+        return 'bg-orange-100 text-errandify-orange-700';
       case 'meetup':
         return 'bg-pink-100 text-pink-700';
       case 'competition':
@@ -412,7 +412,7 @@ export default function MyKampungPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-errandify-brown mb-2">🏘️ MyKampung</h1>
-          <p className="text-gray-600">Connect with the community, share stories, and learn together</p>
+          <p className="text-gray-600">Your neighbourhood community • Share stories, help neighbours, grow together</p>
         </div>
 
         {/* Tab Navigation */}

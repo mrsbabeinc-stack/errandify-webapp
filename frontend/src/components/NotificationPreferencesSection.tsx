@@ -223,7 +223,7 @@ export default function NotificationPreferencesSection() {
         </div>
 
         {/* Info Footer */}
-        <div className="mt-8 p-4 bg-errandify-orange-50 rounded-lg border border-errandify-orange-200">
+        <div className="mt-8 p-4 bg-orange-50 rounded-lg border border-errandify-orange-200">
           <p className="text-sm text-errandify-orange-900">
             <strong>💡 Tip:</strong> Critical notifications cannot be disabled because they're essential for managing your tasks and payments. You can customize all other notifications to suit your preferences.
           </p>

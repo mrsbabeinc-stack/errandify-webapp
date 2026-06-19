@@ -150,7 +150,7 @@ export default function RecurringSessionsPage() {
                     session.status === 'completed'
                       ? 'bg-green-100 text-green-700'
                       : session.status === 'assigned'
-                        ? 'bg-errandify-orange-100 text-errandify-orange-700'
+                        ? 'bg-orange-100 text-errandify-orange-700'
                         : 'bg-yellow-100 text-yellow-700'
                   }`}>
                     {session.status === 'completed' ? '✅ Done' : session.status === 'assigned' ? '👤 Assigned' : '⏳ Pending'}
