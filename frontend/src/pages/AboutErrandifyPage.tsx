@@ -133,7 +133,7 @@ export default function AboutErrandifyPage() {
 
           {/* For Doers */}
           <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-            <h3 className="font-bold text-gray-800 mb-3">For Doers: Earn Money Helping Neighbours</h3>
+            <h3 className="font-bold text-gray-800 mb-3">💪 For Doers: Earn Money Helping Neighbours</h3>
             <ul className="text-sm text-gray-700 space-y-2">
               <li className="flex gap-2">
                 <span>✓</span>
@@ -142,6 +142,10 @@ export default function AboutErrandifyPage() {
               <li className="flex gap-2">
                 <span>✓</span>
                 <span>Submit bids at your own rates – you're in control</span>
+              </li>
+              <li className="flex gap-2">
+                <span>✓</span>
+                <span>Keep 80% of what you earn – Errandify takes 20% commission</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
@@ -160,7 +164,7 @@ export default function AboutErrandifyPage() {
 
           {/* For Askers */}
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <h3 className="font-bold text-gray-800 mb-3">For Askers: Get Help You Can Trust</h3>
+            <h3 className="font-bold text-gray-800 mb-3">📝 For Askers: Get Help You Can Trust</h3>
             <ul className="text-sm text-gray-700 space-y-2">
               <li className="flex gap-2">
                 <span>✓</span>
