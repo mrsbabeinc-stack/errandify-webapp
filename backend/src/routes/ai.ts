@@ -410,11 +410,16 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const { input } = req.body;
     if (!input) return res.status(400).json({ error: 'input required' });
 
-    // Parse user input like: "Clean my house at 680433 on Saturday for 2 hours at 2pm, budget $100"
+    // Extract title - first few words before "at"
+    const titleMatch = input.match(/^(.+?)\s+at\s+/i) || input.match(/^(.+?)(?:\s+on|\s+for|,)/i);
+    const title = titleMatch ? titleMatch[1].trim().substring(0, 50) : input.substring(0, 50);
+
+    // Parse location
     const locationMatch = input.match(/at\s+(\d{6}|\S+?)(?:\s+on|\s+at|,)/i);
     const location = locationMatch ? locationMatch[1].trim() : '';
     const postalCode = location.match(/\d{6}/) ? location : '';
 
+    // Parse date
     const dateMatch = input.match(/on\s+([a-zA-Z]+day|\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})/i);
     let date = '';
     if (dateMatch) {
@@ -434,6 +439,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       }
     }
 
+    // Parse time
     const timeMatch = input.match(/at\s+(\d{1,2}):?(\d{2})?\s*(am|pm)/i);
     let time = '10:00';
     if (timeMatch) {
@@ -445,27 +451,32 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       time = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
     }
 
+    // Parse duration
     const durationMatch = input.match(/for\s+(\d+)\s*(hour|hr)/i);
     const duration = durationMatch ? durationMatch[1] : '';
 
+    // Parse budget
     const budgetMatch = input.match(/budget\s*\$?(\d+)/i);
     const budget = budgetMatch ? budgetMatch[1] : '';
+
+    // Build description as natural language
+    const description = `${title}${location ? ` at ${location}` : ''}${date ? ` on ${new Date(date).toLocaleDateString('en-SG')}` : ''}${time ? ` at ${time}` : ''}${duration ? ` for ${duration} hours` : ''}${budget ? ` - Budget: $${budget}` : ''}`;
 
     res.json({
       success: true,
       data: {
-        title: input.substring(0, 100),
-        description: input,
-        location: location || 'Singapore',
-        fullAddress: location || 'Singapore',
+        title,
+        description,
+        location: location || '',
+        fullAddress: location || '',
         date,
         time,
         duration,
         durationUnit: 'Hr',
         budget,
         category: 'cleaning-laundry',
-        postalCode: postalCode || location || '',
-        notes: input,
+        postalCode,
+        notes: '',
       },
     });
   } catch (error) {
@@ -488,13 +499,38 @@ router.post('/content-filter', async (req: Request, res: Response) => {
 router.post('/suggestions', async (req: Request, res: Response) => {
   try {
     const { title, description } = req.body;
+    const text = `${title} ${description}`.toLowerCase();
+
+    // Detect category from keywords
+    let category = 'other';
+    if (text.includes('clean')) category = 'cleaning-laundry';
+    else if (text.includes('walk') || text.includes('dog') || text.includes('pet')) category = 'pet-care';
+    else if (text.includes('shop') || text.includes('buy')) category = 'shopping-errands';
+    else if (text.includes('move') || text.includes('delivery')) category = 'delivery-moving';
+    else if (text.includes('tutor') || text.includes('teach') || text.includes('child')) category = 'childcare-tutoring';
+
+    // Suggest skills based on category
+    const skillMap: Record<string, string[]> = {
+      'cleaning-laundry': ['Thorough cleaning', 'Attention to detail', 'Time management'],
+      'pet-care': ['Dog handling', 'Patience', 'Physical fitness'],
+      'shopping-errands': ['Time management', 'Organization', 'Reliability'],
+      'delivery-moving': ['Physical fitness', 'Driving', 'Logistics'],
+      'childcare-tutoring': ['Patience', 'Communication', 'Teaching skills'],
+    };
+
+    const skills = skillMap[category] || [];
+
+    // Generate suggested notes
+    const notes = `Please ${title.toLowerCase()}. Ensure quality work and communicate if any issues arise.`;
+
     res.json({
       success: true,
       data: {
-        category: 'other',
+        category,
         description: description || title,
         suggestedBudget: 50,
-        notes: '',
+        notes,
+        skills,
       },
     });
   } catch (error) {
