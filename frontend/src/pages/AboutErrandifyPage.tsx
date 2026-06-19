@@ -14,9 +14,11 @@ export default function AboutErrandifyPage() {
           ‹ Back
         </button>
 
-        <div className="mb-6">
+        <div className="mb-6 text-center">
+          <p className="text-xs font-semibold text-errandify-orange italic mb-3">Simplifying Life, Amplifying Humanity</p>
           <h1 className="text-3xl font-bold text-errandify-brown mb-2">🏘️ About Errandify</h1>
-          <p className="text-gray-600">Simplifying lives. Amplifying humanity.</p>
+          <p className="text-gray-600 mb-3">Simplifying lives. Amplifying humanity.</p>
+          <p className="text-sm font-semibold text-errandify-brown">💬 Get Help • 🤝 Give Help • 💰 Get Paid</p>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
