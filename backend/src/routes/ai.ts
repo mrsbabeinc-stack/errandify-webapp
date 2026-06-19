@@ -410,60 +410,78 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const { input } = req.body;
     if (!input) return res.status(400).json({ error: 'input required' });
 
-    // Extract title - first few words before "at"
-    const titleMatch = input.match(/^(.+?)\s+at\s+/i) || input.match(/^(.+?)(?:\s+on|\s+for|,)/i);
-    const title = titleMatch ? titleMatch[1].trim().substring(0, 50) : input.substring(0, 50);
+    console.log('[Extract] Input:', input);
 
-    // Parse location - look for postal code (6 digits) after "at"
-    const postalCodeMatch = input.match(/at\s+(\d{6})/i);
-    const postalCode = postalCodeMatch ? postalCodeMatch[1].trim() : '';
+    // Extract postal code first (6 consecutive digits anywhere in input)
+    const postalCodeMatch = input.match(/\b(\d{6})\b/);
+    const postalCode = postalCodeMatch ? postalCodeMatch[1] : '';
 
-    // Parse date - look for "tomorrow", day names, or dates
+    // Extract title - remove postal code, time, budget, duration, date keywords
+    let title = input
+      .replace(/\d{6}/g, '') // Remove postal code
+      .replace(/\d{1,2}:\d{2}\s*(am|pm)/gi, '') // Remove times like 3:00pm
+      .replace(/\d{1,2}\s*(am|pm)/gi, '') // Remove times like 3pm
+      .replace(/\$\d+/g, '') // Remove budget
+      .replace(/for\s+\d+\s*(hour|hr)/gi, '') // Remove duration
+      .replace(/tomorrow|today/gi, '') // Remove date keywords
+      .replace(/at\s+/gi, '') // Remove "at"
+      .trim();
+    // Take first 50 chars or first phrase
+    title = title.split(/\s+(?:on|at|for|budget)/i)[0].trim().substring(0, 50) || 'Task';
+
+    // Parse date - look for "tomorrow", day names
     let date = '';
-    const tomorrowMatch = input.match(/tomorrow/i);
-    if (tomorrowMatch) {
+    if (/tomorrow/i.test(input)) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       date = tomorrow.toISOString().split('T')[0];
+    } else if (/today/i.test(input)) {
+      date = new Date().toISOString().split('T')[0];
     } else {
-      const dateMatch = input.match(/on\s+([a-zA-Z]+day|\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})/i);
+      const dateMatch = input.match(/on\s+([a-zA-Z]+day)/i);
       if (dateMatch) {
         const dayStr = dateMatch[1].toLowerCase();
-        if (dayStr.includes('day')) {
-          const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-          const dayIndex = days.findIndex(d => dayStr.includes(d));
-          if (dayIndex >= 0) {
-            const today = new Date();
-            const current = today.getDay();
-            let diff = dayIndex - current;
-            if (diff <= 0) diff += 7;
-            const result = new Date(today);
-            result.setDate(result.getDate() + diff);
-            date = result.toISOString().split('T')[0];
-          }
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayIndex = days.findIndex(d => dayStr.includes(d));
+        if (dayIndex >= 0) {
+          const today = new Date();
+          const current = today.getDay();
+          let diff = dayIndex - current;
+          if (diff <= 0) diff += 7;
+          const result = new Date(today);
+          result.setDate(result.getDate() + diff);
+          date = result.toISOString().split('T')[0];
         }
       }
     }
 
-    // Parse time
-    const timeMatch = input.match(/at\s+(\d{1,2}):?(\d{2})?\s*(am|pm)/i);
-    let time = '10:00';
+    // Parse time - look for patterns like "3pm", "15:00", "3:00pm"
+    let time = '';
+    const timeMatch = input.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)|(\d{1,2})\s*(am|pm)/i);
     if (timeMatch) {
-      let hours = parseInt(timeMatch[1]);
+      let hours = parseInt(timeMatch[1] || timeMatch[4]);
       const mins = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
-      const period = timeMatch[3]?.toLowerCase();
+      const period = (timeMatch[3] || timeMatch[5])?.toLowerCase();
       if (period === 'pm' && hours !== 12) hours += 12;
       if (period === 'am' && hours === 12) hours = 0;
       time = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
     }
 
-    // Parse duration
-    const durationMatch = input.match(/for\s+(\d+)\s*(hour|hr)/i);
-    const duration = durationMatch ? durationMatch[1] : '';
+    // Parse duration - look for "3 hours", "2 hrs", "3h"
+    let duration = '';
+    const durationMatch = input.match(/(\d+)\s*(hour|hr|h)/i);
+    if (durationMatch) {
+      duration = durationMatch[1];
+    }
 
-    // Parse budget
-    const budgetMatch = input.match(/budget\s*\$?(\d+)/i);
-    const budget = budgetMatch ? budgetMatch[1] : '';
+    // Parse budget - look for "$100", "budget $100", "$100"
+    let budget = '';
+    const budgetMatch = input.match(/[\$](\d+)|budget\s*[\$]?(\d+)/i);
+    if (budgetMatch) {
+      budget = budgetMatch[1] || budgetMatch[2];
+    }
+
+    console.log('[Extract] Parsed - title:', title, 'postal:', postalCode, 'time:', time, 'duration:', duration, 'budget:', budget);
 
     // Use OneMap API to lookup address from postal code
     let area = 'Singapore';
