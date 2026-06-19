@@ -499,6 +499,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     title = title
       .replace(/\bmykid\b/gi, 'my kid')
       .replace(/\byour\b/gi, 'my')
+      .replace(/\bmim(?:s)?\b/gi, 'mom') // Fix "mim" or "mims" -> "mom"
       .replace(/\bmoms\b/gi, 'mom')
       .replace(/\bkids\b/gi, 'kid')
       .replace(/\bare\b/gi, 'care') // Fix "are" -> "care"
