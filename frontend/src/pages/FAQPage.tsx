@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface FAQItem {
   id: string;
-  category: 'general' | 'asker' | 'doer' | 'payment' | 'safety';
+  category: 'general' | 'asker' | 'doer' | 'payment' | 'safety' | 'conduct';
   question: string;
   answer: string;
 }
@@ -167,6 +167,18 @@ export default function FAQPage() {
       question: 'Can I block or trust users?',
       answer: 'Yes. In MyKampung, you can mark users as "Trusted" (priority matching) or "Blocked" (no future interactions). These are private to you and help customize your experience.',
     },
+    {
+      id: 's6',
+      category: 'safety',
+      question: 'What is Errandify\'s policy on inappropriate behaviour?',
+      answer: 'Errandify is a safe environment where we have zero tolerance for inappropriate behaviour. This includes: harassment, discrimination, abuse, fraud, or any conduct that violates community standards. Any such behaviour will result in immediate account suspension and potential legal action. Report any incidents immediately to togather@errandify.ai.',
+    },
+    {
+      id: 's7',
+      category: 'safety',
+      question: 'How do I report inappropriate behaviour?',
+      answer: 'If you experience or witness inappropriate behaviour, report it immediately via email (togather@errandify.ai) or through the app. Include details and any evidence. We take every report seriously, investigate promptly, and take swift action to protect our community.',
+    },
   ];
 
   const filteredFAQs = activeCategory === 'all'
@@ -180,6 +192,7 @@ export default function FAQPage() {
     doer: '💪 For Doers',
     payment: '💰 Payment & Earnings',
     safety: '🛡️ Safety & Trust',
+    conduct: '❤️ Community Conduct',
   };
 
   return (
@@ -197,7 +210,7 @@ export default function FAQPage() {
         {/* Category Filter */}
         <div className="mb-6 bg-white rounded-lg p-1 border border-gray-200">
           <div className="flex flex-wrap gap-1">
-            {(['all', 'general', 'asker', 'doer', 'payment', 'safety'] as const).map(cat => (
+            {(['all', 'general', 'asker', 'doer', 'payment', 'safety', 'conduct'] as const).map(cat => (
               <button
                 key={cat}
                 onClick={() => {
