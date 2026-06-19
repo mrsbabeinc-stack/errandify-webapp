@@ -23,6 +23,7 @@ import ProfilePage from './pages/ProfilePage';
 import ReviewPage from './pages/ReviewPage';
 import TaskExecutionPage from './pages/TaskExecutionPage';
 import RecurringSessionsManager from './components/RecurringSessionsManager';
+import SingPassSignupPage from './pages/SingPassSignupPage';
 import MyProfilePage from './pages/MyProfilePage';
 import ReferralPage from './pages/ReferralPage';
 import TrustedUsersPage from './pages/TrustedUsersPage';
@@ -99,6 +100,17 @@ export default function App() {
               <Navigate to="/home" replace />
             ) : (
               <LoginPage onLogin={handleLogin} />
+            )
+          }
+        />
+
+        <Route
+          path="/signup"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/home" replace />
+            ) : (
+              <SingPassSignupPage />
             )
           }
         />
