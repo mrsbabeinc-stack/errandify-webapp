@@ -528,7 +528,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       '65': { area: 'Bukit Merah', building: 'Bukit Merah' },
       '66': { area: 'Tiong Bahru', building: 'Tiong Bahru' },
       '67': { area: 'Tiong Bahru', building: 'Tiong Bahru' },
-      '68': { area: 'Tanjong Pagar', building: 'Pinnacle@Duxton' },
+      '68': { area: 'Choa Chu Kang', building: 'Choa Chu Kang Avenue 4' },
       '69': { area: 'Tanjong Pagar', building: 'Tanjong Pagar' },
       '70': { area: 'Clementi', building: 'Clementi' },
       '71': { area: 'Clementi', building: 'Clementi' },
