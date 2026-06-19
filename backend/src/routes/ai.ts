@@ -617,39 +617,111 @@ router.post('/suggestions', async (req: Request, res: Response) => {
 
     const skills = skillMap[detectedCategory] || [];
 
-    // Generate suggested description - ask for missing INFO relevant to this task
-    const descriptionSuggestions: Record<string, string> = {
-      'eldercare': 'Any specific health conditions or medications the caregiver should know about?',
-      'childcare': 'Any allergies, dietary restrictions, or special needs the child has?',
-      'homehelp': 'What specific areas need most attention? Any fragile items to avoid?',
-      'petcare': 'Any health issues, medications, or behavioral notes about your pet?',
-      'delivery': 'Any special handling requirements or preferred delivery time?',
-      'eventhelp': 'What\'s the event type and approximate setup time needed?',
-      'wellness': 'What type of wellness support do you need and any medical history?',
-      'tripcarry': 'What items are being transported and any fragile/valuable items?',
-      'donate': 'What type of items and approximate quantity for pickup?',
-      'localbiz': 'What specific services or tasks does your business need help with?',
-    };
+    // Generate suggested description using Qwen AI (with fallback)
+    let suggestedDescription = '';
+    try {
+      const config = require('../config').default;
+      if (config.qwen.apiKey) {
+        const qwenResponse = await axios.post(
+          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+          {
+            model: 'qwen-plus',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are a helpful assistant. Generate ONE clarifying question for a task poster. Ask what important INFO you need to know to help with this errand. Keep it under 150 characters. Be specific to the task type.',
+              },
+              {
+                role: 'user',
+                content: `For this ${detectedCategory} task: "${title}" on ${date} at ${time}. What ONE important clarifying question should I ask the person posting this task?`,
+              },
+            ],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${config.qwen.apiKey}`,
+            },
+            timeout: 5000,
+          }
+        );
 
-    let suggestedDescription = descriptionSuggestions[detectedCategory] || 'Add any important details or special requirements for this task.';
-    suggestedDescription = suggestedDescription.substring(0, 150);
+        const aiText = qwenResponse.data?.output?.text || '';
+        suggestedDescription = aiText.substring(0, 150).trim();
+        console.log('[AI] Dynamic description generated:', suggestedDescription);
+      }
+    } catch (qwenErr) {
+      console.warn('[AI] Qwen description generation failed, using fallback:', qwenErr instanceof Error ? qwenErr.message : qwenErr);
+    }
 
-    // Generate suggested notes - what to ask doer
-    const notesSuggestions: Record<string, string> = {
-      'eldercare': 'Ask doer: Emergency contact? Experience with seniors? Any medical training?',
-      'childcare': 'Ask doer: Experience with kids this age? Any certifications? First aid trained?',
-      'homehelp': 'Ask doer: Own tools/supplies? Experience level? Availability for same-day work?',
-      'petcare': 'Ask doer: Experience with animals? Any certifications? Can stay for full duration?',
-      'delivery': 'Ask doer: Vehicle type? Can handle fragile items? Insurance coverage?',
-      'eventhelp': 'Ask doer: Experience with events? Availability on date? Physical fitness needed?',
-      'wellness': 'Ask doer: Relevant certifications? Confidentiality agreement? Flexible schedule?',
-      'tripcarry': 'Ask doer: Travel experience? Passport required? Any weight/size limits?',
-      'donate': 'Ask doer: Vehicle needed? Help required at both ends? Flexible timing?',
-      'localbiz': 'Ask doer: Relevant business experience? Schedule flexibility? Quality standards?',
-    };
+    // Fallback if Qwen fails
+    if (!suggestedDescription) {
+      const descriptionSuggestions: Record<string, string> = {
+        'eldercare': 'Any specific health conditions or medications the caregiver should know about?',
+        'childcare': 'Any allergies, dietary restrictions, or special needs the child has?',
+        'homehelp': 'What specific areas need most attention? Any fragile items to avoid?',
+        'petcare': 'Any health issues, medications, or behavioral notes about your pet?',
+        'delivery': 'Any special handling requirements or preferred delivery time?',
+        'eventhelp': 'What\'s the event type and approximate setup time needed?',
+        'wellness': 'What type of wellness support do you need and any medical history?',
+        'tripcarry': 'What items are being transported and any fragile/valuable items?',
+        'donate': 'What type of items and approximate quantity for pickup?',
+        'localbiz': 'What specific services or tasks does your business need help with?',
+      };
+      suggestedDescription = descriptionSuggestions[detectedCategory] || 'Add any important details or special requirements for this task.';
+    }
 
-    let notes = notesSuggestions[detectedCategory] || 'Add any requirements or questions for the doer.';
-    notes = notes.substring(0, 300);
+    // Generate suggested notes using Qwen AI (with fallback)
+    let notes = '';
+    try {
+      const config = require('../config').default;
+      if (config.qwen.apiKey) {
+        const qwenNotesResponse = await axios.post(
+          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+          {
+            model: 'qwen-plus',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are a helpful assistant. Suggest 2-3 key questions the task poster should ask a potential doer. Focus on safety, experience, and task understanding. Keep it under 300 characters. Be specific to the task type.',
+              },
+              {
+                role: 'user',
+                content: `For a ${detectedCategory} task: "${title}" on ${date}. What 2-3 key questions should I ask a doer to ensure they understand the full scope and are qualified?`,
+              },
+            ],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${config.qwen.apiKey}`,
+            },
+            timeout: 5000,
+          }
+        );
+
+        const aiNotes = qwenNotesResponse.data?.output?.text || '';
+        notes = aiNotes.substring(0, 300).trim();
+        console.log('[AI] Dynamic notes generated:', notes);
+      }
+    } catch (qwenErr) {
+      console.warn('[AI] Qwen notes generation failed, using fallback:', qwenErr instanceof Error ? qwenErr.message : qwenErr);
+    }
+
+    // Fallback if Qwen fails
+    if (!notes) {
+      const notesSuggestions: Record<string, string> = {
+        'eldercare': 'Ask doer: Emergency contact? Experience with seniors? Any medical training?',
+        'childcare': 'Ask doer: Experience with kids this age? Any certifications? First aid trained?',
+        'homehelp': 'Ask doer: Own tools/supplies? Experience level? Availability for same-day work?',
+        'petcare': 'Ask doer: Experience with animals? Any certifications? Can stay for full duration?',
+        'delivery': 'Ask doer: Vehicle type? Can handle fragile items? Insurance coverage?',
+        'eventhelp': 'Ask doer: Experience with events? Availability on date? Physical fitness needed?',
+        'wellness': 'Ask doer: Relevant certifications? Confidentiality agreement? Flexible schedule?',
+        'tripcarry': 'Ask doer: Travel experience? Passport required? Any weight/size limits?',
+        'donate': 'Ask doer: Vehicle needed? Help required at both ends? Flexible timing?',
+        'localbiz': 'Ask doer: Relevant business experience? Schedule flexibility? Quality standards?',
+      };
+      notes = notesSuggestions[detectedCategory] || 'Add any requirements or questions for the doer.';
+    }
 
     res.json({
       success: true,
