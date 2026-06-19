@@ -133,7 +133,7 @@ export default function FAQPage() {
       id: 'p4',
       category: 'payment',
       question: 'What are Stripe fees and why do askers pay them?',
-      answer: 'Stripe is the secure payment processor we use. They charge 2-3% (varies by payment method: credit card, debit card, PayNow, etc.). Askers pay these fees since they're the ones making the payment. Doers only pay the 20% platform fee from their earnings.',
+      answer: 'Stripe is the secure payment processor we use. They charge 2-3% (varies by payment method: credit card, debit card, PayNow, etc.). Askers pay these fees since they are the ones making the payment. Doers only pay the 20% platform fee from their earnings.',
     },
     {
       id: 'p5',
@@ -142,7 +142,7 @@ export default function FAQPage() {
       answer: 'Earnings accumulate in your Errandify Pocket (wallet) after the 20% platform fee is deducted. You can request a payout anytime. We process payouts to your registered bank account.',
     },
 
-    // Safety
+    // Safety Questions
     {
       id: 's1',
       category: 'safety',
@@ -164,7 +164,7 @@ export default function FAQPage() {
     {
       id: 's4',
       category: 'safety',
-      question: 'What if there's a misunderstanding or disagreement?',
+      question: 'What if there is a misunderstanding or disagreement?',
       answer: 'We encourage open communication first. Message the other person to clarify expectations and resolve issues respectfully. Most problems happen because of misunderstandings, not bad intentions. Our community believes in helping each other. Only if communication doesn't work, we have a fair dispute process.',
     },
     {
@@ -176,7 +176,7 @@ export default function FAQPage() {
     {
       id: 's6',
       category: 'safety',
-      question: 'What is Errandify\'s policy on inappropriate behaviour?',
+      question: 'What is Errandify policy on inappropriate behaviour?',
       answer: 'Errandify is a safe environment where we have zero tolerance for inappropriate behaviour. This includes: harassment, discrimination, abuse, fraud, or any conduct that violates community standards. Any such behaviour will result in immediate account suspension and potential legal action. Report any incidents immediately to togather@errandify.ai.',
     },
     {
