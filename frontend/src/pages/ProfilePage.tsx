@@ -182,6 +182,14 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
         </h2>
         <div className="space-y-2">
           {/* About */}
+          <button onClick={() => navigate('/how-it-works')} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+            <div className="flex items-center gap-2 text-left">
+              <span className="text-lg">🎯</span>
+              <span className="text-sm font-medium text-gray-700">How It Works</span>
+            </div>
+            <span className="text-gray-400">›</span>
+          </button>
+
           <button onClick={() => navigate('/about')} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
             <div className="flex items-center gap-2 text-left">
               <span className="text-lg">🏘️</span>

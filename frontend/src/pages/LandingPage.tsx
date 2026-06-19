@@ -68,6 +68,13 @@ export default function LandingPage() {
           {/* Learn More Links */}
           <div className="flex gap-2 justify-center mb-3">
             <a
+              href="/how-it-works"
+              className="text-xs text-errandify-orange hover:underline font-semibold"
+            >
+              How It Works
+            </a>
+            <span className="text-gray-400">•</span>
+            <a
               href="/about"
               className="text-xs text-errandify-orange hover:underline font-semibold"
             >
