@@ -645,25 +645,23 @@ export default function CreateErrandPage() {
 
               {/* AI Suggestion for Description */}
               {aiSuggestions.suggestedDescription && !formData.description && (
-                <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="flex-1">
-                      <p className="text-xs font-semibold text-blue-900 mb-1">💡 AI Suggestion:</p>
-                      <p className="text-sm text-blue-800">{aiSuggestions.suggestedDescription}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          description: aiSuggestions.suggestedDescription,
-                        }));
-                      }}
-                      className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 whitespace-nowrap flex-shrink-0"
-                    >
-                      ✓ Use
-                    </button>
+                <div className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded space-y-3">
+                  <div>
+                    <p className="text-xs font-semibold text-blue-900 mb-2">💡 AI Suggestion:</p>
+                    <p className="text-sm text-blue-800 leading-relaxed whitespace-pre-wrap break-words">{aiSuggestions.suggestedDescription}</p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        description: aiSuggestions.suggestedDescription,
+                      }));
+                    }}
+                    className="w-full px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 transition-colors"
+                  >
+                    ✓ Use This Suggestion
+                  </button>
                 </div>
               )}
             </div>
@@ -1205,25 +1203,23 @@ export default function CreateErrandPage() {
 
             {/* AI Suggestion for Notes */}
             {aiSuggestions.suggestedNotes && !formData.specialNote && (
-              <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
-                <div className="flex justify-between items-start gap-2">
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold text-blue-900 mb-1">💡 AI Suggested Notes:</p>
-                    <p className="text-sm text-blue-800">{aiSuggestions.suggestedNotes}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        specialNote: aiSuggestions.suggestedNotes,
-                      }));
-                    }}
-                    className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 whitespace-nowrap flex-shrink-0"
-                  >
-                    ✓ Use
-                  </button>
+              <div className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded space-y-3">
+                <div>
+                  <p className="text-xs font-semibold text-blue-900 mb-2">💡 AI Suggested Notes:</p>
+                  <p className="text-sm text-blue-800 leading-relaxed whitespace-pre-wrap break-words">{aiSuggestions.suggestedNotes}</p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      specialNote: aiSuggestions.suggestedNotes,
+                    }));
+                  }}
+                  className="w-full px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 transition-colors"
+                >
+                  ✓ Use These Notes
+                </button>
               </div>
             )}
           </div>
