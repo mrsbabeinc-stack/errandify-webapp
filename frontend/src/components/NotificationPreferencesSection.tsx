@@ -52,14 +52,21 @@ export default function NotificationPreferencesSection() {
       );
 
       if (response.data.success && response.data.data?.notification_preferences) {
+        const fetchedPrefs = response.data.data.notification_preferences;
+        // Merge with defaults to ensure all keys exist
         setPreferences({
           ...DEFAULT_PREFERENCES,
-          ...response.data.data.notification_preferences,
+          ...fetchedPrefs,
         });
+      } else {
+        // Use defaults if no data returned
+        setPreferences(DEFAULT_PREFERENCES);
       }
     } catch (err) {
       console.error('Failed to fetch preferences:', err);
-      setMessage({ type: 'error', text: 'Failed to load preferences' });
+      // Use defaults on error
+      setPreferences(DEFAULT_PREFERENCES);
+      setMessage({ type: 'error', text: '⚠️ Using default preferences (could not load saved ones)' });
     } finally {
       setLoading(false);
     }
