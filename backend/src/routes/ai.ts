@@ -620,18 +620,18 @@ router.post('/suggestions', async (req: Request, res: Response) => {
 
     const skills = skillMap[detectedCategory] || [];
 
-    // Generate AI-suggested description (concise, max 150 chars, task-specific instructions only)
+    // Generate AI-suggested description (concise, max 150 chars, conversational, task-focused)
     const descriptionMap: Record<string, string> = {
-      'eldercare': 'Provide compassionate support with comfort, safety, and well-being. Follow special instructions.',
-      'childcare': 'Ensure child safety and well-being. Follow parent schedule and instructions. Keep parent updated.',
-      'homehelp': 'Complete task professionally. Ensure quality work. Report any issues.',
-      'wellness': 'Provide confidential support following best practices. Ensure comfort and respect.',
-      'tripcarry': 'Handle items carefully. Deliver safely. Follow customs requirements.',
-      'petcare': 'Handle with care. Ensure pet safety and comfort. Provide water and follow instructions.',
-      'delivery': 'Handle items carefully and deliver to location. Communicate arrival.',
-      'eventhelp': 'Complete setup/shopping/planning professionally. Ensure quality and timeliness.',
-      'donate': 'Handle with respect. Follow guidelines. Ensure successful completion.',
-      'localbiz': 'Provide professional service. Ensure quality and reliability.',
+      'eldercare': 'Accompany and provide safe support. Help with appointments, errands, or companionship. Bring patience and kindness.',
+      'childcare': 'Pick up/drop off child safely, keep them comfortable and engaged. Bring their bag if needed. Stay in touch with parent.',
+      'homehelp': 'Help with cleaning, organising, or maintenance work. Do quality work. Bring own supplies if needed.',
+      'wellness': 'Provide caring support for wellness activities or appointments. Keep things confidential and respectful.',
+      'tripcarry': 'Handle items with care during delivery or cross-border trip. Keep them safe and secure. Arrive on time.',
+      'petcare': 'Walk, groom, or sit with pet. Keep them safe, calm, and happy. Bring water for them if needed.',
+      'delivery': 'Deliver items to the right place, right time. Handle carefully, communicate arrival, take photos if needed.',
+      'eventhelp': 'Help plan, shop, or set up for event. Work professionally. Ensure everything is ready on time.',
+      'donate': 'Help with donation pickup or dropoff. Handle items with respect. Follow guidelines.',
+      'localbiz': 'Provide professional service for business needs. Do quality work, communicate clearly, meet deadlines.',
     };
 
     let suggestedDescription = descriptionMap[detectedCategory] || 'Complete task professionally and communicate any issues.';

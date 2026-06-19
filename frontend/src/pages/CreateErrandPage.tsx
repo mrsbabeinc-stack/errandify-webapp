@@ -648,26 +648,21 @@ export default function CreateErrandPage() {
                 <span className="absolute bottom-1 right-0 text-xs text-gray-500">{formData.description.length}/150</span>
               </div>
 
-              {/* AI Suggestion for Description */}
+              {/* AI Suggestion for Description - Compact inline */}
               {aiSuggestions.suggestedDescription && !formData.description && (
-                <div className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded space-y-3">
-                  <div>
-                    <p className="text-xs font-semibold text-blue-900 mb-2">💡 AI Suggestion:</p>
-                    <p className="text-sm text-blue-800 leading-relaxed whitespace-pre-wrap break-words">{aiSuggestions.suggestedDescription}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        description: aiSuggestions.suggestedDescription,
-                      }));
-                    }}
-                    className="w-full px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 transition-colors"
-                  >
-                    ✓ Use This Suggestion
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: aiSuggestions.suggestedDescription,
+                    }));
+                  }}
+                  className="mt-2 inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full hover:bg-blue-200 transition-colors font-medium"
+                  title="Click to use AI suggestion"
+                >
+                  💡 {aiSuggestions.suggestedDescription}
+                </button>
               )}
             </div>
 
@@ -1210,26 +1205,21 @@ export default function CreateErrandPage() {
               <span className="absolute bottom-1 right-2 text-xs text-gray-500">{formData.specialNote.length}/300</span>
             </div>
 
-            {/* AI Suggestion for Notes */}
+            {/* AI Suggestion for Notes - Compact inline */}
             {aiSuggestions.suggestedNotes && !formData.specialNote && (
-              <div className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded space-y-3">
-                <div>
-                  <p className="text-xs font-semibold text-blue-900 mb-2">💡 AI Suggested Notes:</p>
-                  <p className="text-sm text-blue-800 leading-relaxed whitespace-pre-wrap break-words">{aiSuggestions.suggestedNotes}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      specialNote: aiSuggestions.suggestedNotes,
-                    }));
-                  }}
-                  className="w-full px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 transition-colors"
-                >
-                  ✓ Use These Notes
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    specialNote: aiSuggestions.suggestedNotes,
+                  }));
+                }}
+                className="mt-2 inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full hover:bg-blue-200 transition-colors font-medium"
+                title="Click to use AI suggestion"
+              >
+                💡 {aiSuggestions.suggestedNotes}
+              </button>
             )}
           </div>
         </div>
