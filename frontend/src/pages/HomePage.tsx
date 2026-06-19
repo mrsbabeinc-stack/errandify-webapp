@@ -93,25 +93,43 @@ export default function HomePage({ userRole }: HomePageProps) {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <button
-            onClick={() => navigate('/create-errand')}
-            className="bg-errandify-orange text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
-          >
-            <span className="text-3xl mb-2 block">📝</span>
-            <span className="font-semibold text-sm">Post an Errand</span>
-          </button>
+          {userRole === 'asker' ? (
+            <>
+              <button
+                onClick={() => navigate('/create-errand')}
+                className="bg-errandify-orange text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+              >
+                <span className="text-3xl mb-2 block">📝</span>
+                <span className="font-semibold text-sm">Post an Errand</span>
+              </button>
 
-          <button
-            onClick={() => navigate('/errands')}
-            className="bg-blue-500 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
-          >
-            <span className="text-3xl mb-2 block">
-              {userRole === 'asker' ? '📋' : '✓'}
-            </span>
-            <span className="font-semibold text-sm">
-              {userRole === 'asker' ? 'My Errands' : 'My Work'}
-            </span>
-          </button>
+              <button
+                onClick={() => navigate('/errands')}
+                className="bg-blue-500 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+              >
+                <span className="text-3xl mb-2 block">📋</span>
+                <span className="font-semibold text-sm">My Errands</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate('/search')}
+                className="bg-errandify-orange text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+              >
+                <span className="text-3xl mb-2 block">🔍</span>
+                <span className="font-semibold text-sm">Browse Errands</span>
+              </button>
+
+              <button
+                onClick={() => navigate('/errands')}
+                className="bg-blue-500 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+              >
+                <span className="text-3xl mb-2 block">✓</span>
+                <span className="font-semibold text-sm">My Work</span>
+              </button>
+            </>
+          )}
         </div>
 
         {/* Quick Categories Section - Grouped with Section Headers */}
