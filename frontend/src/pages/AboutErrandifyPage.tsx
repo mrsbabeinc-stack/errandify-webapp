@@ -1,20 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
 
 export default function AboutErrandifyPage() {
   const navigate = useNavigate();
-  const [canGoBack, setCanGoBack] = useState(false);
-
-  useEffect(() => {
-    setCanGoBack(window.history.length > 1);
-  }, []);
 
   const handleBack = () => {
-    if (canGoBack) {
-      navigate(-1);
-    } else {
-      navigate('/');
-    }
+    navigate(-1);
   };
 
   return (
