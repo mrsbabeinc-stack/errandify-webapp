@@ -19,6 +19,12 @@ export default function LandingPage() {
 
         {/* Bottom Section - Text & Button */}
         <div className="w-full bg-gradient-to-b from-orange-50 to-orange-100 px-4 py-4 flex flex-col justify-end items-center flex-shrink-0">
+          {/* Main Tagline */}
+          <div className="max-w-xs w-full text-center mb-4">
+            <h1 className="text-2xl font-bold text-errandify-brown mb-1">Errandify</h1>
+            <p className="text-sm font-semibold text-errandify-orange italic mb-3">Simplifying Life, Amplifying Humanity</p>
+          </div>
+
           {/* Value Proposition - Compact */}
           <div className="max-w-xs w-full space-y-1 mb-3">
             <div className="flex items-start gap-2">

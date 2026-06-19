@@ -79,15 +79,25 @@ export default function HomePage({ userRole }: HomePageProps) {
     <div className="min-h-screen bg-errandify-bg">
       {/* Page Container */}
       <div className="max-w-3xl mx-auto px-4 py-8">
+        {/* Main Tagline */}
+        <div className="mb-6 text-center">
+          <p className="text-xs font-semibold text-errandify-orange italic mb-4">Simplifying Life, Amplifying Humanity</p>
+        </div>
+
         {/* Welcome Section */}
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-errandify-brown mb-2">
             Welcome home, {userName}! 👋
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-3">
             {userRole === 'asker'
               ? 'Need help with something? Post an errand and let your kampung help you out'
               : 'Looking to help your neighbours? Browse ToHelp and earn some rewards'}
+          </p>
+          <p className="text-sm font-semibold text-errandify-brown">
+            {userRole === 'asker'
+              ? '💬 Get Help • 🤝 Give Help • 💰 Get Paid'
+              : '💬 Get Help • 🤝 Give Help • 💰 Get Paid'}
           </p>
         </div>
 

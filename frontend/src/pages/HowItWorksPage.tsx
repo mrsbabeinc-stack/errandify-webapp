@@ -14,9 +14,11 @@ export default function HowItWorksPage() {
           ‹ Back
         </button>
 
-        <div className="mb-8">
+        <div className="mb-8 text-center">
+          <p className="text-xs font-semibold text-errandify-orange italic mb-3">Simplifying Life, Amplifying Humanity</p>
           <h1 className="text-4xl font-bold text-errandify-brown mb-2">How Errandify Works</h1>
-          <p className="text-gray-600">Simple steps to connect your kampung and get things done together</p>
+          <p className="text-gray-600 mb-3">Simple steps to connect your kampung and get things done together</p>
+          <p className="text-sm font-semibold text-errandify-brown">💬 Get Help • 🤝 Give Help • 💰 Get Paid</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

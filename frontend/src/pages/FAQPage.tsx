@@ -212,9 +212,11 @@ export default function FAQPage() {
           ‹ Back
         </button>
 
-        <div className="mb-6">
+        <div className="mb-6 text-center">
+          <p className="text-xs font-semibold text-errandify-orange italic mb-3">Simplifying Life, Amplifying Humanity</p>
           <h1 className="text-3xl font-bold text-errandify-brown mb-2">❓ Frequently Asked Questions</h1>
-          <p className="text-gray-600">Find answers to common questions about Errandify</p>
+          <p className="text-gray-600 mb-3">Find answers to common questions about Errandify</p>
+          <p className="text-sm font-semibold text-errandify-brown">💬 Get Help • 🤝 Give Help • 💰 Get Paid</p>
         </div>
 
         {/* Category Filter */}
