@@ -82,7 +82,20 @@ export default function MyVillagePage() {
     <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-20">
       <div className="max-w-2xl mx-auto">
         <button onClick={() => navigate(-1)} className="mb-4 text-lg text-gray-600 font-bold">‹ Back</button>
-        <h1 className="text-2xl font-bold text-errandify-brown mb-6">🏘️ MyVillage</h1>
+
+        {/* Header with CTA */}
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-errandify-brown">🏘️ MyVillage</h1>
+            <p className="text-sm text-gray-600 mt-1">Manage your trusted network</p>
+          </div>
+          <button
+            onClick={() => navigate('/community-hub')}
+            className="bg-errandify-orange text-white px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition text-sm whitespace-nowrap"
+          >
+            📢 Community Hub
+          </button>
+        </div>
 
         {/* Tabs */}
         <div className="flex gap-2 mb-4 bg-white rounded-lg p-1">
