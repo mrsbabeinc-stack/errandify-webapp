@@ -22,6 +22,7 @@ import MyVillagePage from './pages/MyVillagePage';
 import ProfilePage from './pages/ProfilePage';
 import ReviewPage from './pages/ReviewPage';
 import TaskExecutionPage from './pages/TaskExecutionPage';
+import RecurringSessionsManager from './components/RecurringSessionsManager';
 import MyProfilePage from './pages/MyProfilePage';
 import ReferralPage from './pages/ReferralPage';
 import TrustedUsersPage from './pages/TrustedUsersPage';
@@ -207,6 +208,7 @@ export default function App() {
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
           <Route path="/profile" element={<ProfilePage userRole={userRole} onLogout={handleLogout} />} />
           <Route path="/task/:id/execute" element={<TaskExecutionPage />} />
+          <Route path="/errand/:id/sessions" element={<RecurringSessionsManager errandId={parseInt(window.location.pathname.split('/')[2])} userRole={userRole} />} />
           <Route path="/review/:jobId" element={<ReviewPage />} />
         </Route>
       </Routes>

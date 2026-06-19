@@ -16,6 +16,7 @@ import notificationsRoutes from './routes/notifications.js';
 import chasRoutes from './routes/chas.js';
 import pushRoutes from './routes/push.js';
 import taskExecutionRoutes from './routes/taskExecution.js';
+import sessionsRoutes from './routes/sessions.js';
 import { startCrons } from './cron.js';
 
 const app = express();
@@ -44,6 +45,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/chas', chasRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/tasks', taskExecutionRoutes);
+app.use('/api/errands', sessionsRoutes);
 app.use('/api', hanaRoutes);
 
 // Error handling
