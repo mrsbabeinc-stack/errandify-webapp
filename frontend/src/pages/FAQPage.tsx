@@ -165,7 +165,7 @@ export default function FAQPage() {
       id: 's4',
       category: 'safety',
       question: 'What if there is a misunderstanding or disagreement?',
-      answer: 'We encourage open communication first. Message the other person to clarify expectations and resolve issues respectfully. Most problems happen because of misunderstandings, not bad intentions. Our community believes in helping each other. Only if communication doesn't work, we have a fair dispute process.',
+      answer: 'We encourage open communication first. Message the other person to clarify expectations and resolve issues respectfully. Most problems happen because of misunderstandings, not bad intentions. Our community believes in helping each other. Only if communication does not work, we have a fair dispute process.',
     },
     {
       id: 's5',
