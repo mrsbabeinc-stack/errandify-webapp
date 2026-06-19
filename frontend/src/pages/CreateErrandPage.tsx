@@ -394,14 +394,30 @@ export default function CreateErrandPage() {
 
   // Auto-apply AI suggestions when they arrive
   useEffect(() => {
+    // Auto-fill empty description and notes from AI suggestions
+    if (aiSuggestions.suggestedDescription && !formData.description) {
+      console.log('[useEffect] Auto-filling description from AI suggestion');
+      setFormData((prev) => ({
+        ...prev,
+        description: aiSuggestions.suggestedDescription,
+      }));
+    }
+    if (aiSuggestions.suggestedNotes && !formData.specialNote) {
+      console.log('[useEffect] Auto-filling notes from AI suggestion');
+      setFormData((prev) => ({
+        ...prev,
+        specialNote: aiSuggestions.suggestedNotes,
+      }));
+    }
     // Update category if AI has a suggestion and user hasn't selected one yet
     if (aiSuggestions.suggestedCategory && !formData.category) {
+      console.log('[useEffect] Auto-filling category from AI suggestion');
       setFormData((prev) => ({
         ...prev,
         category: aiSuggestions.suggestedCategory,
       }));
     }
-  }, [aiSuggestions.suggestedCategory, formData.category]);
+  }, [aiSuggestions.suggestedCategory, aiSuggestions.suggestedDescription, aiSuggestions.suggestedNotes, formData.category, formData.description, formData.specialNote]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
