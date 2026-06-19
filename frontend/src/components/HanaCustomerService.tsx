@@ -357,7 +357,7 @@ export default function HanaCustomerService() {
       const errorMessage: Message = {
         id: (Date.now() + 2).toString(),
         sender: 'hana',
-        text: "Sorry, I'm having trouble responding right now. Please try again or contact support@errandify.ai.",
+        text: "Sorry, I'm having trouble responding right now. Please try again or contact togather@errandify.ai.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
