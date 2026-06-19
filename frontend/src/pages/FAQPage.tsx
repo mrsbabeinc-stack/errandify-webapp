@@ -251,8 +251,8 @@ export default function FAQPage() {
           <div className="space-y-2 text-sm">
             <p className="text-gray-700">
               <strong>📧 Email:</strong>{' '}
-              <a href="mailto:support@errandify.ai" className="text-errandify-orange hover:underline">
-                support@errandify.ai
+              <a href="mailto:togather@errandify.ai" className="text-errandify-orange hover:underline">
+                togather@errandify.ai
               </a>
             </p>
             <p className="text-gray-700">
