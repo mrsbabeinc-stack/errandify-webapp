@@ -27,6 +27,7 @@ interface HanaTaskCreationProps {
   onClose: () => void;
   onComplete: (taskData: TaskData) => void;
   onSkipToManual?: () => void;
+  defaultCategory?: string | null;
 }
 
 export default function HanaTaskCreation({
@@ -34,12 +35,13 @@ export default function HanaTaskCreation({
   onClose,
   onComplete,
   onSkipToManual,
+  defaultCategory,
 }: HanaTaskCreationProps) {
   const [currentStep, setCurrentStep] = useState<CollectionStep>('input');
   const [taskData, setTaskData] = useState<TaskData>({
     title: '',
     description: '',
-    category: '',
+    category: defaultCategory || '',
     location: '',
     fullAddress: '',
     date: '',
