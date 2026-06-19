@@ -479,16 +479,11 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
         if (oneMapResponse.data?.results && oneMapResponse.data.results.length > 0) {
           const result = oneMapResponse.data.results[0];
-          // Build full address from components
-          const block = result.BLK_NO ? `Block ${result.BLK_NO}` : '';
-          const road = result.ROAD_NAME || '';
-          const building = result.BUILDING_NAME ? `, ${result.BUILDING_NAME}` : '';
+          // Use ADDRESS field directly from OneMap
+          fullAddress = result.ADDRESS || `Singapore ${postalCode}`;
 
-          const parts = [block, road, building].filter((p: string) => p);
-          fullAddress = parts.join(', ').replace(/^, /, '') || `Singapore ${postalCode}`;
-
-          // Extract area from road name or building name
-          area = result.BUILDING_NAME || result.ROAD_NAME || 'Singapore';
+          // Extract area from road name
+          area = result.ROAD_NAME || 'Singapore';
         }
       } catch (error) {
         console.error('OneMap API error:', error);
