@@ -64,7 +64,7 @@ export default function HanaTaskCreation({
     if (isOpen && !hanaMessage) {
       initializeChat();
     }
-  }, [isOpen]);
+  }, [isOpen, defaultCategory]);
 
   const getExampleByCategory = (category: string) => {
     const examples: Record<string, string> = {
