@@ -670,7 +670,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     };
 
     let suggestedSkills: string[] = [];
-    const titleLower = title.toLowerCase();
+    // titleLower already declared above, reuse it
 
     // Check for skill-related keywords in the title
     if (category === 'childcare' && (titleLower.includes('certified') || titleLower.includes('certification'))) {
