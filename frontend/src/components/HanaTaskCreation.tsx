@@ -103,8 +103,21 @@ export default function HanaTaskCreation({
 
   const extractTaskInfo = async (userInput: string) => {
     try {
-      // NOTE: Don't check raw input for content - user might mention postal codes, budgets, skills
-      // Instead, check the extracted title/description/notes after extraction
+      // Check raw input for explicit inappropriate requests like "provide sex", "sell drugs"
+      // Only check for SERIOUS violations (sex, drugs, violence, illegal)
+      const seriousKeywords = ['sex', 'porn', 'drug', 'cocaine', 'heroin', 'marijuana', 'bomb', 'weapon', 'gun', 'steal', 'rob', 'hacking'];
+      const lowerInput = userInput.toLowerCase();
+
+      for (const keyword of seriousKeywords) {
+        if (lowerInput.includes(keyword)) {
+          console.log('[Hana] Serious violation detected:', keyword);
+          setHanaMessage('I cannot help with that request. It contains inappropriate content. Please describe your errand in a different way. 😊');
+          setCurrentStep('input');
+          setInput('');
+          setLoading(false);
+          return;
+        }
+      }
 
       // Use AI to extract structured task info from freeform input
       const response = await axios.post(
@@ -115,6 +128,7 @@ export default function HanaTaskCreation({
       console.log('Extract response:', response.data);
       const extracted = response.data.data;
       console.log('[Hana] Extracted budget:', extracted.budget, 'type:', typeof extracted.budget);
+      console.log('[Hana] Extracted title:', extracted.title);
 
       // Update task data with extracted info
       const updatedTaskData: TaskData = {
