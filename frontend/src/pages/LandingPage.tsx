@@ -65,6 +65,23 @@ export default function LandingPage() {
           {/* Divider */}
           <div className="w-full max-w-xs border-t border-gray-300 mb-3"></div>
 
+          {/* Learn More Links */}
+          <div className="flex gap-2 justify-center mb-3">
+            <a
+              href="/about"
+              className="text-xs text-errandify-orange hover:underline font-semibold"
+            >
+              About Us
+            </a>
+            <span className="text-gray-400">•</span>
+            <a
+              href="/faq"
+              className="text-xs text-errandify-orange hover:underline font-semibold"
+            >
+              FAQ
+            </a>
+          </div>
+
           {/* SingPass Footer */}
           <p className="text-xs text-gray-600 text-center">
             Powered by SingPass
