@@ -5,78 +5,53 @@ interface HomePageProps {
   userRole: 'asker' | 'doer';
 }
 
-interface CategoryGroup {
+interface Category {
   id: string;
   name: string;
   icon: string;
-  categories: Array<{
-    id: string;
-    name: string;
-    icon: string;
-    color: string;
-    purpose: string;
-  }>;
+  color: string;
+  purpose: string;
+  group: string;
 }
 
 export default function HomePage({ userRole }: HomePageProps) {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('Friend');
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['group1', 'group2']);
 
-  const categoryGroups: CategoryGroup[] = [
-    {
-      id: 'group1',
-      name: '🏠 Home & Household',
-      icon: '🏠',
-      categories: [
-        { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50', purpose: 'Repairs, renovations, plumbing, electrical' },
-        { id: 'cleaning-household', name: 'Cleaning & Household', icon: '🧹', color: 'from-blue-100 to-blue-50', purpose: 'House cleaning, laundry, organizing' },
-        { id: 'food-beverage', name: 'Food & Beverage', icon: '🍕', color: 'from-red-100 to-red-50', purpose: 'Cooking, grocery shopping, meal prep' },
-        { id: 'furniture-assembly', name: 'Furniture & Assembly', icon: '🛋️', color: 'from-amber-100 to-amber-50', purpose: 'Furniture assembly, arrangement, moving' },
-      ]
-    },
-    {
-      id: 'group2',
-      name: '🚚 Errands & Logistics',
-      icon: '🚚',
-      categories: [
-        { id: 'shopping-errands', name: 'Shopping & Errands', icon: '🛍️', color: 'from-pink-100 to-pink-50', purpose: 'Shopping, deliveries, postal services' },
-        { id: 'delivery-moving', name: 'Delivery & Moving', icon: '📦', color: 'from-yellow-100 to-yellow-50', purpose: 'Package delivery, moving assistance' },
-        { id: 'travel-mobility', name: 'Travel & Mobility', icon: '✈️', color: 'from-sky-100 to-sky-50', purpose: 'Airport rides, travel planning, relocation' },
-        { id: 'event-planning', name: 'Event Planning', icon: '✨', color: 'from-violet-100 to-violet-50', purpose: 'Weddings, parties, corporate events' },
-      ]
-    },
-    {
-      id: 'group3',
-      name: '❤️ Care & Wellbeing',
-      icon: '❤️',
-      categories: [
-        { id: 'childcare-education', name: 'Childcare & Education', icon: '🧒', color: 'from-green-100 to-green-50', purpose: 'Babysitting, tutoring, homework help' },
-        { id: 'eldercare-healthcare', name: 'Eldercare & Healthcare', icon: '👵', color: 'from-gray-100 to-gray-50', purpose: 'Senior care, medication, health support' },
-        { id: 'pet-care', name: 'Pet Care', icon: '🐕', color: 'from-purple-100 to-purple-50', purpose: 'Dog walking, pet sitting, grooming' },
-        { id: 'personal-care', name: 'Personal Care & Wellness', icon: '💆', color: 'from-rose-100 to-rose-50', purpose: 'Hair styling, massage, fitness coaching' },
-      ]
-    },
-    {
-      id: 'group4',
-      name: '💡 Skills & Services',
-      icon: '💡',
-      categories: [
-        { id: 'tech-support', name: 'Tech Support & IT', icon: '💻', color: 'from-indigo-100 to-indigo-50', purpose: 'Computer repair, setup, tech help' },
-        { id: 'creative-arts', name: 'Creative & Arts', icon: '🎨', color: 'from-fuchsia-100 to-fuchsia-50', purpose: 'Design, photography, art services' },
-        { id: 'admin-business', name: 'Admin & Business', icon: '📚', color: 'from-slate-100 to-slate-50', purpose: 'Bookkeeping, document prep, data entry' },
-        { id: 'charity-community', name: 'Charity & Community', icon: '❤️', color: 'from-red-100 to-red-50', purpose: 'Volunteer work, community service' },
-      ]
-    }
+  const categories: Category[] = [
+    // GROUP 1: HOME & HOUSEHOLD
+    { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50', purpose: 'Repairs, renovations, plumbing, electrical', group: '🏠 Home & Household' },
+    { id: 'cleaning-household', name: 'Cleaning & Household', icon: '🧹', color: 'from-blue-100 to-blue-50', purpose: 'House cleaning, laundry, organizing', group: '🏠 Home & Household' },
+    { id: 'food-beverage', name: 'Food & Beverage', icon: '🍕', color: 'from-red-100 to-red-50', purpose: 'Cooking, grocery shopping, meal prep', group: '🏠 Home & Household' },
+    { id: 'furniture-assembly', name: 'Furniture & Assembly', icon: '🛋️', color: 'from-amber-100 to-amber-50', purpose: 'Furniture assembly, arrangement, moving', group: '🏠 Home & Household' },
+
+    // GROUP 2: ERRANDS & LOGISTICS
+    { id: 'shopping-errands', name: 'Shopping & Errands', icon: '🛍️', color: 'from-pink-100 to-pink-50', purpose: 'Shopping, deliveries, postal services', group: '🚚 Errands & Logistics' },
+    { id: 'delivery-moving', name: 'Delivery & Moving', icon: '📦', color: 'from-yellow-100 to-yellow-50', purpose: 'Package delivery, moving assistance', group: '🚚 Errands & Logistics' },
+    { id: 'travel-mobility', name: 'Travel & Mobility', icon: '✈️', color: 'from-sky-100 to-sky-50', purpose: 'Airport rides, travel planning, relocation', group: '🚚 Errands & Logistics' },
+    { id: 'event-planning', name: 'Event Planning', icon: '✨', color: 'from-violet-100 to-violet-50', purpose: 'Weddings, parties, corporate events', group: '🚚 Errands & Logistics' },
+
+    // GROUP 3: CARE & WELLBEING
+    { id: 'childcare-education', name: 'Childcare & Education', icon: '🧒', color: 'from-green-100 to-green-50', purpose: 'Babysitting, tutoring, homework help', group: '❤️ Care & Wellbeing' },
+    { id: 'eldercare-healthcare', name: 'Eldercare & Healthcare', icon: '👵', color: 'from-gray-100 to-gray-50', purpose: 'Senior care, medication, health support', group: '❤️ Care & Wellbeing' },
+    { id: 'pet-care', name: 'Pet Care', icon: '🐕', color: 'from-purple-100 to-purple-50', purpose: 'Dog walking, pet sitting, grooming', group: '❤️ Care & Wellbeing' },
+    { id: 'personal-care', name: 'Personal Care & Wellness', icon: '💆', color: 'from-rose-100 to-rose-50', purpose: 'Hair styling, massage, fitness coaching', group: '❤️ Care & Wellbeing' },
+
+    // GROUP 4: SKILLS & SERVICES
+    { id: 'tech-support', name: 'Tech Support & IT', icon: '💻', color: 'from-indigo-100 to-indigo-50', purpose: 'Computer repair, setup, tech help', group: '💡 Skills & Services' },
+    { id: 'creative-arts', name: 'Creative & Arts', icon: '🎨', color: 'from-fuchsia-100 to-fuchsia-50', purpose: 'Design, photography, art services', group: '💡 Skills & Services' },
+    { id: 'admin-business', name: 'Admin & Business', icon: '📚', color: 'from-slate-100 to-slate-50', purpose: 'Bookkeeping, document prep, data entry', group: '💡 Skills & Services' },
+    { id: 'charity-community', name: 'Charity & Community', icon: '❤️', color: 'from-red-100 to-red-50', purpose: 'Volunteer work, community service', group: '💡 Skills & Services' },
   ];
 
-  const toggleGroup = (groupId: string) => {
-    setExpandedGroups(prev =>
-      prev.includes(groupId)
-        ? prev.filter(id => id !== groupId)
-        : [...prev, groupId]
-    );
-  };
+  // Group categories by their group field
+  const groupedCategories = categories.reduce((acc, cat) => {
+    if (!acc[cat.group]) {
+      acc[cat.group] = [];
+    }
+    acc[cat.group].push(cat);
+    return acc;
+  }, {} as Record<string, Category[]>);
 
   useEffect(() => {
     const user = localStorage.getItem('user');
@@ -139,57 +114,49 @@ export default function HomePage({ userRole }: HomePageProps) {
           </button>
         </div>
 
-        {/* Quick Categories Section - Grouped */}
+        {/* Quick Categories Section - Grouped with Section Headers */}
         <div className="bg-white rounded-lg p-6 mb-8 border border-gray-200">
           <h2 className="font-bold text-errandify-brown mb-4">
             {userRole === 'asker' ? '📋 Quick Categories' : '🔍 Browse by Category'}
           </h2>
 
-          <div className="space-y-3">
-            {categoryGroups.map((group) => (
-              <div key={group.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                {/* Group Header */}
-                <button
-                  onClick={() => toggleGroup(group.id)}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-150 font-semibold text-gray-700 flex items-center justify-between transition-colors"
-                >
-                  <span>{group.name}</span>
-                  <span className={`text-lg transition-transform ${expandedGroups.includes(group.id) ? 'rotate-180' : ''}`}>
-                    ▼
-                  </span>
-                </button>
+          <div className="space-y-4">
+            {Object.entries(groupedCategories).map(([groupName, cats]) => (
+              <div key={groupName}>
+                {/* Group Section Header */}
+                <h3 className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-2 pl-1">
+                  {groupName}
+                </h3>
 
-                {/* Group Categories - Collapsible */}
-                {expandedGroups.includes(group.id) && (
-                  <div className="p-3 bg-white flex flex-wrap gap-2 border-t border-gray-200">
-                    {group.categories.map((category) => (
-                      <div key={category.id} className="group relative">
-                        <button
-                          onClick={() => handleCategoryClick(category.id)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:shadow-md bg-gradient-to-r ${category.color}`}
-                        >
-                          <span className="mr-1">{category.icon}</span>
-                          {category.name}
-                        </button>
+                {/* Group Categories Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {cats.map((category) => (
+                    <div key={category.id} className="group relative">
+                      <button
+                        onClick={() => handleCategoryClick(category.id)}
+                        className={`w-full px-3 py-2 rounded-lg text-xs font-medium transition-all hover:shadow-md bg-gradient-to-r ${category.color}`}
+                      >
+                        <div className="text-lg mb-0.5">{category.icon}</div>
+                        <div className="line-clamp-2">{category.name}</div>
+                      </button>
 
-                        {/* Tooltip */}
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
-                          {category.purpose}
-                          {/* Tooltip arrow */}
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 transform rotate-45 -mt-1"></div>
-                        </div>
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg max-w-xs whitespace-normal">
+                        {category.purpose}
+                        {/* Tooltip arrow */}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 transform rotate-45 -mt-1"></div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
 
           <p className="text-xs text-gray-500 mt-4">
             {userRole === 'asker'
-              ? '💡 Expand groups • Hover for details • Click to post'
-              : '💡 Expand groups • Hover for details • Click to browse'}
+              ? '💡 Hover for details • Click to post'
+              : '💡 Hover for details • Click to browse'}
           </p>
         </div>
 
