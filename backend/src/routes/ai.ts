@@ -659,6 +659,40 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     console.log('[Extract] Category detected:', category);
 
+    // Extract certification/skill keywords from title and remove them from title
+    const skillKeywords = {
+      childcare: ['certified', 'certification', 'cpr', 'first aid', 'trained', 'professional'],
+      eldercare: ['certified', 'certification', 'cpr', 'first aid', 'trained', 'professional', 'dementia'],
+      petcare: ['certified', 'grooming', 'professional', 'experienced', 'trained'],
+    };
+
+    let suggestedSkills: string[] = [];
+    const titleLower = title.toLowerCase();
+
+    // Check for skill-related keywords in the title
+    if (category === 'childcare' && (titleLower.includes('certified') || titleLower.includes('certification'))) {
+      suggestedSkills.push('Childcare Certification');
+      title = title.replace(/\b(certified|certification)\b/gi, '').replace(/\s+/g, ' ').trim();
+    }
+    if (category === 'childcare' && (titleLower.includes('cpr') || titleLower.includes('first aid'))) {
+      suggestedSkills.push('First Aid/CPR');
+      title = title.replace(/\b(cpr|first\s+aid)\b/gi, '').replace(/\s+/g, ' ').trim();
+    }
+    if (category === 'eldercare' && (titleLower.includes('certified') || titleLower.includes('certification'))) {
+      suggestedSkills.push('Basic Elder Care Certification');
+      title = title.replace(/\b(certified|certification)\b/gi, '').replace(/\s+/g, ' ').trim();
+    }
+    if (category === 'eldercare' && (titleLower.includes('dementia') || titleLower.includes('alzheimer'))) {
+      suggestedSkills.push('Dementia Care');
+      title = title.replace(/\b(dementia|alzheimer)\b/gi, '').replace(/\s+/g, ' ').trim();
+    }
+    if (category === 'petcare' && (titleLower.includes('grooming') || titleLower.includes('groom'))) {
+      suggestedSkills.push('Pet Grooming');
+      title = title.replace(/\b(groom|grooming)\b/gi, '').replace(/\s+/g, ' ').trim();
+    }
+
+    console.log('[Extract] Extracted skills:', suggestedSkills);
+
     res.json({
       success: true,
       data: {
@@ -674,6 +708,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         category,
         postalCode,
         notes: '',
+        suggestedSkills,
       },
     });
   } catch (error) {
