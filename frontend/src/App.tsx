@@ -1,9 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Layout from './components/Layout';
+import NotificationToastContainer from './components/NotificationToastContainer';
+import { NotificationProvider } from './context/NotificationContext';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
+import NotificationPreferencesPage from './pages/NotificationPreferencesPage';
 import CategorySelectionPage from './pages/CategorySelectionPage';
 import CategoryPreferencePage from './pages/CategoryPreferencePage';
 import CreateErrandPage from './pages/CreateErrandPage';
@@ -69,8 +72,10 @@ export default function App() {
   }
 
   return (
-    <Router>
-      <Routes>
+    <NotificationProvider>
+      <Router>
+        <NotificationToastContainer />
+        <Routes>
         {/* Landing page - shown first to unauthenticated users */}
         <Route
           path="/"
@@ -179,6 +184,7 @@ export default function App() {
         <Route path="/errandify-points" element={isAuthenticated ? <ErrandifyPointsPage /> : <Navigate to="/login" replace />} />
         <Route path="/my-rewards" element={isAuthenticated ? <MyRewardsPage /> : <Navigate to="/login" replace />} />
         <Route path="/points-history" element={isAuthenticated ? <PointsHistoryPage /> : <Navigate to="/login" replace />} />
+        <Route path="/settings/notifications" element={isAuthenticated ? <NotificationPreferencesPage /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout */}
         <Route
@@ -200,6 +206,7 @@ export default function App() {
           <Route path="/review/:jobId" element={<ReviewPage />} />
         </Route>
       </Routes>
-    </Router>
+      </Router>
+    </NotificationProvider>
   );
 }
