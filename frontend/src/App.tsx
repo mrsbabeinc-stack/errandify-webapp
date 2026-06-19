@@ -35,6 +35,8 @@ import MyRewardsPage from './pages/MyRewardsPage';
 import PointsHistoryPage from './pages/PointsHistoryPage';
 import TestPage from './pages/TestPage';
 import WalletPage from './pages/WalletPage';
+import UserProfilePage from './pages/UserProfilePage';
+import EditProfilePage from './pages/EditProfilePage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -203,6 +205,8 @@ export default function App() {
         <Route path="/points-history" element={isAuthenticated ? <PointsHistoryPage /> : <Navigate to="/login" replace />} />
         <Route path="/settings/notifications" element={isAuthenticated ? <NotificationPreferencesPage /> : <Navigate to="/login" replace />} />
         <Route path="/wallet" element={isAuthenticated ? <WalletPage /> : <Navigate to="/login" replace />} />
+        <Route path="/user/:userId" element={<UserProfilePage />} />
+        <Route path="/edit-profile" element={isAuthenticated ? <EditProfilePage /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout */}
         <Route
