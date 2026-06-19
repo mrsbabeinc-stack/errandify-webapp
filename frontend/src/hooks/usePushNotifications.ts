@@ -58,7 +58,7 @@ export function usePushNotifications() {
 
   const subscribe = useCallback(async () => {
     if (!isSupported) {
-      setError('Push notifications not supported');
+      setError('Push notifications not supported in this browser');
       return false;
     }
 
@@ -73,10 +73,17 @@ export function usePushNotifications() {
       }
 
       // Register service worker
-      const registration = await navigator.serviceWorker.register(
-        '/service-worker.js',
-        { scope: '/' }
-      );
+      let registration;
+      try {
+        registration = await navigator.serviceWorker.register(
+          '/service-worker.js',
+          { scope: '/' }
+        );
+      } catch (swErr) {
+        console.warn('Service worker registration failed (expected in dev):', swErr);
+        setError('Push notifications require HTTPS in production');
+        return false;
+      }
 
       // Subscribe to push
       const subscription = await registration.pushManager.subscribe({
@@ -100,7 +107,13 @@ export function usePushNotifications() {
       return true;
     } catch (err) {
       console.error('Error subscribing to push:', err);
-      setError(err instanceof Error ? err.message : 'Failed to subscribe');
+      const message = err instanceof Error ? err.message : 'Failed to subscribe';
+      // Only show certain errors to user
+      if (message.includes('Service Worker')) {
+        setError('Push notifications require HTTPS in production');
+      } else if (!message.includes('Subscription failed')) {
+        setError(message);
+      }
       return false;
     }
   }, [isSupported]);
