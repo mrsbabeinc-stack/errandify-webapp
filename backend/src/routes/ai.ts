@@ -509,21 +509,34 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       }
     }
 
-    // Detect category from keywords in title or input
-    let category = 'other';
+    // Detect category from keywords in title or input (map to correct category IDs)
+    let category = '';
     const inputLower = input.toLowerCase();
-    if (inputLower.includes('dog') || inputLower.includes('pet') || inputLower.includes('cat') || inputLower.includes('walk')) {
-      category = 'pet-care';
-    } else if (inputLower.includes('clean') || inputLower.includes('laundry') || inputLower.includes('wash')) {
-      category = 'cleaning-laundry';
-    } else if (inputLower.includes('shop') || inputLower.includes('buy') || inputLower.includes('errand')) {
-      category = 'shopping-errands';
-    } else if (inputLower.includes('move') || inputLower.includes('deliver')) {
-      category = 'delivery-moving';
-    } else if (inputLower.includes('tutor') || inputLower.includes('teach') || inputLower.includes('child') || inputLower.includes('babysit')) {
-      category = 'childcare-tutoring';
-    } else if (inputLower.includes('repair') || inputLower.includes('fix') || inputLower.includes('install') || inputLower.includes('maintenance')) {
-      category = 'home-maintenance';
+
+    // Category mapping
+    if (inputLower.includes('elder') || inputLower.includes('caregiv') || inputLower.includes('companion')) {
+      category = 'eldercare'; // Caregiving & Elder Companionship
+    } else if (inputLower.includes('child') || inputLower.includes('babysit') || inputLower.includes('school') || inputLower.includes('pickup') || inputLower.includes('dropoff')) {
+      category = 'childcare'; // Childcare & School Pickup/Drop-off
+    } else if (inputLower.includes('clean') || inputLower.includes('laundry') || inputLower.includes('wash') || inputLower.includes('maintenance') || inputLower.includes('repair') || inputLower.includes('fix') || inputLower.includes('install')) {
+      category = 'homehelp'; // Household Errands & Home Maintenance
+    } else if (inputLower.includes('wellness') || inputLower.includes('mental') || inputLower.includes('health') || inputLower.includes('therapy')) {
+      category = 'wellness'; // Wellness Support (incl. Mental Wellness)
+    } else if (inputLower.includes('cross') || inputLower.includes('border') || inputLower.includes('trip') || inputLower.includes('travel')) {
+      category = 'tripcarry'; // Cross-Border Errands
+    } else if (inputLower.includes('dog') || inputLower.includes('pet') || inputLower.includes('cat') || inputLower.includes('groom') || inputLower.includes('walk') || inputLower.includes('sitting')) {
+      category = 'petcare'; // Pet Care (sitting, grooming, walking)
+    } else if (inputLower.includes('deliver') || inputLower.includes('parcel') || inputLower.includes('food') || inputLower.includes('document')) {
+      category = 'delivery'; // Delivery (local errands, parcels, food, documents)
+    } else if (inputLower.includes('event') || inputLower.includes('setup') || inputLower.includes('shop') || inputLower.includes('plan')) {
+      category = 'eventhelp'; // Events (setup, shopping, planning)
+    } else if (inputLower.includes('donate') || inputLower.includes('giveback')) {
+      category = 'donate'; // Donate / Giveback
+    } else if (inputLower.includes('business') || inputLower.includes('sme') || inputLower.includes('micro')) {
+      category = 'localbiz'; // Microservices for Local SMEs
+    } else {
+      // Default fallback
+      category = 'homehelp';
     }
 
     res.json({
@@ -562,54 +575,63 @@ router.post('/content-filter', async (req: Request, res: Response) => {
 
 router.post('/suggestions', async (req: Request, res: Response) => {
   try {
-    const { title, description } = req.body;
-    const text = `${title} ${description}`.toLowerCase();
+    const { title, description, category } = req.body;
 
-    // Detect category from keywords
-    let category = 'other';
-    if (text.includes('clean')) category = 'cleaning-laundry';
-    else if (text.includes('walk') || text.includes('dog') || text.includes('pet')) category = 'pet-care';
-    else if (text.includes('shop') || text.includes('buy')) category = 'shopping-errands';
-    else if (text.includes('move') || text.includes('delivery')) category = 'delivery-moving';
-    else if (text.includes('tutor') || text.includes('teach') || text.includes('child')) category = 'childcare-tutoring';
+    // Use provided category or detect from title/description
+    let detectedCategory = category || 'homehelp';
 
     // Suggest skills based on category
     const skillMap: Record<string, string[]> = {
-      'cleaning-laundry': ['Thorough cleaning', 'Attention to detail', 'Time management'],
-      'pet-care': ['Dog handling', 'Patience', 'Physical fitness'],
-      'shopping-errands': ['Time management', 'Organization', 'Reliability'],
-      'delivery-moving': ['Physical fitness', 'Driving', 'Logistics'],
-      'childcare-tutoring': ['Patience', 'Communication', 'Teaching skills'],
+      'eldercare': ['Empathy', 'Patience', 'Communication', 'Care skills'],
+      'childcare': ['Patience', 'Communication', 'Child safety awareness', 'Reliability'],
+      'homehelp': ['Attention to detail', 'Time management', 'Problem-solving'],
+      'wellness': ['Empathy', 'Active listening', 'Confidentiality'],
+      'tripcarry': ['Organization', 'Logistics', 'Communication', 'Reliability'],
+      'petcare': ['Dog handling', 'Patience', 'Physical fitness', 'Animal care'],
+      'delivery': ['Time management', 'Reliability', 'Attention to detail', 'Driving'],
+      'eventhelp': ['Organization', 'Creativity', 'Communication', 'Time management'],
+      'donate': ['Compassion', 'Organization', 'Communication'],
+      'localbiz': ['Business acumen', 'Problem-solving', 'Communication'],
     };
 
-    const skills = skillMap[category] || [];
+    const skills = skillMap[detectedCategory] || [];
 
     // Generate AI-suggested description (more detailed than title)
     const descriptionMap: Record<string, string> = {
-      'cleaning-laundry': `${title}. Please ensure all surfaces are thoroughly cleaned, dusted, and organized. Vacuum or sweep floors and dispose of trash properly.`,
-      'pet-care': `${title}. Please handle with care and ensure the pet is safe and comfortable. Provide fresh water and follow any special instructions.`,
-      'shopping-errands': `${title}. Please get exactly what is needed and keep receipts. Call if any items are unavailable.`,
-      'delivery-moving': `${title}. Please handle items carefully and deliver to the specified location. Take photos if required.`,
-      'childcare-tutoring': `${title}. Please follow the schedule and provide updates. Ensure the child's safety and well-being at all times.`,
+      'eldercare': `${title}. Provide compassionate support and companionship. Ensure comfort, safety, and well-being at all times. Follow any special instructions.`,
+      'childcare': `${title}. Ensure child's safety and well-being. Follow schedule and parent instructions. Provide updates and report any issues immediately.`,
+      'homehelp': `${title}. Complete the task professionally and thoroughly. Ensure all work meets quality standards. Communicate any issues that arise.`,
+      'wellness': `${title}. Provide supportive and confidential assistance. Follow best practices. Ensure comfort and respect at all times.`,
+      'tripcarry': `${title}. Ensure items are handled carefully and delivered safely. Follow customs requirements where applicable.`,
+      'petcare': `${title}. Handle with care and ensure pet safety and comfort. Provide fresh water and follow special instructions.`,
+      'delivery': `${title}. Handle items carefully and deliver to specified location. Take photos if required. Communicate arrival.`,
+      'eventhelp': `${title}. Complete setup/shopping/planning professionally. Follow instructions carefully. Ensure everything is ready on time.`,
+      'donate': `${title}. Handle with care and respect. Follow all guidelines. Ensure smooth and successful completion.`,
+      'localbiz': `${title}. Provide professional service to support local business operations. Ensure quality and reliability.`,
     };
 
-    const suggestedDescription = descriptionMap[category] || `${title}. Please complete the task professionally and communicate any issues.`;
+    const suggestedDescription = descriptionMap[detectedCategory] || `${title}. Please complete the task professionally and communicate any issues.`;
 
     // Generate task-specific notes (actionable, not duplicating info)
     const notesMap: Record<string, string> = {
-      'cleaning-laundry': 'Use provided cleaning supplies if available. Empty all trash bins.',
-      'pet-care': 'Check for any health concerns. Keep pet on leash in public areas.',
-      'shopping-errands': 'Purchase fresh items. Avoid expired products. Keep within budget.',
-      'delivery-moving': 'Take extra care with fragile items. Ring doorbell/call upon arrival.',
-      'childcare-tutoring': 'Engage child in learning activities. Report any issues immediately.',
+      'eldercare': 'Show respect and patience. Follow health protocols. Report any concerns.',
+      'childcare': 'Know emergency contacts. Prioritize safety. Engage positively.',
+      'homehelp': 'Use provided supplies if available. Clean as you work. Report any damage.',
+      'wellness': 'Maintain confidentiality. Be a good listener. Report concerns appropriately.',
+      'tripcarry': 'Check customs requirements. Keep items secure. Arrive on time.',
+      'petcare': 'Check for health concerns. Use leash in public. Keep pet calm.',
+      'delivery': 'Take care with items. Ring doorbell/call upon arrival. Update customer.',
+      'eventhelp': 'Follow host instructions precisely. Arrive early if needed. Communicate updates.',
+      'donate': 'Handle items with respect. Follow guidelines. Thank participants.',
+      'localbiz': 'Deliver quality work. Communicate professionally. Support business goals.',
     };
 
-    const notes = notesMap[category] || 'Please ensure quality work and communicate any concerns.';
+    const notes = notesMap[detectedCategory] || 'Please ensure quality work and communicate any concerns.';
 
     res.json({
       success: true,
       data: {
-        category,
+        category: detectedCategory,
         description: suggestedDescription,
         suggestedBudget: 50,
         notes,
