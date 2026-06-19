@@ -147,12 +147,59 @@ Current (Mock):
 ├─ Email verification (not yet implemented)
 ├─ Display name
 ├─ No photo requirement
+├─ Criminal screening declaration (IMPLEMENTED ✅)
+└─ Audit logged with timestamp & IP
 
 Future (SingPass Phase):
 ├─ NRIC verification (via SingPass)
 ├─ Phone verification
 ├─ Address verification
 ├─ Reduces fraud & fake accounts
+└─ Integrates with screening (automatic flags)
+```
+
+### Criminal Background Screening: ✅ IMPLEMENTED
+
+**Critical for Safety:**
+
+```
+Screened Upon Signup:
+├─ Children & Young Persons Act (CYPA) offences
+├─ Women's Charter (domestic violence/abuse)
+├─ Penal Code (outrage of modesty, rape, hurt, wrongful confinement)
+├─ Vulnerable Adults Act 2018 (elder/vulnerable abuse)
+└─ Dishonesty offences (cheating, criminal breach of trust)
+
+If User Declares Conviction:
+├─ AUTOMATIC RESTRICTION from sensitive categories:
+│  ├─ ❌ Childcare
+│  ├─ ❌ Elderly Care
+│  ├─ ❌ Home Access tasks
+│  ├─ ❌ Live-in Care
+│  ├─ ❌ Personal Assistant
+│  └─ (and similar vulnerable-person/home-access tasks)
+├─ ✅ Can still use other categories (delivery, shopping, errands)
+├─ ✅ Cannot SEE restricted tasks
+├─ ✅ Cannot POST restricted tasks
+├─ ✅ Cannot BID on restricted tasks
+└─ Full audit log kept for compliance
+
+Applies to BOTH Asker AND Doer:
+├─ Asker with conviction → Can't hire for sensitive tasks
+├─ Doer with conviction → Can't accept sensitive tasks
+└─ Both: Tasks simply hidden from view (no confusion)
+
+Transparency:
+├─ Users see which categories restricted & why
+├─ User can view their declaration anytime
+├─ Restricted message explains reason
+└─ Clear that other tasks remain available
+
+False Declaration:
+├─ Criminal offence (fraud, false statement)
+├─ Audit trail captures declaration
+├─ Admin can review & escalate
+└─ Strong deterrent
 ```
 
 #### Communication Safety:
