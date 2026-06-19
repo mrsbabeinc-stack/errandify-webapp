@@ -146,7 +146,7 @@ export default function ReviewPage() {
                   <p className="text-sm text-blue-800">
                     {rating <= 2 && 'Help the doer improve! Specific feedback about what went wrong is most helpful.'}
                     {rating === 3 && 'Let them know what you loved and what could be improved next time.'}
-                    {rating === 4 && 'Tell them what exceeded your expectations – they'll love to hear it!'}
+                    {rating === 4 && 'Tell them what exceeded your expectations – they\'ll love to hear it!'}
                   </p>
                 </div>
               </div>
