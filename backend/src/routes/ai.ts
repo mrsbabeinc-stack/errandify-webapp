@@ -459,14 +459,52 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const budgetMatch = input.match(/budget\s*\$?(\d+)/i);
     const budget = budgetMatch ? budgetMatch[1] : '';
 
-    // For now, just return the postal code as-is
-    // Frontend/user will need to verify and complete the address
-    let area = '';
-    let fullAddress = '';
+    // Use OneMap API to lookup address from postal code
+    let area = 'Singapore';
+    let fullAddress = `Singapore ${postalCode}`;
 
     if (postalCode) {
-      // Just return postal code - let user fill in area and address
-      fullAddress = `Singapore ${postalCode}`;
+      try {
+        // OneMap reverse geocoding: convert postal code to address
+        const oneMapResponse = await axios.get(
+          `https://www.onemap.sg/api/common/searchAddressFreetext`,
+          {
+            params: {
+              searchVal: postalCode,
+              returnGeom: 'N',
+              getAddrDetails: 'Y',
+              pageNum: 1,
+            },
+          }
+        );
+
+        if (oneMapResponse.data?.results && oneMapResponse.data.results.length > 0) {
+          const result = oneMapResponse.data.results[0];
+          fullAddress = result.ADDRESS || `Singapore ${postalCode}`;
+
+          // Extract area from address
+          // Format is usually: "STREET NUMBER STREET NAME, POSTAL CODE"
+          // We want to extract meaningful area/location from this
+          const parts = fullAddress.split(',');
+          if (parts.length > 0) {
+            // Try to extract area name from the first part (before comma)
+            const addressLine = parts[0].trim();
+            // Get everything after the first few words (street number and name)
+            const words = addressLine.split(' ');
+            if (words.length > 2) {
+              // Skip street number and take remaining as area
+              area = words.slice(1).join(' ') || 'Singapore';
+            } else {
+              area = 'Singapore';
+            }
+          }
+        }
+      } catch (error) {
+        console.error('OneMap API error:', error);
+        // Fallback to generic address
+        fullAddress = `Singapore ${postalCode}`;
+        area = 'Singapore';
+      }
     }
 
     res.json({
