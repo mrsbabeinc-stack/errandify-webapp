@@ -183,7 +183,11 @@ export default function AboutErrandifyPage() {
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span>Secure payment – money held until work is done to your satisfaction</span>
+                <span>Secure payment via Stripe – money held until work is done to your satisfaction</span>
+              </li>
+              <li className="flex gap-2">
+                <span>✓</span>
+                <span>Fair pricing – 20% platform fee supports the community and service quality</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
