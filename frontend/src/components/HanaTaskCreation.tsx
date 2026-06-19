@@ -66,8 +66,31 @@ export default function HanaTaskCreation({
     }
   }, [isOpen]);
 
+  const getExampleByCategory = (category: string) => {
+    const examples: Record<string, string> = {
+      'home-maintenance': 'Fix my leaky kitchen tap at 680433 on Saturday at 2pm, budget $80',
+      'cleaning-household': 'Clean my house at 680433 on Saturday for 2 hours at 2pm, budget $100',
+      'food-beverage': 'Prepare lunch for 4 people at 680433 on Sunday at 12pm, budget $60',
+      'furniture-assembly': 'Assemble IKEA bookshelf at my place (680433) on Saturday afternoon, budget $50',
+      'shopping-errands': 'Help me shopping at Takashimaya at 160 Orchard Road on Friday 3pm, budget $200',
+      'delivery-moving': 'Move my boxes from my office to home (680433) on Saturday morning, budget $150',
+      'travel-mobility': 'Drive me to Changi Airport from my home (680433) on Friday 5am, budget $40',
+      'event-planning': 'Help decorate my apartment for birthday party at 680433 on Saturday 5pm, budget $200',
+      'childcare-education': 'Tutor my son in Math at 680433 on weekday evenings, budget $30/hour',
+      'eldercare-healthcare': 'Help my mum with groceries and medical checkup at 680433 on Wednesday, budget $50',
+      'pet-care': 'Dog walk my golden retriever at 680433 daily for 30 mins, budget $20/day',
+      'personal-care': 'Hair cut at my place (680433) on Saturday afternoon, budget $40',
+      'tech-support': 'Fix my WiFi router at 680433 on Friday evening, budget $50',
+      'creative-arts': 'Design a logo for my business, deadline next Friday, budget $200',
+      'admin-business': 'Help with data entry for my small business, 10 hours total, budget $150',
+      'charity-community': 'Help pack donation boxes at community center on Sunday morning, budget $20',
+    };
+    return examples[category] || 'Describe your errand with location, date, time and budget';
+  };
+
   const initializeChat = () => {
-    setHanaMessage("Hi! What errand do you need help with?\n\nExample:\n'Clean my house at 680433 on Saturday for 2 hours at 2pm, budget $100'");
+    const example = getExampleByCategory(defaultCategory || '');
+    setHanaMessage(`Hi! What errand do you need help with?\n\nExample:\n'${example}'`);
     setCurrentStep('input');
     triggerSpeaking();
   };
