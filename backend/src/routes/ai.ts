@@ -459,16 +459,40 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const budgetMatch = input.match(/budget\s*\$?(\d+)/i);
     const budget = budgetMatch ? budgetMatch[1] : '';
 
-    // Build description as natural language
-    const description = `${title}${location ? ` at ${location}` : ''}${date ? ` on ${new Date(date).toLocaleDateString('en-SG')}` : ''}${time ? ` at ${time}` : ''}${duration ? ` for ${duration} hours` : ''}${budget ? ` - Budget: $${budget}` : ''}`;
+    // Map postal code to area (Singapore postal code prefixes)
+    const postalCodeAreas: Record<string, { area: string; building: string }> = {
+      '01': { area: 'Raffles', building: 'Raffles Place' },
+      '02': { area: 'Cecil', building: 'Cecil Street' },
+      '03': { area: 'Shenton', building: 'Shenton Way' },
+      '04': { area: 'Telok', building: 'Telok Ayer' },
+      '05': { area: 'Outram', building: 'Outram Park' },
+      '06': { area: 'Tiong Bahru', building: 'Tiong Bahru' },
+      '07': { area: 'Queenstown', building: 'Queenstown' },
+      '08': { area: 'Bukit Merah', building: 'Bukit Merah' },
+      '09': { area: 'Redhill', building: 'Redhill' },
+      '10': { area: 'Tanglin', building: 'Tanglin' },
+    };
+
+    let area = 'Singapore';
+    let building = 'Location';
+    if (postalCode && postalCode.length >= 2) {
+      const prefix = postalCode.substring(0, 2);
+      const areaData = postalCodeAreas[prefix];
+      if (areaData) {
+        area = areaData.area;
+        building = areaData.building;
+      }
+    }
+
+    const fullAddress = postalCode ? `${building}, Singapore ${postalCode}` : '';
 
     res.json({
       success: true,
       data: {
         title,
-        description,
-        location: location || '',
-        fullAddress: location || '',
+        description: '',
+        location: area,
+        fullAddress,
         date,
         time,
         duration,
@@ -520,14 +544,33 @@ router.post('/suggestions', async (req: Request, res: Response) => {
 
     const skills = skillMap[category] || [];
 
-    // Generate suggested notes
-    const notes = `Please ${title.toLowerCase()}. Ensure quality work and communicate if any issues arise.`;
+    // Generate AI-suggested description (more detailed than title)
+    const descriptionMap: Record<string, string> = {
+      'cleaning-laundry': `${title}. Please ensure all surfaces are thoroughly cleaned, dusted, and organized. Vacuum or sweep floors and dispose of trash properly.`,
+      'pet-care': `${title}. Please handle with care and ensure the pet is safe and comfortable. Provide fresh water and follow any special instructions.`,
+      'shopping-errands': `${title}. Please get exactly what is needed and keep receipts. Call if any items are unavailable.`,
+      'delivery-moving': `${title}. Please handle items carefully and deliver to the specified location. Take photos if required.`,
+      'childcare-tutoring': `${title}. Please follow the schedule and provide updates. Ensure the child's safety and well-being at all times.`,
+    };
+
+    const suggestedDescription = descriptionMap[category] || `${title}. Please complete the task professionally and communicate any issues.`;
+
+    // Generate task-specific notes (actionable, not duplicating info)
+    const notesMap: Record<string, string> = {
+      'cleaning-laundry': 'Use provided cleaning supplies if available. Empty all trash bins.',
+      'pet-care': 'Check for any health concerns. Keep pet on leash in public areas.',
+      'shopping-errands': 'Purchase fresh items. Avoid expired products. Keep within budget.',
+      'delivery-moving': 'Take extra care with fragile items. Ring doorbell/call upon arrival.',
+      'childcare-tutoring': 'Engage child in learning activities. Report any issues immediately.',
+    };
+
+    const notes = notesMap[category] || 'Please ensure quality work and communicate any concerns.';
 
     res.json({
       success: true,
       data: {
         category,
-        description: description || title,
+        description: suggestedDescription,
         suggestedBudget: 50,
         notes,
         skills,
