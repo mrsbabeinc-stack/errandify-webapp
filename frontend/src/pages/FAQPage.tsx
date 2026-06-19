@@ -156,6 +156,12 @@ export default function FAQPage() {
       answer: 'We verify identities, monitor suspicious activity, enforce ratings transparency, and have a clear cancellation/dispute process. Payment is held securely until work is confirmed complete.',
     },
     {
+      id: 's3',
+      category: 'safety',
+      question: 'What if I feel unsafe during an errand?',
+      answer: 'Your safety is priority. You can cancel anytime, leave early, or contact authorities if needed. Report concerns to our support team immediately at togather@errandify.ai for investigation and action.',
+    },
+    {
       id: 's4',
       category: 'safety',
       question: 'What if there's a misunderstanding or disagreement?',
