@@ -46,6 +46,7 @@ import RatingsHistoryPage from './pages/RatingsHistoryPage';
 import DisputesManagementPage from './pages/DisputesManagementPage';
 import AboutErrandifyPage from './pages/AboutErrandifyPage';
 import FAQPage from './pages/FAQPage';
+import BlogDetailPage from './pages/BlogDetailPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -226,6 +227,7 @@ export default function App() {
         <Route path="/about" element={<AboutErrandifyPage />} />
         <Route path="/faq" element={<FAQPage />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/blog/:slug" element={<BlogDetailPage />} />
 
         {/* Main dashboard layout */}
         <Route

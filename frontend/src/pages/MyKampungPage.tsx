@@ -752,14 +752,21 @@ export default function MyKampungPage() {
               </div>
             ) : (
               blogPosts.map((post) => (
-                <div key={post.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition">
-                  <h3 className="font-semibold text-gray-800 hover:text-errandify-orange">{post.title}</h3>
+                <div
+                  key={post.id}
+                  onClick={() => navigate(`/blog/${post.slug}`)}
+                  className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-lg transition cursor-pointer"
+                >
+                  <h3 className="font-semibold text-gray-800 hover:text-errandify-orange transition">{post.title}</h3>
                   <p className="text-sm text-gray-600 mt-1">{post.excerpt}</p>
 
                   <div className="flex items-center justify-between gap-2 mt-3 flex-wrap">
                     <div className="flex items-center gap-2 flex-wrap text-xs">
                       <span className={`font-semibold px-2 py-1 rounded-full ${getCategoryColor(post.category)}`}>
-                        {post.category.charAt(0).toUpperCase() + post.category.slice(1)}
+                        {post.category === 'guide' ? '📚 Guide' :
+                         post.category === 'stories' ? '📖 Story' :
+                         post.category === 'tips' ? '💡 Tips' :
+                         '📰 News'}
                       </span>
                       <span className="text-gray-500">By {post.author}</span>
                       <span className="text-gray-500">•</span>
@@ -768,7 +775,10 @@ export default function MyKampungPage() {
                       <span className="text-gray-500">{formatDate(post.createdAt)}</span>
                     </div>
                     <button
-                      onClick={() => handleLikeBlog(post.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLikeBlog(post.id);
+                      }}
                       className={`text-xs font-semibold px-3 py-1 rounded-lg transition ${
                         post.isLiked
                           ? 'bg-red-100 text-red-600'
