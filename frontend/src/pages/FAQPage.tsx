@@ -25,7 +25,7 @@ export default function FAQPage() {
       id: 'g2',
       category: 'general',
       question: 'How much does it cost to use Errandify?',
-      answer: 'Errandify is free to join and use. We believe in our community, so doers keep 100% of what they earn. Askers cover a 20% platform fee to help us maintain and improve the platform. For example, if an errand costs SGD $100, the asker pays SGD $120 total, and the doer receives the full SGD $100.',
+      answer: 'Errandify is free to join and use. We believe in supporting our doer community, so askers cover the platform fee. Doers receive exactly what they bid for – no deductions. Askers pay a 20% platform fee on top. For example: errand cost SGD $100 + SGD $20 fee = SGD $120 total for asker, and doer gets the full SGD $100.',
     },
     {
       id: 'g3',
@@ -127,7 +127,7 @@ export default function FAQPage() {
       id: 'p3',
       category: 'payment',
       question: 'Are there any fees?',
-      answer: 'Doers earn 100% of what they bid – no fees taken from you. Askers pay a 20% platform fee on top of the agreed errand cost. For example: errand cost SGD $100 + SGD $20 fee (20%) = SGD $120 total for asker. The doer receives the full SGD $100. This model respects our doer community and keeps the platform thriving.',
+      answer: 'Doers receive exactly what they bid – no commission taken from doers. Askers pay a 20% platform fee on top of the errand cost. Example: If you bid SGD $100, asker pays SGD $120 total ($100 to you + $20 fee). We designed this model to support our doer community fairly.',
     },
     {
       id: 'p4',
