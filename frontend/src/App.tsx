@@ -42,6 +42,9 @@ import DisputePage from './pages/DisputePage';
 import SearchBrowsePage from './pages/SearchBrowsePage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import RecurringSessionsPage from './pages/RecurringSessionsPage';
+import EmailNotificationSettingsPage from './pages/EmailNotificationSettingsPage';
+import RatingsHistoryPage from './pages/RatingsHistoryPage';
+import DisputesManagementPage from './pages/DisputesManagementPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -216,6 +219,9 @@ export default function App() {
         <Route path="/disputes" element={isAuthenticated ? <DisputePage /> : <Navigate to="/login" replace />} />
         <Route path="/search" element={isAuthenticated ? <SearchBrowsePage /> : <Navigate to="/login" replace />} />
         <Route path="/recurring-sessions" element={isAuthenticated ? <RecurringSessionsPage /> : <Navigate to="/login" replace />} />
+        <Route path="/email-notifications" element={isAuthenticated ? <EmailNotificationSettingsPage /> : <Navigate to="/login" replace />} />
+        <Route path="/ratings" element={isAuthenticated ? <RatingsHistoryPage /> : <Navigate to="/login" replace />} />
+        <Route path="/disputes-management" element={isAuthenticated ? <DisputesManagementPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin" element={isAuthenticated ? <AdminDashboardPage /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout */}
