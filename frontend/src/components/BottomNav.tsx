@@ -51,7 +51,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-errandify-bg border-t border-gray-200 shadow-lg">
+    <nav className="fixed bottom-0 left-0 right-0 bg-errandify-bg border-t border-gray-200 shadow-lg z-40">
       <div className="flex justify-between items-center h-16 px-2 relative">
         {/* Left Items */}
         <div className="flex justify-center gap-3 flex-1">
