@@ -361,4 +361,135 @@ router.post('/task/:taskId/cancel', authMiddleware, async (req: AuthRequest, res
   }
 });
 
+// POST /api/bids/recurring-sessions - Accept specific sessions of recurring errand
+router.post('/recurring-sessions', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const doerId = parseInt(req.userId || '0', 10);
+    const { errandId, selectedSessionIds } = req.body;
+
+    if (!errandId || !Array.isArray(selectedSessionIds) || selectedSessionIds.length === 0) {
+      return res.status(400).json({ error: 'errandId and selectedSessionIds required' });
+    }
+
+    // Check if errand exists and is recurring
+    const errandResult = await db.query(
+      'SELECT id, is_recurring, asker_id FROM errands WHERE id = $1',
+      [errandId]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+    if (!errand.is_recurring) {
+      return res.status(400).json({ error: 'This is not a recurring errand' });
+    }
+
+    // Get all sessions for this errand
+    const sessionsResult = await db.query(
+      'SELECT id, session_number, start_date FROM errand_sessions WHERE errand_id = $1 ORDER BY session_number',
+      [errandId]
+    );
+
+    const allSessions = sessionsResult.rows;
+
+    // Validate selected session IDs exist for this errand
+    const validSessionIds = new Set(allSessions.map((s) => s.id));
+    for (const sessionId of selectedSessionIds) {
+      if (!validSessionIds.has(sessionId)) {
+        return res.status(400).json({ error: 'Invalid session ID for this errand' });
+      }
+    }
+
+    // Create assignments for selected sessions
+    const assignments = [];
+    for (const sessionId of selectedSessionIds) {
+      const assignmentResult = await db.query(
+        `INSERT INTO errand_assignments (errand_id, doer_id, session_id, status, is_partial_recurring, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+         RETURNING id, session_id, status`,
+        [errandId, doerId, sessionId, 'accepted', true]
+      );
+      assignments.push(assignmentResult.rows[0]);
+    }
+
+    // Get session details for response
+    const sessionDetails = allSessions.filter((s) => selectedSessionIds.includes(s.id));
+
+    res.status(201).json({
+      success: true,
+      data: {
+        errandId,
+        doerId,
+        totalSessions: allSessions.length,
+        acceptedSessions: selectedSessionIds.length,
+        assignments: assignments,
+        sessionDetails: sessionDetails.map((s) => ({
+          id: s.id,
+          sessionNumber: s.session_number,
+          startDate: s.start_date,
+        })),
+        message: `Accepted ${selectedSessionIds.length} of ${allSessions.length} sessions`,
+      },
+    });
+  } catch (error) {
+    console.error('Recurring sessions bid error:', error);
+    res.status(500).json({ error: 'Failed to accept recurring errand sessions' });
+  }
+});
+
+// GET /api/bids/recurring/:errandId - Get recurring errand sessions for selection
+router.get('/recurring/:errandId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { errandId } = req.params;
+
+    // Check if errand exists and is recurring
+    const errandResult = await db.query(
+      'SELECT id, title, is_recurring, budget, category FROM errands WHERE id = $1',
+      [errandId]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+    if (!errand.is_recurring) {
+      return res.status(400).json({ error: 'This is not a recurring errand' });
+    }
+
+    // Get all sessions
+    const sessionsResult = await db.query(
+      'SELECT id, session_number, start_date, deadline, status FROM errand_sessions WHERE errand_id = $1 ORDER BY session_number',
+      [errandId]
+    );
+
+    const sessions = sessionsResult.rows;
+
+    res.json({
+      success: true,
+      data: {
+        errand: {
+          id: errand.id,
+          title: errand.title,
+          category: errand.category,
+          budget: errand.budget,
+          totalSessions: sessions.length,
+        },
+        sessions: sessions.map((s) => ({
+          id: s.id,
+          sessionNumber: s.session_number,
+          startDate: s.start_date,
+          deadline: s.deadline,
+          status: s.status,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error('Get recurring errand error:', error);
+    res.status(500).json({ error: 'Failed to get recurring errand details' });
+  }
+});
+
 export default router;
