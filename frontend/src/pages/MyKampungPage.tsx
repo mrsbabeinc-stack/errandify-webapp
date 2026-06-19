@@ -14,6 +14,13 @@ interface CommunityPost {
   comments: number;
   createdAt: string;
   isLiked: boolean;
+  moderationStatus?: {
+    flagged: boolean;
+    category?: string;
+    confidence?: number;
+  };
+  deletedAt?: string;
+  deletedBy?: string;
 }
 
 interface Discussion {
@@ -72,6 +79,10 @@ export default function MyKampungPage() {
   const [newPostText, setNewPostText] = useState('');
   const [moderationMessage, setModerationMessage] = useState<string>('');
   const [isCheckingModeration, setIsCheckingModeration] = useState(false);
+
+  // Check if user is admin
+  const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     fetchCommunityData();
@@ -365,6 +376,32 @@ export default function MyKampungPage() {
     ));
   };
 
+  const handleDeletePost = async (postId: number, postAuthor: string, moderationReason?: string) => {
+    if (!isAdmin) return;
+
+    const reason = moderationReason || 'Manual deletion by admin';
+    const confirmed = confirm(`Delete post by ${postAuthor}?\n\nReason: ${reason}`);
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/moderation/posts/${postId}`,
+        {
+          data: { reason },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Remove from feed
+      setPosts(posts.filter(p => p.id !== postId));
+      console.log('[Admin] Post deleted:', postId);
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      alert('Could not delete post. Please try again.');
+    }
+  };
+
   const handleLikeBlog = (postId: number) => {
     setBlogPosts(blogPosts.map(p =>
       p.id === postId ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 } : p
@@ -569,6 +606,17 @@ export default function MyKampungPage() {
                     </div>
                   </div>
 
+                  {post.moderationStatus?.flagged && (
+                    <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-xs text-amber-700">
+                        ⚠️ <span className="font-semibold">{post.moderationStatus.category}</span>
+                        {post.moderationStatus.confidence && (
+                          <span> ({(post.moderationStatus.confidence * 100).toFixed(0)}% confidence)</span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+
                   <p className="text-sm text-gray-700 mb-4">{post.content}</p>
 
                   <div className="flex items-center gap-4 text-xs text-gray-600 border-t border-gray-100 pt-3">
@@ -588,6 +636,21 @@ export default function MyKampungPage() {
                     <button className="flex items-center gap-1 hover:text-gray-800 font-medium transition ml-auto">
                       📤 Share
                     </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleDeletePost(
+                          post.id,
+                          post.author,
+                          post.moderationStatus?.flagged
+                            ? `Qwen flagged: ${post.moderationStatus.category}`
+                            : undefined
+                        )}
+                        className="flex items-center gap-1 text-red-600 hover:text-red-800 font-medium transition"
+                        title="Delete post (admin only)"
+                      >
+                        🗑️ Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               ))
