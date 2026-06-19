@@ -10,7 +10,7 @@ interface FAQItem {
 
 export default function FAQPage() {
   const navigate = useNavigate();
-  const [activeCategory, setActiveCategory] = useState<'all' | 'general' | 'asker' | 'doer' | 'payment' | 'safety'>('all');
+  const [activeCategory, setActiveCategory] = useState<'all' | 'general' | 'asker' | 'doer' | 'payment' | 'safety' | 'conduct'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const faqs: FAQItem[] = [
