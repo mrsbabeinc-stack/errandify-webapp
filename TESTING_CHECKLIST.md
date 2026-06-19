@@ -1,338 +1,563 @@
-# 🧪 Errandify Testing Checklist
-**Purpose**: Validate all core features before integrating SingPass & Stripe  
-**Duration**: 60-90 minutes  
-**Mode**: Demo accounts (sarah/john), dummy payments
+# 🧪 ERRANDIFY MVP - COMPREHENSIVE TESTING CHECKLIST
+
+## ✅ PRE-TESTING REQUIREMENTS
+
+Before testing, ensure:
+- [ ] Backend server is running on port 3000
+- [ ] Frontend is running on localhost:5173
+- [ ] You can log in (use any mock credentials)
+- [ ] Browser console is open (F12) to catch errors
 
 ---
 
-## Setup (5 minutes)
+## 📱 **PHASE 1: NAVIGATION & BASIC UI** 
+### (No Backend Required - All Mock Data)
 
-### Start Services
-```bash
-# Terminal 1: Backend
-cd backend && npm run dev
-# Expected: "Server running on http://localhost:3000"
+### 1. Landing & Login Page
+- [ ] Navigate to `/` - Landing page loads
+- [ ] Click "Get Started" → Goes to `/login`
+- [ ] Login form displays correctly
+- [ ] Use mock credentials (any email/password) → Should log in
+- [ ] Redirect to `/home` after login ✅
 
-# Terminal 2: Frontend
-cd frontend && npm run dev
-# Expected: "VITE v4.x.x ready in Xs"
-# Open: http://localhost:5173
+### 2. Bottom Navigation
+- [ ] 🏠 Home icon visible
+- [ ] 📋 MyErrands icon visible
+- [ ] ➕ Plus button (for askers) visible
+- [ ] 🏘️ MyVillage icon visible
+- [ ] 💬 Chat icon visible
+- [ ] 💰 MyPocket icon visible
+- [ ] 👤 MyAccount icon visible
+- [ ] All buttons are clickable
+- [ ] Active state highlights correctly (orange)
+
+### 3. HomePage Dashboard
+- [ ] Page loads with "Welcome back!"
+- [ ] Role-specific greeting shows
+- [ ] Quick action buttons visible
+  - [ ] "Post Errand" (for askers)
+  - [ ] "Browse Errands" (for doers)
+- [ ] 16 Category grid displays
+- [ ] Categories organized in 4 groups:
+  - [ ] 🏠 Home & Household
+  - [ ] 🚚 Errands & Logistics
+  - [ ] ❤️ Care & Wellbeing
+  - [ ] 💡 Skills & Services
+- [ ] Hover on category → Tooltip appears with description
+- [ ] Click category → Navigates to appropriate page
+
+---
+
+## 💼 **PHASE 2: MY POCKET (Wallet)**
+### (Uses Mock Data)
+
+### 1. Page Load
+- [ ] Navigate to `/wallet` or `/my-pocket`
+- [ ] Page loads with "MyPocket" title
+- [ ] No console errors
+
+### 2. Main Balance Card
+- [ ] Large balance display (SGD format)
+- [ ] "Payout Settings" button visible
+- [ ] "Pending: SGD $150" badge shows (if pending)
+
+### 3. Stats Grid
+- [ ] Total Earned stat card shows
+- [ ] Total Spent stat card shows
+- [ ] Errandify Points card shows (⭐ 325 EP)
+- [ ] All amounts formatted as SGD
+- [ ] Colors are distinct (green/blue/orange)
+
+### 4. Quick Actions
+- [ ] "Redeem Rewards" button works
+- [ ] "Points History" button works
+- [ ] "Transaction History" button works
+- [ ] Clicking navigates to appropriate pages
+
+### 5. Recent Activity
+- [ ] Transaction list displays
+- [ ] Each transaction shows:
+  - [ ] Description (e.g., "Completed: Clean apartment")
+  - [ ] Amount (with +/- sign)
+  - [ ] Date
+  - [ ] "View Task" link (clickable)
+- [ ] Color coding:
+  - [ ] Green for earnings (+)
+  - [ ] Blue for refunds
+  - [ ] Gray for spending (-)
+
+### 6. Mobile Responsiveness
+- [ ] Shrink browser to 375px width
+- [ ] Layout still looks good
+- [ ] No horizontal scrolling
+- [ ] Buttons are touch-friendly (44px+ height)
+
+---
+
+## 🏘️ **PHASE 3: MY VILLAGE (Community)**
+### (Uses Mock Data)
+
+### 1. Page Load
+- [ ] Navigate to `/my-village`
+- [ ] Page loads with "MyVillage" title
+- [ ] No console errors
+
+### 2. Tabs Navigation
+- [ ] "❤️ Trusted" tab visible
+- [ ] "🚫 Blocked" tab visible
+- [ ] Default shows Trusted users
+- [ ] Clicking Blocked tab switches view
+
+### 3. Trusted Users Tab
+- [ ] Shows list of trusted users
+- [ ] Each user card displays:
+  - [ ] Avatar (initials in circle)
+  - [ ] Name
+  - [ ] Role badge (👷 Doer / 📝 Asker)
+  - [ ] ⭐ Rating
+  - [ ] Number of completed tasks
+  - [ ] Remove button
+  - [ ] Block button
+- [ ] Remove button is clickable
+- [ ] Block button is clickable
+
+### 4. Blocked Users Tab
+- [ ] Switch to Blocked tab
+- [ ] Shows blocked users (if any)
+- [ ] Each card has Unblock button
+- [ ] Unblock button is clickable
+
+### 5. Referral Section
+- [ ] Referral section visible at bottom
+- [ ] "🎁 Invite & Earn" header shows
+- [ ] "Share Referral Code" button visible
+- [ ] Clicking goes to `/referral` page
+
+### 6. Empty States
+- [ ] When no data, shows appropriate message
+- [ ] Empty state is user-friendly
+
+---
+
+## 🔄 **PHASE 4: RECURRING SESSIONS**
+### (Uses Mock Data)
+
+### 1. Page Load
+- [ ] Navigate to `/recurring-sessions`
+- [ ] Page loads with "🔄 Recurring Sessions" title
+- [ ] No console errors
+
+### 2. Filter Tabs
+- [ ] "All" tab visible (shows count)
+- [ ] "⏳ Pending" tab visible (shows count)
+- [ ] "✅ Completed" tab visible (shows count)
+- [ ] Default shows All
+- [ ] Clicking tabs filters correctly
+
+### 3. Session Cards
+- [ ] Each session shows:
+  - [ ] Task title (e.g., "Water Plants")
+  - [ ] Date (formatted, e.g., "Tue, Jun 20")
+  - [ ] Doer name (if assigned)
+  - [ ] Status badge (colored: yellow/blue/green)
+  - [ ] Progress bar (visual indicator)
+  - [ ] Budget amount (SGD format)
+- [ ] Status badges:
+  - [ ] ⏳ Pending (yellow)
+  - [ ] 👤 Assigned (blue)
+  - [ ] ✅ Done (green)
+
+### 4. Session Actions
+- [ ] Pending sessions have "Mark Done" button
+- [ ] Pending sessions have "Skip" button
+- [ ] Buttons are clickable
+- [ ] Completed sessions don't have action buttons
+
+### 5. Progress Bars
+- [ ] Progress bars show correctly
+- [ ] Pending sessions: 0% (empty)
+- [ ] Completed sessions: 100% (full)
+
+---
+
+## 📧 **PHASE 5: EMAIL NOTIFICATIONS**
+### (No Backend Required - Settings Only)
+
+### 1. Page Load
+- [ ] Navigate to `/email-notifications`
+- [ ] Page loads with "📧 Email Notifications" title
+- [ ] No console errors
+
+### 2. Master Toggle
+- [ ] Toggle switch visible
+- [ ] Toggle switches on/off
+- [ ] When OFF, other options disable
+- [ ] When ON, options become available
+
+### 3. Digest Frequency (when enabled)
+- [ ] Radio buttons for:
+  - [ ] ⚡ Immediate
+  - [ ] 📅 Daily Digest
+  - [ ] 📆 Weekly Digest
+- [ ] Can select different options
+- [ ] Selection shows correctly
+
+### 4. Notification Tiers
+- [ ] 🔴 Critical section shows (red background)
+  - [ ] Bid Accepted
+  - [ ] Payment Released
+  - [ ] Dispute Opened
+  - [ ] All marked "Always"
+- [ ] 🟡 Important section shows (yellow background)
+  - [ ] Task Completed
+  - [ ] New Bid Received
+  - [ ] Review Received
+  - [ ] Task Cancelled
+  - [ ] Toggle switches work
+- [ ] 🟢 Optional section shows (green background)
+  - [ ] Message Received
+  - [ ] Toggle switch works
+
+### 5. Save Button
+- [ ] "💾 Save Settings" button visible
+- [ ] Clicking shows "Saving..." state
+- [ ] Success message appears ("✅ Preferences saved!")
+- [ ] Message disappears after 3 seconds
+
+### 6. Mobile Responsiveness
+- [ ] Shrink to 375px width
+- [ ] Layout still works
+- [ ] Toggles are touch-friendly
+
+---
+
+## ⭐ **PHASE 6: RATINGS & REVIEWS**
+### (Uses Mock Data)
+
+### 1. Page Load
+- [ ] Navigate to `/ratings`
+- [ ] Page loads with "⭐ Ratings & Reviews" title
+- [ ] No console errors
+
+### 2. Rating Summary (when viewing received)
+- [ ] Large star rating displays (4.8)
+- [ ] Star visualization shows (visual stars)
+- [ ] Total reviews count shows (24 reviews)
+- [ ] Distribution bars show:
+  - [ ] 5⭐ bar (longest)
+  - [ ] 4⭐ bar
+  - [ ] 3⭐ bar (shortest)
+  - [ ] 2⭐ bar
+  - [ ] 1⭐ bar
+- [ ] Numbers show correctly for each bar
+
+### 3. Tabs Navigation
+- [ ] "📥 Received" tab visible (with count)
+- [ ] "📤 Given" tab visible (with count)
+- [ ] Default shows Received
+- [ ] Clicking Given tab switches view
+- [ ] Summary disappears when viewing Given
+
+### 4. Rating Cards
+- [ ] Each rating shows:
+  - [ ] Task title
+  - [ ] Rater name
+  - [ ] Star rating (visual stars)
+  - [ ] Review text/comment
+  - [ ] Date posted
+- [ ] Stars are correct (5 stars = 5 filled)
+- [ ] Dates are formatted (e.g., "6/19/2026")
+
+### 5. Empty States
+- [ ] When switching tabs with no data, shows message
+- [ ] Message is appropriate for the view
+
+---
+
+## ⚖️ **PHASE 7: DISPUTES & CANCELLATION**
+### (Uses Mock Data)
+
+### 1. Page Load
+- [ ] Navigate to `/disputes-management`
+- [ ] Page loads with "⚖️ Disputes & Cancellations" title
+- [ ] No console errors
+
+### 2. Action Buttons
+- [ ] "🚨 Raise Dispute" button visible
+- [ ] Button is clickable
+
+### 3. Filter Tabs
+- [ ] "All" tab visible
+- [ ] "🔴 Open" tab visible
+- [ ] "✅ Resolved" tab visible
+- [ ] Default shows All
+- [ ] Clicking tabs filters correctly
+
+### 4. Dispute Cards
+- [ ] Each dispute shows:
+  - [ ] Task title
+  - [ ] Who raised it
+  - [ ] Status badge (color-coded)
+  - [ ] Reason description
+  - [ ] Creation date
+  - [ ] Evidence file count (if any)
+- [ ] Status badges:
+  - [ ] 🔴 Open (red)
+  - [ ] ⏳ Pending (yellow)
+  - [ ] ✅ Resolved (green)
+  - [ ] 🔵 Appeal (blue)
+
+### 5. Resolution Details
+- [ ] Resolved disputes show resolution text
+- [ ] Green background for resolution box
+- [ ] Text shows details (e.g., "Refund SGD $150")
+
+### 6. Actions
+- [ ] Open disputes have "View & Update" button
+- [ ] Button is clickable
+- [ ] Resolved disputes don't have action button
+
+---
+
+## 🎨 **PHASE 8: 16-CATEGORY SYSTEM**
+### (From HomePage)
+
+### 1. Category Grid Display
+- [ ] All 4 category groups visible:
+  - [ ] 🏠 Home & Household
+  - [ ] 🚚 Errands & Logistics
+  - [ ] ❤️ Care & Wellbeing
+  - [ ] 💡 Skills & Services
+- [ ] Each group has 4 categories
+- [ ] Total 16 categories visible
+
+### 2. Category Cards
+- [ ] Each category shows:
+  - [ ] Large emoji icon
+  - [ ] Category name
+  - [ ] Proper styling with gradient background
+  - [ ] Distinct color per category
+
+### 3. Hover Tooltips
+- [ ] Hover on category → Tooltip appears
+- [ ] Tooltip shows:
+  - [ ] Dark background (gray-800)
+  - [ ] White text
+  - [ ] Category purpose description
+  - [ ] Arrow pointing to button
+- [ ] Tooltip is positioned correctly above button
+- [ ] Tooltip disappears when moving away
+
+### 4. Click Navigation
+- [ ] Click on category → Navigates appropriately
+- [ ] Askers go to create-errand?category=XXX
+- [ ] Doers go to browse?category=XXX
+
+### 5. Responsive Grid
+- [ ] Desktop (1200px+): 4 columns
+- [ ] Tablet (768px): 2-4 columns
+- [ ] Mobile (375px): 2 columns
+- [ ] Layout looks good at all sizes
+
+---
+
+## 🤖 **PHASE 9: HANA FLOATING BUTTON**
+
+### 1. Button Visibility
+- [ ] Navigate to any page
+- [ ] Floating button visible at bottom-right
+- [ ] Button is positioned correctly (not hidden)
+- [ ] Button is above BottomNav (z-index correct)
+
+### 2. Button Appearance
+- [ ] Shows Hana avatar image
+- [ ] Circular shape
+- [ ] Border visible
+- [ ] Orange color scheme
+- [ ] Size looks right (56px)
+
+### 3. Button Interaction
+- [ ] Hover → Button scales up slightly
+- [ ] Click → Opens Hana chat modal
+- [ ] Modal appears at correct position
+- [ ] Modal is visible and readable
+
+### 4. Modal Features
+- [ ] Hana header shows with avatar
+- [ ] Language selector (English, Mandarin, Cantonese)
+- [ ] Message display area
+- [ ] Input field for text
+- [ ] Close button (X)
+- [ ] Minimize button (−)
+- [ ] Speaker toggle (🔊/🔇)
+
+---
+
+## 📋 **PHASE 10: HANA COPY ERRAND**
+
+### 1. Access Copy Feature
+- [ ] Navigate to `/errands` (My Errands)
+- [ ] Errands list displays
+- [ ] Each errand shows:
+  - [ ] "View Details" button (orange)
+  - [ ] "📋 Copy" button (blue) - **for askers only**
+
+### 2. Copy Functionality
+- [ ] Click Copy button on an errand
+- [ ] Redirects to `/create-errand`
+- [ ] Form is pre-filled with:
+  - [ ] Title from copied task
+  - [ ] Description from copied task
+  - [ ] Category from copied task
+  - [ ] Budget from copied task
+  - [ ] Other fields from copied task
+- [ ] All fields are editable
+- [ ] User can modify before posting
+
+### 3. Form Submission
+- [ ] User can edit any field
+- [ ] Can change title, budget, category, etc.
+- [ ] Can submit to create new task
+- [ ] New task should be created successfully
+
+---
+
+## 🔍 **CRITICAL CHECKS: Console Errors**
+
+### 1. Open Browser Console (F12)
+- [ ] No red error messages
+- [ ] No "TypeError" messages
+- [ ] No "Cannot read properties" errors
+- [ ] No "404" resource errors
+- [ ] No CORS errors (unless expected)
+
+### 2. Network Tab
+- [ ] HTML loads (200 status)
+- [ ] CSS loads (200 status)
+- [ ] JavaScript bundles load (200 status)
+- [ ] Images load (200 status)
+- [ ] No 404s for critical resources
+
+### 3. Warnings (Yellow)
+- [ ] React warnings about props (acceptable)
+- [ ] Deprecation warnings (acceptable)
+- [ ] Security warnings (check if serious)
+
+---
+
+## 📱 **RESPONSIVE DESIGN CHECKS**
+
+### Mobile (375px width):
+- [ ] All text readable
+- [ ] No horizontal scrolling
+- [ ] Buttons are 44px+ tall
+- [ ] Spacing is appropriate
+- [ ] Forms are usable
+
+### Tablet (768px width):
+- [ ] Layout looks balanced
+- [ ] No wasted space
+- [ ] Components arranged well
+- [ ] Touch-friendly
+
+### Desktop (1200px width):
+- [ ] Content doesn't stretch too wide
+- [ ] Sidebar/main layout clear
+- [ ] White space balanced
+- [ ] Professional appearance
+
+---
+
+## 🔐 **AUTHENTICATION CHECKS**
+
+### 1. Login Flow
+- [ ] Can log in with any credentials (mock)
+- [ ] Token stored in localStorage
+- [ ] Redirects to `/home` after login
+- [ ] Session persists on page reload
+
+### 2. Protected Routes
+- [ ] Can't access `/my-pocket` without login
+- [ ] Can't access `/my-village` without login
+- [ ] Can't access `/errands` without login
+- [ ] Redirects to `/login` when unauthorized
+
+### 3. Logout
+- [ ] Profile page has Logout button
+- [ ] Clicking logs out
+- [ ] Token cleared from localStorage
+- [ ] Redirects to `/login`
+
+---
+
+## ⚠️ **KNOWN LIMITATIONS (Won't Work Yet)**
+
+These features require backend/external services:
+
+- [ ] ❌ SingPass integration (will come next)
+- [ ] ❌ Stripe payments (will come next)
+- [ ] ❌ Email sending (needs email service)
+- [ ] ❌ Push notifications (needs service worker)
+- [ ] ❌ Database persistence (mock data only)
+- [ ] ❌ Criminal screening verification
+- [ ] ❌ Qwen AI responses (if enabled)
+- [ ] ❌ Real file uploads (would go to AWS S3)
+
+---
+
+## 📊 **TESTING SUMMARY TEMPLATE**
+
+When you finish testing, fill in:
+
+```
+ERRANDIFY MVP TESTING REPORT
+═════════════════════════════
+
+Date Tested: ___________
+Tester: __________________
+
+PHASE 1 - Navigation: ☐ PASS ☐ FAIL
+PHASE 2 - MyPocket: ☐ PASS ☐ FAIL
+PHASE 3 - MyVillage: ☐ PASS ☐ FAIL
+PHASE 4 - Sessions: ☐ PASS ☐ FAIL
+PHASE 5 - Email Settings: ☐ PASS ☐ FAIL
+PHASE 6 - Ratings: ☐ PASS ☐ FAIL
+PHASE 7 - Disputes: ☐ PASS ☐ FAIL
+PHASE 8 - Categories: ☐ PASS ☐ FAIL
+PHASE 9 - Hana Button: ☐ PASS ☐ FAIL
+PHASE 10 - Copy Errand: ☐ PASS ☐ FAIL
+
+CONSOLE ERRORS: ☐ NONE ☐ MINOR ☐ CRITICAL
+RESPONSIVE: ☐ EXCELLENT ☐ GOOD ☐ NEEDS WORK
+
+Issues Found:
+1. ___________________________________________
+2. ___________________________________________
+3. ___________________________________________
+
+Overall Status: ___% Complete
 ```
 
-### Demo Accounts
-- **Asker**: Email: `sarah@example.com` (or use demo-login button)
-- **Doer**: Email: `john@example.com` (or use demo-login button)
-- **Password**: Any (demo mode doesn't validate)
+---
+
+## 🚀 **IF EVERYTHING PASSES**
+
+You're ready for:
+✅ User testing
+✅ Demo to stakeholders
+✅ Backend integration
+✅ Real data connectivity
 
 ---
 
-## Test Modules
+## ❌ **IF YOU FIND BUGS**
 
-### ✅ Module 1: Authentication (5 min)
+Please note:
+1. Which phase/feature
+2. What you did
+3. What you expected
+4. What happened instead
+5. Console error (if any)
 
-**Scenario A: Demo Login**
-- [ ] Click "Demo: Login as Asker" → see Dashboard
-- [ ] Verify bottom nav shows: Home, MyErrands, MyVillage, Chat, Profile
-- [ ] Click Profile → can edit info
-- [ ] Click Logout → back to Landing page
+Then I can fix immediately!
 
-**Scenario B: Manual Signup**
-- [ ] Go to Login → "Don't have account? Sign up"
-- [ ] Fill: Name, Email, Mobile, Address
-- [ ] Choose Role: Asker
-- [ ] Submit → should see "Account created" message
-- [ ] Auto-login to Dashboard
-
-**Expected**: Both flows work, user data persists in localStorage
-
----
-
-### ✅ Module 2: Profile Management (5 min)
-
-**Scenario: Edit Profile**
-- [ ] Go to Profile → "My Profile"
-- [ ] Edit: Name, Bio, Avatar
-- [ ] Click Save → shows "Profile updated"
-- [ ] Refresh page → changes persist
-- [ ] Check CHAS Card section exists (can select Blue/Green/None)
-
-**Expected**: All fields save and persist across page reloads
-
----
-
-### ✅ Module 3: Errand Creation (10 min)
-
-**Scenario A: AI-Assisted Creation (Hana)**
-- [ ] Click floating Hana icon (bottom-right)
-- [ ] Say/type: "I need someone to walk my dog every morning"
-- [ ] Hana responds and suggests category
-- [ ] Follow Hana's questions (location, date, budget)
-- [ ] Review suggested task
-- [ ] Click "Post" → redirects to CreateErrandPage with prefilled data
-- [ ] Verify all fields auto-filled (title, description, category, budget)
-- [ ] Click "Post Errand" → shows success message
-
-**Scenario B: Manual Form**
-- [ ] Go to Home → Click "+" button OR go to `/create-errand`
-- [ ] Fill: Title, Description, Category, Location, Budget ($25-150), Deadline
-- [ ] Click "Post Errand" → success message, redirects to MyErrands
-- [ ] Verify errand appears in list with status "Open"
-
-**Expected**: Both paths work, errand appears in doer's browse list
-
----
-
-### ✅ Module 4: Errand Browsing (5 min)
-
-**Scenario: Doer Browse**
-- [ ] Login as Doer (john)
-- [ ] Click "Browse ToHelp" or go to `/browse`
-- [ ] See list of open errands (from Module 3)
-- [ ] Each errand card shows: Title, Budget, Location (masked), Status
-- [ ] Click errand → see full details + "Submit a Bid" button
-
-**Expected**: All errands visible, details accurate
-
----
-
-### ✅ Module 5: Bidding System (10 min)
-
-**Scenario A: Submit Bid (Doer)**
-- [ ] From errand detail, click "Submit a Bid"
-- [ ] Modal opens: Amount field (pre-filled with budget), Note field
-- [ ] Edit amount (e.g., $20 instead of $25)
-- [ ] Add note: "I can do this today!"
-- [ ] Click "Submit Bid" → success message
-
-**Scenario B: View & Accept Bid (Asker)**
-- [ ] Login as Asker (sarah)
-- [ ] Go to MyErrands → click the errand you posted
-- [ ] Scroll down → see "Bids" section
-- [ ] See doer's bid: Amount, Note, Status "Pending"
-- [ ] Click "Accept" → shows "Bid accepted! Payment created"
-- [ ] Errand status changes to "Confirmed"
-- [ ] Notice: "Chat with Doer" button now appears
-
-**Scenario C: Check Notification**
-- [ ] Check notification icon (🔊 at top)
-- [ ] Should show badge with count
-- [ ] Click → see notification: "💰 New Bid - John bid $20 on your task!"
-- [ ] Click notification → marks as read
-
-**Expected**: 
-- Bid submits successfully
-- Asker sees real-time bid updates (polls every 3s)
-- Acceptance works
-- Notification system working
-
----
-
-### ✅ Module 6: Chat System (10 min)
-
-**Scenario A: Open Chat from Errand**
-- [ ] On confirmed errand detail (Asker or Doer view)
-- [ ] Click "Chat with Doer" or "Chat with Asker"
-- [ ] TaskChatbox slides up from bottom
-- [ ] See two tabs: "Team Chat" & "Ask Hana"
-
-**Scenario B: Send Messages**
-- [ ] Type message: "When can you start?"
-- [ ] Click Send → message appears with your avatar
-- [ ] Switch to other account (login as other user)
-- [ ] Go to same errand → open chat
-- [ ] Should see your previous message
-- [ ] Type reply: "I can start tomorrow!"
-- [ ] First account should see reply (may take 2-3 sec to poll)
-
-**Scenario C: Chat Tab on BottomNav**
-- [ ] Click "Chat" in bottom nav
-- [ ] See list of all active conversations (confirmed errands)
-- [ ] Each shows: Errand title, Other party name, Status badge
-- [ ] Click "Open Chat" → TaskChatbox opens
-
-**Expected**: 
-- Messages persist
-- Real-time polling works (2s updates)
-- Chat tab shows all active tasks
-
----
-
-### ✅ Module 7: Job Execution (10 min)
-
-**Scenario: Mark as Completed**
-- [ ] Login as Doer
-- [ ] Go to MyErrands → open confirmed errand
-- [ ] Look for "Job Execution" section
-- [ ] Click "Start Job" (captures current status)
-- [ ] Do some "work" (wait 10 seconds)
-- [ ] Click "End Job & Upload Proof" 
-- [ ] Upload photo (select any image from device)
-- [ ] Click "Complete" → status changes to "Completed"
-
-**Expected**: Job status changes, proof uploads (test locally with dummy file)
-
----
-
-### ✅ Module 8: Reviews & Ratings (10 min)
-
-**Scenario: Submit Review**
-- [ ] Login as Asker
-- [ ] Go to MyErrands → click completed errand
-- [ ] Should see "Rate this doer" section OR notification to review
-- [ ] Go to `/review/{errandId}` directly
-- [ ] Fill rating: 1-5 stars (click stars to select)
-- [ ] Add comment: "Great work, very reliable!"
-- [ ] Click "Submit Review" → shows success
-
-**Scenario: Verify Rating Saved**
-- [ ] Go to Doer's Profile
-- [ ] Check ratings section shows your review
-- [ ] Rating count increased
-
-**Expected**: Review submits, appears on doer's profile, payment can be released
-
----
-
-### ✅ Module 9: Hana AI Assistant (15 min)
-
-**Scenario A: English Mode**
-- [ ] Click floating Hana
-- [ ] Ask: "What are errand categories available?"
-- [ ] Hana responds with list (in English)
-- [ ] Verify: No emoticons (😀 ❌), proper English, professional tone
-
-**Scenario B: Chinese Mode**
-- [ ] Click Hana settings (gear icon)
-- [ ] Select language: 中文 (Chinese)
-- [ ] Ask: "我想要找一個清潔服務" (I want to find cleaning service)
-- [ ] Hana responds in Chinese (Simplified or Traditional)
-- [ ] Verify: Response is Chinese, female voice (click speaker icon)
-
-**Scenario C: Cantonese Mode**
-- [ ] Change language to 粵語 (Cantonese)
-- [ ] Ask: "我想搵人幫我走狗" (I want to find dog walking help)
-- [ ] Hana responds in Cantonese
-- [ ] Verify: Cantonese response, female voice
-
-**Scenario D: Task Extraction**
-- [ ] Say: "我需要人幫我打掃3房公寓，星期六下午2點到4點，預算50元"
-- [ ] Hana should extract: Category, Date, Time, Budget
-- [ ] Should ask follow-up questions if unclear
-- [ ] Should offer to create errand
-
-**Expected**: 
-- [ ] Responses are professional (no emojis/emoticons)
-- [ ] All 3 languages work
-- [ ] Voice is female (not male)
-- [ ] Task extraction is accurate
-
----
-
-### ✅ Module 10: Notifications (5 min)
-
-**Scenario A: Real-time Notifications**
-- [ ] Login as Asker, open errand detail
-- [ ] Have Doer submit a bid (from another browser/device)
-- [ ] Check notification icon badge → should show "1"
-- [ ] Click icon → see "New Bid" notification
-- [ ] Mark as read → badge disappears
-
-**Scenario B: Bid Status Notifications**
-- [ ] As Asker, accept a bid
-- [ ] Check Doer's notifications (login as Doer)
-- [ ] Should see: "🎉 Bid Accepted! - You're hired for..."
-- [ ] Reject another bid
-- [ ] Should see: "😕 Bid Not Selected - Your bid wasn't chosen..."
-
-**Expected**: Notifications flow through system correctly
-
----
-
-### ✅ Module 11: Error Handling (5 min)
-
-**Scenario A: Validation Errors**
-- [ ] Try to create errand with empty title → error message
-- [ ] Try to submit bid with 0 amount → error message
-- [ ] Try to access errand without auth → redirects to login
-
-**Scenario B: Edge Cases**
-- [ ] Create 2 errands with same title → should allow
-- [ ] Submit 2 bids from same doer on same task → should allow resubmit
-- [ ] Try to bid on your own errand → error: "Cannot bid on your own task"
-
-**Expected**: Clear error messages, no app crashes
-
----
-
-## Database Verification
-
-After testing, verify data persisted:
-
-```bash
-psql -U postgres -d errandify
-
--- Check users created
-SELECT display_name, role FROM users LIMIT 10;
-
--- Check errands posted
-SELECT title, status, category FROM errands LIMIT 10;
-
--- Check bids submitted
-SELECT * FROM bids LIMIT 10;
-
--- Check reviews submitted
-SELECT rating, comment FROM reviews LIMIT 5;
-
--- Check notifications created
-SELECT title, body, read FROM notifications LIMIT 10;
-```
-
----
-
-## Test Results Summary
-
-| Module | Status | Notes |
-|--------|--------|-------|
-| Authentication | ⬜ | |
-| Profile | ⬜ | |
-| Errand Creation | ⬜ | |
-| Errand Browsing | ⬜ | |
-| Bidding | ⬜ | |
-| Chat | ⬜ | |
-| Job Execution | ⬜ | |
-| Reviews | ⬜ | |
-| Hana AI | ⬜ | |
-| Notifications | ⬜ | |
-| Error Handling | ⬜ | |
-
-**Overall Status**: ⬜ Pending / ⏳ In Progress / ✅ Complete
-
----
-
-## Issues Found During Testing
-
-### Critical (Blocks Deployment)
-- [ ] 
-
-### Major (Needs Fix)
-- [ ] 
-
-### Minor (Can Fix Later)
-- [ ] 
-
----
-
-## Next Steps After Testing
-
-1. ✅ Fix any identified issues
-2. ⏳ Integrate SingPass authentication
-3. ⏳ Integrate real Stripe payments
-4. ⏳ Deploy to staging environment
-5. ⏳ User acceptance testing
-6. ⏳ Production deployment
-
----
-
-**Last Updated**: 2026-06-18  
-**Prepared By**: Claude Code  
-**Status**: Ready for Testing 🚀
