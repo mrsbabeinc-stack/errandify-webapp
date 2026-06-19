@@ -136,7 +136,7 @@ export default function AboutErrandifyPage() {
 
           {/* For Doers */}
           <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-            <h3 className="font-bold text-gray-800 mb-3">💪 For Doers: Earn 100% of What You're Worth</h3>
+            <h3 className="font-bold text-gray-800 mb-3">💪 For Doers: Earn What You Negotiate</h3>
             <ul className="text-sm text-gray-700 space-y-2">
               <li className="flex gap-2">
                 <span>✓</span>
@@ -144,11 +144,11 @@ export default function AboutErrandifyPage() {
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span>Submit bids at your own rates – you're in complete control</span>
+                <span>Submit bids at your own rates – you set the price</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span><strong>Keep 100% of your earnings</strong> – no fees taken from you</span>
+                <span><strong>Receive your full bid amount</strong> – askers cover platform fees, not you</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
