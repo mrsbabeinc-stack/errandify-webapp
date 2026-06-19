@@ -414,27 +414,33 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const titleMatch = input.match(/^(.+?)\s+at\s+/i) || input.match(/^(.+?)(?:\s+on|\s+for|,)/i);
     const title = titleMatch ? titleMatch[1].trim().substring(0, 50) : input.substring(0, 50);
 
-    // Parse location
-    const locationMatch = input.match(/at\s+(\d{6}|\S+?)(?:\s+on|\s+at|,)/i);
-    const location = locationMatch ? locationMatch[1].trim() : '';
-    const postalCode = location.match(/\d{6}/) ? location : '';
+    // Parse location - look for postal code (6 digits) after "at"
+    const postalCodeMatch = input.match(/at\s+(\d{6})/i);
+    const postalCode = postalCodeMatch ? postalCodeMatch[1].trim() : '';
 
-    // Parse date
-    const dateMatch = input.match(/on\s+([a-zA-Z]+day|\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})/i);
+    // Parse date - look for "tomorrow", day names, or dates
     let date = '';
-    if (dateMatch) {
-      const dayStr = dateMatch[1].toLowerCase();
-      if (dayStr.includes('day')) {
-        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        const dayIndex = days.findIndex(d => dayStr.includes(d));
-        if (dayIndex >= 0) {
-          const today = new Date();
-          const current = today.getDay();
-          let diff = dayIndex - current;
-          if (diff <= 0) diff += 7;
-          const result = new Date(today);
-          result.setDate(result.getDate() + diff);
-          date = result.toISOString().split('T')[0];
+    const tomorrowMatch = input.match(/tomorrow/i);
+    if (tomorrowMatch) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      date = tomorrow.toISOString().split('T')[0];
+    } else {
+      const dateMatch = input.match(/on\s+([a-zA-Z]+day|\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})/i);
+      if (dateMatch) {
+        const dayStr = dateMatch[1].toLowerCase();
+        if (dayStr.includes('day')) {
+          const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+          const dayIndex = days.findIndex(d => dayStr.includes(d));
+          if (dayIndex >= 0) {
+            const today = new Date();
+            const current = today.getDay();
+            let diff = dayIndex - current;
+            if (diff <= 0) diff += 7;
+            const result = new Date(today);
+            result.setDate(result.getDate() + diff);
+            date = result.toISOString().split('T')[0];
+          }
         }
       }
     }
@@ -494,6 +500,23 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       }
     }
 
+    // Detect category from keywords in title or input
+    let category = 'other';
+    const inputLower = input.toLowerCase();
+    if (inputLower.includes('dog') || inputLower.includes('pet') || inputLower.includes('cat') || inputLower.includes('walk')) {
+      category = 'pet-care';
+    } else if (inputLower.includes('clean') || inputLower.includes('laundry') || inputLower.includes('wash')) {
+      category = 'cleaning-laundry';
+    } else if (inputLower.includes('shop') || inputLower.includes('buy') || inputLower.includes('errand')) {
+      category = 'shopping-errands';
+    } else if (inputLower.includes('move') || inputLower.includes('deliver')) {
+      category = 'delivery-moving';
+    } else if (inputLower.includes('tutor') || inputLower.includes('teach') || inputLower.includes('child') || inputLower.includes('babysit')) {
+      category = 'childcare-tutoring';
+    } else if (inputLower.includes('repair') || inputLower.includes('fix') || inputLower.includes('install') || inputLower.includes('maintenance')) {
+      category = 'home-maintenance';
+    }
+
     res.json({
       success: true,
       data: {
@@ -506,7 +529,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         duration,
         durationUnit: 'Hr',
         budget,
-        category: 'cleaning-laundry',
+        category,
         postalCode,
         notes: '',
       },
