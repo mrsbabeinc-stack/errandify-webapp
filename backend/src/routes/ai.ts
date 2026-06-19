@@ -416,11 +416,19 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const postalCodeMatch = input.match(/\b(\d{6})\b/);
     const postalCode = postalCodeMatch ? postalCodeMatch[1] : '';
 
-    // Extract title - split on common delimiters and take meaningful part
-    let titleParts = input.split(/\s+(?:at\s+)?\d{6}|tomorrow|today|at\s+\d+\s*(?:am|pm)|\$\d+|\d+\s*(?:hour|hr|h)/i);
-    let title = titleParts[0].trim().substring(0, 50) || 'Task';
+    // Extract title - take everything before postal code, date keywords, or time
+    let title = input
+      .replace(/\s*\d{6}\s*/g, ' ') // Remove postal code
+      .replace(/\s*(on\s+)?sun(day)?|mon(day)?|tue(sday)?|wed(nesday)?|thu(rsday)?|fri(day)?|sat(urday)?|tomorrow|today/gi, ' ') // Remove day keywords
+      .replace(/\s*\d{1,2}(:\d{2})?\s*(am|pm)/gi, ' ') // Remove times
+      .replace(/\s*[\$@]\s*\d+/g, ' ') // Remove budget/amounts
+      .replace(/\s*\d+\s*(hours?|hrs?|h|min|mins?|minutes?)/gi, ' ') // Remove duration
+      .trim()
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .substring(0, 50);
+    title = title || 'Task';
 
-    // Parse date - look for "tomorrow", day names
+    // Parse date - look for "tomorrow", "today", day names, or "sun", "sun 7pm"
     let date = '';
     if (/tomorrow/i.test(input)) {
       const tomorrow = new Date();
@@ -429,12 +437,13 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     } else if (/today/i.test(input)) {
       date = new Date().toISOString().split('T')[0];
     } else {
-      const dateMatch = input.match(/on\s+([a-zA-Z]+day)/i);
-      if (dateMatch) {
-        const dayStr = dateMatch[1].toLowerCase();
-        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        const dayIndex = days.findIndex(d => dayStr.includes(d));
-        if (dayIndex >= 0) {
+      // Match short day names like "sun", "mon", or full names like "sunday", "monday"
+      const dayMatch = input.match(/\b(sun|mon|tue|wed|thu|fri|sat)(?:day)?\b/i);
+      if (dayMatch) {
+        const dayStr = dayMatch[1].toLowerCase();
+        const dayMap: Record<string, number> = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+        const dayIndex = dayMap[dayStr];
+        if (dayIndex !== undefined) {
           const today = new Date();
           const current = today.getDay();
           let diff = dayIndex - current;
@@ -446,7 +455,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       }
     }
 
-    // Parse time - look for patterns like "3pm", "15:00", "3:00pm"
+    // Parse time - look for patterns like "3pm", "7pm", "15:00", "3:00pm"
     let time = '';
     const timeMatch = input.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)|(\d{1,2})\s*(am|pm)/i);
     if (timeMatch) {
@@ -458,16 +467,16 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       time = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
     }
 
-    // Parse duration - look for "3 hours", "2 hrs", "3h"
+    // Parse duration - look for "3 hours", "2 hrs", "30 min", "30min", "30m"
     let duration = '';
-    const durationMatch = input.match(/(\d+)\s*(hour|hr|h)/i);
+    const durationMatch = input.match(/(\d+)\s*(?:hour|hr|h|min|m|minute)/i);
     if (durationMatch) {
       duration = durationMatch[1];
     }
 
-    // Parse budget - look for "$100", "budget $100", "$100"
+    // Parse budget - look for "$100", "@100", "100", "budget $100"
     let budget = '';
-    const budgetMatch = input.match(/[\$](\d+)|budget\s*[\$]?(\d+)/i);
+    const budgetMatch = input.match(/[\$@]\s*(\d+)|budget\s*[\$@]?\s*(\d+)/i);
     if (budgetMatch) {
       budget = budgetMatch[1] || budgetMatch[2];
     }
@@ -516,7 +525,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Category mapping
     if (inputLower.includes('elder') || inputLower.includes('caregiv') || inputLower.includes('companion')) {
       category = 'eldercare'; // Caregiving & Elder Companionship
-    } else if (inputLower.includes('child') || inputLower.includes('babysit') || inputLower.includes('school') || inputLower.includes('pickup') || inputLower.includes('dropoff')) {
+    } else if (inputLower.includes('child') || inputLower.includes('kid') || inputLower.includes('babysit') || inputLower.includes('school') || inputLower.includes('pickup') || inputLower.includes('pick up') || inputLower.includes('dropoff') || inputLower.includes('drop off') || inputLower.includes('pick')) {
       category = 'childcare'; // Childcare & School Pickup/Drop-off
     } else if (inputLower.includes('clean') || inputLower.includes('laundry') || inputLower.includes('wash') || inputLower.includes('maintenance') || inputLower.includes('repair') || inputLower.includes('fix') || inputLower.includes('install')) {
       category = 'homehelp'; // Household Errands & Home Maintenance
