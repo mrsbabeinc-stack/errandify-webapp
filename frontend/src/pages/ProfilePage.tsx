@@ -174,6 +174,33 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
         </div>
       </div>
 
+      {/* Help & Info Section */}
+      <div className="mb-6">
+        <h2 className="text-sm font-bold text-errandify-brown mb-3 flex items-center gap-2">
+          <span>ℹ️</span>
+          <span>Help & Information</span>
+        </h2>
+        <div className="space-y-2">
+          {/* About */}
+          <button onClick={() => navigate('/about')} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+            <div className="flex items-center gap-2 text-left">
+              <span className="text-lg">🏘️</span>
+              <span className="text-sm font-medium text-gray-700">About Errandify</span>
+            </div>
+            <span className="text-gray-400">›</span>
+          </button>
+
+          {/* FAQ */}
+          <button onClick={() => navigate('/faq')} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+            <div className="flex items-center gap-2 text-left">
+              <span className="text-lg">❓</span>
+              <span className="text-sm font-medium text-gray-700">FAQ</span>
+            </div>
+            <span className="text-gray-400">›</span>
+          </button>
+        </div>
+      </div>
+
       {/* Delete Account */}
       <div className="mb-4">
         <button onClick={handleDeleteAccount} className="text-xs font-medium text-red-600 hover:text-red-700">
