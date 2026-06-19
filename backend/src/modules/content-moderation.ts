@@ -117,6 +117,8 @@ export function performBasicModerationCheck(
   budget?: number
 ): ModerationResult {
   const fullText = `${title} ${description} ${notes}`.toLowerCase();
+  console.log('[Moderation] Checking text:', fullText);
+
   const issues = {
     spam: false,
     inappropriate: false,
@@ -129,6 +131,7 @@ export function performBasicModerationCheck(
     if (pattern.test(fullText)) {
       issues.spam = true;
       flags.push('spam_detected');
+      console.log('[Moderation] Spam detected');
       break;
     }
   }
@@ -138,6 +141,7 @@ export function performBasicModerationCheck(
     if (fullText.includes(keyword.toLowerCase())) {
       issues.inappropriate = true;
       flags.push('phishing_attempt');
+      console.log('[Moderation] Phishing detected:', keyword);
       break;
     }
   }
@@ -147,6 +151,7 @@ export function performBasicModerationCheck(
     if (fullText.includes(word)) {
       issues.inappropriate = true;
       flags.push('inappropriate_language');
+      console.log('[Moderation] Inappropriate word detected:', word);
       break;
     }
   }
@@ -177,9 +182,12 @@ export function performBasicModerationCheck(
 
   const hasSeriousIssue = issues.spam || issues.inappropriate;
   const confidence = hasSeriousIssue ? 0.95 : (flags.length > 0 ? 0.6 : 0.05);
+  const isSafe = !hasSeriousIssue && flags.length < 3;
+
+  console.log('[Moderation] Result - is_safe:', isSafe, 'hasSeriousIssue:', hasSeriousIssue, 'issues:', issues, 'flags:', flags);
 
   return {
-    is_safe: !hasSeriousIssue && flags.length < 3,
+    is_safe: isSafe,
     issues,
     confidence,
     flags,
