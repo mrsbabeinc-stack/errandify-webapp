@@ -28,6 +28,7 @@ import SingPassSignupPage from './pages/SingPassSignupPage';
 import MyProfilePage from './pages/MyProfilePage';
 import ReferralPage from './pages/ReferralPage';
 import PayoutSettingsPage from './pages/PayoutSettingsPage';
+import HowItWorksPage from './pages/HowItWorksPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import ErrandifyPointsPage from './pages/ErrandifyPointsPage';
 import MyRewardsPage from './pages/MyRewardsPage';
@@ -222,6 +223,7 @@ export default function App() {
         <Route path="/admin" element={isAuthenticated ? <AdminDashboardPage /> : <Navigate to="/login" replace />} />
         <Route path="/about" element={<AboutErrandifyPage />} />
         <Route path="/faq" element={<FAQPage />} />
+        <Route path="/how-it-works" element={<HowItWorksPage />} />
 
         {/* Main dashboard layout */}
         <Route
