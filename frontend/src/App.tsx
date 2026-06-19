@@ -37,6 +37,7 @@ import TestPage from './pages/TestPage';
 import WalletPage from './pages/WalletPage';
 import UserProfilePage from './pages/UserProfilePage';
 import EditProfilePage from './pages/EditProfilePage';
+import DisputePage from './pages/DisputePage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -207,6 +208,7 @@ export default function App() {
         <Route path="/wallet" element={isAuthenticated ? <WalletPage /> : <Navigate to="/login" replace />} />
         <Route path="/user/:userId" element={<UserProfilePage />} />
         <Route path="/edit-profile" element={isAuthenticated ? <EditProfilePage /> : <Navigate to="/login" replace />} />
+        <Route path="/disputes" element={isAuthenticated ? <DisputePage /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout */}
         <Route
