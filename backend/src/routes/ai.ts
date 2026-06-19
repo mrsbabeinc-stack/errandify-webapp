@@ -416,19 +416,9 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const postalCodeMatch = input.match(/\b(\d{6})\b/);
     const postalCode = postalCodeMatch ? postalCodeMatch[1] : '';
 
-    // Extract title - remove postal code, time, budget, duration, date keywords
-    let title = input
-      .replace(/\d{6}/g, '') // Remove postal code
-      .replace(/\d{1,2}:\d{2}\s*(am|pm)/gi, '') // Remove times like 3:00pm
-      .replace(/\d{1,2}\s*(am|pm)/gi, '') // Remove times like 3pm
-      .replace(/\$\d+/g, '') // Remove budget
-      .replace(/\d+\s*(hour|hr|h)/gi, '') // Remove "3 hours" or "2hrs"
-      .replace(/tomorrow|today/gi, '') // Remove date keywords
-      .replace(/at\s+/gi, '') // Remove "at"
-      .replace(/\s+/g, ' ') // Collapse multiple spaces
-      .trim()
-      .substring(0, 50);
-    title = title || 'Task';
+    // Extract title - split on common delimiters and take meaningful part
+    let titleParts = input.split(/\s+(?:at\s+)?\d{6}|tomorrow|today|at\s+\d+\s*(?:am|pm)|\$\d+|\d+\s*(?:hour|hr|h)/i);
+    let title = titleParts[0].trim().substring(0, 50) || 'Task';
 
     // Parse date - look for "tomorrow", day names
     let date = '';
