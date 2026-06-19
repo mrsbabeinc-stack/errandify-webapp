@@ -66,26 +66,57 @@ export default function HanaTaskCreation({
     }
   }, [isOpen, defaultCategory]);
 
+  const getRandomPostalCode = () => {
+    const postalCodes = ['680433', '238857', '269163', '554262', '507565', '408600', '750131', '629652', '535239', '110001'];
+    return postalCodes[Math.floor(Math.random() * postalCodes.length)];
+  };
+
+  const getRandomDay = () => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return days[Math.floor(Math.random() * days.length)];
+  };
+
+  const getRandomTime = () => {
+    const times = ['9am', '10am', '12pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm'];
+    return times[Math.floor(Math.random() * times.length)];
+  };
+
+  const getRandomDuration = () => {
+    const durations = ['30 mins', '1 hour', '1.5 hours', '2 hours', '2.5 hours', '3 hours', '4 hours'];
+    return durations[Math.floor(Math.random() * durations.length)];
+  };
+
+  const getRandomBudget = () => {
+    const budgets = [30, 50, 75, 100, 150, 200, 250, 300];
+    return budgets[Math.floor(Math.random() * budgets.length)];
+  };
+
   const getExampleByCategory = (category: string) => {
+    const postalCode = getRandomPostalCode();
+    const day = getRandomDay();
+    const time = getRandomTime();
+    const duration = getRandomDuration();
+    const budget = getRandomBudget();
+
     const examples: Record<string, string> = {
-      'home-maintenance': 'Fix my leaky kitchen tap at 680433 on Saturday 2pm for 1 hour, budget $80',
-      'cleaning-household': 'Clean my house at 680433 on Saturday 2pm for 2 hours, budget $100',
-      'food-beverage': 'Prepare lunch for 4 people at 680433 on Sunday 12pm for 3 hours, budget $60',
-      'furniture-assembly': 'Assemble IKEA bookshelf at 680433 on Saturday 3pm for 2 hours, budget $50',
-      'shopping-errands': 'Help me shopping at Orchard Road (238857) on Friday 3pm for 1.5 hours, budget $200',
-      'delivery-moving': 'Move my boxes from office to home (680433) on Saturday 9am for 4 hours, budget $150',
-      'travel-mobility': 'Drive me to Changi Airport from home (680433) on Friday 5am, budget $40',
-      'event-planning': 'Help decorate apartment for birthday party at 680433 on Saturday 5pm for 3 hours, budget $200',
-      'childcare-education': 'Tutor my son in Math at 680433 on Wednesday 4pm for 1.5 hours, budget $30',
-      'eldercare-healthcare': 'Help mum with groceries and medical checkup at 680433 on Wednesday 10am for 2 hours, budget $50',
-      'pet-care': 'Dog walk my golden retriever at 680433 daily 5pm for 30 mins, budget $20',
-      'personal-care': 'Hair cut at home (680433) on Saturday 2pm for 1 hour, budget $40',
-      'tech-support': 'Fix my WiFi router at 680433 on Friday 7pm for 1 hour, budget $50',
-      'creative-arts': 'Design a logo for my business, deadline Friday 5pm, budget $200',
-      'admin-business': 'Help with data entry for my small business, 10 hours total, budget $150',
-      'charity-community': 'Help pack donation boxes at community center (269163) on Sunday 10am for 2 hours, budget $20',
+      'home-maintenance': `Fix my leaky kitchen tap at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'cleaning-household': `Clean my house at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'food-beverage': `Prepare lunch for 4 people at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'furniture-assembly': `Assemble IKEA bookshelf at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'shopping-errands': `Help me shopping at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'delivery-moving': `Move my boxes from office to home (${postalCode}) on ${day} ${time} for ${duration}, budget $${budget}`,
+      'travel-mobility': `Drive me to Changi Airport from home (${postalCode}) on ${day} ${time}, budget $${budget}`,
+      'event-planning': `Help decorate apartment for party at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'childcare-education': `Tutor my son in Math at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'eldercare-healthcare': `Help mum with groceries and checkup at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'pet-care': `Dog walk my golden retriever at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'personal-care': `Hair cut at home (${postalCode}) on ${day} ${time} for ${duration}, budget $${budget}`,
+      'tech-support': `Fix my WiFi router at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'creative-arts': `Design a logo for my business, deadline ${day} ${time}, budget $${budget}`,
+      'admin-business': `Help with data entry for my business, ${duration} total, budget $${budget}`,
+      'charity-community': `Help pack donation boxes at center (${postalCode}) on ${day} ${time} for ${duration}, budget $${budget}`,
     };
-    return examples[category] || 'Describe your errand: what you need, where (postal code), when (date/time), how long, and your budget';
+    return examples[category] || `Describe your errand: what (required), postal code (required), date & time (required), duration (required), budget SGD (required)`;
   };
 
   const initializeChat = () => {
