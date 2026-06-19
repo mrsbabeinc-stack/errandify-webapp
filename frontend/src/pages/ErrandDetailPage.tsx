@@ -87,14 +87,35 @@ export default function ErrandDetailPage() {
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      'pet-care': 'bg-amber-100 text-amber-700',
-      'cleaning-laundry': 'bg-blue-100 text-blue-700',
-      'shopping-errands': 'bg-green-100 text-green-700',
-      'tech-support': 'bg-purple-100 text-purple-700',
-      'childcare-tutoring': 'bg-pink-100 text-pink-700',
+      // GROUP 1: HOME & HOUSEHOLD
       'home-maintenance': 'bg-orange-100 text-orange-700',
-      'delivery-moving': 'bg-indigo-100 text-indigo-700',
+      'cleaning-household': 'bg-blue-100 text-blue-700',
+      'food-beverage': 'bg-red-100 text-red-700',
+      'furniture-assembly': 'bg-amber-100 text-amber-700',
+
+      // GROUP 2: ERRANDS & LOGISTICS
+      'shopping-errands': 'bg-pink-100 text-pink-700',
+      'delivery-moving': 'bg-yellow-100 text-yellow-700',
+      'travel-mobility': 'bg-sky-100 text-sky-700',
+      'event-planning': 'bg-violet-100 text-violet-700',
+
+      // GROUP 3: CARE & WELLBEING
+      'childcare-education': 'bg-green-100 text-green-700',
+      'eldercare-healthcare': 'bg-gray-100 text-gray-700',
+      'pet-care': 'bg-purple-100 text-purple-700',
+      'personal-care': 'bg-rose-100 text-rose-700',
+
+      // GROUP 4: SKILLS & SERVICES
+      'tech-support': 'bg-indigo-100 text-indigo-700',
+      'creative-arts': 'bg-fuchsia-100 text-fuchsia-700',
+      'admin-business': 'bg-slate-100 text-slate-700',
+      'charity-community': 'bg-red-100 text-red-700',
+
+      // Legacy category names for backwards compatibility
+      'cleaning-laundry': 'bg-blue-100 text-blue-700',
+      'childcare-tutoring': 'bg-pink-100 text-pink-700',
       'moving-help': 'bg-red-100 text-red-700',
+      'tech-support-it': 'bg-indigo-100 text-indigo-700',
     };
     return colors[category] || 'bg-gray-100 text-gray-700';
   };
