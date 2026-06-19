@@ -26,7 +26,7 @@ const CATEGORIES: Category[] = [
     name: 'Cleaning & Laundry',
     icon: '🧺',
     description: 'House cleaning, laundry services',
-    color: 'from-blue-100 to-blue-50',
+    color: 'from-errandify-orange-100 to-errandify-orange-50',
   },
   {
     id: 'shopping-errands',

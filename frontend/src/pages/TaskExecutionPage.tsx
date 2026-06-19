@@ -213,7 +213,7 @@ export default function TaskExecutionPage() {
 
               {/* Upload Photos */}
               {canUploadPhotos && (
-                <div className="border-2 border-dashed border-blue-300 rounded-lg p-6">
+                <div className="border-2 border-dashed border-errandify-orange-300 rounded-lg p-6">
                   <h2 className="text-xl font-bold mb-3">📸 Upload Proof of Work</h2>
                   <p className="text-gray-600 mb-4">
                     Share photos of your completed work so the asker can verify.
@@ -245,7 +245,7 @@ export default function TaskExecutionPage() {
                     <button
                       onClick={handleUploadPhoto}
                       disabled={uploading || !photoUrl}
-                      className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 disabled:opacity-50"
+                      className="w-full px-4 py-2 bg-errandify-orange-500 text-white rounded-lg font-semibold hover:bg-errandify-orange-600 disabled:opacity-50"
                     >
                       {uploading ? 'Uploading...' : 'Upload Photo'}
                     </button>

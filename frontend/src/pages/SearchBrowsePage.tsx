@@ -132,7 +132,7 @@ export default function SearchBrowsePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8 px-6">
+    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 py-8 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <button onClick={() => navigate(-1)} className="mb-4 text-lg text-gray-600 font-bold">‹ Back</button>
@@ -151,7 +151,7 @@ export default function SearchBrowsePage() {
                 <h2 className="text-xl font-bold text-gray-800">🎛️ Filters</h2>
                 <button
                   onClick={handleReset}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-semibold"
+                  className="text-sm text-errandify-orange-600 hover:text-errandify-orange-800 font-semibold"
                 >
                   Reset
                 </button>
@@ -192,7 +192,7 @@ export default function SearchBrowsePage() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-errandify-orange-500"
                 >
                   <option value="">All Categories</option>
                   {categories.map((cat) => (
@@ -209,7 +209,7 @@ export default function SearchBrowsePage() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-errandify-orange-500"
                 >
                   <option value="newest">Newest First</option>
                   <option value="oldest">Oldest First</option>
@@ -222,7 +222,7 @@ export default function SearchBrowsePage() {
               {/* Apply Filters Button */}
               <button
                 onClick={performSearch}
-                className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition"
+                className="w-full px-4 py-3 bg-errandify-orange-600 text-white rounded-lg font-bold hover:bg-errandify-orange-700 transition"
               >
                 🔍 Apply Filters
               </button>
@@ -242,11 +242,11 @@ export default function SearchBrowsePage() {
                     fetchSuggestions(e.target.value);
                   }}
                   placeholder="Search tasks... (e.g., 'cleaning', 'delivery')"
-                  className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange-500"
                 />
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition"
+                  className="px-6 py-3 bg-errandify-orange-600 text-white rounded-lg font-bold hover:bg-errandify-orange-700 transition"
                 >
                   Search
                 </button>
@@ -261,8 +261,8 @@ export default function SearchBrowsePage() {
 
               {/* Suggestions */}
               {suggestions && (
-                <div className="mt-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-900 font-semibold mb-2">💡 {suggestions.aiInsight}</p>
+                <div className="mt-3 p-4 bg-errandify-orange-50 rounded-lg border border-errandify-orange-200">
+                  <p className="text-sm text-errandify-orange-900 font-semibold mb-2">💡 {suggestions.aiInsight}</p>
                   {suggestions.categories.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {suggestions.categories.map((cat: any, idx: number) => (
@@ -272,7 +272,7 @@ export default function SearchBrowsePage() {
                             setSelectedCategory(cat.category);
                             performSearch();
                           }}
-                          className="px-3 py-1 bg-blue-200 text-blue-900 rounded-full text-xs font-semibold hover:bg-blue-300"
+                          className="px-3 py-1 bg-errandify-orange-200 text-errandify-orange-900 rounded-full text-xs font-semibold hover:bg-errandify-orange-300"
                         >
                           {cat.category} (~${cat.avgBudget}/task)
                         </button>
@@ -302,7 +302,7 @@ export default function SearchBrowsePage() {
                 <p className="text-gray-400 text-sm mb-4">Try different filters or search terms</p>
                 <button
                   onClick={handleReset}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 bg-errandify-orange-600 text-white rounded-lg hover:bg-errandify-orange-700"
                 >
                   Clear All Filters
                 </button>
@@ -320,7 +320,7 @@ export default function SearchBrowsePage() {
                         <h3 className="text-xl font-bold text-gray-800 mb-1">{errand.title}</h3>
                         <p className="text-gray-600 text-sm mb-2">{errand.description.substring(0, 100)}...</p>
                         <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                          <span className="px-2 py-1 bg-errandify-orange-100 text-errandify-orange-800 rounded-full text-xs font-semibold">
                             {errand.category}
                           </span>
                           <span>📍 Posted {formatDate(errand.createdAt)}</span>

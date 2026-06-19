@@ -137,7 +137,7 @@ export default function NotificationPreferencesSection() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -223,8 +223,8 @@ export default function NotificationPreferencesSection() {
         </div>
 
         {/* Info Footer */}
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm text-blue-900">
+        <div className="mt-8 p-4 bg-errandify-orange-50 rounded-lg border border-errandify-orange-200">
+          <p className="text-sm text-errandify-orange-900">
             <strong>💡 Tip:</strong> Critical notifications cannot be disabled because they're essential for managing your tasks and payments. You can customize all other notifications to suit your preferences.
           </p>
         </div>

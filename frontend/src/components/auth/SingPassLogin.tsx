@@ -78,7 +78,7 @@ export default function SingPassLogin({ onComplete, onBack }: SingPassLoginProps
         <button
           onClick={handleSingPassLogin}
           disabled={loading}
-          className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4 flex items-center justify-center gap-2"
+          className="w-full py-3 px-4 bg-errandify-orange-600 text-white rounded-lg font-semibold hover:bg-errandify-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4 flex items-center justify-center gap-2"
         >
           {loading ? 'Redirecting to SingPass...' : '🔐 Sign in with SingPass'}
         </button>
@@ -98,7 +98,7 @@ export default function SingPassLogin({ onComplete, onBack }: SingPassLoginProps
           <button
             onClick={() => handleDemoLogin('sarah')}
             disabled={loading}
-            className="w-full py-3 px-4 bg-blue-50 border-2 border-blue-300 text-blue-700 rounded-lg font-semibold hover:bg-blue-100 transition-colors disabled:opacity-50"
+            className="w-full py-3 px-4 bg-errandify-orange-50 border-2 border-errandify-orange-300 text-errandify-orange-700 rounded-lg font-semibold hover:bg-errandify-orange-100 transition-colors disabled:opacity-50"
           >
             👩 Sarah (Asker/Doer)
           </button>

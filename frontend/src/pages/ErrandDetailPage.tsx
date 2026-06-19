@@ -89,7 +89,7 @@ export default function ErrandDetailPage() {
     const colors: Record<string, string> = {
       // GROUP 1: HOME & HOUSEHOLD
       'home-maintenance': 'bg-orange-100 text-orange-700',
-      'cleaning-household': 'bg-blue-100 text-blue-700',
+      'cleaning-household': 'bg-errandify-orange-100 text-errandify-orange-700',
       'food-beverage': 'bg-red-100 text-red-700',
       'furniture-assembly': 'bg-amber-100 text-amber-700',
 
@@ -112,7 +112,7 @@ export default function ErrandDetailPage() {
       'charity-community': 'bg-red-100 text-red-700',
 
       // Legacy category names for backwards compatibility
-      'cleaning-laundry': 'bg-blue-100 text-blue-700',
+      'cleaning-laundry': 'bg-errandify-orange-100 text-errandify-orange-700',
       'childcare-tutoring': 'bg-pink-100 text-pink-700',
       'moving-help': 'bg-red-100 text-red-700',
       'tech-support-it': 'bg-indigo-100 text-indigo-700',
@@ -280,7 +280,7 @@ export default function ErrandDetailPage() {
 
             {/* Deadline */}
             {errand.deadline && (
-              <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="bg-errandify-orange-50 p-4 rounded-lg">
                 <h2 className="font-semibold text-errandify-brown mb-2">
                   Deadline
                 </h2>
@@ -411,7 +411,7 @@ export default function ErrandDetailPage() {
         {errand && errand.status !== 'open' && (
           <button
             onClick={() => setShowChat(true)}
-            className="mt-6 w-full bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600"
+            className="mt-6 w-full bg-errandify-orange-500 text-white py-3 rounded-lg font-bold hover:bg-errandify-orange-600"
           >
             💬 Chat with {currentUser?.id === errand.askerId ? 'Doer' : 'Asker'}
           </button>

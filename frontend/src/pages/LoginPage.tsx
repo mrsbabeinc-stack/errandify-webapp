@@ -55,7 +55,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           <button
             onClick={() => handleDemoLogin('sarah')}
             disabled={loading}
-            className="w-full py-3 px-4 bg-blue-50 border-2 border-blue-300 text-blue-700 rounded-lg font-semibold hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 bg-errandify-orange-50 border-2 border-errandify-orange-300 text-errandify-orange-700 rounded-lg font-semibold hover:bg-errandify-orange-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Logging in...' : '👩 Sarah (Asker/Doer)'}
           </button>

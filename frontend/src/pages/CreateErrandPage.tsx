@@ -847,7 +847,7 @@ export default function CreateErrandPage() {
                       description: aiSuggestions.suggestedDescription,
                     }));
                   }}
-                  className="mt-2 inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full hover:bg-blue-200 transition-colors font-medium"
+                  className="mt-2 inline-block px-3 py-1 bg-errandify-orange-100 text-errandify-orange-700 text-xs rounded-full hover:bg-errandify-orange-200 transition-colors font-medium"
                   title="Click to use AI suggestion"
                 >
                   💡 {aiSuggestions.suggestedDescription}
@@ -1118,12 +1118,12 @@ export default function CreateErrandPage() {
 
                   {/* GPS Location Notice */}
                   {gpsEnabled && gpsLocation && (
-                    <div className="mt-2 p-2 bg-blue-50 border-l-4 border-blue-400 rounded text-xs">
-                      <p className="text-blue-900">
+                    <div className="mt-2 p-2 bg-errandify-orange-50 border-l-4 border-errandify-orange-400 rounded text-xs">
+                      <p className="text-errandify-orange-900">
                         📍 <span className="font-semibold">Your current location detected:</span> {gpsLocation.latitude.toFixed(4)}, {gpsLocation.longitude.toFixed(4)}
                       </p>
                       {formData.location && (
-                        <p className="text-blue-800 mt-1">
+                        <p className="text-errandify-orange-800 mt-1">
                           ℹ️ Task location: <span className="font-semibold">{formData.location}</span> — Make sure this is different from your current location if the doer needs to travel.
                         </p>
                       )}
@@ -1193,7 +1193,7 @@ export default function CreateErrandPage() {
                   <button
                     key={skill}
                     onClick={() => removeSkill(skill)}
-                    className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full font-semibold hover:bg-blue-200"
+                    className="bg-errandify-orange-100 text-errandify-orange-700 text-sm px-3 py-1 rounded-full font-semibold hover:bg-errandify-orange-200"
                   >
                     {skill} ✕
                   </button>
@@ -1297,17 +1297,17 @@ export default function CreateErrandPage() {
             {/* Selected Certifications Display */}
             {(formData.certifications.required.length > 0 ||
               formData.certifications.optional.length > 0) && (
-              <div className="p-3 bg-blue-50 rounded text-sm mt-3 space-y-3">
-                <p className="font-semibold text-blue-900">Selected Certifications:</p>
+              <div className="p-3 bg-errandify-orange-50 rounded text-sm mt-3 space-y-3">
+                <p className="font-semibold text-errandify-orange-900">Selected Certifications:</p>
 
                 {formData.certifications.required.length > 0 && (
                   <div>
-                    <p className="text-xs text-blue-800 font-semibold mb-2">Required:</p>
+                    <p className="text-xs text-errandify-orange-800 font-semibold mb-2">Required:</p>
                     <div className="flex flex-wrap gap-2">
                       {formData.certifications.required.map((cert) => (
                         <div
                           key={cert}
-                          className="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded flex items-center gap-2"
+                          className="bg-errandify-orange-200 text-errandify-orange-800 text-xs px-2 py-1 rounded flex items-center gap-2"
                         >
                           <span>{cert}</span>
                           <label className="flex items-center gap-1 cursor-pointer">
@@ -1336,12 +1336,12 @@ export default function CreateErrandPage() {
 
                 {formData.certifications.optional.length > 0 && (
                   <div>
-                    <p className="text-xs text-blue-700 font-semibold mb-2">Optional:</p>
+                    <p className="text-xs text-errandify-orange-700 font-semibold mb-2">Optional:</p>
                     <div className="flex flex-wrap gap-2">
                       {formData.certifications.optional.map((cert) => (
                         <div
                           key={cert}
-                          className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded flex items-center gap-2"
+                          className="bg-errandify-orange-100 text-errandify-orange-700 text-xs px-2 py-1 rounded flex items-center gap-2"
                         >
                           <span>{cert}</span>
                           <label className="flex items-center gap-1 cursor-pointer">
@@ -1404,7 +1404,7 @@ export default function CreateErrandPage() {
                     specialNote: aiSuggestions.suggestedNotes,
                   }));
                 }}
-                className="mt-2 inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full hover:bg-blue-200 transition-colors font-medium"
+                className="mt-2 inline-block px-3 py-1 bg-errandify-orange-100 text-errandify-orange-700 text-xs rounded-full hover:bg-errandify-orange-200 transition-colors font-medium"
                 title="Click to use AI suggestion"
               >
                 💡 {aiSuggestions.suggestedNotes}

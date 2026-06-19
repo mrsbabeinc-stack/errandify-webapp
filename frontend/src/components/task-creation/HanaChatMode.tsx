@@ -201,7 +201,7 @@ export default function HanaChatMode({
             <div
               className={`max-w-xs px-4 py-3 rounded-lg ${
                 msg.role === 'hana'
-                  ? 'bg-blue-100 text-blue-900 rounded-bl-none'
+                  ? 'bg-errandify-orange-100 text-errandify-orange-900 rounded-bl-none'
                   : 'bg-errandify-orange text-white rounded-br-none'
               }`}
             >

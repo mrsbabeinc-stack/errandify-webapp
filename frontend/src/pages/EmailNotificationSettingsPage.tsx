@@ -260,8 +260,8 @@ export default function EmailNotificationSettingsPage() {
         </div>
 
         {/* Info */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-xs text-blue-900">
+        <div className="mt-6 p-4 bg-errandify-orange-50 rounded-lg border border-errandify-orange-200">
+          <p className="text-xs text-errandify-orange-900">
             <strong>💡 Tip:</strong> Critical events are always sent immediately. Important events follow your digest schedule. Optional events can be toggled on/off.
           </p>
         </div>

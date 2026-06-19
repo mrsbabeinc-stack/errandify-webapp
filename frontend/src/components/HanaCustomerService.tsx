@@ -529,7 +529,7 @@ export default function HanaCustomerService() {
                 className={`px-3 py-2 rounded-lg text-white font-semibold transition-all ${
                   isRecording
                     ? 'bg-red-500 hover:bg-red-600 animate-pulse'
-                    : 'bg-blue-500 hover:bg-blue-600'
+                    : 'bg-errandify-orange-500 hover:bg-errandify-orange-600'
                 } disabled:opacity-50`}
                 title={isRecording ? 'Stop recording' : 'Start voice input'}
               >

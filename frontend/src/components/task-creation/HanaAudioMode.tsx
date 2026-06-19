@@ -133,7 +133,7 @@ export default function HanaAudioMode({
         <div className="space-y-6">
           {/* Transcription Display */}
           {transcription && (
-            <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="bg-errandify-orange-50 p-4 rounded-lg">
               <p className="text-sm font-semibold text-gray-600 mb-2">Transcription:</p>
               <p className="text-gray-700 whitespace-pre-wrap">{transcription}</p>
             </div>
@@ -240,7 +240,7 @@ export default function HanaAudioMode({
         <button
           onClick={handleTranscribeAndExtract}
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50"
+          className="w-full bg-errandify-orange-600 text-white py-3 rounded-lg font-bold hover:bg-errandify-orange-700 disabled:opacity-50"
         >
           {loading ? 'Processing...' : 'Transcribe & Extract'}
         </button>

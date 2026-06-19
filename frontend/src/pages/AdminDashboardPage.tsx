@@ -89,7 +89,7 @@ export default function AdminDashboardPage() {
               onClick={() => setActiveTab('overview')}
               className={`flex-1 px-6 py-4 font-semibold transition ${
                 activeTab === 'overview'
-                  ? 'bg-blue-100 text-blue-900 border-b-4 border-blue-600'
+                  ? 'bg-errandify-orange-100 text-errandify-orange-900 border-b-4 border-errandify-orange-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
@@ -132,9 +132,9 @@ export default function AdminDashboardPage() {
             <div className="p-8">
               {/* Key Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg p-6 border-l-4 border-blue-600">
+                <div className="bg-gradient-to-br from-errandify-orange-100 to-errandify-orange-50 rounded-lg p-6 border-l-4 border-errandify-orange-600">
                   <p className="text-gray-600 text-sm font-semibold mb-2">👥 Total Users</p>
-                  <p className="text-4xl font-bold text-blue-600">{dashboard.stats.totalUsers}</p>
+                  <p className="text-4xl font-bold text-errandify-orange-600">{dashboard.stats.totalUsers}</p>
                 </div>
                 <div className="bg-gradient-to-br from-green-100 to-green-50 rounded-lg p-6 border-l-4 border-green-600">
                   <p className="text-gray-600 text-sm font-semibold mb-2">📋 Total Tasks</p>
@@ -166,7 +166,7 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="bg-white rounded-lg shadow p-6">
                   <p className="text-gray-600 text-sm font-semibold mb-2">🎯 Bid Conversion</p>
-                  <p className="text-3xl font-bold text-blue-600">
+                  <p className="text-3xl font-bold text-errandify-orange-600">
                     {dashboard.stats.totalTasks > 0
                       ? Math.round((dashboard.stats.totalBids / dashboard.stats.totalTasks) * 100)
                       : 0}

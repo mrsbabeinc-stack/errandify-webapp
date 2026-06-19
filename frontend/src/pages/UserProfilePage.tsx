@@ -119,13 +119,13 @@ export default function UserProfilePage() {
   const roleEmoji = profile.user.role === 'doer' ? '👷' : '📋';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-8">
+      <div className="bg-gradient-to-r from-errandify-orange-600 to-indigo-600 text-white py-8">
         <div className="max-w-4xl mx-auto px-6">
           <button
             onClick={() => navigate(-1)}
-            className="mb-4 text-blue-200 hover:text-white transition text-sm"
+            className="mb-4 text-errandify-orange-200 hover:text-white transition text-sm"
           >
             ← Back
           </button>
@@ -150,10 +150,10 @@ export default function UserProfilePage() {
                 <img
                   src={profile.user.profileImage}
                   alt={profile.user.displayName}
-                  className="w-32 h-32 rounded-full object-cover border-4 border-blue-500"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-errandify-orange-500"
                 />
               ) : (
-                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-5xl border-4 border-blue-500">
+                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-errandify-orange-400 to-indigo-600 flex items-center justify-center text-5xl border-4 border-errandify-orange-500">
                   👤
                 </div>
               )}
@@ -223,7 +223,7 @@ export default function UserProfilePage() {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 border-t">
             <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600">
+              <p className="text-3xl font-bold text-errandify-orange-600">
                 {profile.stats.tasksCompletedAsDoer}
               </p>
               <p className="text-sm text-gray-600 mt-1">Tasks Done</p>
@@ -306,7 +306,7 @@ export default function UserProfilePage() {
         )}
 
         {/* Activity Info */}
-        <div className="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="mt-8 p-6 bg-errandify-orange-50 rounded-lg border border-errandify-orange-200">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-600 font-semibold">Joined</p>

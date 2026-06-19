@@ -130,13 +130,13 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8 px-6">
+    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 py-8 px-6">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => navigate('/profile')}
-            className="mb-4 text-blue-600 hover:text-blue-800 transition text-sm"
+            className="mb-4 text-errandify-orange-600 hover:text-errandify-orange-800 transition text-sm"
           >
             ← Back to Profile
           </button>
@@ -168,7 +168,7 @@ export default function EditProfilePage() {
                 value={formData.displayName}
                 onChange={handleInputChange}
                 placeholder="How people will see you"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-errandify-orange-500 transition"
                 required
               />
             </div>
@@ -183,7 +183,7 @@ export default function EditProfilePage() {
                 placeholder="Tell others about yourself... (max 500 characters)"
                 maxLength={500}
                 rows={4}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition resize-none"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-errandify-orange-500 transition resize-none"
               />
               <p className="text-xs text-gray-500 mt-1">{formData.bio.length}/500</p>
             </div>
@@ -197,7 +197,7 @@ export default function EditProfilePage() {
                 value={formData.phone}
                 onChange={handleInputChange}
                 placeholder="+65 XXXX XXXX"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-errandify-orange-500 transition"
               />
             </div>
 
@@ -210,7 +210,7 @@ export default function EditProfilePage() {
                 value={formData.profileImageUrl}
                 onChange={handleInputChange}
                 placeholder="https://example.com/photo.jpg"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-errandify-orange-500 transition"
               />
               {formData.profileImageUrl && (
                 <div className="mt-3 flex items-center gap-4">
@@ -218,7 +218,7 @@ export default function EditProfilePage() {
                   <img
                     src={formData.profileImageUrl}
                     alt="Profile"
-                    className="w-16 h-16 rounded-full object-cover border-2 border-blue-300"
+                    className="w-16 h-16 rounded-full object-cover border-2 border-errandify-orange-300"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
@@ -236,7 +236,7 @@ export default function EditProfilePage() {
                   value={newSkill}
                   onChange={(e) => setNewSkill(e.target.value)}
                   placeholder="Add a skill (e.g., Photography, Gardening)"
-                  className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-errandify-orange-500"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -247,7 +247,7 @@ export default function EditProfilePage() {
                 <button
                   type="button"
                   onClick={handleAddSkill}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-semibold"
+                  className="px-4 py-2 bg-errandify-orange-500 text-white rounded-lg hover:bg-errandify-orange-600 transition font-semibold"
                 >
                   Add
                 </button>
@@ -259,13 +259,13 @@ export default function EditProfilePage() {
                   {formData.skills.map((skill) => (
                     <div
                       key={skill}
-                      className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                      className="flex items-center gap-2 px-3 py-1 bg-errandify-orange-100 text-errandify-orange-800 rounded-full text-sm"
                     >
                       {skill}
                       <button
                         type="button"
                         onClick={() => handleRemoveSkill(skill)}
-                        className="text-blue-600 hover:text-blue-800 font-bold"
+                        className="text-errandify-orange-600 hover:text-errandify-orange-800 font-bold"
                       >
                         ×
                       </button>
@@ -304,7 +304,7 @@ export default function EditProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold hover:shadow-lg disabled:opacity-50 transition transform hover:scale-105"
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-errandify-orange-600 to-indigo-600 text-white rounded-lg font-bold hover:shadow-lg disabled:opacity-50 transition transform hover:scale-105"
               >
                 {saving ? '💾 Saving...' : '✅ Save Changes'}
               </button>
