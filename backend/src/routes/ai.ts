@@ -557,7 +557,18 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       }
     }
 
-    const fullAddress = postalCode ? `${building}, Singapore ${postalCode}` : '';
+    // Extract building number from postal code (last 4 digits represent the building/street number)
+    let buildingNumber = '';
+    if (postalCode && postalCode.length === 6) {
+      const lastFourDigits = postalCode.substring(2);
+      if (lastFourDigits !== '0000') {
+        buildingNumber = lastFourDigits.replace(/^0+/, ''); // Remove leading zeros
+      }
+    }
+
+    const fullAddress = postalCode
+      ? `${buildingNumber ? buildingNumber + ' ' : ''}${building}, Singapore ${postalCode}`
+      : '';
 
     res.json({
       success: true,
