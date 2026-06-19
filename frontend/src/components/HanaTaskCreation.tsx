@@ -97,20 +97,27 @@ export default function HanaTaskCreation({
   const extractTaskInfo = async (userInput: string) => {
     try {
       // First, check if the input contains inappropriate content
-      const contentCheckResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/check-content`,
-        {
-          title: userInput,
-          description: '',
-          notes: '',
-        }
-      );
+      try {
+        const contentCheckResponse = await axios.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/check-content`,
+          {
+            title: userInput,
+            description: '',
+            notes: '',
+          }
+        );
 
-      if (!contentCheckResponse.data.data.is_safe) {
-        setHanaMessage('I cannot help with that request. It contains inappropriate content. Please describe your errand in a different way. 😊');
-        setCurrentStep('input');
-        setInput('');
-        return;
+        if (!contentCheckResponse.data.data.is_safe) {
+          console.log('[Hana] Content check failed - inappropriate content detected');
+          setHanaMessage('I cannot help with that request. It contains inappropriate content. Please describe your errand in a different way. 😊');
+          setCurrentStep('input');
+          setInput('');
+          setLoading(false);
+          return;
+        }
+      } catch (contentCheckErr) {
+        console.warn('[Hana] Content check error:', contentCheckErr);
+        // Continue anyway if content check fails - don't block the user
       }
 
       // Use AI to extract structured task info from freeform input
