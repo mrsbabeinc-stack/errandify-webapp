@@ -25,7 +25,7 @@ export default function FAQPage() {
       id: 'g2',
       category: 'general',
       question: 'How much does it cost to use Errandify?',
-      answer: 'Errandify is free to join and use. We only take a small commission (varies by category) when a doer completes an errand. Doers keep the majority of what they earn.',
+      answer: 'Errandify is free to join and use. We take a 20% commission when a doer completes an errand. For example, if you earn SGD $100, Errandify takes SGD $20 and you receive SGD $80. This helps us maintain the platform, verify users, and ensure quality.',
     },
     {
       id: 'g3',
@@ -127,7 +127,7 @@ export default function FAQPage() {
       id: 'p3',
       category: 'payment',
       question: 'Are there any fees?',
-      answer: 'Askers pay the errand amount to doers + a small commission (varies by category, typically 5-10%). Doers earn the negotiated rate. Payout fees to your bank are minimal (included).',
+      answer: 'Errandify charges a 20% commission on completed errands. If you (as a doer) negotiate SGD $100, you earn SGD $80 after the 20% commission. Askers pay the full agreed amount. Bank payout fees are minimal and included in your account.',
     },
     {
       id: 'p4',
