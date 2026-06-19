@@ -15,6 +15,7 @@ interface TaskData {
   budget: string;
   postalCode: string;
   notes: string;
+  suggestedSkills?: string[];
 }
 
 type CollectionStep = 'input' | 'confirm' | 'complete';
@@ -120,14 +121,45 @@ export default function HanaTaskCreation({
 
       setTaskData(updatedTaskData);
 
-      // Auto-proceed to form - skip confirmation
-      setHanaMessage('✅ Got it! Taking you to the form now...');
-      triggerSpeaking();
+      // Get AI suggestions for this category
+      try {
+        const suggestionsResponse = await axios.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+          {
+            title: updatedTaskData.title,
+            description: updatedTaskData.description,
+            category: updatedTaskData.category,
+          }
+        );
 
-      // Auto-fill form and proceed after a short delay
-      setTimeout(() => {
-        onComplete(updatedTaskData);
-      }, 1000);
+        const suggestions = suggestionsResponse.data.data;
+        const enhancedTaskData = {
+          ...updatedTaskData,
+          description: suggestions.description || updatedTaskData.description,
+          notes: suggestions.notes || updatedTaskData.notes,
+          suggestedSkills: suggestions.skills || [],
+        };
+
+        setTaskData(enhancedTaskData as any);
+
+        // Auto-proceed to form
+        setHanaMessage('✅ Got it! Taking you to the form now...');
+        triggerSpeaking();
+
+        // Auto-fill form and proceed after a short delay
+        setTimeout(() => {
+          onComplete(enhancedTaskData as any);
+        }, 1000);
+      } catch (err) {
+        console.error('Failed to get suggestions:', err);
+        // Proceed anyway without suggestions
+        setHanaMessage('✅ Got it! Taking you to the form now...');
+        triggerSpeaking();
+
+        setTimeout(() => {
+          onComplete(updatedTaskData);
+        }, 1000);
+      }
     } catch (err: any) {
       console.error('Extraction error:', err);
       const errorMsg = err.response?.data?.error || err.message || 'Unknown error';

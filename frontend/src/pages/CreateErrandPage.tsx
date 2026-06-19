@@ -86,49 +86,39 @@ export default function CreateErrandPage() {
     if (prefilledJson) {
       try {
         const prefilledData = JSON.parse(decodeURIComponent(prefilledJson));
+        console.log('[CreateErrand] Prefilled data:', prefilledData);
+
         const newFormData = {
           title: prefilledData.title || '',
           description: prefilledData.description || '',
           category: prefilledData.category || '',
           location: prefilledData.location || '',
           startLocation: '',
-          budget: prefilledData.budget || '',
+          budget: prefilledData.budget ? String(prefilledData.budget) : '',
           deadline: prefilledData.date || '',
           time: prefilledData.time || '',
-          duration: prefilledData.duration || '',
+          duration: prefilledData.duration ? String(prefilledData.duration) : '',
           durationUnit: (prefilledData.durationUnit || 'Hr') as 'Min' | 'Hr' | 'Day' | 'Week',
           isRecurring: false,
           repeatEvery: '1',
           repeatUnit: 'week' as 'day' | 'week' | 'month',
           occurrences: '1',
           specialNote: prefilledData.notes || '',
-          skills: [] as string[],
+          skills: prefilledData.suggestedSkills ? [...prefilledData.suggestedSkills] : [],
           certifications: { required: [] as string[], optional: [] as string[] },
         };
+
         setFormData(newFormData);
 
         // Set postal code and full address from prefilled data
         if (prefilledData.postalCode) {
-          const code = prefilledData.postalCode;
-          setPostalCode(code);
+          setPostalCode(prefilledData.postalCode);
+          console.log('[CreateErrand] Postal code:', prefilledData.postalCode);
+        }
 
-          // Use full address from API if available
-          if (prefilledData.fullAddress) {
-            setFullAddress(prefilledData.fullAddress);
-          } else {
-            // Fallback: Update location and address based on postal code prefix
-            if (code.length === 6 && /^\d+$/.test(code)) {
-              const areaPrefix = code.substring(0, 2);
-              const areaData = postalCodeAreas[areaPrefix];
-              if (areaData) {
-                setFormData((prev) => ({
-                  ...prev,
-                  location: areaData.area,
-                }));
-                setFullAddress(`1 ${areaData.building}, Unit: __, Singapore ${code}`);
-              }
-            }
-          }
+        if (prefilledData.fullAddress) {
+          setFullAddress(prefilledData.fullAddress);
+          console.log('[CreateErrand] Full address:', prefilledData.fullAddress);
         }
 
         // Auto-fetch AI suggestions for the prefilled title
