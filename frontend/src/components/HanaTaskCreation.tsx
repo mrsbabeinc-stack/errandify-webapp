@@ -77,11 +77,16 @@ export default function HanaTaskCreation({
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading) {
+      console.log('[Hana] Skipping - input empty or already loading');
+      return;
+    }
 
     const userInput = input.trim();
+    console.log('[Hana] Processing input:', userInput);
     setInput('');
     setLoading(true);
+    console.log('[Hana] Set loading to true');
 
     try {
       // Send user input to AI to extract all info at once
@@ -89,7 +94,9 @@ export default function HanaTaskCreation({
     } catch (error) {
       console.error('Chat error:', error);
       setHanaMessage('Sorry, I had trouble understanding. Can you try again?');
+      setCurrentStep('input'); // Make sure we return to input step
     } finally {
+      console.log('[Hana] Setting loading to false after processing');
       setLoading(false);
     }
   };
@@ -109,10 +116,10 @@ export default function HanaTaskCreation({
 
         if (!contentCheckResponse.data.data.is_safe) {
           console.log('[Hana] Content check failed - inappropriate content detected');
+          console.log('[Hana] Setting step to input and showing rejection message');
           setHanaMessage('I cannot help with that request. It contains inappropriate content. Please describe your errand in a different way. 😊');
           setCurrentStep('input');
-          setInput('');
-          setLoading(false);
+          console.log('[Hana] About to return - loading will be reset by finally block');
           return;
         }
       } catch (contentCheckErr) {
