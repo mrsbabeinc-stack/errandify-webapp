@@ -34,8 +34,8 @@ export default function HowItWorksPage() {
               <div className="flex gap-4">
                 <div className="bg-errandify-orange text-white rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0 text-lg">1</div>
                 <div>
-                  <h3 className="font-bold text-gray-800 mb-1">Post an Errand</h3>
-                  <p className="text-sm text-gray-600">Describe what you need done. Use Hana (our AI assistant) to make it easy!</p>
+                  <h3 className="font-bold text-gray-800 mb-1">Post an Errand with Your Budget</h3>
+                  <p className="text-sm text-gray-600">Describe what you need done and set your budget. Doers will see what you're willing to pay.</p>
                 </div>
               </div>
 
@@ -43,8 +43,8 @@ export default function HowItWorksPage() {
               <div className="flex gap-4">
                 <div className="bg-errandify-orange text-white rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0 text-lg">2</div>
                 <div>
-                  <h3 className="font-bold text-gray-800 mb-1">Find a Doer</h3>
-                  <p className="text-sm text-gray-600">Browse bids from qualified neighbours. Compare ratings, prices, and availability.</p>
+                  <h3 className="font-bold text-gray-800 mb-1">Review Bids from Doers</h3>
+                  <p className="text-sm text-gray-600">Doers submit bids at their own rates (at, above, or below your budget). Compare ratings and prices.</p>
                 </div>
               </div>
 
@@ -82,8 +82,8 @@ export default function HowItWorksPage() {
               <div className="flex gap-4">
                 <div className="bg-errandify-brown text-white rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0 text-lg">1</div>
                 <div>
-                  <h3 className="font-bold text-gray-800 mb-1">Browse Errands</h3>
-                  <p className="text-sm text-gray-600">See what your neighbourhood needs. Filter by category, location, and pay rate.</p>
+                  <h3 className="font-bold text-gray-800 mb-1">Browse Errands with Budgets</h3>
+                  <p className="text-sm text-gray-600">See what your neighbourhood needs and how much they're willing to pay. Filter by category and budget.</p>
                 </div>
               </div>
 
@@ -91,8 +91,8 @@ export default function HowItWorksPage() {
               <div className="flex gap-4">
                 <div className="bg-errandify-brown text-white rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0 text-lg">2</div>
                 <div>
-                  <h3 className="font-bold text-gray-800 mb-1">Apply & Accept</h3>
-                  <p className="text-sm text-gray-600">Submit your bid at your rate. When asker picks you, confirm and get started!</p>
+                  <h3 className="font-bold text-gray-800 mb-1">Submit Your Bid</h3>
+                  <p className="text-sm text-gray-600">Bid any amount (at, below, or above their budget). When asker picks you, you're locked in and can start!</p>
                 </div>
               </div>
 

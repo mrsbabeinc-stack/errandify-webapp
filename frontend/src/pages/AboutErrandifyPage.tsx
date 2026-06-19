@@ -105,15 +105,15 @@ export default function AboutErrandifyPage() {
               <div className="flex gap-3 items-start">
                 <div className="bg-errandify-orange text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">1</div>
                 <div>
-                  <p className="font-semibold text-gray-800">Need Help? Post an Errand</p>
-                  <p className="text-sm text-gray-600">Tell us what you need done – cleaning, moving, tutoring, repairs, or anything else.</p>
+                  <p className="font-semibold text-gray-800">Post an Errand with Your Budget</p>
+                  <p className="text-sm text-gray-600">Tell us what you need done and set your budget. Doers will see how much you're willing to pay.</p>
                 </div>
               </div>
               <div className="flex gap-3 items-start">
                 <div className="bg-errandify-orange text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">2</div>
                 <div>
                   <p className="font-semibold text-gray-800">Doers Submit Bids</p>
-                  <p className="text-sm text-gray-600">Skilled neighbours review your errand and submit bids with their rates and availability.</p>
+                  <p className="text-sm text-gray-600">Skilled neighbours review your budget and submit bids – they can bid at, below, or above your budget.</p>
                 </div>
               </div>
               <div className="flex gap-3 items-start">
