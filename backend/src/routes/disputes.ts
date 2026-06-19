@@ -408,13 +408,35 @@ router.post('/:disputeId/appeal', authMiddleware, async (req: AuthRequest, res: 
     res.status(500).json({ error: 'Failed to appeal dispute' });
   }
 });
+
+// POST /api/disputes - Raise a dispute
+router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { taskId, issueType, description, evidenceUrls } = req.body;
+    const raisedBy = req.userId;
+
+    // Verify task exists and get details
+    const taskResult = await db.query('SELECT * FROM errands WHERE id = $1', [taskId]);
+
+    if (taskResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const task = taskResult.rows[0];
+
+    // Verify user is involved in task
+    if (task.asker_id !== raisedBy && task.doer_id !== raisedBy) {
+      return res.status(403).json({ error: 'You can only dispute tasks you are involved in' });
+    }
+
+    // Check if dispute is within 48 hours of completion
+    if (task.status === 'completed') {
+      const completedTime = new Date(task.completed_at).getTime();
       const now = Date.now();
       const hoursPassed = (now - completedTime) / (1000 * 60 * 60);
 
       if (hoursPassed > 48) {
-        return res
-          .status(400)
-          .json({ error: 'Disputes can only be raised within 48 hours of completion' });
+        return res.status(400).json({ error: 'Disputes can only be raised within 48 hours of completion' });
       }
     }
 

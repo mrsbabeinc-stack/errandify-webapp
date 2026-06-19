@@ -48,6 +48,30 @@ export default function CreateErrandPage() {
   const [paymentRequired, setPaymentRequired] = useState(false);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
+  // Load copied errand data on mount
+  useEffect(() => {
+    const copyErrandData = sessionStorage.getItem('copyErrandData');
+    if (copyErrandData) {
+      try {
+        const data = JSON.parse(copyErrandData);
+        setFormData((prev) => ({
+          ...prev,
+          title: data.title || '',
+          description: data.description || '',
+          category: data.category || prev.category,
+          budget: data.budget ? data.budget.toString() : '',
+          deadline: data.deadline || '',
+          location: data.location || '',
+          isRecurring: data.isRecurring || false,
+        }));
+        // Clear the session storage so it doesn't persist
+        sessionStorage.removeItem('copyErrandData');
+      } catch (err) {
+        console.error('Failed to load copied errand data:', err);
+      }
+    }
+  }, []);
+
   const [aiSuggestions, setAiSuggestions] = useState({
     suggestedCategory: '',
     suggestedDescription: '',
