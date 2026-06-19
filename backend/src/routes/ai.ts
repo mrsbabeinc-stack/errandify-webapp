@@ -464,7 +464,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       '01': 'Raffles Place', '02': 'Downtown Core', '03': 'Marina', '04': 'Telok Ayer',
       '05': 'Outram', '06': 'Tiong Bahru', '07': 'Queenstown', '08': 'Bukit Merah',
       '09': 'Redhill', '10': 'Tanglin', '11': 'Novena', '12': 'Balestier',
-      '13': 'Potong Pasir', '14': 'Geylang', '15': 'Whampoa', '16': 'Whampoa',
+      '13': 'Potong Pasir', '14': 'Geylang', '15': 'Henderson Crescent', '16': 'Whampoa',
       '17': 'Serangoon', '18': 'Macpherson', '19': 'Tai Seng', '20': 'Bishan',
       '21': 'Ang Mo Kio', '22': 'Hougang', '23': 'Punggol', '24': 'Tampines',
       '25': 'Pasir Ris', '26': 'Tampines', '27': 'Bedok', '28': 'Changi',
