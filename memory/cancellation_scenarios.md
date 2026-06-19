@@ -30,7 +30,7 @@ metadata:
 
 ### What Happens When Doer A Cancels?
 
-**API Call (NEED TO IMPLEMENT):**
+**API Call (IMPLEMENTED):**
 ```
 POST /api/bids/:bidId/cancel
 {
@@ -38,7 +38,7 @@ POST /api/bids/:bidId/cancel
 }
 ```
 
-**Expected Backend Logic:**
+**Backend Logic:**
 
 1. **Verify doer owns the bid:**
    - Check current user is the doer
@@ -55,16 +55,17 @@ POST /api/bids/:bidId/cancel
 4. **Revert task:**
    - errands status: 'confirmed' → 'open' (allow new bids)
    - Clear accepted_bid_id
-   - Payment stays in escrow (ready for next doer)
+   - **Payment stays in escrow** (same $100 reserved, ready for next doer)
 
 5. **Notify previous bidders:**
    - **To Doer B:** "Task is available again! Your previous bid of $95 can be reconsidered. [Re-bid Now]"
-   - Or auto-offer to accept their previous bid: "[Accept Doer B's $95 bid]"
+   - Send critical email: "Task Available Again! Your bid ready"
+   - Automatically notify all doers who bid (backend: notifyTaskReopenedAfterCancellation)
 
 6. **Asker can:**
-   - Accept Doer B's previous bid (already bid $95)
+   - Accept Doer B's previous bid (same $100 escrow used)
    - Wait for new bids
-   - Reject and get refund
+   - Reject and get escrow released
 
 ### After Doer A Cancels
 ```
@@ -179,38 +180,49 @@ Doer compensation: $5 (pending)
 
 ## ESCROW & 48-HOUR DISPUTE SYSTEM (CORE PROTECTION)
 
-### How Escrow Works
+### How Escrow Works (CRITICAL CLARIFICATION)
+
+**Payment held IN ESCROW from moment of posting, NOT when bid accepted.**
+
 ```
 PAYMENT TIMELINE:
 
-1. POSTING PHASE
+1. POSTING PHASE ⭐ ESCROW STARTS HERE
    ├─ Asker posts task: $100
-   └─ System: $100 held in escrow (not charged to card yet)
-
+   └─ System: $100 IMMEDIATELY held in escrow (Stripe reserve)
+   
 2. BIDDING PHASE
-   ├─ Doers bid (doesn't affect escrow)
+   ├─ Doers bid (escrow unchanged)
+   ├─ Multiple bids possible
    └─ Asker accepts one bid
 
 3. CONFIRMED PHASE
    ├─ Task: "confirmed"
    ├─ Payment: $100 still in escrow
-   └─ Doer: Completes payment (confirms from their end)
+   └─ Doer: Accepts and proceeds to work
 
 4. IN_PROGRESS PHASE
    ├─ Task: "in_progress"
-   ├─ Payment: $100 escrow → now locked for release
+   ├─ Payment: $100 escrow → locked for 48h hold
    └─ Timer: 48-hour dispute window starts
 
 5. COMPLETED PHASE
    ├─ Task: "completed"
    ├─ Asker marks work done
-   └─ Dispute window: still open (48h from completion)
+   └─ Dispute window: Open for 48h from completion
 
 6. PAYMENT RELEASE (After 48h or dispute resolved)
-   ├─ If no dispute: $100 → doer's Stripe Connect account
+   ├─ If no dispute: $100 → doer's wallet
    ├─ If doer disputed & won: $100 → doer
    └─ If asker disputed & won: $95 to asker, $5 to doer
 ```
+
+**Key Insight:**
+- Escrow starts at POSTING (before any bids)
+- Guarantees asker has funds before doers start work
+- If doer cancels and task reopens, SAME $100 escrow transfers to new doer
+- Asker cannot withdraw escrow or change amount once posted
+- This builds trust with doers (money is guaranteed)
 
 ### Why 48 Hours?
 **Protects both:**
