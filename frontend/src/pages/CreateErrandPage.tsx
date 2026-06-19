@@ -82,83 +82,86 @@ export default function CreateErrandPage() {
 
   // Load prefilled data from Hana on mount
   useEffect(() => {
-    const prefilledJson = searchParams.get('prefilled');
-    console.log('[CreateErrand] searchParams.get("prefilled"):', prefilledJson);
-    if (prefilledJson) {
-      try {
-        const prefilledData = JSON.parse(decodeURIComponent(prefilledJson));
-        console.log('[CreateErrand] Parsed prefilled data:', prefilledData);
-        console.log('[CreateErrand] Data keys:', Object.keys(prefilledData));
+    const loadPrefilled = async () => {
+      const prefilledJson = searchParams.get('prefilled');
+      console.log('[CreateErrand] searchParams.get("prefilled"):', prefilledJson);
+      if (prefilledJson) {
+        try {
+          const prefilledData = JSON.parse(decodeURIComponent(prefilledJson));
+          console.log('[CreateErrand] Parsed prefilled data:', prefilledData);
+          console.log('[CreateErrand] Data keys:', Object.keys(prefilledData));
 
-        const newFormData = {
-          title: prefilledData.title || '',
-          description: prefilledData.description || '',
-          category: prefilledData.category || '',
-          location: prefilledData.location || '',
-          startLocation: '',
-          budget: prefilledData.budget ? String(prefilledData.budget) : '',
-          deadline: prefilledData.date || '',
-          time: prefilledData.time || '',
-          duration: prefilledData.duration ? String(prefilledData.duration) : '',
-          durationUnit: (prefilledData.durationUnit || 'Hr') as 'Min' | 'Hr' | 'Day' | 'Week',
-          isRecurring: false,
-          repeatEvery: '1',
-          repeatUnit: 'week' as 'day' | 'week' | 'month',
-          occurrences: '1',
-          specialNote: prefilledData.notes || '',
-          skills: prefilledData.suggestedSkills ? [...prefilledData.suggestedSkills] : [],
-          certifications: { required: [] as string[], optional: [] as string[] },
-        };
+          const newFormData = {
+            title: prefilledData.title || '',
+            description: prefilledData.description || '',
+            category: prefilledData.category || '',
+            location: prefilledData.location || '',
+            startLocation: '',
+            budget: prefilledData.budget ? String(prefilledData.budget) : '',
+            deadline: prefilledData.date || '',
+            time: prefilledData.time || '',
+            duration: prefilledData.duration ? String(prefilledData.duration) : '',
+            durationUnit: (prefilledData.durationUnit || 'Hr') as 'Min' | 'Hr' | 'Day' | 'Week',
+            isRecurring: false,
+            repeatEvery: '1',
+            repeatUnit: 'week' as 'day' | 'week' | 'month',
+            occurrences: '1',
+            specialNote: prefilledData.notes || '',
+            skills: prefilledData.suggestedSkills ? [...prefilledData.suggestedSkills] : [],
+            certifications: { required: [] as string[], optional: [] as string[] },
+          };
 
-        setFormData(newFormData);
+          setFormData(newFormData);
 
-        // Set postal code and full address from prefilled data
-        if (prefilledData.postalCode) {
-          setPostalCode(prefilledData.postalCode);
-          console.log('[CreateErrand] Postal code:', prefilledData.postalCode);
-        }
-
-        if (prefilledData.fullAddress) {
-          setFullAddress(prefilledData.fullAddress);
-          console.log('[CreateErrand] Full address:', prefilledData.fullAddress);
-        }
-
-        // Auto-fetch AI suggestions for the prefilled title and category
-        if (newFormData.title && newFormData.category) {
-          console.log('[CreateErrand] Fetching suggestions for:', newFormData.title, 'category:', newFormData.category);
-          // Call suggestions API with category
-          try {
-            const response = await axios.post(
-              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
-              {
-                title: newFormData.title,
-                description: newFormData.description,
-                category: newFormData.category
-              }
-            );
-            if (response.data.success) {
-              console.log('[CreateErrand] Got suggestions:', response.data.data);
-              setAiSuggestions({
-                suggestedCategory: response.data.data.category,
-                suggestedDescription: response.data.data.description,
-                correctedTitle: response.data.data.correctedTitle || '',
-                hasCorrections: response.data.data.hasCorrections,
-                suggestedBudget: response.data.data.suggestedBudget || null,
-                suggestedNotes: response.data.data.notes || '',
-                certifications: response.data.data.certifications || { required: [], optional: [] },
-                skills: response.data.data.skills || [],
-                blocked: false,
-                error: '',
-              });
-            }
-          } catch (err) {
-            console.error('Error fetching suggestions:', err);
+          // Set postal code and full address from prefilled data
+          if (prefilledData.postalCode) {
+            setPostalCode(prefilledData.postalCode);
+            console.log('[CreateErrand] Postal code:', prefilledData.postalCode);
           }
+
+          if (prefilledData.fullAddress) {
+            setFullAddress(prefilledData.fullAddress);
+            console.log('[CreateErrand] Full address:', prefilledData.fullAddress);
+          }
+
+          // Auto-fetch AI suggestions for the prefilled title and category
+          if (newFormData.title && newFormData.category) {
+            console.log('[CreateErrand] Fetching suggestions for:', newFormData.title, 'category:', newFormData.category);
+            try {
+              const response = await axios.post(
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+                {
+                  title: newFormData.title,
+                  description: newFormData.description,
+                  category: newFormData.category
+                }
+              );
+              if (response.data.success) {
+                console.log('[CreateErrand] Got suggestions:', response.data.data);
+                setAiSuggestions({
+                  suggestedCategory: response.data.data.category,
+                  suggestedDescription: response.data.data.description,
+                  correctedTitle: response.data.data.correctedTitle || '',
+                  hasCorrections: response.data.data.hasCorrections,
+                  suggestedBudget: response.data.data.suggestedBudget || null,
+                  suggestedNotes: response.data.data.notes || '',
+                  certifications: response.data.data.certifications || { required: [], optional: [] },
+                  skills: response.data.data.skills || [],
+                  blocked: false,
+                  error: '',
+                });
+              }
+            } catch (err) {
+              console.error('Error fetching suggestions:', err);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to load prefilled data:', err);
         }
-      } catch (err) {
-        console.error('Failed to load prefilled data:', err);
       }
-    }
+    };
+
+    loadPrefilled();
   }, [searchParams]);
 
   const categoryNames: Record<string, string> = {
