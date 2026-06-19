@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import NotificationPreferencesSection from '../components/NotificationPreferencesSection';
 
 interface ProfilePageProps {
   userRole: 'asker' | 'doer';
@@ -9,7 +8,6 @@ interface ProfilePageProps {
 
 export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
   const navigate = useNavigate();
-  const [showNotifications, setShowNotifications] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -29,6 +27,7 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
   const handleBlockList = () => navigate('/block-list');
   const handlePayoutSetting = () => navigate('/payout-settings');
   const handleTransactionHistory = () => navigate('/transaction-history');
+  const handleNotificationPreferences = () => navigate('/settings/notifications');
   const handleErrandifyPoints = () => navigate('/errandify-points');
   const handleMyRewards = () => navigate('/my-rewards');
   const handlePointsHistory = () => navigate('/points-history');
@@ -129,24 +128,14 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
           </button>
 
           {/* Notification Preferences */}
-          <button
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100"
-          >
+          <button onClick={handleNotificationPreferences} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
             <div className="flex items-center gap-2 text-left">
               <span className="text-lg">🔔</span>
               <span className="text-sm font-medium text-gray-700">Notification Preferences</span>
             </div>
-            <span className={`text-gray-400 transition-transform ${showNotifications ? 'rotate-180' : ''}`}>›</span>
+            <span className="text-gray-400">›</span>
           </button>
         </div>
-
-        {/* Notification Preferences Expanded */}
-        {showNotifications && (
-          <div className="mt-3 bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-            <NotificationPreferencesSection />
-          </div>
-        )}
       </div>
 
       {/* MyRewardSpace Section */}
