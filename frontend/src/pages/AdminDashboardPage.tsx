@@ -89,7 +89,7 @@ export default function AdminDashboardPage() {
               onClick={() => setActiveTab('overview')}
               className={`flex-1 px-6 py-4 font-semibold transition ${
                 activeTab === 'overview'
-                  ? 'bg-errandify-orange-100 text-errandify-orange-900 border-b-4 border-errandify-orange-600'
+                  ? 'bg-orange-100 text-errandify-orange-900 border-b-4 border-errandify-orange-600'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >

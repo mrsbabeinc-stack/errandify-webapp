@@ -143,12 +143,12 @@ export default function MyPocketPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-errandify-brown mb-1">💼 MyPocket</h1>
-          <p className="text-sm text-gray-600">Manage your earnings and spending</p>
+          <p className="text-sm text-gray-600">Track your earnings from helping neighbours and manage your rewards</p>
         </div>
 
         {/* Main Balance Card */}
         <div className="bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-xl p-6 mb-6 shadow-lg">
-          <p className="text-sm opacity-90 mb-1">Available Balance</p>
+          <p className="text-sm opacity-90 mb-1">Your Errandify Balance</p>
           <h2 className="text-4xl font-bold mb-4">{formatCurrency(wallet.balance)}</h2>
           <div className="flex gap-3">
             <button
@@ -278,7 +278,7 @@ export default function MyPocketPage() {
         </div>
 
         {/* Info Footer */}
-        <div className="mt-6 p-4 bg-errandify-orange-50 rounded-lg border border-errandify-orange-200">
+        <div className="mt-6 p-4 bg-orange-50 rounded-lg border border-errandify-orange-200">
           <p className="text-xs text-errandify-orange-900">
             <strong>💡 Tip:</strong> Earn Errandify Points on every completed task. Redeem them for discounts, rewards, or donate to charity!
           </p>

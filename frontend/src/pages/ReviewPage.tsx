@@ -138,7 +138,7 @@ export default function ReviewPage() {
 
           {/* Hana Suggestions */}
           {rating < 5 && (
-            <div className="p-4 bg-errandify-orange-50 border border-errandify-orange-200 rounded-lg mb-6">
+            <div className="p-4 bg-orange-50 border border-errandify-orange-200 rounded-lg mb-6">
               <div className="flex gap-3">
                 <span className="text-2xl">🤖</span>
                 <div>

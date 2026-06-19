@@ -126,7 +126,7 @@ export default function SingPassSignupPage() {
             <p className="text-gray-600">Verified with SingPass</p>
           </div>
 
-          <div className="bg-errandify-orange-50 border-l-4 border-errandify-orange-500 p-4 mb-6">
+          <div className="bg-orange-50 border-l-4 border-errandify-orange-500 p-4 mb-6">
             <p className="text-errandify-orange-800 text-sm">
               <strong>Why SingPass?</strong> We verify your identity for safety and compliance.
               Your NRIC helps us screen for criminal convictions to protect vulnerable people.
@@ -142,7 +142,7 @@ export default function SingPassSignupPage() {
           <button
             onClick={handleSingPassLogin}
             disabled={loading}
-            className="w-full py-3 px-4 bg-errandify-orange-600 text-white rounded-lg font-bold hover:bg-errandify-orange-700 disabled:opacity-50 flex items-center justify-center gap-2 mb-4"
+            className="w-full py-3 px-4 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 disabled:opacity-50 flex items-center justify-center gap-2 mb-4"
           >
             {loading ? '🔄 Redirecting...' : '🆔 Login with SingPass'}
           </button>
@@ -284,7 +284,7 @@ export default function SingPassSignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-errandify-orange-600 text-white rounded-lg font-bold hover:bg-errandify-orange-700 disabled:opacity-50 transition-colors"
+              className="w-full py-3 px-4 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 disabled:opacity-50 transition-colors"
             >
               {loading ? 'Saving...' : 'Continue to Safety Screening'}
             </button>

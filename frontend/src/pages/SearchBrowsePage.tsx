@@ -222,7 +222,7 @@ export default function SearchBrowsePage() {
               {/* Apply Filters Button */}
               <button
                 onClick={performSearch}
-                className="w-full px-4 py-3 bg-errandify-orange-600 text-white rounded-lg font-bold hover:bg-errandify-orange-700 transition"
+                className="w-full px-4 py-3 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 transition"
               >
                 🔍 Apply Filters
               </button>
@@ -246,7 +246,7 @@ export default function SearchBrowsePage() {
                 />
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-errandify-orange-600 text-white rounded-lg font-bold hover:bg-errandify-orange-700 transition"
+                  className="px-6 py-3 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 transition"
                 >
                   Search
                 </button>
@@ -261,7 +261,7 @@ export default function SearchBrowsePage() {
 
               {/* Suggestions */}
               {suggestions && (
-                <div className="mt-3 p-4 bg-errandify-orange-50 rounded-lg border border-errandify-orange-200">
+                <div className="mt-3 p-4 bg-orange-50 rounded-lg border border-errandify-orange-200">
                   <p className="text-sm text-errandify-orange-900 font-semibold mb-2">💡 {suggestions.aiInsight}</p>
                   {suggestions.categories.length > 0 && (
                     <div className="flex flex-wrap gap-2">
@@ -272,7 +272,7 @@ export default function SearchBrowsePage() {
                             setSelectedCategory(cat.category);
                             performSearch();
                           }}
-                          className="px-3 py-1 bg-errandify-orange-200 text-errandify-orange-900 rounded-full text-xs font-semibold hover:bg-errandify-orange-300"
+                          className="px-3 py-1 bg-orange-200 text-errandify-orange-900 rounded-full text-xs font-semibold hover:bg-orange-300"
                         >
                           {cat.category} (~${cat.avgBudget}/task)
                         </button>
@@ -302,7 +302,7 @@ export default function SearchBrowsePage() {
                 <p className="text-gray-400 text-sm mb-4">Try different filters or search terms</p>
                 <button
                   onClick={handleReset}
-                  className="px-4 py-2 bg-errandify-orange-600 text-white rounded-lg hover:bg-errandify-orange-700"
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
                 >
                   Clear All Filters
                 </button>
@@ -320,7 +320,7 @@ export default function SearchBrowsePage() {
                         <h3 className="text-xl font-bold text-gray-800 mb-1">{errand.title}</h3>
                         <p className="text-gray-600 text-sm mb-2">{errand.description.substring(0, 100)}...</p>
                         <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <span className="px-2 py-1 bg-errandify-orange-100 text-errandify-orange-800 rounded-full text-xs font-semibold">
+                          <span className="px-2 py-1 bg-orange-100 text-errandify-orange-800 rounded-full text-xs font-semibold">
                             {errand.category}
                           </span>
                           <span>📍 Posted {formatDate(errand.createdAt)}</span>

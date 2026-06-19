@@ -171,7 +171,7 @@ export default function RecurringErrandSessionSelector({
           </div>
 
           {/* Summary */}
-          <div className="mt-6 p-4 bg-errandify-orange-50 rounded-lg">
+          <div className="mt-6 p-4 bg-orange-50 rounded-lg">
             <p className="text-sm text-gray-700">
               You've selected <strong>{selectedSessions.size} of {sessions.length}</strong> sessions
             </p>

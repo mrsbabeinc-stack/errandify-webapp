@@ -74,7 +74,7 @@ export default function NotificationIcon({ unreadCount: _propUnreadCount = 0 }: 
                   <div
                     key={notification.id}
                     className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                      !notification.read ? 'bg-errandify-orange-50' : ''
+                      !notification.read ? 'bg-orange-50' : ''
                     }`}
                     onClick={() => handleNotificationClick(notification)}
                   >
@@ -84,7 +84,7 @@ export default function NotificationIcon({ unreadCount: _propUnreadCount = 0 }: 
                         <p className="text-xs text-gray-600 mt-1 line-clamp-2">{notification.body}</p>
                       </div>
                       {!notification.read && (
-                        <span className="flex-shrink-0 w-2 h-2 bg-errandify-orange-500 rounded-full mt-1"></span>
+                        <span className="flex-shrink-0 w-2 h-2 bg-orange-500 rounded-full mt-1"></span>
                       )}
                     </div>
                     <p className="text-xs text-gray-400 mt-2">{formatTime(notification.created_at)}</p>

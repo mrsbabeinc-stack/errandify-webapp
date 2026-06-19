@@ -147,7 +147,7 @@ export default function CompleteProfileStep({
           </div>
 
           {/* Age Display (informational) */}
-          <div className="p-3 bg-errandify-orange-50 rounded-lg">
+          <div className="p-3 bg-orange-50 rounded-lg">
             <p className="text-sm text-gray-700">
               <span className="font-semibold">Age:</span> {mockData.age}
               {mockData.age >= 50 && (

@@ -194,7 +194,7 @@ Be warm, brief (1-2 sentences), and use an emoji. Sound like a friend cheering t
           <p className="text-xs text-gray-500 mt-1">of {errand.totalSessions}</p>
         </div>
 
-        <div className="bg-errandify-orange-50 rounded-lg p-4 border border-errandify-orange-200">
+        <div className="bg-orange-50 rounded-lg p-4 border border-errandify-orange-200">
           <p className="text-sm text-gray-600 mb-1">Assigned</p>
           <p className="text-3xl font-bold text-errandify-orange-600">{assignedCount}</p>
           <p className="text-xs text-gray-500 mt-1">working on it</p>
@@ -232,7 +232,7 @@ Be warm, brief (1-2 sentences), and use an emoji. Sound like a friend cheering t
                 session.status === 'completed'
                   ? 'bg-green-50 border-green-200'
                   : session.status === 'assigned'
-                  ? 'bg-errandify-orange-50 border-errandify-orange-200'
+                  ? 'bg-orange-50 border-errandify-orange-200'
                   : session.status === 'in_progress'
                   ? 'bg-purple-50 border-purple-200'
                   : 'bg-gray-50 border-gray-200'
@@ -264,7 +264,7 @@ Be warm, brief (1-2 sentences), and use an emoji. Sound like a friend cheering t
                       session.status === 'completed'
                         ? 'bg-green-200 text-green-800'
                         : session.status === 'assigned'
-                        ? 'bg-errandify-orange-200 text-errandify-orange-800'
+                        ? 'bg-orange-200 text-errandify-orange-800'
                         : session.status === 'in_progress'
                         ? 'bg-purple-200 text-purple-800'
                         : 'bg-gray-200 text-gray-800'
@@ -290,7 +290,7 @@ Be warm, brief (1-2 sentences), and use an emoji. Sound like a friend cheering t
 
       {/* Actions */}
       {userRole === 'asker' && (
-        <div className="bg-errandify-orange-50 border border-errandify-orange-200 rounded-lg p-4">
+        <div className="bg-orange-50 border border-errandify-orange-200 rounded-lg p-4">
           <p className="text-sm text-gray-700 mb-3">
             💡 <strong>Pro tip:</strong> Doers love consistency! Keep the same sessions each time so
             they know when you need them.

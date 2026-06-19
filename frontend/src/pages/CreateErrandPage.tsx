@@ -847,7 +847,7 @@ export default function CreateErrandPage() {
                       description: aiSuggestions.suggestedDescription,
                     }));
                   }}
-                  className="mt-2 inline-block px-3 py-1 bg-errandify-orange-100 text-errandify-orange-700 text-xs rounded-full hover:bg-errandify-orange-200 transition-colors font-medium"
+                  className="mt-2 inline-block px-3 py-1 bg-orange-100 text-errandify-orange-700 text-xs rounded-full hover:bg-orange-200 transition-colors font-medium"
                   title="Click to use AI suggestion"
                 >
                   💡 {aiSuggestions.suggestedDescription}
@@ -1118,7 +1118,7 @@ export default function CreateErrandPage() {
 
                   {/* GPS Location Notice */}
                   {gpsEnabled && gpsLocation && (
-                    <div className="mt-2 p-2 bg-errandify-orange-50 border-l-4 border-errandify-orange-400 rounded text-xs">
+                    <div className="mt-2 p-2 bg-orange-50 border-l-4 border-errandify-orange-400 rounded text-xs">
                       <p className="text-errandify-orange-900">
                         📍 <span className="font-semibold">Your current location detected:</span> {gpsLocation.latitude.toFixed(4)}, {gpsLocation.longitude.toFixed(4)}
                       </p>
@@ -1193,7 +1193,7 @@ export default function CreateErrandPage() {
                   <button
                     key={skill}
                     onClick={() => removeSkill(skill)}
-                    className="bg-errandify-orange-100 text-errandify-orange-700 text-sm px-3 py-1 rounded-full font-semibold hover:bg-errandify-orange-200"
+                    className="bg-orange-100 text-errandify-orange-700 text-sm px-3 py-1 rounded-full font-semibold hover:bg-orange-200"
                   >
                     {skill} ✕
                   </button>
@@ -1297,7 +1297,7 @@ export default function CreateErrandPage() {
             {/* Selected Certifications Display */}
             {(formData.certifications.required.length > 0 ||
               formData.certifications.optional.length > 0) && (
-              <div className="p-3 bg-errandify-orange-50 rounded text-sm mt-3 space-y-3">
+              <div className="p-3 bg-orange-50 rounded text-sm mt-3 space-y-3">
                 <p className="font-semibold text-errandify-orange-900">Selected Certifications:</p>
 
                 {formData.certifications.required.length > 0 && (
@@ -1307,7 +1307,7 @@ export default function CreateErrandPage() {
                       {formData.certifications.required.map((cert) => (
                         <div
                           key={cert}
-                          className="bg-errandify-orange-200 text-errandify-orange-800 text-xs px-2 py-1 rounded flex items-center gap-2"
+                          className="bg-orange-200 text-errandify-orange-800 text-xs px-2 py-1 rounded flex items-center gap-2"
                         >
                           <span>{cert}</span>
                           <label className="flex items-center gap-1 cursor-pointer">
@@ -1341,7 +1341,7 @@ export default function CreateErrandPage() {
                       {formData.certifications.optional.map((cert) => (
                         <div
                           key={cert}
-                          className="bg-errandify-orange-100 text-errandify-orange-700 text-xs px-2 py-1 rounded flex items-center gap-2"
+                          className="bg-orange-100 text-errandify-orange-700 text-xs px-2 py-1 rounded flex items-center gap-2"
                         >
                           <span>{cert}</span>
                           <label className="flex items-center gap-1 cursor-pointer">
@@ -1404,7 +1404,7 @@ export default function CreateErrandPage() {
                     specialNote: aiSuggestions.suggestedNotes,
                   }));
                 }}
-                className="mt-2 inline-block px-3 py-1 bg-errandify-orange-100 text-errandify-orange-700 text-xs rounded-full hover:bg-errandify-orange-200 transition-colors font-medium"
+                className="mt-2 inline-block px-3 py-1 bg-orange-100 text-errandify-orange-700 text-xs rounded-full hover:bg-orange-200 transition-colors font-medium"
                 title="Click to use AI suggestion"
               >
                 💡 {aiSuggestions.suggestedNotes}

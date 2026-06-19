@@ -245,7 +245,7 @@ export default function TaskExecutionPage() {
                     <button
                       onClick={handleUploadPhoto}
                       disabled={uploading || !photoUrl}
-                      className="w-full px-4 py-2 bg-errandify-orange-500 text-white rounded-lg font-semibold hover:bg-errandify-orange-600 disabled:opacity-50"
+                      className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 disabled:opacity-50"
                     >
                       {uploading ? 'Uploading...' : 'Upload Photo'}
                     </button>

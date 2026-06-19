@@ -76,7 +76,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return 'bg-errandify-orange-100 text-errandify-orange-700';
+        return 'bg-orange-100 text-errandify-orange-700';
       case 'in_progress':
         return 'bg-green-100 text-green-700';
       case 'completed_unconfirmed':
