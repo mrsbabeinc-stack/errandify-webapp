@@ -1,4 +1,5 @@
 import db from './db.js';
+import { sendDailyDigests, sendPaymentReminders } from './services/emailNotifications.js';
 
 /**
  * Cron jobs for Errandify job execution flow
@@ -186,6 +187,42 @@ async function releasePaymentForTask(task: any, reason: 'early_confirm' | 'auto_
   return releaseResult.rows[0];
 }
 
+// Scheduled job: Send daily digest at 9am (Asia/Singapore)
+export async function scheduleDailyDigest() {
+  try {
+    console.log('[CRON] Running daily digest send...');
+    await sendDailyDigests();
+  } catch (error) {
+    console.error('[CRON] Daily digest error:', error);
+  }
+}
+
+// Scheduled job: Send payment reminders (check every hour)
+export async function schedulePaymentReminders() {
+  try {
+    console.log('[CRON] Checking for payment reminders...');
+    await sendPaymentReminders();
+  } catch (error) {
+    console.error('[CRON] Payment reminder error:', error);
+  }
+}
+
+// Helper to get next 9am in Singapore timezone
+function getNextNineAM(): Date {
+  const now = new Date();
+  const singapore = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Singapore' }));
+
+  const next9am = new Date(singapore);
+  next9am.setHours(9, 0, 0, 0);
+
+  // If already past 9am, schedule for tomorrow
+  if (next9am < singapore) {
+    next9am.setDate(next9am.getDate() + 1);
+  }
+
+  return next9am;
+}
+
 // Start all cron jobs
 export function startCrons() {
   console.log('[CRON] Starting all cron jobs...');
@@ -199,10 +236,25 @@ export function startCrons() {
   // Check 47h reminders every hour
   setInterval(check47hReminders, 60 * 60 * 1000);
 
+  // Send payment reminders every hour
+  setInterval(schedulePaymentReminders, 60 * 60 * 1000);
+
+  // Schedule daily digest at 9am Singapore time
+  const nextDigestTime = getNextNineAM();
+  const msUntilNextDigest = nextDigestTime.getTime() - new Date().getTime();
+  setTimeout(() => {
+    scheduleDailyDigest().catch(console.error);
+    // Then repeat every 24 hours
+    setInterval(scheduleDailyDigest, 24 * 60 * 60 * 1000);
+  }, msUntilNextDigest);
+
+  console.log(`[CRON] Daily digest scheduled for ${nextDigestTime.toISOString()}`);
+
   // Run once on startup to catch any missed
   checkAutoPaymentRelease().catch(console.error);
   check24hReminders().catch(console.error);
   check47hReminders().catch(console.error);
+  schedulePaymentReminders().catch(console.error);
 
   console.log('[CRON] All cron jobs started successfully');
 }

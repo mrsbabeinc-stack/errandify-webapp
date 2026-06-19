@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { notifyBidReceived, notifyBidAccepted, notifyBidRejected, notifyTaskReopenedAfterCancellation, createNotification } from './notifications.js';
+import { sendCriticalEmail } from '../services/emailNotifications.js';
 
 const router = Router();
 
@@ -218,6 +219,15 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
     // Notify accepted doer
     await notifyBidAccepted(bid.doer_id, errandTitle, bid.amount);
 
+    // Send critical email to doer
+    await sendCriticalEmail(bid.doer_id, 'bid_accepted', {
+      taskTitle: errandTitle,
+      amount: bid.amount,
+      taskId: bid.task_id,
+    }).catch((err) => {
+      console.error('Error sending bid_accepted email:', err);
+    });
+
     res.json({
       success: true,
       data: {
@@ -301,6 +311,15 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
         rejectedBid.amount,
         errand.id
       );
+
+      // Send critical email to previous bidders
+      await sendCriticalEmail(rejectedBid.doer_id, 'task_reopened', {
+        taskTitle: errand.title,
+        bidAmount: rejectedBid.amount,
+        taskId: errand.id,
+      }).catch((err) => {
+        console.error('Error sending task_reopened email:', err);
+      });
     }
 
     // Notify asker
