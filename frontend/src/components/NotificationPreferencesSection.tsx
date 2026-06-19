@@ -66,9 +66,7 @@ export default function NotificationPreferencesSection() {
   };
 
   const handleToggle = (key: keyof NotificationPreferences) => {
-    // Don't allow disabling critical events
     if (CRITICAL_EVENTS.includes(key)) {
-      setMessage({ type: 'error', text: 'Critical notifications cannot be disabled' });
       return;
     }
 
@@ -90,94 +88,139 @@ export default function NotificationPreferencesSection() {
       );
 
       if (response.data.success) {
-        setMessage({ type: 'success', text: 'Preferences saved successfully!' });
+        setMessage({ type: 'success', text: '✅ Preferences saved successfully!' });
+        setTimeout(() => setMessage(null), 3000);
       }
     } catch (err) {
       console.error('Failed to save preferences:', err);
-      setMessage({ type: 'error', text: 'Failed to save preferences' });
+      setMessage({ type: 'error', text: '❌ Failed to save preferences' });
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return <p className="text-gray-600">Loading preferences...</p>;
+    return (
+      <div className="flex items-center justify-center py-8">
+        <p className="text-gray-600">Loading preferences...</p>
+      </div>
+    );
   }
 
-  const renderEventToggle = (key: keyof NotificationPreferences, label: string, isCritical = false) => (
-    <label key={key} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
-      <input
-        type="checkbox"
-        checked={preferences[key]}
-        onChange={() => handleToggle(key)}
-        disabled={isCritical}
-        className={`w-5 h-5 rounded ${isCritical ? 'cursor-not-allowed opacity-50' : ''}`}
-      />
+  const renderEventToggle = (key: keyof NotificationPreferences, label: string, description: string, isCritical = false) => (
+    <div key={key} className="flex items-center justify-between p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition">
       <div className="flex-1">
-        <p className="text-sm font-medium text-gray-800">{label}</p>
-        {isCritical && <p className="text-xs text-gray-500">Always enabled</p>}
+        <p className="text-sm font-semibold text-gray-800">{label}</p>
+        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
       </div>
-    </label>
+      <button
+        onClick={() => handleToggle(key)}
+        disabled={isCritical}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ml-4 ${
+          preferences[key] ? 'bg-green-500' : 'bg-gray-300'
+        } ${isCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+      >
+        <span
+          className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+            preferences[key] ? 'translate-x-5' : 'translate-x-0.5'
+          }`}
+        />
+      </button>
+    </div>
   );
 
   return (
-    <div className="space-y-6">
-      {message && (
-        <div
-          className={`p-4 rounded-lg ${
-            message.type === 'success'
-              ? 'bg-green-50 border border-green-200 text-green-800'
-              : 'bg-red-50 border border-red-200 text-red-800'
-          }`}
-        >
-          {message.text}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">🔔 Notification Preferences</h1>
+          <p className="text-gray-600">Customize which notifications you want to receive</p>
         </div>
-      )}
 
-      {/* Critical Events */}
-      <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-3">🔴 Critical Events (Always Enabled)</h3>
-        <p className="text-sm text-gray-600 mb-4">These important notifications cannot be disabled</p>
-        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-          {renderEventToggle('bid_accepted', 'Bid Accepted', true)}
-          {renderEventToggle('task_reopened', 'Task Reopened', true)}
-          {renderEventToggle('payment_released', 'Payment Released', true)}
+        {/* Message Alert */}
+        {message && (
+          <div
+            className={`mb-6 p-4 rounded-lg border ${
+              message.type === 'success'
+                ? 'bg-green-50 border-green-200 text-green-800'
+                : 'bg-red-50 border-red-200 text-red-800'
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
+
+        {/* All Notifications in One Card */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+          {/* Critical Section */}
+          <div className="border-b-2 border-red-100 bg-red-50/30">
+            <div className="px-6 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <span>🔴</span>
+                <span>Critical Events (Always Enabled)</span>
+              </h2>
+              <p className="text-sm text-red-100 mt-1">Essential notifications that keep your business running</p>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {renderEventToggle('bid_accepted', 'Bid Accepted', 'When someone accepts your bid', true)}
+              {renderEventToggle('task_reopened', 'Task Reopened', 'When a task you bid on becomes available again', true)}
+              {renderEventToggle('payment_released', 'Payment Released', 'When payment is released for completed work', true)}
+            </div>
+          </div>
+
+          {/* Medium Section */}
+          <div className="border-b-2 border-yellow-100 bg-yellow-50/30">
+            <div className="px-6 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <span>🟡</span>
+                <span>Important Events</span>
+              </h2>
+              <p className="text-sm text-yellow-100 mt-1">Keep track of task activity and interactions</p>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {renderEventToggle('new_bid_received', 'New Bid Received', 'When you receive a new bid on your task')}
+              {renderEventToggle('message_received', 'Message Received', 'When someone sends you a message')}
+              {renderEventToggle('task_completed', 'Task Completed', 'When a task you posted is completed')}
+              {renderEventToggle('review_received', 'Review Received', 'When someone leaves you a review or rating')}
+              {renderEventToggle('bid_rejected', 'Bid Rejected', 'When your bid is rejected')}
+            </div>
+          </div>
+
+          {/* Low Section */}
+          <div className="bg-green-50/30">
+            <div className="px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <span>🟢</span>
+                <span>Optional Notifications</span>
+              </h2>
+              <p className="text-sm text-green-100 mt-1">Nice-to-know updates and community highlights</p>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {renderEventToggle('profile_viewed', 'Profile Viewed', 'When someone views your profile')}
+              {renderEventToggle('referral_activity', 'Referral Activity', 'Updates about your referrals')}
+              {renderEventToggle('platform_updates', 'Platform Updates', 'News and announcements from Errandify')}
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Medium Events */}
-      <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-3">🟡 Important Events</h3>
-        <p className="text-sm text-gray-600 mb-4">Toggle these notifications on or off</p>
-        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-          {renderEventToggle('new_bid_received', 'New Bid Received')}
-          {renderEventToggle('bid_rejected', 'Bid Rejected')}
-          {renderEventToggle('message_received', 'Message Received')}
-          {renderEventToggle('task_completed', 'Task Completed')}
-          {renderEventToggle('review_received', 'Review Received')}
+        {/* Save Button */}
+        <div className="flex gap-3">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 px-6 py-4 bg-gradient-to-r from-errandify-orange to-orange-600 text-white rounded-xl font-bold hover:shadow-lg disabled:opacity-50 transition transform hover:scale-105"
+          >
+            {saving ? '⏳ Saving...' : '💾 Save Preferences'}
+          </button>
         </div>
-      </div>
 
-      {/* Low Events */}
-      <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-3">🟢 Optional Notifications</h3>
-        <p className="text-sm text-gray-600 mb-4">Nice-to-know updates</p>
-        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-          {renderEventToggle('profile_viewed', 'Profile Viewed')}
-          {renderEventToggle('referral_activity', 'Referral Activity')}
-          {renderEventToggle('platform_updates', 'Platform Updates')}
+        {/* Info Footer */}
+        <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="text-sm text-blue-900">
+            <strong>💡 Tip:</strong> Critical notifications cannot be disabled because they're essential for managing your tasks and payments. You can customize all other notifications to suit your preferences.
+          </p>
         </div>
-      </div>
-
-      {/* Save Button */}
-      <div className="flex gap-3 pt-4">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="flex-1 px-6 py-3 bg-errandify-orange text-white rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50 transition"
-        >
-          {saving ? '💾 Saving...' : '💾 Save Preferences'}
-        </button>
       </div>
     </div>
   );
