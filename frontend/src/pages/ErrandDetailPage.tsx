@@ -4,6 +4,7 @@ import axios from 'axios';
 import BidSubmissionModal from '../components/BidSubmissionModal';
 import BidsViewer from '../components/BidsViewer';
 import TaskChatbox from '../components/TaskChatbox';
+import RecurringErrandSessionSelector from '../components/RecurringErrandSessionSelector';
 
 interface ErrandDetail {
   id: number;
@@ -17,6 +18,7 @@ interface ErrandDetail {
   askerId?: number;
   asker?: { name: string; mobile: string };
   createdAt: string;
+  isRecurring?: boolean;
 }
 
 interface UserProfile {
@@ -37,6 +39,7 @@ export default function ErrandDetailPage() {
   const [error, setError] = useState('');
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [showBidModal, setShowBidModal] = useState(false);
+  const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [bidSubmitted, setBidSubmitted] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
@@ -330,10 +333,16 @@ export default function ErrandDetailPage() {
             {/* Action Button */}
             {errand.status === 'open' && currentUser && currentUser.id !== errand.askerId ? (
               <button
-                onClick={() => setShowBidModal(true)}
+                onClick={() => {
+                  if (errand.isRecurring) {
+                    setShowSessionSelector(true);
+                  } else {
+                    setShowBidModal(true);
+                  }
+                }}
                 className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
               >
-                {bidSubmitted ? '✓ Bid Submitted' : 'Submit a Bid'}
+                {bidSubmitted ? '✓ Bid Submitted' : errand.isRecurring ? 'Select Sessions' : 'Submit a Bid'}
               </button>
             ) : errand.status === 'open' && currentUser && currentUser.id === errand.askerId ? (
               <div className="flex gap-2 mt-2">
@@ -394,7 +403,7 @@ export default function ErrandDetailPage() {
       <div className="h-8"></div>
 
       {/* Bid Submission Modal */}
-      {showBidModal && errand && (
+      {showBidModal && errand && !errand.isRecurring && (
         <BidSubmissionModal
           taskId={errand.id}
           taskBudget={errand.budget || 0}
@@ -404,6 +413,18 @@ export default function ErrandDetailPage() {
             setShowBidModal(false);
           }}
           onClose={() => setShowBidModal(false)}
+        />
+      )}
+
+      {/* Recurring Errand Session Selector */}
+      {showSessionSelector && errand && errand.isRecurring && (
+        <RecurringErrandSessionSelector
+          errandId={errand.id}
+          onSessionsSelected={() => {
+            setBidSubmitted(true);
+            setShowSessionSelector(false);
+          }}
+          onCancel={() => setShowSessionSelector(false)}
         />
       )}
 
