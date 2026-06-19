@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { moderatePost, getModerationStatus, getModerationMessage } from '../services/moderationService';
 
 interface CommunityPost {
   id: number;
@@ -69,6 +70,8 @@ export default function MyKampungPage() {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [newPostText, setNewPostText] = useState('');
+  const [moderationMessage, setModerationMessage] = useState<string>('');
+  const [isCheckingModeration, setIsCheckingModeration] = useState(false);
 
   useEffect(() => {
     fetchCommunityData();
@@ -315,12 +318,44 @@ export default function MyKampungPage() {
     ));
   };
 
-  const handlePostComment = (postId: number) => {
-    if (newPostText.trim()) {
-      setPosts(posts.map(p =>
-        p.id === postId ? { ...p, comments: p.comments + 1 } : p
-      ));
+  const handlePostComment = async (postId: number) => {
+    if (!newPostText.trim()) return;
+
+    setIsCheckingModeration(true);
+    setModerationMessage('');
+
+    try {
+      const result = await moderatePost(newPostText);
+
+      if (result.flagged) {
+        const message = getModerationMessage(result);
+        setModerationMessage(message);
+        setIsCheckingModeration(false);
+        return;
+      }
+
+      // Post approved - add to feed
+      const newPost: CommunityPost = {
+        id: Math.max(...posts.map(p => p.id), 0) + 1,
+        author: 'You',
+        authorRole: 'doer',
+        authorRating: 4.8,
+        content: newPostText,
+        category: 'tip',
+        likes: 0,
+        comments: 0,
+        createdAt: new Date().toISOString(),
+        isLiked: false,
+      };
+
+      setPosts([newPost, ...posts]);
       setNewPostText('');
+      setModerationMessage('');
+    } catch (error) {
+      console.error('Error checking moderation:', error);
+      setModerationMessage('Error checking post. Please try again.');
+    } finally {
+      setIsCheckingModeration(false);
     }
   };
 
@@ -484,16 +519,27 @@ export default function MyKampungPage() {
                     className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none focus:outline-none focus:border-errandify-orange"
                     rows={3}
                   />
+                  {moderationMessage && (
+                    <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-xs text-red-700">{moderationMessage}</p>
+                    </div>
+                  )}
                   <div className="flex justify-end gap-2 mt-3">
-                    <button className="text-gray-600 hover:text-gray-800 font-semibold text-sm px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition">
+                    <button
+                      onClick={() => {
+                        setNewPostText('');
+                        setModerationMessage('');
+                      }}
+                      className="text-gray-600 hover:text-gray-800 font-semibold text-sm px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+                    >
                       Cancel
                     </button>
                     <button
                       onClick={() => handlePostComment(0)}
-                      className="bg-errandify-orange text-white font-semibold text-sm px-4 py-2 rounded-lg hover:bg-opacity-90 transition disabled:opacity-50"
-                      disabled={!newPostText.trim()}
+                      className="bg-errandify-orange text-white font-semibold text-sm px-4 py-2 rounded-lg hover:bg-opacity-90 transition disabled:opacity-50 flex items-center gap-2"
+                      disabled={!newPostText.trim() || isCheckingModeration}
                     >
-                      Post
+                      {isCheckingModeration ? '⏳ Checking...' : '📤 Post'}
                     </button>
                   </div>
                 </div>
