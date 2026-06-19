@@ -396,21 +396,7 @@ export default function CreateErrandPage() {
 
   // Auto-apply AI suggestions when they arrive
   useEffect(() => {
-    // Auto-fill empty description and notes from AI suggestions
-    if (aiSuggestions.suggestedDescription && !formData.description) {
-      console.log('[useEffect] Auto-filling description from AI suggestion');
-      setFormData((prev) => ({
-        ...prev,
-        description: aiSuggestions.suggestedDescription,
-      }));
-    }
-    if (aiSuggestions.suggestedNotes && !formData.specialNote) {
-      console.log('[useEffect] Auto-filling notes from AI suggestion');
-      setFormData((prev) => ({
-        ...prev,
-        specialNote: aiSuggestions.suggestedNotes,
-      }));
-    }
+    // Note: Do NOT auto-fill description or notes - only show as suggestions for user to approve
     // Update category if AI has a suggestion and user hasn't selected one yet
     if (aiSuggestions.suggestedCategory && !formData.category) {
       console.log('[useEffect] Auto-filling category from AI suggestion');
@@ -631,21 +617,21 @@ export default function CreateErrandPage() {
 
             {/* Description */}
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-semibold text-errandify-brown">
-                  Description
-                </label>
-                <span className="text-xs text-gray-500">{formData.description.length}/500</span>
+              <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                Description
+              </label>
+              <div className="relative">
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Describe your errand in detail..."
+                  rows={2}
+                  maxLength={150}
+                  className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base resize-none"
+                />
+                <span className="absolute bottom-1 right-0 text-xs text-gray-500">{formData.description.length}/150</span>
               </div>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Describe your errand in detail..."
-                rows={2}
-                maxLength={500}
-                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-base resize-none"
-              />
 
               {/* AI Suggestion for Description */}
               {aiSuggestions.suggestedDescription && !formData.description && (
@@ -1193,21 +1179,21 @@ export default function CreateErrandPage() {
           <h3 className="font-bold text-errandify-brown text-sm">Additional Notes</h3>
 
           <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-semibold text-errandify-brown">
-                Notes (Shown to Confirmed Doer) <span className="text-xs text-gray-600">(optional)</span>
-              </label>
-              <span className="text-xs text-gray-500">{formData.specialNote.length}/300</span>
+            <label className="block text-sm font-semibold text-errandify-brown mb-2">
+              Notes (Shown to Confirmed Doer) <span className="text-xs text-gray-600">(optional)</span>
+            </label>
+            <div className="relative">
+              <textarea
+                name="specialNote"
+                value={formData.specialNote}
+                onChange={handleChange}
+                placeholder="e.g., access instructions, special requirements, or preferences"
+                rows={2}
+                maxLength={300}
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
+              />
+              <span className="absolute bottom-1 right-2 text-xs text-gray-500">{formData.specialNote.length}/300</span>
             </div>
-            <textarea
-              name="specialNote"
-              value={formData.specialNote}
-              onChange={handleChange}
-              placeholder="e.g., access instructions, special requirements, or preferences"
-              rows={2}
-              maxLength={300}
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
-            />
 
             {/* AI Suggestion for Notes */}
             {aiSuggestions.suggestedNotes && !formData.specialNote && (

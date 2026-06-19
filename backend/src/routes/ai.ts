@@ -419,22 +419,32 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Extract title - take everything before postal code, date keywords, or time
     let title = input
       .replace(/\s*\d{6}\s*/g, ' ') // Remove postal code
-      .replace(/\s*(on\s+)?sun(day)?|mon(day)?|tue(sday)?|wed(nesday)?|thu(rsday)?|fri(day)?|sat(urday)?|tomorrow|today/gi, ' ') // Remove day keywords
+      .replace(/\s*(on\s+)?sun(day)?|mon(day)?|tue(sday)?|wed(nesday)?|thu(rsday)?|fri(day)?|sat(urday)?|tomorrow|today|later/gi, ' ') // Remove day keywords
       .replace(/\s*\d{1,2}(:\d{2})?\s*(am|pm)/gi, ' ') // Remove times
       .replace(/\s*[\$@]\s*\d+/g, ' ') // Remove budget/amounts
       .replace(/\s*\d+\s*(hours?|hrs?|h|min|mins?|minutes?)/gi, ' ') // Remove duration
       .trim()
       .replace(/\s+/g, ' ') // Collapse multiple spaces
       .substring(0, 50);
+
+    // Auto-correct title: fix common mistakes
+    title = title
+      .replace(/\bmykid\b/gi, 'my kid')
+      .replace(/\byour\b/gi, 'my') // "pick your kid" → "pick my kid"
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+
     title = title || 'Task';
 
-    // Parse date - look for "tomorrow", "today", day names, or "sun", "sun 7pm"
+    // Parse date - look for "tomorrow", "today", "later" (=today), day names, or "sun", "sun 7pm"
     let date = '';
     if (/tomorrow/i.test(input)) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       date = tomorrow.toISOString().split('T')[0];
-    } else if (/today/i.test(input)) {
+    } else if (/today|later/i.test(input)) {
+      // "later" also means today
       date = new Date().toISOString().split('T')[0];
     } else {
       // Match short day names like "sun", "mon", or full names like "sunday", "monday"
@@ -469,9 +479,14 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     // Parse duration - look for "3 hours", "2 hrs", "30 min", "30min", "30m"
     let duration = '';
-    const durationMatch = input.match(/(\d+)\s*(?:hour|hr|h|min|m|minute)/i);
+    let durationUnit = 'Hr'; // Default to hours
+    const durationMatch = input.match(/(\d+)\s*(?:hour|hr|h)s?|(\d+)\s*(?:min|m)(?:ute)?s?/i);
     if (durationMatch) {
-      duration = durationMatch[1];
+      duration = durationMatch[1] || durationMatch[2];
+      // If it's minutes (matched second group), keep as is; if hours, keep as is
+      if (durationMatch[2]) {
+        durationUnit = 'Min'; // It's minutes
+      }
     }
 
     // Parse budget - look for "$100", "@100", "100", "budget $100"
@@ -558,7 +573,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         date,
         time,
         duration,
-        durationUnit: 'Hr',
+        durationUnit,
         budget,
         category,
         postalCode,
@@ -605,21 +620,25 @@ router.post('/suggestions', async (req: Request, res: Response) => {
 
     const skills = skillMap[detectedCategory] || [];
 
-    // Generate AI-suggested description (more detailed than title)
+    // Generate AI-suggested description (concise, max 150 chars, task-specific instructions only)
     const descriptionMap: Record<string, string> = {
-      'eldercare': `${title}. Provide compassionate support and companionship. Ensure comfort, safety, and well-being at all times. Follow any special instructions.`,
-      'childcare': `${title}. Ensure child's safety and well-being. Follow schedule and parent instructions. Provide updates and report any issues immediately.`,
-      'homehelp': `${title}. Complete the task professionally and thoroughly. Ensure all work meets quality standards. Communicate any issues that arise.`,
-      'wellness': `${title}. Provide supportive and confidential assistance. Follow best practices. Ensure comfort and respect at all times.`,
-      'tripcarry': `${title}. Ensure items are handled carefully and delivered safely. Follow customs requirements where applicable.`,
-      'petcare': `${title}. Handle with care and ensure pet safety and comfort. Provide fresh water and follow special instructions.`,
-      'delivery': `${title}. Handle items carefully and deliver to specified location. Take photos if required. Communicate arrival.`,
-      'eventhelp': `${title}. Complete setup/shopping/planning professionally. Follow instructions carefully. Ensure everything is ready on time.`,
-      'donate': `${title}. Handle with care and respect. Follow all guidelines. Ensure smooth and successful completion.`,
-      'localbiz': `${title}. Provide professional service to support local business operations. Ensure quality and reliability.`,
+      'eldercare': 'Provide compassionate support with comfort, safety, and well-being. Follow special instructions.',
+      'childcare': 'Ensure child safety and well-being. Follow parent schedule and instructions. Keep parent updated.',
+      'homehelp': 'Complete task professionally. Ensure quality work. Report any issues.',
+      'wellness': 'Provide confidential support following best practices. Ensure comfort and respect.',
+      'tripcarry': 'Handle items carefully. Deliver safely. Follow customs requirements.',
+      'petcare': 'Handle with care. Ensure pet safety and comfort. Provide water and follow instructions.',
+      'delivery': 'Handle items carefully and deliver to location. Communicate arrival.',
+      'eventhelp': 'Complete setup/shopping/planning professionally. Ensure quality and timeliness.',
+      'donate': 'Handle with respect. Follow guidelines. Ensure successful completion.',
+      'localbiz': 'Provide professional service. Ensure quality and reliability.',
     };
 
-    const suggestedDescription = descriptionMap[detectedCategory] || `${title}. Please complete the task professionally and communicate any issues.`;
+    let suggestedDescription = descriptionMap[detectedCategory] || 'Complete task professionally and communicate any issues.';
+    // Truncate to max 150 characters
+    if (suggestedDescription.length > 150) {
+      suggestedDescription = suggestedDescription.substring(0, 147) + '...';
+    }
 
     // Generate task-specific notes (actionable, not duplicating info)
     const notesMap: Record<string, string> = {
