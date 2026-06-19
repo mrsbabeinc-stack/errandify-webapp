@@ -447,8 +447,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Extract title - keep only meaningful words, filter filler words
     console.log('[Extract] Raw input:', input);
 
-    // Filler words to remove (articles, prepositions, common function words)
-    const fillerWords = /\b(if|at|on|for|of|to|the|a|an|and|or|in|is|are|be|by|from|with|as|i|me|my|we|you|your|our|their|this|that|these|those|it|which|who|what|when|where|why|how|can|could|will|would|should|must|may|might|today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)\b/gi;
+    // Filler words to remove (articles, prepositions, common function words, category names, certification words)
+    const fillerWords = /\b(if|at|on|for|of|to|the|a|an|and|or|in|is|are|be|by|from|with|as|i|me|my|we|you|your|our|their|this|that|these|those|it|which|who|what|when|where|why|how|can|could|will|would|should|must|may|might|today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat|childcare|eldercare|petcare|homehelp|eventhelp|delivery|service|certified|certification|cpr|trained|professional|experienced)\b/gi;
 
     let title = input
       // Remove all weird punctuation at start and throughout
