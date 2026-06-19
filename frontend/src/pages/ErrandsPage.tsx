@@ -31,8 +31,11 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   }, [userRole]);
 
   const fetchErrands = async () => {
+    let url = '';
+    let token = '';
+
     try {
-      const token = localStorage.getItem('token');
+      token = localStorage.getItem('token') || '';
 
       if (!token) {
         setError('Not authenticated. Please log in again.');
@@ -40,7 +43,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
         return;
       }
 
-      let url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`;
+      url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`;
 
       if (userRole === 'asker') {
         // Askers see their posted errands
