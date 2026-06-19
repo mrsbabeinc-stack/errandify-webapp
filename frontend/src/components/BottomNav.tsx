@@ -38,15 +38,16 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
     ? [
         { label: 'Browse ToHelp', path: '/', icon: '🔍' },
         { label: 'MyErrands', path: '/errands', icon: '📋' },
+        { label: 'Chat', path: '/chat', icon: '💬' },
       ]
     : [
         { label: 'Home', path: '/', icon: '🏠' },
         { label: 'MyErrands', path: '/errands', icon: '📋' },
+        { label: 'Chat', path: '/chat', icon: '💬' },
       ];
 
   const rightItems: NavItem[] = [
     { label: 'MyKampung', path: '/my-kampung', icon: '🏘️' },
-    { label: 'Chat', path: '/chat', icon: '💬' },
     { label: 'MyPocket', path: '/wallet', icon: '💰' },
     { label: 'MyAccount', path: '/profile', icon: '👤', image: userImage || undefined },
   ];
