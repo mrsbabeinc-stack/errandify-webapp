@@ -120,6 +120,7 @@ export default function HanaTaskCreation({
         budget: extracted.budget ? String(extracted.budget) : '',
         postalCode: extracted.postalCode || '',
         notes: extracted.notes || '',
+        suggestedSkills: extracted.suggestedSkills || [],
       };
 
       setTaskData(updatedTaskData);
