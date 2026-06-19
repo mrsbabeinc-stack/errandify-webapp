@@ -45,7 +45,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
       ];
 
   const rightItems: NavItem[] = [
-    { label: 'MyVillage', path: '/my-village', icon: '🏘️' },
+    { label: 'MyKampung', path: '/my-kampung', icon: '🏘️' },
     { label: 'Chat', path: '/chat', icon: '💬' },
     { label: 'MyPocket', path: '/wallet', icon: '💰' },
     { label: 'MyAccount', path: '/profile', icon: '👤', image: userImage || undefined },

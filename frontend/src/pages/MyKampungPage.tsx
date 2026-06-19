@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-interface VillageUser {
+interface KampungUser {
   id: number;
   displayName: string;
   profileImage?: string;
@@ -14,10 +14,10 @@ interface VillageUser {
   completedTasks: number;
 }
 
-export default function MyVillagePage() {
+export default function MyKampungPage() {
   const navigate = useNavigate();
-  const [trustedUsers, setTrustedUsers] = useState<VillageUser[]>([]);
-  const [blockedUsers, setBlockedUsers] = useState<VillageUser[]>([]);
+  const [trustedUsers, setTrustedUsers] = useState<KampungUser[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<KampungUser[]>([]);
   const [activeTab, setActiveTab] = useState<'trusted' | 'blocked'>('trusted');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -86,7 +86,7 @@ export default function MyVillagePage() {
         {/* Header with CTA */}
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-errandify-brown">🏘️ MyVillage</h1>
+            <h1 className="text-2xl font-bold text-errandify-brown">🏘️ MyKampung</h1>
             <p className="text-sm text-gray-600 mt-1">Manage your trusted network</p>
           </div>
           <button
