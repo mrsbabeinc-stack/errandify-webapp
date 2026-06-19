@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface FAQItem {
@@ -10,8 +10,21 @@ interface FAQItem {
 
 export default function FAQPage() {
   const navigate = useNavigate();
+  const [canGoBack, setCanGoBack] = useState(false);
   const [activeCategory, setActiveCategory] = useState<'all' | 'general' | 'asker' | 'doer' | 'payment' | 'safety' | 'conduct'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCanGoBack(window.history.length > 1);
+  }, []);
+
+  const handleBack = () => {
+    if (canGoBack) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
 
   const faqs: FAQItem[] = [
     // General
@@ -204,7 +217,7 @@ export default function FAQPage() {
   return (
     <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-20">
       <div className="max-w-2xl mx-auto">
-        <button onClick={() => navigate(-1)} className="mb-4 text-lg text-gray-600 font-bold">
+        <button onClick={handleBack} className="mb-4 text-lg text-gray-600 font-bold hover:text-gray-800 transition">
           ‹ Back
         </button>
 

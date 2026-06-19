@@ -1,12 +1,28 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 export default function HowItWorksPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [canGoBack, setCanGoBack] = useState(false);
+
+  useEffect(() => {
+    // Check if there's history to go back to
+    setCanGoBack(window.history.length > 1);
+  }, []);
+
+  const handleBack = () => {
+    if (canGoBack) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-20">
       <div className="max-w-3xl mx-auto">
-        <button onClick={() => navigate(-1)} className="mb-4 text-lg text-gray-600 font-bold">
+        <button onClick={handleBack} className="mb-4 text-lg text-gray-600 font-bold hover:text-gray-800 transition">
           ‹ Back
         </button>
 
