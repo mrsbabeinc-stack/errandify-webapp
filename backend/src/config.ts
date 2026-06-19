@@ -22,4 +22,12 @@ export const config = {
     clientSecret: process.env.SINGPASS_CLIENT_SECRET || '',
     useSingpass: process.env.USE_SINGPASS === 'true' || false,
   },
+  email: {
+    provider: process.env.EMAIL_PROVIDER || 'sendgrid', // 'sendgrid', 'mailgun', 'smtp'
+    sendgridApiKey: process.env.SENDGRID_API_KEY || '',
+    mailgunApiKey: process.env.MAILGUN_API_KEY || '',
+    mailgunDomain: process.env.MAILGUN_DOMAIN || '',
+    fromEmail: process.env.EMAIL_FROM || 'noreply@errandify.app',
+    fromName: process.env.EMAIL_FROM_NAME || 'Errandify',
+  },
 };

@@ -139,7 +139,7 @@ router.get('/preferences', authMiddleware, async (req: AuthRequest, res) => {
     const userId = parseInt(req.userId || '0', 10);
 
     const result = await db.query(
-      'SELECT notification_preferences, email_frequency FROM users WHERE id = $1',
+      'SELECT notification_preferences, email_frequency, email_preferences FROM users WHERE id = $1',
       [userId]
     );
 
@@ -153,6 +153,7 @@ router.get('/preferences', authMiddleware, async (req: AuthRequest, res) => {
       data: {
         notification_preferences: user.notification_preferences || {},
         email_frequency: user.email_frequency || 'daily',
+        email_preferences: user.email_preferences || {},
       },
     });
   } catch (error) {
@@ -165,7 +166,7 @@ router.get('/preferences', authMiddleware, async (req: AuthRequest, res) => {
 router.patch('/preferences', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const userId = parseInt(req.userId || '0', 10);
-    const { notification_preferences, email_frequency } = req.body;
+    const { notification_preferences, email_frequency, email_preferences } = req.body;
 
     const updateFields = [];
     const updateValues = [userId];
@@ -181,6 +182,11 @@ router.patch('/preferences', authMiddleware, async (req: AuthRequest, res) => {
       updateValues.push(email_frequency);
     }
 
+    if (email_preferences !== undefined) {
+      updateFields.push(`email_preferences = $${++paramCount}`);
+      updateValues.push(JSON.stringify(email_preferences));
+    }
+
     if (updateFields.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
     }
@@ -189,7 +195,7 @@ router.patch('/preferences', authMiddleware, async (req: AuthRequest, res) => {
       UPDATE users
       SET ${updateFields.join(', ')}
       WHERE id = $1
-      RETURNING id, notification_preferences, email_frequency
+      RETURNING id, notification_preferences, email_frequency, email_preferences
     `;
 
     const result = await db.query(query, updateValues);
@@ -203,6 +209,7 @@ router.patch('/preferences', authMiddleware, async (req: AuthRequest, res) => {
       data: {
         notification_preferences: result.rows[0].notification_preferences,
         email_frequency: result.rows[0].email_frequency,
+        email_preferences: result.rows[0].email_preferences,
       },
     });
   } catch (error) {
