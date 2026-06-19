@@ -459,116 +459,37 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const budgetMatch = input.match(/budget\s*\$?(\d+)/i);
     const budget = budgetMatch ? budgetMatch[1] : '';
 
-    // Map postal code to area (Singapore postal code prefixes)
-    const postalCodeAreas: Record<string, { area: string; building: string }> = {
-      '01': { area: 'Raffles', building: 'Raffles Place' },
-      '02': { area: 'Cecil', building: 'Cecil Street' },
-      '03': { area: 'Shenton', building: 'Shenton Way' },
-      '04': { area: 'Telok', building: 'Telok Ayer' },
-      '05': { area: 'Outram', building: 'Outram Park' },
-      '06': { area: 'Tiong Bahru', building: 'Tiong Bahru' },
-      '07': { area: 'Queenstown', building: 'Queenstown' },
-      '08': { area: 'Bukit Merah', building: 'Bukit Merah' },
-      '09': { area: 'Redhill', building: 'Redhill' },
-      '10': { area: 'Tanglin', building: 'Tanglin' },
-      '11': { area: 'Novena', building: 'Novena' },
-      '12': { area: 'Balestier', building: 'Balestier' },
-      '13': { area: 'Potong Pasir', building: 'Potong Pasir' },
-      '14': { area: 'Geylang', building: 'Geylang' },
-      '15': { area: 'Kallang', building: 'Kallang' },
-      '16': { area: 'Whampoa', building: 'Whampoa' },
-      '17': { area: 'Serangoon', building: 'Serangoon' },
-      '18': { area: 'Macpherson', building: 'Macpherson' },
-      '19': { area: 'Tai Seng', building: 'Tai Seng' },
-      '20': { area: 'Bishan', building: 'Bishan' },
-      '21': { area: 'Ang Mo Kio', building: 'Ang Mo Kio' },
-      '22': { area: 'Hougang', building: 'Hougang' },
-      '23': { area: 'Punggol', building: 'Punggol' },
-      '24': { area: 'Tampines', building: 'Tampines' },
-      '25': { area: 'Pasir Ris', building: 'Pasir Ris' },
-      '26': { area: 'Tampines', building: 'Tampines' },
-      '27': { area: 'Bedok', building: 'Bedok' },
-      '28': { area: 'Changi', building: 'Changi' },
-      '29': { area: 'Changi', building: 'Changi' },
-      '30': { area: 'Marine Parade', building: 'Marine Parade' },
-      '31': { area: 'Marine Parade', building: 'Marine Parade' },
-      '32': { area: 'Katong', building: 'Katong' },
-      '33': { area: 'Joo Chiat', building: 'Joo Chiat' },
-      '34': { area: 'Eunos', building: 'Eunos' },
-      '35': { area: 'Geylang Lorong', building: 'Geylang Lorong' },
-      '36': { area: 'Kembangan', building: 'Kembangan' },
-      '37': { area: 'Teban', building: 'Teban' },
-      '38': { area: 'Clementi', building: 'Clementi' },
-      '39': { area: 'Clementi', building: 'Clementi' },
-      '40': { area: 'Bukit Batok', building: 'Bukit Batok' },
-      '41': { area: 'Bukit Gombak', building: 'Bukit Gombak' },
-      '42': { area: 'Bukit Panjang', building: 'Bukit Panjang' },
-      '43': { area: 'Choa Chu Kang', building: 'Choa Chu Kang' },
-      '44': { area: 'Yung Ho', building: 'Yung Ho' },
-      '45': { area: 'Yung Ho', building: 'Yung Ho' },
-      '46': { area: 'Lim Chu Kang', building: 'Lim Chu Kang' },
-      '47': { area: 'Kranji', building: 'Kranji' },
-      '48': { area: 'Woodlands', building: 'Woodlands' },
-      '49': { area: 'Woodlands', building: 'Woodlands' },
-      '50': { area: 'Yishun', building: 'Yishun' },
-      '51': { area: 'Yishun', building: 'Yishun' },
-      '52': { area: 'Sembawang', building: 'Sembawang' },
-      '53': { area: 'Sembawang', building: 'Sembawang' },
-      '54': { area: 'Mandai', building: 'Mandai' },
-      '55': { area: 'Mandai', building: 'Mandai' },
-      '56': { area: 'Admiralty', building: 'Admiralty' },
-      '57': { area: 'Punggol', building: 'Punggol' },
-      '58': { area: 'Marine Parade', building: 'Marine Parade' },
-      '59': { area: 'Pasir Ris', building: 'Pasir Ris' },
-      '60': { area: 'Sentosa', building: 'Sentosa' },
-      '61': { area: 'Bukit Merah', building: 'Bukit Merah' },
-      '62': { area: 'Tiong Bahru', building: 'Tiong Bahru' },
-      '63': { area: 'Bukit Merah', building: 'Bukit Merah' },
-      '64': { area: 'Bukit Merah', building: 'Bukit Merah' },
-      '65': { area: 'Bukit Merah', building: 'Bukit Merah' },
-      '66': { area: 'Tiong Bahru', building: 'Tiong Bahru' },
-      '67': { area: 'Tiong Bahru', building: 'Tiong Bahru' },
-      '68': { area: 'Choa Chu Kang', building: 'Choa Chu Kang Avenue 4' },
-      '69': { area: 'Tanjong Pagar', building: 'Tanjong Pagar' },
-      '70': { area: 'Clementi', building: 'Clementi' },
-      '71': { area: 'Clementi', building: 'Clementi' },
-      '72': { area: 'Clementi', building: 'Clementi' },
-      '73': { area: 'Clementi', building: 'Clementi' },
-      '74': { area: 'Clementi', building: 'Clementi' },
-      '75': { area: 'Dover', building: 'Dover' },
-      '76': { area: 'Bukit Timah', building: 'Bukit Timah' },
-      '77': { area: 'Bukit Timah', building: 'Bukit Timah' },
-      '78': { area: 'Bukit Timah', building: 'Bukit Timah' },
-      '79': { area: 'Bukit Timah', building: 'Bukit Timah' },
-      '80': { area: 'Farrer', building: 'Farrer' },
-      '81': { area: 'Farrer', building: 'Farrer' },
-      '82': { area: 'Farrer', building: 'Farrer' },
-      '83': { area: 'Ghim Moh', building: 'Ghim Moh' },
-    };
-
+    // Use OneMap API to get proper address from postal code
     let area = 'Singapore';
-    let building = 'Location';
-    if (postalCode && postalCode.length >= 2) {
-      const prefix = postalCode.substring(0, 2);
-      const areaData = postalCodeAreas[prefix];
-      if (areaData) {
-        area = areaData.area;
-        building = areaData.building;
+    let fullAddress = '';
+
+    if (postalCode) {
+      try {
+        const oneMapResponse = await axios.get(
+          `https://www.onemap.sg/api/common/searchAddressFreetext`,
+          {
+            params: {
+              searchVal: postalCode,
+              returnGeom: 'N',
+              getAddrDetails: 'Y',
+            },
+          }
+        );
+
+        if (oneMapResponse.data?.results && oneMapResponse.data.results.length > 0) {
+          const result = oneMapResponse.data.results[0];
+          fullAddress = result.ADDRESS || '';
+          // Extract area from address (usually the first meaningful part after building number)
+          const addressParts = fullAddress.split(',');
+          area = addressParts.length > 1 ? addressParts[1].trim() : 'Singapore';
+        } else {
+          fullAddress = `Singapore ${postalCode}`;
+        }
+      } catch (mapError) {
+        console.error('OneMap lookup failed:', mapError);
+        fullAddress = `Singapore ${postalCode}`;
       }
     }
-
-    // Extract building number from postal code (last 4 digits represent the building/street number)
-    let buildingNumber = '';
-    if (postalCode && postalCode.length === 6) {
-      const lastFourDigits = postalCode.substring(2);
-      if (lastFourDigits !== '0000') {
-        buildingNumber = lastFourDigits.replace(/^0+/, ''); // Remove leading zeros
-      }
-    }
-
-    const fullAddress = postalCode
-      ? `${buildingNumber ? buildingNumber + ' ' : ''}${building}, Singapore ${postalCode}`
-      : '';
 
     res.json({
       success: true,
