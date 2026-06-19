@@ -465,6 +465,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     if (postalCode) {
       try {
+        console.log(`[Hana] Looking up postal code: ${postalCode}`);
         const oneMapResponse = await axios.get(
           'https://www.onemap.gov.sg/api/common/elastic/search',
           {
@@ -477,6 +478,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           }
         );
 
+        console.log(`[Hana] OneMap response:`, oneMapResponse.data);
+
         if (oneMapResponse.data?.results && oneMapResponse.data.results.length > 0) {
           const result = oneMapResponse.data.results[0];
           // Use ADDRESS field directly from OneMap
@@ -484,9 +487,12 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
           // Extract area from road name
           area = result.ROAD_NAME || 'Singapore';
+          console.log(`[Hana] Found address: ${fullAddress}, area: ${area}`);
+        } else {
+          console.log(`[Hana] No results from OneMap`);
         }
       } catch (error) {
-        console.error('OneMap API error:', error);
+        console.error(`[Hana] OneMap API error for ${postalCode}:`, error instanceof Error ? error.message : error);
         fullAddress = `Singapore ${postalCode}`;
         area = 'Singapore';
       }
