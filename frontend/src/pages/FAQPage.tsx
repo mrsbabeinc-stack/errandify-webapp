@@ -25,7 +25,7 @@ export default function FAQPage() {
       id: 'g2',
       category: 'general',
       question: 'How much does it cost to use Errandify?',
-      answer: 'Errandify is free to join and use. We take a 20% commission when a doer completes an errand. For example, if you earn SGD $100, Errandify takes SGD $20 and you receive SGD $80. This helps us maintain the platform, verify users, and ensure quality.',
+      answer: 'Errandify is free to join and use. We believe in our community, so doers keep 100% of what they earn. Askers cover a 20% platform fee to help us maintain and improve the platform. For example, if an errand costs SGD $100, the asker pays SGD $120 total, and the doer receives the full SGD $100.',
     },
     {
       id: 'g3',
@@ -127,7 +127,7 @@ export default function FAQPage() {
       id: 'p3',
       category: 'payment',
       question: 'Are there any fees?',
-      answer: 'Errandify charges a 20% commission on completed errands. If you (as a doer) negotiate SGD $100, you earn SGD $80 after the 20% commission. Askers pay the full agreed amount. Bank payout fees are minimal and included in your account.',
+      answer: 'Doers earn 100% of what they bid – no fees taken from you. Askers pay a 20% platform fee on top of the agreed errand cost. For example: errand cost SGD $100 + SGD $20 fee (20%) = SGD $120 total for asker. The doer receives the full SGD $100. This model respects our doer community and keeps the platform thriving.',
     },
     {
       id: 'p4',
@@ -152,8 +152,8 @@ export default function FAQPage() {
     {
       id: 's4',
       category: 'safety',
-      question: 'What if I feel unsafe during an errand?',
-      answer: 'Your safety is priority. You can cancel anytime, leave early, or involve authorities if needed. Report concerns to our support team immediately for investigation and action.',
+      question: 'What if there's a misunderstanding or disagreement?',
+      answer: 'We encourage open communication first. Message the other person to clarify expectations and resolve issues respectfully. Most problems happen because of misunderstandings, not bad intentions. Our community believes in helping each other. Only if communication doesn't work, we have a fair dispute process.',
     },
     {
       id: 's5',
