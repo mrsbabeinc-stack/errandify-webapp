@@ -416,24 +416,16 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const postalCodeMatch = input.match(/\b(\d{6})\b/);
     const postalCode = postalCodeMatch ? postalCodeMatch[1] : '';
 
-    // Extract title - take everything before postal code, date keywords, or time
-    let title = input
-      .replace(/\s*\d{6}\s*/g, ' ') // Remove postal code
-      .replace(/\s*(on\s+)?sun(day)?|mon(day)?|tue(sday)?|wed(nesday)?|thu(rsday)?|fri(day)?|sat(urday)?|tomorrow|today|later/gi, ' ') // Remove day keywords
-      .replace(/\s*\d{1,2}(:\d{2})?\s*(am|pm)/gi, ' ') // Remove times
-      .replace(/\s*[\$@]\s*\d+/g, ' ') // Remove budget/amounts
-      .replace(/\s*\d+\s*(hours?|hrs?|h|min|mins?|minutes?)/gi, ' ') // Remove duration
-      .trim()
-      .replace(/\s+/g, ' ') // Collapse multiple spaces
-      .substring(0, 50);
+    // Extract title - take first meaningful phrase before date/time/budget/location
+    // Split on common delimiters: "at TIME", "on DAY", "for DURATION", "$AMOUNT", postal code
+    const titleParts = input.split(/\s+(?:at|on|for|,|\d{1,2}(?::|am|pm)|days?\s+(?:later|before)|[\$@]\d+|\d{6})/i);
+    let title = titleParts[0].trim().substring(0, 50);
 
-    // Auto-correct title: fix common mistakes
+    // Auto-correct title: fix common mistakes and capitalize
     title = title
       .replace(/\bmykid\b/gi, 'my kid')
-      .replace(/\byour\b/gi, 'my') // "pick your kid" → "pick my kid"
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
+      .replace(/\byour\b/gi, 'my')
+      .replace(/\b(\w)/g, letter => letter.toUpperCase()); // Capitalize first letter of each word
 
     title = title || 'Task';
 
@@ -642,7 +634,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
 
     const skills = skillMap[detectedCategory] || [];
 
-    // Generate AI-suggested description using Qwen
+    // Generate AI-suggested description - ASK FOR MISSING INFO relevant to this task
     let suggestedDescription = '';
     try {
       const config = require('../config').default;
@@ -653,11 +645,11 @@ router.post('/suggestions', async (req: Request, res: Response) => {
           messages: [
             {
               role: 'system',
-              content: 'Generate an errand description for a Singapore home-services app. Under 150 characters total. State only: what needs to be done, where/when if essential, and one safety-relevant detail if applicable. Plain conversational language. No headers, no bullet points.',
+              content: 'Generate a question for a task poster. Ask what important INFO you need to know to accept this errand (not instructions for the doer). Under 150 chars. For example: "Any special requirements for pickup?" or "Does your pet have any health issues?"',
             },
             {
               role: 'user',
-              content: `Generate a description for this errand:\nTitle: ${title}\nCategory: ${detectedCategory}\nDate: ${date}\nTime: ${time}\n\nBe concise and conversational.`,
+              content: `For this ${detectedCategory} task: "${title}" on ${date} at ${time}. What important info should I ask the person to provide? Generate 1 clarifying question.`,
             },
           ],
         },
@@ -672,11 +664,11 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       suggestedDescription = aiText.substring(0, 150);
     } catch (qwenErr) {
       console.error('[AI] Qwen description generation failed:', qwenErr);
-      // Fallback to simple template
-      suggestedDescription = `Help needed for ${detectedCategory}. Will provide more details when you accept.`;
+      // Fallback - ask for basic info
+      suggestedDescription = 'Add any important details or special requirements for this task.';
     }
 
-    // Generate task-specific notes using Qwen
+    // Generate AI notes - suggest what extra INFO to collect from doer
     let notes = '';
     try {
       const config = require('../config').default;
@@ -687,11 +679,11 @@ router.post('/suggestions', async (req: Request, res: Response) => {
           messages: [
             {
               role: 'system',
-              content: 'Generate actionable safety/instructions notes for an errand. Concise, practical, specific to the task type. No headers, plain language.',
+              content: 'Suggest what INFO to collect from the doer accepting this task. Focus on safety, accessibility, or task-specific needs. Under 300 chars. Plain language, no headers.',
             },
             {
               role: 'user',
-              content: `Generate important notes/instructions for this ${detectedCategory} errand:\nTitle: ${title}\nDate: ${date}\nTime: ${time}\n\nFocus on safety and practical instructions.`,
+              content: `For a ${detectedCategory} task: "${title}" on ${date}. What questions should I ask the doer to ensure they understand the full scope? (e.g., availability, requirements, allergies)`,
             },
           ],
         },
@@ -707,7 +699,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     } catch (qwenErr) {
       console.error('[AI] Qwen notes generation failed:', qwenErr);
       // Fallback
-      notes = 'Please provide any special instructions or requirements when confirming.';
+      notes = 'Add any special requirements or questions for the doer to understand the full scope.';
     }
 
     res.json({
