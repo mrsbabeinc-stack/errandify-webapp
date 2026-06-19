@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 interface Rating {
@@ -25,6 +26,7 @@ interface RatingSummary {
 }
 
 export default function RatingsHistoryPage() {
+  const navigate = useNavigate();
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [summary, setSummary] = useState<RatingSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,6 +100,7 @@ export default function RatingsHistoryPage() {
   return (
     <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-20">
       <div className="max-w-2xl mx-auto">
+        <button onClick={() => navigate(-1)} className="mb-4 text-lg text-gray-600 font-bold">‹ Back</button>
         <h1 className="text-2xl font-bold text-errandify-brown mb-6">⭐ Ratings & Reviews</h1>
 
         {/* Summary Card */}

@@ -139,6 +139,7 @@ export default function MyPocketPage() {
   return (
     <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-20">
       <div className="max-w-2xl mx-auto">
+        <button onClick={() => navigate(-1)} className="mb-4 text-lg text-gray-600 font-bold">‹ Back</button>
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-errandify-brown mb-1">💼 MyPocket</h1>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 interface Session {
@@ -12,6 +13,7 @@ interface Session {
 }
 
 export default function RecurringSessionsPage() {
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
@@ -107,6 +109,7 @@ export default function RecurringSessionsPage() {
   return (
     <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-20">
       <div className="max-w-2xl mx-auto">
+        <button onClick={() => navigate(-1)} className="mb-4 text-lg text-gray-600 font-bold">‹ Back</button>
         <h1 className="text-2xl font-bold text-errandify-brown mb-6">🔄 Recurring Sessions</h1>
 
         {/* Filters */}
