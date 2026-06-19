@@ -466,23 +466,18 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     if (postalCode) {
       try {
         console.log(`[Hana] Looking up postal code: ${postalCode}`);
-        const oneMapResponse = await axios.get(
-          'https://www.onemap.gov.sg/api/common/elastic/search',
-          {
-            params: {
-              searchVal: postalCode,
-              returnGeom: 'Y',
-              getAddrDetails: 'Y',
-            },
-            timeout: 5000,
-            validateStatus: () => true, // Accept any status code
-          }
-        );
+        const url = new URL('https://www.onemap.gov.sg/api/common/elastic/search');
+        url.searchParams.set('searchVal', postalCode);
+        url.searchParams.set('returnGeom', 'Y');
+        url.searchParams.set('getAddrDetails', 'Y');
 
-        console.log(`[Hana] OneMap response status:`, oneMapResponse.status);
+        const oneMapResponse = await fetch(url.toString());
+        const data = await oneMapResponse.json();
 
-        if (oneMapResponse.data?.results && oneMapResponse.data.results.length > 0) {
-          const result = oneMapResponse.data.results[0];
+        console.log(`[Hana] OneMap response:`, data);
+
+        if (data?.results && data.results.length > 0) {
+          const result = data.results[0];
           // Use ADDRESS field directly from OneMap
           fullAddress = result.ADDRESS || `Singapore ${postalCode}`;
 
@@ -493,7 +488,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           console.log(`[Hana] No results from OneMap for ${postalCode}`);
         }
       } catch (error) {
-        console.error(`[Hana] OneMap API error for ${postalCode}:`, error instanceof Error ? error.message : error);
+        console.error(`[Hana] OneMap lookup error for ${postalCode}:`, error instanceof Error ? error.message : error);
         fullAddress = `Singapore ${postalCode}`;
         area = 'Singapore';
       }
