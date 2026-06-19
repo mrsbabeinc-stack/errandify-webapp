@@ -465,43 +465,33 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     if (postalCode) {
       try {
-        // OneMap reverse geocoding: convert postal code to address
         const oneMapResponse = await axios.get(
-          `https://www.onemap.sg/api/common/searchAddressFreetext`,
+          'https://www.onemap.gov.sg/api/common/elastic/search',
           {
             params: {
               searchVal: postalCode,
-              returnGeom: 'N',
+              returnGeom: 'Y',
               getAddrDetails: 'Y',
-              pageNum: 1,
             },
+            timeout: 5000,
           }
         );
 
         if (oneMapResponse.data?.results && oneMapResponse.data.results.length > 0) {
           const result = oneMapResponse.data.results[0];
-          fullAddress = result.ADDRESS || `Singapore ${postalCode}`;
+          // Build full address from components
+          const block = result.BLK_NO ? `Block ${result.BLK_NO}` : '';
+          const road = result.ROAD_NAME || '';
+          const building = result.BUILDING_NAME ? `, ${result.BUILDING_NAME}` : '';
 
-          // Extract area from address
-          // Format is usually: "STREET NUMBER STREET NAME, POSTAL CODE"
-          // We want to extract meaningful area/location from this
-          const parts = fullAddress.split(',');
-          if (parts.length > 0) {
-            // Try to extract area name from the first part (before comma)
-            const addressLine = parts[0].trim();
-            // Get everything after the first few words (street number and name)
-            const words = addressLine.split(' ');
-            if (words.length > 2) {
-              // Skip street number and take remaining as area
-              area = words.slice(1).join(' ') || 'Singapore';
-            } else {
-              area = 'Singapore';
-            }
-          }
+          const parts = [block, road, building].filter((p: string) => p);
+          fullAddress = parts.join(', ').replace(/^, /, '') || `Singapore ${postalCode}`;
+
+          // Extract area from road name or building name
+          area = result.BUILDING_NAME || result.ROAD_NAME || 'Singapore';
         }
       } catch (error) {
         console.error('OneMap API error:', error);
-        // Fallback to generic address
         fullAddress = `Singapore ${postalCode}`;
         area = 'Singapore';
       }
