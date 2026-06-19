@@ -260,6 +260,11 @@ router.get('/:id/ratings', async (req, res) => {
 // Get notification preferences
 router.get('/preferences', authMiddleware, async (req, res) => {
   try {
+    // Ensure notification_preferences column exists
+    await db.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS notification_preferences JSONB DEFAULT '{}'`
+    );
+
     const result = await db.query(
       `SELECT notification_preferences FROM users WHERE id = $1`,
       [req.userId]
@@ -284,10 +289,16 @@ router.get('/preferences', authMiddleware, async (req, res) => {
       platform_updates: false,
     };
 
+    // Handle both empty object and null cases
+    let prefs = user.notification_preferences;
+    if (!prefs || Object.keys(prefs).length === 0) {
+      prefs = defaultPreferences;
+    }
+
     res.json({
       success: true,
       data: {
-        notification_preferences: user.notification_preferences || defaultPreferences,
+        notification_preferences: prefs,
       },
     });
   } catch (error) {
@@ -299,6 +310,11 @@ router.get('/preferences', authMiddleware, async (req, res) => {
 // Update notification preferences
 router.patch('/preferences', authMiddleware, async (req, res) => {
   try {
+    // Ensure notification_preferences column exists
+    await db.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS notification_preferences JSONB DEFAULT '{}'`
+    );
+
     const { notification_preferences } = req.body;
 
     if (!notification_preferences) {
@@ -307,7 +323,7 @@ router.patch('/preferences', authMiddleware, async (req, res) => {
 
     const result = await db.query(
       `UPDATE users SET notification_preferences = $1 WHERE id = $2 RETURNING id`,
-      [JSON.stringify(notification_preferences), req.userId]
+      [notification_preferences, req.userId]
     );
 
     if (result.rows.length === 0) {
