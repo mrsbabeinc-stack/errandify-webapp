@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import NotificationToastContainer from './components/NotificationToastContainer';
+import PushNotificationManager from './components/PushNotificationManager';
 import { NotificationProvider } from './context/NotificationContext';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
@@ -75,6 +76,7 @@ export default function App() {
     <NotificationProvider>
       <Router>
         <NotificationToastContainer />
+        {isAuthenticated && <PushNotificationManager />}
         <Routes>
         {/* Landing page - shown first to unauthenticated users */}
         <Route
