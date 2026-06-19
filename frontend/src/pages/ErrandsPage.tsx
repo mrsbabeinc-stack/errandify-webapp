@@ -127,6 +127,22 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
     return date.toLocaleDateString();
   };
 
+  const handleCopyErrand = (errand: Errand) => {
+    // Store errand data in sessionStorage for create-errand page to use
+    sessionStorage.setItem('copyErrandData', JSON.stringify({
+      title: errand.title,
+      description: errand.description,
+      category: errand.category,
+      budget: errand.budget,
+      deadline: errand.deadline,
+      location: errand.location,
+      isRecurring: errand.isRecurring,
+    }));
+
+    // Navigate to create errand page
+    navigate('/create-errand');
+  };
+
   const pageTitle = userRole === 'asker' ? 'MyPosted Errands' : 'ToHelp Errands';
   const pageSubtitle = userRole === 'asker' ? 'Errands you have posted' : 'Errands you have accepted';
 
@@ -256,13 +272,24 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                       </div>
                     )}
 
-                    {/* Action Button */}
-                    <button
-                      onClick={() => navigate(`/errand/${errand.id}`)}
-                      className="w-full bg-errandify-orange text-white py-2 rounded-lg font-semibold hover:bg-opacity-90 text-sm mt-2"
-                    >
-                      View Details
-                    </button>
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => navigate(`/errand/${errand.id}`)}
+                        className="flex-1 bg-errandify-orange text-white py-2 rounded-lg font-semibold hover:bg-opacity-90 text-sm"
+                      >
+                        View Details
+                      </button>
+                      {userRole === 'asker' && (
+                        <button
+                          onClick={() => handleCopyErrand(errand)}
+                          className="flex-1 bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 text-sm"
+                          title="Copy this errand to create a new one"
+                        >
+                          📋 Copy
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
