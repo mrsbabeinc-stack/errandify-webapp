@@ -45,10 +45,10 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
       ];
 
   const rightItems: NavItem[] = [
-    { label: 'My Village', path: '/my-village', icon: '🏘️' },
-    { label: 'Wallet', path: '/wallet', icon: '💰' },
+    { label: 'MyVillage', path: '/my-village', icon: '🏘️' },
     { label: 'Chat', path: '/chat', icon: '💬' },
-    { label: 'Profile', path: '/profile', icon: '👤', image: userImage || undefined },
+    { label: 'MyPocket', path: '/wallet', icon: '💰' },
+    { label: 'MyAccount', path: '/profile', icon: '👤', image: userImage || undefined },
   ];
 
   return (
