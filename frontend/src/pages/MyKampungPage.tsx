@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { moderatePost, getModerationStatus, getModerationMessage } from '../services/moderationService';
+import blogPostsData from '../data/blogPosts';
 
 interface CommunityPost {
   id: number;
@@ -286,41 +287,8 @@ export default function MyKampungPage() {
       },
     ]);
 
-    setBlogPosts([
-      {
-        id: 1,
-        title: 'How Sarah Earned $2,000 in Her First Month on Errandify',
-        excerpt: 'Success story: A single mom who turned Errandify into a flexible side income.',
-        author: 'Community Team',
-        category: 'stories',
-        readTime: 5,
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        likes: 342,
-        isLiked: false,
-      },
-      {
-        id: 2,
-        title: 'Complete Guide: Setting the Right Budget for Your Tasks',
-        excerpt: 'Learn how to price tasks competitively while ensuring doers are motivated.',
-        author: 'Sarah Chen',
-        category: 'guide',
-        readTime: 8,
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        likes: 298,
-        isLiked: false,
-      },
-      {
-        id: 3,
-        title: 'Top 5 Safety Tips for Doers Meeting New Askers',
-        excerpt: 'Your safety matters. Here are essential tips to stay safe while working.',
-        author: 'Safety Team',
-        category: 'tips',
-        readTime: 6,
-        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-        likes: 567,
-        isLiked: false,
-      },
-    ]);
+    // Use real, SEO-optimized blog posts from blogPosts data
+    setBlogPosts(blogPostsData);
   };
 
   const handleLikePost = (postId: number) => {
