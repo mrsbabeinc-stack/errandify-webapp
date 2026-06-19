@@ -19,7 +19,7 @@ export default function FAQPage() {
       id: 'g1',
       category: 'general',
       question: 'What is Errandify?',
-      answer: 'Errandify is Singapore\'s AI-powered neighbourhood marketplace where neighbours help each other with daily tasks. Whether you need help or want to earn by helping others, Errandify connects you with trusted community members.',
+      answer: 'Errandify is Singapore-based AI-powered neighbourhood marketplace where neighbours help each other with daily tasks. Whether you need help or want to earn by helping others, Errandify connects you with trusted community members.',
     },
     {
       id: 'g2',
@@ -62,7 +62,7 @@ export default function FAQPage() {
     {
       id: 'a4',
       category: 'asker',
-      question: 'What if I\'m not happy with the work?',
+      question: 'What if I am not happy with the work?',
       answer: 'Payment is held until you mark the work as complete. If there are issues, you can raise a dispute with evidence. Our team reviews and resolves fairly. Doers can also make things right before disputes escalate.',
     },
     {
@@ -147,7 +147,7 @@ export default function FAQPage() {
       id: 's1',
       category: 'safety',
       question: 'Is my personal information safe?',
-      answer: 'Yes. We use industry-standard encryption, verify all users via government IDs (SingPass or Veriff), and follow Singapore\'s data protection laws (PDPA). Your data is never shared without consent.',
+      answer: 'Yes. We use industry-standard encryption, verify all users via government IDs (SingPass or Veriff), and follow Singapore data protection laws (PDPA). Your data is never shared without consent.',
     },
     {
       id: 's2',
