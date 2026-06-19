@@ -23,23 +23,23 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
   {
     id: 1,
-    title: 'How to Earn $2,000+ Monthly on Errandify: The Complete Doer Guide',
-    excerpt: 'Discover proven strategies used by top earners to make $2,000+ every month helping neighbors. Learn pricing, time management, and reputation building.',
+    title: 'Build a Sustainable Income on Errandify: Singapore Doer Guide',
+    excerpt: 'Realistic strategies from active doers in Singapore. Learn how to earn SGD $1,500-2,500/month doing 15-20 hours of work you enjoy.',
     content: `
-# How to Earn $2,000+ Monthly on Errandify: The Complete Doer Guide
+# Build a Sustainable Income on Errandify: Singapore Doer Guide
 
-Are you looking for flexible ways to earn money without leaving your neighbourhood? Errandify connects you with people who need help, paying you fairly for your time and skills.
+Looking for flexible ways to earn additional income in Singapore? Errandify connects you with neighbors in your community who need help, paying fairly for your time and skills.
 
-## The Real Numbers: What Errandify Doers Actually Earn
+## Real Numbers from Singapore Doers
 
-According to our community data, successful Errandify doers earn between $1,500 to $3,500 monthly by working 15-25 hours per week. Here's what they're doing differently.
+Active Errandify doers in Singapore typically earn between SGD $1,500 to $2,500 monthly by working 15-20 hours per week. This varies based on your skills, location, and effort.
 
-### Average Earnings by Category
-- **Home Care & Cleaning:** $50-150 per task
-- **Shopping & Errands:** $40-100 per task
-- **Tech Help & Tutoring:** $60-200 per task
-- **Handyman & Repairs:** $100-300 per task
-- **Pet Care:** $40-120 per task
+### Typical Earnings by Category (Singapore)
+- **Home Care & Cleaning:** SGD $40-80 per task
+- **Shopping & Errands:** SGD $25-50 per task
+- **Tech Help & Tutoring:** SGD $40-100 per task
+- **Handyman & Repairs:** SGD $60-150 per task
+- **Pet Care:** SGD $30-80 per task
 
 ## 5 Proven Strategies Top Earners Use
 
@@ -57,7 +57,7 @@ They price 15-20% above market rate and justify it with:
 - Proactive problem-solving
 - Premium finish quality
 
-**Real example:** Two doers both offer home cleaning. Doer A charges $50/hour (average), gets 5 jobs/week, earns $1,000/month. Doer B charges $65/hour (premium), gets 4 jobs/week but earns $1,300/month because askers value reliability over bargain prices.
+**Real example (Singapore):** Two doers both offer home cleaning. Doer A charges SGD $30/hour, gets 5 jobs/week, earns $600/month. Doer B charges SGD $40/hour with excellent reviews, gets 4 jobs/week but earns $800/month because askers value reliability and quality.
 
 ### 3. Build Recurring Relationships
 One-off jobs are volatile. Top earners convert 40% of their askers into repeat customers through:
@@ -83,17 +83,15 @@ Your profile is your storefront. Top earners spend 2 hours creating:
 - Before/after photos of your work
 - Clear availability calendar
 
-## The Unspoken Secret: Why Some Doers Earn 3x More
+## The Realistic Path: How to Build Sustainable Income
 
-It's not luck. It's **positioning yourself for higher-value tasks**.
+Building consistent income isn't about big promises. It's about:
+- **Starting with what you're good at** (not overstretching)
+- **Building reputation slowly** (5-star ratings matter)
+- **Staying reliable** (consistency beats volume)
+- **Being honest with clients** (set realistic expectations)
 
-High-value tasks (tech help, tutoring, home repairs) pay 2-3x more than low-value tasks (shopping, simple errands). But they require:
-- Relevant skills or certification
-- Track record of success
-- Strong communication
-- Problem-solving mindset
-
-**Strategy:** Start with what you know. As you build reputation (5+ star rating), gradually take on higher-complexity tasks at premium prices.
+**Strategy:** Start with tasks in your comfort zone. As you build a track record of positive feedback, you can gradually increase your rates modestly (10-15% per year) and take on more complex work.
 
 ## Common Earnings Myths (Debunked)
 
@@ -106,27 +104,27 @@ High-value tasks (tech help, tutoring, home repairs) pay 2-3x more than low-valu
 **Myth:** "Low prices build a customer base."
 **Reality:** You build a base of price-sensitive customers who demand discounts. Premium pricing attracts quality askers.
 
-## Your 30-Day Action Plan to $2,000/Month
+## Your 30-Day Action Plan to Start Earning
 
-**Week 1:** Optimize your profile (photo, intro, availability)
-**Week 2:** Choose 2-3 categories to specialize in
-**Week 3:** Set premium pricing (15% above market)
-**Week 4:** Focus on 5-star quality, gather video testimonials
+**Week 1:** Create a strong profile (clear photo, honest description, realistic availability)
+**Week 2:** Choose 2-3 categories where you have genuine skills
+**Week 3:** Set fair pricing (research what others in your area charge)
+**Week 4:** Focus on excellent work and getting positive reviews
 
-By week 4, you should see better-quality inquiries and higher acceptance rates.
+By week 4, you should start receiving consistent inquiries and building reviews.
 
-## The Bottom Line
+## The Honest Bottom Line
 
-Making $2,000+ monthly on Errandify isn't about working more hours. It's about:
-1. Specializing in what you're good at
-2. Pricing your value correctly
-3. Building repeat relationships
-4. Optimizing your profile
-5. Continuously improving quality
+Building sustainable income on Errandify is realistic, but it requires:
+1. **Being good at what you do** (quality matters)
+2. **Pricing fairly** (not competing on lowest price)
+3. **Building relationships** (repeat customers = steady income)
+4. **A strong profile** (first impressions count)
+5. **Patience** (income grows over months, not days)
 
-Start small, build reputation, scale strategically. That's how top earners do it.
+Start small, deliver excellent work, and let your reputation grow naturally. That's how sustainable doers build reliable income.
 
-**Ready to start? Create your profile and pick your first category. Your neighbors are waiting for help.**
+**Ready to start? Create your profile with an honest description, and pick a category where you're genuinely skilled. Your neighbors are waiting for help.**
     `,
     author: 'Errandify Community Team',
     category: 'guide',
@@ -134,8 +132,8 @@ Start small, build reputation, scale strategically. That's how top earners do it
     createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     likes: 842,
     isLiked: false,
-    slug: 'earn-2000-monthly-errandify-guide',
-    seoKeywords: ['earn money', 'side hustle', 'flexible income', 'gig economy', 'neighborhood help'],
+    slug: 'sustainable-income-singapore-doer-guide',
+    seoKeywords: ['earn SGD', 'side income Singapore', 'flexible work', 'gig economy Singapore', 'neighborhood help'],
     tags: ['earning', 'doer', 'strategy', 'income'],
   },
   {
@@ -868,19 +866,19 @@ For the first time in 30 years, she had power over her own work.
 
 ### Before Errandify:
 - **Hours/week:** 50-55
-- **Earning/month:** $1,200 SGD
-- **Hourly rate:** $5-6 SGD/hour
+- **Earning/month:** SGD $1,200
+- **Hourly rate:** SGD $5-6/hour
 - **Job security:** Dependent on agency
 - **Retirement savings:** Nearly zero
 
 ### After Errandify (6 months):
-- **Hours/week:** 18-20
-- **Earning/month:** $2,800 SGD
-- **Hourly rate:** $25-30 SGD/hour
-- **Job security:** 40+ regular customers
-- **Retirement savings:** Building month by month
+- **Hours/week:** 22-25
+- **Earning/month:** SGD $1,800-2,000
+- **Hourly rate:** SGD $18-25/hour
+- **Job security:** 30+ regular customers
+- **Retirement savings:** Starting to build
 
-**That's 2.3x more income for 60% fewer hours.**
+**That's 60-70% more income for about the same hours, but with much more control.**
 
 ## How It Helped Her Life: Personal Impact
 
