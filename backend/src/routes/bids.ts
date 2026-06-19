@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
-import { notifyBidReceived, notifyBidAccepted, notifyBidRejected } from './notifications.js';
+import { notifyBidReceived, notifyBidAccepted, notifyBidRejected, notifyTaskReopenedAfterCancellation, createNotification } from './notifications.js';
 
 const router = Router();
 
@@ -229,6 +229,107 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
   } catch (error) {
     console.error('Accept bid error:', error);
     res.status(500).json({ error: 'Failed to accept bid' });
+  }
+});
+
+// POST /api/bids/:id/cancel - Doer cancels accepted bid and reopens task
+router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const doerId = parseInt(req.userId || '0', 10);
+    const { reason } = req.body;
+
+    // Get bid details
+    const bidResult = await db.query(
+      'SELECT * FROM bids WHERE id = $1',
+      [id]
+    );
+
+    if (bidResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Bid not found' });
+    }
+
+    const bid = bidResult.rows[0];
+
+    // Verify doer owns the bid
+    if (bid.doer_id !== doerId) {
+      return res.status(403).json({ error: 'Only the doer can cancel this bid' });
+    }
+
+    // Get errand details
+    const errandResult = await db.query(
+      'SELECT id, title, status FROM errands WHERE id = $1',
+      [bid.task_id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    // Can only cancel if not yet started (confirmed or pending payment)
+    if (errand.status !== 'confirmed' && errand.status !== 'in_progress') {
+      return res.status(400).json({ error: 'Cannot cancel bid at this stage' });
+    }
+
+    // Update bid status to cancelled_by_doer
+    await db.query(
+      'UPDATE bids SET status = $1 WHERE id = $2',
+      ['cancelled_by_doer', id]
+    );
+
+    // Revert errand to open
+    await db.query(
+      'UPDATE errands SET status = $1, accepted_bid_id = NULL WHERE id = $2',
+      ['open', bid.task_id]
+    );
+
+    // Get all other rejected bids on this task (previous bidders)
+    const rejectedBidsResult = await db.query(
+      `SELECT DISTINCT b.id, b.doer_id, b.amount
+       FROM bids b
+       WHERE b.task_id = $1 AND b.status = $2 AND b.doer_id != $3`,
+      [bid.task_id, 'rejected', doerId]
+    );
+
+    // Notify previous bidders that task is available again
+    for (const rejectedBid of rejectedBidsResult.rows) {
+      await notifyTaskReopenedAfterCancellation(
+        rejectedBid.doer_id,
+        errand.title,
+        rejectedBid.amount,
+        errand.id
+      );
+    }
+
+    // Notify asker
+    const askerResult = await db.query(
+      'SELECT id FROM users WHERE id = (SELECT asker_id FROM errands WHERE id = $1)',
+      [bid.task_id]
+    );
+
+    if (askerResult.rows.length > 0) {
+      await createNotification(
+        askerResult.rows[0].id,
+        'task_doer_cancelled',
+        '⚠️ Doer Cancelled',
+        `The doer cancelled "${errand.title}". Previous bidders have been notified.`,
+        null
+      );
+    }
+
+    res.json({
+      success: true,
+      data: {
+        bidId: id,
+        status: 'cancelled_by_doer',
+        notifiedCount: rejectedBidsResult.rows.length,
+      },
+    });
+  } catch (error) {
+    console.error('Cancel bid error:', error);
+    res.status(500).json({ error: 'Failed to cancel bid' });
   }
 });
 

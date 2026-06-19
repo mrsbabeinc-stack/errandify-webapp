@@ -152,6 +152,22 @@ export async function notifyBidRejected(doerId: number, taskTitle: string) {
   );
 }
 
+export async function notifyTaskReopenedAfterCancellation(
+  doerId: number,
+  taskTitle: string,
+  bidAmount: number,
+  errandId: number
+) {
+  const actionUrl = `/errand/${errandId}/reaccept-bid/${bidAmount}`;
+  await createNotification(
+    doerId,
+    'task_reopened_for_bid',
+    '🎯 Task Available Again!',
+    `${taskTitle}" is available again! Your original bid of $${bidAmount} is ready to go. [Accept Now]`,
+    actionUrl
+  );
+}
+
 export async function notifyJobStarted(askerId: number, doerName: string, taskTitle: string) {
   await createNotification(
     askerId,
