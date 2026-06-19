@@ -103,29 +103,8 @@ export default function HanaTaskCreation({
 
   const extractTaskInfo = async (userInput: string) => {
     try {
-      // First, check if the input contains inappropriate content
-      try {
-        const contentCheckResponse = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/check-content`,
-          {
-            title: userInput,
-            description: '',
-            notes: '',
-          }
-        );
-
-        if (!contentCheckResponse.data.data.is_safe) {
-          console.log('[Hana] Content check failed - inappropriate content detected');
-          console.log('[Hana] Setting step to input and showing rejection message');
-          setHanaMessage('I cannot help with that request. It contains inappropriate content. Please describe your errand in a different way. 😊');
-          setCurrentStep('input');
-          console.log('[Hana] About to return - loading will be reset by finally block');
-          return;
-        }
-      } catch (contentCheckErr) {
-        console.warn('[Hana] Content check error:', contentCheckErr);
-        // Continue anyway if content check fails - don't block the user
-      }
+      // NOTE: Don't check raw input for content - user might mention postal codes, budgets, skills
+      // Instead, check the extracted title/description/notes after extraction
 
       // Use AI to extract structured task info from freeform input
       const response = await axios.post(
@@ -223,6 +202,29 @@ export default function HanaTaskCreation({
           setCurrentStep('input');
           setInput('');
           return;
+        }
+
+        // Check content moderation on EXTRACTED data only (not raw input)
+        try {
+          const contentCheckResponse = await axios.post(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/check-content`,
+            {
+              title: enhancedTaskData.title,
+              description: enhancedTaskData.description || '',
+              notes: enhancedTaskData.notes || '',
+            }
+          );
+
+          if (!contentCheckResponse.data.data.is_safe) {
+            console.log('[Hana] Content check failed on extracted data');
+            setHanaMessage('I cannot help with that request. It contains inappropriate content. Please describe your errand in a different way. 😊');
+            setCurrentStep('input');
+            setInput('');
+            return;
+          }
+        } catch (contentCheckErr) {
+          console.warn('[Hana] Content check error:', contentCheckErr);
+          // Continue anyway if content check fails
         }
 
         setTaskData(enhancedTaskData as any);
