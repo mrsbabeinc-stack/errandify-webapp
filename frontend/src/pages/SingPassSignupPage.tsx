@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import CriminalScreening from '../components/CriminalScreening';
 
 interface SignupData {
   nric: string;
@@ -14,7 +13,7 @@ interface SignupData {
 export default function SingPassSignupPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [step, setStep] = useState<'singpass' | 'profile' | 'screening' | 'complete'>('singpass');
+  const [step, setStep] = useState<'singpass' | 'profile' | 'complete'>('singpass');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -128,8 +127,7 @@ export default function SingPassSignupPage() {
 
           <div className="bg-orange-50 border-l-4 border-errandify-orange-500 p-4 mb-6">
             <p className="text-errandify-orange-800 text-sm">
-              <strong>Why SingPass?</strong> We verify your identity for safety and compliance.
-              Your NRIC helps us screen for criminal convictions to protect vulnerable people.
+              <strong>Why SingPass?</strong> We verify your identity to keep our community safe and trustworthy.
             </p>
           </div>
 
@@ -286,7 +284,7 @@ export default function SingPassSignupPage() {
               disabled={loading}
               className="w-full py-3 px-4 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Saving...' : 'Continue to Safety Screening'}
+              {loading ? 'Saving...' : 'Complete Sign Up'}
             </button>
           </form>
 
@@ -298,17 +296,7 @@ export default function SingPassSignupPage() {
     );
   }
 
-  // Step 3: Criminal Screening
-  if (step === 'screening') {
-    return (
-      <CriminalScreening
-        onComplete={handleScreeningComplete}
-        onCancel={() => setStep('profile')}
-      />
-    );
-  }
-
-  // Step 4: Success
+  // Step 3: Success
   if (step === 'complete') {
     return (
       <div className="min-h-screen bg-green-50 flex items-center justify-center p-4">

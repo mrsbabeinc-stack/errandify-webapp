@@ -150,12 +150,6 @@ export default function FAQPage() {
       answer: 'We verify identities, monitor suspicious activity, enforce ratings transparency, and have a clear cancellation/dispute process. Payment is held securely until work is confirmed complete.',
     },
     {
-      id: 's3',
-      category: 'safety',
-      question: 'What categories require background checks?',
-      answer: 'Childcare, elderly care, healthcare support, and home key access require background screening. We use licensed screening services and follow all legal requirements (CYPA, Women\'s Charter, etc.).',
-    },
-    {
       id: 's4',
       category: 'safety',
       question: 'What if I feel unsafe during an errand?',

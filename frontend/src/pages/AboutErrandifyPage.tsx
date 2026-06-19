@@ -187,7 +187,7 @@ export default function AboutErrandifyPage() {
 
           {/* Safety & Security */}
           <div>
-            <h2 className="text-2xl font-bold text-errandify-brown mb-4">Safety & Security</h2>
+            <h2 className="text-2xl font-bold text-errandify-brown mb-4">🛡️ Safety & Security</h2>
             <p className="text-gray-700 mb-3">Your safety matters to us. We verify users, monitor quality, and have policies in place:</p>
             <ul className="space-y-2 text-sm text-gray-700">
               <li className="flex gap-2">
@@ -196,19 +196,19 @@ export default function AboutErrandifyPage() {
               </li>
               <li className="flex gap-2">
                 <span className="text-errandify-orange font-bold">•</span>
-                <span><strong>Background Checks:</strong> Criminal screening for certain sensitive categories</span>
+                <span><strong>Secure Payments:</strong> Money is held securely in escrow until work is confirmed complete</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-errandify-orange font-bold">•</span>
-                <span><strong>Secure Payments:</strong> Money is held securely during work</span>
+                <span><strong>Ratings & Reviews:</strong> Every doer is rated by askers. See all reviews – build trust through transparency</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-errandify-orange font-bold">•</span>
-                <span><strong>Dispute Resolution:</strong> Fair process if something goes wrong</span>
+                <span><strong>Dispute Resolution:</strong> Fair process if something goes wrong. We mediate and resolve fairly</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-errandify-orange font-bold">•</span>
-                <span><strong>Transparent Ratings:</strong> See all reviews – both good and constructive</span>
+                <span><strong>Block & Trust Lists:</strong> Control who you work with. Block users or mark as trusted</span>
               </li>
             </ul>
           </div>
