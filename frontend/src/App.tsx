@@ -42,6 +42,8 @@ import RecurringSessionsPage from './pages/RecurringSessionsPage';
 import EmailNotificationSettingsPage from './pages/EmailNotificationSettingsPage';
 import RatingsHistoryPage from './pages/RatingsHistoryPage';
 import DisputesManagementPage from './pages/DisputesManagementPage';
+import AboutErrandifyPage from './pages/AboutErrandifyPage';
+import FAQPage from './pages/FAQPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -218,6 +220,8 @@ export default function App() {
         <Route path="/ratings" element={isAuthenticated ? <RatingsHistoryPage /> : <Navigate to="/login" replace />} />
         <Route path="/disputes-management" element={isAuthenticated ? <DisputesManagementPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin" element={isAuthenticated ? <AdminDashboardPage /> : <Navigate to="/login" replace />} />
+        <Route path="/about" element={<AboutErrandifyPage />} />
+        <Route path="/faq" element={<FAQPage />} />
 
         {/* Main dashboard layout */}
         <Route
