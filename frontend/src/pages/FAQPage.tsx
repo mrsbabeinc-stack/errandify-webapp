@@ -25,7 +25,7 @@ export default function FAQPage() {
       id: 'g2',
       category: 'general',
       question: 'How much does it cost to use Errandify?',
-      answer: 'Errandify is free to join and use. We believe in supporting our doer community, so askers cover all platform and payment processing costs. Doers receive exactly what they bid for – no deductions. Askers pay the errand amount + 20% platform fee + Stripe payment processing fees (typically 2-3%).',
+      answer: 'Errandify is free to join and use. Doers pay a 20% platform fee from their earnings. Askers pay Stripe payment processing fees (2-3% depending on payment method). For example: If you bid SGD $100, you earn SGD $80 (after 20% platform fee). Asker pays SGD $100 + Stripe fees (~$2-3).',
     },
     {
       id: 'g3',
@@ -127,19 +127,19 @@ export default function FAQPage() {
       id: 'p3',
       category: 'payment',
       question: 'Are there any fees?',
-      answer: 'Doers receive exactly what they bid – no fees taken from doers. Askers pay: (1) the errand amount to the doer, (2) 20% platform fee, and (3) Stripe payment processing fees (typically 2-3% depending on payment method). Example: If you bid SGD $100, asker pays approximately SGD $123-124 total ($100 to you + $20 platform fee + ~$3-4 Stripe fees).',
+      answer: 'Yes. Doers pay a 20% platform fee from their earnings. Askers pay Stripe payment processing fees (2-3%). Example: If you (doer) bid SGD $100, you earn SGD $80 (Errandify takes 20%). Asker pays the SGD $100 + Stripe fees (~$2-3).',
     },
     {
       id: 'p4',
       category: 'payment',
       question: 'What are Stripe fees and why do askers pay them?',
-      answer: 'Stripe is the secure payment processor we use. They charge 2-3% (varies by payment method: credit card, debit card, PayNow, etc.). Since askers are the ones using payment methods to pay for errands, it's fair they cover these processing costs. Doers never pay Stripe fees.',
+      answer: 'Stripe is the secure payment processor we use. They charge 2-3% (varies by payment method: credit card, debit card, PayNow, etc.). Askers pay these fees since they're the ones making the payment. Doers only pay the 20% platform fee from their earnings.',
     },
     {
       id: 'p5',
       category: 'payment',
       question: 'How do I withdraw my earnings?',
-      answer: 'Earnings accumulate in your Errandify Pocket (wallet). You can request a payout anytime. We process payouts every Friday to your registered bank account. Payout fees are minimal and covered by askers through the platform, so doers receive their full earnings.',
+      answer: 'Earnings accumulate in your Errandify Pocket (wallet) after the 20% platform fee is deducted. You can request a payout anytime. We process payouts to your registered bank account.',
     },
 
     // Safety

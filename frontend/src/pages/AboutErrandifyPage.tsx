@@ -136,7 +136,7 @@ export default function AboutErrandifyPage() {
 
           {/* For Doers */}
           <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-            <h3 className="font-bold text-gray-800 mb-3">💪 For Doers: Earn What You Negotiate</h3>
+            <h3 className="font-bold text-gray-800 mb-3">💪 For Doers: Earn by Helping</h3>
             <ul className="text-sm text-gray-700 space-y-2">
               <li className="flex gap-2">
                 <span>✓</span>
@@ -148,7 +148,7 @@ export default function AboutErrandifyPage() {
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span><strong>Receive your full bid amount</strong> – askers cover platform fees, not you</span>
+                <span>Earn 80% of your bid (after 20% platform fee) – fair compensation for your work</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
@@ -183,11 +183,11 @@ export default function AboutErrandifyPage() {
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span>Secure payment via Stripe – money held until work is done to your satisfaction</span>
+                <span>Secure payment via Stripe – pay errand cost + Stripe payment fees (2-3%)</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span>Fair pricing – 20% platform fee supports the community and service quality</span>
+                <span>Money held safely until work is done to your satisfaction</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
