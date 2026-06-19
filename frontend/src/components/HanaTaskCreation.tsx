@@ -96,6 +96,23 @@ export default function HanaTaskCreation({
 
   const extractTaskInfo = async (userInput: string) => {
     try {
+      // First, check if the input contains inappropriate content
+      const contentCheckResponse = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/check-content`,
+        {
+          title: userInput,
+          description: '',
+          notes: '',
+        }
+      );
+
+      if (!contentCheckResponse.data.data.is_safe) {
+        setHanaMessage('I cannot help with that request. It contains inappropriate content. Please describe your errand in a different way. 😊');
+        setCurrentStep('input');
+        setInput('');
+        return;
+      }
+
       // Use AI to extract structured task info from freeform input
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
