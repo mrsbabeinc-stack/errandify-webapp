@@ -181,7 +181,7 @@ export default function FAQPage() {
       id: 's6',
       category: 'safety',
       question: 'What is Errandify policy on inappropriate behaviour?',
-      answer: 'Errandify is a safe environment where we have zero tolerance for inappropriate behaviour. This includes: harassment, discrimination, abuse, fraud, or any conduct that violates community standards. Any such behaviour will result in immediate account suspension and potential legal action. Report any incidents immediately to togather@errandify.ai.',
+      answer: 'Errandify is built on community respect. We do not tolerate harassment, discrimination, abuse, fraud, or conduct that violates community standards. Users who violate these standards may face account suspension and potential legal action. Report concerning behaviour immediately to togather@errandify.ai.',
     },
     {
       id: 's7',

@@ -203,7 +203,7 @@ export default function AboutErrandifyPage() {
           {/* Safety & Community Trust */}
           <div>
             <h2 className="text-2xl font-bold text-errandify-brown mb-4">🛡️ Trust, Respect & Safety</h2>
-            <p className="text-gray-700 mb-3">We build trust through communication, transparency, and our shared community values. <strong>Errandify is a safe environment where we do not tolerate inappropriate behaviour.</strong></p>
+            <p className="text-gray-700 mb-3">We build trust through communication, transparency, and our shared community values. While we cannot guarantee safety, we're committed to fostering a respectful community where people look out for each other.</p>
             <ul className="space-y-2 text-sm text-gray-700">
               <li className="flex gap-2">
                 <span className="text-errandify-orange font-bold">•</span>
@@ -223,11 +223,11 @@ export default function AboutErrandifyPage() {
               </li>
               <li className="flex gap-2">
                 <span className="text-errandify-orange font-bold">•</span>
-                <span><strong>Zero Tolerance:</strong> Inappropriate behaviour (harassment, discrimination, abuse, fraud) will result in immediate account suspension and potential legal action</span>
+                <span><strong>Community Standards:</strong> We do not tolerate harassment, discrimination, abuse, or fraud. Users who violate community standards may face account suspension and legal action</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-errandify-orange font-bold">•</span>
-                <span><strong>Report & Action:</strong> Report inappropriate behaviour immediately. We take every report seriously and act swiftly</span>
+                <span><strong>Report & Action:</strong> Report concerning behaviour immediately. We take every report seriously and investigate promptly</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-errandify-orange font-bold">•</span>
