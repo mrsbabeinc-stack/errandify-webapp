@@ -87,7 +87,7 @@ export default function HomePage({ userRole }: HomePageProps) {
           <p className="text-gray-600">
             {userRole === 'asker'
               ? 'Post errands and find reliable doers to complete them'
-              : 'Browse available errands and earn by helping others'}
+              : 'Browse ToHelp and earn by helping others'}
           </p>
         </div>
 
@@ -118,7 +118,7 @@ export default function HomePage({ userRole }: HomePageProps) {
                 className="bg-errandify-orange text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
                 <span className="text-3xl mb-2 block">🔍</span>
-                <span className="font-semibold text-sm">Browse Errands</span>
+                <span className="font-semibold text-sm">Browse ToHelp</span>
               </button>
 
               <button
@@ -135,7 +135,7 @@ export default function HomePage({ userRole }: HomePageProps) {
         {/* Quick Categories Section - Grouped with Section Headers */}
         <div className="bg-white rounded-lg p-6 mb-8 border border-gray-200">
           <h2 className="font-bold text-errandify-brown mb-4">
-            {userRole === 'asker' ? '📋 Quick Categories' : '🔍 Browse by Category'}
+            {userRole === 'asker' ? '📋 Quick Categories' : '🔍 Browse ToHelp by Category'}
           </h2>
 
           <div className="space-y-4">
