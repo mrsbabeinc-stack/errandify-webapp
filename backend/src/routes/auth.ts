@@ -76,18 +76,6 @@ router.post('/signup', async (req: Request, res: Response) => {
       return res.status(409).json({ error: 'User already exists with this NRIC' });
     }
 
-    // Check if user already exists
-    const existing = await db.query(
-      'SELECT id FROM users WHERE nric_hash = $1',
-      [hashNric(nric)]
-    );
-
-    if (existing.rows.length > 0) {
-      return res
-        .status(409)
-        .json({ error: 'User already exists with this NRIC' });
-    }
-
     // Insert new user with SingPass verification
     const referralCode = generateReferralCode();
 
