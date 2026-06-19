@@ -437,9 +437,17 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     title = title || 'Task';
 
-    // Parse date - look for "tomorrow", "today", "later" (=today), day names, or "sun", "sun 7pm"
+    // Parse date - look for "tomorrow", "today", "later" (=today), "N days later", day names, or "sun", "sun 7pm"
     let date = '';
-    if (/tomorrow/i.test(input)) {
+
+    // Check for "N days later" pattern first
+    const daysLaterMatch = input.match(/(\d+)\s*days?\s+later/i);
+    if (daysLaterMatch) {
+      const daysToAdd = parseInt(daysLaterMatch[1]);
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + daysToAdd);
+      date = futureDate.toISOString().split('T')[0];
+    } else if (/tomorrow/i.test(input)) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       date = tomorrow.toISOString().split('T')[0];
@@ -620,41 +628,73 @@ router.post('/suggestions', async (req: Request, res: Response) => {
 
     const skills = skillMap[detectedCategory] || [];
 
-    // Generate AI-suggested description (concise, max 150 chars, conversational, task-focused)
-    const descriptionMap: Record<string, string> = {
-      'eldercare': 'Accompany and provide safe support. Help with appointments, errands, or companionship. Bring patience and kindness.',
-      'childcare': 'Pick up/drop off child safely, keep them comfortable and engaged. Bring their bag if needed. Stay in touch with parent.',
-      'homehelp': 'Help with cleaning, organising, or maintenance work. Do quality work. Bring own supplies if needed.',
-      'wellness': 'Provide caring support for wellness activities or appointments. Keep things confidential and respectful.',
-      'tripcarry': 'Handle items with care during delivery or cross-border trip. Keep them safe and secure. Arrive on time.',
-      'petcare': 'Walk, groom, or sit with pet. Keep them safe, calm, and happy. Bring water for them if needed.',
-      'delivery': 'Deliver items to the right place, right time. Handle carefully, communicate arrival, take photos if needed.',
-      'eventhelp': 'Help plan, shop, or set up for event. Work professionally. Ensure everything is ready on time.',
-      'donate': 'Help with donation pickup or dropoff. Handle items with respect. Follow guidelines.',
-      'localbiz': 'Provide professional service for business needs. Do quality work, communicate clearly, meet deadlines.',
-    };
+    // Generate AI-suggested description using Qwen
+    let suggestedDescription = '';
+    try {
+      const config = require('../config').default;
+      const qwenResponse = await axios.post(
+        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+        {
+          model: 'qwen-plus',
+          messages: [
+            {
+              role: 'system',
+              content: 'Generate an errand description for a Singapore home-services app. Under 150 characters total. State only: what needs to be done, where/when if essential, and one safety-relevant detail if applicable. Plain conversational language. No headers, no bullet points.',
+            },
+            {
+              role: 'user',
+              content: `Generate a description for this errand:\nTitle: ${title}\nCategory: ${detectedCategory}\nDate: ${date}\nTime: ${time}\n\nBe concise and conversational.`,
+            },
+          ],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${config.qwen.apiKey}`,
+          },
+        }
+      );
 
-    let suggestedDescription = descriptionMap[detectedCategory] || 'Complete task professionally and communicate any issues.';
-    // Truncate to max 150 characters
-    if (suggestedDescription.length > 150) {
-      suggestedDescription = suggestedDescription.substring(0, 147) + '...';
+      const aiText = qwenResponse.data?.output?.text || '';
+      suggestedDescription = aiText.substring(0, 150);
+    } catch (qwenErr) {
+      console.error('[AI] Qwen description generation failed:', qwenErr);
+      // Fallback to simple template
+      suggestedDescription = `Help needed for ${detectedCategory}. Will provide more details when you accept.`;
     }
 
-    // Generate task-specific notes (actionable, not duplicating info)
-    const notesMap: Record<string, string> = {
-      'eldercare': 'Show respect and patience. Follow health protocols. Report any concerns.',
-      'childcare': 'Know emergency contacts. Prioritize safety. Engage positively.',
-      'homehelp': 'Use provided supplies if available. Clean as you work. Report any damage.',
-      'wellness': 'Maintain confidentiality. Be a good listener. Report concerns appropriately.',
-      'tripcarry': 'Check customs requirements. Keep items secure. Arrive on time.',
-      'petcare': 'Check for health concerns. Use leash in public. Keep pet calm.',
-      'delivery': 'Take care with items. Ring doorbell/call upon arrival. Update customer.',
-      'eventhelp': 'Follow host instructions precisely. Arrive early if needed. Communicate updates.',
-      'donate': 'Handle items with respect. Follow guidelines. Thank participants.',
-      'localbiz': 'Deliver quality work. Communicate professionally. Support business goals.',
-    };
+    // Generate task-specific notes using Qwen
+    let notes = '';
+    try {
+      const config = require('../config').default;
+      const qwenNotesResponse = await axios.post(
+        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+        {
+          model: 'qwen-plus',
+          messages: [
+            {
+              role: 'system',
+              content: 'Generate actionable safety/instructions notes for an errand. Concise, practical, specific to the task type. No headers, plain language.',
+            },
+            {
+              role: 'user',
+              content: `Generate important notes/instructions for this ${detectedCategory} errand:\nTitle: ${title}\nDate: ${date}\nTime: ${time}\n\nFocus on safety and practical instructions.`,
+            },
+          ],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${config.qwen.apiKey}`,
+          },
+        }
+      );
 
-    const notes = notesMap[detectedCategory] || 'Please ensure quality work and communicate any concerns.';
+      const aiNotes = qwenNotesResponse.data?.output?.text || '';
+      notes = aiNotes.substring(0, 300);
+    } catch (qwenErr) {
+      console.error('[AI] Qwen notes generation failed:', qwenErr);
+      // Fallback
+      notes = 'Please provide any special instructions or requirements when confirming.';
+    }
 
     res.json({
       success: true,
