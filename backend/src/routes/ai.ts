@@ -422,9 +422,10 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       .replace(/\d{1,2}:\d{2}\s*(am|pm)/gi, '') // Remove times like 3:00pm
       .replace(/\d{1,2}\s*(am|pm)/gi, '') // Remove times like 3pm
       .replace(/\$\d+/g, '') // Remove budget
-      .replace(/for\s+\d+\s*(hour|hr)/gi, '') // Remove duration
+      .replace(/for\s+\d+\s*(hour|hr|h)/gi, '') // Remove duration
       .replace(/tomorrow|today/gi, '') // Remove date keywords
       .replace(/at\s+/gi, '') // Remove "at"
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
       .trim();
     // Take first 50 chars or first phrase
     title = title.split(/\s+(?:on|at|for|budget)/i)[0].trim().substring(0, 50) || 'Task';
