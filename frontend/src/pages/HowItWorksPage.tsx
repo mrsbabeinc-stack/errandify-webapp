@@ -134,7 +134,7 @@ export default function HowItWorksPage() {
             </div>
             <div>
               <p className="font-bold mb-1">🛡️ Safety</p>
-              <p className="opacity-90">Zero tolerance policy</p>
+              <p className="opacity-90">Community standards enforced</p>
             </div>
             <div>
               <p className="font-bold mb-1">💰 Fair</p>
