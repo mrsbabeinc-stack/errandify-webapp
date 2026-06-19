@@ -107,10 +107,11 @@ export default function CreateErrandPage() {
             repeatUnit: 'week' as 'day' | 'week' | 'month',
             occurrences: '1',
             specialNote: prefilledData.notes || '',
-            skills: prefilledData.suggestedSkills ? [...prefilledData.suggestedSkills] : [],
+            skills: [], // Do NOT auto-add suggested skills - user can add them manually
             certifications: { required: [] as string[], optional: [] as string[] },
           };
 
+          console.log('[CreateErrand] Setting form data - title:', newFormData.title, 'budget:', newFormData.budget);
           setFormData(newFormData);
 
           // Set postal code and full address from prefilled data
