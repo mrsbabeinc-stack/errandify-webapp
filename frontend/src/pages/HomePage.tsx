@@ -105,10 +105,10 @@ export default function HomePage({ userRole }: HomePageProps) {
 
               <button
                 onClick={() => navigate('/errands')}
-                className="bg-orange-500 text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+                className="bg-errandify-brown text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
                 <span className="text-3xl mb-2 block">📋</span>
-                <span className="font-semibold text-sm">My Errands</span>
+                <span className="font-semibold text-sm">MyErrands</span>
               </button>
             </>
           ) : (
