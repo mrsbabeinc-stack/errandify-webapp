@@ -540,49 +540,25 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       }
     }
 
-    // Detect category using AI (not keyword matching)
+    // Detect category using keyword matching
     let category = 'homehelp'; // Default
-    try {
-      const config = require('../config').default;
-      const categoryResponse = await axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
-        {
-          model: 'qwen-plus',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a task category classifier. Return ONLY the category ID, nothing else.\nCategories: eldercare, childcare, homehelp, wellness, tripcarry, petcare, delivery, eventhelp, donate, localbiz',
-            },
-            {
-              role: 'user',
-              content: `Classify this task: "${title}"\nInput: "${input}"\n\nReturn only the category ID.`,
-            },
-          ],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${config.qwen.apiKey}`,
-          },
-        }
-      );
+    const inputLower = input.toLowerCase();
 
-      const aiCategory = categoryResponse.data?.output?.text?.trim().toLowerCase() || '';
-      const validCategories = ['eldercare', 'childcare', 'homehelp', 'wellness', 'tripcarry', 'petcare', 'delivery', 'eventhelp', 'donate', 'localbiz'];
-
-      if (validCategories.includes(aiCategory)) {
-        category = aiCategory;
-        console.log('[AI] Category detected:', category);
-      }
-    } catch (categoryErr) {
-      console.error('[AI] Qwen category detection failed, using default:', categoryErr);
-      // Fallback to keyword matching if AI fails
-      const inputLower = input.toLowerCase();
-      if (inputLower.includes('child') || inputLower.includes('kid') || inputLower.includes('pick')) {
-        category = 'childcare';
-      } else if (inputLower.includes('dog') || inputLower.includes('pet')) {
-        category = 'petcare';
-      }
+    if (inputLower.includes('elder') || inputLower.includes('mom') || inputLower.includes('mum') || inputLower.includes('dad') || inputLower.includes('caregiv')) {
+      category = 'eldercare';
+    } else if (inputLower.includes('child') || inputLower.includes('kid') || inputLower.includes('pick') || inputLower.includes('school')) {
+      category = 'childcare';
+    } else if (inputLower.includes('dog') || inputLower.includes('pet') || inputLower.includes('cat') || inputLower.includes('groom') || inputLower.includes('walk')) {
+      category = 'petcare';
+    } else if (inputLower.includes('clean') || inputLower.includes('laundry') || inputLower.includes('repair') || inputLower.includes('fix')) {
+      category = 'homehelp';
+    } else if (inputLower.includes('deliver') || inputLower.includes('parcel') || inputLower.includes('food')) {
+      category = 'delivery';
+    } else if (inputLower.includes('event') || inputLower.includes('setup') || inputLower.includes('shop')) {
+      category = 'eventhelp';
     }
+
+    console.log('[Extract] Category detected:', category);
 
     res.json({
       success: true,
@@ -641,73 +617,39 @@ router.post('/suggestions', async (req: Request, res: Response) => {
 
     const skills = skillMap[detectedCategory] || [];
 
-    // Generate AI-suggested description - ASK FOR MISSING INFO relevant to this task
-    let suggestedDescription = '';
-    try {
-      const config = require('../config').default;
-      const qwenResponse = await axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
-        {
-          model: 'qwen-plus',
-          messages: [
-            {
-              role: 'system',
-              content: 'Generate a question for a task poster. Ask what important INFO you need to know to accept this errand (not instructions for the doer). Under 150 chars. For example: "Any special requirements for pickup?" or "Does your pet have any health issues?"',
-            },
-            {
-              role: 'user',
-              content: `For this ${detectedCategory} task: "${title}" on ${date} at ${time}. What important info should I ask the person to provide? Generate 1 clarifying question.`,
-            },
-          ],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${config.qwen.apiKey}`,
-          },
-        }
-      );
+    // Generate suggested description - ask for missing INFO relevant to this task
+    const descriptionSuggestions: Record<string, string> = {
+      'eldercare': 'Any specific health conditions or medications the caregiver should know about?',
+      'childcare': 'Any allergies, dietary restrictions, or special needs the child has?',
+      'homehelp': 'What specific areas need most attention? Any fragile items to avoid?',
+      'petcare': 'Any health issues, medications, or behavioral notes about your pet?',
+      'delivery': 'Any special handling requirements or preferred delivery time?',
+      'eventhelp': 'What\'s the event type and approximate setup time needed?',
+      'wellness': 'What type of wellness support do you need and any medical history?',
+      'tripcarry': 'What items are being transported and any fragile/valuable items?',
+      'donate': 'What type of items and approximate quantity for pickup?',
+      'localbiz': 'What specific services or tasks does your business need help with?',
+    };
 
-      const aiText = qwenResponse.data?.output?.text || '';
-      suggestedDescription = aiText.substring(0, 150);
-    } catch (qwenErr) {
-      console.error('[AI] Qwen description generation failed:', qwenErr);
-      // Fallback - ask for basic info
-      suggestedDescription = 'Add any important details or special requirements for this task.';
-    }
+    let suggestedDescription = descriptionSuggestions[detectedCategory] || 'Add any important details or special requirements for this task.';
+    suggestedDescription = suggestedDescription.substring(0, 150);
 
-    // Generate AI notes - suggest what extra INFO to collect from doer
-    let notes = '';
-    try {
-      const config = require('../config').default;
-      const qwenNotesResponse = await axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
-        {
-          model: 'qwen-plus',
-          messages: [
-            {
-              role: 'system',
-              content: 'Suggest what INFO to collect from the doer accepting this task. Focus on safety, accessibility, or task-specific needs. Under 300 chars. Plain language, no headers.',
-            },
-            {
-              role: 'user',
-              content: `For a ${detectedCategory} task: "${title}" on ${date}. What questions should I ask the doer to ensure they understand the full scope? (e.g., availability, requirements, allergies)`,
-            },
-          ],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${config.qwen.apiKey}`,
-          },
-        }
-      );
+    // Generate suggested notes - what to ask doer
+    const notesSuggestions: Record<string, string> = {
+      'eldercare': 'Ask doer: Emergency contact? Experience with seniors? Any medical training?',
+      'childcare': 'Ask doer: Experience with kids this age? Any certifications? First aid trained?',
+      'homehelp': 'Ask doer: Own tools/supplies? Experience level? Availability for same-day work?',
+      'petcare': 'Ask doer: Experience with animals? Any certifications? Can stay for full duration?',
+      'delivery': 'Ask doer: Vehicle type? Can handle fragile items? Insurance coverage?',
+      'eventhelp': 'Ask doer: Experience with events? Availability on date? Physical fitness needed?',
+      'wellness': 'Ask doer: Relevant certifications? Confidentiality agreement? Flexible schedule?',
+      'tripcarry': 'Ask doer: Travel experience? Passport required? Any weight/size limits?',
+      'donate': 'Ask doer: Vehicle needed? Help required at both ends? Flexible timing?',
+      'localbiz': 'Ask doer: Relevant business experience? Schedule flexibility? Quality standards?',
+    };
 
-      const aiNotes = qwenNotesResponse.data?.output?.text || '';
-      notes = aiNotes.substring(0, 300);
-    } catch (qwenErr) {
-      console.error('[AI] Qwen notes generation failed:', qwenErr);
-      // Fallback
-      notes = 'Add any special requirements or questions for the doer to understand the full scope.';
-    }
+    let notes = notesSuggestions[detectedCategory] || 'Add any requirements or questions for the doer.';
+    notes = notes.substring(0, 300);
 
     res.json({
       success: true,
