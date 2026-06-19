@@ -37,6 +37,9 @@ export default function AboutErrandifyPage() {
             <p className="text-sm text-gray-600 italic">
               Errandify unites generations: retirees find purpose, professionals reclaim time, and communities rediscover empathy — all powered by AI-driven convenience with a human heart.
             </p>
+            <p className="text-sm text-errandify-orange font-semibold mt-3">
+              ✨ We are all from the community. We encourage communication, respect, and help each other avoid disputes through understanding and kindness.
+            </p>
           </div>
 
           {/* Vision */}
@@ -133,7 +136,7 @@ export default function AboutErrandifyPage() {
 
           {/* For Doers */}
           <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-            <h3 className="font-bold text-gray-800 mb-3">💪 For Doers: Earn Money Helping Neighbours</h3>
+            <h3 className="font-bold text-gray-800 mb-3">💪 For Doers: Earn 100% of What You're Worth</h3>
             <ul className="text-sm text-gray-700 space-y-2">
               <li className="flex gap-2">
                 <span>✓</span>
@@ -141,23 +144,23 @@ export default function AboutErrandifyPage() {
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span>Submit bids at your own rates – you're in control</span>
+                <span>Submit bids at your own rates – you're in complete control</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span>Keep 80% of what you earn – Errandify takes 20% commission</span>
+                <span><strong>Keep 100% of your earnings</strong> – no fees taken from you</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span>Build your reputation with ratings and reviews</span>
+                <span>Build reputation through open communication and mutual respect</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span>Earn Errandify Points (EP) – redeemable for rewards or cash</span>
+                <span>Earn Errandify Points (EP) – bonus rewards for community contribution</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span>Flexible schedule – work when you want</span>
+                <span>Work flexibly – help neighbours when it suits you</span>
               </li>
             </ul>
           </div>
@@ -189,30 +192,34 @@ export default function AboutErrandifyPage() {
             </ul>
           </div>
 
-          {/* Safety & Security */}
+          {/* Safety & Community Trust */}
           <div>
-            <h2 className="text-2xl font-bold text-errandify-brown mb-4">🛡️ Safety & Security</h2>
-            <p className="text-gray-700 mb-3">Your safety matters to us. We verify users, monitor quality, and have policies in place:</p>
+            <h2 className="text-2xl font-bold text-errandify-brown mb-4">🛡️ Trust & Respect</h2>
+            <p className="text-gray-700 mb-3">We build trust through communication, transparency, and our shared community values:</p>
             <ul className="space-y-2 text-sm text-gray-700">
               <li className="flex gap-2">
                 <span className="text-errandify-orange font-bold">•</span>
-                <span><strong>Identity Verification:</strong> Users verify via SingPass (citizens) or Veriff (foreigners)</span>
+                <span><strong>Identity Verification:</strong> Users verify via SingPass (citizens) or Veriff (foreigners) – know who you're working with</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-errandify-orange font-bold">•</span>
-                <span><strong>Secure Payments:</strong> Money is held securely in escrow until work is confirmed complete</span>
+                <span><strong>Open Communication:</strong> Message before, during, and after work. Clear expectations prevent misunderstandings</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-errandify-orange font-bold">•</span>
-                <span><strong>Ratings & Reviews:</strong> Every doer is rated by askers. See all reviews – build trust through transparency</span>
+                <span><strong>Ratings & Reviews:</strong> Build reputation through fair feedback. See what the community says about each person</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-errandify-orange font-bold">•</span>
-                <span><strong>Dispute Resolution:</strong> Fair process if something goes wrong. We mediate and resolve fairly</span>
+                <span><strong>Secure Payments:</strong> Money held in escrow until work is complete – protects both asker and doer</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-errandify-orange font-bold">•</span>
-                <span><strong>Block & Trust Lists:</strong> Control who you work with. Block users or mark as trusted</span>
+                <span><strong>Dispute Prevention:</strong> We encourage communication and respect to resolve issues before they escalate. Fair mediation if needed</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-errandify-orange font-bold">•</span>
+                <span><strong>Block & Trust Lists:</strong> Support people you love, avoid people who don't align with community values</span>
               </li>
             </ul>
           </div>
