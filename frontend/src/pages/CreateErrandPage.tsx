@@ -83,10 +83,12 @@ export default function CreateErrandPage() {
   // Load prefilled data from Hana on mount
   useEffect(() => {
     const prefilledJson = searchParams.get('prefilled');
+    console.log('[CreateErrand] searchParams.get("prefilled"):', prefilledJson);
     if (prefilledJson) {
       try {
         const prefilledData = JSON.parse(decodeURIComponent(prefilledJson));
-        console.log('[CreateErrand] Prefilled data:', prefilledData);
+        console.log('[CreateErrand] Parsed prefilled data:', prefilledData);
+        console.log('[CreateErrand] Data keys:', Object.keys(prefilledData));
 
         const newFormData = {
           title: prefilledData.title || '',

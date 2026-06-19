@@ -123,6 +123,7 @@ export default function HanaTaskCreation({
 
       // Get AI suggestions for this category
       try {
+        console.log('[Hana] Requesting suggestions for:', updatedTaskData.category);
         const suggestionsResponse = await axios.post(
           `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
           {
@@ -132,6 +133,8 @@ export default function HanaTaskCreation({
           }
         );
 
+        console.log('[Hana] Suggestions response:', suggestionsResponse.data);
+
         const suggestions = suggestionsResponse.data.data;
         const enhancedTaskData = {
           ...updatedTaskData,
@@ -139,6 +142,8 @@ export default function HanaTaskCreation({
           notes: suggestions.notes || updatedTaskData.notes,
           suggestedSkills: suggestions.skills || [],
         };
+
+        console.log('[Hana] Enhanced task data to send:', enhancedTaskData);
 
         setTaskData(enhancedTaskData as any);
 
@@ -148,6 +153,7 @@ export default function HanaTaskCreation({
 
         // Auto-fill form and proceed after a short delay
         setTimeout(() => {
+          console.log('[Hana] Calling onComplete with:', enhancedTaskData);
           onComplete(enhancedTaskData as any);
         }, 1000);
       } catch (err) {
