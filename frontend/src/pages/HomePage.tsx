@@ -67,8 +67,8 @@ export default function HomePage({ userRole }: HomePageProps) {
 
   const handleCategoryClick = (categoryId: string) => {
     if (userRole === 'asker') {
-      // Askers: Go to create errand with category
-      navigate(`/create-errand?category=${categoryId}`);
+      // Askers: Go to Hana with category pre-filled
+      navigate(`/hana?category=${categoryId}`);
     } else {
       // Doers: Go to browse with category filter
       navigate(`/browse?category=${categoryId}`);

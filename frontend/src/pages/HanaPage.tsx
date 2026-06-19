@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import HanaTaskCreation from '../components/HanaTaskCreation';
 
 interface TaskData {
@@ -19,7 +19,9 @@ interface TaskData {
 
 export default function HanaPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isOpen, setIsOpen] = useState(true);
+  const selectedCategory = searchParams.get('category');
 
   const handleComplete = (taskData: TaskData) => {
     // Navigate to create errand with prefilled data
@@ -42,6 +44,7 @@ export default function HanaPage() {
       onClose={handleClose}
       onComplete={handleComplete}
       onSkipToManual={handleSkipToManual}
+      defaultCategory={selectedCategory}
     />
   );
 }
