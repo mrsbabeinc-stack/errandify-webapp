@@ -68,24 +68,24 @@ export default function HanaTaskCreation({
 
   const getExampleByCategory = (category: string) => {
     const examples: Record<string, string> = {
-      'home-maintenance': 'Fix my leaky kitchen tap at 680433 on Saturday at 2pm, budget $80',
-      'cleaning-household': 'Clean my house at 680433 on Saturday for 2 hours at 2pm, budget $100',
-      'food-beverage': 'Prepare lunch for 4 people at 680433 on Sunday at 12pm, budget $60',
-      'furniture-assembly': 'Assemble IKEA bookshelf at my place (680433) on Saturday afternoon, budget $50',
-      'shopping-errands': 'Help me shopping at Takashimaya at 160 Orchard Road on Friday 3pm, budget $200',
-      'delivery-moving': 'Move my boxes from my office to home (680433) on Saturday morning, budget $150',
-      'travel-mobility': 'Drive me to Changi Airport from my home (680433) on Friday 5am, budget $40',
-      'event-planning': 'Help decorate my apartment for birthday party at 680433 on Saturday 5pm, budget $200',
-      'childcare-education': 'Tutor my son in Math at 680433 on weekday evenings, budget $30/hour',
-      'eldercare-healthcare': 'Help my mum with groceries and medical checkup at 680433 on Wednesday, budget $50',
-      'pet-care': 'Dog walk my golden retriever at 680433 daily for 30 mins, budget $20/day',
-      'personal-care': 'Hair cut at my place (680433) on Saturday afternoon, budget $40',
-      'tech-support': 'Fix my WiFi router at 680433 on Friday evening, budget $50',
-      'creative-arts': 'Design a logo for my business, deadline next Friday, budget $200',
+      'home-maintenance': 'Fix my leaky kitchen tap at 680433 on Saturday 2pm for 1 hour, budget $80',
+      'cleaning-household': 'Clean my house at 680433 on Saturday 2pm for 2 hours, budget $100',
+      'food-beverage': 'Prepare lunch for 4 people at 680433 on Sunday 12pm for 3 hours, budget $60',
+      'furniture-assembly': 'Assemble IKEA bookshelf at 680433 on Saturday 3pm for 2 hours, budget $50',
+      'shopping-errands': 'Help me shopping at Orchard Road (238857) on Friday 3pm for 1.5 hours, budget $200',
+      'delivery-moving': 'Move my boxes from office to home (680433) on Saturday 9am for 4 hours, budget $150',
+      'travel-mobility': 'Drive me to Changi Airport from home (680433) on Friday 5am, budget $40',
+      'event-planning': 'Help decorate apartment for birthday party at 680433 on Saturday 5pm for 3 hours, budget $200',
+      'childcare-education': 'Tutor my son in Math at 680433 on Wednesday 4pm for 1.5 hours, budget $30',
+      'eldercare-healthcare': 'Help mum with groceries and medical checkup at 680433 on Wednesday 10am for 2 hours, budget $50',
+      'pet-care': 'Dog walk my golden retriever at 680433 daily 5pm for 30 mins, budget $20',
+      'personal-care': 'Hair cut at home (680433) on Saturday 2pm for 1 hour, budget $40',
+      'tech-support': 'Fix my WiFi router at 680433 on Friday 7pm for 1 hour, budget $50',
+      'creative-arts': 'Design a logo for my business, deadline Friday 5pm, budget $200',
       'admin-business': 'Help with data entry for my small business, 10 hours total, budget $150',
-      'charity-community': 'Help pack donation boxes at community center on Sunday morning, budget $20',
+      'charity-community': 'Help pack donation boxes at community center (269163) on Sunday 10am for 2 hours, budget $20',
     };
-    return examples[category] || 'Describe your errand with location, date, time and budget';
+    return examples[category] || 'Describe your errand: what you need, where (postal code), when (date/time), how long, and your budget';
   };
 
   const initializeChat = () => {
