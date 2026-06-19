@@ -4,15 +4,18 @@ export default function HowItWorksPage() {
   const navigate = useNavigate();
 
   const handleBack = () => {
-    navigate(-1);
-    // If no back history, will stay on page, but link from pages will have history
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
   };
 
   return (
     <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-20">
       <div className="max-w-3xl mx-auto">
         <button onClick={handleBack} className="mb-4 text-lg text-gray-600 font-bold hover:text-gray-800 transition">
-          ‹ Back
+          ‹ Back to Home
         </button>
 
         <div className="mb-8 text-center">
