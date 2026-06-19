@@ -459,47 +459,14 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const budgetMatch = input.match(/budget\s*\$?(\d+)/i);
     const budget = budgetMatch ? budgetMatch[1] : '';
 
-    // Map postal code prefix to area name (Singapore Official)
-    const postalAreaMap: Record<string, string> = {
-      '01': 'Raffles Place', '02': 'Downtown Core', '03': 'Marina', '04': 'Telok Ayer',
-      '05': 'Outram', '06': 'Tiong Bahru', '07': 'Queenstown', '08': 'Bukit Merah',
-      '09': 'Redhill', '10': 'Tanglin', '11': 'Novena', '12': 'Balestier',
-      '13': 'Potong Pasir', '14': 'Geylang', '15': 'Henderson Crescent', '16': 'Whampoa',
-      '17': 'Serangoon', '18': 'Macpherson', '19': 'Tai Seng', '20': 'Bishan',
-      '21': 'Ang Mo Kio', '22': 'Hougang', '23': 'Punggol', '24': 'Tampines',
-      '25': 'Pasir Ris', '26': 'Tampines', '27': 'Bedok', '28': 'Changi',
-      '29': 'Changi', '30': 'Marine Parade', '31': 'Marine Parade', '32': 'Katong',
-      '33': 'Joo Chiat', '34': 'Eunos', '35': 'Geylang', '36': 'Kembangan',
-      '37': 'Clementi', '38': 'Clementi', '39': 'Clementi', '40': 'Bukit Batok',
-      '41': 'Bukit Gombak', '42': 'Bukit Panjang', '43': 'Choa Chu Kang', '44': 'Yung Ho',
-      '45': 'Yung Ho', '46': 'Lim Chu Kang', '47': 'Kranji', '48': 'Woodlands',
-      '49': 'Woodlands', '50': 'Yishun', '51': 'Yishun', '52': 'Sembawang',
-      '53': 'Sembawang', '54': 'Mandai', '55': 'Mandai', '56': 'Admiralty',
-      '57': 'Punggol', '58': 'Marine Parade', '59': 'Pasir Ris', '60': 'Sentosa',
-      '61': 'Bukit Merah', '62': 'Tiong Bahru', '63': 'Bukit Merah', '64': 'Bukit Merah',
-      '65': 'Bukit Merah', '66': 'Tiong Bahru', '67': 'Tiong Bahru', '68': 'Choa Chu Kang',
-      '69': 'Tanjong Pagar', '70': 'Clementi', '71': 'Clementi', '72': 'Clementi',
-      '73': 'Clementi', '74': 'Clementi', '75': 'Dover', '76': 'Bukit Timah',
-      '77': 'Bukit Timah', '78': 'Bukit Timah', '79': 'Bukit Timah', '80': 'Farrer',
-      '81': 'Farrer', '82': 'Farrer', '83': 'Ghim Moh', '84': 'Ghim Moh',
-      '85': 'Bukit Timah', '86': 'Tuas', '87': 'Tuas', '88': 'Tuas',
-      '89': 'Jurong East', '90': 'Jurong East', '91': 'Jurong East', '92': 'Jurong East',
-      '93': 'Jurong West', '94': 'Jurong West', '95': 'Jurong West', '96': 'Jurong West',
-      '97': 'Bukit Batok', '98': 'Jurong West',
-    };
-
-    let area = 'Singapore';
+    // For now, just return the postal code as-is
+    // Frontend/user will need to verify and complete the address
+    let area = '';
     let fullAddress = '';
 
-    if (postalCode && postalCode.length >= 2) {
-      const prefix = postalCode.substring(0, 2);
-      area = postalAreaMap[prefix] || 'Singapore';
-
-      // Extract building number from last 4 digits
-      const buildingNumber = postalCode.substring(2).replace(/^0+/, '');
-      fullAddress = buildingNumber
-        ? `${buildingNumber} ${area}, Singapore ${postalCode}`
-        : `${area}, Singapore ${postalCode}`;
+    if (postalCode) {
+      // Just return postal code - let user fill in area and address
+      fullAddress = `Singapore ${postalCode}`;
     }
 
     res.json({
