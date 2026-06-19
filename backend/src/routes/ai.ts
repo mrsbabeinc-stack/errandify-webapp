@@ -432,6 +432,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     title = title
       .replace(/\bmykid\b/gi, 'my kid')
       .replace(/\byour\b/gi, 'my')
+      .replace(/\bmoms\b/gi, 'mom') // Fix plural
+      .replace(/\bkids\b/gi, 'kid') // Fix plural
       .replace(/\b(\w)/g, letter => letter.toUpperCase()); // Capitalize first letter of each word
 
     title = title || 'Task';
@@ -601,18 +603,18 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     // Use provided category or detect from title/description
     let detectedCategory = category || 'homehelp';
 
-    // Suggest skills based on category
+    // Suggest certified/professional skills needed based on category
     const skillMap: Record<string, string[]> = {
-      'eldercare': ['Empathy', 'Patience', 'Communication', 'Care skills'],
-      'childcare': ['Patience', 'Communication', 'Child safety awareness', 'Reliability'],
-      'homehelp': ['Attention to detail', 'Time management', 'Problem-solving'],
-      'wellness': ['Empathy', 'Active listening', 'Confidentiality'],
-      'tripcarry': ['Organization', 'Logistics', 'Communication', 'Reliability'],
-      'petcare': ['Dog handling', 'Patience', 'Physical fitness', 'Animal care'],
-      'delivery': ['Time management', 'Reliability', 'Attention to detail', 'Driving'],
-      'eventhelp': ['Organization', 'Creativity', 'Communication', 'Time management'],
-      'donate': ['Compassion', 'Organization', 'Communication'],
-      'localbiz': ['Business acumen', 'Problem-solving', 'Communication'],
+      'eldercare': ['Basic Elder Care Certification', 'First Aid/CPR', 'Communication', 'Patience'],
+      'childcare': ['Childcare Certification', 'First Aid/CPR', 'Child Safety Awareness', 'Communication'],
+      'homehelp': ['Housekeeping Skills', 'Time Management', 'Attention to Detail', 'Problem-solving'],
+      'wellness': ['Basic Counseling Skills', 'Active Listening', 'Confidentiality', 'Empathy'],
+      'tripcarry': ['Travel Experience', 'Organization', 'Logistics Knowledge', 'Communication'],
+      'petcare': ['Dog Handling Certificate', 'Animal Care Training', 'Physical Fitness', 'Patience'],
+      'delivery': ['Driving License', 'Time Management', 'Reliability', 'Attention to Detail'],
+      'eventhelp': ['Event Planning Experience', 'Organization', 'Communication', 'Problem-solving'],
+      'donate': ['Charity Experience', 'Organization', 'Communication', 'Compassion'],
+      'localbiz': ['Business Experience', 'Professional Communication', 'Problem-solving', 'Reliability'],
     };
 
     const skills = skillMap[detectedCategory] || [];
