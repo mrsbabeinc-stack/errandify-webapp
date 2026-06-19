@@ -338,7 +338,6 @@ export default function TaskExecutionPage() {
             </div>
           )}
         </div>
-        </div>
 
         {/* Sidebar - Task Chat */}
         <div className="lg:col-span-1">
