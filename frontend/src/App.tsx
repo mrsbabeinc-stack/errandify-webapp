@@ -27,6 +27,7 @@ import RecurringSessionsManager from './components/RecurringSessionsManager';
 import SingPassSignupPage from './pages/SingPassSignupPage';
 import MyProfilePage from './pages/MyProfilePage';
 import ReferralPage from './pages/ReferralPage';
+import MyReferralsPage from './pages/MyReferralsPage';
 import PayoutSettingsPage from './pages/PayoutSettingsPage';
 import HowItWorksPage from './pages/HowItWorksPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
@@ -204,6 +205,7 @@ export default function App() {
         {/* Profile sub-pages (outside layout for simpler rendering) */}
         <Route path="/my-profile" element={isAuthenticated ? <MyProfilePage /> : <Navigate to="/login" replace />} />
         <Route path="/referral" element={isAuthenticated ? <ReferralPage /> : <Navigate to="/login" replace />} />
+        <Route path="/my-referrals" element={isAuthenticated ? <MyReferralsPage /> : <Navigate to="/login" replace />} />
         <Route path="/payout-settings" element={isAuthenticated ? <PayoutSettingsPage /> : <Navigate to="/login" replace />} />
         <Route path="/transaction-history" element={isAuthenticated ? <TransactionHistoryPage /> : <Navigate to="/login" replace />} />
         <Route path="/errandify-points" element={isAuthenticated ? <ErrandifyPointsPage /> : <Navigate to="/login" replace />} />
