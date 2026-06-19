@@ -22,6 +22,7 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
 
   // Navigation handlers for profile sections
   const handleViewProfile = () => navigate('/my-profile');
+  const handleEditProfile = () => navigate('/edit-profile');
   const handleReferral = () => navigate('/referral');
   const handleTrustedUsers = () => navigate('/trusted-users');
   const handleBlockList = () => navigate('/block-list');
@@ -48,8 +49,17 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
           {/* View Profile */}
           <button onClick={handleViewProfile} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
             <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">✏️</span>
+              <span className="text-lg">👁️</span>
               <span className="text-sm font-medium text-gray-700">View Profile</span>
+            </div>
+            <span className="text-gray-400">›</span>
+          </button>
+
+          {/* Edit Profile */}
+          <button onClick={handleEditProfile} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+            <div className="flex items-center gap-2 text-left">
+              <span className="text-lg">✏️</span>
+              <span className="text-sm font-medium text-gray-700">Edit Profile</span>
             </div>
             <span className="text-gray-400">›</span>
           </button>
