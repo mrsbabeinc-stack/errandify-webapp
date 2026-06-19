@@ -1,22 +1,10 @@
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function HowItWorksPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [canGoBack, setCanGoBack] = useState(false);
-
-  useEffect(() => {
-    // Check if there's history to go back to
-    setCanGoBack(window.history.length > 1);
-  }, []);
 
   const handleBack = () => {
-    if (canGoBack) {
-      navigate(-1);
-    } else {
-      navigate('/');
-    }
+    navigate(-1);
   };
 
   return (

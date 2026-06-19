@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface FAQItem {
@@ -10,20 +10,11 @@ interface FAQItem {
 
 export default function FAQPage() {
   const navigate = useNavigate();
-  const [canGoBack, setCanGoBack] = useState(false);
   const [activeCategory, setActiveCategory] = useState<'all' | 'general' | 'asker' | 'doer' | 'payment' | 'safety' | 'conduct'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    setCanGoBack(window.history.length > 1);
-  }, []);
-
   const handleBack = () => {
-    if (canGoBack) {
-      navigate(-1);
-    } else {
-      navigate('/');
-    }
+    navigate(-1);
   };
 
   const faqs: FAQItem[] = [
