@@ -133,6 +133,84 @@ router.patch('/categories', authMiddleware, async (req, res) => {
   }
 });
 
+// Get user notification preferences
+router.get('/preferences', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    const result = await db.query(
+      'SELECT notification_preferences, email_frequency FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+    res.json({
+      success: true,
+      data: {
+        notification_preferences: user.notification_preferences || {},
+        email_frequency: user.email_frequency || 'daily',
+      },
+    });
+  } catch (error) {
+    console.error('Preferences fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch preferences' });
+  }
+});
+
+// Update user notification preferences
+router.patch('/preferences', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const { notification_preferences, email_frequency } = req.body;
+
+    const updateFields = [];
+    const updateValues = [userId];
+    let paramCount = 1;
+
+    if (notification_preferences !== undefined) {
+      updateFields.push(`notification_preferences = $${++paramCount}`);
+      updateValues.push(JSON.stringify(notification_preferences));
+    }
+
+    if (email_frequency) {
+      updateFields.push(`email_frequency = $${++paramCount}`);
+      updateValues.push(email_frequency);
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    const query = `
+      UPDATE users
+      SET ${updateFields.join(', ')}
+      WHERE id = $1
+      RETURNING id, notification_preferences, email_frequency
+    `;
+
+    const result = await db.query(query, updateValues);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        notification_preferences: result.rows[0].notification_preferences,
+        email_frequency: result.rows[0].email_frequency,
+      },
+    });
+  } catch (error) {
+    console.error('Preferences update error:', error);
+    res.status(500).json({ error: 'Failed to update preferences' });
+  }
+});
+
 // Get user ratings/history
 router.get('/:id/ratings', async (req, res) => {
   try {
