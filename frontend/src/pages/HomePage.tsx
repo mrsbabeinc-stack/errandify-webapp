@@ -10,14 +10,29 @@ export default function HomePage({ userRole }: HomePageProps) {
   const [userName, setUserName] = useState('Friend');
 
   const categories = [
-    { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50' },
-    { id: 'cleaning-laundry', name: 'Cleaning & Laundry', icon: '🧺', color: 'from-blue-100 to-blue-50' },
-    { id: 'shopping-errands', name: 'Shopping & Errands', icon: '🛍️', color: 'from-pink-100 to-pink-50' },
-    { id: 'delivery-moving', name: 'Delivery & Moving', icon: '📦', color: 'from-yellow-100 to-yellow-50' },
-    { id: 'childcare-tutoring', name: 'Childcare & Tutoring', icon: '🧒', color: 'from-green-100 to-green-50' },
-    { id: 'pet-care', name: 'Pet Care', icon: '🐕', color: 'from-purple-100 to-purple-50' },
-    { id: 'tech-support', name: 'Tech Support', icon: '💻', color: 'from-indigo-100 to-indigo-50' },
-    { id: 'moving-help', name: 'Moving Help', icon: '🚚', color: 'from-red-100 to-red-50' },
+    // GROUP 1: HOME & HOUSEHOLD
+    { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50', purpose: 'Repairs, renovations, plumbing, electrical' },
+    { id: 'cleaning-household', name: 'Cleaning & Household', icon: '🧹', color: 'from-blue-100 to-blue-50', purpose: 'House cleaning, laundry, organizing' },
+    { id: 'food-beverage', name: 'Food & Beverage', icon: '🍕', color: 'from-red-100 to-red-50', purpose: 'Cooking, grocery shopping, meal prep' },
+    { id: 'furniture-assembly', name: 'Furniture & Assembly', icon: '🛋️', color: 'from-amber-100 to-amber-50', purpose: 'Furniture assembly, arrangement, moving' },
+
+    // GROUP 2: ERRANDS & LOGISTICS
+    { id: 'shopping-errands', name: 'Shopping & Errands', icon: '🛍️', color: 'from-pink-100 to-pink-50', purpose: 'Shopping, deliveries, postal services' },
+    { id: 'delivery-moving', name: 'Delivery & Moving', icon: '📦', color: 'from-yellow-100 to-yellow-50', purpose: 'Package delivery, moving assistance' },
+    { id: 'travel-mobility', name: 'Travel & Mobility', icon: '✈️', color: 'from-sky-100 to-sky-50', purpose: 'Airport rides, travel planning, relocation' },
+    { id: 'event-planning', name: 'Event Planning', icon: '✨', color: 'from-violet-100 to-violet-50', purpose: 'Weddings, parties, corporate events' },
+
+    // GROUP 3: CARE & WELLBEING
+    { id: 'childcare-education', name: 'Childcare & Education', icon: '🧒', color: 'from-green-100 to-green-50', purpose: 'Babysitting, tutoring, homework help' },
+    { id: 'eldercare-healthcare', name: 'Eldercare & Healthcare', icon: '👵', color: 'from-gray-100 to-gray-50', purpose: 'Senior care, medication, health support' },
+    { id: 'pet-care', name: 'Pet Care', icon: '🐕', color: 'from-purple-100 to-purple-50', purpose: 'Dog walking, pet sitting, grooming' },
+    { id: 'personal-care', name: 'Personal Care & Wellness', icon: '💆', color: 'from-rose-100 to-rose-50', purpose: 'Hair styling, massage, fitness coaching' },
+
+    // GROUP 4: SKILLS & SERVICES
+    { id: 'tech-support', name: 'Tech Support & IT', icon: '💻', color: 'from-indigo-100 to-indigo-50', purpose: 'Computer repair, setup, tech help' },
+    { id: 'creative-arts', name: 'Creative & Arts', icon: '🎨', color: 'from-fuchsia-100 to-fuchsia-50', purpose: 'Design, photography, art services' },
+    { id: 'admin-business', name: 'Admin & Business', icon: '📚', color: 'from-slate-100 to-slate-50', purpose: 'Bookkeeping, document prep, data entry' },
+    { id: 'charity-community', name: 'Charity & Community', icon: '❤️', color: 'from-red-100 to-red-50', purpose: 'Volunteer work, community service' },
   ];
 
   useEffect(() => {
@@ -88,20 +103,28 @@ export default function HomePage({ userRole }: HomePageProps) {
           </h2>
           <div className="flex flex-wrap gap-3">
             {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => handleCategoryClick(category.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-md bg-gradient-to-r ${category.color}`}
-              >
-                <span className="mr-2">{category.icon}</span>
-                {category.name}
-              </button>
+              <div key={category.id} className="group relative">
+                <button
+                  onClick={() => handleCategoryClick(category.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-md bg-gradient-to-r ${category.color}`}
+                >
+                  <span className="mr-2">{category.icon}</span>
+                  {category.name}
+                </button>
+
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
+                  {category.purpose}
+                  {/* Tooltip arrow */}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 transform rotate-45 -mt-1"></div>
+                </div>
+              </div>
             ))}
           </div>
           <p className="text-xs text-gray-500 mt-4">
             {userRole === 'asker'
-              ? 'Click a category to post a new errand'
-              : 'Click a category to filter available errands'}
+              ? 'Hover to see category details • Click to post'
+              : 'Hover to see category details • Click to browse'}
           </p>
         </div>
 
