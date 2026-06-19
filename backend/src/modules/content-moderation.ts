@@ -17,6 +17,33 @@ const SPAM_PATTERNS = [
   /([a-z0-9]{30,})/i, // Long strings of random chars
   /((https?|ftp):\/\/[^\s]+){3,}/i, // Multiple URLs
   /\b(click|buy|subscribe)\b.*\b(now|here|link)\b/i,
+  // SQL Injection patterns
+  /(\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b|\bDROP\b|\bUNION\b|\b--\b|\b;\b)/i,
+  // XSS patterns
+  /(<script|<iframe|<img|<svg|javascript:|onerror=|onload=|onclick=)/i,
+  // Command injection
+  /(\$\(|`|&&|\|\||;\s*rm|\bwget\b|\bcurl\b)/i,
+  // Spam repetition
+  /(.)\1{10,}/i, // Same character repeated 10+ times
+  // Excessive URLs and phone numbers
+  /((\d{3}[-.\s]?){2}\d{4})/g, // Multiple phone numbers
+];
+
+const PHISHING_KEYWORDS = [
+  'verify account',
+  'confirm password',
+  'update payment',
+  'urgent action',
+  'click here immediately',
+  'your account has been',
+  'suspended',
+  'limited access',
+  'unusual activity',
+  'confirm identity',
+  'bank',
+  'paypal',
+  'amazon',
+  'apple id',
 ];
 
 const INAPPROPRIATE_WORDS = [
@@ -28,6 +55,53 @@ const INAPPROPRIATE_WORDS = [
   'abuse',
   'threat',
   'violence',
+  // Sexual content
+  'sex',
+  'porn',
+  'xxx',
+  'nude',
+  'naked',
+  'sexual',
+  'escort',
+  'prostitut',
+  'explicit',
+  // Illegal activities
+  'drug',
+  'cocaine',
+  'heroin',
+  'meth',
+  'marijuana',
+  'weed',
+  'illegal',
+  'theft',
+  'steal',
+  'rob',
+  'burglary',
+  'hacking',
+  'malware',
+  'bomb',
+  'weapon',
+  'gun',
+  'knife',
+  'hitman',
+  'assassin',
+  'counterfeit',
+  'fake',
+  'forge',
+  'money laundering',
+  'blackmail',
+  'extortion',
+  'kidnap',
+  'ransom',
+  'slavery',
+  'trafficking',
+  'child',
+  'minor',
+  'underage',
+  'pedophil',
+  'beastiality',
+  'zoophil',
+  'necrophil',
 ];
 
 const MISLEADING_PATTERNS = [
@@ -39,9 +113,10 @@ const MISLEADING_PATTERNS = [
 export function performBasicModerationCheck(
   title: string,
   description: string = '',
+  notes: string = '',
   budget?: number
 ): ModerationResult {
-  const fullText = `${title} ${description}`.toLowerCase();
+  const fullText = `${title} ${description} ${notes}`.toLowerCase();
   const issues = {
     spam: false,
     inappropriate: false,
@@ -49,11 +124,20 @@ export function performBasicModerationCheck(
   };
   const flags: string[] = [];
 
-  // Check for spam
+  // Check for spam, injection attacks, and malicious patterns
   for (const pattern of SPAM_PATTERNS) {
     if (pattern.test(fullText)) {
       issues.spam = true;
       flags.push('spam_detected');
+      break;
+    }
+  }
+
+  // Check for phishing attempts
+  for (const keyword of PHISHING_KEYWORDS) {
+    if (fullText.includes(keyword.toLowerCase())) {
+      issues.inappropriate = true;
+      flags.push('phishing_attempt');
       break;
     }
   }
@@ -110,10 +194,11 @@ export function performBasicModerationCheck(
 
 export async function checkContentWithQwen(
   title: string,
-  description: string = ''
+  description: string = '',
+  notes: string = ''
 ): Promise<ModerationResult> {
   try {
-    const basicCheck = performBasicModerationCheck(title, description);
+    const basicCheck = performBasicModerationCheck(title, description, notes);
 
     // If basic check found serious issues, return early
     if (basicCheck.issues.spam || basicCheck.issues.inappropriate) {
@@ -135,6 +220,7 @@ export async function checkContentWithQwen(
 
 Title: "${title}"
 Description: "${description}"
+Notes: "${notes}"
 
 Check for:
 1. Spam or phishing
