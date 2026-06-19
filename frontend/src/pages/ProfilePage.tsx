@@ -23,8 +23,8 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
   const handleViewProfile = () => navigate('/my-profile');
   const handleEditProfile = () => navigate('/edit-profile');
   const handleReferral = () => navigate('/referral');
-  const handleTrustedUsers = () => navigate('/trusted-users');
-  const handleBlockList = () => navigate('/block-list');
+  const handleTrustedUsers = () => navigate('/my-kampung');
+  const handleBlockList = () => navigate('/my-kampung');
   const handlePayoutSetting = () => navigate('/payout-settings');
   const handleTransactionHistory = () => navigate('/transaction-history');
   const handleNotificationPreferences = () => navigate('/settings/notifications');
