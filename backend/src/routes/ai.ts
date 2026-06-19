@@ -417,6 +417,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const postalCode = postalCodeMatch ? postalCodeMatch[1] : '';
 
     // Extract title - remove all non-title info and take first part
+    console.log('[Extract] Raw input:', input);
     let title = input
       .replace(/\s*,\s*/g, ' ') // Replace commas with spaces
       .replace(/\s+\d+\s+days?\s+later/gi, '') // Remove "2 days later"
@@ -428,6 +429,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       .trim()
       .substring(0, 50);
 
+    console.log('[Extract] After cleanup:', title);
+
     // Auto-correct title: fix common mistakes and capitalize
     title = title
       .replace(/\bmykid\b/gi, 'my kid')
@@ -436,6 +439,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       .replace(/\bkids\b/gi, 'kid') // Fix plural
       .replace(/\b(\w)/g, letter => letter.toUpperCase()); // Capitalize first letter of each word
 
+    console.log('[Extract] Final title:', title);
     title = title || 'Task';
 
     // Parse date - look for "tomorrow", "today", "later" (=today), "N days later", day names, or "sun", "sun 7pm"
@@ -501,8 +505,10 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Parse budget - look for "$100", "@100", "100", "budget $100"
     let budget = '';
     const budgetMatch = input.match(/[\$@]\s*(\d+)|budget\s*[\$@]?\s*(\d+)/i);
+    console.log('[Extract] Budget match:', budgetMatch);
     if (budgetMatch) {
       budget = budgetMatch[1] || budgetMatch[2];
+      console.log('[Extract] Budget extracted:', budget);
     }
 
     console.log('[Extract] Parsed - title:', title, 'postal:', postalCode, 'time:', time, 'duration:', duration, 'budget:', budget);
