@@ -541,34 +541,48 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       }
     }
 
-    // Detect category from keywords in title or input (map to correct category IDs)
-    let category = '';
-    const inputLower = input.toLowerCase();
+    // Detect category using AI (not keyword matching)
+    let category = 'homehelp'; // Default
+    try {
+      const config = require('../config').default;
+      const categoryResponse = await axios.post(
+        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+        {
+          model: 'qwen-plus',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a task category classifier. Return ONLY the category ID, nothing else.\nCategories: eldercare, childcare, homehelp, wellness, tripcarry, petcare, delivery, eventhelp, donate, localbiz',
+            },
+            {
+              role: 'user',
+              content: `Classify this task: "${title}"\nInput: "${input}"\n\nReturn only the category ID.`,
+            },
+          ],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${config.qwen.apiKey}`,
+          },
+        }
+      );
 
-    // Category mapping
-    if (inputLower.includes('elder') || inputLower.includes('caregiv') || inputLower.includes('companion')) {
-      category = 'eldercare'; // Caregiving & Elder Companionship
-    } else if (inputLower.includes('child') || inputLower.includes('kid') || inputLower.includes('babysit') || inputLower.includes('school') || inputLower.includes('pickup') || inputLower.includes('pick up') || inputLower.includes('dropoff') || inputLower.includes('drop off') || inputLower.includes('pick')) {
-      category = 'childcare'; // Childcare & School Pickup/Drop-off
-    } else if (inputLower.includes('clean') || inputLower.includes('laundry') || inputLower.includes('wash') || inputLower.includes('maintenance') || inputLower.includes('repair') || inputLower.includes('fix') || inputLower.includes('install')) {
-      category = 'homehelp'; // Household Errands & Home Maintenance
-    } else if (inputLower.includes('wellness') || inputLower.includes('mental') || inputLower.includes('health') || inputLower.includes('therapy')) {
-      category = 'wellness'; // Wellness Support (incl. Mental Wellness)
-    } else if (inputLower.includes('cross') || inputLower.includes('border') || inputLower.includes('trip') || inputLower.includes('travel')) {
-      category = 'tripcarry'; // Cross-Border Errands
-    } else if (inputLower.includes('dog') || inputLower.includes('pet') || inputLower.includes('cat') || inputLower.includes('groom') || inputLower.includes('walk') || inputLower.includes('sitting')) {
-      category = 'petcare'; // Pet Care (sitting, grooming, walking)
-    } else if (inputLower.includes('deliver') || inputLower.includes('parcel') || inputLower.includes('food') || inputLower.includes('document')) {
-      category = 'delivery'; // Delivery (local errands, parcels, food, documents)
-    } else if (inputLower.includes('event') || inputLower.includes('setup') || inputLower.includes('shop') || inputLower.includes('plan')) {
-      category = 'eventhelp'; // Events (setup, shopping, planning)
-    } else if (inputLower.includes('donate') || inputLower.includes('giveback')) {
-      category = 'donate'; // Donate / Giveback
-    } else if (inputLower.includes('business') || inputLower.includes('sme') || inputLower.includes('micro')) {
-      category = 'localbiz'; // Microservices for Local SMEs
-    } else {
-      // Default fallback
-      category = 'homehelp';
+      const aiCategory = categoryResponse.data?.output?.text?.trim().toLowerCase() || '';
+      const validCategories = ['eldercare', 'childcare', 'homehelp', 'wellness', 'tripcarry', 'petcare', 'delivery', 'eventhelp', 'donate', 'localbiz'];
+
+      if (validCategories.includes(aiCategory)) {
+        category = aiCategory;
+        console.log('[AI] Category detected:', category);
+      }
+    } catch (categoryErr) {
+      console.error('[AI] Qwen category detection failed, using default:', categoryErr);
+      // Fallback to keyword matching if AI fails
+      const inputLower = input.toLowerCase();
+      if (inputLower.includes('child') || inputLower.includes('kid') || inputLower.includes('pick')) {
+        category = 'childcare';
+      } else if (inputLower.includes('dog') || inputLower.includes('pet')) {
+        category = 'petcare';
+      }
     }
 
     res.json({
