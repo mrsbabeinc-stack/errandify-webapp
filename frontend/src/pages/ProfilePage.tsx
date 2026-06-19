@@ -147,7 +147,6 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
             <NotificationPreferencesSection />
           </div>
         )}
-        </div>
       </div>
 
       {/* MyRewardSpace Section */}
