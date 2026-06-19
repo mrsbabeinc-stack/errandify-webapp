@@ -132,6 +132,8 @@ export default function HanaTaskCreation({
             title: updatedTaskData.title,
             description: updatedTaskData.description,
             category: updatedTaskData.category,
+            date: updatedTaskData.date,
+            time: updatedTaskData.time,
           }
         );
 
@@ -151,6 +153,36 @@ export default function HanaTaskCreation({
         };
 
         console.log('[Hana] Enhanced task data to send:', enhancedTaskData);
+
+        // Validate date and time before proceeding
+        if (!enhancedTaskData.date || !enhancedTaskData.time) {
+          setHanaMessage('I need the date and time to help you. Could you tell me again when you need help? 🥺');
+          return;
+        }
+
+        // Check if date is in the past
+        const errandDate = new Date(enhancedTaskData.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (errandDate < today) {
+          setHanaMessage('That date is in the past. Please give me a future date and I will process it again. What date would you like? 😊');
+          setCurrentStep('input');
+          setInput('');
+          return;
+        }
+
+        // Check if date/time is at least 30 minutes from now
+        const errandDateTime = new Date(`${enhancedTaskData.date}T${enhancedTaskData.time}`);
+        const now = new Date();
+        const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60 * 1000);
+
+        if (errandDateTime < thirtyMinutesFromNow) {
+          setHanaMessage('I need at least 30 minutes from now to find someone to help you. Please give me a later time. 🙏');
+          setCurrentStep('input');
+          setInput('');
+          return;
+        }
 
         setTaskData(enhancedTaskData as any);
 
@@ -220,6 +252,9 @@ export default function HanaTaskCreation({
           {
             title: taskData.title,
             description: taskData.description,
+            category: taskData.category,
+            date: taskData.date,
+            time: taskData.time,
           }
         );
 

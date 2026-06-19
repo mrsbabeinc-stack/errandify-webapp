@@ -149,7 +149,9 @@ export default function CreateErrandPage() {
                 {
                   title: newFormData.title,
                   description: newFormData.description,
-                  category: newFormData.category
+                  category: newFormData.category,
+                  date: newFormData.deadline,
+                  time: newFormData.time
                 }
               );
               if (response.data.success) {
@@ -336,7 +338,7 @@ export default function CreateErrandPage() {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
-        { title, description }
+        { title, description, category: formData.category, date: formData.deadline, time: formData.time }
       );
 
       if (response.data.success) {
@@ -374,7 +376,7 @@ export default function CreateErrandPage() {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
-        { title, description }
+        { title, description, category: formData.category, date: formData.deadline, time: formData.time }
       );
 
       if (response.data.success && response.data.data.description) {
@@ -485,10 +487,172 @@ export default function CreateErrandPage() {
     console.log('[DEBUG] Current state - loading:', loading, 'showConfirm:', showConfirm);
     console.log('[DEBUG] formData:', formData);
 
-    if (!formData.title || !formData.category) {
-      console.error('[DEBUG] *** VALIDATION FAILED - Missing title or category ***');
-      setError('Title and category are required');
+    // ===== COMPREHENSIVE VALIDATION =====
+
+    // 1. Title validation
+    if (!formData.title || formData.title.trim().length === 0) {
+      setError('Please enter an errand title. Tell me what help you need 😊');
       return;
+    }
+    if (formData.title.trim().length < 5) {
+      setError('Title is too short. Please provide more details 🙏');
+      return;
+    }
+    if (formData.title.length > 100) {
+      setError('Title is too long. Please keep it short and clear ✌️');
+      return;
+    }
+
+    // 2. Category validation
+    if (!formData.category) {
+      setError('Please select a category. What kind of help do you need? 🤔');
+      return;
+    }
+
+    // 3. Location validation
+    if (!formData.isRemoteWork && (!formData.location || formData.location.trim().length === 0)) {
+      setError('Please enter the location or mark it as remote work 📍');
+      return;
+    }
+
+    // 3b. Full address validation
+    if (!formData.isRemoteWork && (!fullAddress || fullAddress.trim().length === 0)) {
+      setError('Please enter a valid address or mark it as remote work 📍');
+      return;
+    }
+
+    // 4. Budget validation
+    if (!formData.budget || formData.budget.trim().length === 0) {
+      setError('Please enter a budget amount. How much are you willing to pay? 💰');
+      return;
+    }
+    const budgetNum = parseFloat(formData.budget);
+    if (isNaN(budgetNum) || budgetNum <= 0) {
+      setError('Budget must be a valid number 😄');
+      return;
+    }
+    if (budgetNum > 99999) {
+      setError('Budget is too high. Please enter a reasonable amount 😅');
+      return;
+    }
+    if (budgetNum < 8) {
+      setError('Minimum budget is $8. Please increase it slightly 🙂');
+      return;
+    }
+
+    // 5. Date and time validation
+    if (!formData.deadline || !formData.time) {
+      setError('Please enter the date and time. When do you need help? ⏰');
+      return;
+    }
+
+    // Parse the deadline date
+    const errandDateTime = new Date(`${formData.deadline}T${formData.time}`);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const errandDate = new Date(formData.deadline);
+
+    if (isNaN(errandDateTime.getTime())) {
+      setError('Invalid date or time format. Please check again 🤨');
+      return;
+    }
+
+    // Check if the selected date is in the past (before today)
+    if (errandDate < today) {
+      setError('That date is in the past. Please select today or a future date 📅');
+      return;
+    }
+
+    // Check if date/time is at least 30 minutes from now
+    const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60 * 1000);
+
+    if (errandDateTime < thirtyMinutesFromNow) {
+      setError('Please schedule at least 30 minutes from now to give helpers time to respond ⏳');
+      return;
+    }
+
+    // 6. Duration validation (if specified)
+    if (formData.duration && formData.duration.trim().length > 0) {
+      const durationNum = parseFloat(formData.duration);
+      if (isNaN(durationNum) || durationNum <= 0) {
+        setError('Duration must be a valid positive number 🙃');
+        return;
+      }
+      if (durationNum > 480) { // Max 8 hours
+        setError('Duration cannot exceed 480 hours. That is too long 😅');
+        return;
+      }
+    }
+
+    // 7. Description length validation
+    if (formData.description && formData.description.length > 150) {
+      setError('Description is too long. Please keep it under 150 characters 📝');
+      return;
+    }
+
+    // 8. Notes length validation
+    if (formData.specialNote && formData.specialNote.length > 500) {
+      setError('Notes are too long. Please keep them under 500 characters 😄');
+      return;
+    }
+
+    // 9. Content moderation check for inappropriate content
+    try {
+      const contentCheckResponse = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/check-content`,
+        {
+          title: formData.title,
+          description: formData.description,
+          notes: formData.specialNote,
+        }
+      );
+
+      if (!contentCheckResponse.data.data.is_safe) {
+        setError('Your errand contains inappropriate content. Please review and try again.');
+        return;
+      }
+    } catch (contentErr) {
+      console.warn('Content check failed:', contentErr);
+      // Continue anyway if content check fails
+    }
+
+    // 10. Duplication check - block exact duplicates, warn on similar but different location/time
+    try {
+      const token = localStorage.getItem('token');
+      const duplicationResponse = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/check-duplicate`,
+        {
+          title: formData.title,
+          category: formData.category,
+          location: formData.location,
+          deadline: formData.deadline,
+          time: formData.time,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const { isDuplicate, isSimilar, similar, similarButDifferent, message } = duplicationResponse.data.data;
+
+      // Block exact duplicates (same title + category + location + time)
+      if (isDuplicate && similar.length > 0) {
+        const duplicate = similar[0];
+        setError(`You already posted this exact errand on ${new Date(duplicate.created_at).toLocaleDateString()}. Please avoid posting duplicates.`);
+        return;
+      }
+
+      // Warn on similar but different location/time (but allow)
+      if (isSimilar && similarButDifferent.length > 0) {
+        const similar_errand = similarButDifferent[0];
+        // Show warning but allow them to proceed
+        setError(`⚠️ You posted a similar errand on ${new Date(similar_errand.created_at).toLocaleDateString()} at a different location/time. Make sure this is a different request. You can still proceed.`);
+        // Don't return - allow user to continue
+        setTimeout(() => setError(''), 5000); // Clear warning after 5 seconds
+      }
+    } catch (dupErr) {
+      console.warn('Duplication check failed:', dupErr);
+      // Continue anyway if duplication check fails
     }
 
     console.log('[DEBUG] *** VALIDATION PASSED - SETTING LOADING TRUE ***');

@@ -405,10 +405,38 @@ router.get('/bias-audit-summary', authMiddleware, async (req: AuthRequest, res: 
   }
 });
 
+// Sanitize input to prevent XSS, SQL injection, and command injection
+function sanitizeInput(input: string): string {
+  if (!input || typeof input !== 'string') return '';
+
+  // Remove HTML/XML tags
+  let sanitized = input.replace(/<[^>]*>/g, '');
+
+  // Remove SQL injection patterns
+  sanitized = sanitized.replace(/(\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b|\bDROP\b|\bUNION\b|--)/gi, '');
+
+  // Remove command injection patterns
+  sanitized = sanitized.replace(/(\$\(|`|&&|\|\||;\s*rm|\bwget\b|\bcurl\b)/gi, '');
+
+  // Remove excessive special characters
+  sanitized = sanitized.replace(/[^\w\s\-.,!?@#$%&()']/g, '');
+
+  // Remove excessive repetition
+  sanitized = sanitized.replace(/(.)\1{10,}/g, '$1');
+
+  return sanitized.trim();
+}
+
 router.post('/extract-task-info', async (req: Request, res: Response) => {
   try {
-    const { input } = req.body;
+    let { input } = req.body;
     if (!input) return res.status(400).json({ error: 'input required' });
+
+    // Sanitize input
+    input = sanitizeInput(input);
+    if (!input || input.length === 0) {
+      return res.status(400).json({ error: 'Invalid input format' });
+    }
 
     console.log('[Extract] Input:', input);
 
@@ -416,28 +444,44 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const postalCodeMatch = input.match(/\b(\d{6})\b/);
     const postalCode = postalCodeMatch ? postalCodeMatch[1] : '';
 
-    // Extract title - remove all non-title info and take first part
+    // Extract title - use simple approach: extract first meaningful words before time/date/amount
     console.log('[Extract] Raw input:', input);
+
     let title = input
-      .replace(/\s*,\s*/g, ' ') // Replace commas with spaces
-      .replace(/\s+\d+\s+days?\s+later/gi, '') // Remove "2 days later"
-      .replace(/\s+at\s+\d{1,2}(?::|am|pm)/gi, '') // Remove "at 7pm"
-      .replace(/\s+for\s+\d+\s+(?:hour|hr|h|min|mins?|m)/gi, '') // Remove "for 30 mins"
-      .replace(/[\$@]\s*\d+/g, '') // Remove "$80"
-      .replace(/\s+at\s+\d{6}/g, '') // Remove "at 082001"
-      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      // Remove all weird punctuation at start and throughout
+      .replace(/^[^\w\s]+/, '') // Remove non-word chars at start
+      .replace(/[+\-*~`!@#$%^&|\\\/=<>?:;"'.,_(){}[\]]/g, ' ') // Replace weird punctuation with spaces
+      // First, split by common delimiters that separate title from metadata
+      .split(/\s+(?:at|on|today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)/i)[0]
+      // Remove postal codes
+      .replace(/\s*\d{6}\s*/g, ' ')
+      // Remove times (5pm, 7am, 7:00pm, etc)
+      .replace(/\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/gi, '')
+      .replace(/\s*\d{1,2}(?:am|pm)\b/gi, '')
+      // Remove durations - match digits followed by hour/min keywords (5hour, 3hours, 30mins, etc)
+      .replace(/\s*\d+\s*(?:hour|hr|h|min|m)(?:s|ute)?\b/gi, '')
+      // Remove amounts ($100, @50, etc)
+      .replace(/[\$@]\s*\d+/g, '')
+      // Remove trailing numbers
+      .replace(/\s+\d{2,4}\s*$/g, '')
+      // Collapse spaces
+      .replace(/\s+/g, ' ')
       .trim()
       .substring(0, 50);
 
     console.log('[Extract] After cleanup:', title);
 
-    // Auto-correct title: fix common mistakes and capitalize
+    // Auto-correct common mistakes and capitalize
     title = title
       .replace(/\bmykid\b/gi, 'my kid')
       .replace(/\byour\b/gi, 'my')
-      .replace(/\bmoms\b/gi, 'mom') // Fix plural
-      .replace(/\bkids\b/gi, 'kid') // Fix plural
-      .replace(/\b(\w)/g, letter => letter.toUpperCase()); // Capitalize first letter of each word
+      .replace(/\bmoms\b/gi, 'mom')
+      .replace(/\bkids\b/gi, 'kid')
+      .replace(/\bare\b/gi, 'care') // Fix "are" -> "care"
+      .replace(/\bf\b/gi, '') // Remove single letter "f"
+      .replace(/\s+/g, ' ') // Collapse spaces after replacements
+      .trim()
+      .replace(/\b(\w)/g, letter => letter.toUpperCase());
 
     console.log('[Extract] Final title:', title);
     title = title || 'Task';
@@ -502,13 +546,23 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       }
     }
 
-    // Parse budget - look for "$100", "@100", "100", "budget $100"
+    // Parse budget - look for "$100", "@100", "budget 100", or trailing number
     let budget = '';
-    const budgetMatch = input.match(/[\$@]\s*(\d+)|budget\s*[\$@]?\s*(\d+)/i);
-    console.log('[Extract] Budget match:', budgetMatch);
+    let budgetMatch = input.match(/[\$@]\s*(\d+)|budget\s*[\$@]?\s*(\d+)/i);
+    console.log('[Extract] Budget match (explicit):', budgetMatch);
     if (budgetMatch) {
       budget = budgetMatch[1] || budgetMatch[2];
       console.log('[Extract] Budget extracted:', budget);
+    } else {
+      // If no explicit budget pattern, look for a trailing number (2-4 digits at end)
+      budgetMatch = input.match(/(\d{2,4})\s*$/);
+      if (budgetMatch) {
+        const trailingNum = budgetMatch[1];
+        if (parseInt(trailingNum) >= 10) {
+          budget = trailingNum;
+          console.log('[Extract] Budget extracted from trailing number:', budget);
+        }
+      }
     }
 
     console.log('[Extract] Parsed - title:', title, 'postal:', postalCode, 'time:', time, 'duration:', duration, 'budget:', budget);
@@ -592,12 +646,30 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
 router.post('/content-filter', async (req: Request, res: Response) => {
   try {
-    const { title, description } = req.body;
+    const { title, description, notes } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ error: 'title required' });
+    }
+
+    // Check title, description, and notes for inappropriate content
+    const fullText = `${title} ${description || ''} ${notes || ''}`;
+    const moderationResult = await contentMod.checkContentWithQwen(title, description || '', notes || '');
+
+    const status = moderationResult.is_safe ? 'SAFE' : 'FLAG';
+
     res.json({
       success: true,
-      data: { status: 'SAFE' },
+      data: {
+        status,
+        is_safe: moderationResult.is_safe,
+        flags: moderationResult.flags,
+        issues: moderationResult.issues,
+        confidence: moderationResult.confidence,
+      },
     });
   } catch (error) {
+    console.error('Content filter error:', error);
     res.status(500).json({ error: 'Failed to filter' });
   }
 });

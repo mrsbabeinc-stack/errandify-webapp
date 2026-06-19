@@ -428,4 +428,118 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Check for similar errands (warn but allow if location or timing is different)
+router.post('/check-duplicate', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const { title, category, location, deadline, time } = req.body;
+
+    if (!title || !category) {
+      return res.status(400).json({ error: 'title and category required' });
+    }
+
+    // Get user's errands from last 24 hours
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const result = await db.query(
+      `SELECT id, title, category, location, deadline, time, created_at
+       FROM errands
+       WHERE asker_id = $1
+       AND created_at > $2
+       AND status != 'cancelled'
+       ORDER BY created_at DESC`,
+      [userId, twentyFourHoursAgo.toISOString()]
+    );
+
+    // Check for similar errands using fuzzy matching on title and category
+    const similar = result.rows.filter((errand) => {
+      const titleSimilarity = calculateSimilarity(title.toLowerCase(), errand.title.toLowerCase());
+      const categoryMatch = category === errand.category;
+
+      // Flag as similar if title is 70%+ similar AND category matches
+      // Allow if location or timing is different
+      if (titleSimilarity >= 0.7 && categoryMatch) {
+        const locationMatch = location === errand.location;
+        const timeMatch = deadline === errand.deadline && time === errand.time;
+
+        // Only flag as true duplicate if BOTH location AND time match
+        // If either is different, it's just a similar errand (allow with warning)
+        return locationMatch && timeMatch;
+      }
+      return false;
+    });
+
+    // Also get "similar but different" errands (same title+category but different location/time)
+    const similarButDifferent = result.rows.filter((errand) => {
+      const titleSimilarity = calculateSimilarity(title.toLowerCase(), errand.title.toLowerCase());
+      const categoryMatch = category === errand.category;
+
+      if (titleSimilarity >= 0.7 && categoryMatch) {
+        const locationMatch = location === errand.location;
+        const timeMatch = deadline === errand.deadline && time === errand.time;
+
+        // Return if similar but location OR time is different
+        return !(locationMatch && timeMatch);
+      }
+      return false;
+    });
+
+    res.json({
+      success: true,
+      data: {
+        isDuplicate: similar.length > 0, // True duplicate (same everything)
+        isSimilar: similarButDifferent.length > 0, // Warning: similar but different location/time
+        similar: similar.slice(0, 1), // Return top duplicate (if exact match)
+        similarButDifferent: similarButDifferent.slice(0, 1), // Return warning candidate
+        count: similar.length,
+        message: similarButDifferent.length > 0
+          ? `You posted a similar errand before at a different time/location. Is this a new request?`
+          : null,
+      },
+    });
+  } catch (error) {
+    console.error('Duplicate check error:', error);
+    res.status(500).json({ error: 'Failed to check duplicates' });
+  }
+});
+
+// Levenshtein similarity calculation (0-1, where 1 is identical)
+function calculateSimilarity(str1: string, str2: string): number {
+  const longer = str1.length > str2.length ? str1 : str2;
+  const shorter = str1.length > str2.length ? str2 : str1;
+
+  if (longer.length === 0) return 1.0;
+
+  const editDistance = getEditDistance(longer, shorter);
+  return (longer.length - editDistance) / longer.length;
+}
+
+function getEditDistance(str1: string, str2: string): number {
+  const matrix: number[][] = [];
+
+  for (let i = 0; i <= str2.length; i++) {
+    matrix[i] = [i];
+  }
+
+  for (let j = 0; j <= str1.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+
+  return matrix[str2.length][str1.length];
+}
+
 export default router;
