@@ -136,6 +136,8 @@ export default function CreateErrandPage() {
           };
 
           console.log('[CreateErrand] Setting form data - title:', newFormData.title, 'budget:', newFormData.budget, 'prefilled budget:', prefilledData.budget);
+          console.log('[CreateErrand] Prefilled date:', prefilledData.date, 'converted deadline:', newFormData.deadline);
+          console.log('[CreateErrand] Full prefilled object:', prefilledData);
           setFormData(newFormData);
 
           // Set postal code and full address from prefilled data
