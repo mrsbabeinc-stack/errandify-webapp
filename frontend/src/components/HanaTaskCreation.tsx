@@ -521,11 +521,11 @@ export default function HanaTaskCreation({
           </div>
         </div>
 
-        {/* Main Content - Hana Left + Conversation Right */}
-        <div className="flex-1 overflow-hidden flex gap-4 px-4 py-4">
-          {/* Hana Half-Body Avatar - Left Side, Large */}
-          <div className="flex-shrink-0 flex items-center justify-center overflow-hidden">
-            <div style={{ height: '450px', width: 'auto' }}>
+        {/* Main Content - Hana Left (Full Body) + Conversation Right */}
+        <div className="flex-1 overflow-hidden flex gap-6 px-4 py-4">
+          {/* Hana Full-Body Avatar - Left Side */}
+          <div className="flex-shrink-0 flex items-end justify-center overflow-visible pt-4">
+            <div style={{ height: '520px', width: 'auto', maxWidth: '280px' }}>
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}
                 message={hanaMessage}
@@ -534,10 +534,10 @@ export default function HanaTaskCreation({
           </div>
 
           {/* Right Side - Speech Bubble + Input */}
-          <div className="flex-1 overflow-y-auto flex flex-col">
+          <div className="flex-1 overflow-y-auto flex flex-col pt-6">
             {/* Speech Bubble */}
             {hanaMessage && (
-              <div className="flex-shrink-0 mb-3">
+              <div className="flex-shrink-0 mb-4">
                 <div className="relative animate-slideDown"
                      style={{
                        background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
