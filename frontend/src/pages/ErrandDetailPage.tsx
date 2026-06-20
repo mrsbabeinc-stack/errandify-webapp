@@ -47,6 +47,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [bidSubmitted, setBidSubmitted] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [userBidAmount, setUserBidAmount] = useState<number | null>(null);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -54,7 +55,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       const user = JSON.parse(userStr);
       setCurrentUser(user);
     }
-  }, []);
+
+    // Load user bids from localStorage
+    if (id) {
+      const bids = JSON.parse(localStorage.getItem('userBids') || '{}');
+      setUserBidAmount(bids[id] || null);
+    }
+  }, [id]);
 
   useEffect(() => {
     fetchErrandDetail();
@@ -368,7 +375,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 }}
                 className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
               >
-                {bidSubmitted ? '✓ Bid Submitted' : errand.isRecurring ? 'Select Sessions' : 'Submit a Bid'}
+                {bidSubmitted || userBidAmount ? '✓ Update Bid' : errand.isRecurring ? 'Select Sessions' : 'Submit a Bid'}
               </button>
             ) : errand.status === 'open' && currentUser && (currentUser.id === errand.askerId || userRole === 'asker') ? (
               <div className="flex gap-2 mt-2">
@@ -434,9 +441,14 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           taskId={errand.id}
           taskBudget={errand.budget || 0}
           taskTitle={errand.title}
+          existingBidAmount={userBidAmount || undefined}
+          askerId={errand.askerId}
           onSuccess={() => {
             setBidSubmitted(true);
             setShowBidModal(false);
+            // Reload bid amount
+            const bids = JSON.parse(localStorage.getItem('userBids') || '{}');
+            setUserBidAmount(bids[errand.id] || null);
           }}
           onClose={() => setShowBidModal(false)}
         />

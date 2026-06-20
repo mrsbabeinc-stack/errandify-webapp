@@ -5,6 +5,8 @@ interface BidSubmissionModalProps {
   taskId: number;
   taskBudget: number;
   taskTitle: string;
+  existingBidAmount?: number;
+  askerId?: number;
   onSuccess: () => void;
   onClose: () => void;
 }
@@ -13,10 +15,13 @@ export default function BidSubmissionModal({
   taskId,
   taskBudget,
   taskTitle,
+  existingBidAmount,
+  askerId,
   onSuccess,
   onClose,
 }: BidSubmissionModalProps) {
-  const [bidAmount, setBidAmount] = useState<string>(taskBudget?.toString() || '');
+  const isUpdating = !!existingBidAmount;
+  const [bidAmount, setBidAmount] = useState<string>(existingBidAmount?.toString() || taskBudget?.toString() || '');
   const [bidNote, setBidNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -47,7 +52,26 @@ export default function BidSubmissionModal({
         bids[taskId.toString()] = parseFloat(bidAmount);
         localStorage.setItem('userBids', JSON.stringify(bids));
 
-        alert(`✓ Bid submitted for $${bidAmount}!`);
+        // Send notification to asker
+        if (askerId) {
+          try {
+            await axios.post(
+              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`,
+              {
+                recipientId: askerId,
+                type: 'bid_placed',
+                title: isUpdating ? 'Bid Updated' : 'New Bid Received',
+                message: `A ${isUpdating ? 'updated' : 'new'} bid of $${bidAmount} was placed on "${taskTitle}"`,
+                taskId,
+              },
+              { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+            );
+          } catch (notifErr) {
+            console.error('Failed to send notification:', notifErr);
+          }
+        }
+
+        alert(`✓ Bid ${isUpdating ? 'updated' : 'submitted'} for $${bidAmount}!`);
         onSuccess();
       }
     } catch (err: any) {
@@ -60,8 +84,15 @@ export default function BidSubmissionModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-md w-full p-6">
-        <h2 className="text-xl font-bold text-errandify-brown mb-2">Submit Your Bid</h2>
+        <h2 className="text-xl font-bold text-errandify-brown mb-2">
+          {isUpdating ? 'Update Your Bid' : 'Submit Your Bid'}
+        </h2>
         <p className="text-gray-600 text-sm mb-4">"{taskTitle}"</p>
+        {isUpdating && (
+          <p className="text-xs text-blue-600 mb-3 bg-blue-50 p-2 rounded">
+            Previous bid: ${existingBidAmount?.toFixed(2)}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -117,7 +148,7 @@ export default function BidSubmissionModal({
               disabled={isSubmitting || !bidAmount}
               className="flex-1 px-4 py-2 bg-errandify-orange text-white rounded-lg font-semibold hover:bg-opacity-90 disabled:opacity-50"
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Bid'}
+              {isSubmitting ? (isUpdating ? 'Updating...' : 'Submitting...') : (isUpdating ? 'Update Bid' : 'Submit Bid')}
             </button>
           </div>
         </form>
