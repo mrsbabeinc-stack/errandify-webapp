@@ -1,9 +1,15 @@
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import blogPostsData from '../data/blogPosts';
 
 export default function BlogDetailPage() {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
+
+  // Scroll to top when slug changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
 
   // Find post by slug
   const post = blogPostsData.find(p => p.slug === slug);
@@ -131,8 +137,11 @@ export default function BlogDetailPage() {
               <div className="grid grid-cols-1 gap-4">
                 {relatedArticles.map((article) => (
                   <div
-                    key={article.id}
-                    onClick={() => navigate(`/blog/${article.slug}`)}
+                    key={article.slug}
+                    onClick={() => {
+                      console.log('[Related Article Click]', article.slug);
+                      navigate(`/blog/${article.slug}`);
+                    }}
                     className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md hover:bg-white transition cursor-pointer"
                   >
                     <div className="flex items-start justify-between gap-3">
