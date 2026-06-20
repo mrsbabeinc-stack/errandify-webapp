@@ -911,15 +911,17 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       notes = notesSuggestions[detectedCategory] || 'Add any requirements or questions for the doer.';
     }
 
+    const responseData = {
+      category: detectedCategory,
+      description: suggestedDescription,
+      notes: notes,
+      skills: skills,
+    };
+    console.log('[Suggestions] Returning:', responseData);
+
     res.json({
       success: true,
-      data: {
-        category: detectedCategory,
-        description: suggestedDescription,
-        suggestedBudget: 50,
-        notes,
-        skills,
-      },
+      data: responseData,
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to get suggestions' });
