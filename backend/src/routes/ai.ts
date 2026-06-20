@@ -447,9 +447,9 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Extract title - keep only meaningful words, filter filler words
     console.log('[Extract] Raw input:', input);
 
-    // Filler words to remove (articles, prepositions, common function words, category names, certification words)
+    // Filler words to remove (articles, prepositions, common function words, category names, certification words, generic nouns)
     // DO NOT remove action verbs: take, care, help, clean, pick, etc.
-    const fillerWords = /\b(if|at|on|for|of|to|the|a|an|and|or|in|is|are|be|by|from|with|as|i|me|my|we|you|your|our|their|this|that|these|those|it|which|who|what|when|where|why|how|can|could|will|would|should|must|may|might|today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat|childcare|eldercare|petcare|homehelp|eventhelp|delivery|service|certified|certification|trained|professional|experienced|budget)\b/gi;
+    const fillerWords = /\b(if|at|on|for|of|to|the|a|an|and|or|in|is|are|be|by|from|with|as|i|me|my|we|you|your|our|their|this|that|these|those|it|which|who|what|when|where|why|how|can|could|will|would|should|must|may|might|today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat|childcare|eldercare|petcare|homehelp|eventhelp|delivery|service|certified|certification|trained|professional|experienced|budget|business|total|job|work|task|errand)\b/gi;
 
     let title = input
       // Remove all weird punctuation at start and throughout
@@ -559,6 +559,9 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         }
       } else {
         console.log('[Extract] No date pattern matched in:', input);
+        // Default to today if no date found
+        date = new Date().toISOString().split('T')[0];
+        console.log('[Extract] Using default date (today):', date);
       }
     }
 
