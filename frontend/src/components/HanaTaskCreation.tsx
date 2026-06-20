@@ -521,11 +521,54 @@ export default function HanaTaskCreation({
           </div>
         </div>
 
-        {/* Main Content - Hana Full Left + Chat Right (Optimal Layout) */}
-        <div className="flex-1 overflow-hidden flex gap-8 px-6 py-6">
-          {/* Hana Avatar - Full Left Side */}
-          <div className="flex-shrink-0 flex items-center justify-center overflow-visible">
-            <div style={{ height: '420px', width: 'auto', maxWidth: '280px' }}>
+        {/* Main Content - Your Design: Vertical Layout */}
+        <div className="flex-1 overflow-y-auto flex flex-col px-6 py-6 gap-6">
+          {/* Speech Bubble - Top (Full Width) */}
+          {hanaMessage && (
+            <div className="flex-shrink-0">
+              <div className="relative animate-slideDown"
+                   style={{
+                     background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
+                     border: '1.5px solid #FF8C42',
+                     borderRadius: '18px',
+                     padding: '14px 18px',
+                     boxShadow: '0 4px 12px rgba(255, 140, 66, 0.12), 0 1px 3px rgba(0,0,0,0.06)',
+                   }}>
+                <p className="whitespace-pre-line text-xs font-medium"
+                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.5', letterSpacing: '0px'}}>
+                  {hanaMessage}
+                </p>
+                {/* Speech bubble tail - pointing down */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-8px',
+                  left: '20px',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '7px solid transparent',
+                  borderRight: '0 solid transparent',
+                  borderTop: '8px solid #FF8C42',
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-6px',
+                  left: '21px',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '5px solid transparent',
+                  borderRight: '0 solid transparent',
+                  borderTop: '6px solid #FFF8F0',
+                }} />
+              </div>
+            </div>
+          )}
+
+          {/* Middle Space - Grows to fill */}
+          <div className="flex-1"></div>
+
+          {/* Hana Avatar - Left Side (Bottom Area) */}
+          <div className="flex-shrink-0 flex items-end">
+            <div style={{ height: '400px', width: 'auto', maxWidth: '200px' }}>
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}
                 message={hanaMessage}
@@ -533,82 +576,39 @@ export default function HanaTaskCreation({
             </div>
           </div>
 
-          {/* Right Side - Speech Bubble (Top) + Input (Bottom) */}
-          <div className="flex-1 flex flex-col justify-between">
-            {/* Speech Bubble - Top */}
-            {hanaMessage && (
-              <div className="flex-shrink-0">
-                <div className="relative animate-slideDown"
-                     style={{
-                       background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
-                       border: '1.5px solid #FF8C42',
-                       borderRadius: '18px',
-                       padding: '14px 18px',
-                       boxShadow: '0 4px 12px rgba(255, 140, 66, 0.12), 0 1px 3px rgba(0,0,0,0.06)',
-                       maxWidth: '100%',
-                     }}>
-                  <p className="whitespace-pre-line text-xs font-medium"
-                     style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.5', letterSpacing: '0px'}}>
-                    {hanaMessage}
-                  </p>
-                  {/* Speech bubble tail - pointing left to Hana */}
-                  <div style={{
-                    position: 'absolute',
-                    left: '-8px',
-                    top: '12px',
-                    width: '0',
-                    height: '0',
-                    borderTop: '7px solid transparent',
-                    borderBottom: '7px solid transparent',
-                    borderRight: '8px solid #FF8C42',
-                  }} />
-                  <div style={{
-                    position: 'absolute',
-                    left: '-6px',
-                    top: '14px',
-                    width: '0',
-                    height: '0',
-                    borderTop: '5px solid transparent',
-                    borderBottom: '5px solid transparent',
-                    borderRight: '6px solid #FFF8F0',
-                  }} />
-                </div>
-              </div>
-            )}
-
-            {/* Input Section - Bottom */}
-            {currentStep === 'input' && (
-              <form onSubmit={handleSendMessage} className="flex gap-3 flex-shrink-0">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type all details here..."
-                  className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-full focus:outline-none focus:border-opacity-100 text-sm"
-                  disabled={loading || isRecording}
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={isRecording ? stopRecording : startRecording}
-                  className={`px-4 py-3 rounded-full font-bold transition-all text-sm flex-shrink-0 ${
-                    isRecording
-                      ? 'bg-red-500 hover:bg-red-600 text-white'
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                  }`}
-                  title={isRecording ? 'Stop recording' : 'Start voice input'}
-                >
-                  {isRecording ? '⏹️' : '🎤'}
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading || !input.trim()}
-                  className="px-6 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex-shrink-0"
-                >
-                  {loading ? '•••' : '→'}
-                </button>
-              </form>
-            )}
+          {/* Input Section - Bottom (Full Width) */}
+          {currentStep === 'input' && (
+            <form onSubmit={handleSendMessage} className="flex gap-3 flex-shrink-0">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type all details here..."
+                className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-full focus:outline-none focus:border-opacity-100 text-sm"
+                disabled={loading || isRecording}
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`px-4 py-3 rounded-full font-bold transition-all text-sm flex-shrink-0 ${
+                  isRecording
+                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}
+                title={isRecording ? 'Stop recording' : 'Start voice input'}
+              >
+                {isRecording ? '⏹️' : '🎤'}
+              </button>
+              <button
+                type="submit"
+                disabled={loading || !input.trim()}
+                className="px-6 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex-shrink-0"
+              >
+                {loading ? '•••' : '→'}
+              </button>
+            </form>
+          )}
 
             {currentStep === 'confirm' && (
               <div className="flex gap-3 flex-shrink-0">
