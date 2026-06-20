@@ -512,6 +512,14 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     }
 
     console.log('[Extract] Category detected BEFORE Qwen:', category);
+    console.log('[Extract] Keyword check:', {
+      input_has_wifi: inputLower.includes('wifi'),
+      input_has_router: inputLower.includes('router'),
+      title_has_wifi: titleLower.includes('wifi'),
+      title_has_router: titleLower.includes('router'),
+      checkText_includes_wifi: checkText.includes('wifi'),
+      checkText_includes_router: checkText.includes('router'),
+    });
 
     // Use Qwen to improve title wording if available
     let improvedTitle = title;
@@ -675,7 +683,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     let fullAddress = `Singapore ${postalCode}`;
 
     if (postalCode && postalCode.length === 6) {
-      // Postal code prefix (first 2 digits) → area mapping
+      // Postal code prefix (first 2 digits) → area mapping (complete Singapore postal code ranges)
       const postalCodeAreas: Record<string, string> = {
         '01': 'Raffles Place', '02': 'Beach Road', '03': 'Tiong Bahru',
         '04': 'Harbourfront', '05': 'Outram', '06': 'Bukit Merah', '07': 'Kallang',
@@ -685,6 +693,19 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         '20': 'Admiralty', '21': 'Bukit Batok', '22': 'Bukit Panjang', '23': 'Choa Chu Kang',
         '24': 'Yew Tee', '25': 'Kranji', '26': 'Jurong West', '27': 'Clementi',
         '28': 'Jurong East', '29': 'Pioneer', '30': 'Boon Lay', '31': 'Tuas',
+        '32': 'Jurong Gateway', '33': 'Jurong Port', '34': 'Sentosa', '35': 'Marina Offshore',
+        '36': 'Tanjong Pagar', '37': 'Downtown Core', '38': 'Orchard', '39': 'Tanglin',
+        '40': 'Bukit Timah', '41': 'Novena', '42': 'Thomson', '43': 'Bishan',
+        '44': 'Marymount', '45': 'Ang Mo Kio', '46': 'Yio Chu Kang', '47': 'Macpherson',
+        '48': 'Potong Pasir', '49': 'Geylang Serai', '50': 'Mattar', '51': 'Eunos',
+        '52': 'Paya Lebar', '53': 'MacPherson', '54': 'Ubi', '55': 'Kembangan',
+        '56': 'Bedok Reservoir', '57': 'Changi Business Park', '58': 'Loyang', '59': 'Pasir Ris',
+        '60': 'Pioneer', '61': 'Boon Lay', '62': 'Jurong East', '63': 'Choa Chu Kang',
+        '64': 'Choa Chu Kang', '65': 'Kranji', '66': 'Woodlands', '67': 'Admiralty',
+        '68': 'Sembawang', '69': 'Yishun', '70': 'Khatib', '71': 'Sengkang',
+        '72': 'Sengkang', '73': 'Punggol', '74': 'Punggol', '75': 'Seletar',
+        '76': 'Changi', '77': 'Changi', '78': 'Loyang', '79': 'Changi',
+        '80': 'Sentosa', '81': 'Changi', '82': 'Tampines', '83': 'Pasir Ris',
       };
 
       const prefix = postalCode.substring(0, 2);
