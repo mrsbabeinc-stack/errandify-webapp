@@ -945,14 +945,19 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       notes: notes,
       skills: skills,
     };
-    console.log('[Suggestions] Returning:', responseData);
+    console.log('[Suggestions] ✅ Returning:', responseData);
 
     res.json({
       success: true,
       data: responseData,
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get suggestions' });
+    console.error('[Suggestions] ❌ ERROR:', error instanceof Error ? error.message : error);
+    console.error('[Suggestions] Stack:', error instanceof Error ? error.stack : 'No stack trace');
+    res.status(500).json({
+      error: 'Failed to get suggestions',
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 
