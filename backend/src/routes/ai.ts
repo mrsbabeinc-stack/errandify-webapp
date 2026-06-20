@@ -491,6 +491,35 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
       .join(' ');
 
+    console.log('[Extract] Before Qwen improvement:', title);
+
+    // IMPORTANT: Do category detection BEFORE Qwen improves title
+    // (so we still have the original keywords)
+    let category = 'homehelp'; // Default
+    const inputLower = input.toLowerCase();
+    const titleLower = title.toLowerCase();
+    const checkText = inputLower + ' ' + titleLower;
+
+    if (checkText.includes('elder') || checkText.includes('mom') || checkText.includes('mum') || checkText.includes('dad') || checkText.includes('caregiv') || checkText.includes('senior') || checkText.includes('aged')) {
+      category = 'eldercare';
+    } else if (checkText.includes('baby') || checkText.includes('child') || checkText.includes('kid') || checkText.includes('pick') || checkText.includes('school') || checkText.includes('babysit') || checkText.includes('nanny')) {
+      category = 'childcare';
+    } else if (checkText.includes('dog') || checkText.includes('pet') || checkText.includes('cat') || checkText.includes('groom') || checkText.includes('walk') || checkText.includes('animal')) {
+      category = 'petcare';
+    } else if (checkText.includes('clean') || checkText.includes('laundry') || checkText.includes('repair') || checkText.includes('fix') || checkText.includes('household')) {
+      category = 'homehelp';
+    } else if (checkText.includes('deliver') || checkText.includes('parcel') || checkText.includes('food') || checkText.includes('courier')) {
+      category = 'delivery';
+    } else if (checkText.includes('event') || checkText.includes('setup') || checkText.includes('shop') || checkText.includes('party')) {
+      category = 'eventhelp';
+    } else if (checkText.includes('tutor') || checkText.includes('teach') || checkText.includes('lesson') || checkText.includes('homework') || checkText.includes('math') || checkText.includes('english')) {
+      category = 'childcare';
+    } else if (checkText.includes('wifi') || checkText.includes('tech') || checkText.includes('computer') || checkText.includes('router') || checkText.includes('software')) {
+      category = 'tech-support';
+    }
+
+    console.log('[Extract] Category detected BEFORE Qwen:', category);
+
     // Use Qwen to improve title wording if available
     let improvedTitle = title;
     try {
@@ -675,27 +704,6 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       fullAddress = postalCode ? `Singapore ${postalCode}` : 'Singapore';
     }
 
-    // Detect category using keyword matching (check BOTH raw input and extracted title)
-    let category = 'homehelp'; // Default
-    const inputLower = input.toLowerCase();
-    const titleLower = title.toLowerCase();
-    const checkText = inputLower + ' ' + titleLower; // Check both for better matching
-
-    if (checkText.includes('elder') || checkText.includes('mom') || checkText.includes('mum') || checkText.includes('dad') || checkText.includes('caregiv') || checkText.includes('senior') || checkText.includes('aged')) {
-      category = 'eldercare';
-    } else if (checkText.includes('baby') || checkText.includes('child') || checkText.includes('kid') || checkText.includes('pick') || checkText.includes('school') || checkText.includes('babysit') || checkText.includes('nanny')) {
-      category = 'childcare';
-    } else if (checkText.includes('dog') || checkText.includes('pet') || checkText.includes('cat') || checkText.includes('groom') || checkText.includes('walk') || checkText.includes('animal')) {
-      category = 'petcare';
-    } else if (checkText.includes('clean') || checkText.includes('laundry') || checkText.includes('repair') || checkText.includes('fix') || checkText.includes('household')) {
-      category = 'homehelp';
-    } else if (checkText.includes('deliver') || checkText.includes('parcel') || checkText.includes('food') || checkText.includes('courier')) {
-      category = 'delivery';
-    } else if (checkText.includes('event') || checkText.includes('setup') || checkText.includes('shop') || checkText.includes('party')) {
-      category = 'eventhelp';
-    }
-
-    console.log('[Extract] Category detected:', category);
 
     // Extract certification/skill keywords from title and remove them from title
     const skillKeywords = {
