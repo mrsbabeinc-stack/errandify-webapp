@@ -511,6 +511,9 @@ export default function CreateErrandPage() {
     console.log('[DEBUG] Current state - loading:', loading, 'showConfirm:', showConfirm);
     console.log('[DEBUG] formData:', formData);
 
+    setLoading(true);
+    console.log('[DEBUG] Set loading to true');
+
     // ===== COMPREHENSIVE VALIDATION =====
 
     // 1. Title validation
