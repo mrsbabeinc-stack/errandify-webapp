@@ -521,11 +521,53 @@ export default function HanaTaskCreation({
           </div>
         </div>
 
-        {/* Main Content - FINAL: Hana Upper Body LEFT + Chat RIGHT */}
-        <div className="flex-1 overflow-y-auto flex gap-6 px-6 py-6">
-          {/* Left Side - Hana Upper Body Only (head to chest) */}
-          <div className="flex-shrink-0">
-            <div style={{ height: '250px', width: 'auto', maxWidth: '160px' }}>
+        {/* Main Content - Simple: Bubble Top, Hana Center, Input Bottom */}
+        <div className="flex-1 overflow-y-auto flex flex-col px-6 py-6 gap-6">
+          {/* Speech Bubble - Top (Full Width) */}
+          {hanaMessage && (
+            <div className="flex-shrink-0">
+              <div className="relative animate-slideDown mx-auto max-w-lg"
+                   style={{
+                     background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
+                     border: '1.5px solid #FF8C42',
+                     borderRadius: '18px',
+                     padding: '14px 18px',
+                     boxShadow: '0 4px 12px rgba(255, 140, 66, 0.12), 0 1px 3px rgba(0,0,0,0.06)',
+                   }}>
+                <p className="whitespace-pre-line text-xs font-medium text-center"
+                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.5', letterSpacing: '0px'}}>
+                  {hanaMessage}
+                </p>
+                {/* Speech bubble tail - pointing down */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-8px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '7px solid transparent',
+                  borderRight: '7px solid transparent',
+                  borderTop: '8px solid #FF8C42',
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-6px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '5px solid transparent',
+                  borderRight: '5px solid transparent',
+                  borderTop: '6px solid #FFF8F0',
+                }} />
+              </div>
+            </div>
+          )}
+
+          {/* Middle Space - Hana Centered */}
+          <div className="flex-1 flex items-center justify-center">
+            <div style={{ height: '300px', width: 'auto', maxWidth: '220px' }}>
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}
                 message={hanaMessage}
@@ -533,108 +575,62 @@ export default function HanaTaskCreation({
             </div>
           </div>
 
-          {/* Right Side - Speech Bubble (Top) + Growing Space + Input (Bottom) */}
-          <div className="flex-1 flex flex-col justify-between">
-            {/* Speech Bubble - Top Right */}
-            {hanaMessage && (
-              <div className="flex-shrink-0">
-                <div className="relative animate-slideDown"
-                     style={{
-                       background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
-                       border: '1.5px solid #FF8C42',
-                       borderRadius: '18px',
-                       padding: '14px 18px',
-                       boxShadow: '0 4px 12px rgba(255, 140, 66, 0.12), 0 1px 3px rgba(0,0,0,0.06)',
-                     }}>
-                  <p className="whitespace-pre-line text-xs font-medium"
-                     style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.5', letterSpacing: '0px'}}>
-                    {hanaMessage}
-                  </p>
-                  {/* Speech bubble tail - pointing left to Hana */}
-                  <div style={{
-                    position: 'absolute',
-                    left: '-8px',
-                    top: '12px',
-                    width: '0',
-                    height: '0',
-                    borderTop: '7px solid transparent',
-                    borderBottom: '7px solid transparent',
-                    borderRight: '8px solid #FF8C42',
-                  }} />
-                  <div style={{
-                    position: 'absolute',
-                    left: '-6px',
-                    top: '14px',
-                    width: '0',
-                    height: '0',
-                    borderTop: '5px solid transparent',
-                    borderBottom: '5px solid transparent',
-                    borderRight: '6px solid #FFF8F0',
-                  }} />
-                </div>
-              </div>
-            )}
+          {/* Input Section - Bottom (Full Width) */}
+          {currentStep === 'input' && (
+            <form onSubmit={handleSendMessage} className="flex gap-3 flex-shrink-0">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type all details here..."
+                className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-full focus:outline-none focus:border-opacity-100 text-sm"
+                disabled={loading || isRecording}
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`px-4 py-3 rounded-full font-bold transition-all text-sm flex-shrink-0 ${
+                  isRecording
+                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}
+                title={isRecording ? 'Stop recording' : 'Start voice input'}
+              >
+                {isRecording ? '⏹️' : '🎤'}
+              </button>
+              <button
+                type="submit"
+                disabled={loading || !input.trim()}
+                className="px-6 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex-shrink-0"
+              >
+                {loading ? '•••' : '→'}
+              </button>
+            </form>
+          )}
 
-            {/* Middle Space - Grows to fill */}
-            <div className="flex-1"></div>
-
-            {/* Input Section - Bottom Right (Full Width) */}
-            {currentStep === 'input' && (
-              <form onSubmit={handleSendMessage} className="flex gap-3 flex-shrink-0">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type all details here..."
-                  className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-full focus:outline-none focus:border-opacity-100 text-sm"
-                  disabled={loading || isRecording}
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={isRecording ? stopRecording : startRecording}
-                  className={`px-4 py-3 rounded-full font-bold transition-all text-sm flex-shrink-0 ${
-                    isRecording
-                      ? 'bg-red-500 hover:bg-red-600 text-white'
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                  }`}
-                  title={isRecording ? 'Stop recording' : 'Start voice input'}
-                >
-                  {isRecording ? '⏹️' : '🎤'}
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading || !input.trim()}
-                  className="px-6 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex-shrink-0"
-                >
-                  {loading ? '•••' : '→'}
-                </button>
-              </form>
-            )}
-
-            {currentStep === 'confirm' && (
-              <div className="flex gap-3 flex-shrink-0">
-                <button
-                  onClick={handleConfirmAndProceed}
-                  disabled={loading}
-                  className="flex-1 px-4 py-3 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 disabled:opacity-50 text-sm"
-                >
-                  {loading ? 'Processing...' : '✓ Post Errand'}
-                </button>
-                <button
-                  onClick={() => {
-                    setCurrentStep('input');
-                    setInput('');
-                    setHanaMessage('Let me know what errand you need done!');
-                  }}
-                  disabled={loading}
-                  className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 text-sm"
-                >
-                  Edit
-                </button>
-              </div>
-            )}
-          </div>
+          {currentStep === 'confirm' && (
+            <div className="flex gap-3 flex-shrink-0">
+              <button
+                onClick={handleConfirmAndProceed}
+                disabled={loading}
+                className="flex-1 px-4 py-3 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 disabled:opacity-50 text-sm"
+              >
+                {loading ? 'Processing...' : '✓ Post Errand'}
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentStep('input');
+                  setInput('');
+                  setHanaMessage('Let me know what errand you need done!');
+                }}
+                disabled={loading}
+                className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 text-sm"
+              >
+                Edit
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
