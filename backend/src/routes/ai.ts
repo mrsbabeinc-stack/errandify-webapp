@@ -683,43 +683,14 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     let fullAddress = `Singapore ${postalCode}`;
 
     if (postalCode && postalCode.length === 6) {
-      try {
-        console.log(`[Extract] OneMap: Looking up postal code ${postalCode}...`);
-        const oneMapUrl = `https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=Y&getAddrDetails=Y`;
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-
-        const oneMapResponse = await fetch(oneMapUrl, { signal: controller.signal });
-        clearTimeout(timeoutId);
-
-        if (!oneMapResponse.ok) {
-          throw new Error(`OneMap HTTP ${oneMapResponse.status}`);
-        }
-
-        const oneMapData = await oneMapResponse.json();
-        console.log(`[Extract] OneMap response:`, oneMapData?.results?.length, 'results found');
-
-        if (oneMapData?.results && oneMapData.results.length > 0) {
-          const result = oneMapData.results[0];
-          // Use real address from OneMap
-          fullAddress = result.ADDRESS || `Singapore ${postalCode}`;
-          // Extract area from address or use road name
-          area = result.ROAD_NAME || result.BUILDING_NAME || 'Singapore';
-          console.log(`[Extract] ✅ OneMap found: ${fullAddress}, area: ${area}`);
-        } else {
-          console.log(`[Extract] OneMap: No results, using postal code only`);
-          fullAddress = `Singapore ${postalCode}`;
-          area = 'Singapore';
-        }
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        console.warn(`[Extract] ❌ OneMap lookup failed (${errorMsg}), using fallback`);
-        fullAddress = `Singapore ${postalCode}`;
-        area = 'Singapore';
-      }
+      // For now, use postal code as-is
+      // User will add specific address details in the form (e.g., "Block 433, #04-12")
+      // This avoids unreliable external API calls
+      fullAddress = `Singapore ${postalCode}`;
+      area = 'Singapore';
+      console.log(`[Extract] Using postal code: ${postalCode}, user will add full address in form`);
     } else {
-      console.log('[Extract] No valid postal code, using Singapore');
+      console.log('[Extract] No valid postal code');
       area = 'Singapore';
       fullAddress = 'Singapore';
     }
