@@ -581,16 +581,17 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       time = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
     }
 
-    // Parse duration - look for "3 hours", "2 hrs", "30 min", "30min", "30m"
+    // Parse duration - look for "3 hours", "2.5 hrs", "30 min", "30min", "30m"
     let duration = '';
     let durationUnit = 'Hr'; // Default to hours
-    const durationMatch = input.match(/(\d+)\s*(?:hour|hr|h)s?|(\d+)\s*(?:min|m)(?:ute)?s?/i);
+    const durationMatch = input.match(/(\d+(?:\.\d+)?)\s*(?:hour|hr|h)s?|(\d+(?:\.\d+)?)\s*(?:min|m)(?:ute)?s?/i);
     if (durationMatch) {
       duration = durationMatch[1] || durationMatch[2];
       // If it's minutes (matched second group), keep as is; if hours, keep as is
       if (durationMatch[2]) {
         durationUnit = 'Min'; // It's minutes
       }
+      console.log('[Extract] Duration parsed:', duration, durationUnit);
     }
 
     // Parse budget - smart, order-independent extraction
