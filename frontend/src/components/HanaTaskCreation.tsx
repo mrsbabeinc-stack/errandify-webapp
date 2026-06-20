@@ -610,29 +610,28 @@ export default function HanaTaskCreation({
             </form>
           )}
 
-            {currentStep === 'confirm' && (
-              <div className="flex gap-3 flex-shrink-0">
-                <button
-                  onClick={handleConfirmAndProceed}
-                  disabled={loading}
-                  className="flex-1 px-4 py-3 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 disabled:opacity-50 text-sm"
-                >
-                  {loading ? 'Processing...' : '✓ Post Errand'}
-                </button>
-                <button
-                  onClick={() => {
-                    setCurrentStep('input');
-                    setInput('');
-                    setHanaMessage('Let me know what errand you need done!');
-                  }}
-                  disabled={loading}
-                  className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 text-sm"
-                >
-                  Edit
-                </button>
-              </div>
-            )}
-          </div>
+          {currentStep === 'confirm' && (
+            <div className="flex gap-3 flex-shrink-0">
+              <button
+                onClick={handleConfirmAndProceed}
+                disabled={loading}
+                className="flex-1 px-4 py-3 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 disabled:opacity-50 text-sm"
+              >
+                {loading ? 'Processing...' : '✓ Post Errand'}
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentStep('input');
+                  setInput('');
+                  setHanaMessage('Let me know what errand you need done!');
+                }}
+                disabled={loading}
+                className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 text-sm"
+              >
+                Edit
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
