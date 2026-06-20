@@ -121,22 +121,22 @@ export default function HanaTaskCreation({
     const budget = getRandomBudget();
 
     const examples: Record<string, string> = {
-      'home-maintenance': `Fix my leaky kitchen tap at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'home-maintenance': `Fix leaky kitchen tap at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
       'cleaning-household': `Clean my house at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
       'food-beverage': `Prepare lunch for 4 people at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
       'furniture-assembly': `Assemble IKEA bookshelf at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
-      'shopping-errands': `Help me shopping at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
-      'delivery-moving': `Move my boxes from office to home (${postalCode}) on ${day} ${time} for ${duration}, budget $${budget}`,
-      'travel-mobility': `Drive me to Changi Airport from home (${postalCode}) on ${day} ${time}, budget $${budget}`,
-      'event-planning': `Help decorate apartment for party at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'shopping-errands': `Grocery shopping at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'delivery-moving': `Move boxes from office to home at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'travel-mobility': `Drive me to airport at ${postalCode} on ${day} ${time}, budget $${budget}`,
+      'event-planning': `Decorate apartment for party at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
       'childcare-education': `Tutor my son in Math at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
-      'eldercare-healthcare': `Help mum with groceries and checkup at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
-      'pet-care': `Dog walk my golden retriever at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'eldercare-healthcare': `Help mum with groceries at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'pet-care': `Walk my dog at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
       'personal-care': `Hair cut at home (${postalCode}) on ${day} ${time} for ${duration}, budget $${budget}`,
-      'tech-support': `Fix my WiFi router at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
-      'creative-arts': `Design a logo for my business at ${postalCode}, deadline ${day} ${time}, budget $${budget}`,
-      'admin-business': `Help with data entry for my business at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
-      'charity-community': `Help pack donation boxes at center (${postalCode}) on ${day} ${time} for ${duration}, budget $${budget}`,
+      'tech-support': `Fix WiFi router at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'creative-arts': `Design logo for my business, deadline ${day} ${time}, budget $${budget}`,
+      'admin-business': `Data entry for my business at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
+      'charity-community': `Pack donation boxes at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
     };
     return examples[category] || `Describe your errand: what (required), postal code (required), date & time (required), duration (required), budget SGD (required)`;
   };
