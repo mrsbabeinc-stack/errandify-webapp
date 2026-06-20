@@ -11,6 +11,19 @@ interface Bid {
   note?: string;
   status: 'pending' | 'accepted' | 'rejected';
   createdAt: string;
+  doerRating?: number;
+  doerReviewCount?: number;
+  confidenceScore?: number;
+}
+
+interface DoerConfidence {
+  total_jobs: number;
+  success_rate: number;
+  avg_rating: number;
+  review_count: number;
+  acceptance_rate: number;
+  days_since_last_job?: number;
+  confidence_score: number;
 }
 
 interface BidsViewerProps {
@@ -26,6 +39,9 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
   const [rejectingBidId, setRejectingBidId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState('accepted_another');
   const [rejectCustomReason, setRejectCustomReason] = useState('');
+  const [doerConfidence, setDoerConfidence] = useState<Record<number, DoerConfidence>>({});
+  const [sortBy, setSortBy] = useState<'price' | 'rating' | 'confidence' | 'newest'>('newest');
+  const [filterMinRating, setFilterMinRating] = useState<number>(0);
 
   useEffect(() => {
     fetchBids();
@@ -44,6 +60,22 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
       );
       setBids(response.data.data);
       setError('');
+
+      // Fetch confidence scores for each doer
+      const bidsData = response.data.data;
+      for (const bid of bidsData) {
+        try {
+          const confidenceRes = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/user/${bid.doerId}/confidence`
+          );
+          setDoerConfidence((prev) => ({
+            ...prev,
+            [bid.doerId]: confidenceRes.data.data,
+          }));
+        } catch (e) {
+          console.error('Failed to fetch confidence for doer:', bid.doerId);
+        }
+      }
     } catch (err: any) {
       if (err.response?.status !== 403) {
         setError(err.response?.data?.error || 'Failed to load bids');
@@ -132,7 +164,33 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
   }
 
   const acceptedBid = bids.find(b => b.status === 'accepted');
-  const pendingBids = bids.filter(b => b.status === 'pending');
+  let pendingBids = bids.filter(b => b.status === 'pending');
+
+  // Filter by rating
+  pendingBids = pendingBids.filter(bid => {
+    const confidence = doerConfidence[bid.doerId];
+    if (!confidence) return true;
+    return confidence.avg_rating >= filterMinRating;
+  });
+
+  // Sort bids
+  pendingBids = [...pendingBids].sort((a, b) => {
+    switch (sortBy) {
+      case 'price':
+        return a.amount - b.amount;
+      case 'rating':
+        const ratingA = doerConfidence[a.doerId]?.avg_rating || 0;
+        const ratingB = doerConfidence[b.doerId]?.avg_rating || 0;
+        return ratingB - ratingA;
+      case 'confidence':
+        const scoreA = doerConfidence[a.doerId]?.confidence_score || 0;
+        const scoreB = doerConfidence[b.doerId]?.confidence_score || 0;
+        return scoreB - scoreA;
+      case 'newest':
+      default:
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+  });
 
   return (
     <div className="space-y-4">
@@ -152,9 +210,50 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
       )}
 
       <div>
-        <h3 className="font-semibold text-errandify-brown mb-3">
-          {acceptedBid ? 'Other Bids' : `Bids (${pendingBids.length})`}
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-errandify-brown">
+            {acceptedBid ? 'Other Bids' : `Bids (${pendingBids.length})`}
+          </h3>
+        </div>
+
+        {/* Sort & Filter Controls */}
+        {pendingBids.length > 0 && (
+          <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
+            <div className="flex gap-2 flex-wrap">
+              {['newest', 'price', 'rating', 'confidence'].map((option) => (
+                <button
+                  key={option}
+                  onClick={() => setSortBy(option as any)}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+                    sortBy === option
+                      ? 'bg-errandify-orange text-white'
+                      : 'bg-white border border-gray-300 text-gray-700 hover:border-errandify-orange'
+                  }`}
+                >
+                  {option === 'newest' && '🕐 Newest'}
+                  {option === 'price' && '💰 Price'}
+                  {option === 'rating' && '⭐ Rating'}
+                  {option === 'confidence' && '💪 Confidence'}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2 items-center">
+              <label className="text-xs font-semibold text-gray-700">Min Rating:</label>
+              <select
+                value={filterMinRating}
+                onChange={(e) => setFilterMinRating(parseFloat(e.target.value))}
+                className="px-2 py-1 border border-gray-300 rounded text-xs"
+              >
+                <option value="0">All</option>
+                <option value="3">3.0+</option>
+                <option value="4">4.0+</option>
+                <option value="4.5">4.5+</option>
+                <option value="5">5.0</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-3">
           {pendingBids.map(bid => (
             <div key={bid.id} className="bg-white border border-gray-200 rounded-lg p-4">
@@ -181,6 +280,33 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
                 <p className="text-sm text-gray-600 mb-3 bg-gray-50 p-2 rounded">
                   {bid.note}
                 </p>
+              )}
+
+              {/* Confidence Signals */}
+              {doerConfidence[bid.doerId] && (
+                <div className="mb-3 p-2 bg-blue-50 rounded border border-blue-100">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className="text-gray-600">Jobs: {doerConfidence[bid.doerId].total_jobs}</p>
+                      <p className="text-gray-600">Success: {doerConfidence[bid.doerId].success_rate}%</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Rating: ⭐ {doerConfidence[bid.doerId].avg_rating}</p>
+                      <p className="text-gray-600">Reviews: {doerConfidence[bid.doerId].review_count}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className="text-xs font-semibold text-gray-700">
+                      Confidence: {doerConfidence[bid.doerId].confidence_score}%
+                    </div>
+                    <div className="w-12 h-2 bg-gray-300 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-green-500 transition-all"
+                        style={{ width: `${doerConfidence[bid.doerId].confidence_score}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
               )}
 
               {taskBudget && bid.amount > taskBudget && (

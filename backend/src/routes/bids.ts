@@ -244,4 +244,71 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Respons
   }
 });
 
+// GET /api/users/:userId/confidence-score - Get doer confidence signals
+router.get('/user/:userId/confidence', async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    // Get user info
+    const userResult = await db.query(
+      'SELECT id, display_name FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Calculate confidence metrics
+    const metricsResult = await db.query(
+      `SELECT
+        COUNT(DISTINCT e.id) as total_jobs_completed,
+        COUNT(CASE WHEN e.status = 'completed' THEN 1 END) as successful_jobs,
+        AVG(COALESCE(ur.rating, 0)) as avg_rating,
+        COUNT(DISTINCT ur.id) as review_count,
+        MAX(e.completed_at) as last_job_date,
+        CEIL(COUNT(DISTINCT e.id) * 100.0 / NULLIF(COUNT(DISTINCT CASE WHEN b.id IS NOT NULL THEN b.id END), 0)) as acceptance_rate
+       FROM bids b
+       LEFT JOIN errands e ON b.errand_id = e.id AND b.status = 'accepted'
+       LEFT JOIN user_reviews ur ON e.doer_id = ur.reviewed_user_id
+       WHERE b.doer_id = $1`,
+      [userId]
+    );
+
+    const metrics = metricsResult.rows[0];
+    const totalJobs = parseInt(metrics.total_jobs_completed) || 0;
+    const successfulJobs = parseInt(metrics.successful_jobs) || 0;
+    const avgRating = parseFloat(metrics.avg_rating) || 0;
+    const reviewCount = parseInt(metrics.review_count) || 0;
+    const acceptanceRate = parseInt(metrics.acceptance_rate) || 0;
+    const daysSinceLastJob = metrics.last_job_date
+      ? Math.floor((Date.now() - new Date(metrics.last_job_date).getTime()) / (1000 * 60 * 60 * 24))
+      : null;
+
+    // Calculate confidence score (0-100)
+    const successRate = totalJobs > 0 ? (successfulJobs / totalJobs) * 100 : 0;
+    const ratingScore = (avgRating / 5) * 40; // 40 points max
+    const jobsScore = Math.min((totalJobs / 20) * 30, 30); // 30 points max
+    const acceptanceScore = (acceptanceRate / 100) * 30; // 30 points max
+    const confidenceScore = Math.round(ratingScore + jobsScore + acceptanceScore);
+
+    res.json({
+      success: true,
+      data: {
+        total_jobs: totalJobs,
+        successful_jobs: successfulJobs,
+        success_rate: Math.round(successRate),
+        avg_rating: avgRating.toFixed(1),
+        review_count: reviewCount,
+        acceptance_rate: acceptanceRate,
+        days_since_last_job: daysSinceLastJob,
+        confidence_score: Math.min(100, confidenceScore),
+      },
+    });
+  } catch (error) {
+    console.error('Error calculating confidence:', error);
+    res.status(500).json({ error: 'Failed to calculate confidence' });
+  }
+});
+
 export default router;
