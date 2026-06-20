@@ -1,15 +1,48 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import blogPostsData from '../data/blogPosts';
+import { useNotification } from '../context/NotificationContext';
 
 export default function BlogDetailPage() {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
+  const { addNotification } = useNotification();
 
   // Find post by slug
   const post = blogPostsData.find(p => p.slug === slug);
 
+  // Get related articles (same category, different post)
+  const relatedArticles = post
+    ? blogPostsData
+        .filter(p => p.category === post.category && p.id !== post.id)
+        .slice(0, 3)
+    : [];
+
   const handleBack = () => {
     navigate('/my-kampung');
+  };
+
+  const handleShare = () => {
+    const url = `${window.location.origin}/blog/${slug}`;
+    const title = post?.title || 'Check out this article';
+    const text = `${title} - Errandify Community Blog`;
+
+    // Try native share if available
+    if (navigator.share) {
+      navigator.share({
+        title: 'Errandify Blog',
+        text: text,
+        url: url,
+      }).catch(err => console.log('Share cancelled:', err));
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(`${text}\n${url}`);
+      addNotification({
+        type: 'success',
+        title: 'Copied!',
+        message: 'Article link copied to clipboard',
+        duration: 3000,
+      });
+    }
   };
 
   if (!post) {
@@ -78,8 +111,11 @@ export default function BlogDetailPage() {
                   {post.isLiked ? '❤️' : '🤍'} {post.likes}
                 </button>
               </div>
-              <button className="px-4 py-2 bg-errandify-orange text-white rounded-lg hover:bg-opacity-90 transition font-medium">
-                Share Article
+              <button
+                onClick={handleShare}
+                className="px-4 py-2 bg-errandify-orange text-white rounded-lg hover:bg-opacity-90 transition font-medium"
+              >
+                📤 Share
               </button>
             </div>
 
@@ -95,18 +131,69 @@ export default function BlogDetailPage() {
             )}
           </div>
 
-          {/* CTA */}
-          <div className="mt-12 p-6 bg-gradient-to-r from-errandify-orange to-orange-600 rounded-lg text-white">
-            <h3 className="text-xl font-bold mb-2">Ready to Get Started?</h3>
-            <p className="mb-4 opacity-90">Join thousands of Singaporeans building community through Errandify.</p>
+          {/* Related Articles */}
+          {relatedArticles.length > 0 && (
+            <div className="mt-12 border-t border-gray-200 pt-8">
+              <h3 className="text-2xl font-bold text-errandify-brown mb-6">Read More Articles</h3>
+              <div className="grid grid-cols-1 gap-4">
+                {relatedArticles.map((article) => (
+                  <div
+                    key={article.id}
+                    onClick={() => navigate(`/blog/${article.slug}`)}
+                    className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md hover:bg-white transition cursor-pointer"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-800 hover:text-errandify-orange transition">
+                          {article.title}
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">{article.excerpt}</p>
+                        <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                          <span>{article.readTime} min read</span>
+                          <span>•</span>
+                          <span>By {article.author}</span>
+                        </div>
+                      </div>
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full flex-shrink-0 ${
+                        article.category === 'guide' ? 'bg-blue-100 text-blue-700' :
+                        article.category === 'stories' ? 'bg-green-100 text-green-700' :
+                        article.category === 'tips' ? 'bg-orange-100 text-orange-700' :
+                        'bg-purple-100 text-purple-700'
+                      }`}>
+                        {article.category === 'guide' ? '📚' :
+                         article.category === 'stories' ? '📖' :
+                         article.category === 'tips' ? '💡' :
+                         '📰'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Back to Blog */}
+          <div className="mt-8 text-center">
             <button
-              onClick={() => navigate('/login')}
-              className="px-6 py-2 bg-white text-errandify-orange rounded-lg font-bold hover:bg-opacity-90 transition"
+              onClick={handleBack}
+              className="px-6 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition font-medium"
             >
-              Sign In / Join Now
+              ← Back to MyKampung Blog
             </button>
           </div>
         </article>
+
+        {/* CTA */}
+        <div className="mt-8 p-6 bg-gradient-to-r from-errandify-orange to-orange-600 rounded-lg text-white">
+          <h3 className="text-xl font-bold mb-2">Ready to Get Started?</h3>
+          <p className="mb-4 opacity-90">Join thousands of Singaporeans building community through Errandify.</p>
+          <button
+            onClick={() => navigate('/login')}
+            className="px-6 py-2 bg-white text-errandify-orange rounded-lg font-bold hover:bg-opacity-90 transition"
+          >
+            Sign In / Join Now
+          </button>
+        </div>
       </div>
     </div>
   );
