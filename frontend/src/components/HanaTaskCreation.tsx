@@ -534,7 +534,7 @@ export default function HanaTaskCreation({
                      padding: '16px 22px',
                      boxShadow: '0 4px 12px rgba(255, 140, 66, 0.12), 0 1px 3px rgba(0,0,0,0.06)',
                    }}>
-                <p className="whitespace-pre-line text-sm font-bold text-center"
+                <p className="whitespace-pre-line text-base font-bold text-center"
                    style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.6', letterSpacing: '0px'}}>
                   {hanaMessage}
                 </p>
