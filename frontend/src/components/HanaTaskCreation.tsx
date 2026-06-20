@@ -521,11 +521,11 @@ export default function HanaTaskCreation({
           </div>
         </div>
 
-        {/* Main Content - Hana LEFT (full height) + Chat RIGHT */}
+        {/* Main Content - FINAL: Hana Upper Body LEFT + Chat RIGHT */}
         <div className="flex-1 overflow-y-auto flex gap-6 px-6 py-6">
-          {/* Left Side - Hana Full Body (stretches vertically) */}
-          <div className="flex-shrink-0 flex items-start">
-            <div style={{ height: '480px', width: 'auto', maxWidth: '200px' }}>
+          {/* Left Side - Hana Upper Body (head to waist) */}
+          <div className="flex-shrink-0">
+            <div style={{ height: '300px', width: 'auto', maxWidth: '180px' }}>
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}
                 message={hanaMessage}
@@ -578,7 +578,7 @@ export default function HanaTaskCreation({
             {/* Middle Space - Grows to fill */}
             <div className="flex-1"></div>
 
-            {/* Input Section - Bottom Right */}
+            {/* Input Section - Bottom Right (Full Width) */}
             {currentStep === 'input' && (
               <form onSubmit={handleSendMessage} className="flex gap-3 flex-shrink-0">
                 <input
