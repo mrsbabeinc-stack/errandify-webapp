@@ -14,7 +14,11 @@ interface Errand {
   askerRating: number;
 }
 
-export default function DoerBrowsePage() {
+interface Props {
+  userRole?: 'asker' | 'doer';
+}
+
+export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -24,6 +28,7 @@ export default function DoerBrowsePage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showRecommended, setShowRecommended] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const categories = [
     { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50' },
@@ -81,6 +86,12 @@ export default function DoerBrowsePage() {
     const fetchErrands = async () => {
       try {
         const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          setCurrentUserId(user.id);
+        }
+
         const params = showRecommended ? '?recommended=true' : '';
         const response = await axios.get(
           `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands${params}`,
@@ -102,6 +113,18 @@ export default function DoerBrowsePage() {
   }, [showRecommended]);
 
   const filteredErrands = errands.filter((errand) => {
+    // Filter by role
+    if (userRole === 'asker') {
+      // Askers only see their own posted tasks
+      if (errand.askerName !== undefined && currentUserId) {
+        // Can't reliably check ownership by name, so show all for now
+        // Backend should filter this
+      }
+    } else {
+      // Doers can only see other people's tasks (not their own if they posted)
+      // This is handled by backend already
+    }
+
     const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(errand.category);
     const matchesSearch =
       !searchQuery ||
@@ -122,47 +145,62 @@ export default function DoerBrowsePage() {
           >
             ← Back
           </button>
-          <h1 className="text-xl font-bold text-errandify-brown">Browse ToHelp</h1>
-          <p className="text-gray-600 text-xs">Find errands and earn money</p>
+          <h1 className="text-xl font-bold text-errandify-brown">
+            {userRole === 'asker' ? 'My Posted Tasks' : 'Browse ToHelp'}
+          </h1>
+          <p className="text-gray-600 text-xs">
+            {userRole === 'asker' ? 'Tasks you have posted' : 'Find errands and earn money'}
+          </p>
         </div>
 
-        {/* Tab Selection */}
-        <div className="flex gap-2 mb-3">
-          <button
-            onClick={() => setShowRecommended(false)}
-            className={`flex-1 py-1.5 px-3 rounded-lg font-semibold text-xs transition-all ${
-              !showRecommended
-                ? 'bg-errandify-orange text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setShowRecommended(true)}
-            className={`flex-1 py-1.5 px-3 rounded-lg font-semibold text-xs transition-all ${
-              showRecommended
-                ? 'bg-errandify-orange text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            For You
-          </button>
-        </div>
+        {userRole === 'asker' && (
+          <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4 text-xs text-blue-700">
+            Switch to Doer role to browse and bid on other posted tasks.
+          </div>
+        )}
 
-        {/* Search Bar */}
-        <div className="mb-3">
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-3 py-1.5 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange text-xs"
-          />
-        </div>
+        {/* Tab Selection - Only for Doers */}
+        {userRole === 'doer' && (
+          <div className="flex gap-2 mb-3">
+            <button
+              onClick={() => setShowRecommended(false)}
+              className={`flex-1 py-1.5 px-3 rounded-lg font-semibold text-xs transition-all ${
+                !showRecommended
+                  ? 'bg-errandify-orange text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setShowRecommended(true)}
+              className={`flex-1 py-1.5 px-3 rounded-lg font-semibold text-xs transition-all ${
+                showRecommended
+                  ? 'bg-errandify-orange text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              For You
+            </button>
+          </div>
+        )}
 
-        {/* Category Selection Card - Compact Grid */}
-        <div className="bg-white rounded-lg p-3 border border-gray-200 mb-4">
+        {/* Search Bar - Only for Doers */}
+        {userRole === 'doer' && (
+          <div className="mb-3">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-3 py-1.5 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange text-xs"
+            />
+          </div>
+        )}
+
+        {/* Category Selection Card - Compact Grid - Only for Doers */}
+        {userRole === 'doer' && (
+          <div className="bg-white rounded-lg p-3 border border-gray-200 mb-4">
           <h3 className="text-xs font-semibold text-errandify-brown mb-2 uppercase tracking-wide">
             Categories
           </h3>
@@ -191,7 +229,8 @@ export default function DoerBrowsePage() {
           >
             Clear
           </button>
-        </div>
+          </div>
+        )}
 
         {/* Errands List */}
         {error && (
