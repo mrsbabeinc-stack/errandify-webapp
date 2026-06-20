@@ -85,7 +85,11 @@ export default function SearchBrowsePage() {
           `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setErrands(fallbackResponse.data.data || []);
+        // GET /api/errands returns { success, data: [...] }
+        const errandsList = Array.isArray(fallbackResponse.data.data)
+          ? fallbackResponse.data.data
+          : fallbackResponse.data.data || [];
+        setErrands(errandsList);
       }
 
       // Update URL with filters
