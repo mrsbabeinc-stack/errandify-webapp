@@ -75,6 +75,11 @@ app.listen(PORT, () => {
   console.log(`Environment: ${config.nodeEnv}`);
   console.log(`SingPass enabled: ${config.singpass.useSingpass}`);
 
-  // Start background cron jobs
-  startCrons();
+  // Start background cron jobs (wrapped in try-catch to prevent startup crash)
+  try {
+    startCrons();
+  } catch (error) {
+    console.error('Failed to start cron jobs:', error);
+    console.log('Continuing without cron jobs...');
+  }
 });
