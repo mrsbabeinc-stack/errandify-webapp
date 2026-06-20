@@ -966,25 +966,48 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       console.log('[Qwen] Using fallback notes');
     }
 
+    // Ensure all response fields have valid values
     const responseData = {
-      category: detectedCategory,
-      description: suggestedDescription,
-      notes: notes,
-      skills: skills,
+      category: String(detectedCategory || 'homehelp'),
+      description: String(suggestedDescription || 'Provide details about your task.'),
+      notes: String(notes || 'Share any special requirements with doers.'),
+      skills: Array.isArray(skills) ? skills : [],
     };
-    console.log('[Suggestions] ✅ Returning:', responseData);
 
-    res.json({
+    console.log('[Suggestions] ✅ SUCCESS - Returning response');
+    console.log('[Suggestions] Category:', responseData.category);
+    console.log('[Suggestions] Description length:', responseData.description.length);
+    console.log('[Suggestions] Notes length:', responseData.notes.length);
+    console.log('[Suggestions] Skills count:', responseData.skills.length);
+
+    return res.status(200).json({
       success: true,
       data: responseData,
     });
   } catch (error) {
-    console.error('[Suggestions] ❌ ERROR:', error instanceof Error ? error.message : error);
-    console.error('[Suggestions] Stack:', error instanceof Error ? error.stack : 'No stack trace');
-    res.status(500).json({
-      error: 'Failed to get suggestions',
-      details: error instanceof Error ? error.message : String(error)
-    });
+    console.error('[Suggestions] ❌ ENDPOINT ERROR');
+    console.error('[Suggestions] Error message:', error instanceof Error ? error.message : String(error));
+    console.error('[Suggestions] Error type:', error instanceof Error ? error.constructor.name : typeof error);
+    if (error instanceof Error && error.stack) {
+      console.error('[Suggestions] Stack trace:', error.stack.split('\n').slice(0, 5).join('\n'));
+    }
+
+    // Always return a valid response, even on error
+    try {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to generate suggestions',
+        data: {
+          category: 'homehelp',
+          description: 'Provide details about your task.',
+          notes: 'Share any special requirements with doers.',
+          skills: [],
+        }
+      });
+    } catch (responseErr) {
+      console.error('[Suggestions] Failed to send error response:', responseErr);
+      return res.status(500).send('Internal server error');
+    }
   }
 });
 
