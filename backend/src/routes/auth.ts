@@ -313,7 +313,12 @@ router.post('/demo-login', async (req: Request, res: Response) => {
       );
       user = createResult.rows[0];
     } else {
-      user = result.rows[0];
+      // User exists - update display name to ensure correct demo user name
+      const updateResult = await db.query(
+        'UPDATE users SET display_name = $1 WHERE mobile = $2 RETURNING id, display_name, mobile, role',
+        [demoUser.name, demoUser.mobile]
+      );
+      user = updateResult.rows[0];
     }
 
     // Generate token
