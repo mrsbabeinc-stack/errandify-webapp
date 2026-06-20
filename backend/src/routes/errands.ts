@@ -793,8 +793,17 @@ router.post('/:id/work-proof', authMiddleware, async (req: AuthRequest, res: Res
     const { id } = req.params;
     const { proof_description, proof_urls } = req.body;
 
-    if (!proof_description) {
+    if (!proof_description || proof_description.trim().length === 0) {
       return res.status(400).json({ error: 'Work proof description required' });
+    }
+
+    // Validate proof URLs are proper image/video URLs if provided
+    if (proof_urls && Array.isArray(proof_urls)) {
+      for (const url of proof_urls) {
+        if (!url.match(/^https?:\/\/.+\.(jpg|jpeg|png|gif|mp4|mov|webm)$/i)) {
+          return res.status(400).json({ error: 'Invalid image/video URL format' });
+        }
+      }
     }
 
     // Store work proof
