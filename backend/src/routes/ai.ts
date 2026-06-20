@@ -511,7 +511,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     console.log('[Extract] Final title:', title);
     title = title || 'Task';
 
-    // Parse date - look for "tomorrow", "today", "later" (=today), "N days later", day names, or "sun", "sun 7pm"
+    // Parse date - look for "tomorrow", "today", "later" (=today), "N days later", day names, or dates
     let date = '';
 
     // Check for "N days later" pattern first
@@ -521,19 +521,31 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + daysToAdd);
       date = futureDate.toISOString().split('T')[0];
+      console.log('[Extract] Date from "N days later":', date);
     } else if (/tomorrow/i.test(input)) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       date = tomorrow.toISOString().split('T')[0];
+      console.log('[Extract] Date from "tomorrow":', date);
     } else if (/today|later/i.test(input)) {
       // "later" also means today
       date = new Date().toISOString().split('T')[0];
+      console.log('[Extract] Date from "today/later":', date);
     } else {
-      // Match short day names like "sun", "mon", or full names like "sunday", "monday"
-      const dayMatch = input.match(/\b(sun|mon|tue|wed|thu|fri|sat)(?:day)?\b/i);
+      // Match full day names (sunday, monday, etc) OR short names (sun, mon, etc)
+      const dayMatch = input.match(/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)\b/i);
       if (dayMatch) {
         const dayStr = dayMatch[1].toLowerCase();
-        const dayMap: Record<string, number> = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+        // Map both full and short day names
+        const dayMap: Record<string, number> = {
+          sunday: 0, sun: 0,
+          monday: 1, mon: 1,
+          tuesday: 2, tue: 2,
+          wednesday: 3, wed: 3,
+          thursday: 4, thu: 4,
+          friday: 5, fri: 5,
+          saturday: 6, sat: 6
+        };
         const dayIndex = dayMap[dayStr];
         if (dayIndex !== undefined) {
           const today = new Date();
@@ -543,7 +555,10 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           const result = new Date(today);
           result.setDate(result.getDate() + diff);
           date = result.toISOString().split('T')[0];
+          console.log('[Extract] Date from day name:', dayStr, 'date:', date);
         }
+      } else {
+        console.log('[Extract] No date pattern matched in:', input);
       }
     }
 
@@ -604,7 +619,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       }
     }
 
-    console.log('[Extract] Parsed - title:', title, 'postal:', postalCode, 'time:', time, 'duration:', duration, 'budget:', budget);
+    console.log('[Extract] Parsed - title:', title, 'postal:', postalCode, 'date:', date, 'time:', time, 'duration:', duration, 'budget:', budget);
 
     // Use OneMap API to lookup address from postal code
     let area = 'Singapore';
@@ -612,7 +627,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     if (postalCode) {
       try {
-        console.log(`[Hana] Looking up postal code: ${postalCode}`);
+        console.log(`[Extract] Looking up postal code: ${postalCode}`);
         const url = new URL('https://www.onemap.gov.sg/api/common/elastic/search');
         url.searchParams.set('searchVal', postalCode);
         url.searchParams.set('returnGeom', 'Y');
@@ -621,24 +636,27 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         const oneMapResponse = await fetch(url.toString());
         const data = await oneMapResponse.json();
 
-        console.log(`[Hana] OneMap response:`, data);
+        console.log(`[Extract] OneMap response for ${postalCode}:`, data?.results?.length, 'results');
 
         if (data?.results && data.results.length > 0) {
           const result = data.results[0];
           // Use ADDRESS field directly from OneMap
           fullAddress = result.ADDRESS || `Singapore ${postalCode}`;
-
-          // Extract area from road name
-          area = result.ROAD_NAME || 'Singapore';
-          console.log(`[Hana] Found address: ${fullAddress}, area: ${area}`);
+          // Extract area from road name or building name
+          area = result.ROAD_NAME || result.BUILDING_NAME || 'Singapore';
+          console.log(`[Extract] Found address: ${fullAddress}, area: ${area}`);
         } else {
-          console.log(`[Hana] No results from OneMap for ${postalCode}`);
+          console.log(`[Extract] No results from OneMap for ${postalCode}, using fallback`);
+          fullAddress = `Singapore ${postalCode}`;
+          area = 'Singapore';
         }
       } catch (error) {
-        console.error(`[Hana] OneMap lookup error for ${postalCode}:`, error instanceof Error ? error.message : error);
+        console.error(`[Extract] OneMap lookup error for ${postalCode}:`, error instanceof Error ? error.message : error);
         fullAddress = `Singapore ${postalCode}`;
         area = 'Singapore';
       }
+    } else {
+      console.log('[Extract] No postal code found, using defaults');
     }
 
     // Detect category using keyword matching (check BOTH raw input and extracted title)
