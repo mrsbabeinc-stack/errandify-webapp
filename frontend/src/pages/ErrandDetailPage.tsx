@@ -50,6 +50,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [bidSubmitted, setBidSubmitted] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [userBidAmount, setUserBidAmount] = useState<number | null>(null);
+  const [confirmationTimeLeft, setConfirmationTimeLeft] = useState<string>('');
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');

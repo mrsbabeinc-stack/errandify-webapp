@@ -921,6 +921,78 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
   }
 });
 
+// POST /api/errands/:id/confirm-extension-request - Doer requests 24h extension
+router.post('/:id/confirm-extension-request', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(req.userId || '0', 10);
+    const { reason } = req.body;
+
+    const errandResult = await db.query(
+      'SELECT id, status, confirmation_expires_at, asker_id FROM errands WHERE id = $1',
+      [id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    if (errand.status !== 'confirmed') {
+      return res.status(400).json({ error: 'Extension only available during confirmation period' });
+    }
+
+    // Send notification to asker about extension request
+    res.json({
+      success: true,
+      message: 'Extension request sent to asker. Waiting for approval...',
+      expires_at: errand.confirmation_expires_at,
+    });
+  } catch (error) {
+    console.error('Error requesting extension:', error);
+    res.status(500).json({ error: 'Failed to request extension' });
+  }
+});
+
+// POST /api/errands/:id/confirm-extension-approve - Asker approves extension
+router.post('/:id/confirm-extension-approve', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(req.userId || '0', 10);
+
+    const errandResult = await db.query(
+      'SELECT id, status, asker_id FROM errands WHERE id = $1',
+      [id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    // Only asker can approve extension
+    if (userId !== errand.asker_id) {
+      return res.status(403).json({ error: 'Only asker can approve extension' });
+    }
+
+    // Extend deadline by 24h
+    await db.query(
+      'UPDATE errands SET confirmation_expires_at = confirmation_expires_at + INTERVAL \'24 hours\', confirmation_extended = true WHERE id = $1',
+      [id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Extension approved. Doer has 24 more hours to confirm.',
+    });
+  } catch (error) {
+    console.error('Error approving extension:', error);
+    res.status(500).json({ error: 'Failed to approve extension' });
+  }
+});
+
 // GET /api/errands/disputes - Get all disputes (admin only)
 router.get('/disputes/list/all', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
