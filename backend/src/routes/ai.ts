@@ -776,6 +776,7 @@ router.post('/content-filter', async (req: Request, res: Response) => {
 router.post('/suggestions', async (req: Request, res: Response) => {
   try {
     const { title, description, category } = req.body;
+    console.log('[Suggestions] Request received - title:', title, 'category:', category);
 
     // Use provided category or detect from title/description
     let detectedCategory = category || 'homehelp';
@@ -804,12 +805,15 @@ router.post('/suggestions', async (req: Request, res: Response) => {
 
     console.log('[Extract] Suggested skills for', detectedCategory, ':', skills);
 
-    // Generate suggested description using Qwen AI (with fallback)
+    // Generate suggested description using Qwen AI (ALWAYS attempt, then fallback)
     // Description should give context/details about the task, not ask questions
     let suggestedDescription = '';
-    try {
-      const config = require('../config').default;
-      if (config.qwen.apiKey) {
+    let qwenDescriptionUsed = false;
+
+    const config = require('../config').default;
+    if (config.qwen.apiKey) {
+      try {
+        console.log('[Qwen] Calling for description generation...');
         const qwenResponse = await axios.post(
           `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
           {
@@ -834,15 +838,22 @@ router.post('/suggestions', async (req: Request, res: Response) => {
         );
 
         const aiText = qwenResponse.data?.output?.text || '';
-        suggestedDescription = aiText.substring(0, 150).trim();
-        console.log('[AI] Dynamic description generated:', suggestedDescription);
+        if (aiText && aiText.trim().length > 0) {
+          suggestedDescription = aiText.substring(0, 150).trim();
+          qwenDescriptionUsed = true;
+          console.log('[Qwen] ✅ Description generated:', suggestedDescription);
+        } else {
+          console.log('[Qwen] Empty response, using fallback');
+        }
+      } catch (qwenErr) {
+        console.warn('[Qwen] ❌ Description generation failed:', qwenErr instanceof Error ? qwenErr.message : qwenErr);
       }
-    } catch (qwenErr) {
-      console.warn('[AI] Qwen description generation failed, using fallback:', qwenErr instanceof Error ? qwenErr.message : qwenErr);
+    } else {
+      console.warn('[Qwen] ❌ API key not configured');
     }
 
-    // Fallback if Qwen fails - provide contextual descriptions, not questions
-    if (!suggestedDescription) {
+    // Fallback if Qwen not used
+    if (!qwenDescriptionUsed) {
       const descriptionSuggestions: Record<string, string> = {
         'eldercare': 'Provide care and support for elderly person. Include any mobility or health considerations.',
         'childcare': 'Provide childcare and supervision. Specify age group and any special requirements.',
@@ -855,14 +866,17 @@ router.post('/suggestions', async (req: Request, res: Response) => {
         'creative-arts': 'Provide creative services. Specify the deliverable and any style preferences.',
       };
       suggestedDescription = descriptionSuggestions[detectedCategory] || 'Provide additional context about the task, expected outcomes, and any special requirements.';
+      console.log('[Qwen] Using fallback description');
     }
 
-    // Generate suggested notes using Qwen AI (with fallback)
+    // Generate suggested notes using Qwen AI (ALWAYS attempt, then fallback)
     // Notes should provide tips or questions to ask doers, not task description
     let notes = '';
-    try {
-      const config = require('../config').default;
-      if (config.qwen.apiKey) {
+    let qwenNotesUsed = false;
+
+    if (config.qwen.apiKey) {
+      try {
+        console.log('[Qwen] Calling for notes generation...');
         const qwenNotesResponse = await axios.post(
           `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
           {
@@ -887,15 +901,22 @@ router.post('/suggestions', async (req: Request, res: Response) => {
         );
 
         const aiNotes = qwenNotesResponse.data?.output?.text || '';
-        notes = aiNotes.substring(0, 300).trim();
-        console.log('[AI] Dynamic notes generated:', notes);
+        if (aiNotes && aiNotes.trim().length > 0) {
+          notes = aiNotes.substring(0, 300).trim();
+          qwenNotesUsed = true;
+          console.log('[Qwen] ✅ Notes generated:', notes);
+        } else {
+          console.log('[Qwen] Empty response, using fallback');
+        }
+      } catch (qwenErr) {
+        console.warn('[Qwen] ❌ Notes generation failed:', qwenErr instanceof Error ? qwenErr.message : qwenErr);
       }
-    } catch (qwenErr) {
-      console.warn('[AI] Qwen notes generation failed, using fallback:', qwenErr instanceof Error ? qwenErr.message : qwenErr);
+    } else {
+      console.warn('[Qwen] ❌ API key not configured for notes');
     }
 
-    // Fallback if Qwen fails
-    if (!notes) {
+    // Fallback if Qwen not used
+    if (!qwenNotesUsed) {
       const notesSuggestions: Record<string, string> = {
         'eldercare': 'Ask doer: Emergency contact? Experience with seniors? Any medical training?',
         'childcare': 'Ask doer: Experience with kids this age? Any certifications? First aid trained?',
@@ -909,6 +930,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
         'localbiz': 'Ask doer: Relevant business experience? Schedule flexibility? Quality standards?',
       };
       notes = notesSuggestions[detectedCategory] || 'Add any requirements or questions for the doer.';
+      console.log('[Qwen] Using fallback notes');
     }
 
     const responseData = {
