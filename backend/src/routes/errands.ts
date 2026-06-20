@@ -14,7 +14,6 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'User ID not found in token' });
     }
 
-    console.log('[Errands] GET /errands - currentUserId:', currentUserId, 'filters:', { myOnly, accepted, recommended, category, status });
 
     let query: string;
     const params: any[] = [];
@@ -29,7 +28,6 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       query = 'SELECT * FROM errands WHERE asker_id = $1';
       params.push(currentUserId);
       paramIndex = 2;
-      console.log('[Errands] Query mode: myOnly (asker errands)');
     } else if (isAccepted) {
       // Show errands accepted by current user (for doers) - join with assignments
       query = `SELECT e.* FROM errands e
@@ -37,7 +35,6 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
                WHERE ea.doer_id = $1 AND ea.status = 'accepted'`;
       params.push(currentUserId);
       paramIndex = 2;
-      console.log('[Errands] Query mode: accepted (doer accepted errands)');
     } else if (isRecommended) {
       // Show open errands that match user's category preferences
       query = `SELECT e.* FROM errands e
@@ -48,13 +45,11 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
                )`;
       params.push('open', currentUserId);
       paramIndex = 3;
-      console.log('[Errands] Query mode: recommended (by category preference)');
     } else {
       // Show all open errands excluding ones posted by current user
       query = 'SELECT * FROM errands WHERE status = $1 AND asker_id != $2';
       params.push('open', currentUserId);
       paramIndex = 3;
-      console.log('[Errands] Query mode: all open errands (excluding own)');
     }
 
     // Filter by category
@@ -82,29 +77,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       query += ` ORDER BY ${tablePrefix}created_at DESC`;
     }
 
-    console.log('[Errands] EXECUTING QUERY:', {
-      query,
-      params,
-      paramCount: params.length,
-    });
-
     const result = await db.query(query, params);
-    console.log('[Errands] Query returned', result.rows.length, 'errands');
-    console.log('[Errands] Full query result:', result.rows);
-
-    if (result.rows.length > 0) {
-      console.log('[Errands] Results:', result.rows.map(e => ({
-        id: e.id,
-        title: e.title,
-        asker_id: e.asker_id,
-        status: e.status,
-        category: e.category,
-      })));
-    } else {
-      // Debug: check all errands in DB
-      const allErrands = await db.query('SELECT id, title, asker_id, status, category FROM errands LIMIT 20');
-      console.log('[Errands] No results found. All errands in DB:', allErrands.rows);
-    }
 
     // Enrich with asker info
     const errandsWithAskerInfo = await Promise.all(
@@ -129,7 +102,6 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       })
     );
 
-    console.log('[Errands] Returning', errandsWithAskerInfo.length, 'enriched errands');
     res.json({
       success: true,
       data: errandsWithAskerInfo,
@@ -578,26 +550,5 @@ function getEditDistance(str1: string, str2: string): number {
 
   return matrix[str2.length][str1.length];
 }
-
-// DEBUG ENDPOINT: Check all errands and users (remove after testing)
-router.get('/debug/all', async (req: Request, res: Response) => {
-  try {
-    const errands = await db.query('SELECT id, asker_id, title, status, category FROM errands ORDER BY created_at DESC LIMIT 50');
-    const users = await db.query('SELECT id, display_name, mobile FROM users ORDER BY id DESC LIMIT 50');
-
-    res.json({
-      success: true,
-      data: {
-        errands: errands.rows,
-        users: users.rows,
-        errandCount: errands.rows.length,
-        userCount: users.rows.length,
-      }
-    });
-  } catch (error) {
-    console.error('Debug error:', error);
-    res.status(500).json({ error: 'Debug failed' });
-  }
-});
 
 export default router;
