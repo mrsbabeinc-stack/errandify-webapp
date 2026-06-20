@@ -456,15 +456,22 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     // Remove metadata markers that clearly indicate non-title content
     title = title
-      // Remove everything after common separators
-      .split(/\s+(?:at|on|by|in)\s+\d/)[0] // Stop at first date/time marker
-      .split(/\s*,\s*budget/i)[0] // Stop at budget marker
-      .split(/\s*,\s*\$/)[0] // Stop at $ marker
+      // Remove postal codes in parentheses
+      .replace(/\s*\(\d{6}\)\s*/g, ' ')
+      // Remove everything after " at " (location marker)
+      .split(/\s+at\s+/i)[0]
+      // Remove everything after " on " (date marker)
+      .split(/\s+on\s+/i)[0]
+      // Remove budget markers
+      .split(/\s*,?\s*budget/i)[0]
+      .split(/\s*,?\s*\$/)[0]
+      // Remove for X hours/mins duration markers
+      .split(/\s+for\s+[\d.]+\s*(?:hours?|hrs?|h|mins?|m|minutes?|days?|weeks?)/i)[0]
       .trim();
 
     // Remove common metadata words from the end
     title = title
-      .replace(/\s+(?:tomorrow|today|tonight|this\s+week|next\s+week|asap|urgent)\b.*$/gi, '')
+      .replace(/\s+(?:tomorrow|today|tonight|this\s+week|next\s+week|asap|urgent|monday|tuesday|wednesday|thursday|friday|saturday|sunday|am|pm|a\.m\.|p\.m\.)\b.*$/gi, '')
       .trim();
 
     // If we got something, use it; otherwise default
