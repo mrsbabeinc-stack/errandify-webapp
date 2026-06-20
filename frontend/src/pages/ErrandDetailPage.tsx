@@ -367,18 +367,35 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
             {/* Action Button */}
             {errand.status === 'open' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
-              <button
-                onClick={() => {
-                  if (errand.isRecurring) {
-                    setShowSessionSelector(true);
-                  } else {
-                    setShowBidModal(true);
-                  }
-                }}
-                className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
-              >
-                {bidSubmitted || userBidAmount ? '✓ Update Bid' : errand.isRecurring ? 'Select Sessions' : 'Submit a Bid'}
-              </button>
+              bidSubmitted || userBidAmount ? (
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => setShowChat(true)}
+                    className="flex-1 bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
+                  >
+                    📋 View Details
+                  </button>
+                  <button
+                    onClick={() => setShowBidModal(true)}
+                    className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
+                  >
+                    ✏️ Update Bid
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    if (errand.isRecurring) {
+                      setShowSessionSelector(true);
+                    } else {
+                      setShowBidModal(true);
+                    }
+                  }}
+                  className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
+                >
+                  {errand.isRecurring ? 'Select Sessions' : 'Submit a Bid'}
+                </button>
+              )
             ) : errand.status === 'open' && currentUser && (currentUser.id === errand.askerId || userRole === 'asker') ? (
               <div className="flex gap-2 mt-2">
                 {!errand.bidCount ? (
@@ -415,6 +432,19 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             ) : null}
           </div>
         </div>
+
+        {/* Your Bid Section - Only for Doers who have bid */}
+        {userBidAmount && currentUser && currentUser.id !== errand?.askerId && userRole === 'doer' && (
+          <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
+            <h3 className="font-semibold text-green-800 mb-2">Your Bid</h3>
+            <p className="text-sm text-green-700 mb-2">
+              Amount: <span className="font-bold text-lg">SGD ${userBidAmount?.toFixed(2)}</span>
+            </p>
+            <p className="text-xs text-green-600">
+              ✓ Bid submitted. Waiting for asker to review.
+            </p>
+          </div>
+        )}
 
         {/* Bids Section - Only for Asker */}
         {currentUser && currentUser.id === errand?.askerId && (
