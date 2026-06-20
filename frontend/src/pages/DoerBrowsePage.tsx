@@ -251,7 +251,7 @@ export default function DoerBrowsePage() {
                 <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
                   {errand.budget && (
                     <div className="text-errandify-orange font-semibold">
-                      SGD ${typeof errand.budget === 'string' ? errand.budget : errand.budget.toFixed(2)}
+                      SGD ${errand.budget.toFixed(2)}
                     </div>
                   )}
                   {errand.location && (
