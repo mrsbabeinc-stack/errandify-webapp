@@ -227,17 +227,17 @@ function getNextNineAM(): Date {
 export function startCrons() {
   console.log('[CRON] Starting all cron jobs...');
 
-  // Check auto-payment release every 15 minutes
-  setInterval(checkAutoPaymentRelease, 15 * 60 * 1000);
+  // DISABLED: Check auto-payment release - bids table queries need fixing
+  // setInterval(checkAutoPaymentRelease, 15 * 60 * 1000);
 
-  // Check 24h reminders every hour
-  setInterval(check24hReminders, 60 * 60 * 1000);
+  // DISABLED: Check 24h reminders - payment_release_at logic needs schema review
+  // setInterval(check24hReminders, 60 * 60 * 1000);
 
-  // Check 47h reminders every hour
-  setInterval(check47hReminders, 60 * 60 * 1000);
+  // DISABLED: Check 47h reminders - payment_release_at logic needs schema review
+  // setInterval(check47hReminders, 60 * 60 * 1000);
 
-  // Send payment reminders every hour
-  setInterval(schedulePaymentReminders, 60 * 60 * 1000);
+  // DISABLED: Send payment reminders - users table has no email column
+  // setInterval(schedulePaymentReminders, 60 * 60 * 1000);
 
   // Schedule daily digest at 9am Singapore time
   const nextDigestTime = getNextNineAM();
@@ -249,12 +249,6 @@ export function startCrons() {
   }, msUntilNextDigest);
 
   console.log(`[CRON] Daily digest scheduled for ${nextDigestTime.toISOString()}`);
-
-  // Run once on startup to catch any missed
-  checkAutoPaymentRelease().catch(console.error);
-  check24hReminders().catch(console.error);
-  check47hReminders().catch(console.error);
-  schedulePaymentReminders().catch(console.error);
 
   console.log('[CRON] All cron jobs started successfully');
 }
