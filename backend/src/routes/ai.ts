@@ -780,23 +780,32 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     // Use provided category or detect from title/description
     let detectedCategory = category || 'homehelp';
 
-    // Suggest certified/professional skills needed based on category
+    // Suggest relevant skills based on category and task content
     const skillMap: Record<string, string[]> = {
-      'eldercare': ['Basic Elder Care Certification', 'First Aid/CPR', 'Communication', 'Patience'],
-      'childcare': ['Childcare Certification', 'First Aid/CPR', 'Child Safety Awareness', 'Communication'],
-      'homehelp': ['Housekeeping Skills', 'Time Management', 'Attention to Detail', 'Problem-solving'],
-      'wellness': ['Basic Counseling Skills', 'Active Listening', 'Confidentiality', 'Empathy'],
-      'tripcarry': ['Travel Experience', 'Organization', 'Logistics Knowledge', 'Communication'],
-      'petcare': ['Dog Handling Certificate', 'Animal Care Training', 'Physical Fitness', 'Patience'],
-      'delivery': ['Driving License', 'Time Management', 'Reliability', 'Attention to Detail'],
-      'eventhelp': ['Event Planning Experience', 'Organization', 'Communication', 'Problem-solving'],
-      'donate': ['Charity Experience', 'Organization', 'Communication', 'Compassion'],
-      'localbiz': ['Business Experience', 'Professional Communication', 'Problem-solving', 'Reliability'],
+      'eldercare': ['Patience', 'Communication Skills', 'Physical Care Experience', 'Empathy'],
+      'childcare': ['Child Safety Awareness', 'Communication', 'Patience', 'Activity Planning'],
+      'homehelp': ['Attention to Detail', 'Time Management', 'Physical Stamina', 'Problem-solving'],
+      'petcare': ['Animal Care Experience', 'Patience', 'Physical Fitness', 'Communication'],
+      'delivery': ['Reliability', 'Navigation Skills', 'Physical Fitness', 'Customer Service'],
+      'eventhelp': ['Organization', 'Communication', 'Physical Stamina', 'Problem-solving'],
+      'tech-support': ['Technical Knowledge', 'Problem-solving', 'Patience', 'Communication'],
+      'creative-arts': ['Creativity', 'Attention to Detail', 'Relevant Software Skills', 'Communication'],
+      'admin-business': ['Data Entry Skills', 'Accuracy', 'Time Management', 'Attention to Detail'],
+      'shopping-errands': ['Organization', 'Reliability', 'Customer Service', 'Time Management'],
     };
 
-    const skills = skillMap[detectedCategory] || [];
+    // Get skills for category, filter out irrelevant ones like "Driving License" for non-delivery tasks
+    let skills = skillMap[detectedCategory] || [];
+
+    // Filter skills based on actual task content
+    if (!titleLower.includes('deliver') && !titleLower.includes('drive')) {
+      skills = skills.filter(s => s !== 'Driving License');
+    }
+
+    console.log('[Extract] Suggested skills for', detectedCategory, ':', skills);
 
     // Generate suggested description using Qwen AI (with fallback)
+    // Description should give context/details about the task, not ask questions
     let suggestedDescription = '';
     try {
       const config = require('../config').default;
@@ -808,11 +817,11 @@ router.post('/suggestions', async (req: Request, res: Response) => {
             messages: [
               {
                 role: 'system',
-                content: 'You are a helpful assistant. Generate ONE clarifying question for a task poster. Ask what important INFO you need to know to help with this errand. Keep it under 150 characters. Be specific to the task type.',
+                content: 'You are a helpful assistant. Generate a detailed description for a task that includes: scope of work, expected outcome, and any special requirements. Be concise but informative. Under 150 characters.',
               },
               {
                 role: 'user',
-                content: `For this ${detectedCategory} task: "${title}" on ${date} at ${time}. What ONE important clarifying question should I ask the person posting this task?`,
+                content: `For this ${detectedCategory} task: "${title}" on ${date} at ${time}. Provide a brief description of what the task involves and what the doer should expect.`,
               },
             ],
           },
@@ -832,24 +841,24 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       console.warn('[AI] Qwen description generation failed, using fallback:', qwenErr instanceof Error ? qwenErr.message : qwenErr);
     }
 
-    // Fallback if Qwen fails
+    // Fallback if Qwen fails - provide contextual descriptions, not questions
     if (!suggestedDescription) {
       const descriptionSuggestions: Record<string, string> = {
-        'eldercare': 'Any specific health conditions or medications the caregiver should know about?',
-        'childcare': 'Any allergies, dietary restrictions, or special needs the child has?',
-        'homehelp': 'What specific areas need most attention? Any fragile items to avoid?',
-        'petcare': 'Any health issues, medications, or behavioral notes about your pet?',
-        'delivery': 'Any special handling requirements or preferred delivery time?',
-        'eventhelp': 'What\'s the event type and approximate setup time needed?',
-        'wellness': 'What type of wellness support do you need and any medical history?',
-        'tripcarry': 'What items are being transported and any fragile/valuable items?',
-        'donate': 'What type of items and approximate quantity for pickup?',
-        'localbiz': 'What specific services or tasks does your business need help with?',
+        'eldercare': 'Provide care and support for elderly person. Include any mobility or health considerations.',
+        'childcare': 'Provide childcare and supervision. Specify age group and any special requirements.',
+        'homehelp': 'Provide household assistance. Specify which areas and what type of cleaning/work needed.',
+        'petcare': 'Provide pet care services. Include pet type, temperament, and any special dietary needs.',
+        'delivery': 'Deliver items or packages. Include size, weight, and any special handling requirements.',
+        'eventhelp': 'Help with event setup and execution. Specify event type and number of attendees.',
+        'admin-business': 'Provide administrative support. Specify tasks like data entry, document prep, etc.',
+        'tech-support': 'Provide technical assistance. Specify device type and nature of technical issue.',
+        'creative-arts': 'Provide creative services. Specify the deliverable and any style preferences.',
       };
-      suggestedDescription = descriptionSuggestions[detectedCategory] || 'Add any important details or special requirements for this task.';
+      suggestedDescription = descriptionSuggestions[detectedCategory] || 'Provide additional context about the task, expected outcomes, and any special requirements.';
     }
 
     // Generate suggested notes using Qwen AI (with fallback)
+    // Notes should provide tips or questions to ask doers, not task description
     let notes = '';
     try {
       const config = require('../config').default;
@@ -861,11 +870,11 @@ router.post('/suggestions', async (req: Request, res: Response) => {
             messages: [
               {
                 role: 'system',
-                content: 'You are a helpful assistant. Suggest 2-3 key questions the task poster should ask a potential doer. Focus on safety, experience, and task understanding. Keep it under 300 characters. Be specific to the task type.',
+                content: 'You are a helpful assistant. Suggest 2-3 key things to ask or verify with a doer. Focus on safety, qualifications, and task execution. Keep it under 200 characters. Be specific.',
               },
               {
                 role: 'user',
-                content: `For a ${detectedCategory} task: "${title}" on ${date}. What 2-3 key questions should I ask a doer to ensure they understand the full scope and are qualified?`,
+                content: `For a ${detectedCategory} task: "${title}". What should the task poster ask the doer about experience, qualifications, or task details?`,
               },
             ],
           },
