@@ -506,7 +506,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
             messages: [
               {
                 role: 'system',
-                content: 'You are a task categorization expert. Analyze the errand and categorize it into ONE of these categories: eldercare, childcare, petcare, homehelp, delivery, eventhelp, tech-support, other. Respond with ONLY the category name, nothing else.',
+                content: 'You are a task categorization expert. Analyze the errand and categorize it into ONE of these categories: eldercare, childcare, petcare, homehelp, delivery, eventhelp, tech-support, data-entry, other. Respond with ONLY the category name, nothing else.',
               },
               {
                 role: 'user',
@@ -524,7 +524,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         );
 
         const categoryText = categoryResponse.data?.output?.text?.trim().toLowerCase() || 'homehelp';
-        if (['eldercare', 'childcare', 'petcare', 'homehelp', 'delivery', 'eventhelp', 'tech-support'].includes(categoryText)) {
+        if (['eldercare', 'childcare', 'petcare', 'homehelp', 'delivery', 'eventhelp', 'tech-support', 'data-entry'].includes(categoryText)) {
           category = categoryText;
         }
         console.log('[Extract] Qwen category detection:', category);
@@ -906,6 +906,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
         'delivery': ['Reliability', 'Navigation Skills', 'Physical Fitness', 'Customer Service'],
         'eventhelp': ['Organization', 'Communication', 'Physical Stamina', 'Problem-solving'],
         'tech-support': ['Technical Knowledge', 'Problem-solving', 'Patience', 'Communication'],
+        'data-entry': ['Data Entry Skills', 'Accuracy', 'Time Management', 'Attention to Detail'],
       };
       skills = skillMap[detectedCategory] || ['Problem-solving', 'Communication', 'Reliability'];
       console.log('[Suggestions] Using fallback skills for', detectedCategory, ':', skills);
