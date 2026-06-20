@@ -134,8 +134,8 @@ export default function HanaTaskCreation({
       'pet-care': `Dog walk my golden retriever at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
       'personal-care': `Hair cut at home (${postalCode}) on ${day} ${time} for ${duration}, budget $${budget}`,
       'tech-support': `Fix my WiFi router at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
-      'creative-arts': `Design a logo for my business, deadline ${day} ${time}, budget $${budget}`,
-      'admin-business': `Help with data entry for my business, ${duration} total, budget $${budget}`,
+      'creative-arts': `Design a logo for my business at ${postalCode}, deadline ${day} ${time}, budget $${budget}`,
+      'admin-business': `Help with data entry for my business at ${postalCode} on ${day} ${time} for ${duration}, budget $${budget}`,
       'charity-community': `Help pack donation boxes at center (${postalCode}) on ${day} ${time} for ${duration}, budget $${budget}`,
     };
     return examples[category] || `Describe your errand: what (required), postal code (required), date & time (required), duration (required), budget SGD (required)`;
