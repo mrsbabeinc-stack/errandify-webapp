@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { moderatePost, getModerationStatus, getModerationMessage } from '../services/moderationService';
 import blogPostsData from '../data/blogPosts';
@@ -70,7 +70,10 @@ interface BlogPost {
 
 export default function MyKampungPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'feed' | 'discussions' | 'announcements' | 'events' | 'blog'>('feed');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<'feed' | 'discussions' | 'announcements' | 'events' | 'blog'>(
+    (location.state as any)?.tab || 'feed'
+  );
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);

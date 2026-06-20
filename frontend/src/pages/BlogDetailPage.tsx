@@ -16,7 +16,7 @@ export default function BlogDetailPage() {
     : [];
 
   const handleBack = () => {
-    navigate('/my-kampung');
+    navigate('/my-kampung', { state: { tab: 'blog' } });
   };
 
   const handleShare = () => {
