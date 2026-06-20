@@ -644,36 +644,40 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     if (postalCode) {
       try {
-        console.log(`[Extract] Looking up postal code: ${postalCode}`);
+        console.log(`[Extract] OneMap: Looking up postal code ${postalCode}...`);
         const url = new URL('https://www.onemap.gov.sg/api/common/elastic/search');
         url.searchParams.set('searchVal', postalCode);
         url.searchParams.set('returnGeom', 'Y');
         url.searchParams.set('getAddrDetails', 'Y');
 
-        const oneMapResponse = await fetch(url.toString());
+        const oneMapResponse = await fetch(url.toString(), { timeout: 3000 });
         const data = await oneMapResponse.json();
-
-        console.log(`[Extract] OneMap response for ${postalCode}:`, data?.results?.length, 'results');
 
         if (data?.results && data.results.length > 0) {
           const result = data.results[0];
-          // Use ADDRESS field directly from OneMap
-          fullAddress = result.ADDRESS || `Singapore ${postalCode}`;
-          // Extract area from road name or building name
-          area = result.ROAD_NAME || result.BUILDING_NAME || 'Singapore';
-          console.log(`[Extract] Found address: ${fullAddress}, area: ${area}`);
+          fullAddress = result.ADDRESS && result.ADDRESS.trim().length > 0
+            ? result.ADDRESS
+            : `Singapore ${postalCode}`;
+          area = (result.ROAD_NAME && result.ROAD_NAME.trim().length > 0)
+            ? result.ROAD_NAME
+            : (result.BUILDING_NAME && result.BUILDING_NAME.trim().length > 0)
+            ? result.BUILDING_NAME
+            : 'Singapore';
+          console.log(`[Extract] OneMap: ✅ Found - ${area}, address: ${fullAddress}`);
         } else {
-          console.log(`[Extract] No results from OneMap for ${postalCode}, using fallback`);
+          console.log(`[Extract] OneMap: No results found, using postal code fallback`);
           fullAddress = `Singapore ${postalCode}`;
           area = 'Singapore';
         }
       } catch (error) {
-        console.error(`[Extract] OneMap lookup error for ${postalCode}:`, error instanceof Error ? error.message : error);
+        console.warn(`[Extract] OneMap: Lookup failed (${error instanceof Error ? error.message : error}), using fallback`);
         fullAddress = `Singapore ${postalCode}`;
         area = 'Singapore';
       }
     } else {
-      console.log('[Extract] No postal code found, using defaults');
+      console.log('[Extract] No postal code in input, area: Singapore');
+      area = 'Singapore';
+      fullAddress = 'Singapore';
     }
 
     // Detect category using keyword matching (check BOTH raw input and extracted title)
