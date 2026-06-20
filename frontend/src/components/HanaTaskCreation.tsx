@@ -581,6 +581,13 @@ export default function HanaTaskCreation({
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  // Submit on Ctrl+Enter or Cmd+Enter
+                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSendMessage({ preventDefault: () => {} } as any);
+                  }
+                }}
                 placeholder="Type all details here..."
                 className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-2xl focus:outline-none focus:border-opacity-100 text-base font-semibold resize-none"
                 rows={2}
