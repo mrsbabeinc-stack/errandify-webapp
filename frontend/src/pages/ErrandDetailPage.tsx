@@ -19,6 +19,8 @@ interface ErrandDetail {
   asker?: { name: string; mobile: string };
   createdAt: string;
   isRecurring?: boolean;
+  bidCount?: number;
+  acceptedBidId?: number;
 }
 
 interface UserProfile {
@@ -379,12 +381,18 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </button>
             ) : errand.status === 'open' && currentUser && (currentUser.id === errand.askerId || userRole === 'asker') ? (
               <div className="flex gap-2 mt-2">
-                <button
-                  onClick={() => navigate(`/errand/${id}/edit`)}
-                  className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
-                >
-                  Edit Errand
-                </button>
+                {!errand.bidCount ? (
+                  <button
+                    onClick={() => navigate(`/errand/${id}/edit`)}
+                    className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
+                  >
+                    Edit Errand
+                  </button>
+                ) : (
+                  <div className="flex-1 bg-gray-400 text-white py-3 rounded-lg font-bold text-center text-base cursor-not-allowed">
+                    Locked (Has Bids)
+                  </div>
+                )}
                 <button
                   onClick={handleCancelErrand}
                   className="flex-1 bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"

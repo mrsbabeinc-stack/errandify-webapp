@@ -67,6 +67,11 @@ export default function EditErrandPage({ userRole }: EditErrandPageProps) {
         throw new Error('You can only edit open errands');
       }
 
+      // Check if there are any bids - if so, lock editing
+      if (errand.acceptedBidId || errand.bidCount > 0) {
+        throw new Error('You cannot edit this errand. It has received bids. Cancel the errand if you need to make changes.');
+      }
+
       setFormData({
         title: errand.title || '',
         description: errand.description || '',
