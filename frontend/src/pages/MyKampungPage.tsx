@@ -84,6 +84,7 @@ export default function MyKampungPage() {
   const [moderationMessage, setModerationMessage] = useState<string>('');
   const [isCheckingModeration, setIsCheckingModeration] = useState(false);
   const [recognitions, setRecognitions] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<number[]>([]);
 
   // Check if user is admin
   const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
@@ -410,6 +411,14 @@ export default function MyKampungPage() {
     setEvents(events.map(e =>
       e.id === eventId ? { ...e, isAttending: !e.isAttending, attendees: e.isAttending ? e.attendees - 1 : e.attendees + 1 } : e
     ));
+  };
+
+  const handleFavoriteRecognition = (recognitionId: number) => {
+    if (favorites.includes(recognitionId)) {
+      setFavorites(favorites.filter(id => id !== recognitionId));
+    } else {
+      setFavorites([...favorites, recognitionId]);
+    }
   };
 
   const handleDeletePost = async (postId: number, postAuthor: string, moderationReason?: string) => {
@@ -896,9 +905,18 @@ export default function MyKampungPage() {
                       {recognition.name.charAt(0)}
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-xl font-bold text-gray-800">{recognition.name}</h3>
-                        <span className="text-lg">{recognition.title}</span>
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-xl font-bold text-gray-800">{recognition.name}</h3>
+                          <span className="text-lg">{recognition.title}</span>
+                        </div>
+                        <button
+                          onClick={() => handleFavoriteRecognition(recognition.id)}
+                          className="flex-shrink-0 text-2xl hover:scale-110 transition"
+                          title={favorites.includes(recognition.id) ? 'Remove from favorites' : 'Add to favorites'}
+                        >
+                          {favorites.includes(recognition.id) ? '❤️' : '🤍'}
+                        </button>
                       </div>
                       <p className="text-sm text-gray-600 mb-2">⭐ {recognition.rating.toFixed(1)} rating</p>
                       <p className="text-gray-700 mb-3">{recognition.description}</p>
