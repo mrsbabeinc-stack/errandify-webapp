@@ -18,11 +18,8 @@ export default function BlogDetailPage() {
   }, [slug]);
 
   const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate('/my-kampung');
-    }
+    // Always go back to MyKampung page (the blog will show blog tab)
+    navigate('/my-kampung');
   };
 
   if (loading) {
@@ -50,7 +47,7 @@ export default function BlogDetailPage() {
     <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-20">
       <div className="max-w-3xl mx-auto">
         <button onClick={handleBack} className="mb-4 text-lg text-gray-600 font-bold hover:text-gray-800 transition">
-          ‹ Back to Blog
+          ‹ Back to MyKampung
         </button>
 
         <article className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
