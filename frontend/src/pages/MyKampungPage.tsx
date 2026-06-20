@@ -919,42 +919,54 @@ export default function MyKampungPage() {
                 .sort((a, b) => b.votes - a.votes)
                 .map((recognition) => (
                 <div key={recognition.id} className="bg-white rounded-lg border border-yellow-200 p-6 shadow-sm hover:shadow-md transition">
-                  <div className="flex items-start gap-4 mb-4">
+                  <div className="flex items-start gap-4">
+                    {/* Avatar */}
                     <div className="w-16 h-16 bg-gradient-to-br from-yellow-300 to-orange-400 rounded-full flex items-center justify-center text-2xl flex-shrink-0">
                       {recognition.name.charAt(0)}
                     </div>
+
+                    {/* Content */}
                     <div className="flex-1">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-xl font-bold text-gray-800">{recognition.name}</h3>
-                          <span className="text-lg">{recognition.title}</span>
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-xl font-bold text-gray-800">{recognition.name}</h3>
+                            <span className="text-lg">{recognition.title}</span>
+                          </div>
+                          <p className="text-sm text-gray-600">⭐ {recognition.rating.toFixed(1)} rating</p>
                         </div>
                         <button
                           onClick={() => handleFavoriteRecognition(recognition.id)}
-                          className="flex-shrink-0 text-2xl hover:scale-110 transition"
+                          className="flex-shrink-0 text-3xl hover:scale-110 transition"
                           title={favorites.includes(recognition.id) ? 'Remove from favorites' : 'Add to favorites'}
                         >
                           {favorites.includes(recognition.id) ? '❤️' : '🤍'}
                         </button>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">⭐ {recognition.rating.toFixed(1)} rating</p>
+
                       <p className="text-gray-700 mb-3">{recognition.description}</p>
-                      <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-100 mb-3">
+
+                      <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-100 mb-4">
                         <p className="text-sm text-gray-700 italic">"{recognition.testimonial}"</p>
                         <p className="text-xs text-gray-500 mt-1">— {recognition.nominatedBy}</p>
                       </div>
-                      <div className="flex items-center justify-between">
+
+                      {/* Bottom actions - Date and Vote */}
+                      <div className="flex items-center justify-between gap-3">
                         <span className="text-xs text-gray-500">{new Date(recognition.nominationDate).toLocaleDateString()}</span>
+
+                        {/* Prominent Vote Button */}
                         <button
                           onClick={() => handleVoteRecognition(recognition.id)}
-                          className={`flex items-center gap-1 px-3 py-1 rounded-lg transition ${
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition font-semibold text-sm ${
                             userVotes.includes(recognition.id)
-                              ? 'bg-blue-100 text-blue-600 font-semibold'
-                              : 'bg-gray-100 text-gray-600 hover:bg-blue-50'
+                              ? 'bg-blue-500 text-white scale-105'
+                              : 'bg-blue-100 text-blue-600 hover:bg-blue-200 hover:scale-105'
                           }`}
-                          title={userVotes.includes(recognition.id) ? 'Remove vote' : 'Vote for this doer'}
+                          title={userVotes.includes(recognition.id) ? 'Remove your vote' : 'Vote for this amazing doer'}
                         >
-                          {userVotes.includes(recognition.id) ? '👍' : '👏'} {recognition.votes}
+                          <span className="text-xl">{userVotes.includes(recognition.id) ? '👍' : '👏'}</span>
+                          <span>{recognition.votes} vote{recognition.votes !== 1 ? 's' : ''}</span>
                         </button>
                       </div>
                     </div>
