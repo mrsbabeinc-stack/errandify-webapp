@@ -52,13 +52,13 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/chas', chasRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/tasks', taskExecutionRoutes);
-app.use('/api/sessions', sessionsRoutes);
+app.use('/api/errands', sessionsRoutes);
+app.use('/api/errands', errandSearchRoutes);
 app.use('/api/screening', screeningRoutes);
 app.use('/api/ratings', ratingsRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/user-profile', userProfileRoutes);
 app.use('/api/user-data', userDataExportRoutes);
-app.use('/api/errands', errandSearchRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', hanaRoutes);
 
