@@ -521,59 +521,59 @@ export default function HanaTaskCreation({
           </div>
         </div>
 
-        {/* Main Content - Better Proportioned Layout */}
-        <div className="flex-1 overflow-y-auto flex flex-col gap-4 pt-6 pb-6">
-          {/* Hana Avatar - Larger, More Prominent */}
-          <div className="flex justify-center flex-shrink-0">
-            <div className="h-96 w-auto">
-              <HanaAnimatedAvatar
-                isSpeaking={isSpeaking}
-                message={hanaMessage}
-              />
-            </div>
-          </div>
-
-          {/* Speech Bubble - Natural Chat Bubble Design */}
+        {/* Main Content - Speech Bubble + Hana Half-Body */}
+        <div className="flex-1 overflow-y-auto flex flex-col pt-4 pb-4">
+          {/* Speech Bubble - Top, Connected */}
           {hanaMessage && (
-            <div className="px-6 flex-shrink-0">
-              <div className="relative animate-slideDown max-w-lg mx-auto"
+            <div className="px-6 flex-shrink-0 mb-0">
+              <div className="relative animate-slideDown max-w-2xl mx-auto"
                    style={{
                      background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
                      border: '2px solid #FF8C42',
                      borderRadius: '24px',
-                     padding: '16px 20px',
+                     padding: '18px 24px',
                      boxShadow: '0 8px 16px rgba(255, 140, 66, 0.15), 0 2px 4px rgba(0,0,0,0.08)',
                    }}>
                 <p className="text-center whitespace-pre-line text-sm font-medium"
-                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.5', letterSpacing: '0px'}}>
+                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.6', letterSpacing: '0px'}}>
                   {hanaMessage}
                 </p>
-                {/* Natural speech bubble tail - bottom center */}
+                {/* Speech bubble tail - pointing down to Hana */}
                 <div style={{
                   position: 'absolute',
-                  bottom: '-12px',
+                  bottom: '-14px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '10px solid transparent',
+                  borderRight: '10px solid transparent',
+                  borderTop: '14px solid #FF8C42',
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-10px',
                   left: '50%',
                   transform: 'translateX(-50%)',
                   width: '0',
                   height: '0',
                   borderLeft: '8px solid transparent',
                   borderRight: '8px solid transparent',
-                  borderTop: '12px solid #FF8C42',
-                }} />
-                <div style={{
-                  position: 'absolute',
-                  bottom: '-8px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '0',
-                  height: '0',
-                  borderLeft: '6px solid transparent',
-                  borderRight: '6px solid transparent',
-                  borderTop: '8px solid #FFF8F0',
+                  borderTop: '10px solid #FFF8F0',
                 }} />
               </div>
             </div>
           )}
+
+          {/* Hana Half-Body Avatar - Large, Centered */}
+          <div className="flex-1 flex items-center justify-center overflow-hidden">
+            <div style={{ height: '500px', width: 'auto' }}>
+              <HanaAnimatedAvatar
+                isSpeaking={isSpeaking}
+                message={hanaMessage}
+              />
+            </div>
+          </div>
 
           {/* Bottom Section: Input - Always Visible */}
           <div className="bg-white border-t border-gray-200 px-6 py-4 flex-shrink-0">
