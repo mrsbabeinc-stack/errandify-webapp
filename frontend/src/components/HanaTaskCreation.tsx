@@ -249,7 +249,9 @@ export default function HanaTaskCreation({
         return;
       }
 
-      // Get AI suggestions for this category
+      // Get AI suggestions for this category (even with incomplete data)
+      // Qwen will be called again in the form when more details are added
+      let enhancedTaskData = { ...updatedTaskData };
       try {
         console.log('[Hana] Requesting suggestions for:', updatedTaskData.category);
         const suggestionsResponse = await axios.post(
@@ -258,8 +260,8 @@ export default function HanaTaskCreation({
             title: updatedTaskData.title,
             description: updatedTaskData.description,
             category: updatedTaskData.category,
-            date: updatedTaskData.date,
-            time: updatedTaskData.time,
+            date: updatedTaskData.date || 'TBD',
+            time: updatedTaskData.time || 'TBD',
           }
         );
 
@@ -268,7 +270,7 @@ export default function HanaTaskCreation({
         const suggestions = suggestionsResponse.data.data;
         // Don't auto-fill description and notes - just send the suggestion data separately
         // Form will show these as suggestion boxes for user to click and apply
-        const enhancedTaskData = {
+        enhancedTaskData = {
           ...updatedTaskData,
           description: '', // Keep empty - user will click "Use" button to apply
           notes: '', // Keep empty - user will click "Use" button to apply
@@ -278,14 +280,15 @@ export default function HanaTaskCreation({
           suggestedNotes: suggestions.notes,
         };
 
-        console.log('[Hana] Enhanced task data to send:', enhancedTaskData);
+        console.log('[Hana] Enhanced task data with suggestions:', enhancedTaskData);
+      } catch (suggestionsError) {
+        console.warn('[Hana] Suggestions call failed (will retry in form):', suggestionsError instanceof Error ? suggestionsError.message : suggestionsError);
+        // Continue without suggestions - form will call again
+        enhancedTaskData = updatedTaskData;
+      }
 
-        // Validate date and time before proceeding
-        if (!enhancedTaskData.date || !enhancedTaskData.time) {
-          setHanaMessage('I need the date and time to help you. Could you tell me again when you need help? 🥺');
-          return;
-        }
-
+      // Validate date and time ONLY if user provided them
+      if (enhancedTaskData.date && enhancedTaskData.date !== 'TBD' && enhancedTaskData.time && enhancedTaskData.time !== 'TBD') {
         // Check if date is in the past
         const errandDate = new Date(enhancedTaskData.date);
         const today = new Date();
@@ -309,51 +312,42 @@ export default function HanaTaskCreation({
           setInput('');
           return;
         }
-
-        // Check content moderation on EXTRACTED data only (not raw input)
-        try {
-          const contentCheckResponse = await axios.post(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/check-content`,
-            {
-              title: enhancedTaskData.title,
-              description: enhancedTaskData.description || '',
-              notes: enhancedTaskData.notes || '',
-            }
-          );
-
-          if (!contentCheckResponse.data.data.is_safe) {
-            console.log('[Hana] Content check failed on extracted data');
-            setHanaMessage('I cannot help with that request. It contains inappropriate content. Please describe your errand in a different way. 😊');
-            setCurrentStep('input');
-            setInput('');
-            return;
-          }
-        } catch (contentCheckErr) {
-          console.warn('[Hana] Content check error:', contentCheckErr);
-          // Continue anyway if content check fails
-        }
-
-        setTaskData(enhancedTaskData as any);
-
-        // Auto-proceed to form
-        setHanaMessage('✅ Got it! Taking you to the form now...');
-        triggerSpeaking();
-
-        // Auto-fill form and proceed after a short delay
-        setTimeout(() => {
-          console.log('[Hana] Calling onComplete with:', enhancedTaskData);
-          onComplete(enhancedTaskData as any);
-        }, 1000);
-      } catch (err) {
-        console.error('Failed to get suggestions:', err);
-        // Proceed anyway without suggestions
-        setHanaMessage('✅ Got it! Taking you to the form now...');
-        triggerSpeaking();
-
-        setTimeout(() => {
-          onComplete(updatedTaskData);
-        }, 1000);
       }
+
+      // Check content moderation on EXTRACTED data only (not raw input)
+      try {
+        const contentCheckResponse = await axios.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/check-content`,
+          {
+            title: enhancedTaskData.title,
+            description: enhancedTaskData.description || '',
+            notes: enhancedTaskData.notes || '',
+          }
+        );
+
+        if (!contentCheckResponse.data.data.is_safe) {
+          console.log('[Hana] Content check failed on extracted data');
+          setHanaMessage('I cannot help with that request. It contains inappropriate content. Please describe your errand in a different way. 😊');
+          setCurrentStep('input');
+          setInput('');
+          return;
+        }
+      } catch (contentCheckErr) {
+        console.warn('[Hana] Content check error:', contentCheckErr);
+        // Continue anyway if content check fails
+      }
+
+      setTaskData(enhancedTaskData as any);
+
+      // Auto-proceed to form
+      setHanaMessage('✅ Got it! Taking you to the form now...');
+      triggerSpeaking();
+
+      // Auto-fill form and proceed after a short delay
+      setTimeout(() => {
+        console.log('[Hana] Calling onComplete with:', enhancedTaskData);
+        onComplete(enhancedTaskData as any);
+      }, 1000);
     } catch (err: any) {
       console.error('Extraction error:', err);
       const errorMsg = err.response?.data?.error || err.message || 'Unknown error';
