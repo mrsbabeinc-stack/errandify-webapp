@@ -678,44 +678,40 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     console.log('[Extract] Parsed - title:', title, 'postal:', postalCode, 'date:', date, 'time:', time, 'duration:', duration, 'budget:', budget);
 
-    // Map postal code prefix to area (no external API needed)
+    // Use OneMap API to get real address from postal code
     let area = 'Singapore';
     let fullAddress = `Singapore ${postalCode}`;
 
     if (postalCode && postalCode.length === 6) {
-      // Postal code prefix (first 2 digits) → area mapping (complete Singapore postal code ranges)
-      const postalCodeAreas: Record<string, string> = {
-        '01': 'Raffles Place', '02': 'Beach Road', '03': 'Tiong Bahru',
-        '04': 'Harbourfront', '05': 'Outram', '06': 'Bukit Merah', '07': 'Kallang',
-        '08': 'Marine Parade', '09': 'Geylang', '10': 'Bedok', '11': 'Changi',
-        '12': 'Tampines', '13': 'Pasir Ris', '14': 'Serangoon', '15': 'Hougang',
-        '16': 'Punggol', '17': 'Sengkang', '18': 'Yung Ho', '19': 'Woodlands',
-        '20': 'Admiralty', '21': 'Bukit Batok', '22': 'Bukit Panjang', '23': 'Choa Chu Kang',
-        '24': 'Yew Tee', '25': 'Kranji', '26': 'Jurong West', '27': 'Clementi',
-        '28': 'Jurong East', '29': 'Pioneer', '30': 'Boon Lay', '31': 'Tuas',
-        '32': 'Jurong Gateway', '33': 'Jurong Port', '34': 'Sentosa', '35': 'Marina Offshore',
-        '36': 'Tanjong Pagar', '37': 'Downtown Core', '38': 'Orchard', '39': 'Tanglin',
-        '40': 'Bukit Timah', '41': 'Novena', '42': 'Thomson', '43': 'Bishan',
-        '44': 'Marymount', '45': 'Ang Mo Kio', '46': 'Yio Chu Kang', '47': 'Macpherson',
-        '48': 'Potong Pasir', '49': 'Geylang Serai', '50': 'Mattar', '51': 'Eunos',
-        '52': 'Paya Lebar', '53': 'MacPherson', '54': 'Ubi', '55': 'Kembangan',
-        '56': 'Bedok Reservoir', '57': 'Changi Business Park', '58': 'Loyang', '59': 'Pasir Ris',
-        '60': 'Pioneer', '61': 'Boon Lay', '62': 'Jurong East', '63': 'Choa Chu Kang',
-        '64': 'Choa Chu Kang', '65': 'Kranji', '66': 'Woodlands', '67': 'Admiralty',
-        '68': 'Sembawang', '69': 'Yishun', '70': 'Khatib', '71': 'Sengkang',
-        '72': 'Sengkang', '73': 'Punggol', '74': 'Punggol', '75': 'Seletar',
-        '76': 'Changi', '77': 'Changi', '78': 'Loyang', '79': 'Changi',
-        '80': 'Sentosa', '81': 'Changi', '82': 'Tampines', '83': 'Pasir Ris',
-      };
+      try {
+        console.log(`[Extract] OneMap: Looking up postal code ${postalCode}...`);
+        const oneMapUrl = `https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=Y&getAddrDetails=Y`;
+        const oneMapResponse = await fetch(oneMapUrl);
+        const oneMapData = await oneMapResponse.json();
 
-      const prefix = postalCode.substring(0, 2);
-      area = postalCodeAreas[prefix] || 'Singapore';
-      fullAddress = `${area}, Singapore ${postalCode}`;
-      console.log(`[Extract] Area lookup: ${prefix} → ${area}`);
+        console.log(`[Extract] OneMap response:`, oneMapData?.results?.length, 'results found');
+
+        if (oneMapData?.results && oneMapData.results.length > 0) {
+          const result = oneMapData.results[0];
+          // Use real address from OneMap
+          fullAddress = result.ADDRESS || `Singapore ${postalCode}`;
+          // Extract area from address or use road name
+          area = result.ROAD_NAME || result.BUILDING_NAME || 'Singapore';
+          console.log(`[Extract] OneMap found: ${fullAddress}, area: ${area}`);
+        } else {
+          console.log(`[Extract] OneMap: No results, using postal code only`);
+          fullAddress = `Singapore ${postalCode}`;
+          area = 'Singapore';
+        }
+      } catch (error) {
+        console.warn(`[Extract] OneMap lookup failed (${error instanceof Error ? error.message : error'}), using fallback`);
+        fullAddress = `Singapore ${postalCode}`;
+        area = 'Singapore';
+      }
     } else {
-      console.log('[Extract] Invalid postal code format, using Singapore');
+      console.log('[Extract] No valid postal code, using Singapore');
       area = 'Singapore';
-      fullAddress = postalCode ? `Singapore ${postalCode}` : 'Singapore';
+      fullAddress = 'Singapore';
     }
 
 
