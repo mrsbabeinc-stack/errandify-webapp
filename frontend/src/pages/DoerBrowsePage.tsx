@@ -284,11 +284,11 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
             )}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {filteredErrands.map((errand) => (
               <div
                 key={errand.id}
-                className="bg-white rounded-lg p-4 shadow hover:shadow-lg transition-shadow cursor-pointer relative"
+                className="bg-white rounded-lg p-3 shadow hover:shadow-lg transition-shadow cursor-pointer relative"
                 onClick={() => navigate(`/errand/${errand.id}`)}
               >
                 {/* Bid Badge */}
@@ -299,24 +299,24 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                 )}
 
                 {/* Title */}
-                <h3 className="text-sm font-semibold text-errandify-brown mb-1">
+                <h3 className="text-xs font-semibold text-errandify-brown mb-0.5">
                   {errand.title}
                 </h3>
 
                 {/* Category Badge */}
-                <div className="mb-2">
+                <div className="mb-1">
                   <span className="inline-block bg-orange-100 text-errandify-orange text-xs px-2 py-0.5 rounded-full font-semibold">
                     {categoryNames[errand.category] || errand.category}
                   </span>
                 </div>
 
                 {/* Description */}
-                <p className="text-gray-600 text-xs mb-2 line-clamp-2">
+                <p className="text-gray-600 text-xs mb-1 line-clamp-1">
                   {errand.description}
                 </p>
 
                 {/* Metadata Grid */}
-                <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+                <div className="grid grid-cols-2 gap-1 text-xs">
                   {errand.budget && (
                     <div className="text-errandify-orange font-semibold">
                       SGD ${Number(errand.budget).toFixed(2)}
