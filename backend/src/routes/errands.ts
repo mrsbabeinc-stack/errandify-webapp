@@ -81,6 +81,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     }
 
     const result = await db.query(query, params);
+    console.log('[Errands GET] Query executed - found', result.rows.length, 'raw rows');
 
     // Map internal category names to frontend category IDs
     const categoryMap: Record<string, string> = {
