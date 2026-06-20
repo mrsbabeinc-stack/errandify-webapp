@@ -84,9 +84,21 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     const result = await db.query(query, params);
     console.log('[Errands] Query returned', result.rows.length, 'errands');
+    console.log('[Errands] Query was:', query);
+    console.log('[Errands] Query params:', params);
 
     if (result.rows.length > 0) {
-      console.log('[Errands] First errand asker_id:', result.rows[0].asker_id, 'status:', result.rows[0].status, 'title:', result.rows[0].title);
+      console.log('[Errands] Results:', result.rows.map(e => ({
+        id: e.id,
+        title: e.title,
+        asker_id: e.asker_id,
+        status: e.status,
+        category: e.category,
+      })));
+    } else {
+      // Debug: check all errands in DB
+      const allErrands = await db.query('SELECT id, title, asker_id, status, category FROM errands LIMIT 20');
+      console.log('[Errands] No results found. All errands in DB:', allErrands.rows);
     }
 
     // Enrich with asker info
@@ -273,7 +285,15 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       );
 
       const errand = errandResult.rows[0];
-      console.log('[DEBUG] Errand created successfully:', errand.id);
+      console.log('[DEBUG] Errand created successfully:', {
+        id: errand.id,
+        askerId: askerId,
+        title: errand.title,
+        category: errand.category,
+        status: errand.status,
+        budget: errand.budget,
+        deadline: errand.deadline,
+      });
 
       res.status(201).json({
         success: true,
