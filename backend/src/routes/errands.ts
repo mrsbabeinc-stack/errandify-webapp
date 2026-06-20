@@ -574,4 +574,25 @@ function getEditDistance(str1: string, str2: string): number {
   return matrix[str2.length][str1.length];
 }
 
+// DEBUG ENDPOINT: Check all errands and users (remove after testing)
+router.get('/debug/all', async (req: Request, res: Response) => {
+  try {
+    const errands = await db.query('SELECT id, asker_id, title, status, category FROM errands ORDER BY created_at DESC LIMIT 50');
+    const users = await db.query('SELECT id, display_name, mobile FROM users ORDER BY id DESC LIMIT 50');
+
+    res.json({
+      success: true,
+      data: {
+        errands: errands.rows,
+        users: users.rows,
+        errandCount: errands.rows.length,
+        userCount: users.rows.length,
+      }
+    });
+  } catch (error) {
+    console.error('Debug error:', error);
+    res.status(500).json({ error: 'Debug failed' });
+  }
+});
+
 export default router;
