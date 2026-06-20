@@ -788,10 +788,12 @@ router.post('/content-filter', async (req: Request, res: Response) => {
 router.post('/suggestions', async (req: Request, res: Response) => {
   console.log('[Suggestions] ========== REQUEST RECEIVED ==========');
   try {
-    const { title = '', description = '', category = '' } = req.body;
+    const { title = '', description = '', category = '', date = '', time = '' } = req.body;
     console.log('[Suggestions] Title:', title);
     console.log('[Suggestions] Description:', description);
     console.log('[Suggestions] Category:', category);
+    console.log('[Suggestions] Date:', date);
+    console.log('[Suggestions] Time:', time);
 
     if (!title || !category) {
       console.warn('[Suggestions] Missing required fields: title or category');
