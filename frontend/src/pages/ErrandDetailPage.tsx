@@ -32,7 +32,11 @@ interface AcceptedBid {
   doerId: number;
 }
 
-export default function ErrandDetailPage() {
+interface Props {
+  userRole?: 'asker' | 'doer';
+}
+
+export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [errand, setErrand] = useState<ErrandDetail | null>(null);
@@ -353,7 +357,7 @@ export default function ErrandDetailPage() {
             </div>
 
             {/* Action Button */}
-            {errand.status === 'open' && currentUser && currentUser.id !== errand.askerId && currentUser.role === 'doer' ? (
+            {errand.status === 'open' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
               <button
                 onClick={() => {
                   if (errand.isRecurring) {
@@ -366,7 +370,7 @@ export default function ErrandDetailPage() {
               >
                 {bidSubmitted ? '✓ Bid Submitted' : errand.isRecurring ? 'Select Sessions' : 'Submit a Bid'}
               </button>
-            ) : errand.status === 'open' && currentUser && (currentUser.id === errand.askerId || currentUser.role === 'asker') ? (
+            ) : errand.status === 'open' && currentUser && (currentUser.id === errand.askerId || userRole === 'asker') ? (
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => navigate(`/errand/${id}/edit`)}
