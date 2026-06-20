@@ -582,7 +582,7 @@ export default function HanaTaskCreation({
                     handleSendMessage({ preventDefault: () => {} } as any);
                   }
                 }}
-                placeholder="Type all details here... (Shift+Enter for new line)"
+                placeholder="Type all details here..."
                 className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-2xl focus:outline-none focus:border-opacity-100 text-base font-semibold resize-none"
                 rows={2}
                 disabled={loading || isRecording}
