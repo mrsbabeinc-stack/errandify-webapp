@@ -455,25 +455,32 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     const fillerWords = /\b(if|at|on|for|of|to|the|a|an|and|or|in|is|are|be|by|from|with|as|i|me|my|we|you|your|our|their|this|that|these|those|it|which|who|what|when|where|why|how|can|could|will|would|should|must|may|might|today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat|childcare|eldercare|petcare|homehelp|eventhelp|delivery|service|certified|certification|trained|professional|experienced|budget|business|total|job|work|task|errand)\b/gi;
 
     let title = input
-      // Remove all weird punctuation at start and throughout
+      // STEP 1: Remove punctuation and normalize spaces
       .replace(/^[^\w\s]+/, '') // Remove non-word chars at start
       .replace(/[+\-*~`!@#$%^&|\\\/=<>?:;"'.,_(){}[\]]/g, ' ') // Replace weird punctuation with spaces
-      // Remove postal codes
-      .replace(/\s*\d{6}\s*/g, ' ')
-      // Remove times (5pm, 7am, 7:00pm, etc)
+
+      // STEP 2: Remove ALL duration patterns (do this FIRST before other number removals)
+      // Matches: "for 2.5 hours", "2.5 hours", "for 2 hrs", "in 3 days", etc
+      .replace(/\b(?:for|in)\s+\d+(?:\.\d+)?\s*(?:hour|hr|h|day|d|week|w|min|m|minute|second|sec|s)s?\b/gi, '')
+      .replace(/\b\d+(?:\.\d+)?\s*(?:hour|hr|h|day|d|week|w|min|m|minute|second|sec|s)s?\b/gi, '')
+
+      // STEP 3: Remove postal codes (6 digits)
+      .replace(/\b\d{6}\b/g, ' ')
+
+      // STEP 4: Remove times (5pm, 7am, 7:00pm, etc)
       .replace(/\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/gi, '')
-      .replace(/\s*\d{1,2}(?:am|pm)\b/gi, '')
-      // Remove durations WITH "for" prefix - ONLY if followed by hour/min keywords (include decimals like 2.5)
-      .replace(/\s+for\s+\d+(?:\.\d+)?\s*(?:hour|hr|h|hours|min|mins|m|minute|minutes)\b/gi, '')
-      // Remove standalone durations - ONLY if followed by hour/min keywords (include decimals like 2.5)
-      .replace(/\s*\d+(?:\.\d+)?\s*(?:hour|hr|h|hours|min|mins|m|minute|minutes)\b/gi, '')
-      // Remove amounts ($100, @50, etc)
+      .replace(/\b\d{1,2}(?:am|pm)\b/gi, '')
+
+      // STEP 5: Remove amounts ($100, @50, etc)
       .replace(/[\$@]\s*\d+/g, '')
-      // Remove trailing numbers
-      .replace(/\s+\d{2,4}\s*$/g, '')
-      // Remove filler words (keep only meaningful words)
+
+      // STEP 6: Remove any trailing numbers (final cleanup)
+      .replace(/\s+\d+(?:\.\d+)?\s*$/g, '')
+
+      // STEP 7: Remove filler words (keep only meaningful words)
       .replace(fillerWords, ' ')
-      // Collapse spaces
+
+      // STEP 8: Collapse spaces and trim
       .replace(/\s+/g, ' ')
       .trim()
       .substring(0, 50);
