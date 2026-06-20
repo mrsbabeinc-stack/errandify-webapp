@@ -777,17 +777,29 @@ router.post('/content-filter', async (req: Request, res: Response) => {
 });
 
 router.post('/suggestions', async (req: Request, res: Response) => {
+  console.log('[Suggestions] ========== REQUEST RECEIVED ==========');
   try {
-    const { title, description, category } = req.body;
-    console.log('[Suggestions] ========== REQUEST RECEIVED ==========');
+    const { title = '', description = '', category = '' } = req.body;
     console.log('[Suggestions] Title:', title);
     console.log('[Suggestions] Description:', description);
     console.log('[Suggestions] Category:', category);
 
-    // Get config once
-    const config = require('../config').default;
+    if (!title || !category) {
+      console.warn('[Suggestions] Missing required fields: title or category');
+      return res.status(400).json({ error: 'Title and category required' });
+    }
+
+    // Get config
+    let config;
+    try {
+      config = require('../config').default;
+    } catch (configErr) {
+      console.error('[Suggestions] Config load error:', configErr instanceof Error ? configErr.message : configErr);
+      config = { qwen: { apiKey: '' } };
+    }
+
     if (!config.qwen.apiKey) {
-      console.warn('[Suggestions] ⚠️ Qwen API key not configured, will use fallbacks');
+      console.warn('[Suggestions] ⚠️ Qwen API key not configured, will use fallbacks only');
     }
 
     // Use provided category or detect from title/description
