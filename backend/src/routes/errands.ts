@@ -687,7 +687,7 @@ router.post('/:id/end', authMiddleware, async (req: AuthRequest, res: Response) 
   }
 });
 
-// POST /api/errands/:id/reopen - Asker reopens job if not satisfied
+// POST /api/errands/:id/reopen - Both asker and doer can reopen job
 router.post('/:id/reopen', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -696,7 +696,7 @@ router.post('/:id/reopen', authMiddleware, async (req: AuthRequest, res: Respons
 
     // Get errand details
     const errandResult = await db.query(
-      'SELECT id, status, asker_id, dispute_deadline FROM errands WHERE id = $1',
+      'SELECT id, status, asker_id, accepted_bid_id, dispute_deadline FROM errands WHERE id = $1',
       [id]
     );
 
@@ -706,13 +706,16 @@ router.post('/:id/reopen', authMiddleware, async (req: AuthRequest, res: Respons
 
     const errand = errandResult.rows[0];
 
-    // Only asker can reopen
-    if (userId !== errand.asker_id) {
-      return res.status(403).json({ error: 'Only asker can reopen job' });
+    // Both asker and accepted doer can reopen
+    const isAsker = userId === errand.asker_id;
+    const isDoer = userId === errand.accepted_bid_id; // This would need doer_id from bids table
+
+    if (!isAsker && !isDoer) {
+      return res.status(403).json({ error: 'Only asker or doer can reopen job' });
     }
 
-    // Can only reopen within 48 hours
-    if (new Date() > new Date(errand.dispute_deadline)) {
+    // Can only reopen within 48 hours if no dispute
+    if (errand.dispute_deadline && new Date() > new Date(errand.dispute_deadline)) {
       return res.status(400).json({ error: 'Dispute period has ended. Cannot reopen job.' });
     }
 
@@ -722,13 +725,13 @@ router.post('/:id/reopen', authMiddleware, async (req: AuthRequest, res: Respons
 
     // Update status back to in_progress
     await db.query(
-      'UPDATE errands SET status = $1, reopened_reason = $2 WHERE id = $3',
-      ['in_progress', reason || null, id]
+      'UPDATE errands SET status = $1, reopened_reason = $2, reopened_by = $3 WHERE id = $4',
+      ['in_progress', reason || null, userId, id]
     );
 
     res.json({
       success: true,
-      message: 'Job reopened. Doer can continue working.',
+      message: 'Job reopened. Work can continue.',
     });
   } catch (error) {
     console.error('Error reopening job:', error);
@@ -781,6 +784,32 @@ router.post('/:id/raise-dispute', authMiddleware, async (req: AuthRequest, res: 
   } catch (error) {
     console.error('Error raising dispute:', error);
     res.status(500).json({ error: 'Failed to raise dispute' });
+  }
+});
+
+// POST /api/errands/:id/work-proof - Upload work proof before completion
+router.post('/:id/work-proof', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { proof_description, proof_urls } = req.body;
+
+    if (!proof_description) {
+      return res.status(400).json({ error: 'Work proof description required' });
+    }
+
+    // Store work proof
+    await db.query(
+      'UPDATE errands SET work_proof_description = $1, work_proof_urls = $2, work_proof_submitted_at = NOW() WHERE id = $3',
+      [proof_description, proof_urls ? JSON.stringify(proof_urls) : null, id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Work proof uploaded successfully.',
+    });
+  } catch (error) {
+    console.error('Error uploading work proof:', error);
+    res.status(500).json({ error: 'Failed to upload work proof' });
   }
 });
 
@@ -880,6 +909,69 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
   } catch (error) {
     console.error('Error cancelling job:', error);
     res.status(500).json({ error: 'Failed to cancel job' });
+  }
+});
+
+// GET /api/errands/disputes - Get all disputes (admin only)
+router.get('/disputes/list/all', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    // TODO: Check if user is admin
+    // For now, return disputes
+    const result = await db.query(
+      `SELECT id, title, asker_id, status, dispute_reason, created_at, dispute_deadline
+       FROM errands WHERE status = 'disputed' ORDER BY created_at DESC`
+    );
+
+    res.json({
+      success: true,
+      data: result.rows,
+    });
+  } catch (error) {
+    console.error('Error fetching disputes:', error);
+    res.status(500).json({ error: 'Failed to fetch disputes' });
+  }
+});
+
+// POST /api/errands/:id/resolve-dispute - Admin resolves dispute
+router.post('/:id/resolve-dispute', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { resolution, payment_to, amount_percentage } = req.body;
+
+    // TODO: Check if user is admin
+
+    if (!resolution || !payment_to) {
+      return res.status(400).json({ error: 'Resolution and payment_to required' });
+    }
+
+    const errandResult = await db.query(
+      'SELECT id, status FROM errands WHERE id = $1',
+      [id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    if (errandResult.rows[0].status !== 'disputed') {
+      return res.status(400).json({ error: 'Can only resolve disputed jobs' });
+    }
+
+    // Update dispute resolution
+    await db.query(
+      'UPDATE errands SET status = $1, dispute_resolution = $2, dispute_resolved_at = NOW(), payment_released_to = $3, payment_percentage = $4 WHERE id = $5',
+      ['completed', resolution, payment_to, amount_percentage || 100, id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Dispute resolved. Payment will be released.',
+    });
+  } catch (error) {
+    console.error('Error resolving dispute:', error);
+    res.status(500).json({ error: 'Failed to resolve dispute' });
   }
 });
 

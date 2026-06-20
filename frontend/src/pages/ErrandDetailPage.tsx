@@ -418,50 +418,42 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               >
                 ✓ Mark as Completed
               </button>
-            ) : errand.status === 'job_completed' && currentUser && currentUser.id === errand.askerId ? (
+            ) : errand.status === 'job_completed' && currentUser && (currentUser.id === errand.askerId || userRole === 'doer') ? (
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => {
                     const reason = window.prompt('Why reopen this job?');
-                    if (!reason) return;
+                    if (reason === null) return;
                     const token = localStorage.getItem('token');
                     fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/reopen`, {
                       method: 'POST',
                       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ reason }),
+                      body: JSON.stringify({ reason: reason || null }),
                     })
                       .then(r => r.json())
                       .then(() => {
-                        alert('✓ Job reopened. Doer can continue.');
+                        alert('✓ Job reopened. Work can continue.');
                         fetchErrandDetail();
                       })
-                      .catch(e => alert('Error: ' + e));
+                      .catch(e => alert('Error: ' + e.message));
                   }}
                   className="flex-1 bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
                 >
                   Reopen Job
                 </button>
-                <button
-                  onClick={() => {
-                    const reason = window.prompt('Dispute reason:');
-                    if (!reason) return;
-                    const token = localStorage.getItem('token');
-                    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/raise-dispute`, {
-                      method: 'POST',
-                      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ reason }),
-                    })
-                      .then(r => r.json())
-                      .then(() => {
-                        alert('✓ Dispute raised. Admin will review.');
-                        fetchErrandDetail();
-                      })
-                      .catch(e => alert('Error: ' + e));
-                  }}
-                  className="flex-1 bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
-                >
-                  Raise Dispute
-                </button>
+                {currentUser.id === errand.askerId && (
+                  <button
+                    onClick={() => setShowChat(true)}
+                    className="flex-1 bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
+                  >
+                    💬 Talk to Hana
+                  </button>
+                )}
+              </div>
+            ) : errand.status === 'disputed' ? (
+              <div className="w-full bg-red-50 border border-red-200 rounded-lg p-3 mt-2 text-center">
+                <p className="text-red-800 font-semibold">⚠️ Under Admin Review</p>
+                <p className="text-xs text-red-600">Dispute is being reviewed. Payment is held.</p>
               </div>
             ) : errand.status === 'completed' ? (
               <div className="w-full bg-green-50 border border-green-200 rounded-lg p-3 mt-2 text-center">
@@ -539,23 +531,43 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 <p className="text-xs text-blue-600 font-semibold">
                   🔄 Job in progress...
                 </p>
+                <textarea
+                  id="workProof"
+                  placeholder="Describe the work completed (required before ending)..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-errandify-orange"
+                  rows={3}
+                />
                 <button
                   onClick={() => {
+                    const proof = (document.getElementById('workProof') as HTMLTextAreaElement)?.value;
+                    if (!proof?.trim()) {
+                      alert('Please describe the work completed');
+                      return;
+                    }
                     const token = localStorage.getItem('token');
-                    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/end`, {
+                    // First upload proof
+                    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/work-proof`, {
                       method: 'POST',
-                      headers: { Authorization: `Bearer ${token}` },
+                      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ proof_description: proof }),
                     })
+                      .then(() =>
+                        // Then end job
+                        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/end`, {
+                          method: 'POST',
+                          headers: { Authorization: `Bearer ${token}` },
+                        })
+                      )
                       .then(r => r.json())
                       .then(() => {
-                        alert('✓ Job ended! Waiting for asker confirmation.');
+                        alert('✓ Work proof submitted and job ended. Waiting for asker review.');
                         fetchErrandDetail();
                       })
-                      .catch(e => alert('Error: ' + e));
+                      .catch(e => alert('Error: ' + e.message));
                   }}
                   className="w-full bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 text-sm"
                 >
-                  End Job
+                  End Job & Submit Proof
                 </button>
               </div>
             )}
