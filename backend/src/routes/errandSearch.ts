@@ -8,7 +8,7 @@ const router = Router();
 router.get('/search', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     // TODO: user_category_restrictions table doesn't exist yet
-    // For now, return empty restricted list and let basic GET / handle filtering
+    // For now, return empty list - frontend will use fallback to GET /api/errands
     res.json({
       success: true,
       data: {
@@ -17,8 +17,14 @@ router.get('/search', authMiddleware, async (req: AuthRequest, res: Response) =>
         hasMore: false,
       },
     });
-    return;
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ error: 'Search failed' });
+  }
+});
 
+// OLD CODE BELOW - DISABLED
+/*
     // Build query with filters
     let whereClause = `WHERE e.status = $1`;
     const params: any[] = [status];
@@ -209,8 +215,14 @@ router.get('/categories', authMiddleware, async (req: AuthRequest, res: Response
       success: true,
       data: { categories },
     });
-    return;
+  } catch (error) {
+    console.error('Get categories error:', error);
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
 
+// OLD CODE BELOW - DISABLED
+/*
     const restrictedCategories = restrictedResult.rows.map((r) => r.category_name);
 
     // Get all categories with task counts and avg budget
