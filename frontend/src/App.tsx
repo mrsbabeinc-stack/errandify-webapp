@@ -182,7 +182,7 @@ export default function App() {
           path="/browse"
           element={
             isAuthenticated ? (
-              <DoerBrowsePage />
+              <DoerBrowsePage userRole={userRole} />
             ) : (
               <Navigate to="/login" replace />
             )
@@ -219,7 +219,7 @@ export default function App() {
         <Route path="/user/:userId" element={<UserProfilePage />} />
         <Route path="/edit-profile" element={isAuthenticated ? <EditProfilePage /> : <Navigate to="/login" replace />} />
         <Route path="/disputes" element={isAuthenticated ? <DisputePage /> : <Navigate to="/login" replace />} />
-        <Route path="/search" element={isAuthenticated ? <DoerBrowsePage /> : <Navigate to="/login" replace />} />
+        <Route path="/search" element={isAuthenticated ? <DoerBrowsePage userRole={userRole} /> : <Navigate to="/login" replace />} />
         <Route path="/recurring-sessions" element={isAuthenticated ? <RecurringSessionsPage /> : <Navigate to="/login" replace />} />
         <Route path="/email-notifications" element={isAuthenticated ? <EmailNotificationSettingsPage /> : <Navigate to="/login" replace />} />
         <Route path="/ratings" element={isAuthenticated ? <RatingsHistoryPage /> : <Navigate to="/login" replace />} />
