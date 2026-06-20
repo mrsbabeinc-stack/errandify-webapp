@@ -23,6 +23,9 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
   const [bids, setBids] = useState<Bid[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [rejectingBidId, setRejectingBidId] = useState<number | null>(null);
+  const [rejectReason, setRejectReason] = useState('accepted_another');
+  const [rejectCustomReason, setRejectCustomReason] = useState('');
 
   useEffect(() => {
     fetchBids();
@@ -85,15 +88,27 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
   };
 
   const handleRejectBid = async (bidId: number) => {
+    setRejectingBidId(bidId);
+    setRejectReason('accepted_another');
+    setRejectCustomReason('');
+  };
+
+  const confirmRejectBid = async () => {
+    if (!rejectingBidId) return;
+
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${bidId}/reject`,
-        {},
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${rejectingBidId}/reject`,
+        {
+          reason: rejectReason,
+          custom_reason: rejectCustomReason,
+        },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      setRejectingBidId(null);
       fetchBids();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to reject bid');
@@ -190,6 +205,64 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
           ))}
         </div>
       </div>
+
+      {rejectingBidId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h2 className="text-xl font-bold text-errandify-brown mb-4">Reject Bid</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Tell the doer why you're rejecting their bid. This helps them improve future bids.
+            </p>
+
+            <div className="space-y-3 mb-4">
+              {[
+                { value: 'accepted_another', label: '✓ Accepted another bid' },
+                { value: 'budget_changed', label: '💰 Budget changed' },
+                { value: 'skill_mismatch', label: '🎯 Need different skills' },
+                { value: 'price_too_high', label: '💸 Price too high' },
+                { value: 'other', label: '📝 Other reason' },
+              ].map((option) => (
+                <label key={option.value} className="flex items-center p-2 border border-gray-200 rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name="reason"
+                    value={option.value}
+                    checked={rejectReason === option.value}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    className="mr-3"
+                  />
+                  <span className="text-sm text-gray-800">{option.label}</span>
+                </label>
+              ))}
+            </div>
+
+            {rejectReason === 'other' && (
+              <textarea
+                value={rejectCustomReason}
+                onChange={(e) => setRejectCustomReason(e.target.value)}
+                placeholder="Please explain..."
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange mb-4"
+              />
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRejectingBidId(null)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmRejectBid}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600"
+              >
+                Reject & Notify
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

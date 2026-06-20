@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
+import axios from 'axios';
 
 const router = Router();
 
@@ -137,9 +138,9 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
     // Update bid status
     bid.status = 'accepted';
 
-    // Update errand status to 'confirmed'
+    // Update errand status to 'confirmed' and set 24h confirmation deadline
     await db.query(
-      'UPDATE errands SET status = $1, accepted_bid_id = $2 WHERE id = $3',
+      'UPDATE errands SET status = $1, accepted_bid_id = $2, confirmation_expires_at = NOW() + INTERVAL \'24 hours\' WHERE id = $3',
       ['confirmed', bid.id, taskId]
     );
 
@@ -161,10 +162,11 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
   }
 });
 
-// POST /api/bids/:id/reject - Reject a bid
+// POST /api/bids/:id/reject - Reject a bid with optional feedback
 router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const { reason, custom_reason } = req.body;
     const currentUserId = parseInt(req.userId || '0', 10);
 
     // Find the bid in mock storage
@@ -193,8 +195,27 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Respons
       return res.status(403).json({ error: 'Only the asker can reject bids' });
     }
 
-    // Update bid status
+    // Update bid status with rejection reason
     bid.status = 'rejected';
+    bid.rejectionReason = reason;
+    bid.customReason = custom_reason;
+    bid.rejectedAt = new Date().toISOString();
+
+    // Send notification to doer with reason
+    try {
+      await axios.post(
+        `http://localhost:3000/api/notifications`,
+        {
+          recipientId: bid.doerId,
+          type: 'bid_rejected',
+          title: 'Bid Rejected',
+          message: `Your bid of $${bid.amount} was rejected${reason ? `: ${reason}${custom_reason ? ` - ${custom_reason}` : ''}` : ''}`,
+          taskId,
+        }
+      );
+    } catch (notifErr) {
+      console.error('Failed to send rejection notification:', notifErr);
+    }
 
     res.json({ success: true, data: bid });
   } catch (error) {
