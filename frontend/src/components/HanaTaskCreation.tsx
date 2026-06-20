@@ -523,19 +523,19 @@ export default function HanaTaskCreation({
 
         {/* Main Content - Proportionate: Bubble, Hana Full Body, Input */}
         <div className="flex-1 overflow-y-auto flex flex-col px-6 py-4 gap-2">
-          {/* Speech Bubble - Below Top (Centered, Moved Down) */}
+          {/* Speech Bubble - Below Top (Centered, Moved Down, Bigger with Bold) */}
           {hanaMessage && (
             <div className="flex-shrink-0 pt-4">
-              <div className="relative animate-slideDown mx-auto max-w-lg"
+              <div className="relative animate-slideDown mx-auto max-w-2xl"
                    style={{
                      background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
                      border: '1.5px solid #FF8C42',
                      borderRadius: '18px',
-                     padding: '14px 18px',
+                     padding: '16px 22px',
                      boxShadow: '0 4px 12px rgba(255, 140, 66, 0.12), 0 1px 3px rgba(0,0,0,0.06)',
                    }}>
-                <p className="whitespace-pre-line text-xs font-medium text-center"
-                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.5', letterSpacing: '0px'}}>
+                <p className="whitespace-pre-line text-sm font-bold text-center"
+                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.6', letterSpacing: '0px'}}>
                   {hanaMessage}
                 </p>
                 {/* Speech bubble tail - pointing down */}
@@ -565,9 +565,9 @@ export default function HanaTaskCreation({
             </div>
           )}
 
-          {/* Hana Full Body - Larger, Fills Space, Feet Touch Input */}
+          {/* Hana Full Body - Slightly Smaller, Fills Space, Feet Touch Input */}
           <div className="flex-1 flex items-end justify-center overflow-hidden min-h-0">
-            <div style={{ height: '100%', width: 'auto', maxWidth: '280px' }}>
+            <div style={{ height: '100%', width: 'auto', maxWidth: '260px' }}>
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}
                 message={hanaMessage}
