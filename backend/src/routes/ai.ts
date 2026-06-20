@@ -443,7 +443,9 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Extract postal code first (6 consecutive digits anywhere in input)
     const postalCodeMatch = input.match(/\b(\d{6})\b/);
     const postalCode = postalCodeMatch ? postalCodeMatch[1] : '';
-    console.log('[Extract] Postal code search result:', postalCodeMatch, 'extracted:', postalCode);
+    console.log('[Extract] Input:', input);
+    console.log('[Extract] Postal code regex match:', postalCodeMatch);
+    console.log('[Extract] Extracted postal code:', postalCode || '(EMPTY)');
 
     // Extract title - keep only meaningful words, filter filler words
     console.log('[Extract] Raw input:', input);
@@ -776,7 +778,10 @@ router.post('/content-filter', async (req: Request, res: Response) => {
 router.post('/suggestions', async (req: Request, res: Response) => {
   try {
     const { title, description, category } = req.body;
-    console.log('[Suggestions] Request received - title:', title, 'category:', category);
+    console.log('[Suggestions] ========== REQUEST RECEIVED ==========');
+    console.log('[Suggestions] Title:', title);
+    console.log('[Suggestions] Description:', description);
+    console.log('[Suggestions] Category:', category);
 
     // Use provided category or detect from title/description
     let detectedCategory = category || 'homehelp';
