@@ -219,6 +219,7 @@ export default function EditErrandPage({ userRole }: EditErrandPageProps) {
                 <option value="petcare">Pet Care (sitting, grooming, walking)</option>
                 <option value="delivery">Delivery (local errands, parcels, food, documents)</option>
                 <option value="eventhelp">Events (setup, shopping, planning)</option>
+                <option value="data-entry">Data Entry & Administrative Work</option>
                 <option value="donate">Donate / Giveback</option>
                 <option value="localbiz">Microservices for Local SMEs</option>
               </select>

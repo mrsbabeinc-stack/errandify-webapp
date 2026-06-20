@@ -215,6 +215,7 @@ export default function CreateErrandPage() {
     'petcare': 'Pet Care (sitting, grooming, walking)',
     'delivery': 'Delivery (local errands, parcels, food, documents)',
     'eventhelp': 'Events (setup, shopping, planning)',
+    'data-entry': 'Data Entry & Administrative Work',
     'donate': 'Donate / Giveback',
     'localbiz': 'Microservices for Local SMEs',
   };
