@@ -443,6 +443,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Extract postal code first (6 consecutive digits anywhere in input)
     const postalCodeMatch = input.match(/\b(\d{6})\b/);
     const postalCode = postalCodeMatch ? postalCodeMatch[1] : '';
+    console.log('[Extract] Postal code search result:', postalCodeMatch, 'extracted:', postalCode);
 
     // Extract title - keep only meaningful words, filter filler words
     console.log('[Extract] Raw input:', input);
@@ -460,8 +461,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       // Remove times (5pm, 7am, 7:00pm, etc)
       .replace(/\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/gi, '')
       .replace(/\s*\d{1,2}(?:am|pm)\b/gi, '')
-      // Remove durations - match digits followed by hour/min keywords (5hour, 3hours, 30mins, etc)
-      .replace(/\s*\d+\s*(?:hour|hr|h|hours|min|mins|m|minute|minutes)?\b/gi, '')
+      // Remove durations - ONLY if followed by hour/min keywords (NOT just any number)
+      .replace(/\s*\d+\s*(?:hour|hr|h|hours|min|mins|m|minute|minutes)\b/gi, '')
       // Remove amounts ($100, @50, etc)
       .replace(/[\$@]\s*\d+/g, '')
       // Remove trailing numbers
