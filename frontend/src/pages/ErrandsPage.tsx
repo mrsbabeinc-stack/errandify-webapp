@@ -26,7 +26,10 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   const [error, setError] = useState('');
   const [expandedErrandId, setExpandedErrandId] = useState<number | null>(null);
 
+  console.log('[ErrandsPage] Mounted, userRole:', userRole);
+
   useEffect(() => {
+    console.log('[ErrandsPage] useEffect triggered, userRole:', userRole);
     fetchErrands();
   }, [userRole]);
 
@@ -35,9 +38,11 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
     let token = '';
 
     try {
+      console.log('[ErrandsPage] fetchErrands called, userRole:', userRole);
       token = localStorage.getItem('token') || '';
 
       if (!token) {
+        console.error('[ErrandsPage] No token found');
         setError('Not authenticated. Please log in again.');
         setLoading(false);
         return;
@@ -48,6 +53,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
       if (userRole === 'asker') {
         // Askers see their posted errands
         url += '?myOnly=true';
+        console.log('[ErrandsPage] Asker - fetching my errands from:', url);
       } else {
         // Doers see their accepted errands
         url += '?accepted=true';
