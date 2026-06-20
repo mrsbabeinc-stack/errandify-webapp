@@ -14,6 +14,8 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'User ID not found in token' });
     }
 
+    console.log('[Errands] GET /errands - currentUserId:', currentUserId, 'filters:', { myOnly, accepted, recommended, category, status });
+
     let query: string;
     const params: any[] = [];
     let paramIndex = 1;
@@ -27,6 +29,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       query = 'SELECT * FROM errands WHERE asker_id = $1';
       params.push(currentUserId);
       paramIndex = 2;
+      console.log('[Errands] Query mode: myOnly (asker errands)');
     } else if (isAccepted) {
       // Show errands accepted by current user (for doers) - join with assignments
       query = `SELECT e.* FROM errands e
@@ -34,6 +37,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
                WHERE ea.doer_id = $1 AND ea.status = 'accepted'`;
       params.push(currentUserId);
       paramIndex = 2;
+      console.log('[Errands] Query mode: accepted (doer accepted errands)');
     } else if (isRecommended) {
       // Show open errands that match user's category preferences
       query = `SELECT e.* FROM errands e
@@ -44,11 +48,13 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
                )`;
       params.push('open', currentUserId);
       paramIndex = 3;
+      console.log('[Errands] Query mode: recommended (by category preference)');
     } else {
       // Show all open errands excluding ones posted by current user
       query = 'SELECT * FROM errands WHERE status = $1 AND asker_id != $2';
       params.push('open', currentUserId);
       paramIndex = 3;
+      console.log('[Errands] Query mode: all open errands (excluding own)');
     }
 
     // Filter by category
@@ -77,6 +83,11 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     }
 
     const result = await db.query(query, params);
+    console.log('[Errands] Query returned', result.rows.length, 'errands');
+
+    if (result.rows.length > 0) {
+      console.log('[Errands] First errand asker_id:', result.rows[0].asker_id, 'status:', result.rows[0].status, 'title:', result.rows[0].title);
+    }
 
     // Enrich with asker info
     const errandsWithAskerInfo = await Promise.all(
@@ -101,6 +112,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       })
     );
 
+    console.log('[Errands] Returning', errandsWithAskerInfo.length, 'enriched errands');
     res.json({
       success: true,
       data: errandsWithAskerInfo,
