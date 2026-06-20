@@ -54,9 +54,12 @@ export default function SearchBrowsePage() {
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/categories`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setCategories(response.data.data.accessible);
+      const cats = response.data.data.categories || response.data.data.accessible || [];
+      setCategories(cats);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
+      // Fallback to empty list if categories endpoint fails
+      setCategories([]);
     }
   };
 
