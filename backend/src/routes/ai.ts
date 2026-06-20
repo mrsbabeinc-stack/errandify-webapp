@@ -783,6 +783,12 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     console.log('[Suggestions] Description:', description);
     console.log('[Suggestions] Category:', category);
 
+    // Get config once
+    const config = require('../config').default;
+    if (!config.qwen.apiKey) {
+      console.warn('[Suggestions] ⚠️ Qwen API key not configured, will use fallbacks');
+    }
+
     // Use provided category or detect from title/description
     let detectedCategory = category || 'homehelp';
 
@@ -816,7 +822,6 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     let suggestedDescription = '';
     let qwenDescriptionUsed = false;
 
-    const config = require('../config').default;
     if (config.qwen.apiKey) {
       try {
         console.log('[Qwen] Calling for description generation...');
