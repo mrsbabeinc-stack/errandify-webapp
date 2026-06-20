@@ -106,7 +106,7 @@ export default function HomePage({ userRole }: HomePageProps) {
           {userRole === 'asker' ? (
             <>
               <button
-                onClick={() => navigate('/create-errand')}
+                onClick={() => navigate('/create-errand-hana')}
                 className="bg-errandify-orange text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
                 <span className="text-3xl mb-2 block">📝</span>
