@@ -8,22 +8,17 @@ const router = Router();
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.userId || '0', 10);
-    const { limit = 50, offset = 0 } = req.query;
 
-    const notificationsResult = await db.query(
-      `SELECT id, user_id, title, body, type, read, created_at, action_url
-       FROM notifications
-       WHERE user_id = $1
-       ORDER BY created_at DESC
-       LIMIT $2 OFFSET $3`,
-      [userId, parseInt(limit as string), parseInt(offset as string)]
-    );
-
-    // Get unread count
-    const countResult = await db.query(
-      'SELECT COUNT(*) as count FROM notifications WHERE user_id = $1 AND read = false',
-      [userId]
-    );
+    // TODO: notifications table doesn't exist in schema yet
+    // Return empty list for now to prevent app from crashing
+    res.json({
+      success: true,
+      data: {
+        notifications: [],
+        unread_count: 0,
+      },
+    });
+    return;
 
     res.json({
       success: true,
