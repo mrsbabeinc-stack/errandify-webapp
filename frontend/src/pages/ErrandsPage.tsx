@@ -62,7 +62,10 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setErrands(response.data.data || []);
+      console.log('[ErrandsPage] API Response received:', response.data);
+      const errandsList = response.data.data || [];
+      console.log('[ErrandsPage] Errands count:', errandsList.length);
+      setErrands(errandsList);
     } catch (err: any) {
       console.error('Failed to fetch errands:', {
         status: err.response?.status,
