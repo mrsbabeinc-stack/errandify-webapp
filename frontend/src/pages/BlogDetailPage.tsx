@@ -1,43 +1,27 @@
-import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import blogPostsData from '../data/blogPosts';
 
 export default function BlogDetailPage() {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
-  const [post, setPost] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Find post by slug
-    const foundPost = blogPostsData.find(p => p.slug === slug);
-    if (foundPost) {
-      setPost(foundPost);
-    }
-    setLoading(false);
-  }, [slug]);
+  // Find post by slug
+  const post = blogPostsData.find(p => p.slug === slug);
 
   const handleBack = () => {
-    // Always go back to MyKampung page (the blog will show blog tab)
     navigate('/my-kampung');
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-errandify-bg flex items-center justify-center">
-        <p className="text-gray-600">Loading article...</p>
-      </div>
-    );
-  }
 
   if (!post) {
     return (
       <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-20">
         <div className="max-w-3xl mx-auto">
           <button onClick={handleBack} className="mb-4 text-lg text-gray-600 font-bold hover:text-gray-800 transition">
-            ‹ Back
+            ‹ Back to MyKampung
           </button>
-          <p className="text-gray-600">Article not found.</p>
+          <div className="bg-white rounded-lg border border-gray-200 p-8">
+            <p className="text-gray-600">Article not found.</p>
+          </div>
         </div>
       </div>
     );
@@ -65,9 +49,7 @@ export default function BlogDetailPage() {
                  post.category === 'tips' ? '💡 Tips' :
                  '📰 News'}
               </span>
-              <span className="text-sm text-gray-500">
-                {post.readTime} min read
-              </span>
+              <span className="text-sm text-gray-500">{post.readTime} min read</span>
             </div>
 
             <h1 className="text-4xl font-bold text-errandify-brown mb-4">{post.title}</h1>
@@ -84,60 +66,8 @@ export default function BlogDetailPage() {
           </div>
 
           {/* Content */}
-          <div className="prose prose-sm max-w-none text-gray-700 mb-8">
-            {post.content.split('\n\n').map((paragraph: string, idx: number) => {
-              // Handle headings
-              if (paragraph.startsWith('# ')) {
-                return <h1 key={idx} className="text-3xl font-bold text-errandify-brown mt-8 mb-4">{paragraph.replace('# ', '')}</h1>;
-              }
-              if (paragraph.startsWith('## ')) {
-                return <h2 key={idx} className="text-2xl font-bold text-errandify-brown mt-6 mb-3">{paragraph.replace('## ', '')}</h2>;
-              }
-              if (paragraph.startsWith('### ')) {
-                return <h3 key={idx} className="text-xl font-bold text-gray-800 mt-4 mb-2">{paragraph.replace('### ', '')}</h3>;
-              }
-              // Handle lists
-              if (paragraph.startsWith('- ')) {
-                const items = paragraph.split('\n').filter(line => line.startsWith('- '));
-                return (
-                  <ul key={idx} className="list-disc list-inside space-y-2 my-4 text-gray-700">
-                    {items.map((item, i) => (
-                      <li key={i}>{item.replace('- ', '')}</li>
-                    ))}
-                  </ul>
-                );
-              }
-              // Handle tables
-              if (paragraph.includes('|')) {
-                return (
-                  <div key={idx} className="overflow-x-auto my-4">
-                    <table className="w-full border-collapse text-sm">
-                      <tbody>
-                        {paragraph.split('\n').map((row, ridx) => {
-                          if (!row.trim() || row.includes('---')) return null;
-                          const cells = row.split('|').filter(c => c.trim());
-                          return (
-                            <tr key={ridx} className={ridx === 0 ? 'bg-gray-100' : 'border-b'}>
-                              {cells.map((cell, cidx) => (
-                                <td key={cidx} className={`px-4 py-2 border ${ridx === 0 ? 'font-bold text-gray-800' : 'text-gray-700'}`}>
-                                  {cell.trim()}
-                                </td>
-                              ))}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                );
-              }
-              // Regular paragraphs
-              return paragraph.trim() ? (
-                <p key={idx} className="text-gray-700 mb-4 leading-relaxed">
-                  {paragraph}
-                </p>
-              ) : null;
-            })}
+          <div className="prose prose-sm max-w-none text-gray-700 mb-8 whitespace-pre-wrap">
+            {post.content}
           </div>
 
           {/* Footer */}
