@@ -523,9 +523,9 @@ export default function HanaTaskCreation({
 
         {/* Main Content - FINAL: Hana Upper Body LEFT + Chat RIGHT */}
         <div className="flex-1 overflow-y-auto flex gap-6 px-6 py-6">
-          {/* Left Side - Hana Upper Body (head to waist) */}
+          {/* Left Side - Hana Upper Body Only (head to chest) */}
           <div className="flex-shrink-0">
-            <div style={{ height: '300px', width: 'auto', maxWidth: '180px' }}>
+            <div style={{ height: '250px', width: 'auto', maxWidth: '160px' }}>
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}
                 message={hanaMessage}
