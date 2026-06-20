@@ -418,6 +418,51 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               >
                 ✓ Mark as Completed
               </button>
+            ) : errand.status === 'job_completed' && currentUser && currentUser.id === errand.askerId ? (
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => {
+                    const reason = window.prompt('Why reopen this job?');
+                    if (!reason) return;
+                    const token = localStorage.getItem('token');
+                    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/reopen`, {
+                      method: 'POST',
+                      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ reason }),
+                    })
+                      .then(r => r.json())
+                      .then(() => {
+                        alert('✓ Job reopened. Doer can continue.');
+                        fetchErrandDetail();
+                      })
+                      .catch(e => alert('Error: ' + e));
+                  }}
+                  className="flex-1 bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
+                >
+                  Reopen Job
+                </button>
+                <button
+                  onClick={() => {
+                    const reason = window.prompt('Dispute reason:');
+                    if (!reason) return;
+                    const token = localStorage.getItem('token');
+                    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/raise-dispute`, {
+                      method: 'POST',
+                      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ reason }),
+                    })
+                      .then(r => r.json())
+                      .then(() => {
+                        alert('✓ Dispute raised. Admin will review.');
+                        fetchErrandDetail();
+                      })
+                      .catch(e => alert('Error: ' + e));
+                  }}
+                  className="flex-1 bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
+                >
+                  Raise Dispute
+                </button>
+              </div>
             ) : errand.status === 'completed' ? (
               <div className="w-full bg-green-50 border border-green-200 rounded-lg p-3 mt-2 text-center">
                 <p className="text-green-800 font-semibold">✓ Completed</p>
@@ -453,7 +498,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     })
                       .then(r => r.json())
                       .then(() => {
-                        alert('✓ Job confirmed! Start working on the task.');
+                        alert('✓ Job confirmed!');
                         fetchErrandDetail();
                       })
                       .catch(e => alert('Error: ' + e));
@@ -464,10 +509,65 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 </button>
               </div>
             )}
+            {errand?.status === 'confirmed_awaiting_start' && (
+              <div className="space-y-2">
+                <p className="text-xs text-blue-600 font-semibold">
+                  ✓ Confirmed. Payment held in escrow.
+                </p>
+                <button
+                  onClick={() => {
+                    const token = localStorage.getItem('token');
+                    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/start`, {
+                      method: 'POST',
+                      headers: { Authorization: `Bearer ${token}` },
+                    })
+                      .then(r => r.json())
+                      .then(() => {
+                        alert('✓ Job started!');
+                        fetchErrandDetail();
+                      })
+                      .catch(e => alert('Error: ' + e));
+                  }}
+                  className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 text-sm"
+                >
+                  Start Job
+                </button>
+              </div>
+            )}
             {errand?.status === 'in_progress' && (
-              <p className="text-xs text-blue-600 font-semibold">
-                🔄 Job in progress...
-              </p>
+              <div className="space-y-2">
+                <p className="text-xs text-blue-600 font-semibold">
+                  🔄 Job in progress...
+                </p>
+                <button
+                  onClick={() => {
+                    const token = localStorage.getItem('token');
+                    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/end`, {
+                      method: 'POST',
+                      headers: { Authorization: `Bearer ${token}` },
+                    })
+                      .then(r => r.json())
+                      .then(() => {
+                        alert('✓ Job ended! Waiting for asker confirmation.');
+                        fetchErrandDetail();
+                      })
+                      .catch(e => alert('Error: ' + e));
+                  }}
+                  className="w-full bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 text-sm"
+                >
+                  End Job
+                </button>
+              </div>
+            )}
+            {errand?.status === 'job_completed' && (
+              <div className="space-y-2">
+                <p className="text-xs text-orange-600 font-semibold">
+                  ⏳ Job completed. Asker has 48 hours to dispute.
+                </p>
+                <p className="text-xs text-gray-600">
+                  Payment will be released if no dispute.
+                </p>
+              </div>
             )}
           </div>
         )}

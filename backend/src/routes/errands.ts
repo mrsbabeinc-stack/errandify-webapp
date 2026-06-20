@@ -603,15 +603,15 @@ router.post('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respon
       return res.status(400).json({ error: 'Errand must be confirmed before doer can accept' });
     }
 
-    // Update status to in_progress
+    // Update status to confirmed_awaiting_start
     await db.query(
       'UPDATE errands SET status = $1 WHERE id = $2',
-      ['in_progress', id]
+      ['confirmed_awaiting_start', id]
     );
 
     res.json({
       success: true,
-      message: 'Job confirmed. You can now start working on the task.',
+      message: 'Job confirmed. Payment has been held in escrow. Ready to start work.',
     });
   } catch (error) {
     console.error('Error confirming job:', error);
@@ -619,13 +619,11 @@ router.post('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respon
   }
 });
 
-// POST /api/errands/:id/complete - Doer marks job as completed
-router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Response) => {
+// POST /api/errands/:id/start - Doer starts job
+router.post('/:id/start', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const doerId = parseInt(req.userId || '0', 10);
 
-    // Get errand details
     const errandResult = await db.query(
       'SELECT id, status FROM errands WHERE id = $1',
       [id]
@@ -635,25 +633,202 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
       return res.status(404).json({ error: 'Errand not found' });
     }
 
-    const errand = errandResult.rows[0];
-
-    if (errand.status !== 'in_progress') {
-      return res.status(400).json({ error: 'Errand must be in progress to mark as completed' });
+    if (errandResult.rows[0].status !== 'confirmed_awaiting_start') {
+      return res.status(400).json({ error: 'Can only start job from awaiting_start status' });
     }
 
-    // Update status to completed
+    // Update status and set start time
     await db.query(
-      'UPDATE errands SET status = $1 WHERE id = $2',
-      ['completed', id]
+      'UPDATE errands SET status = $1, job_started_at = NOW() WHERE id = $2',
+      ['in_progress', id]
     );
 
     res.json({
       success: true,
-      message: 'Job marked as completed. Waiting for asker to confirm and rate.',
+      message: 'Job started! Timer is running.',
     });
   } catch (error) {
-    console.error('Error completing job:', error);
-    res.status(500).json({ error: 'Failed to complete job' });
+    console.error('Error starting job:', error);
+    res.status(500).json({ error: 'Failed to start job' });
+  }
+});
+
+// POST /api/errands/:id/end - Doer ends job
+router.post('/:id/end', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const errandResult = await db.query(
+      'SELECT id, status FROM errands WHERE id = $1',
+      [id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    if (errandResult.rows[0].status !== 'in_progress') {
+      return res.status(400).json({ error: 'Can only end job while in progress' });
+    }
+
+    // Update status and set end time
+    await db.query(
+      'UPDATE errands SET status = $1, job_ended_at = NOW(), dispute_deadline = NOW() + INTERVAL \'48 hours\' WHERE id = $2',
+      ['job_completed', id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Job ended. Waiting for asker confirmation. Payment will be released in 48 hours if no dispute.',
+    });
+  } catch (error) {
+    console.error('Error ending job:', error);
+    res.status(500).json({ error: 'Failed to end job' });
+  }
+});
+
+// POST /api/errands/:id/reopen - Asker reopens job if not satisfied
+router.post('/:id/reopen', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(req.userId || '0', 10);
+    const { reason } = req.body;
+
+    // Get errand details
+    const errandResult = await db.query(
+      'SELECT id, status, asker_id, dispute_deadline FROM errands WHERE id = $1',
+      [id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    // Only asker can reopen
+    if (userId !== errand.asker_id) {
+      return res.status(403).json({ error: 'Only asker can reopen job' });
+    }
+
+    // Can only reopen within 48 hours
+    if (new Date() > new Date(errand.dispute_deadline)) {
+      return res.status(400).json({ error: 'Dispute period has ended. Cannot reopen job.' });
+    }
+
+    if (errand.status !== 'job_completed') {
+      return res.status(400).json({ error: 'Can only reopen completed jobs' });
+    }
+
+    // Update status back to in_progress
+    await db.query(
+      'UPDATE errands SET status = $1, reopened_reason = $2 WHERE id = $3',
+      ['in_progress', reason || null, id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Job reopened. Doer can continue working.',
+    });
+  } catch (error) {
+    console.error('Error reopening job:', error);
+    res.status(500).json({ error: 'Failed to reopen job' });
+  }
+});
+
+// POST /api/errands/:id/raise-dispute - Raise dispute before 48 hours
+router.post('/:id/raise-dispute', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(req.userId || '0', 10);
+    const { reason } = req.body;
+
+    const errandResult = await db.query(
+      'SELECT id, status, asker_id, dispute_deadline FROM errands WHERE id = $1',
+      [id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    // Only asker can raise dispute
+    if (userId !== errand.asker_id) {
+      return res.status(403).json({ error: 'Only asker can raise dispute' });
+    }
+
+    // Can only dispute within 48 hours
+    if (new Date() > new Date(errand.dispute_deadline)) {
+      return res.status(400).json({ error: 'Dispute period has ended' });
+    }
+
+    if (errand.status !== 'job_completed') {
+      return res.status(400).json({ error: 'Can only dispute completed jobs' });
+    }
+
+    // Update status to disputed - payment held indefinitely
+    await db.query(
+      'UPDATE errands SET status = $1, dispute_reason = $2 WHERE id = $3',
+      ['disputed', reason || null, id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Dispute raised. Admin will review. Payment is held.',
+    });
+  } catch (error) {
+    console.error('Error raising dispute:', error);
+    res.status(500).json({ error: 'Failed to raise dispute' });
+  }
+});
+
+// POST /api/errands/:id/review - Leave a review
+router.post('/:id/review', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(req.userId || '0', 10);
+    const { rating, comment } = req.body;
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+    }
+
+    const errandResult = await db.query(
+      'SELECT id, status, asker_id FROM errands WHERE id = $1',
+      [id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    // Can only review after job completed (within 48 hours or after)
+    if (!['job_completed', 'disputed', 'completed'].includes(errand.status)) {
+      return res.status(400).json({ error: 'Can only review completed jobs' });
+    }
+
+    // Check if already reviewed by this user
+    const isAsker = userId === errand.asker_id;
+    const reviewField = isAsker ? 'asker_rating' : 'doer_rating';
+    const commentField = isAsker ? 'asker_review_comment' : 'doer_review_comment';
+
+    // Update review
+    await db.query(
+      `UPDATE errands SET ${reviewField} = $1, ${commentField} = $2 WHERE id = $3`,
+      [rating, comment || null, id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Review submitted.',
+    });
+  } catch (error) {
+    console.error('Error submitting review:', error);
+    res.status(500).json({ error: 'Failed to submit review' });
   }
 });
 
