@@ -1,11 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import blogPostsData from '../data/blogPosts';
-import { useNotification } from '../context/NotificationContext';
 
 export default function BlogDetailPage() {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
-  const { addNotification } = useNotification();
 
   // Find post by slug
   const post = blogPostsData.find(p => p.slug === slug);
@@ -36,12 +34,7 @@ export default function BlogDetailPage() {
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(`${text}\n${url}`);
-      addNotification({
-        type: 'success',
-        title: 'Copied!',
-        message: 'Article link copied to clipboard',
-        duration: 3000,
-      });
+      alert('Article link copied to clipboard!');
     }
   };
 
