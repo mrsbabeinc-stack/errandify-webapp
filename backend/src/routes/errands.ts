@@ -79,6 +79,26 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     const result = await db.query(query, params);
 
+    // Map internal category names to frontend category IDs
+    const categoryMap: Record<string, string> = {
+      'homehelp': 'home-maintenance',
+      'petcare': 'pet-care',
+      'childcare': 'childcare-tutoring',
+      'eldercare': 'childcare-tutoring', // Map eldercare to childcare-tutoring for now
+      'delivery': 'delivery-moving',
+      'eventhelp': 'moving-help', // No exact match, use moving-help
+      'tech-support': 'tech-support',
+      'data-entry': 'home-maintenance', // Map data-entry to home-maintenance
+      // Handle frontend category IDs passed through (just return as-is)
+      'home-maintenance': 'home-maintenance',
+      'cleaning-laundry': 'cleaning-laundry',
+      'shopping-errands': 'shopping-errands',
+      'delivery-moving': 'delivery-moving',
+      'childcare-tutoring': 'childcare-tutoring',
+      'pet-care': 'pet-care',
+      'moving-help': 'moving-help',
+    };
+
     // Enrich with asker info
     const errandsWithAskerInfo = await Promise.all(
       result.rows.map(async (errand) => {
@@ -90,7 +110,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           id: errand.id,
           title: errand.title,
           description: errand.description,
-          category: errand.category,
+          category: categoryMap[errand.category] || errand.category, // Map to frontend category
           status: errand.status,
           budget: errand.budget,
           location: errand.location,
