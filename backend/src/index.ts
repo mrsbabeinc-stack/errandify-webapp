@@ -39,7 +39,6 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/errands', errandRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ai', aiRoutes);
@@ -52,8 +51,11 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/chas', chasRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/tasks', taskExecutionRoutes);
+// Mount specific errand routes BEFORE the catch-all
 app.use('/api/errands', sessionsRoutes);
 app.use('/api/errands', errandSearchRoutes);
+// Mount main errand routes LAST so specific routes take precedence
+app.use('/api/errands', errandRoutes);
 app.use('/api/screening', screeningRoutes);
 app.use('/api/ratings', ratingsRoutes);
 app.use('/api/wallet', walletRoutes);
