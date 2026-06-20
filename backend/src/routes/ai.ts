@@ -804,11 +804,12 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     let skills = skillMap[detectedCategory] || [];
 
     // Filter skills based on actual task content
+    const titleLower = title.toLowerCase();
     if (!titleLower.includes('deliver') && !titleLower.includes('drive')) {
       skills = skills.filter(s => s !== 'Driving License');
     }
 
-    console.log('[Extract] Suggested skills for', detectedCategory, ':', skills);
+    console.log('[Suggestions] Suggested skills for', detectedCategory, ':', skills);
 
     // Generate suggested description using Qwen AI (ALWAYS attempt, then fallback)
     // Description should give context/details about the task, not ask questions
