@@ -24,6 +24,7 @@ interface ErrandDetail {
 interface UserProfile {
   id: number;
   role: 'asker' | 'doer';
+  name?: string;
 }
 
 interface AcceptedBid {
@@ -352,7 +353,7 @@ export default function ErrandDetailPage() {
             </div>
 
             {/* Action Button */}
-            {errand.status === 'open' && currentUser && currentUser.id !== errand.askerId ? (
+            {errand.status === 'open' && currentUser && currentUser.id !== errand.askerId && currentUser.role === 'doer' ? (
               <button
                 onClick={() => {
                   if (errand.isRecurring) {
@@ -365,7 +366,7 @@ export default function ErrandDetailPage() {
               >
                 {bidSubmitted ? '✓ Bid Submitted' : errand.isRecurring ? 'Select Sessions' : 'Submit a Bid'}
               </button>
-            ) : errand.status === 'open' && currentUser && currentUser.id === errand.askerId ? (
+            ) : errand.status === 'open' && currentUser && (currentUser.id === errand.askerId || currentUser.role === 'asker') ? (
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => navigate(`/errand/${id}/edit`)}
