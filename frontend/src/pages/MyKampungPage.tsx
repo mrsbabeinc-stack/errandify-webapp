@@ -638,7 +638,11 @@ export default function MyKampungPage() {
               </div>
             ) : (
               discussions.map((discussion) => (
-                <div key={discussion.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition cursor-pointer">
+                <div
+                  key={discussion.id}
+                  onClick={() => navigate(`/discussion/${discussion.id}`)}
+                  className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition cursor-pointer"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">

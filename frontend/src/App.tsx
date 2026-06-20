@@ -47,6 +47,7 @@ import DisputesManagementPage from './pages/DisputesManagementPage';
 import AboutErrandifyPage from './pages/AboutErrandifyPage';
 import FAQPage from './pages/FAQPage';
 import BlogDetailPage from './pages/BlogDetailPage';
+import DiscussionDetailPage from './pages/DiscussionDetailPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -228,6 +229,7 @@ export default function App() {
         <Route path="/faq" element={<FAQPage />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/blog/:slug" element={<BlogDetailPage />} />
+        <Route path="/discussion/:id" element={<DiscussionDetailPage />} />
 
         {/* Main dashboard layout */}
         <Route
