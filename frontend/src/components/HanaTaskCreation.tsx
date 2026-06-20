@@ -91,6 +91,28 @@ export default function HanaTaskCreation({
     return budgets[Math.floor(Math.random() * budgets.length)];
   };
 
+  const getRandomCategory = () => {
+    const categories = [
+      'home-maintenance',
+      'cleaning-household',
+      'food-beverage',
+      'furniture-assembly',
+      'shopping-errands',
+      'delivery-moving',
+      'travel-mobility',
+      'event-planning',
+      'childcare-education',
+      'eldercare-healthcare',
+      'pet-care',
+      'personal-care',
+      'tech-support',
+      'creative-arts',
+      'admin-business',
+      'charity-community',
+    ];
+    return categories[Math.floor(Math.random() * categories.length)];
+  };
+
   const getExampleByCategory = (category: string) => {
     const postalCode = getRandomPostalCode();
     const day = getRandomDay();
@@ -120,7 +142,9 @@ export default function HanaTaskCreation({
   };
 
   const initializeChat = () => {
-    const example = getExampleByCategory(defaultCategory || '');
+    // Use provided category or pick a random one for inspiration
+    const categoryToUse = defaultCategory || getRandomCategory();
+    const example = getExampleByCategory(categoryToUse);
     setHanaMessage(`Hi! What errand do you need help with?\n\nExample:\n'${example}'`);
     setCurrentStep('input');
     triggerSpeaking();
