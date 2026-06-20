@@ -521,53 +521,11 @@ export default function HanaTaskCreation({
           </div>
         </div>
 
-        {/* Main Content - Top Speech Bubble + Large Hana Half-Body */}
-        <div className="flex-1 overflow-y-auto flex flex-col pt-4 pb-4">
-          {/* Speech Bubble - Top */}
-          {hanaMessage && (
-            <div className="px-6 flex-shrink-0 mb-2">
-              <div className="relative animate-slideDown max-w-xl mx-auto"
-                   style={{
-                     background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
-                     border: '2px solid #FF8C42',
-                     borderRadius: '24px',
-                     padding: '18px 24px',
-                     boxShadow: '0 8px 16px rgba(255, 140, 66, 0.15), 0 2px 4px rgba(0,0,0,0.08)',
-                   }}>
-                <p className="text-center whitespace-pre-line text-sm font-medium"
-                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.6', letterSpacing: '0px'}}>
-                  {hanaMessage}
-                </p>
-                {/* Speech bubble tail - pointing down to Hana */}
-                <div style={{
-                  position: 'absolute',
-                  bottom: '-12px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '0',
-                  height: '0',
-                  borderLeft: '10px solid transparent',
-                  borderRight: '10px solid transparent',
-                  borderTop: '12px solid #FF8C42',
-                }} />
-                <div style={{
-                  position: 'absolute',
-                  bottom: '-8px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '0',
-                  height: '0',
-                  borderLeft: '8px solid transparent',
-                  borderRight: '8px solid transparent',
-                  borderTop: '8px solid #FFF8F0',
-                }} />
-              </div>
-            </div>
-          )}
-
-          {/* Hana Half-Body Avatar - Large, Centered */}
-          <div className="flex-1 flex items-center justify-center overflow-hidden min-h-0">
-            <div style={{ height: '420px', width: 'auto', maxWidth: '100%' }}>
+        {/* Main Content - Hana Left + Conversation Right */}
+        <div className="flex-1 overflow-hidden flex gap-4 px-4 py-4">
+          {/* Hana Half-Body Avatar - Left Side, Large */}
+          <div className="flex-shrink-0 flex items-center justify-center overflow-hidden">
+            <div style={{ height: '450px', width: 'auto' }}>
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}
                 message={hanaMessage}
@@ -575,10 +533,54 @@ export default function HanaTaskCreation({
             </div>
           </div>
 
-          {/* Bottom Section: Input - Always Visible */}
-          <div className="bg-white border-t border-gray-200 px-6 py-4 flex-shrink-0">
+          {/* Right Side - Speech Bubble + Input */}
+          <div className="flex-1 overflow-y-auto flex flex-col">
+            {/* Speech Bubble */}
+            {hanaMessage && (
+              <div className="flex-shrink-0 mb-4">
+                <div className="relative animate-slideDown"
+                     style={{
+                       background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
+                       border: '2px solid #FF8C42',
+                       borderRadius: '24px',
+                       padding: '18px 24px',
+                       boxShadow: '0 8px 16px rgba(255, 140, 66, 0.15), 0 2px 4px rgba(0,0,0,0.08)',
+                     }}>
+                  <p className="whitespace-pre-line text-sm font-medium"
+                     style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.6', letterSpacing: '0px'}}>
+                    {hanaMessage}
+                  </p>
+                  {/* Speech bubble tail - pointing left to Hana */}
+                  <div style={{
+                    position: 'absolute',
+                    left: '-12px',
+                    top: '20px',
+                    width: '0',
+                    height: '0',
+                    borderTop: '10px solid transparent',
+                    borderBottom: '10px solid transparent',
+                    borderRight: '12px solid #FF8C42',
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    left: '-8px',
+                    top: '22px',
+                    width: '0',
+                    height: '0',
+                    borderTop: '8px solid transparent',
+                    borderBottom: '8px solid transparent',
+                    borderRight: '8px solid #FFF8F0',
+                  }} />
+                </div>
+              </div>
+            )}
+
+            {/* Spacer - pushes input to bottom */}
+            <div className="flex-1"></div>
+
+            {/* Input Section - Bottom of Right Side */}
             {currentStep === 'input' && (
-              <form onSubmit={handleSendMessage} className="flex gap-2">
+              <form onSubmit={handleSendMessage} className="flex gap-2 flex-shrink-0">
                 <input
                   type="text"
                   value={input}
@@ -611,7 +613,7 @@ export default function HanaTaskCreation({
             )}
 
             {currentStep === 'confirm' && (
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-shrink-0">
                 <button
                   onClick={handleConfirmAndProceed}
                   disabled={loading}
