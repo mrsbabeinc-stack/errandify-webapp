@@ -85,6 +85,7 @@ export default function MyKampungPage() {
   const [isCheckingModeration, setIsCheckingModeration] = useState(false);
   const [recognitions, setRecognitions] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [userVotes, setUserVotes] = useState<number[]>([]);
 
   // Check if user is admin
   const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
@@ -418,6 +419,22 @@ export default function MyKampungPage() {
       setFavorites(favorites.filter(id => id !== recognitionId));
     } else {
       setFavorites([...favorites, recognitionId]);
+    }
+  };
+
+  const handleVoteRecognition = (recognitionId: number) => {
+    if (userVotes.includes(recognitionId)) {
+      // User already voted, remove vote
+      setUserVotes(userVotes.filter(id => id !== recognitionId));
+      setRecognitions(recognitions.map(r =>
+        r.id === recognitionId ? { ...r, votes: r.votes - 1 } : r
+      ));
+    } else {
+      // Add vote
+      setUserVotes([...userVotes, recognitionId]);
+      setRecognitions(recognitions.map(r =>
+        r.id === recognitionId ? { ...r, votes: r.votes + 1 } : r
+      ));
     }
   };
 
@@ -898,7 +915,9 @@ export default function MyKampungPage() {
                 <p className="text-gray-500">No recognitions yet</p>
               </div>
             ) : (
-              recognitions.map((recognition) => (
+              recognitions
+                .sort((a, b) => b.votes - a.votes)
+                .map((recognition) => (
                 <div key={recognition.id} className="bg-white rounded-lg border border-yellow-200 p-6 shadow-sm hover:shadow-md transition">
                   <div className="flex items-start gap-4 mb-4">
                     <div className="w-16 h-16 bg-gradient-to-br from-yellow-300 to-orange-400 rounded-full flex items-center justify-center text-2xl flex-shrink-0">
@@ -924,9 +943,19 @@ export default function MyKampungPage() {
                         <p className="text-sm text-gray-700 italic">"{recognition.testimonial}"</p>
                         <p className="text-xs text-gray-500 mt-1">— {recognition.nominatedBy}</p>
                       </div>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>{new Date(recognition.nominationDate).toLocaleDateString()}</span>
-                        <span>👍 {recognition.votes} upvotes</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">{new Date(recognition.nominationDate).toLocaleDateString()}</span>
+                        <button
+                          onClick={() => handleVoteRecognition(recognition.id)}
+                          className={`flex items-center gap-1 px-3 py-1 rounded-lg transition ${
+                            userVotes.includes(recognition.id)
+                              ? 'bg-blue-100 text-blue-600 font-semibold'
+                              : 'bg-gray-100 text-gray-600 hover:bg-blue-50'
+                          }`}
+                          title={userVotes.includes(recognition.id) ? 'Remove vote' : 'Vote for this doer'}
+                        >
+                          {userVotes.includes(recognition.id) ? '👍' : '👏'} {recognition.votes}
+                        </button>
                       </div>
                     </div>
                   </div>
