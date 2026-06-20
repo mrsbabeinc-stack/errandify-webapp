@@ -368,20 +368,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             {/* Action Button */}
             {errand.status === 'open' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
               bidSubmitted || userBidAmount ? (
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => setShowChat(true)}
-                    className="flex-1 bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
-                  >
-                    📋 View Details
-                  </button>
-                  <button
-                    onClick={() => setShowBidModal(true)}
-                    className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
-                  >
-                    ✏️ Update Bid
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowBidModal(true)}
+                  className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
+                >
+                  ✏️ Update Bid
+                </button>
               ) : (
                 <button
                   onClick={() => {
