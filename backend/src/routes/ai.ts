@@ -456,22 +456,23 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     // Remove metadata markers that clearly indicate non-title content
     title = title
-      // Remove postal codes in parentheses
+      // First: Remove postal codes in parentheses like (629652)
       .replace(/\s*\(\d{6}\)\s*/g, ' ')
-      // Remove everything after " at " (location marker)
-      .split(/\s+at\s+/i)[0]
-      // Remove everything after " on " (date marker)
-      .split(/\s+on\s+/i)[0]
+      // Remove " on [day/date]" patterns (on Monday, on Friday, etc)
+      .replace(/\s+on\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|[0-9]{1,2}\/[0-9]{1,2})\b.*/i, '')
+      // Remove " at [time]" patterns (at 4pm, at 10am, etc)
+      .replace(/\s+at\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.)\b.*/i, '')
+      // Remove " at [location]" patterns but only if followed by more metadata
+      // Remove " for X duration" patterns
+      .replace(/\s+for\s+[\d.]+\s*(?:hours?|hrs?|h|mins?|m|minutes?|days?|weeks?|seconds?|secs?)/gi, '')
       // Remove budget markers
-      .split(/\s*,?\s*budget/i)[0]
-      .split(/\s*,?\s*\$/)[0]
-      // Remove for X hours/mins duration markers
-      .split(/\s+for\s+[\d.]+\s*(?:hours?|hrs?|h|mins?|m|minutes?|days?|weeks?)/i)[0]
+      .replace(/\s*,?\s*budget\s+.*$/i, '')
+      .replace(/\s*,?\s*\$\s*\d+.*$/i, '')
       .trim();
 
-    // Remove common metadata words from the end
+    // Remove common metadata words that might remain
     title = title
-      .replace(/\s+(?:tomorrow|today|tonight|this\s+week|next\s+week|asap|urgent|monday|tuesday|wednesday|thursday|friday|saturday|sunday|am|pm|a\.m\.|p\.m\.)\b.*$/gi, '')
+      .replace(/\s+(?:at\s+home|at\s+office|remote|virtual)\b.*/i, '')
       .trim();
 
     // If we got something, use it; otherwise default
@@ -496,8 +497,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Use Qwen to intelligently detect category based on task understanding
     let category = 'homehelp'; // Default fallback
     try {
-      const config = require('../config').default;
-      if (config.qwen.apiKey) {
+      const qwenApiKey = process.env.QWEN_API_KEY;
+      if (qwenApiKey) {
         console.log('[Extract] Using Qwen for category detection...');
         const categoryResponse = await axios.post(
           `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
@@ -516,7 +517,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           },
           {
             headers: {
-              'Authorization': `Bearer ${config.qwen.apiKey}`,
+              'Authorization': `Bearer ${qwenApiKey}`,
               'Content-Type': 'application/json',
             },
             timeout: 5000,
@@ -537,8 +538,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Use Qwen to improve title wording if available
     let improvedTitle = title;
     try {
-      const config = require('../config').default;
-      if (config.qwen.apiKey && title !== 'Task') {
+      // Config loaded from environment variables
+      if (process.env.QWEN_API_KEY && title !== 'Task') {
         console.log('[Extract] Improving title with Qwen...');
         const qwenResponse = await axios.post(
           `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
@@ -557,7 +558,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           },
           {
             headers: {
-              Authorization: `Bearer ${config.qwen.apiKey}`,
+              Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
             },
             timeout: 3000,
           }
@@ -849,7 +850,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       config = { qwen: { apiKey: '' } };
     }
 
-    if (!config.qwen.apiKey) {
+    if (!process.env.QWEN_API_KEY) {
       console.warn('[Suggestions] ⚠️ Qwen API key not configured, will use fallbacks only');
     }
 
@@ -859,7 +860,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     // Use Qwen to generate relevant skills for this specific task
     let skills: string[] = [];
 
-    if (config.qwen.apiKey) {
+    if (process.env.QWEN_API_KEY) {
       try {
         console.log('[Qwen] Generating skills for task...');
         const skillsResponse = await axios.post(
@@ -879,7 +880,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
           },
           {
             headers: {
-              'Authorization': `Bearer ${config.qwen.apiKey}`,
+              'Authorization': `Bearer ${qwenApiKey}`,
               'Content-Type': 'application/json',
             },
             timeout: 5000,
@@ -917,7 +918,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     let suggestedDescription = '';
     let qwenDescriptionUsed = false;
 
-    if (config.qwen.apiKey) {
+    if (process.env.QWEN_API_KEY) {
       try {
         console.log('[Qwen] Calling for description generation...');
         const qwenResponse = await axios.post(
@@ -937,7 +938,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
           },
           {
             headers: {
-              Authorization: `Bearer ${config.qwen.apiKey}`,
+              Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
             },
             timeout: 5000,
           }
@@ -980,7 +981,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     let notes = '';
     let qwenNotesUsed = false;
 
-    if (config.qwen.apiKey) {
+    if (process.env.QWEN_API_KEY) {
       try {
         console.log('[Qwen] Calling for notes/questions generation...');
         const qwenNotesResponse = await axios.post(
@@ -1000,7 +1001,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
           },
           {
             headers: {
-              Authorization: `Bearer ${config.qwen.apiKey}`,
+              Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
             },
             timeout: 5000,
           }
