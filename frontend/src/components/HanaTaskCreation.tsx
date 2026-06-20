@@ -578,12 +578,12 @@ export default function HanaTaskCreation({
           {/* Input Section - Bottom (Full Width, Feet Touch Top) */}
           {currentStep === 'input' && (
             <form onSubmit={handleSendMessage} className="flex gap-3 flex-shrink-0 pb-2">
-              <input
-                type="text"
+              <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Type all details here..."
-                className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-full focus:outline-none focus:border-opacity-100 text-sm"
+                className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-2xl focus:outline-none focus:border-opacity-100 text-base font-semibold resize-none"
+                rows={2}
                 disabled={loading || isRecording}
                 autoFocus
               />
