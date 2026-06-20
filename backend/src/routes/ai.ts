@@ -449,7 +449,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     // Filler words to remove (articles, prepositions, common function words, category names, certification words)
     // DO NOT remove action verbs: take, care, help, clean, pick, etc.
-    const fillerWords = /\b(if|at|on|for|of|to|the|a|an|and|or|in|is|are|be|by|from|with|as|i|me|my|we|you|your|our|their|this|that|these|those|it|which|who|what|when|where|why|how|can|could|will|would|should|must|may|might|today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat|childcare|eldercare|petcare|homehelp|eventhelp|delivery|service|certified|certification|trained|professional|experienced)\b/gi;
+    const fillerWords = /\b(if|at|on|for|of|to|the|a|an|and|or|in|is|are|be|by|from|with|as|i|me|my|we|you|your|our|their|this|that|these|those|it|which|who|what|when|where|why|how|can|could|will|would|should|must|may|might|today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat|childcare|eldercare|petcare|homehelp|eventhelp|delivery|service|certified|certification|trained|professional|experienced|budget)\b/gi;
 
     let title = input
       // Remove all weird punctuation at start and throughout
@@ -461,7 +461,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       .replace(/\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/gi, '')
       .replace(/\s*\d{1,2}(?:am|pm)\b/gi, '')
       // Remove durations - match digits followed by hour/min keywords (5hour, 3hours, 30mins, etc)
-      .replace(/\s*\d+\s*(?:hour|hr|h|min|m)(?:s|ute)?\b/gi, '')
+      .replace(/\s*\d+\s*(?:hour|hr|h|hours|min|mins|m|minute|minutes)?\b/gi, '')
       // Remove amounts ($100, @50, etc)
       .replace(/[\$@]\s*\d+/g, '')
       // Remove trailing numbers
