@@ -26,6 +26,7 @@ export function useNotifications(pollInterval = 10000) {
 
       const response = await axios.get(`${API_URL}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
+        timeout: 3000, // 3 second timeout
       });
 
       if (response.data.success) {
@@ -34,8 +35,9 @@ export function useNotifications(pollInterval = 10000) {
         setError(null);
       }
     } catch (err) {
-      console.error('Failed to fetch notifications:', err);
-      setError('Failed to load notifications');
+      // Don't block the app if notifications fail - just log silently
+      console.warn('[Notifications] Failed to fetch (will retry):', err instanceof Error ? err.message : err);
+      // Don't set error state - let app continue without notifications
     } finally {
       setLoading(false);
     }
