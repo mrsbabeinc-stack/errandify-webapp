@@ -491,6 +491,46 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
       .join(' ');
 
+    // Use Qwen to improve title wording if available
+    let improvedTitle = title;
+    try {
+      const config = require('../config').default;
+      if (config.qwen.apiKey && title !== 'Task') {
+        console.log('[Extract] Improving title with Qwen...');
+        const qwenResponse = await axios.post(
+          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+          {
+            model: 'qwen-plus',
+            messages: [
+              {
+                role: 'system',
+                content: 'Rewrite the task title to be clear, concise, and grammatically correct. Keep it under 40 characters. Only return the title, nothing else.',
+              },
+              {
+                role: 'user',
+                content: title,
+              },
+            ],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${config.qwen.apiKey}`,
+            },
+            timeout: 3000,
+          }
+        );
+
+        const aiTitle = qwenResponse.data?.output?.text?.trim();
+        if (aiTitle && aiTitle.length > 2) {
+          improvedTitle = aiTitle.substring(0, 50);
+          console.log('[Extract] ✅ Title improved by Qwen:', improvedTitle);
+        }
+      }
+    } catch (error) {
+      console.warn('[Extract] Could not improve title with Qwen, using original');
+    }
+
+    title = improvedTitle;
     console.log('[Extract] Final title:', title);
 
     // Parse date - look for "tomorrow", "today", "later" (=today), "N days later", day names, or dates
