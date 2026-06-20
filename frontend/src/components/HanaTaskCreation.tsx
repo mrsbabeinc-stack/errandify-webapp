@@ -521,58 +521,59 @@ export default function HanaTaskCreation({
           </div>
         </div>
 
-        {/* Main Content - Compact Layout */}
-        <div className="flex-1 overflow-y-auto flex flex-col">
-          {/* Top Section: Speech Bubble */}
-          {hanaMessage && (
-            <div className="px-6 pt-1 flex-shrink-0">
-              <div className="relative animate-slideDown max-w-sm mx-auto"
-                   style={{
-                     background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
-                     border: '1.5px solid #FF8C42',
-                     borderRadius: '16px',
-                     padding: '10px 12px',
-                     boxShadow: '0 4px 8px rgba(255, 140, 66, 0.12), 0 1px 2px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
-                     transform: 'perspective(1000px) rotateX(2deg)',
-                   }}>
-                <p className="text-center whitespace-pre-line text-xs font-medium"
-                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.4', letterSpacing: '0px', fontSize: '12px'}}>
-                  {hanaMessage}
-                </p>
-                {/* Speech bubble tail */}
-                <div style={{
-                  position: 'absolute',
-                  bottom: '-6px',
-                  left: '20px',
-                  width: '0',
-                  height: '0',
-                  borderLeft: '6px solid transparent',
-                  borderRight: '0 solid transparent',
-                  borderTop: '6px solid #FF8C42',
-                }} />
-                <div style={{
-                  position: 'absolute',
-                  bottom: '-5px',
-                  left: '21px',
-                  width: '0',
-                  height: '0',
-                  borderLeft: '5px solid transparent',
-                  borderRight: '0 solid transparent',
-                  borderTop: '5px solid #FFF8F0',
-                }} />
-              </div>
-            </div>
-          )}
-
-          {/* Middle Section: Hana Half-Body Image */}
-          <div className="flex-1 flex items-center justify-center overflow-hidden px-2 py-2">
-            <div className="h-80 w-auto">
+        {/* Main Content - Better Proportioned Layout */}
+        <div className="flex-1 overflow-y-auto flex flex-col gap-4 pt-6 pb-6">
+          {/* Hana Avatar - Larger, More Prominent */}
+          <div className="flex justify-center flex-shrink-0">
+            <div className="h-96 w-auto">
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}
                 message={hanaMessage}
               />
             </div>
           </div>
+
+          {/* Speech Bubble - Natural Chat Bubble Design */}
+          {hanaMessage && (
+            <div className="px-6 flex-shrink-0">
+              <div className="relative animate-slideDown max-w-lg mx-auto"
+                   style={{
+                     background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
+                     border: '2px solid #FF8C42',
+                     borderRadius: '24px',
+                     padding: '16px 20px',
+                     boxShadow: '0 8px 16px rgba(255, 140, 66, 0.15), 0 2px 4px rgba(0,0,0,0.08)',
+                   }}>
+                <p className="text-center whitespace-pre-line text-sm font-medium"
+                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.5', letterSpacing: '0px'}}>
+                  {hanaMessage}
+                </p>
+                {/* Natural speech bubble tail - bottom center */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-12px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '8px solid transparent',
+                  borderRight: '8px solid transparent',
+                  borderTop: '12px solid #FF8C42',
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-8px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '6px solid transparent',
+                  borderRight: '6px solid transparent',
+                  borderTop: '8px solid #FFF8F0',
+                }} />
+              </div>
+            </div>
+          )}
 
           {/* Bottom Section: Input - Always Visible */}
           <div className="bg-white border-t border-gray-200 px-6 py-4 flex-shrink-0">
