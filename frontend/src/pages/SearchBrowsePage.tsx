@@ -72,12 +72,21 @@ export default function SearchBrowsePage() {
         sortBy,
       });
 
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/search?${params}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setErrands(response.data.data.errands);
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/search?${params}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setErrands(response.data.data.errands);
+      } catch (searchError) {
+        // Fallback to basic GET /api/errands if search endpoint is not available
+        console.log('Search endpoint unavailable, using basic errands list');
+        const fallbackResponse = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setErrands(fallbackResponse.data.data || []);
+      }
 
       // Update URL with filters
       setSearchParams({
