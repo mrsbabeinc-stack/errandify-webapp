@@ -842,7 +842,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     console.log('[Suggestions] Suggested skills for', detectedCategory, ':', skills);
 
     // Generate suggested description using Qwen AI (ALWAYS attempt, then fallback)
-    // Description should give context/details about the task, not ask questions
+    // Description should clearly explain what needs to be done and what doers should expect
     let suggestedDescription = '';
     let qwenDescriptionUsed = false;
 
@@ -856,11 +856,11 @@ router.post('/suggestions', async (req: Request, res: Response) => {
             messages: [
               {
                 role: 'system',
-                content: 'You are a helpful assistant. Generate a detailed description for a task that includes: scope of work, expected outcome, and any special requirements. Be concise but informative. Under 150 characters.',
+                content: 'You are a task description expert. Write a clear, specific task description that helps doers understand exactly what work is needed. Include: (1) What specifically needs to be done, (2) What the doer should bring/know, (3) Expected outcome. Keep it under 180 characters. Be direct and specific, not generic.',
               },
               {
                 role: 'user',
-                content: `For this ${detectedCategory} task: "${title}" on ${date} at ${time}. Provide a brief description of what the task involves and what the doer should expect.`,
+                content: `Task: "${title}"\nCategory: ${detectedCategory}\nDate: ${date || 'TBD'}\nTime: ${time || 'TBD'}\n\nWrite a clear description of what this task involves and what doers should expect.`,
               },
             ],
           },
@@ -874,7 +874,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
 
         const aiText = qwenResponse.data?.output?.text || '';
         if (aiText && aiText.trim().length > 0) {
-          suggestedDescription = aiText.substring(0, 150).trim();
+          suggestedDescription = aiText.substring(0, 180).trim();
           qwenDescriptionUsed = true;
           console.log('[Qwen] ✅ Description generated:', suggestedDescription);
         } else {
@@ -887,20 +887,20 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       console.warn('[Qwen] ❌ API key not configured');
     }
 
-    // Fallback if Qwen not used
+    // Fallback if Qwen not used - meaningful category-specific suggestions
     if (!qwenDescriptionUsed) {
       const descriptionSuggestions: Record<string, string> = {
-        'eldercare': 'Provide care and support for elderly person. Include any mobility or health considerations.',
-        'childcare': 'Provide childcare and supervision. Specify age group and any special requirements.',
-        'homehelp': 'Provide household assistance. Specify which areas and what type of cleaning/work needed.',
-        'petcare': 'Provide pet care services. Include pet type, temperament, and any special dietary needs.',
-        'delivery': 'Deliver items or packages. Include size, weight, and any special handling requirements.',
-        'eventhelp': 'Help with event setup and execution. Specify event type and number of attendees.',
-        'admin-business': 'Provide administrative support. Specify tasks like data entry, document prep, etc.',
-        'tech-support': 'Provide technical assistance. Specify device type and nature of technical issue.',
-        'creative-arts': 'Provide creative services. Specify the deliverable and any style preferences.',
+        'eldercare': 'Help with daily activities and companionship for elderly person. Include mobility assistance, meal prep, or medication reminders needed.',
+        'childcare': 'Provide childcare and supervision for child. Specify age group, activities, any allergies or special needs.',
+        'homehelp': 'Professional household assistance. Specify areas (bedroom, kitchen, bathroom) and type of work (cleaning, organizing, repairs).',
+        'petcare': 'Pet care services. Specify pet type, size, temperament, and what\'s needed (walking, sitting, grooming).',
+        'delivery': 'Deliver items from point A to point B. Specify item type, size, weight, and any special handling needs.',
+        'eventhelp': 'Help with event preparation and execution. Specify event type (party, wedding, corporate), size, and setup needs.',
+        'admin-business': 'Administrative support work. Specify exact tasks (data entry, document preparation, spreadsheet management).',
+        'tech-support': 'Technical help for device or software. Specify device type, operating system, and exact problem or issue.',
+        'creative-arts': 'Creative services project. Specify deliverable (design, photo, video), style preferences, and deadline.',
       };
-      suggestedDescription = descriptionSuggestions[detectedCategory] || 'Provide additional context about the task, expected outcomes, and any special requirements.';
+      suggestedDescription = descriptionSuggestions[detectedCategory] || 'Describe what needs to be done, what doers should expect, and any special requirements.';
       console.log('[Qwen] Using fallback description');
     }
 
@@ -911,7 +911,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
 
     if (config.qwen.apiKey) {
       try {
-        console.log('[Qwen] Calling for notes generation...');
+        console.log('[Qwen] Calling for notes/questions generation...');
         const qwenNotesResponse = await axios.post(
           `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
           {
@@ -919,11 +919,11 @@ router.post('/suggestions', async (req: Request, res: Response) => {
             messages: [
               {
                 role: 'system',
-                content: 'You are a helpful assistant. Suggest 2-3 key things to ask or verify with a doer. Focus on safety, qualifications, and task execution. Keep it under 200 characters. Be specific.',
+                content: 'You are a task screening expert. Generate 2-3 specific, practical questions the task poster should ask potential doers. Focus on: (1) Experience/qualifications needed, (2) Safety or quality concerns, (3) Logistical requirements. Use action-oriented language like "Ask doer about..." or "Verify...". Keep under 220 characters. Be specific to this task type.',
               },
               {
                 role: 'user',
-                content: `For a ${detectedCategory} task: "${title}". What should the task poster ask the doer about experience, qualifications, or task details?`,
+                content: `Task: "${title}"\nCategory: ${detectedCategory}\nWhat important questions should be asked to qualified doers for this task?`,
               },
             ],
           },
@@ -937,9 +937,9 @@ router.post('/suggestions', async (req: Request, res: Response) => {
 
         const aiNotes = qwenNotesResponse.data?.output?.text || '';
         if (aiNotes && aiNotes.trim().length > 0) {
-          notes = aiNotes.substring(0, 300).trim();
+          notes = aiNotes.substring(0, 220).trim();
           qwenNotesUsed = true;
-          console.log('[Qwen] ✅ Notes generated:', notes);
+          console.log('[Qwen] ✅ Notes/questions generated:', notes);
         } else {
           console.log('[Qwen] Empty response, using fallback');
         }
@@ -950,21 +950,20 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       console.warn('[Qwen] ❌ API key not configured for notes');
     }
 
-    // Fallback if Qwen not used
+    // Fallback if Qwen not used - practical questions for each category
     if (!qwenNotesUsed) {
       const notesSuggestions: Record<string, string> = {
-        'eldercare': 'Ask doer: Emergency contact? Experience with seniors? Any medical training?',
-        'childcare': 'Ask doer: Experience with kids this age? Any certifications? First aid trained?',
-        'homehelp': 'Ask doer: Own tools/supplies? Experience level? Availability for same-day work?',
-        'petcare': 'Ask doer: Experience with animals? Any certifications? Can stay for full duration?',
-        'delivery': 'Ask doer: Vehicle type? Can handle fragile items? Insurance coverage?',
-        'eventhelp': 'Ask doer: Experience with events? Availability on date? Physical fitness needed?',
-        'wellness': 'Ask doer: Relevant certifications? Confidentiality agreement? Flexible schedule?',
-        'tripcarry': 'Ask doer: Travel experience? Passport required? Any weight/size limits?',
-        'donate': 'Ask doer: Vehicle needed? Help required at both ends? Flexible timing?',
-        'localbiz': 'Ask doer: Relevant business experience? Schedule flexibility? Quality standards?',
+        'eldercare': 'Ask doer: Experience with elderly care? Any medical training? Can handle mobility assistance? Can you provide references?',
+        'childcare': 'Ask doer: Experience with this age group? Any certifications (CPR, First Aid)? Background check? References from previous families?',
+        'homehelp': 'Ask doer: Own cleaning supplies or expect to be provided? Experience level? Can you handle same-day work? References?',
+        'petcare': 'Ask doer: Experience with this pet type? Any certifications? Comfortable handling emergencies? What\'s your experience with this breed?',
+        'delivery': 'Ask doer: Vehicle type? Can handle fragile/delicate items? Insured? Can pick up same day? Experience with this distance?',
+        'eventhelp': 'Ask doer: Event experience? Physical fitness for setup work? Flexibility with timing? Can you follow instructions?',
+        'admin-business': 'Ask doer: Software experience (Excel, Google Sheets)? Accuracy record? Attention to detail? Experience with this task type?',
+        'tech-support': 'Ask doer: Device expertise? Problem-solving approach? Availability for follow-up? What tools do you typically use?',
+        'creative-arts': 'Ask doer: Portfolio examples? Software/tools you use? Design philosophy? Timeline flexibility? Revision policy?',
       };
-      notes = notesSuggestions[detectedCategory] || 'Add any requirements or questions for the doer.';
+      notes = notesSuggestions[detectedCategory] || 'Add important questions or requirements for potential doers.';
       console.log('[Qwen] Using fallback notes');
     }
 
