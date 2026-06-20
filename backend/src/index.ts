@@ -52,7 +52,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/chas', chasRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/tasks', taskExecutionRoutes);
-app.use('/api/errands', sessionsRoutes);
+app.use('/api/sessions', sessionsRoutes);
 app.use('/api/screening', screeningRoutes);
 app.use('/api/ratings', ratingsRoutes);
 app.use('/api/wallet', walletRoutes);
