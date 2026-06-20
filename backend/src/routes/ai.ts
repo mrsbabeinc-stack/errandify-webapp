@@ -454,45 +454,75 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Don't try to be clever - let Qwen handle grammar/wording
     let title = input;
 
-    // Remove metadata markers that clearly indicate non-title content
-    title = title
-      // First: Remove postal codes in parentheses like (629652)
-      .replace(/\s*\(\d{6}\)\s*/g, ' ')
-      // Remove " on [day/date]" patterns (on Monday, on Friday, etc)
-      .replace(/\s+on\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|[0-9]{1,2}\/[0-9]{1,2})\b.*/i, '')
-      // Remove " at [time]" patterns (at 4pm, at 10am, etc)
-      .replace(/\s+at\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.)\b.*/i, '')
-      // Remove " at [location]" patterns but only if followed by more metadata
-      // Remove " for X duration" patterns
-      .replace(/\s+for\s+[\d.]+\s*(?:hours?|hrs?|h|mins?|m|minutes?|days?|weeks?|seconds?|secs?)/gi, '')
-      // Remove budget markers
-      .replace(/\s*,?\s*budget\s+.*$/i, '')
-      .replace(/\s*,?\s*\$\s*\d+.*$/i, '')
-      .trim();
+    // Use Qwen to intelligently extract clean title from messy user input
+    let cleanedTitle = title;
+    const qwenApiKey = process.env.QWEN_API_KEY;
 
-    // Remove common metadata words that might remain
-    title = title
-      .replace(/\s+(?:at\s+home|at\s+office|remote|virtual)\b.*/i, '')
-      .trim();
+    if (qwenApiKey) {
+      try {
+        console.log('[Extract] Using Qwen to clean title...');
+        const titleCleanResponse = await axios.post(
+          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+          {
+            model: 'qwen-plus',
+            messages: [
+              {
+                role: 'system',
+                content: 'Extract ONLY the task title from the user input. Remove all metadata like dates, times, locations, postal codes, budgets, durations, etc. Return ONLY the clean task title, 5-10 words max. Be concise.',
+              },
+              {
+                role: 'user',
+                content: `Extract title from: ${input}`,
+              },
+            ],
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${qwenApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 5000,
+          }
+        );
 
-    // If we got something, use it; otherwise default
-    if (!title || title.length < 2) {
-      // Last resort: take first 5 words
-      title = input.split(/\s+/).slice(0, 5).join(' ').trim();
+        const qwenTitle = titleCleanResponse.data?.output?.text?.trim();
+        if (qwenTitle && qwenTitle.length > 0 && qwenTitle.length < 100) {
+          cleanedTitle = qwenTitle;
+          console.log('[Extract] ✅ Qwen cleaned title:', cleanedTitle);
+        }
+      } catch (error) {
+        console.warn('[Extract] Qwen title cleaning failed, using fallback:', error instanceof Error ? error.message : error);
+      }
     }
 
-    // Final sanity check
-    title = title && title.length > 1 ? title : 'Task';
+    // Fallback: basic cleanup if Qwen not available
+    if (cleanedTitle === title) {
+      cleanedTitle = title
+        .replace(/\s*\(\d{6}\)\s*/g, ' ') // Remove postal codes in parens
+        .replace(/\s+on\s+\w+.*$/i, '') // Remove "on [day]..."
+        .replace(/\s+at\s+\d{1,2}.*$/i, '') // Remove "at [time]..."
+        .replace(/\s+for\s+[\d.]+\s*(?:hours?|hrs?|h|mins?|m).*$/i, '') // Remove "for [duration]..."
+        .replace(/\s*,?\s*budget.*$/i, '') // Remove "budget..."
+        .replace(/\s*,?\s*\$.*$/i, '') // Remove "$..."
+        .trim();
+    }
 
-    // Capitalize properly (this is safe - just title case)
-    title = title
+    // Final cleanup
+    if (!cleanedTitle || cleanedTitle.length < 2) {
+      cleanedTitle = input.split(/\s+/).slice(0, 5).join(' ').trim();
+    }
+
+    cleanedTitle = cleanedTitle && cleanedTitle.length > 1 ? cleanedTitle : 'Task';
+
+    // Title case
+    cleanedTitle = cleanedTitle
       .split(/\s+/)
       .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
       .join(' ')
       .substring(0, 50);
 
-    console.log('[Extract] Extracted title:', title);
-    console.log('[Extract] Before Qwen improvement:', title);
+    title = cleanedTitle;
+    console.log('[Extract] Final title:', title);
 
     // Use Qwen to intelligently detect category based on task understanding
     let category = 'homehelp'; // Default fallback
