@@ -7,8 +7,11 @@ const router = Router();
 // Get all errands (with filters)
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    console.log('[Errands GET] Request received - userId:', req.userId);
     const { category, status, sort, myOnly, accepted, recommended } = req.query;
     const currentUserId = req.userId ? parseInt(req.userId, 10) : null;
+
+    console.log('[Errands GET] currentUserId:', currentUserId, 'filters:', { myOnly, accepted, recommended });
 
     if (!currentUserId) {
       return res.status(400).json({ error: 'User ID not found in token' });
@@ -122,6 +125,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       })
     );
 
+    console.log('[Errands] Returning', errandsWithAskerInfo.length, 'errands with categories:', errandsWithAskerInfo.map(e => ({ id: e.id, title: e.title, category: e.category })));
     res.json({
       success: true,
       data: errandsWithAskerInfo,
