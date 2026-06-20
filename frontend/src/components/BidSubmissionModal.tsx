@@ -42,6 +42,11 @@ export default function BidSubmissionModal({
 
       // Show success message
       if (response.data.success) {
+        // Save bid to localStorage for display in browse page
+        const bids = JSON.parse(localStorage.getItem('userBids') || '{}');
+        bids[taskId.toString()] = parseFloat(bidAmount);
+        localStorage.setItem('userBids', JSON.stringify(bids));
+
         alert(`✓ Bid submitted for $${bidAmount}!`);
         onSuccess();
       }

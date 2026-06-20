@@ -29,6 +29,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showRecommended, setShowRecommended] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userBids, setUserBids] = useState<Record<string, number>>({}); // taskId -> bidAmount
 
   const categories = [
     { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50' },
@@ -60,6 +61,16 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
     );
   };
 
+  const saveBid = (taskId: string, amount: number) => {
+    const bids = { ...userBids, [taskId]: amount };
+    setUserBids(bids);
+    localStorage.setItem('userBids', JSON.stringify(bids));
+  };
+
+  const getUserBid = (taskId: string) => {
+    return userBids[taskId];
+  };
+
   const getMaskedLocation = (location?: string) => {
     if (!location) return null;
     if (location.toLowerCase() === 'remote') return 'Remote';
@@ -73,6 +84,18 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
     const parts = location.split(',');
     return parts[parts.length - 1].trim();
   };
+
+  useEffect(() => {
+    // Load user bids from localStorage
+    const savedBids = localStorage.getItem('userBids');
+    if (savedBids) {
+      try {
+        setUserBids(JSON.parse(savedBids));
+      } catch (e) {
+        console.error('Failed to parse user bids:', e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // Load from URL params if available
@@ -265,9 +288,16 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
             {filteredErrands.map((errand) => (
               <div
                 key={errand.id}
-                className="bg-white rounded-lg p-4 shadow hover:shadow-lg transition-shadow cursor-pointer"
+                className="bg-white rounded-lg p-4 shadow hover:shadow-lg transition-shadow cursor-pointer relative"
                 onClick={() => navigate(`/errand/${errand.id}`)}
               >
+                {/* Bid Badge */}
+                {getUserBid(errand.id) && (
+                  <div className="absolute top-2 right-2 bg-green-100 border border-green-300 rounded px-2 py-1 text-xs font-semibold text-green-700">
+                    Your bid: SGD ${getUserBid(errand.id)?.toFixed(2)}
+                  </div>
+                )}
+
                 {/* Title */}
                 <h3 className="text-sm font-semibold text-errandify-brown mb-1">
                   {errand.title}
