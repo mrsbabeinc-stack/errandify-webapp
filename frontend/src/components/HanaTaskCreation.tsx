@@ -521,11 +521,11 @@ export default function HanaTaskCreation({
           </div>
         </div>
 
-        {/* Main Content - Simple: Bubble Top, Hana Center, Input Bottom */}
-        <div className="flex-1 overflow-y-auto flex flex-col px-6 py-6 gap-6">
-          {/* Speech Bubble - Top (Full Width) */}
+        {/* Main Content - Proportionate: Bubble, Hana Full Body, Input */}
+        <div className="flex-1 overflow-y-auto flex flex-col px-6 py-4 gap-2">
+          {/* Speech Bubble - Below Top (Centered, Moved Down) */}
           {hanaMessage && (
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 pt-4">
               <div className="relative animate-slideDown mx-auto max-w-lg"
                    style={{
                      background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
@@ -565,9 +565,9 @@ export default function HanaTaskCreation({
             </div>
           )}
 
-          {/* Middle Space - Hana Centered */}
-          <div className="flex-1 flex items-center justify-center">
-            <div style={{ height: '300px', width: 'auto', maxWidth: '220px' }}>
+          {/* Hana Full Body - Larger, Fills Space, Feet Touch Input */}
+          <div className="flex-1 flex items-end justify-center overflow-hidden min-h-0">
+            <div style={{ height: '100%', width: 'auto', maxWidth: '280px' }}>
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}
                 message={hanaMessage}
@@ -575,9 +575,9 @@ export default function HanaTaskCreation({
             </div>
           </div>
 
-          {/* Input Section - Bottom (Full Width) */}
+          {/* Input Section - Bottom (Full Width, Feet Touch Top) */}
           {currentStep === 'input' && (
-            <form onSubmit={handleSendMessage} className="flex gap-3 flex-shrink-0">
+            <form onSubmit={handleSendMessage} className="flex gap-3 flex-shrink-0 pb-2">
               <input
                 type="text"
                 value={input}
