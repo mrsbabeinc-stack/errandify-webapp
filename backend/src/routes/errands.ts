@@ -581,4 +581,131 @@ function getEditDistance(str1: string, str2: string): number {
   return matrix[str2.length][str1.length];
 }
 
+// POST /api/errands/:id/confirm - Doer confirms job acceptance
+router.post('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const doerId = parseInt(req.userId || '0', 10);
+
+    // Get errand details
+    const errandResult = await db.query(
+      'SELECT id, status, accepted_bid_id FROM errands WHERE id = $1',
+      [id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    if (errand.status !== 'confirmed') {
+      return res.status(400).json({ error: 'Errand must be confirmed before doer can accept' });
+    }
+
+    // Update status to in_progress
+    await db.query(
+      'UPDATE errands SET status = $1 WHERE id = $2',
+      ['in_progress', id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Job confirmed. You can now start working on the task.',
+    });
+  } catch (error) {
+    console.error('Error confirming job:', error);
+    res.status(500).json({ error: 'Failed to confirm job' });
+  }
+});
+
+// POST /api/errands/:id/complete - Doer marks job as completed
+router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const doerId = parseInt(req.userId || '0', 10);
+
+    // Get errand details
+    const errandResult = await db.query(
+      'SELECT id, status FROM errands WHERE id = $1',
+      [id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    if (errand.status !== 'in_progress') {
+      return res.status(400).json({ error: 'Errand must be in progress to mark as completed' });
+    }
+
+    // Update status to completed
+    await db.query(
+      'UPDATE errands SET status = $1 WHERE id = $2',
+      ['completed', id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Job marked as completed. Waiting for asker to confirm and rate.',
+    });
+  } catch (error) {
+    console.error('Error completing job:', error);
+    res.status(500).json({ error: 'Failed to complete job' });
+  }
+});
+
+// POST /api/errands/:id/cancel - Cancel errand at any stage
+router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(req.userId || '0', 10);
+    const { reason } = req.body;
+
+    // Get errand details
+    const errandResult = await db.query(
+      'SELECT id, status, asker_id, accepted_bid_id FROM errands WHERE id = $1',
+      [id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+    const isAsker = userId === errand.asker_id;
+
+    // Check permissions - only asker or the accepted doer can cancel
+    if (!isAsker && errand.accepted_bid_id) {
+      return res.status(403).json({ error: 'Only asker or accepted doer can cancel' });
+    }
+
+    const previousStatus = errand.status;
+
+    // Update status to cancelled
+    await db.query(
+      'UPDATE errands SET status = $1, cancelled_by = $2, cancellation_reason = $3 WHERE id = $4',
+      ['cancelled', userId, reason || null, id]
+    );
+
+    // If in_progress, mark as dispute/pending resolution
+    if (previousStatus === 'in_progress') {
+      res.status(400).json({
+        error: 'Cannot cancel job in progress without asker confirmation. Contact asker to resolve dispute.',
+      });
+    } else {
+      res.json({
+        success: true,
+        message: 'Errand cancelled. All bids rejected.',
+        previousStatus,
+      });
+    }
+  } catch (error) {
+    console.error('Error cancelling job:', error);
+    res.status(500).json({ error: 'Failed to cancel job' });
+  }
+});
+
 export default router;

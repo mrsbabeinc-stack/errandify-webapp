@@ -157,23 +157,25 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   };
 
   const handleCancelErrand = async () => {
-    if (!window.confirm('Are you sure you want to cancel this errand?')) {
-      return;
+    const reason = window.prompt('Reason for cancellation (optional):');
+    if (reason === null) {
+      return; // User clicked Cancel
     }
 
     try {
       const token = localStorage.getItem('token');
-      await axios.put(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}`,
-        { status: 'cancelled' },
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/cancel`,
+        { reason: reason || null },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      alert('✓ Errand cancelled. All bids have been rejected.');
       navigate('/errands');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to cancel errand:', error);
-      alert('Failed to cancel errand. Please try again.');
+      alert(error.response?.data?.error || 'Failed to cancel errand. Please try again.');
     }
   };
 
@@ -409,7 +411,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   Cancel Errand
                 </button>
               </div>
-            ) : errand.status === 'confirmed' && currentUser && currentUser.role === 'doer' ? (
+            ) : errand.status === 'in_progress' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
               <button
                 onClick={handleCompleteErrand}
                 className="w-full bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
@@ -432,9 +434,41 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             <p className="text-sm text-green-700 mb-2">
               Amount: <span className="font-bold text-lg">SGD ${userBidAmount?.toFixed(2)}</span>
             </p>
-            <p className="text-xs text-green-600">
-              ✓ Bid submitted. Waiting for asker to review.
-            </p>
+            {errand?.status === 'open' && (
+              <p className="text-xs text-green-600">
+                ✓ Bid submitted. Waiting for asker to review.
+              </p>
+            )}
+            {errand?.status === 'confirmed' && (
+              <div>
+                <p className="text-xs text-green-600 mb-3">
+                  ✓ Bid accepted! Please confirm you'll do the job.
+                </p>
+                <button
+                  onClick={() => {
+                    const token = localStorage.getItem('token');
+                    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/confirm`, {
+                      method: 'POST',
+                      headers: { Authorization: `Bearer ${token}` },
+                    })
+                      .then(r => r.json())
+                      .then(() => {
+                        alert('✓ Job confirmed! Start working on the task.');
+                        fetchErrandDetail();
+                      })
+                      .catch(e => alert('Error: ' + e));
+                  }}
+                  className="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 text-sm"
+                >
+                  Confirm Job
+                </button>
+              </div>
+            )}
+            {errand?.status === 'in_progress' && (
+              <p className="text-xs text-blue-600 font-semibold">
+                🔄 Job in progress...
+              </p>
+            )}
           </div>
         )}
 
