@@ -242,9 +242,9 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       }
 
       const errandResult = await db.query(
-        `INSERT INTO errands (asker_id, title, description, category, location, postal_code, budget, deadline, is_recurring, recurring_config, status)
+        `INSERT INTO errands (asker_id, title, description, category, location, postal_code, budget, deadline, is_recurring, recurring_schedule, status)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-         RETURNING id, title, description, category, status, budget, deadline, is_recurring, recurring_config, created_at`,
+         RETURNING id, title, description, category, status, budget, deadline, is_recurring, recurring_schedule, created_at`,
         [
           askerId,
           title,
@@ -276,7 +276,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           location: location || null,
           postalCode: postalCode,
           isRecurring: errand.is_recurring,
-          recurringConfig: errand.recurring_config,
+          recurringSchedule: errand.recurring_schedule,
           createdAt: errand.created_at,
         },
       });
