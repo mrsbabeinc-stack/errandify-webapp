@@ -138,9 +138,14 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 });
 
 // Get single errand (numeric ID only - /categories and /search are handled by other routers)
-router.get('/:id(\\d+)', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+
+    // Only handle numeric IDs
+    if (!/^\d+$/.test(id)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
 
     const result = await db.query('SELECT * FROM errands WHERE id = $1', [id]);
 
