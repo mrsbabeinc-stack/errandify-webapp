@@ -267,8 +267,10 @@ router.get('/debug/otp/:mobile', (req: any, res: Response) => {
 router.post('/demo-login', async (req: Request, res: Response) => {
   try {
     const { account } = req.body;
+    console.log('[Auth] Demo login attempt:', account);
 
     if (!account) {
+      console.log('[Auth] No account provided');
       return res.status(400).json({ error: 'Account required' });
     }
 
@@ -280,8 +282,10 @@ router.post('/demo-login', async (req: Request, res: Response) => {
 
     const demoUser = demoAccounts[account.toLowerCase()];
     if (!demoUser) {
+      console.log('[Auth] Invalid demo account:', account);
       return res.status(400).json({ error: 'Invalid demo account' });
     }
+    console.log('[Auth] Demo user found:', demoUser.name);
 
     // Check if user exists, if not create them
     let result = await db.query(
@@ -341,8 +345,8 @@ router.post('/demo-login', async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error('Demo login error:', error);
-    res.status(500).json({ error: 'Demo login failed' });
+    console.error('[Auth] Demo login error:', error);
+    res.status(500).json({ error: String(error) });
   }
 });
 
