@@ -521,23 +521,23 @@ export default function HanaTaskCreation({
           </div>
         </div>
 
-        {/* Main Content - Vertical: Hana+Bubble Top, Growing Space, Input Bottom */}
-        <div className="flex-1 overflow-y-auto flex flex-col px-6 py-6 gap-6">
-          {/* Top Row - Hana Left + Speech Bubble Right */}
-          <div className="flex-shrink-0 flex gap-4">
-            {/* Hana Avatar - Left */}
-            <div className="flex-shrink-0">
-              <div style={{ height: '300px', width: 'auto', maxWidth: '180px' }}>
-                <HanaAnimatedAvatar
-                  isSpeaking={isSpeaking}
-                  message={hanaMessage}
-                />
-              </div>
+        {/* Main Content - Hana LEFT (full height) + Chat RIGHT */}
+        <div className="flex-1 overflow-y-auto flex gap-6 px-6 py-6">
+          {/* Left Side - Hana Full Body (stretches vertically) */}
+          <div className="flex-shrink-0 flex items-start">
+            <div style={{ height: '480px', width: 'auto', maxWidth: '200px' }}>
+              <HanaAnimatedAvatar
+                isSpeaking={isSpeaking}
+                message={hanaMessage}
+              />
             </div>
+          </div>
 
-            {/* Speech Bubble - Right */}
+          {/* Right Side - Speech Bubble (Top) + Growing Space + Input (Bottom) */}
+          <div className="flex-1 flex flex-col justify-between">
+            {/* Speech Bubble - Top Right */}
             {hanaMessage && (
-              <div className="flex-1">
+              <div className="flex-shrink-0">
                 <div className="relative animate-slideDown"
                      style={{
                        background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
@@ -574,67 +574,67 @@ export default function HanaTaskCreation({
                 </div>
               </div>
             )}
+
+            {/* Middle Space - Grows to fill */}
+            <div className="flex-1"></div>
+
+            {/* Input Section - Bottom Right */}
+            {currentStep === 'input' && (
+              <form onSubmit={handleSendMessage} className="flex gap-3 flex-shrink-0">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Type all details here..."
+                  className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-full focus:outline-none focus:border-opacity-100 text-sm"
+                  disabled={loading || isRecording}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={isRecording ? stopRecording : startRecording}
+                  className={`px-4 py-3 rounded-full font-bold transition-all text-sm flex-shrink-0 ${
+                    isRecording
+                      ? 'bg-red-500 hover:bg-red-600 text-white'
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                  }`}
+                  title={isRecording ? 'Stop recording' : 'Start voice input'}
+                >
+                  {isRecording ? '⏹️' : '🎤'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || !input.trim()}
+                  className="px-6 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex-shrink-0"
+                >
+                  {loading ? '•••' : '→'}
+                </button>
+              </form>
+            )}
+
+            {currentStep === 'confirm' && (
+              <div className="flex gap-3 flex-shrink-0">
+                <button
+                  onClick={handleConfirmAndProceed}
+                  disabled={loading}
+                  className="flex-1 px-4 py-3 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 disabled:opacity-50 text-sm"
+                >
+                  {loading ? 'Processing...' : '✓ Post Errand'}
+                </button>
+                <button
+                  onClick={() => {
+                    setCurrentStep('input');
+                    setInput('');
+                    setHanaMessage('Let me know what errand you need done!');
+                  }}
+                  disabled={loading}
+                  className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 text-sm"
+                >
+                  Edit
+                </button>
+              </div>
+            )}
           </div>
-
-          {/* Middle Space - Grows */}
-          <div className="flex-1"></div>
-
-          {/* Input Section - Bottom (Full Width) */}
-          {currentStep === 'input' && (
-            <form onSubmit={handleSendMessage} className="flex gap-3 flex-shrink-0">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Type all details here..."
-                className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-full focus:outline-none focus:border-opacity-100 text-sm"
-                disabled={loading || isRecording}
-                autoFocus
-              />
-              <button
-                type="button"
-                onClick={isRecording ? stopRecording : startRecording}
-                className={`px-4 py-3 rounded-full font-bold transition-all text-sm flex-shrink-0 ${
-                  isRecording
-                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                }`}
-                title={isRecording ? 'Stop recording' : 'Start voice input'}
-              >
-                {isRecording ? '⏹️' : '🎤'}
-              </button>
-              <button
-                type="submit"
-                disabled={loading || !input.trim()}
-                className="px-6 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex-shrink-0"
-              >
-                {loading ? '•••' : '→'}
-              </button>
-            </form>
-          )}
-
-          {currentStep === 'confirm' && (
-            <div className="flex gap-3 flex-shrink-0">
-              <button
-                onClick={handleConfirmAndProceed}
-                disabled={loading}
-                className="flex-1 px-4 py-3 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 disabled:opacity-50 text-sm"
-              >
-                {loading ? 'Processing...' : '✓ Post Errand'}
-              </button>
-              <button
-                onClick={() => {
-                  setCurrentStep('input');
-                  setInput('');
-                  setHanaMessage('Let me know what errand you need done!');
-                }}
-                disabled={loading}
-                className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-full font-bold hover:bg-gray-400 text-sm"
-              >
-                Edit
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
