@@ -559,9 +559,10 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         }
       } else {
         console.log('[Extract] No date pattern matched in:', input);
-        // Default to today if no date found
-        date = new Date().toISOString().split('T')[0];
-        console.log('[Extract] Using default date (today):', date);
+        // If no explicit date mentioned, check if it's today or use today as default
+        // Don't auto-default - let user decide in form if truly no date given
+        date = '';
+        console.log('[Extract] No date pattern found, leaving empty for user to fill');
       }
     }
 
