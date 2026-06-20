@@ -521,11 +521,11 @@ export default function HanaTaskCreation({
           </div>
         </div>
 
-        {/* Main Content - Hana (Upper Body, Left) + Chat (Right, Stacked Vertical) */}
-        <div className="flex-1 overflow-hidden flex gap-6 px-6 py-4">
-          {/* Hana Upper Body Avatar - Left Side */}
-          <div className="flex-shrink-0 flex items-start justify-center overflow-visible">
-            <div style={{ height: '320px', width: 'auto', maxWidth: '260px' }}>
+        {/* Main Content - Hana Full Left + Chat Right (Optimal Layout) */}
+        <div className="flex-1 overflow-hidden flex gap-8 px-6 py-6">
+          {/* Hana Avatar - Full Left Side */}
+          <div className="flex-shrink-0 flex items-center justify-center overflow-visible">
+            <div style={{ height: '420px', width: 'auto', maxWidth: '280px' }}>
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}
                 message={hanaMessage}
@@ -534,23 +534,24 @@ export default function HanaTaskCreation({
           </div>
 
           {/* Right Side - Speech Bubble (Top) + Input (Bottom) */}
-          <div className="flex-1 flex flex-col gap-6">
-            {/* Speech Bubble */}
+          <div className="flex-1 flex flex-col justify-between">
+            {/* Speech Bubble - Top */}
             {hanaMessage && (
               <div className="flex-shrink-0">
-                <div className="relative animate-slideDown max-w-md"
+                <div className="relative animate-slideDown"
                      style={{
                        background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
                        border: '1.5px solid #FF8C42',
                        borderRadius: '18px',
                        padding: '14px 18px',
                        boxShadow: '0 4px 12px rgba(255, 140, 66, 0.12), 0 1px 3px rgba(0,0,0,0.06)',
+                       maxWidth: '100%',
                      }}>
                   <p className="whitespace-pre-line text-xs font-medium"
                      style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.5', letterSpacing: '0px'}}>
                     {hanaMessage}
                   </p>
-                  {/* Speech bubble tail - pointing left-up to Hana */}
+                  {/* Speech bubble tail - pointing left to Hana */}
                   <div style={{
                     position: 'absolute',
                     left: '-8px',
