@@ -539,87 +539,32 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     title = cleanedTitle;
     console.log('[Extract] Final title:', title);
 
-    // Use Qwen to intelligently detect category based on task understanding
+    // Fast keyword-based category detection (skip slow Qwen call)
     let category = 'homehelp'; // Default fallback
-    try {
-      const qwenApiKey = process.env.QWEN_API_KEY;
-      if (qwenApiKey) {
-        console.log('[Extract] Using Qwen for category detection...');
-        const categoryResponse = await axios.post(
-          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
-          {
-            model: 'qwen-plus',
-            messages: [
-              {
-                role: 'system',
-                content: 'You are a task categorization expert. Analyze the errand and categorize it into ONE of these categories: eldercare, childcare, petcare, homehelp, delivery, eventhelp, tech-support, data-entry, other. Respond with ONLY the category name, nothing else.',
-              },
-              {
-                role: 'user',
-                content: `Categorize this errand: ${input}`,
-              },
-            ],
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${qwenApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            timeout: 5000,
-          }
-        );
+    const lowerInput = input.toLowerCase();
 
-        const categoryText = categoryResponse.data?.output?.text?.trim().toLowerCase() || 'homehelp';
-        if (['eldercare', 'childcare', 'petcare', 'homehelp', 'delivery', 'eventhelp', 'tech-support', 'data-entry'].includes(categoryText)) {
-          category = categoryText;
-        }
-        console.log('[Extract] Qwen category detection:', category);
-      }
-    } catch (error) {
-      console.warn('[Extract] Category detection failed, using default:', error instanceof Error ? error.message : error);
+    // Map keywords to categories
+    if (lowerInput.includes('walk') || lowerInput.includes('dog') || lowerInput.includes('pet') || lowerInput.includes('cat')) {
+      category = 'petcare';
+    } else if (lowerInput.includes('babysit') || lowerInput.includes('childcare') || lowerInput.includes('tutor') || lowerInput.includes('child')) {
+      category = 'childcare';
+    } else if (lowerInput.includes('elderly') || lowerInput.includes('elder') || lowerInput.includes('grandmother') || lowerInput.includes('grandfather') || lowerInput.includes('senior')) {
+      category = 'eldercare';
+    } else if (lowerInput.includes('deliver') || lowerInput.includes('move') || lowerInput.includes('moving') || lowerInput.includes('moving boxes') || lowerInput.includes('transport')) {
+      category = 'delivery';
+    } else if (lowerInput.includes('clean') || lowerInput.includes('laundry') || lowerInput.includes('house') || lowerInput.includes('kitchen')) {
       category = 'homehelp';
+    } else if (lowerInput.includes('grocery') || lowerInput.includes('shopping') || lowerInput.includes('shop')) {
+      category = 'delivery';
+    } else if (lowerInput.includes('tech') || lowerInput.includes('computer') || lowerInput.includes('wifi') || lowerInput.includes('device')) {
+      category = 'tech-support';
+    } else if (lowerInput.includes('data entry') || lowerInput.includes('spreadsheet') || lowerInput.includes('excel')) {
+      category = 'data-entry';
     }
 
-    // Use Qwen to improve title wording if available
-    let improvedTitle = title;
-    try {
-      // Config loaded from environment variables
-      if (process.env.QWEN_API_KEY && title !== 'Task') {
-        console.log('[Extract] Improving title with Qwen...');
-        const qwenResponse = await axios.post(
-          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
-          {
-            model: 'qwen-plus',
-            messages: [
-              {
-                role: 'system',
-                content: 'Rewrite the task title to be clear, concise, and grammatically correct. Keep it under 40 characters. Only return the title, nothing else.',
-              },
-              {
-                role: 'user',
-                content: title,
-              },
-            ],
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
-            },
-            timeout: 3000,
-          }
-        );
+    console.log('[Extract] Category detected (keyword-based):', category);
 
-        const aiTitle = qwenResponse.data?.output?.text?.trim();
-        if (aiTitle && aiTitle.length > 2) {
-          improvedTitle = aiTitle.substring(0, 50);
-          console.log('[Extract] ✅ Title improved by Qwen:', improvedTitle);
-        }
-      }
-    } catch (error) {
-      console.warn('[Extract] Could not improve title with Qwen, using original');
-    }
-
-    title = improvedTitle;
+    // Title is already cleaned up above - skip additional Qwen polishing (too slow)
     console.log('[Extract] Final title:', title);
 
     // Parse date - look for "tomorrow", "today", "later" (=today), "N days later", day names, or dates
