@@ -396,7 +396,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   {errand.isRecurring ? 'Select Sessions' : 'Submit a Bid'}
                 </button>
               )
-            ) : errand.status === 'open' && currentUser && (currentUser.id === errand.askerId || userRole === 'asker') ? (
+            ) : errand.status === 'open' && currentUser && currentUser.id === errand.askerId ? (
               <div className="flex gap-2 mt-2">
                 {!errand.bidCount ? (
                   <button
