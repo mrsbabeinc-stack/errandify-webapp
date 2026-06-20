@@ -527,30 +527,64 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </div>
             )}
             {errand?.status === 'in_progress' && (
-              <div className="space-y-2">
+              <div className="space-y-3 bg-blue-50 p-4 rounded-lg">
                 <p className="text-xs text-blue-600 font-semibold">
-                  🔄 Job in progress...
+                  🔄 Job in progress... Submit work proof before ending.
                 </p>
-                <textarea
-                  id="workProof"
-                  placeholder="Describe the work completed (required before ending)..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-errandify-orange"
-                  rows={3}
-                />
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-2">
+                    What work was completed? (required)
+                  </label>
+                  <textarea
+                    id="workProof"
+                    placeholder="Describe the work completed (e.g., 'House cleaned: swept, mopped, dusted all rooms')..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-errandify-orange"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-2">
+                    📷 Photos/Videos (paste image URLs, one per line)
+                  </label>
+                  <textarea
+                    id="workProofUrls"
+                    placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-errandify-orange font-mono"
+                    rows={3}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    💡 Tip: Take before/after photos to strengthen your claim
+                  </p>
+                </div>
+
                 <button
                   onClick={() => {
                     const proof = (document.getElementById('workProof') as HTMLTextAreaElement)?.value;
+                    const urlsText = (document.getElementById('workProofUrls') as HTMLTextAreaElement)?.value;
+
                     if (!proof?.trim()) {
                       alert('Please describe the work completed');
                       return;
                     }
+
+                    const proofUrls = urlsText
+                      ?.split('\n')
+                      .map(url => url.trim())
+                      .filter(url => url.length > 0) || [];
+
                     const token = localStorage.getItem('token');
                     // First upload proof
                     fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/work-proof`, {
                       method: 'POST',
                       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ proof_description: proof }),
+                      body: JSON.stringify({ proof_description: proof, proof_urls: proofUrls.length > 0 ? proofUrls : null }),
                     })
+                      .then(r => {
+                        if (!r.ok) throw new Error('Failed to upload proof');
+                        return r.json();
+                      })
                       .then(() =>
                         // Then end job
                         fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/end`, {
@@ -558,16 +592,19 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                           headers: { Authorization: `Bearer ${token}` },
                         })
                       )
-                      .then(r => r.json())
+                      .then(r => {
+                        if (!r.ok) throw new Error('Failed to end job');
+                        return r.json();
+                      })
                       .then(() => {
-                        alert('✓ Work proof submitted and job ended. Waiting for asker review.');
+                        alert('✓ Work proof submitted and job ended. Waiting for asker review (48h dispute window).');
                         fetchErrandDetail();
                       })
                       .catch(e => alert('Error: ' + e.message));
                   }}
                   className="w-full bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 text-sm"
                 >
-                  End Job & Submit Proof
+                  ✓ End Job & Submit Proof
                 </button>
               </div>
             )}
