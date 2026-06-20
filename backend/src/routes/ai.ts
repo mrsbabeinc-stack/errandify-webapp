@@ -493,40 +493,46 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     console.log('[Extract] Extracted title:', title);
     console.log('[Extract] Before Qwen improvement:', title);
 
-    // IMPORTANT: Do category detection BEFORE Qwen improves title
-    // (so we still have the original keywords)
-    let category = 'homehelp'; // Default
-    const inputLower = input.toLowerCase();
-    const titleLower = title.toLowerCase();
-    const checkText = inputLower + ' ' + titleLower;
+    // Use Qwen to intelligently detect category based on task understanding
+    let category = 'homehelp'; // Default fallback
+    try {
+      const config = require('../config').default;
+      if (config.qwen.apiKey) {
+        console.log('[Extract] Using Qwen for category detection...');
+        const categoryResponse = await axios.post(
+          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+          {
+            model: 'qwen-plus',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are a task categorization expert. Analyze the errand and categorize it into ONE of these categories: eldercare, childcare, petcare, homehelp, delivery, eventhelp, tech-support, other. Respond with ONLY the category name, nothing else.',
+              },
+              {
+                role: 'user',
+                content: `Categorize this errand: ${input}`,
+              },
+            ],
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${config.qwen.apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 5000,
+          }
+        );
 
-    if (checkText.includes('elder') || checkText.includes('mom') || checkText.includes('mum') || checkText.includes('dad') || checkText.includes('caregiv') || checkText.includes('senior') || checkText.includes('aged')) {
-      category = 'eldercare';
-    } else if (checkText.includes('baby') || checkText.includes('child') || checkText.includes('kid') || checkText.includes('pick') || checkText.includes('school') || checkText.includes('babysit') || checkText.includes('nanny')) {
-      category = 'childcare';
-    } else if (checkText.includes('dog') || checkText.includes('pet') || checkText.includes('cat') || checkText.includes('groom') || checkText.includes('walk') || checkText.includes('animal')) {
-      category = 'petcare';
-    } else if (checkText.includes('clean') || checkText.includes('laundry') || checkText.includes('repair') || checkText.includes('fix') || checkText.includes('household')) {
+        const categoryText = categoryResponse.data?.output?.text?.trim().toLowerCase() || 'homehelp';
+        if (['eldercare', 'childcare', 'petcare', 'homehelp', 'delivery', 'eventhelp', 'tech-support'].includes(categoryText)) {
+          category = categoryText;
+        }
+        console.log('[Extract] Qwen category detection:', category);
+      }
+    } catch (error) {
+      console.warn('[Extract] Category detection failed, using default:', error instanceof Error ? error.message : error);
       category = 'homehelp';
-    } else if (checkText.includes('deliver') || checkText.includes('parcel') || checkText.includes('food') || checkText.includes('courier')) {
-      category = 'delivery';
-    } else if (checkText.includes('event') || checkText.includes('setup') || checkText.includes('shop') || checkText.includes('party')) {
-      category = 'eventhelp';
-    } else if (checkText.includes('tutor') || checkText.includes('teach') || checkText.includes('lesson') || checkText.includes('homework') || checkText.includes('math') || checkText.includes('english')) {
-      category = 'childcare';
-    } else if (checkText.includes('wifi') || checkText.includes('tech') || checkText.includes('computer') || checkText.includes('router') || checkText.includes('software')) {
-      category = 'tech-support';
     }
-
-    console.log('[Extract] Category detected BEFORE Qwen:', category);
-    console.log('[Extract] Keyword check:', {
-      input_has_wifi: inputLower.includes('wifi'),
-      input_has_router: inputLower.includes('router'),
-      title_has_wifi: titleLower.includes('wifi'),
-      title_has_router: titleLower.includes('router'),
-      checkText_includes_wifi: checkText.includes('wifi'),
-      checkText_includes_router: checkText.includes('router'),
-    });
 
     // Use Qwen to improve title wording if available
     let improvedTitle = title;
@@ -850,30 +856,60 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     // Use provided category or detect from title/description
     let detectedCategory = category || 'homehelp';
 
-    // Suggest relevant skills based on category and task content
-    const skillMap: Record<string, string[]> = {
-      'eldercare': ['Patience', 'Communication Skills', 'Physical Care Experience', 'Empathy'],
-      'childcare': ['Child Safety Awareness', 'Communication', 'Patience', 'Activity Planning'],
-      'homehelp': ['Attention to Detail', 'Time Management', 'Physical Stamina', 'Problem-solving'],
-      'petcare': ['Animal Care Experience', 'Patience', 'Physical Fitness', 'Communication'],
-      'delivery': ['Reliability', 'Navigation Skills', 'Physical Fitness', 'Customer Service'],
-      'eventhelp': ['Organization', 'Communication', 'Physical Stamina', 'Problem-solving'],
-      'tech-support': ['Technical Knowledge', 'Problem-solving', 'Patience', 'Communication'],
-      'creative-arts': ['Creativity', 'Attention to Detail', 'Relevant Software Skills', 'Communication'],
-      'admin-business': ['Data Entry Skills', 'Accuracy', 'Time Management', 'Attention to Detail'],
-      'shopping-errands': ['Organization', 'Reliability', 'Customer Service', 'Time Management'],
-    };
+    // Use Qwen to generate relevant skills for this specific task
+    let skills: string[] = [];
 
-    // Get skills for category, filter out irrelevant ones like "Driving License" for non-delivery tasks
-    let skills = skillMap[detectedCategory] || [];
+    if (config.qwen.apiKey) {
+      try {
+        console.log('[Qwen] Generating skills for task...');
+        const skillsResponse = await axios.post(
+          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+          {
+            model: 'qwen-plus',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are a skills assessment expert. Given a task, list 4-5 specific skills required to complete it successfully. Return ONLY the skills as a comma-separated list. Be specific to THIS task, not generic.',
+              },
+              {
+                role: 'user',
+                content: `Task: "${title}"\nCategory: ${detectedCategory}\nWhat specific skills are required?`,
+              },
+            ],
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${config.qwen.apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 5000,
+          }
+        );
 
-    // Filter skills based on actual task content
-    const titleLower = title.toLowerCase();
-    if (!titleLower.includes('deliver') && !titleLower.includes('drive')) {
-      skills = skills.filter(s => s !== 'Driving License');
+        const skillsText = skillsResponse.data?.output?.text?.trim() || '';
+        if (skillsText) {
+          skills = skillsText.split(',').map(s => s.trim()).filter(s => s && s.length > 0);
+          console.log('[Qwen] Generated skills:', skills);
+        }
+      } catch (error) {
+        console.warn('[Qwen] Skills generation failed:', error instanceof Error ? error.message : error);
+      }
     }
 
-    console.log('[Suggestions] Suggested skills for', detectedCategory, ':', skills);
+    // Fallback to basic skills if Qwen fails
+    if (skills.length === 0) {
+      const skillMap: Record<string, string[]> = {
+        'eldercare': ['Patience', 'Communication Skills', 'Physical Care Experience', 'Empathy'],
+        'childcare': ['Child Safety Awareness', 'Communication', 'Patience', 'Activity Planning'],
+        'homehelp': ['Attention to Detail', 'Time Management', 'Physical Stamina', 'Problem-solving'],
+        'petcare': ['Animal Care Experience', 'Patience', 'Physical Fitness', 'Communication'],
+        'delivery': ['Reliability', 'Navigation Skills', 'Physical Fitness', 'Customer Service'],
+        'eventhelp': ['Organization', 'Communication', 'Physical Stamina', 'Problem-solving'],
+        'tech-support': ['Technical Knowledge', 'Problem-solving', 'Patience', 'Communication'],
+      };
+      skills = skillMap[detectedCategory] || ['Problem-solving', 'Communication', 'Reliability'];
+      console.log('[Suggestions] Using fallback skills for', detectedCategory, ':', skills);
+    }
 
     // Generate suggested description using Qwen AI (ALWAYS attempt, then fallback)
     // Description should clearly explain what needs to be done and what doers should expect
