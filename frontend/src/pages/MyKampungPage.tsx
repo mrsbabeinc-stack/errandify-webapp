@@ -71,7 +71,7 @@ interface BlogPost {
 export default function MyKampungPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<'feed' | 'discussions' | 'announcements' | 'events' | 'blog'>(
+  const [activeTab, setActiveTab] = useState<'feed' | 'discussions' | 'announcements' | 'events' | 'blog' | 'recognition'>(
     (location.state as any)?.tab || 'feed'
   );
   const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -83,6 +83,7 @@ export default function MyKampungPage() {
   const [newPostText, setNewPostText] = useState('');
   const [moderationMessage, setModerationMessage] = useState<string>('');
   const [isCheckingModeration, setIsCheckingModeration] = useState(false);
+  const [recognitions, setRecognitions] = useState<any[]>([]);
 
   // Check if user is admin
   const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
@@ -292,6 +293,70 @@ export default function MyKampungPage() {
 
     // Use real, SEO-optimized blog posts from blogPosts data
     setBlogPosts(blogPostsData);
+
+    // Mock recognition data
+    setRecognitions([
+      {
+        id: 1,
+        name: 'Ahmad Hassan',
+        title: '⭐ Super Nanny',
+        description: 'Exceptional childcare provider. Reliable, caring, and goes above and beyond for families.',
+        category: 'childcare',
+        rating: 4.9,
+        nominatedBy: 'Priya Sharma',
+        nominationDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        testimonial: 'Ahmad takes such great care of our kids. We feel completely at ease leaving them with him.',
+        votes: 47,
+      },
+      {
+        id: 2,
+        name: 'David Kim',
+        title: '🔨 Master Handyman',
+        description: 'Skilled at repairs and renovations. Professional, efficient, and delivers quality work.',
+        category: 'handyman',
+        rating: 4.8,
+        nominatedBy: 'Wei Liu',
+        nominationDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        testimonial: 'Fixed our entire kitchen in record time. Quality work, fair pricing, highly recommend!',
+        votes: 63,
+      },
+      {
+        id: 3,
+        name: 'Sarah Johnson',
+        title: '🚚 Super Mover',
+        description: 'Efficient moving assistance. Handles items with care and completes jobs on time.',
+        category: 'moving',
+        rating: 4.9,
+        nominatedBy: 'James Chen',
+        nominationDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        testimonial: 'Moving can be stressful but Sarah made it easy. Professional and so helpful!',
+        votes: 52,
+      },
+      {
+        id: 4,
+        name: 'Mdm Lim',
+        title: '✨ Cleaning Excellence',
+        description: 'Detail-oriented cleaning service. Transforms homes with care and attention.',
+        category: 'cleaning',
+        rating: 4.9,
+        nominatedBy: 'Rachel Wong',
+        nominationDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        testimonial: 'Been using Mdm Lim for months. Our home has never looked better!',
+        votes: 81,
+      },
+      {
+        id: 5,
+        name: 'Rajesh Kumar',
+        title: '📚 Excellent Tutor',
+        description: 'Patient teacher. Makes learning enjoyable and helps students achieve their best.',
+        category: 'tutoring',
+        rating: 4.9,
+        nominatedBy: 'Sophia Petrov',
+        nominationDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+        testimonial: 'My daughter went from struggling to loving math! Rajesh is amazing.',
+        votes: 38,
+      },
+    ]);
   };
 
   const handleLikePost = (postId: number) => {
@@ -509,6 +574,16 @@ export default function MyKampungPage() {
             }`}
           >
             📖 Blog
+          </button>
+          <button
+            onClick={() => setActiveTab('recognition')}
+            className={`py-3 px-3 rounded-lg font-semibold text-xs lg:text-sm transition whitespace-nowrap ${
+              activeTab === 'recognition'
+                ? 'bg-errandify-orange text-white'
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            ⭐ Recognition
           </button>
         </div>
 
@@ -798,6 +873,56 @@ export default function MyKampungPage() {
                 </div>
               ))
             )}
+          </div>
+        )}
+
+        {/* RECOGNITION TAB */}
+        {activeTab === 'recognition' && (
+          <div className="space-y-4">
+            <div className="text-center mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-6 border border-yellow-200">
+              <h2 className="text-2xl font-bold text-errandify-brown mb-2">🌟 Hall of Stars</h2>
+              <p className="text-gray-600">Celebrating the amazing doers in our community who go above and beyond</p>
+            </div>
+
+            {recognitions.length === 0 ? (
+              <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
+                <p className="text-gray-500">No recognitions yet</p>
+              </div>
+            ) : (
+              recognitions.map((recognition) => (
+                <div key={recognition.id} className="bg-white rounded-lg border border-yellow-200 p-6 shadow-sm hover:shadow-md transition">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-yellow-300 to-orange-400 rounded-full flex items-center justify-center text-2xl flex-shrink-0">
+                      {recognition.name.charAt(0)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-xl font-bold text-gray-800">{recognition.name}</h3>
+                        <span className="text-lg">{recognition.title}</span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">⭐ {recognition.rating.toFixed(1)} rating</p>
+                      <p className="text-gray-700 mb-3">{recognition.description}</p>
+                      <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-100 mb-3">
+                        <p className="text-sm text-gray-700 italic">"{recognition.testimonial}"</p>
+                        <p className="text-xs text-gray-500 mt-1">— {recognition.nominatedBy}</p>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{new Date(recognition.nominationDate).toLocaleDateString()}</span>
+                        <span>👍 {recognition.votes} upvotes</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+
+            <div className="bg-orange-50 rounded-lg border border-orange-200 p-6 text-center">
+              <h3 className="font-bold text-errandify-brown mb-2">Know someone amazing?</h3>
+              <p className="text-sm text-gray-700 mb-3">Nominate a doer who's impressed you and celebrate their great work!</p>
+              <button className="px-6 py-2 bg-errandify-orange text-white rounded-lg hover:bg-opacity-90 transition font-medium text-sm">
+                🌟 Nominate Someone
+              </button>
+            </div>
           </div>
         )}
       </div>
