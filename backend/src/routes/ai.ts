@@ -450,47 +450,40 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Extract title - keep only meaningful words, filter filler words
     console.log('[Extract] Raw input:', input);
 
-    // SIMPLE title extraction - just remove metadata, keep meaningful words
-    let title = input
-      // Remove durations FIRST: "for 2.5 hours", "in 3 days", etc
-      .replace(/\b(?:for|in)\s+\d+(?:\.\d+)?\s*(?:hour|hr|h|day|d|week|w|min|m|minute|second|sec|s)s?\b/gi, '')
-      .replace(/\b\d+(?:\.\d+)?\s*(?:hour|hr|h|day|d|week|w|min|m|minute|second|sec|s)s?\b/gi, '')
+    // MINIMAL title extraction - just take first meaningful part before metadata
+    // Don't try to be clever - let Qwen handle grammar/wording
+    let title = input;
 
-      // Remove times: "7pm", "7:00am"
-      .replace(/\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/gi, '')
+    // Remove metadata markers that clearly indicate non-title content
+    title = title
+      // Remove everything after common separators
+      .split(/\s+(?:at|on|by|in)\s+\d/)[0] // Stop at first date/time marker
+      .split(/\s*,\s*budget/i)[0] // Stop at budget marker
+      .split(/\s*,\s*\$/)[0] // Stop at $ marker
+      .trim();
 
-      // Remove dates: "on Monday", "tomorrow", etc
-      .replace(/\b(?:on|at)\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi, '')
-      .replace(/\b(?:today|tomorrow|yesterday)\b/gi, '')
+    // Remove common metadata words from the end
+    title = title
+      .replace(/\s+(?:tomorrow|today|tonight|this\s+week|next\s+week|asap|urgent)\b.*$/gi, '')
+      .trim();
 
-      // Remove postal codes (6 digits)
-      .replace(/\b\d{6}\b/g, ' ')
+    // If we got something, use it; otherwise default
+    if (!title || title.length < 2) {
+      // Last resort: take first 5 words
+      title = input.split(/\s+/).slice(0, 5).join(' ').trim();
+    }
 
-      // Remove amounts: "$100", "budget 100", etc
-      .replace(/[\$@]\s*\d+/g, '')
-      .replace(/\b(?:budget|price|cost)\s*[\$@]?\d+/gi, '')
-
-      // Remove punctuation
-      .replace(/[,.\-_]+/g, ' ')
-
-      // Remove filler words at start/end
-      .replace(/^\s*(?:at|on|for|in|and|the|a|an)\s+/i, '')
-      .replace(/\s+(?:at|on|for|in)\s*$/i, '')
-
-      // Collapse spaces
-      .replace(/\s+/g, ' ')
-      .trim()
-      .substring(0, 50);
-
-    // Ensure title is not empty
+    // Final sanity check
     title = title && title.length > 1 ? title : 'Task';
 
-    // Capitalize properly
+    // Capitalize properly (this is safe - just title case)
     title = title
       .split(/\s+/)
       .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-      .join(' ');
+      .join(' ')
+      .substring(0, 50);
 
+    console.log('[Extract] Extracted title:', title);
     console.log('[Extract] Before Qwen improvement:', title);
 
     // IMPORTANT: Do category detection BEFORE Qwen improves title
