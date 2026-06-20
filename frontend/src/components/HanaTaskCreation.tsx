@@ -526,7 +526,7 @@ export default function HanaTaskCreation({
           {/* Speech Bubble - Below Top (Centered, Moved Down, Bigger with Bold) */}
           {hanaMessage && (
             <div className="flex-shrink-0 pt-4">
-              <div className="relative animate-slideDown mx-auto max-w-lg"
+              <div className="relative animate-slideDown mx-auto max-w-md"
                    style={{
                      background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
                      border: '1.5px solid #FF8C42',
