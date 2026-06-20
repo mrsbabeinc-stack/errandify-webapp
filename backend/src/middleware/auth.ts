@@ -22,8 +22,11 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     req.userId = decoded.userId;
     req.user = { id: decoded.userId, email: decoded.email };
 
+    console.log('[Auth] Token decoded - userId:', decoded.userId, 'type:', typeof decoded.userId);
+
     next();
   } catch (error) {
+    console.error('[Auth] Token verification failed:', error instanceof Error ? error.message : error);
     res.status(401).json({ error: 'Invalid token' });
   }
 };

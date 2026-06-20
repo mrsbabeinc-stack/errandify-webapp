@@ -82,10 +82,15 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       query += ` ORDER BY ${tablePrefix}created_at DESC`;
     }
 
+    console.log('[Errands] EXECUTING QUERY:', {
+      query,
+      params,
+      paramCount: params.length,
+    });
+
     const result = await db.query(query, params);
     console.log('[Errands] Query returned', result.rows.length, 'errands');
-    console.log('[Errands] Query was:', query);
-    console.log('[Errands] Query params:', params);
+    console.log('[Errands] Full query result:', result.rows);
 
     if (result.rows.length > 0) {
       console.log('[Errands] Results:', result.rows.map(e => ({
