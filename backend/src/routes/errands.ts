@@ -137,8 +137,8 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 });
 
-// Get single errand
-router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Get single errand (numeric ID only - /categories and /search are handled by other routers)
+router.get('/:id(\\d+)', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
