@@ -521,11 +521,11 @@ export default function HanaTaskCreation({
           </div>
         </div>
 
-        {/* Main Content - Hana Left (Full Body) + Conversation Right */}
-        <div className="flex-1 overflow-hidden flex gap-6 px-4 py-4">
-          {/* Hana Full-Body Avatar - Left Side */}
-          <div className="flex-shrink-0 flex items-end justify-center overflow-visible pt-4">
-            <div style={{ height: '520px', width: 'auto', maxWidth: '280px' }}>
+        {/* Main Content - Hana (Upper Body, Left) + Chat (Right, Stacked Vertical) */}
+        <div className="flex-1 overflow-hidden flex gap-6 px-6 py-4">
+          {/* Hana Upper Body Avatar - Left Side */}
+          <div className="flex-shrink-0 flex items-start justify-center overflow-visible">
+            <div style={{ height: '320px', width: 'auto', maxWidth: '260px' }}>
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}
                 message={hanaMessage}
@@ -533,12 +533,12 @@ export default function HanaTaskCreation({
             </div>
           </div>
 
-          {/* Right Side - Speech Bubble + Input */}
-          <div className="flex-1 overflow-y-auto flex flex-col pt-6">
+          {/* Right Side - Speech Bubble (Top) + Input (Bottom) */}
+          <div className="flex-1 flex flex-col gap-6">
             {/* Speech Bubble */}
             {hanaMessage && (
-              <div className="flex-shrink-0 mb-4">
-                <div className="relative animate-slideDown"
+              <div className="flex-shrink-0">
+                <div className="relative animate-slideDown max-w-md"
                      style={{
                        background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
                        border: '1.5px solid #FF8C42',
@@ -550,11 +550,11 @@ export default function HanaTaskCreation({
                      style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.5', letterSpacing: '0px'}}>
                     {hanaMessage}
                   </p>
-                  {/* Speech bubble tail - pointing left to Hana */}
+                  {/* Speech bubble tail - pointing left-up to Hana */}
                   <div style={{
                     position: 'absolute',
                     left: '-8px',
-                    top: '14px',
+                    top: '12px',
                     width: '0',
                     height: '0',
                     borderTop: '7px solid transparent',
@@ -564,7 +564,7 @@ export default function HanaTaskCreation({
                   <div style={{
                     position: 'absolute',
                     left: '-6px',
-                    top: '16px',
+                    top: '14px',
                     width: '0',
                     height: '0',
                     borderTop: '5px solid transparent',
@@ -575,12 +575,9 @@ export default function HanaTaskCreation({
               </div>
             )}
 
-            {/* Spacer - pushes input to bottom */}
-            <div className="flex-1"></div>
-
-            {/* Input Section - Bottom of Right Side */}
+            {/* Input Section - Bottom */}
             {currentStep === 'input' && (
-              <form onSubmit={handleSendMessage} className="flex gap-2 flex-shrink-0">
+              <form onSubmit={handleSendMessage} className="flex gap-3 flex-shrink-0">
                 <input
                   type="text"
                   value={input}
@@ -593,7 +590,7 @@ export default function HanaTaskCreation({
                 <button
                   type="button"
                   onClick={isRecording ? stopRecording : startRecording}
-                  className={`px-4 py-3 rounded-full font-bold transition-all text-sm ${
+                  className={`px-4 py-3 rounded-full font-bold transition-all text-sm flex-shrink-0 ${
                     isRecording
                       ? 'bg-red-500 hover:bg-red-600 text-white'
                       : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
@@ -605,7 +602,7 @@ export default function HanaTaskCreation({
                 <button
                   type="submit"
                   disabled={loading || !input.trim()}
-                  className="px-6 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
+                  className="px-6 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex-shrink-0"
                 >
                   {loading ? '•••' : '→'}
                 </button>
