@@ -450,78 +450,48 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Extract title - keep only meaningful words, filter filler words
     console.log('[Extract] Raw input:', input);
 
-    // Filler words to remove (articles, prepositions, common function words, category names, certification words, generic nouns)
-    // DO NOT remove action verbs: take, care, help, clean, pick, etc.
-    const fillerWords = /\b(if|at|on|for|of|to|the|a|an|and|or|in|is|are|be|by|from|with|as|i|me|my|we|you|your|our|their|this|that|these|those|it|which|who|what|when|where|why|how|can|could|will|would|should|must|may|might|today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat|childcare|eldercare|petcare|homehelp|eventhelp|delivery|service|certified|certification|trained|professional|experienced|budget|business|total|job|work|task|errand)\b/gi;
-
+    // SIMPLE title extraction - just remove metadata, keep meaningful words
     let title = input
-      // STEP 1: Remove punctuation and normalize spaces
-      .replace(/^[^\w\s]+/, '') // Remove non-word chars at start
-      .replace(/[+\-*~`!@#$%^&|\\\/=<>?:;"'.,_(){}[\]]/g, ' ') // Replace weird punctuation with spaces
-
-      // STEP 2: Remove ALL duration patterns (do this FIRST before other number removals)
-      // Matches: "for 2.5 hours", "2.5 hours", "for 2 hrs", "in 3 days", etc
+      // Remove durations FIRST: "for 2.5 hours", "in 3 days", etc
       .replace(/\b(?:for|in)\s+\d+(?:\.\d+)?\s*(?:hour|hr|h|day|d|week|w|min|m|minute|second|sec|s)s?\b/gi, '')
       .replace(/\b\d+(?:\.\d+)?\s*(?:hour|hr|h|day|d|week|w|min|m|minute|second|sec|s)s?\b/gi, '')
 
-      // STEP 3: Remove postal codes (6 digits)
+      // Remove times: "7pm", "7:00am"
+      .replace(/\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/gi, '')
+
+      // Remove dates: "on Monday", "tomorrow", etc
+      .replace(/\b(?:on|at)\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi, '')
+      .replace(/\b(?:today|tomorrow|yesterday)\b/gi, '')
+
+      // Remove postal codes (6 digits)
       .replace(/\b\d{6}\b/g, ' ')
 
-      // STEP 4: Remove times (5pm, 7am, 7:00pm, etc)
-      .replace(/\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/gi, '')
-      .replace(/\b\d{1,2}(?:am|pm)\b/gi, '')
-
-      // STEP 5: Remove amounts ($100, @50, etc)
+      // Remove amounts: "$100", "budget 100", etc
       .replace(/[\$@]\s*\d+/g, '')
+      .replace(/\b(?:budget|price|cost)\s*[\$@]?\d+/gi, '')
 
-      // STEP 6: Remove any trailing numbers (final cleanup)
-      .replace(/\s+\d+(?:\.\d+)?\s*$/g, '')
+      // Remove punctuation
+      .replace(/[,.\-_]+/g, ' ')
 
-      // STEP 7: Remove filler words (keep only meaningful words)
-      .replace(fillerWords, ' ')
+      // Remove filler words at start/end
+      .replace(/^\s*(?:at|on|for|in|and|the|a|an)\s+/i, '')
+      .replace(/\s+(?:at|on|for|in)\s*$/i, '')
 
-      // STEP 8: Collapse spaces and trim
+      // Collapse spaces
       .replace(/\s+/g, ' ')
       .trim()
       .substring(0, 50);
 
-    console.log('[Extract] After cleanup:', title);
+    // Ensure title is not empty
+    title = title && title.length > 1 ? title : 'Task';
 
-    // Reorder words for natural-sounding title
-    // Priority: (action verb, person/object, purpose/detail)
-    const words = title.split(/\s+/);
-    const actionVerbs = ['take', 'help', 'clean', 'care', 'pick', 'send', 'buy', 'cook', 'drive', 'repair', 'watch', 'babysit', 'walk', 'deliver', 'setup'];
-    const priorities = {
-      0: ['take', 'help', 'clean', 'care', 'do', 'make', 'fix', 'pick', 'send', 'buy', 'cook', 'drive', 'repair', 'watch', 'babysit', 'walk', 'deliver', 'setup'], // Verbs first
-      1: ['baby', 'kid', 'mom', 'dad', 'child', 'dog', 'cat', 'house', 'home', 'car', 'lawn', 'laundry', 'groceries', 'elderly', 'parent'], // Objects/people second
-      2: ['care', 'help', 'service', 'work', 'job', 'errand'], // Purposes last
-    };
-
-    const sortedWords = words.sort((a, b) => {
-      const aLower = a.toLowerCase();
-      const bLower = b.toLowerCase();
-      const aPriority = priorities[0].includes(aLower) ? 0 : priorities[1].includes(aLower) ? 1 : 2;
-      const bPriority = priorities[0].includes(bLower) ? 0 : priorities[1].includes(bLower) ? 1 : 2;
-      return aPriority - bPriority;
-    });
-
-    title = sortedWords.join(' ');
-
-    // Auto-correct common mistakes and capitalize
+    // Capitalize properly
     title = title
-      .replace(/\bmykid\b/gi, 'my kid')
-      .replace(/\byour\b/gi, 'my')
-      .replace(/\bmim(?:s)?\b/gi, 'mom') // Fix "mim" or "mims" -> "mom"
-      .replace(/\bmoms\b/gi, 'mom')
-      .replace(/\bkids\b/gi, 'kid')
-      .replace(/\bare\b/gi, 'care') // Fix "are" -> "care"
-      .replace(/\bf\b/gi, '') // Remove single letter "f"
-      .replace(/\s+/g, ' ') // Collapse spaces after replacements
-      .trim()
-      .replace(/\b(\w)/g, letter => letter.toUpperCase());
+      .split(/\s+/)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
 
     console.log('[Extract] Final title:', title);
-    title = title || 'Task';
 
     // Parse date - look for "tomorrow", "today", "later" (=today), "N days later", day names, or dates
     let date = '';
@@ -638,46 +608,31 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     console.log('[Extract] Parsed - title:', title, 'postal:', postalCode, 'date:', date, 'time:', time, 'duration:', duration, 'budget:', budget);
 
-    // Use OneMap API to lookup address from postal code
+    // Map postal code prefix to area (no external API needed)
     let area = 'Singapore';
     let fullAddress = `Singapore ${postalCode}`;
 
-    if (postalCode) {
-      try {
-        console.log(`[Extract] OneMap: Looking up postal code ${postalCode}...`);
-        const url = new URL('https://www.onemap.gov.sg/api/common/elastic/search');
-        url.searchParams.set('searchVal', postalCode);
-        url.searchParams.set('returnGeom', 'Y');
-        url.searchParams.set('getAddrDetails', 'Y');
+    if (postalCode && postalCode.length === 6) {
+      // Postal code prefix (first 2 digits) → area mapping
+      const postalCodeAreas: Record<string, string> = {
+        '01': 'Raffles Place', '02': 'Beach Road', '03': 'Tiong Bahru',
+        '04': 'Harbourfront', '05': 'Outram', '06': 'Bukit Merah', '07': 'Kallang',
+        '08': 'Marine Parade', '09': 'Geylang', '10': 'Bedok', '11': 'Changi',
+        '12': 'Tampines', '13': 'Pasir Ris', '14': 'Serangoon', '15': 'Hougang',
+        '16': 'Punggol', '17': 'Sengkang', '18': 'Yung Ho', '19': 'Woodlands',
+        '20': 'Admiralty', '21': 'Bukit Batok', '22': 'Bukit Panjang', '23': 'Choa Chu Kang',
+        '24': 'Yew Tee', '25': 'Kranji', '26': 'Jurong West', '27': 'Clementi',
+        '28': 'Jurong East', '29': 'Pioneer', '30': 'Boon Lay', '31': 'Tuas',
+      };
 
-        const oneMapResponse = await fetch(url.toString(), { timeout: 3000 });
-        const data = await oneMapResponse.json();
-
-        if (data?.results && data.results.length > 0) {
-          const result = data.results[0];
-          fullAddress = result.ADDRESS && result.ADDRESS.trim().length > 0
-            ? result.ADDRESS
-            : `Singapore ${postalCode}`;
-          area = (result.ROAD_NAME && result.ROAD_NAME.trim().length > 0)
-            ? result.ROAD_NAME
-            : (result.BUILDING_NAME && result.BUILDING_NAME.trim().length > 0)
-            ? result.BUILDING_NAME
-            : 'Singapore';
-          console.log(`[Extract] OneMap: ✅ Found - ${area}, address: ${fullAddress}`);
-        } else {
-          console.log(`[Extract] OneMap: No results found, using postal code fallback`);
-          fullAddress = `Singapore ${postalCode}`;
-          area = 'Singapore';
-        }
-      } catch (error) {
-        console.warn(`[Extract] OneMap: Lookup failed (${error instanceof Error ? error.message : error}), using fallback`);
-        fullAddress = `Singapore ${postalCode}`;
-        area = 'Singapore';
-      }
+      const prefix = postalCode.substring(0, 2);
+      area = postalCodeAreas[prefix] || 'Singapore';
+      fullAddress = `${area}, Singapore ${postalCode}`;
+      console.log(`[Extract] Area lookup: ${prefix} → ${area}`);
     } else {
-      console.log('[Extract] No postal code in input, area: Singapore');
+      console.log('[Extract] Invalid postal code format, using Singapore');
       area = 'Singapore';
-      fullAddress = 'Singapore';
+      fullAddress = postalCode ? `Singapore ${postalCode}` : 'Singapore';
     }
 
     // Detect category using keyword matching (check BOTH raw input and extracted title)
