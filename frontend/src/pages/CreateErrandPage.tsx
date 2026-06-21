@@ -799,7 +799,7 @@ export default function CreateErrandPage() {
         {/* Header */}
         <button
           onClick={() => navigate(-1)}
-          className="text-errandify-orange font-semibold mb-2 text-xs"
+          className="text-errandify-orange font-semibold mb-2 text-sm"
         >
           ← Back
         </button>
@@ -824,11 +824,11 @@ export default function CreateErrandPage() {
         <div className="bg-white rounded-lg shadow-sm space-y-2 p-3">
           {/* Section 1: Essentials (Title, Description, Category) */}
           <div className="space-y-2">
-            <h3 className="font-bold text-errandify-brown text-xs">About Your Errand</h3>
+            <h3 className="font-bold text-errandify-brown text-sm">About Your Errand</h3>
 
             {/* Title - Required */}
             <div>
-              <label className="block text-xs font-semibold text-errandify-brown mb-1">
+              <label className="block text-sm font-semibold text-errandify-brown mb-1">
                 Errand Title *
               </label>
               <input
@@ -847,7 +847,7 @@ export default function CreateErrandPage() {
 
             {/* Description */}
             <div>
-              <label className="block text-xs font-semibold text-errandify-brown mb-1">
+              <label className="block text-sm font-semibold text-errandify-brown mb-1">
                 Description
               </label>
               <div className="relative">
