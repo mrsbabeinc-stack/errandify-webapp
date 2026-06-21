@@ -256,7 +256,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
         {userRole === 'doer' && (
           <div className="bg-white rounded-lg p-2 border border-gray-200 mb-3">
           <h3 className="text-xs font-semibold text-errandify-brown mb-1.5 uppercase tracking-wide">
-            Categories
+            Categories <span className="text-gray-500 font-normal">(Click to Select)</span>
           </h3>
           <div className="grid grid-cols-4 gap-1.5 mb-2">
             {categories.map((category) => {
@@ -349,7 +349,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                   </div>
                   {getUserBid(errand.id) && (
                     <div className="bg-green-100 border border-green-300 rounded px-1.5 py-0.5 text-xs font-semibold text-green-700 whitespace-nowrap">
-                      ${getUserBid(errand.id)?.toFixed(0)}
+                      Bidded ${getUserBid(errand.id)?.toFixed(0)}
                     </div>
                   )}
                 </div>
