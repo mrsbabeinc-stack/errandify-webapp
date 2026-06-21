@@ -30,6 +30,8 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   const [showRecommended, setShowRecommended] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userBids, setUserBids] = useState<Record<string, number>>({}); // taskId -> bidAmount
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [filterFavorites, setFilterFavorites] = useState(false);
 
   const categories = [
     { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50' },
@@ -71,6 +73,17 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
     return userBids[taskId];
   };
 
+  const toggleFavorite = (errandId: string) => {
+    const newFavorites = new Set(favorites);
+    if (newFavorites.has(errandId)) {
+      newFavorites.delete(errandId);
+    } else {
+      newFavorites.add(errandId);
+    }
+    setFavorites(newFavorites);
+    localStorage.setItem('errandFavorites', JSON.stringify(Array.from(newFavorites)));
+  };
+
   const getMaskedLocation = (location?: string) => {
     if (!location) return null;
     if (location.toLowerCase() === 'remote') return 'Remote';
@@ -93,6 +106,16 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
         setUserBids(JSON.parse(savedBids));
       } catch (e) {
         console.error('Failed to parse user bids:', e);
+      }
+    }
+
+    // Load favorites from localStorage
+    const savedFavorites = localStorage.getItem('errandFavorites');
+    if (savedFavorites) {
+      try {
+        setFavorites(new Set(JSON.parse(savedFavorites)));
+      } catch (e) {
+        console.error('Failed to parse favorites:', e);
       }
     }
   }, []);
@@ -154,7 +177,8 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
       errand.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       errand.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       categoryNames[errand.category]?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    const matchesFavorite = !filterFavorites || favorites.has(errand.id);
+    return matchesCategory && matchesSearch && matchesFavorite;
   });
 
   return (
@@ -253,6 +277,19 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
             Clear
           </button>
           </div>
+
+          {/* Favorites Filter */}
+          <button
+            onClick={() => setFilterFavorites(!filterFavorites)}
+            className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
+              filterFavorites
+                ? 'bg-red-500 text-white shadow-md ring-1 ring-red-300'
+                : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+            }`}
+          >
+            ❤️ {filterFavorites ? 'Showing Favorites' : 'Show Favorites'}
+            {favorites.size > 0 && ` (${favorites.size})`}
+          </button>
         )}
 
         {/* Errands List */}
@@ -298,6 +335,18 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                   </div>
                 )}
 
+                {/* Favorite Heart Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(errand.id);
+                  }}
+                  className="absolute top-2 left-2 text-xl transition-transform hover:scale-125"
+                  title={favorites.has(errand.id) ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  {favorites.has(errand.id) ? '❤️' : '🤍'}
+                </button>
+
                 {/* Title */}
                 <h3 className="text-xs font-semibold text-errandify-brown mb-0.5">
                   {errand.title}
@@ -337,9 +386,9 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                   </div>
                 </div>
 
-                {/* Asker */}
+                {/* Asker (Alias) */}
                 <div className="border-t pt-2 mb-3">
-                  <p className="text-xs text-gray-600">By: <span className="font-semibold">{errand.askerName}</span></p>
+                  <p className="text-xs text-gray-600">Posted by: <span className="font-semibold">{errand.askerName}</span></p>
                 </div>
 
                 {/* View Button */}
