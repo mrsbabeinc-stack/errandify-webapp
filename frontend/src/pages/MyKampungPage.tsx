@@ -72,11 +72,11 @@ export default function MyKampungPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<'feed' | 'news' | 'discussions' | 'announcements' | 'events' | 'blog' | 'recognition'>(
-    (location.state as any)?.tab || 'feed'
+    (location.state as any)?.tab || 'news'
   );
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [newsItems, setNewsItems] = useState<any[]>([]);
-  const [newsTypeFilter, setNewsTypeFilter] = useState<'all' | 'community' | 'singapore' | 'errandify'>('all');
+  const [newsTypeFilter, setNewsTypeFilter] = useState<'all' | 'community' | 'singapore' | 'errandify'>('errandify');
   const [newsCategoryFilter, setNewsCategoryFilter] = useState<string>('all');
   const [newsSearchQuery, setNewsSearchQuery] = useState('');
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
