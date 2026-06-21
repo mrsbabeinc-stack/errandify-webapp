@@ -4,6 +4,7 @@ import axios from 'axios';
 
 interface Errand {
   id: string;
+  errandId?: string;
   title: string;
   description: string;
   budget: number | null;
@@ -124,12 +125,20 @@ export default function BrowseErrandsPage() {
           {errands.map((errand) => (
             <div
               key={errand.id}
-              className="bg-white rounded-lg p-4 shadow hover:shadow-lg transition-shadow"
+              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden"
             >
-              {/* Title */}
-              <h3 className="text-lg font-semibold text-errandify-brown mb-2">
-                {errand.title}
-              </h3>
+              {/* Errand ID Badge */}
+              {errand.errandId && (
+                <div className="bg-gray-50 px-4 py-1.5 border-b border-gray-200 flex items-center justify-between">
+                  <code className="text-xs font-mono text-gray-600">{errand.errandId}</code>
+                </div>
+              )}
+              {/* Content */}
+              <div className="p-4">
+                {/* Title */}
+                <h3 className="text-lg font-semibold text-errandify-brown mb-2">
+                  {errand.title}
+                </h3>
 
               {/* Description */}
               <p className="text-gray-600 text-sm mb-3 line-clamp-2">
@@ -172,13 +181,14 @@ export default function BrowseErrandsPage() {
                 <p className="text-xs text-gray-600">Posted by: <span className="font-semibold">{errand.askerName}</span></p>
               </div>
 
-              {/* Accept Button */}
-              <button
-                onClick={() => handleAcceptErrand(errand.id)}
-                className="w-full bg-errandify-orange text-white py-2 rounded-lg font-semibold hover:bg-opacity-90 transition-colors"
-              >
-                View & Accept
-              </button>
+                {/* Accept Button */}
+                <button
+                  onClick={() => handleAcceptErrand(errand.id)}
+                  className="w-full bg-errandify-orange text-white py-2 rounded-lg font-semibold hover:bg-opacity-90 transition-colors"
+                >
+                  View & Accept
+                </button>
+              </div>
             </div>
           ))}
         </div>
