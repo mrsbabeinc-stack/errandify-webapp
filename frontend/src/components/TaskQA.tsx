@@ -16,9 +16,11 @@ interface TaskQAProps {
   errandId: number;
   isAsker: boolean;
   userRole?: 'asker' | 'doer';
+  errandStatus?: string;
 }
 
-export default function TaskQA({ errandId, isAsker, userRole = 'doer' }: TaskQAProps) {
+export default function TaskQA({ errandId, isAsker, userRole = 'doer', errandStatus = 'open' }: TaskQAProps) {
+  const isQAClosed = errandStatus !== 'open';
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [newQuestion, setNewQuestion] = useState('');
@@ -97,16 +99,21 @@ export default function TaskQA({ errandId, isAsker, userRole = 'doer' }: TaskQAP
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+    <div className={`bg-white rounded-lg border border-gray-200 p-6 mb-6 ${isQAClosed ? 'opacity-60 bg-gray-50' : ''}`}>
       <h2 className="text-lg font-bold text-errandify-brown mb-4 flex items-center gap-2">
         <span>❓ Questions About This Task</span>
         {questions.length > 0 && (
           <span className="text-sm font-normal text-gray-600">({questions.length})</span>
         )}
+        {isQAClosed && (
+          <span className="text-xs font-semibold text-gray-600 bg-gray-200 px-2 py-1 rounded ml-auto">
+            Closed - Use Chat
+          </span>
+        )}
       </h2>
 
-      {/* Ask Question Section (for doers only) */}
-      {userRole === 'doer' && !isAsker && (
+      {/* Ask Question Section (for doers only, only when open) */}
+      {userRole === 'doer' && !isAsker && !isQAClosed && (
         <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <p className="text-sm font-semibold text-gray-800 mb-2">
             💡 Have a question? Ask here and others can see the answer

@@ -626,6 +626,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             errandId={errand.id}
             isAsker={currentUser?.id === errand.askerId}
             userRole={userRole}
+            errandStatus={errand.status}
           />
         )}
 
@@ -672,14 +673,22 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           </div>
         )}
 
-        {/* Chat Button - For both Asker and Doer */}
+        {/* Chat Button - For both Asker and Doer (when not open) */}
         {errand && errand.status !== 'open' && (
-          <button
-            onClick={() => setShowChat(true)}
-            className="mt-6 w-full bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600"
-          >
-            💬 Chat with {currentUser?.id === errand.askerId ? 'Doer' : 'Asker'}
-          </button>
+          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-gray-700 mb-3 font-semibold">
+              📋 Task: <span className="text-errandify-brown">{errand.title}</span>
+            </p>
+            <button
+              onClick={() => setShowChat(true)}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors"
+            >
+              💬 Chat with {currentUser?.id === errand.askerId ? 'Doer' : 'Asker'}
+            </button>
+            <p className="text-xs text-gray-600 mt-2 italic">
+              Questions? Use chat for direct communication about this task.
+            </p>
+          </div>
         )}
       </div>
 
