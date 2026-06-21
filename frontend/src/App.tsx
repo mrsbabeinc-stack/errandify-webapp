@@ -34,6 +34,7 @@ import MyPocketPage from './pages/MyPocketPage';
 import TrustedUsersPage from './pages/TrustedUsersPage';
 import BlockListPage from './pages/BlockListPage';
 import FAQPage from './pages/FAQPage';
+import MyAccountPage from './pages/MyAccountPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -209,6 +210,7 @@ export default function App() {
         <Route path="/task/:id/complete" element={isAuthenticated ? <TaskCompleteEvidencePage /> : <Navigate to="/login" replace />} />
         <Route path="/task/:id/review-completion" element={isAuthenticated ? <ReviewCompletionPage /> : <Navigate to="/login" replace />} />
         <Route path="/faq" element={<FAQPage />} />
+        <Route path="/my-account" element={isAuthenticated ? <MyAccountPage /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout */}
         <Route
