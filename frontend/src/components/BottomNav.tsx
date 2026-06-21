@@ -36,7 +36,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
 
   const doerItems: NavItem[] = [
     { label: 'Browse ToHelp', path: '/', icon: '🔍' },
-    { label: 'My Bids', path: '/my-bids', icon: '💼' },
+    { label: 'MyBids', path: '/my-bids', icon: '💼' },
     { label: 'MyChat', path: '/chat', icon: '💬' },
     { label: 'MyKampung', path: '/my-kampung', icon: '🏘️' },
     { label: 'MyPocket', path: '/wallet', icon: '💰' },
