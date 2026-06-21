@@ -40,11 +40,28 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       paramIndex = 2;
     } else if (isRecommended) {
       // Show open errands that match user's category preferences
+      // If no preferences set, use AI-based behavior recommendations
       query = `SELECT e.* FROM errands e
                WHERE e.status = $1
                AND e.asker_id != $2
-               AND e.category = ANY(
-                 COALESCE((SELECT category_preferences FROM users WHERE id = $2), ARRAY[]::text[])
+               AND (
+                 -- Match user's category preferences if set
+                 e.category = ANY(
+                   COALESCE((SELECT category_preferences FROM users WHERE id = $2), ARRAY[]::text[])
+                 )
+                 OR
+                 -- If no category preferences, recommend based on completed task history
+                 (
+                   (SELECT category_preferences FROM users WHERE id = $2) IS NULL OR
+                   ARRAY_LENGTH((SELECT category_preferences FROM users WHERE id = $2), 1) IS NULL
+                 )
+                 AND e.category IN (
+                   SELECT DISTINCT category FROM errands
+                   WHERE id IN (
+                     SELECT errand_id FROM errand_assignments
+                     WHERE doer_id = $2 AND status = 'completed'
+                   )
+                 )
                )`;
       params.push('open', currentUserId);
       paramIndex = 3;
@@ -301,6 +318,65 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         budget: errand.budget,
         deadline: errand.deadline,
       });
+
+      // Notify relevant doers about this new errand
+      try {
+        // Find doers with matching category preferences OR who have completed similar tasks
+        const notifyResult = await db.query(
+          `SELECT DISTINCT u.id as doer_id, u.display_name, u.fcm_token
+           FROM users u
+           WHERE u.role = 'doer'
+           AND (
+             -- Match category preferences if set
+             $1 = ANY(COALESCE(u.category_preferences, ARRAY[]::text[]))
+             OR
+             -- If no category preferences, find by completed task history
+             (
+               u.category_preferences IS NULL OR
+               ARRAY_LENGTH(u.category_preferences, 1) IS NULL
+             )
+             AND $1 IN (
+               SELECT DISTINCT category FROM errands
+               WHERE id IN (
+                 SELECT errand_id FROM errand_assignments
+                 WHERE doer_id = u.id AND status = 'completed'
+               )
+             )
+             OR
+             -- Always notify doers with no history yet (new doers)
+             (
+               u.category_preferences IS NULL AND
+               NOT EXISTS (
+                 SELECT 1 FROM errand_assignments WHERE doer_id = u.id
+               )
+             )
+           )`,
+          [category]
+        );
+
+        console.log(`[NOTIFICATIONS] Found ${notifyResult.rows.length} doers to notify for category: ${category}`);
+
+        // Create notifications for each matching doer
+        for (const doer of notifyResult.rows) {
+          await db.query(
+            `INSERT INTO notifications (user_id, type, title, message, related_id, related_type, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+            [
+              doer.doer_id,
+              'new_errand_match',
+              '🎉 New Task Matching Your Interests!',
+              `"${errand.title}" posted in ${category} - $${errand.budget}`,
+              errand.id,
+              'errand'
+            ]
+          );
+        }
+
+        console.log(`[NOTIFICATIONS] Created notifications for ${notifyResult.rows.length} doers`);
+      } catch (notifyErr) {
+        console.error('[NOTIFICATIONS] Error sending notifications:', notifyErr);
+        // Don't fail the errand creation if notifications fail
+      }
 
       res.status(201).json({
         success: true,
