@@ -25,6 +25,8 @@ export default function ChatPage({ userRole }: ChatPageProps) {
   const [error, setError] = useState('');
   const [selectedErrandId, setSelectedErrandId] = useState<number | null>(null);
   const [showChatbox, setShowChatbox] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
   useEffect(() => {
     fetchConversations();
@@ -111,12 +113,90 @@ export default function ChatPage({ userRole }: ChatPageProps) {
 
   const selectedConversation = conversations.find(c => c.id === selectedErrandId);
 
+  // Filter conversations
+  const filteredConversations = conversations.filter((conversation) => {
+    // Search filter
+    const matchesSearch = searchQuery === '' ||
+      conversation.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      conversation.otherPartyName.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Status filter
+    const matchesStatus = selectedStatus === 'all' || conversation.status === selectedStatus;
+
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="px-4 py-4 max-w-3xl mx-auto pb-24">
       <h1 className="text-lg font-bold text-errandify-brown mb-2">Messages</h1>
       <p className="text-xs text-gray-600 mb-4">
         Chat with users about errands
       </p>
+
+      {/* Search Box */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="🔍 Search task name or user..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-errandify-orange"
+        />
+      </div>
+
+      {/* Status Filter Buttons */}
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+        <button
+          onClick={() => setSelectedStatus('all')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            selectedStatus === 'all'
+              ? 'bg-errandify-orange text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setSelectedStatus('confirmed')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            selectedStatus === 'confirmed'
+              ? 'bg-errandify-orange text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Confirmed
+        </button>
+        <button
+          onClick={() => setSelectedStatus('in_progress')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            selectedStatus === 'in_progress'
+              ? 'bg-errandify-orange text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          In Progress
+        </button>
+        <button
+          onClick={() => setSelectedStatus('completed_unconfirmed')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            selectedStatus === 'completed_unconfirmed'
+              ? 'bg-errandify-orange text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Awaiting Confirmation
+        </button>
+        <button
+          onClick={() => setSelectedStatus('completed_confirmed')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            selectedStatus === 'completed_confirmed'
+              ? 'bg-errandify-orange text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Completed
+        </button>
+      </div>
 
       {loading ? (
         <div className="text-center py-8">
@@ -131,9 +211,14 @@ export default function ChatPage({ userRole }: ChatPageProps) {
           <p className="text-sm text-gray-500 mb-2">No active chats yet</p>
           <p className="text-xs text-gray-400">Once you accept a task or receive an accepted bid, you can chat here</p>
         </div>
+      ) : filteredConversations.length === 0 ? (
+        <div className="bg-white rounded-lg p-6 text-center shadow-sm">
+          <p className="text-sm text-gray-500 mb-2">No chats match your search</p>
+          <p className="text-xs text-gray-400">Try adjusting your search or filters</p>
+        </div>
       ) : (
         <div className="grid gap-3">
-          {conversations.map((conversation) => (
+          {filteredConversations.map((conversation) => (
             <div key={conversation.id} className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start gap-3 mb-2">
                 <div className="flex-1">
