@@ -70,246 +70,147 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
   };
 
   return (
-    <div className="px-4 py-4 max-w-3xl mx-auto">
-      {/* Profile Header Card */}
+    <div className="px-2 py-2 max-w-2xl mx-auto pb-24">
+      {/* Profile Header */}
       {!loading && userProfile && (
-        <div className="mb-6 bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg p-6 text-white shadow-lg">
-          <div className="flex items-center gap-4">
-            {/* Profile Photo */}
+        <div className="mb-2 bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg p-2 text-white shadow-md">
+          <div className="flex items-center gap-2">
             <div className="flex-shrink-0">
               {userProfile.profileImage ? (
                 <img
                   src={userProfile.profileImage}
                   alt={userProfile.displayName}
-                  className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
+                  className="w-12 h-12 rounded-full object-cover border-2 border-white"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-white bg-opacity-30 flex items-center justify-center border-4 border-white text-3xl">
+                <div className="w-12 h-12 rounded-full bg-white bg-opacity-30 flex items-center justify-center border-2 border-white text-xl">
                   👤
                 </div>
               )}
             </div>
-
-            {/* Profile Info */}
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold">{userProfile.displayName}</h1>
-              {userProfile.bio && (
-                <p className="text-sm text-white text-opacity-90 mt-1">{userProfile.bio}</p>
-              )}
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm">{userProfile.displayName}</p>
               {userProfile.averageRating && (
-                <p className="text-sm text-white text-opacity-90 mt-2">
-                  ⭐ {userProfile.averageRating.toFixed(1)} ({userProfile.totalRatings || 0} reviews)
-                </p>
+                <p className="text-xs opacity-90">⭐ {userProfile.averageRating.toFixed(1)}</p>
               )}
             </div>
-
-            {/* Edit Button */}
             <button
               onClick={handleEditProfile}
-              className="px-4 py-2 bg-white text-errandify-orange rounded-lg font-semibold hover:bg-gray-100 transition-colors text-sm whitespace-nowrap"
+              className="px-2 py-1 bg-white text-errandify-orange rounded text-xs font-bold whitespace-nowrap"
             >
-              ✏️ Edit
+              ✏️
             </button>
           </div>
         </div>
       )}
 
       {/* MyAccount Section */}
-      <div className="mb-6">
-        <h2 className="text-sm font-bold text-errandify-brown mb-3 flex items-center gap-2">
-          <span>👤</span>
-          <span>MyAccount</span>
-        </h2>
-        <div className="space-y-2">
-          {/* View Profile */}
-          <button onClick={handleViewProfile} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">👁️</span>
-              <span className="text-sm font-medium text-gray-700">View Profile</span>
-            </div>
+      <div className="mb-2">
+        <h2 className="text-xs font-bold text-errandify-brown mb-1">👤 MyAccount</h2>
+        <div className="space-y-0 divide-y divide-gray-100">
+          <button onClick={handleViewProfile} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>👁️ View Profile</span>
             <span className="text-gray-400">›</span>
           </button>
-
-          {/* Edit Profile */}
-          <button onClick={handleEditProfile} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">✏️</span>
-              <span className="text-sm font-medium text-gray-700">Edit Profile</span>
-            </div>
+          <button onClick={handleEditProfile} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>✏️ Edit Profile</span>
             <span className="text-gray-400">›</span>
           </button>
-
-          {/* Referral */}
-          <button onClick={handleReferral} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">🔗</span>
-              <span className="text-sm font-medium text-gray-700">Referral</span>
-            </div>
+          <button onClick={handleReferral} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>🔗 Referral</span>
             <span className="text-gray-400">›</span>
           </button>
         </div>
       </div>
 
       {/* Preferences Section */}
-      <div className="mb-6">
-        <h2 className="text-sm font-bold text-errandify-brown mb-3 flex items-center gap-2">
-          <span>⚙️</span>
-          <span>Preferences</span>
-        </h2>
-        <div className="space-y-2">
-          {/* Trusted Users */}
-          <button onClick={handleTrustedUsers} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">❤️</span>
-              <span className="text-sm font-medium text-gray-700">Trusted Users</span>
-            </div>
+      <div className="mb-2">
+        <h2 className="text-xs font-bold text-errandify-brown mb-1">⚙️ Preferences</h2>
+        <div className="space-y-0 divide-y divide-gray-100">
+          <button onClick={handleTrustedUsers} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>❤️ Trusted Users</span>
             <span className="text-gray-400">›</span>
           </button>
-
-          {/* Block List */}
-          <button onClick={handleBlockList} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">🚫</span>
-              <span className="text-sm font-medium text-gray-700">Block List</span>
-            </div>
+          <button onClick={handleBlockList} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>🚫 Block List</span>
             <span className="text-gray-400">›</span>
           </button>
         </div>
       </div>
 
       {/* MyPocket Section */}
-      <div className="mb-6">
-        <h2 className="text-sm font-bold text-errandify-brown mb-3 flex items-center gap-2">
-          <span>💼</span>
-          <span>MyPocket</span>
-        </h2>
-        <div className="space-y-2">
-          {/* Payout Setting */}
-          <button onClick={handlePayoutSetting} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">💳</span>
-              <span className="text-sm font-medium text-gray-700">Payout Setting</span>
-            </div>
+      <div className="mb-2">
+        <h2 className="text-xs font-bold text-errandify-brown mb-1">💼 MyPocket</h2>
+        <div className="space-y-0 divide-y divide-gray-100">
+          <button onClick={handlePayoutSetting} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>💳 Payout</span>
             <span className="text-gray-400">›</span>
           </button>
-
-          {/* Transaction History */}
-          <button onClick={handleTransactionHistory} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">📊</span>
-              <span className="text-sm font-medium text-gray-700">Transaction History</span>
-            </div>
+          <button onClick={handleTransactionHistory} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>📊 Txn History</span>
             <span className="text-gray-400">›</span>
           </button>
-
-          {/* Notification Preferences */}
-          <button onClick={handleNotificationPreferences} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">🔔</span>
-              <span className="text-sm font-medium text-gray-700">Notification Preferences</span>
-            </div>
+          <button onClick={handleNotificationPreferences} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>🔔 Notifications</span>
             <span className="text-gray-400">›</span>
           </button>
-
-          {/* Category Preferences */}
-          <button onClick={handleCategoryPreferences} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">🎯</span>
-              <span className="text-sm font-medium text-gray-700">Task Preferences (For AI Recommendations)</span>
-            </div>
+          <button onClick={handleCategoryPreferences} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>🎯 Preferences</span>
             <span className="text-gray-400">›</span>
           </button>
         </div>
       </div>
 
       {/* MyRewardSpace Section */}
-      <div className="mb-6">
-        <h2 className="text-sm font-bold text-errandify-brown mb-3 flex items-center gap-2">
-          <span>🎁</span>
-          <span>MyRewardSpace</span>
-        </h2>
-        <div className="space-y-2">
-          {/* Errandify Points */}
-          <button onClick={handleErrandifyPoints} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">⭐</span>
-              <span className="text-sm font-medium text-gray-700">Errandify Points</span>
-            </div>
-            <span className="text-errandify-orange font-bold text-sm">20 EP</span>
+      <div className="mb-2">
+        <h2 className="text-xs font-bold text-errandify-brown mb-1">🎁 Rewards</h2>
+        <div className="space-y-0 divide-y divide-gray-100">
+          <button onClick={handleErrandifyPoints} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>⭐ Points</span>
+            <span className="text-errandify-orange font-bold text-xs">20 EP</span>
           </button>
-
-          {/* MyRewards */}
-          <button onClick={handleMyRewards} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">💎</span>
-              <span className="text-sm font-medium text-gray-700">MyRewards</span>
-            </div>
+          <button onClick={handleMyRewards} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>💎 Redeem</span>
             <span className="text-gray-400">›</span>
           </button>
-
-          {/* Point Transaction History */}
-          <button onClick={handlePointsHistory} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">📈</span>
-              <span className="text-sm font-medium text-gray-700">Point Transaction History</span>
-            </div>
+          <button onClick={handlePointsHistory} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>📈 History</span>
             <span className="text-gray-400">›</span>
           </button>
         </div>
       </div>
 
       {/* Help & Info Section */}
-      <div className="mb-6">
-        <h2 className="text-sm font-bold text-errandify-brown mb-3 flex items-center gap-2">
-          <span>ℹ️</span>
-          <span>Help & Information</span>
-        </h2>
-        <div className="space-y-2">
-          {/* About */}
-          <button onClick={() => navigate('/how-it-works')} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">🎯</span>
-              <span className="text-sm font-medium text-gray-700">How It Works</span>
-            </div>
+      <div className="mb-2">
+        <h2 className="text-xs font-bold text-errandify-brown mb-1">ℹ️ Help</h2>
+        <div className="space-y-0 divide-y divide-gray-100">
+          <button onClick={() => navigate('/how-it-works')} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>🎯 How It Works</span>
             <span className="text-gray-400">›</span>
           </button>
-
-          <button onClick={() => navigate('/about')} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">🏘️</span>
-              <span className="text-sm font-medium text-gray-700">About Errandify</span>
-            </div>
+          <button onClick={() => navigate('/about')} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>🏘️ About</span>
             <span className="text-gray-400">›</span>
           </button>
-
-          {/* FAQ */}
-          <button onClick={() => navigate('/faq')} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
-            <div className="flex items-center gap-2 text-left">
-              <span className="text-lg">❓</span>
-              <span className="text-sm font-medium text-gray-700">FAQ</span>
-            </div>
+          <button onClick={() => navigate('/faq')} className="w-full p-2 flex items-center justify-between hover:bg-gray-50 text-xs">
+            <span>❓ FAQ</span>
             <span className="text-gray-400">›</span>
           </button>
         </div>
       </div>
 
-      {/* Delete Account */}
-      <div className="mb-4">
-        <button onClick={handleDeleteAccount} className="text-xs font-medium text-red-600 hover:text-red-700">
-          Delete Account
+      {/* Bottom Actions */}
+      <div className="flex gap-2 mt-2">
+        <button onClick={handleDeleteAccount} className="flex-1 text-xs font-medium text-red-600 hover:text-red-700 py-2 bg-red-50 rounded hover:bg-red-100">
+          🗑️ Delete
+        </button>
+        <button
+          onClick={handleLogout}
+          className="flex-1 bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-opacity-90"
+        >
+          Log Out
         </button>
       </div>
-
-      {/* Log Out Button */}
-      <button
-        onClick={handleLogout}
-        className="w-full bg-white text-errandify-orange py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors border-2 border-errandify-orange text-base"
-      >
-        Log Out
-      </button>
-
-      {/* Bottom Spacing */}
-      <div className="h-8"></div>
     </div>
   );
 }
