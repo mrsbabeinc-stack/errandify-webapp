@@ -52,6 +52,7 @@ export default function TaskChatbox({
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [validationSuggestions, setValidationSuggestions] = useState<string[]>([]);
+  const [blockReason, setBlockReason] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -121,14 +122,25 @@ export default function TaskChatbox({
 
     setIsLoading(true);
     setError('');
+    setBlockReason('');
 
     try {
       // Second: AI-based content moderation
       const aiModeration = await moderateWithAI(newMessage);
 
       if (!aiModeration.isAppropriate) {
-        setValidationErrors([`❌ ${aiModeration.reason || 'Message content not appropriate for this platform. Keep messages task-focused and professional.'}`]);
-        setError('Message failed safety check');
+        const friendlyMessage = `⚠️ Message Not Appropriate
+
+Your message doesn't meet our community standards. Please keep messages:
+• Task-focused and professional
+• Respectful and appropriate
+• Free of personal/romantic advances
+
+📝 Try rephrasing to discuss the task instead.`;
+
+        setBlockReason(aiModeration.reason || 'Message content not appropriate for this platform');
+        setValidationErrors([friendlyMessage]);
+        setError('Message blocked');
         setIsLoading(false);
         return;
       }
@@ -146,6 +158,8 @@ export default function TaskChatbox({
       setValidationErrors([]);
       setValidationWarnings([]);
       setValidationSuggestions([]);
+      setBlockReason('');
+      setError('');
       fetchMessages();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to send message');
@@ -328,16 +342,21 @@ export default function TaskChatbox({
 
         {/* Validation Messages - Prominent Display */}
         {(validationErrors.length > 0 || validationWarnings.length > 0 || validationSuggestions.length > 0) && (
-          <div className={`px-3 py-3 border-t border-gray-200 space-y-2 text-sm ${
+          <div className={`px-4 py-4 border-t border-gray-200 space-y-2 text-sm rounded-t-lg ${
             validationErrors.length > 0
-              ? 'bg-red-50 border-l-4 border-l-red-500'
+              ? 'bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-l-red-500'
               : 'bg-amber-50 border-l-4 border-l-amber-500'
           }`}>
-            {validationErrors.length > 0 && (
-              <div className="font-bold text-red-700">⚠️ Message Cannot Be Sent</div>
-            )}
             {validationErrors.map((err, i) => (
-              <p key={i} className="text-red-700 font-semibold">{err}</p>
+              <div key={i}>
+                {err.includes('Message Not Appropriate') ? (
+                  <div className="whitespace-pre-wrap text-red-700 text-xs leading-relaxed">
+                    {err}
+                  </div>
+                ) : (
+                  <p className="text-red-700 font-semibold">{err}</p>
+                )}
+              </div>
             ))}
             {validationWarnings.map((warn, i) => (
               <p key={i} className="text-amber-700">{warn}</p>
@@ -345,6 +364,11 @@ export default function TaskChatbox({
             {validationSuggestions.map((sug, i) => (
               <p key={i} className="text-blue-700">{sug}</p>
             ))}
+            {blockReason && (
+              <p className="text-xs text-gray-600 italic border-t border-red-200 pt-2 mt-2">
+                🔍 Reason: {blockReason}
+              </p>
+            )}
           </div>
         )}
 
