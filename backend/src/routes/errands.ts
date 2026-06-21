@@ -163,6 +163,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         );
         return {
           id: errand.id,
+          errandId: errand.errand_id,
           title: errand.title,
           description: errand.description,
           category: categoryMap[errand.category] || errand.category, // Map to frontend category
@@ -216,6 +217,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
       success: true,
       data: {
         id: errand.id,
+        errandId: errand.errand_id,
         title: errand.title,
         description: errand.description,
         category: errand.category,
