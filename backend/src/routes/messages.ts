@@ -331,21 +331,22 @@ async function moderateMessage(content: string): Promise<{ status: 'SAFE' | 'FLA
       return { status: 'FLAG' };
     }
 
-    // Call Qwen for content moderation
-    const prompt = `
-      Review this message for harmful content:
-      "${content}"
+    // Basic content checks (no Qwen call for now - just structural checks)
+    const lowerContent = content.toLowerCase();
 
-      Is it safe for a community platform?
-      Consider: harassment, hate speech, threats, illegal content, sexual content.
+    // Check for obvious spam patterns
+    const spamPatterns = [
+      /(.)\1{9,}/g, // 10+ repeated characters
+      /\b(http|https|www)/i, // URLs in chat
+    ];
 
-      Reply ONLY: SAFE or FLAG
-    `;
+    for (const pattern of spamPatterns) {
+      if (pattern.test(content)) {
+        return { status: 'FLAG' };
+      }
+    }
 
-    const response = await callQwen(prompt);
-    const status = response.includes('FLAG') ? 'FLAG' : 'SAFE';
-
-    return { status };
+    return { status: 'SAFE' };
   } catch (error) {
     console.error('Moderation error:', error);
     // Default to SAFE on error (don't block messages)
