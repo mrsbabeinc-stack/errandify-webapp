@@ -1073,13 +1073,134 @@ router.post('/suggestions', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/ai/analyze-task - Analyze task details (location, complexity, sentiment)
+router.post('/analyze-task', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { title, description, location, category, budget } = req.body;
+    const userId = parseInt(req.userId || '0', 10);
+
+    if (!title || !description) {
+      return res.status(400).json({ error: 'Title and description required' });
+    }
+
+    const qwenApiKey = process.env.QWEN_API_KEY;
+    if (!qwenApiKey) {
+      return res.status(500).json({ error: 'AI service not available' });
+    }
+
+    // Build comprehensive analysis prompt
+    const prompt = `Analyze this task posting for location, complexity, and sentiment:
+
+TASK DETAILS:
+- Title: "${title}"
+- Description: "${description}"
+- Location: ${location || 'Not specified'}
+- Category: ${category || 'Not specified'}
+- Budget: ${budget ? '$' + budget : 'Not specified'}
+
+Provide analysis in JSON format with:
+1. "location_insights": {
+   - "postal_area": What postal area this is (e.g., "Central", "East", "North", etc.)
+   - "accessibility": "easy/moderate/difficult" (based on location)
+   - "estimated_travel_time": "quick/moderate/long" estimate
+}
+2. "task_complexity": {
+   - "level": "simple/moderate/complex"
+   - "required_skills": ["skill1", "skill2"] (list top 3)
+   - "estimated_duration": "in hours or timeframe"
+   - "physical_demand": "low/medium/high"
+}
+3. "sentiment_analysis": {
+   - "tone": "friendly/neutral/urgent/frustrated"
+   - "urgency": "low/medium/high"
+   - "clarity": "clear/somewhat_unclear/unclear"
+}
+4. "ai_suggestions": {
+   - "recommended_budget_range": "$X-$Y if budget seems misaligned"
+   - "missing_details": ["detail1", "detail2"] to help find better doers
+   - "best_doer_type": description of ideal person for this task
+   - "estimated_interested_doers": "X% of doers" likely to be interested
+}
+
+Return ONLY valid JSON, no markdown or code blocks.`;
+
+    try {
+      const response = await axios.post(
+        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+        {
+          model: 'qwen-plus',
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${qwenApiKey}`,
+          },
+          timeout: 15000,
+        }
+      );
+
+      const analysisText = response.data?.output?.text?.trim();
+      if (!analysisText) {
+        throw new Error('No analysis returned');
+      }
+
+      // Parse JSON response
+      let analysis;
+      try {
+        const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
+        analysis = JSON.parse(jsonMatch ? jsonMatch[0] : analysisText);
+      } catch {
+        throw new Error('Failed to parse AI response');
+      }
+
+      // Save analysis for task
+      try {
+        await db.query(
+          `INSERT INTO task_analysis (user_id, title, location_insights, task_complexity, sentiment_analysis, ai_suggestions, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, NOW())
+           ON CONFLICT (user_id, title) DO UPDATE SET
+           location_insights = $3, task_complexity = $4, sentiment_analysis = $5, ai_suggestions = $6, created_at = NOW()`,
+          [userId, title, JSON.stringify(analysis.location_insights || {}), JSON.stringify(analysis.task_complexity || {}), JSON.stringify(analysis.sentiment_analysis || {}), JSON.stringify(analysis.ai_suggestions || {})]
+        );
+      } catch (dbErr) {
+        console.warn('[Task Analysis] DB save skipped:', dbErr);
+      }
+
+      console.log('[Task Analysis] ✅ Complete:', analysis);
+
+      res.json({
+        success: true,
+        data: analysis,
+      });
+    } catch (qwenErr: any) {
+      console.error('[Task Analysis] Qwen error:', qwenErr.message);
+      res.status(500).json({
+        error: 'AI analysis failed',
+        details: qwenErr.message,
+      });
+    }
+  } catch (error: any) {
+    console.error('[Task Analysis] Error:', error);
+    res.status(500).json({
+      error: 'Failed to analyze task',
+      details: error.message,
+    });
+  }
+});
+
 // POST /api/ai/analyze-preferences - Analyze category selections to generate user profile
 router.post('/analyze-preferences', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { doer_preferences, asker_needs } = req.body;
     const userId = parseInt(req.userId || '0', 10);
 
-    if (!doer_preferences && !askerNeeds) {
+    if (!doer_preferences && !asker_needs) {
       return res.status(400).json({ error: 'No preferences provided' });
     }
 
@@ -1210,6 +1331,120 @@ Format: Return as JSON with fields: doer_profile, asker_profile, skill_insights,
     console.error('[AI Analysis] Error:', error);
     res.status(500).json({
       error: 'Failed to analyze preferences',
+      details: error.message,
+    });
+  }
+});
+
+// POST /api/ai/suggest-tasks - AI suggestions for tasks user should look at
+router.post('/suggest-tasks', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { user_preferences, user_history, available_tasks, user_role } = req.body;
+    const userId = parseInt(req.userId || '0', 10);
+
+    if (!available_tasks || available_tasks.length === 0) {
+      return res.status(400).json({ error: 'No tasks available' });
+    }
+
+    const qwenApiKey = process.env.QWEN_API_KEY;
+    if (!qwenApiKey) {
+      return res.status(500).json({ error: 'AI service not available' });
+    }
+
+    // Build task suggestion prompt
+    const prompt = `You are a task matching AI. A ${user_role} user is looking for ${user_role === 'doer' ? 'jobs to do' : 'help providers'}.
+
+USER PROFILE:
+- Role: ${user_role}
+- Preferences: ${user_preferences || 'No specific preferences'}
+- Past Work: ${user_history || 'No history yet'}
+
+AVAILABLE ${user_role === 'doer' ? 'JOBS' : 'SERVICE PROVIDERS'}:
+${available_tasks.slice(0, 10).map((t: any, i: number) => `${i + 1}. "${t.title}" - ${t.category} (${t.location || 'Location TBD'}, $${t.budget || 'TBD'})`).join('\n')}
+
+Analyze and provide JSON response with:
+1. "top_recommendations": [
+   {
+     "rank": 1,
+     "title": "job title",
+     "reason": "Why this is perfect for them",
+     "match_score": 95,
+     "why_match": "Specific reasoning"
+   }
+]
+2. "personalized_advice": [
+   "Tip 1 based on their profile",
+   "Tip 2 for improvement"
+]
+3. "skill_gaps": ["skill1", "skill2"] if any common skills missing
+4. "earning_potential": "Based on your skills, you could earn X-Y per month"
+
+Return ONLY valid JSON.`;
+
+    try {
+      const response = await axios.post(
+        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+        {
+          model: 'qwen-plus',
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${qwenApiKey}`,
+          },
+          timeout: 15000,
+        }
+      );
+
+      const suggestionsText = response.data?.output?.text?.trim();
+      if (!suggestionsText) {
+        throw new Error('No suggestions returned');
+      }
+
+      // Parse JSON response
+      let suggestions;
+      try {
+        const jsonMatch = suggestionsText.match(/\{[\s\S]*\}/);
+        suggestions = JSON.parse(jsonMatch ? jsonMatch[0] : suggestionsText);
+      } catch {
+        throw new Error('Failed to parse suggestions');
+      }
+
+      // Save suggestions for user
+      try {
+        await db.query(
+          `INSERT INTO user_suggestions (user_id, suggestions, created_at)
+           VALUES ($1, $2, NOW())
+           ON CONFLICT (user_id) DO UPDATE SET suggestions = $2, created_at = NOW()`,
+          [userId, JSON.stringify(suggestions)]
+        );
+      } catch (dbErr) {
+        console.warn('[Task Suggestions] DB save skipped:', dbErr);
+      }
+
+      console.log('[Task Suggestions] ✅ Generated:', suggestions);
+
+      res.json({
+        success: true,
+        data: suggestions,
+      });
+    } catch (qwenErr: any) {
+      console.error('[Task Suggestions] Qwen error:', qwenErr.message);
+      res.status(500).json({
+        error: 'AI suggestion failed',
+        details: qwenErr.message,
+      });
+    }
+  } catch (error: any) {
+    console.error('[Task Suggestions] Error:', error);
+    res.status(500).json({
+      error: 'Failed to generate suggestions',
       details: error.message,
     });
   }
