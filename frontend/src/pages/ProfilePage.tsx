@@ -51,46 +51,46 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
   };
 
   const menuItems = [
-    { icon: '👁️', label: 'View', onClick: () => navigate('/my-profile'), color: 'from-amber-100 to-amber-50' },
-    { icon: '✏️', label: 'Edit', onClick: () => navigate('/edit-profile'), color: 'from-orange-100 to-orange-50' },
-    { icon: '🎁', label: 'Refer', onClick: () => navigate('/referral'), color: 'from-rose-100 to-rose-50' },
+    { icon: '👁️', label: 'View Profile', onClick: () => navigate('/my-profile'), color: 'from-amber-100 to-amber-50' },
+    { icon: '✏️', label: 'Edit Profile', onClick: () => navigate('/edit-profile'), color: 'from-orange-100 to-orange-50' },
+    { icon: '🎁', label: 'Referral', onClick: () => navigate('/referral'), color: 'from-rose-100 to-rose-50' },
     { icon: '🎯', label: 'Skills', onClick: () => navigate('/category-preferences'), color: 'from-red-100 to-red-50' },
-    { icon: '❤️', label: 'Trust', onClick: () => navigate('/trusted-users'), color: 'from-rose-100 to-rose-50' },
-    { icon: '🚫', label: 'Block', onClick: () => navigate('/block-list'), color: 'from-orange-100 to-orange-50' },
-    { icon: '🏦', label: 'Pay', onClick: () => navigate('/payout-settings'), color: 'from-amber-100 to-amber-50' },
-    { icon: '📊', label: 'Txn', onClick: () => navigate('/transaction-history'), color: 'from-yellow-100 to-yellow-50' },
-    { icon: '🔔', label: 'Notify', onClick: () => navigate('/settings/notifications'), color: 'from-yellow-100 to-yellow-50' },
-    { icon: '🌍', label: 'Lang', onClick: () => navigate('/settings/language'), color: 'from-green-100 to-green-50' },
-    { icon: '🔐', label: 'Pass', onClick: () => navigate('/settings/change-password'), color: 'from-red-100 to-red-50' },
+    { icon: '❤️', label: 'Trusted', onClick: () => navigate('/trusted-users'), color: 'from-rose-100 to-rose-50' },
+    { icon: '🚫', label: 'Blocked', onClick: () => navigate('/block-list'), color: 'from-orange-100 to-orange-50' },
+    { icon: '🏦', label: 'Payout', onClick: () => navigate('/payout-settings'), color: 'from-amber-100 to-amber-50' },
+    { icon: '📊', label: 'History', onClick: () => navigate('/transaction-history'), color: 'from-yellow-100 to-yellow-50' },
+    { icon: '🔔', label: 'Notifications', onClick: () => navigate('/settings/notifications'), color: 'from-yellow-100 to-yellow-50' },
+    { icon: '🌍', label: 'Language', onClick: () => navigate('/settings/language'), color: 'from-green-100 to-green-50' },
+    { icon: '🔐', label: 'Password', onClick: () => navigate('/settings/change-password'), color: 'from-red-100 to-red-50' },
     { icon: '🛡️', label: '2FA', onClick: () => navigate('/settings/2fa'), color: 'from-green-100 to-green-50' },
     { icon: '⭐', label: 'Points', onClick: () => navigate('/errandify-points'), color: 'from-orange-400 to-amber-400 text-white' },
     { icon: '💎', label: 'Redeem', onClick: () => navigate('/my-rewards'), color: 'from-rose-400 to-orange-400 text-white' },
-    { icon: '📈', label: 'Hist', onClick: () => navigate('/points-history'), color: 'from-amber-100 to-amber-50' },
-    { icon: '🎯', label: 'How', onClick: () => navigate('/how-it-works'), color: 'from-orange-100 to-orange-50' },
+    { icon: '📈', label: 'Pts History', onClick: () => navigate('/points-history'), color: 'from-amber-100 to-amber-50' },
+    { icon: '🎯', label: 'How It Works', onClick: () => navigate('/how-it-works'), color: 'from-orange-100 to-orange-50' },
     { icon: '🏘️', label: 'About', onClick: () => navigate('/about'), color: 'from-amber-100 to-amber-50' },
     { icon: '❓', label: 'FAQ', onClick: () => navigate('/faq'), color: 'from-rose-100 to-rose-50' },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 pb-16">
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 pb-20">
       {/* HEADER */}
       {!loading && userProfile && (
-        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white p-3 shadow-md">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2">
+        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white p-4 shadow-md">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
               {userProfile.profileImage ? (
                 <img
                   src={userProfile.profileImage}
                   alt={userProfile.displayName}
-                  className="w-10 h-10 rounded-full object-cover border-2 border-white"
+                  className="w-12 h-12 rounded-full object-cover border-2 border-white"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-white bg-opacity-30 flex items-center justify-center border-2 border-white text-sm font-bold">
+                <div className="w-12 h-12 rounded-full bg-white bg-opacity-30 flex items-center justify-center border-2 border-white text-lg font-bold">
                   👤
                 </div>
               )}
-              <div className="min-w-0">
-                <p className="font-bold text-sm">{userProfile.displayName}</p>
+              <div>
+                <p className="font-bold text-base">{userProfile.displayName}</p>
                 {userProfile.averageRating && (
                   <p className="text-xs opacity-90">⭐ {userProfile.averageRating.toFixed(1)}</p>
                 )}
@@ -98,44 +98,44 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
             </div>
             <button
               onClick={() => navigate('/edit-profile')}
-              className="bg-white text-orange-600 px-2 py-1 rounded text-xs font-bold"
+              className="bg-white text-orange-600 px-3 py-1.5 rounded text-xs font-bold hover:bg-amber-50"
             >
-              ✏️
+              ✏️ Edit
             </button>
           </div>
         </div>
       )}
 
-      {/* MEGA COMPACT GRID */}
-      <div className="max-w-4xl mx-auto px-2 py-2">
-        <div className="grid grid-cols-6 gap-1">
+      {/* MENU GRID - BALANCED COMPACT */}
+      <div className="max-w-6xl mx-auto px-3 py-4">
+        <div className="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-5">
           {menuItems.map((item, idx) => (
             <button
               key={idx}
               onClick={item.onClick}
-              className={`bg-gradient-to-br ${item.color} rounded-lg p-1.5 hover:shadow-md transition text-center`}
+              className={`bg-gradient-to-br ${item.color} rounded-lg p-3 hover:shadow-lg transition text-center`}
             >
-              <p className="text-base mb-0.5">{item.icon}</p>
-              <p className="text-xs font-bold text-gray-800">{item.label}</p>
+              <p className="text-2xl mb-1">{item.icon}</p>
+              <p className="text-xs font-bold text-gray-800 line-clamp-2">{item.label}</p>
             </button>
           ))}
         </div>
 
         {/* ACTION BUTTONS */}
-        <div className="grid grid-cols-2 gap-1 mt-2">
+        <div className="grid grid-cols-2 gap-2 mt-4">
           <button
             onClick={() => {
               if (window.confirm('Are you sure you want to delete your account?')) {
                 navigate('/delete-account');
               }
             }}
-            className="bg-white border-2 border-red-300 text-red-600 py-1.5 rounded text-xs font-bold hover:bg-red-50"
+            className="bg-white border-2 border-red-300 text-red-600 py-2 rounded-lg text-sm font-bold hover:bg-red-50 transition"
           >
-            🗑️ Delete
+            🗑️ Delete Account
           </button>
           <button
             onClick={handleLogout}
-            className="bg-gradient-to-r from-orange-500 to-rose-500 text-white py-1.5 rounded text-xs font-bold hover:shadow-md"
+            className="bg-gradient-to-r from-orange-500 to-rose-500 text-white py-2 rounded-lg text-sm font-bold hover:shadow-lg transition"
           >
             🚪 Logout
           </button>
