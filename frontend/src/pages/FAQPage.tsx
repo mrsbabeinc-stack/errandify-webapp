@@ -447,38 +447,76 @@ export default function FAQPage() {
           ))}
         </div>
 
-        {/* COMPACT DETAIL MODAL */}
+        {/* DETAIL PAGE - FULL SCREEN */}
         {selectedFaq && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end z-50">
-            <div className="bg-white w-full rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-errandify-brown flex-1 pr-4">{selectedFaq.question}</h2>
-                <button
-                  onClick={() => setSelectedFaq(null)}
-                  className="text-2xl text-gray-400 hover:text-gray-600"
-                >
-                  ×
-                </button>
+          <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-errandify-brown flex-1 pr-4">{selectedFaq.question}</h2>
+              <button
+                onClick={() => setSelectedFaq(null)}
+                className="text-3xl text-gray-400 hover:text-gray-600 flex-shrink-0"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="max-w-3xl mx-auto p-6">
+              {/* Answer */}
+              <div className="mb-8">
+                <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  {selectedFaq.answer}
+                </p>
               </div>
 
-              {/* Answer */}
-              <p className="text-sm text-gray-700 leading-relaxed mb-6">{selectedFaq.answer}</p>
+              {/* Category & Navigation */}
+              <div className="border-t border-gray-200 pt-6 space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-600">Category:</span>
+                  <span className="inline-block px-3 py-1 bg-errandify-orange text-white rounded-full text-xs font-bold capitalize">
+                    {selectedFaq.category}
+                  </span>
+                </div>
 
-              {/* Category Tag */}
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-xs font-semibold text-gray-600">Category:</span>
-                <span className="inline-block px-2 py-1 bg-errandify-orange text-white rounded-full text-xs font-bold capitalize">
-                  {selectedFaq.category}
-                </span>
+                {/* Related Questions - Same Category */}
+                <div>
+                  <p className="text-sm font-semibold text-gray-600 mb-3">Related Questions:</p>
+                  <div className="space-y-2">
+                    {faqs
+                      .filter(f => f.category === selectedFaq.category && f.id !== selectedFaq.id)
+                      .slice(0, 3)
+                      .map(relatedFaq => (
+                        <button
+                          key={relatedFaq.id}
+                          onClick={() => setSelectedFaq(relatedFaq)}
+                          className="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
+                        >
+                          <p className="text-sm font-semibold text-errandify-brown">{relatedFaq.question}</p>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Support Section */}
+              <div className="mt-8 bg-orange-50 border border-orange-200 rounded-lg p-6 text-center">
+                <h3 className="font-bold text-gray-800 mb-2">Still have questions?</h3>
+                <p className="text-sm text-gray-600 mb-4">Contact our support team</p>
+                <a
+                  href="mailto:togather@errandify.ai"
+                  className="inline-block bg-errandify-orange text-white px-6 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition"
+                >
+                  📧 Email Support
+                </a>
               </div>
 
               {/* Close Button */}
               <button
                 onClick={() => setSelectedFaq(null)}
-                className="w-full bg-errandify-orange text-white py-2 rounded-lg font-semibold hover:bg-opacity-90 transition text-sm"
+                className="w-full mt-8 bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition text-base"
               >
-                Close
+                Back to FAQ
               </button>
             </div>
           </div>
