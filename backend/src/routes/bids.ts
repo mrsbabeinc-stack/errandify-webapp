@@ -191,6 +191,30 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
       ['confirmed', id, bid.errand_id]
     );
 
+    // Send notification to doer that their bid was accepted
+    try {
+      const errandData = await db.query(
+        'SELECT title FROM errands WHERE id = $1',
+        [bid.errand_id]
+      );
+      const errandTitle = errandData.rows[0]?.title || 'Your task';
+
+      await db.query(
+        `INSERT INTO notifications (user_id, type, title, body, action_url, created_at, read)
+         VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
+        [
+          bid.doer_id,
+          'bid_accepted',
+          '✅ Bid Accepted',
+          `Your bid of $${bid.amount} for "${errandTitle}" has been accepted! Please confirm the job.`,
+          `/errand/${bid.errand_id}`,
+        ]
+      );
+    } catch (notifErr) {
+      console.warn('[Bids] Failed to send bid accepted notification:', notifErr);
+      // Don't fail the entire request if notification fails
+    }
+
     res.json({
       success: true,
       data: {
@@ -247,18 +271,26 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Respons
     // Send notification to doer with reason
     try {
       const reasonText = reason === 'other' ? custom_reason : reason;
-      await axios.post(
-        `http://localhost:3000/api/notifications`,
-        {
-          recipientId: bid.doer_id,
-          type: 'bid_rejected',
-          title: 'Bid Rejected',
-          message: `Your bid of $${bid.amount} was rejected${reasonText ? `: ${reasonText}` : ''}`,
-          taskId: bid.errand_id,
-        }
+      const errandData = await db.query(
+        'SELECT title FROM errands WHERE id = $1',
+        [bid.errand_id]
+      );
+      const errandTitle = errandData.rows[0]?.title || 'Your task';
+
+      await db.query(
+        `INSERT INTO notifications (user_id, type, title, body, action_url, created_at, read)
+         VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
+        [
+          bid.doer_id,
+          'bid_rejected',
+          '❌ Bid Not Selected',
+          `Your bid of $${bid.amount} for "${errandTitle}" was not selected${reasonText ? ` (${reasonText})` : ''}`,
+          `/errand/${bid.errand_id}`,
+        ]
       );
     } catch (notifErr) {
-      console.error('Failed to send rejection notification:', notifErr);
+      console.warn('[Bids] Failed to send rejection notification:', notifErr);
+      // Don't fail the entire request if notification fails
     }
 
     res.json({ success: true, data: updatedBid });
