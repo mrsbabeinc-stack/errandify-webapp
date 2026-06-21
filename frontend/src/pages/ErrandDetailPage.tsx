@@ -629,14 +629,29 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           />
         )}
 
-        {/* Bids Section - Only for Asker */}
-        {currentUser && currentUser.id === errand?.askerId && (
+        {/* Bids Section - Only for Asker when task is open */}
+        {currentUser && currentUser.id === errand?.askerId && errand?.status === 'open' && (
           <div className="mt-6">
             <BidsViewer
               taskId={errand?.id || 0}
               taskBudget={errand?.budget || 0}
               onBidAccepted={() => fetchErrandDetail()}
             />
+          </div>
+        )}
+
+        {/* Bid Accepted Status - Only for Asker when bid is accepted */}
+        {currentUser && currentUser.id === errand?.askerId && errand?.status === 'confirmed' && (
+          <div className="mt-6 bg-green-50 border-2 border-green-300 rounded-lg p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-2xl">✅</span>
+              <div>
+                <p className="text-lg font-bold text-green-800">Bid Accepted!</p>
+                <p className="text-sm text-green-700 mt-1">
+                  Waiting for doer to confirm they'll do the job (24 hour window)
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
