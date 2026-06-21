@@ -90,6 +90,7 @@ export default function MyKampungPage() {
   const [recognitions, setRecognitions] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [userVotes, setUserVotes] = useState<number[]>([]);
+  const [selectedBlogPost, setSelectedBlogPost] = useState<any>(null);
 
   // Check if user is admin
   const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
@@ -1302,7 +1303,7 @@ export default function MyKampungPage() {
                 {blogPosts.length > 0 && (
                   <div
                     key={blogPosts[0].id}
-                    onClick={() => navigate(`/blog/${blogPosts[0].slug}`)}
+                    onClick={() => setSelectedBlogPost(blogPosts[0])}
                     className="bg-gradient-to-br from-errandify-orange to-orange-500 text-white rounded-lg p-4 mb-3 shadow-md hover:shadow-lg transition cursor-pointer"
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -1329,7 +1330,7 @@ export default function MyKampungPage() {
                   {blogPosts.slice(1).map((post) => (
                     <div
                       key={post.id}
-                      onClick={() => navigate(`/blog/${post.slug}`)}
+                      onClick={() => setSelectedBlogPost(post)}
                       className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-md hover:border-errandify-orange transition cursor-pointer"
                     >
                       {/* Category Badge */}
@@ -1370,6 +1371,74 @@ export default function MyKampungPage() {
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {/* BLOG POST MODAL */}
+        {selectedBlogPost && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center p-4">
+            <div className="bg-white rounded-t-2xl sm:rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+                <div className="flex-1">
+                  <span className="inline-block bg-errandify-orange text-white px-3 py-1 rounded-full text-xs font-bold mb-2">
+                    {selectedBlogPost.category === 'guide' ? '📚 Guide' : selectedBlogPost.category === 'stories' ? '📖 Story' : selectedBlogPost.category === 'tips' ? '💡 Tips' : '📰 News'}
+                  </span>
+                  <h2 className="text-lg font-bold text-gray-900">{selectedBlogPost.title}</h2>
+                </div>
+                <button
+                  onClick={() => setSelectedBlogPost(null)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-4 prose prose-sm max-w-none">
+                <p className="text-gray-600 text-sm mb-4">{selectedBlogPost.excerpt}</p>
+
+                <div className="text-xs text-gray-500 mb-4 pb-4 border-b border-gray-200">
+                  <span>By {selectedBlogPost.author}</span>
+                  <span className="mx-2">•</span>
+                  <span>{selectedBlogPost.readTime} min read</span>
+                  {selectedBlogPost.createdAt && (
+                    <>
+                      <span className="mx-2">•</span>
+                      <span>{new Date(selectedBlogPost.createdAt).toLocaleDateString()}</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Article Content */}
+                <div className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm">
+                  {selectedBlogPost.content}
+                </div>
+
+                {/* Footer Actions */}
+                <div className="mt-6 pt-4 border-t border-gray-200 flex gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedBlogPost(null);
+                      handleLikeBlog(selectedBlogPost.id);
+                    }}
+                    className={`flex-1 px-4 py-2 rounded font-semibold text-sm transition ${
+                      selectedBlogPost.isLiked
+                        ? 'bg-red-100 text-red-600'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {selectedBlogPost.isLiked ? '❤️ Liked' : '🤍 Like'}
+                  </button>
+                  <button
+                    onClick={() => setSelectedBlogPost(null)}
+                    className="flex-1 px-4 py-2 rounded font-semibold text-sm bg-errandify-orange text-white hover:bg-orange-600 transition"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
