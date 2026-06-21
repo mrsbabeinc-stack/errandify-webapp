@@ -169,7 +169,7 @@ export default function TaskChatbox({
 
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-2 space-y-1.5 bg-gray-50">
           {messages.length === 0 ? (
             <div className="text-center text-gray-500 text-sm py-8">
               <p>💬 No messages yet</p>
@@ -179,7 +179,7 @@ export default function TaskChatbox({
             messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex gap-2 ${
+                className={`flex gap-1.5 ${
                   msg.flagged ? 'opacity-60' : ''
                 }`}
               >
@@ -187,15 +187,15 @@ export default function TaskChatbox({
                   <img
                     src={msg.senderAvatar}
                     alt={msg.senderName}
-                    className="w-8 h-8 rounded-full flex-shrink-0"
+                    className="w-6 h-6 rounded-full flex-shrink-0"
                   />
                 )}
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold text-gray-900">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="text-xs font-semibold text-gray-900">
                       {msg.senderName}
                     </p>
-                    <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
+                    <span className={`text-xs font-semibold px-1 py-0.5 rounded text-[11px] ${
                       msg.senderId === askerId
                         ? 'bg-blue-100 text-blue-700'
                         : 'bg-green-100 text-green-700'
@@ -210,7 +210,7 @@ export default function TaskChatbox({
                     </p>
                   </div>
                   <div
-                    className={`text-sm py-2 px-3 rounded-lg inline-block max-w-xs ${
+                    className={`text-xs py-1.5 px-2.5 rounded-lg inline-block max-w-xs ${
                       msg.flagged
                         ? 'bg-yellow-100 text-yellow-900 border border-yellow-200'
                         : 'bg-white border border-gray-200'
