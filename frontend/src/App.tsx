@@ -18,8 +18,6 @@ import ProfilePage from './pages/ProfilePage';
 import ReviewPage from './pages/ReviewPage';
 import MyProfilePage from './pages/MyProfilePage';
 import ReferralPage from './pages/ReferralPage';
-import TrustedUsersPage from './pages/TrustedUsersPage';
-import BlockListPage from './pages/BlockListPage';
 import PayoutSettingsPage from './pages/PayoutSettingsPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import ErrandifyPointsPage from './pages/ErrandifyPointsPage';
@@ -174,8 +172,6 @@ export default function App() {
         {/* Profile sub-pages (outside layout for simpler rendering) */}
         <Route path="/my-profile" element={isAuthenticated ? <MyProfilePage /> : <Navigate to="/login" replace />} />
         <Route path="/referral" element={isAuthenticated ? <ReferralPage /> : <Navigate to="/login" replace />} />
-        <Route path="/trusted-users" element={isAuthenticated ? <TrustedUsersPage /> : <Navigate to="/login" replace />} />
-        <Route path="/block-list" element={isAuthenticated ? <BlockListPage /> : <Navigate to="/login" replace />} />
         <Route path="/payout-settings" element={isAuthenticated ? <PayoutSettingsPage /> : <Navigate to="/login" replace />} />
         <Route path="/transaction-history" element={isAuthenticated ? <TransactionHistoryPage /> : <Navigate to="/login" replace />} />
         <Route path="/errandify-points" element={isAuthenticated ? <ErrandifyPointsPage /> : <Navigate to="/login" replace />} />
