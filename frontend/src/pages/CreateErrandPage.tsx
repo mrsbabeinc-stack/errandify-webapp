@@ -906,9 +906,9 @@ export default function CreateErrandPage() {
           <div className="border-t pt-1 space-y-1">
             <h3 className="font-bold text-errandify-brown text-sm">Timeline & Budget</h3>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
+                <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
                   Budget (SGD) {aiSuggestions.suggestedBudget && <span className="text-xs text-gray-400">(suggested)</span>}
                 </label>
                 <input
@@ -916,8 +916,8 @@ export default function CreateErrandPage() {
                   name="budget"
                   value={formData.budget}
                   onChange={handleChange}
-                  placeholder="Enter amount"
-                  className={`w-full px-3 py-1 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm ${
+                  placeholder="Amount"
+                  className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm ${
                     aiSuggestions.suggestedBudget
                       ? 'border-gray-200 text-gray-500'
                       : 'border-gray-300 text-gray-900'
@@ -925,25 +925,21 @@ export default function CreateErrandPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
-                  Errand Date
+                <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
+                  Date
                 </label>
                 <input
                   type="date"
                   name="deadline"
                   value={formData.deadline}
                   onChange={handleChange}
-                  className="w-full px-3 py-1 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                  className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
                 />
               </div>
-            </div>
-
-            {/* Time Field */}
-            <div className="relative">
-              <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
-                Errand Time <span className="text-xs text-gray-400 font-normal">e.g. HH:MM AM/PM</span>
-              </label>
               <div className="relative">
+                <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
+                  Time
+                </label>
                 <input
                   type="time"
                   name="time"
@@ -957,12 +953,10 @@ export default function CreateErrandPage() {
                   onFocus={() => setShowTimePicker(true)}
                   onBlur={() => setTimeout(() => setShowTimePicker(false), 200)}
                   placeholder="HH:MM"
-                  className="w-full px-3 py-1 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm placeholder:text-gray-400 cursor-pointer"
+                  className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm placeholder:text-gray-400 cursor-pointer"
                 />
-
-                {/* Clock icon indicator */}
                 {showTimePicker && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xl animate-pulse">
+                  <div className="absolute right-2 bottom-1 text-lg animate-pulse">
                     🕐
                   </div>
                 )}
@@ -1079,14 +1073,14 @@ export default function CreateErrandPage() {
             {/* Postal Code and Full Address - Only shown when NOT remote work */}
             {!isRemoteWork && (
               <>
-                <div className="space-y-1">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
-                      Postal Code (Singapore)
+                    <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
+                      Postal Code (SG)
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g., 082001"
+                      placeholder="082001"
                       value={postalCode}
                       onChange={(e) => {
                         const code = e.target.value.trim();
@@ -1117,16 +1111,16 @@ export default function CreateErrandPage() {
                         }
                         // Otherwise: don't update location (partial postal codes won't modify anything)
                       }}
-                      className="w-full px-3 py-1 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                      className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
-                      Area (Shown to Potential Doers)
+                    <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
+                      Area
                     </label>
-                    <div className={`w-full px-3 py-1 border-b-2 border-gray-300 bg-gray-50 text-sm ${formData.location ? 'text-gray-900' : 'text-gray-400'}`}>
-                      {formData.location || 'Enter postal code above'}
+                    <div className={`w-full px-2 py-0.5 border-b-2 border-gray-300 bg-gray-50 text-sm ${formData.location ? 'text-gray-900' : 'text-gray-400'}`}>
+                      {formData.location || 'Auto-filled'}
                     </div>
                   </div>
                 </div>
