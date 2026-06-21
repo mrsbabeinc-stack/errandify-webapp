@@ -14,7 +14,6 @@ router.get('/:userId', async (req: AuthRequest, res: Response) => {
       `SELECT
          id,
          display_name,
-         email,
          phone,
          role,
          profile_image_url,
@@ -205,7 +204,6 @@ router.get('/me/full', authMiddleware, async (req: AuthRequest, res: Response) =
       data: {
         id: user.id,
         displayName: user.display_name,
-        email: user.email,
         phone: user.phone,
         role: user.role,
         profileImage: user.profile_image_url,
