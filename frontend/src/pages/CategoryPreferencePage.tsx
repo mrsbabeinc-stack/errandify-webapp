@@ -95,7 +95,7 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
   };
 
   return (
-    <div className="min-h-screen bg-errandify-bg">
+    <div className="min-h-screen bg-errandify-bg pb-32">
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">

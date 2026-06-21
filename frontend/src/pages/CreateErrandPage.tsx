@@ -772,7 +772,7 @@ export default function CreateErrandPage() {
 
 
   return (
-    <div className="min-h-screen bg-errandify-bg">
+    <div className="min-h-screen bg-errandify-bg pb-32">
       <div className="max-w-2xl mx-auto px-4 py-4">
         {/* Header */}
         <button
