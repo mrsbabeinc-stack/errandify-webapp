@@ -8,7 +8,7 @@ const router = Router();
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, user_id, display_name, mobile, role, category_preferences, monthly_household_income, chas_card_color, chas_subsidy_percentage FROM users WHERE id = $1',
+      'SELECT id, user_id, display_name, mobile, role FROM users WHERE id = $1',
       [req.userId]
     );
 
@@ -25,10 +25,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
         name: user.display_name,
         mobile: user.mobile,
         role: user.role,
-        categories: user.category_preferences || [],
-        monthlyHouseholdIncome: user.monthly_household_income,
-        chasCardColor: user.chas_card_color,
-        chasSubsidyPercentage: user.chas_subsidy_percentage,
+        categories: [],
       },
     });
   } catch (error) {
