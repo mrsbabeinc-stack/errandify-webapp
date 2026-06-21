@@ -200,6 +200,7 @@ export default function App() {
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
           <Route path="/my-kampung" element={<MyKampungPage />} />
           <Route path="/my-pocket" element={<MyPocketPage />} />
+          <Route path="/wallet" element={<MyPocketPage />} />
           <Route path="/profile" element={<ProfilePage userRole={userRole} onLogout={handleLogout} />} />
           <Route path="/review/:jobId" element={<ReviewPage />} />
         </Route>
