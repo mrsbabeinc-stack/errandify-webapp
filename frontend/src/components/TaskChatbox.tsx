@@ -44,8 +44,12 @@ export default function TaskChatbox({
   const [doerId, setDoerId] = useState<number | null>(null);
   const [askerName, setAskerName] = useState<string>('Asker');
   const [doerName, setDoerName] = useState<string>('Doer');
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -139,6 +143,45 @@ export default function TaskChatbox({
     setImagePreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      const timer = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+
+      mediaRecorder.onstop = () => {
+        clearInterval(timer);
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setNewMessage(`[Audio: ${audioUrl}]`);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+    } catch (err) {
+      console.error('Error accessing microphone:', err);
+      setError('Unable to access microphone. Please check permissions.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
     }
   };
 
@@ -276,10 +319,28 @@ export default function TaskChatbox({
               onClick={() => fileInputRef.current?.click()}
               className="px-2 py-2 text-gray-500 hover:text-errandify-orange transition text-lg"
               title="Attach image"
-              disabled={isLoading}
+              disabled={isLoading || isRecording}
             >
               🖼️
             </button>
+            <button
+              type="button"
+              onClick={isRecording ? stopRecording : startRecording}
+              className={`px-2 py-2 transition text-lg ${
+                isRecording
+                  ? 'text-red-500 hover:text-red-700 animate-pulse'
+                  : 'text-gray-500 hover:text-errandify-orange'
+              }`}
+              title={isRecording ? 'Stop recording' : 'Start voice recording'}
+              disabled={isLoading}
+            >
+              {isRecording ? '⏹️' : '🎤'}
+            </button>
+            {isRecording && (
+              <span className="text-xs text-red-500 font-semibold">
+                {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+              </span>
+            )}
             <button
               type="submit"
               disabled={isLoading || (!newMessage.trim() && !selectedImage)}
