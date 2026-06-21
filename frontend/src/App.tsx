@@ -29,6 +29,7 @@ import MyProfilePage from './pages/MyProfilePage';
 import ReferralPage from './pages/ReferralPage';
 import MyReferralsPage from './pages/MyReferralsPage';
 import AdminDisputePanel from './pages/AdminDisputePanel';
+import MyBidsPage from './pages/MyBidsPage';
 import PayoutSettingsPage from './pages/PayoutSettingsPage';
 import HowItWorksPage from './pages/HowItWorksPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
@@ -227,6 +228,7 @@ export default function App() {
         <Route path="/disputes-management" element={isAuthenticated ? <DisputesManagementPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin" element={isAuthenticated ? <AdminDashboardPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/disputes" element={isAuthenticated ? <AdminDisputePanel /> : <Navigate to="/login" replace />} />
+        <Route path="/my-bids" element={isAuthenticated ? <MyBidsPage /> : <Navigate to="/login" replace />} />
         <Route path="/about" element={<AboutErrandifyPage />} />
         <Route path="/faq" element={<FAQPage />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
