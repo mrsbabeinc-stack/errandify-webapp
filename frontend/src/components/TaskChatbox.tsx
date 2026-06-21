@@ -29,7 +29,6 @@ export default function TaskChatbox({
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<'team' | 'hana'>('team');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -69,27 +68,13 @@ export default function TaskChatbox({
 
     try {
       const token = localStorage.getItem('token');
-
-      if (activeTab === 'team') {
-        // Send team message
-        await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/tasks/${taskId}/send`,
-          { content: newMessage },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      } else {
-        // Send Hana message
-        await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/tasks/${taskId}/hana`,
-          { question: newMessage },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      }
-
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/tasks/${taskId}/send`,
+        { content: newMessage },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setNewMessage('');
       fetchMessages();
     } catch (err: any) {
@@ -122,29 +107,6 @@ export default function TaskChatbox({
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-gray-200">
-          <button
-            onClick={() => setActiveTab('team')}
-            className={`flex-1 py-2 text-sm font-semibold text-center ${
-              activeTab === 'team'
-                ? 'text-errandify-brown border-b-2 border-errandify-brown'
-                : 'text-gray-600'
-            }`}
-          >
-            👥 Team Chat
-          </button>
-          <button
-            onClick={() => setActiveTab('hana')}
-            className={`flex-1 py-2 text-sm font-semibold text-center ${
-              activeTab === 'hana'
-                ? 'text-errandify-brown border-b-2 border-errandify-brown'
-                : 'text-gray-600'
-            }`}
-          >
-            🤖 Ask Hana
-          </button>
-        </div>
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
@@ -218,11 +180,7 @@ export default function TaskChatbox({
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder={
-                activeTab === 'team'
-                  ? 'Type a message...'
-                  : 'Ask Hana a question...'
-              }
+              placeholder="Type a message..."
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange"
               disabled={isLoading}
             />
@@ -235,9 +193,7 @@ export default function TaskChatbox({
             </button>
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            {activeTab === 'team'
-              ? '💬 Messages are reviewed for community safety'
-              : '🤖 Hana is always here to help'}
+            💬 Messages are reviewed for community safety
           </p>
         </form>
       </div>
