@@ -57,7 +57,7 @@ router.post('/singpass-callback', async (req: Request, res: Response) => {
 // Signup: New SingPass-verified flow with criminal screening
 router.post('/signup', async (req: Request, res: Response) => {
   try {
-    const { nric, displayName, email, phone, role, singpassVerified } = req.body;
+    const { nric, displayName, email, phone, role, singpassVerified, ref } = req.body;
 
     // Validate required fields
     if (!nric || !displayName || !email || !phone) {
@@ -78,13 +78,14 @@ router.post('/signup', async (req: Request, res: Response) => {
 
     // Insert new user with SingPass verification
     const referralCode = generateReferralCode();
+    const referredBy = ref || null; // Track who referred this user
 
     const result = await db.query(
       `INSERT INTO users (
         nric_hash, display_name, email, mobile,
-        font_size_pref, language_pref, role, kyc_status, referral_code,
+        font_size_pref, language_pref, role, kyc_status, referral_code, referred_by,
         screening_completed, screening_completed_date
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
       RETURNING id, display_name, email, mobile, role, criminal_conviction`,
       [
         hashNric(nric),
@@ -96,6 +97,7 @@ router.post('/signup', async (req: Request, res: Response) => {
         role || 'asker',
         singpassVerified ? 'verified' : 'pending',
         referralCode,
+        referredBy,
         true, // screening_completed
       ]
     );
