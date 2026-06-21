@@ -78,18 +78,18 @@ export default function HomePage({ userRole }: HomePageProps) {
   return (
     <div className="min-h-screen bg-errandify-bg pb-32">
       {/* Page Container */}
-      <div className="max-w-3xl mx-auto px-4 py-4">
+      <div className="max-w-3xl mx-auto px-3 py-2">
         {/* Main Tagline */}
-        <div className="mb-3 text-center">
-          <p className="text-xs font-semibold text-errandify-orange italic mb-2">Simplifying Life, Amplifying Humanity</p>
+        <div className="mb-2 text-center">
+          <p className="text-xs font-semibold text-errandify-orange italic mb-1">Simplifying Life, Amplifying Humanity</p>
         </div>
 
         {/* Welcome Section */}
-        <div className="mb-4 text-center">
-          <h1 className="text-2xl font-bold text-errandify-brown mb-1">
+        <div className="mb-3 text-center">
+          <h1 className="text-xl font-bold text-errandify-brown mb-0.5">
             Welcome home, {userName}! 👋
           </h1>
-          <p className="text-gray-600 text-sm mb-2">
+          <p className="text-gray-600 text-xs mb-1">
             {userRole === 'asker'
               ? 'Need help with something? Post an errand and let your kampung help you out'
               : 'Looking to help your neighbours? Browse ToHelp and earn some rewards'}
@@ -102,69 +102,69 @@ export default function HomePage({ userRole }: HomePageProps) {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-2 gap-3 mb-3">
           {userRole === 'asker' ? (
             <>
               <button
                 onClick={() => navigate('/create-errand-hana')}
-                className="bg-errandify-orange text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+                className="bg-errandify-orange text-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
-                <span className="text-3xl mb-2 block">📝</span>
-                <span className="font-semibold text-sm">Post an Errand</span>
+                <span className="text-2xl mb-1 block">📝</span>
+                <span className="font-semibold text-xs">Post an Errand</span>
               </button>
 
               <button
                 onClick={() => navigate('/errands')}
-                className="bg-errandify-brown text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+                className="bg-errandify-brown text-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
-                <span className="text-3xl mb-2 block">📋</span>
-                <span className="font-semibold text-sm">MyErrands</span>
+                <span className="text-2xl mb-1 block">📋</span>
+                <span className="font-semibold text-xs">MyErrands</span>
               </button>
             </>
           ) : (
             <>
               <button
                 onClick={() => navigate('/search')}
-                className="bg-errandify-orange text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+                className="bg-errandify-orange text-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
-                <span className="text-3xl mb-2 block">🔍</span>
-                <span className="font-semibold text-sm">Browse ToHelp</span>
+                <span className="text-2xl mb-1 block">🔍</span>
+                <span className="font-semibold text-xs">Browse ToHelp</span>
               </button>
 
               <button
                 onClick={() => navigate('/my-offer')}
-                className="bg-errandify-brown text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+                className="bg-errandify-brown text-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
-                <span className="text-3xl mb-2 block">💼</span>
-                <span className="font-semibold text-sm">MyOffer</span>
+                <span className="text-2xl mb-1 block">💼</span>
+                <span className="font-semibold text-xs">MyOffer</span>
               </button>
             </>
           )}
         </div>
 
         {/* Quick Categories Section - Grouped with Section Headers */}
-        <div className="bg-white rounded-lg p-3 mb-4 border border-gray-200">
-          <h2 className="font-bold text-errandify-brown mb-3 text-sm">
+        <div className="bg-white rounded-lg p-2 mb-3 border border-gray-200">
+          <h2 className="font-bold text-errandify-brown mb-2 text-xs">
             {userRole === 'asker' ? '🎯 What do you need help with?' : '🤝 How can you help your kampung today?'}
           </h2>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {Object.entries(groupedCategories).map(([groupName, cats]) => (
               <div key={groupName}>
                 {/* Group Section Header */}
-                <h3 className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1 pl-1">
+                <h3 className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-0.5 pl-1">
                   {groupName}
                 </h3>
 
                 {/* Group Categories Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
                   {cats.map((category) => (
                     <div key={category.id} className="group relative">
                       <button
                         onClick={() => handleCategoryClick(category.id)}
-                        className={`w-full px-2 py-1.5 rounded-lg text-xs font-medium transition-all hover:shadow-md bg-gradient-to-r ${category.color}`}
+                        className={`w-full px-1.5 py-1 rounded text-xs font-medium transition-all hover:shadow-md bg-gradient-to-r ${category.color}`}
                       >
-                        <div className="text-base mb-0.5">{category.icon}</div>
+                        <div className="text-sm mb-0.5">{category.icon}</div>
                         <div className="line-clamp-2 text-xs">{category.name}</div>
                       </button>
 
@@ -181,7 +181,7 @@ export default function HomePage({ userRole }: HomePageProps) {
             ))}
           </div>
 
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-gray-500 mt-1">
             {userRole === 'asker'
               ? '✨ Hover to learn more • Click to post your errand'
               : '✨ Hover to learn more • Click to help your neighbours'}
