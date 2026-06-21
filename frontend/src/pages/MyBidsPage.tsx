@@ -108,7 +108,7 @@ export default function MyBidsPage() {
           >
             ← Back
           </button>
-          <h1 className="text-2xl font-bold text-errandify-brown">My Bids</h1>
+          <h1 className="text-2xl font-bold text-errandify-brown">MyBids</h1>
           <p className="text-gray-600 text-sm">Track all your bids and active jobs</p>
         </div>
 
