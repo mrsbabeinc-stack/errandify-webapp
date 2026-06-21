@@ -81,7 +81,7 @@ export const validateMessage = (content: string): ValidationResult => {
   }
 
   // SPECIAL CHECK: Leetspeak/shortcut versions of inappropriate words
-  const hasLeetspeak = /f\*ck|fxxx|f\*\*\*|fk|fcuk|s3x|sx|s\*x|s#x|s@x|d4mn|d@mn|sh1t|sh\*t|c0ck|c\*ck|p0rn|p\*rn|d1ld0|d1ld\*|0rgy|0rg1e|3some|2some|4some|g4ngbang|g4ng\-b4ng|th23some|thr33som/i.test(content);
+  const hasLeetspeak = /f\*ck|fxxx|f\*\*\*|fk|fcuk|f4ck|fuc|fck|s3x|sx|s\*x|s#x|s@x|d4mn|d@mn|d@m|sh1t|sh\*t|sh!t|sht|c0ck|c\*ck|c0ck|ck0k|p0rn|p\*rn|pr0n|p0rn0|d1ld0|d1ld\*|d!ld|0rgy|0rg1e|orgi|3some|2some|4some|5some|g4ngbang|g4ng\-b4ng|gangb4ng|gb4ng|th23some|thr33som|thr3esome|w33d|we3d|c0k3|c0c|h0rny|h0rny|h0rnee|m4ssage|m4ss4ge|esc0rt|3sc0rt|pr0st|pr0stitut|4nal|4n4l|0r4l|0r@l|d4rk|d@rk|drk|b0ndage|b0nd@ge|bd4g3|p3n3trat|p3n3tr4t|c4m|c@m|cum|c\*m|j0i|j0y|j\*i|s0l0|s0l0|extr4|xtr4|ext\*|h4ppy|h4ppy|releas3|rel34s|r3l34s3/i.test(content);
   if (hasLeetspeak) {
     result.errors.push('❌ Message contains inappropriate content. Keep messages professional and task-focused.');
     result.isValid = false;
