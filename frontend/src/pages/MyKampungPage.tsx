@@ -111,7 +111,10 @@ export default function MyKampungPage() {
           { timeout: 5000 }
         );
         console.log('News API response:', newsRes.data);
-        setNewsItems(newsRes.data.data || []);
+        console.log('Setting news items, count:', newsRes.data.data?.length);
+        const apiNews = newsRes.data.data || [];
+        setNewsItems(apiNews);
+        console.log('After setNewsItems, api had:', apiNews.length, 'items');
       } catch (err) {
         console.log('News API not available, using mock data', err);
         setMockNewsData();
@@ -445,8 +448,8 @@ export default function MyKampungPage() {
     // Use real, SEO-optimized blog posts from blogPosts data
     setBlogPosts(blogPostsData);
 
-    // Mock news data
-    setMockNewsData();
+    // Don't reset news - keep the real API data if it loaded
+    // setMockNewsData();
 
     // Mock recognition data
     setRecognitions([
@@ -1066,11 +1069,13 @@ export default function MyKampungPage() {
                   return true;
                 });
 
+              console.log('Filtered news count:', filteredNews.length, 'Filter:', newsTypeFilter, 'Items:', newsItems.length);
+
               return (
                 <div className="space-y-2">
                   {filteredNews.length === 0 ? (
                     <div className="bg-white rounded p-4 text-center border border-gray-200 text-xs text-gray-500">
-                      No news found
+                      No news found (Total items: {newsItems.length}, Filter: {newsTypeFilter})
                     </div>
                   ) : (
                     filteredNews.map((item: any) => {
