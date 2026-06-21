@@ -17,11 +17,15 @@ const CONTACT_PATTERNS = {
   url: /(https?:\/\/[^\s]+|www\.[^\s]+)/gi,
 };
 
-// Patterns for inappropriate content
+// Patterns for inappropriate content - COMPREHENSIVE
 const INAPPROPRIATE_PATTERNS = {
-  profanity: /damn|shit|crap|bloody/gi,
-  threats: /kill|hurt|violence|attack|harm/gi,
-  harassment: /stupid|idiot|moron|dumb|fool/gi,
+  profanity: /damn|shit|crap|bloody|fuck|ass|bitch|bastard|hell|piss/gi,
+  threats: /kill|hurt|violence|attack|harm|rape|murder|die|dead/gi,
+  harassment: /stupid|idiot|moron|dumb|fool|retard|loser|pathetic/gi,
+  sexualContent: /sex|porn|naked|nude|xxx|sexual|cock|pussy|dick|vagina|breast|gay|lesbian|horny|aroused|masturbat|cum/gi,
+  drugs: /cocaine|heroin|meth|weed|cannabis|marijuana|acid|lsd|mdma|ecstasy|crack|fentanyl/gi,
+  violence: /rape|abuse|assault|torture|molest|incest|pedophil|child abuse/gi,
+  scam: /bitcoin|crypto|investment|forex|mlm|pyramid|scheme|urgent|wire transfer|western union|money gram/gi,
 };
 
 // Blocked file types
@@ -73,7 +77,8 @@ export const validateMessage = (content: string): ValidationResult => {
 
   // Check for inappropriate content
   if (INAPPROPRIATE_PATTERNS.profanity.test(content)) {
-    result.warnings.push('⚠️ Profanity detected. Keep messages professional.');
+    result.errors.push('❌ Profanity not allowed. Keep messages professional.');
+    result.isValid = false;
   }
 
   if (INAPPROPRIATE_PATTERNS.threats.test(content)) {
@@ -82,7 +87,28 @@ export const validateMessage = (content: string): ValidationResult => {
   }
 
   if (INAPPROPRIATE_PATTERNS.harassment.test(content)) {
-    result.warnings.push('⚠️ Disrespectful language detected. Keep messages respectful.');
+    result.errors.push('❌ Disrespectful/harassing language not allowed.');
+    result.isValid = false;
+  }
+
+  if (INAPPROPRIATE_PATTERNS.sexualContent.test(content)) {
+    result.errors.push('❌ Sexual content not allowed. Keep messages task-focused.');
+    result.isValid = false;
+  }
+
+  if (INAPPROPRIATE_PATTERNS.drugs.test(content)) {
+    result.errors.push('❌ References to illegal drugs not allowed.');
+    result.isValid = false;
+  }
+
+  if (INAPPROPRIATE_PATTERNS.violence.test(content)) {
+    result.errors.push('❌ Violent/abusive content not allowed.');
+    result.isValid = false;
+  }
+
+  if (INAPPROPRIATE_PATTERNS.scam.test(content)) {
+    result.errors.push('❌ Scam/fraudulent content not allowed.');
+    result.isValid = false;
   }
 
   // Check message length
