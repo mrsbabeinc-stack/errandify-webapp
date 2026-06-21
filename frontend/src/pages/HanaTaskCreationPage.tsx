@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import HanaAssistant from '../components/HanaAssistant';
 import HanaChatMode from '../components/task-creation/HanaChatMode';
 import HanaAudioMode from '../components/task-creation/HanaAudioMode';
 import HanaManualMode from '../components/task-creation/HanaManualMode';
@@ -194,7 +193,6 @@ export default function HanaTaskCreationPage({ userRole }: HanaTaskCreationPageP
           isSubmitting={isSubmitting}
         />
       )}
-      <HanaAssistant />
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import HanaAssistant from '../components/HanaAssistant';
 
 interface Errand {
   id: string;
@@ -184,7 +183,6 @@ export default function BrowseErrandsPage() {
           ))}
         </div>
       )}
-      <HanaAssistant />
     </div>
   );
 }

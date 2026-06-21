@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import HanaAssistant from '../components/HanaAssistant';
 
 interface WalletData {
   balance: number;
@@ -279,7 +278,6 @@ export default function MyPocketPage() {
           </div>
         </div>
       </div>
-      <HanaAssistant />
     </div>
   );
 }

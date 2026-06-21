@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import HanaAssistant from '../components/HanaAssistant';
 
 export default function CreateErrandPage() {
   console.log('===== CreateErrandPage LOADED =====');
@@ -1548,7 +1547,6 @@ export default function CreateErrandPage() {
           </div>
         </div>
       )}
-      <HanaAssistant />
     </div>
   );
 }

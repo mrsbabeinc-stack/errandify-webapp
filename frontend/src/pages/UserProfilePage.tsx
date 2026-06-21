@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import HanaAssistant from '../components/HanaAssistant';
 
 interface Badge {
   type: string;
@@ -322,7 +321,6 @@ export default function UserProfilePage() {
           </div>
         </div>
       </div>
-      <HanaAssistant />
     </div>
   );
 }

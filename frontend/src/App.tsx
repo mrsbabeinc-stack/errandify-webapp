@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Layout from './components/Layout';
+import FloatingHana from './components/FloatingHana';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
@@ -74,6 +75,7 @@ export default function App() {
 
   return (
     <Router>
+      {isAuthenticated && <FloatingHana />}
       <Routes>
         {/* Landing page - shown first to unauthenticated users */}
         <Route

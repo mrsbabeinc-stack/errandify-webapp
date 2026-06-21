@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import HanaAssistant from '../components/HanaAssistant';
 
 export default function PayoutSettingsPage() {
   const navigate = useNavigate();
@@ -20,7 +19,6 @@ export default function PayoutSettingsPage() {
           <button className="w-full mt-6 bg-errandify-orange text-white py-2 rounded-lg font-bold">Change Bank Account</button>
         </div>
       </div>
-      <HanaAssistant />
     </div>
   );
 }
