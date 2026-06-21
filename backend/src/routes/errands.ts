@@ -1056,4 +1056,62 @@ router.post('/:id/resolve-dispute', authMiddleware, async (req: AuthRequest, res
   }
 });
 
+// GET /api/errands/recommended - Get recommended tasks based on user preferences
+router.get('/recommended', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const limit = parseInt(req.query.limit as string) || 5;
+
+    // Get user's category preferences
+    const prefResult = await db.query(
+      'SELECT category_preferences FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (prefResult.rows.length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const preferences = prefResult.rows[0].category_preferences || [];
+
+    if (preferences.length === 0) {
+      // No preferences set - return empty
+      return res.json({ success: true, data: [] });
+    }
+
+    // Get open errands matching user's preferred categories
+    // Exclude errands posted by user and already bid on
+    const query = `
+      SELECT e.id, e.title, e.budget, e.category, e.location, e.deadline, e.status
+      FROM errands e
+      WHERE e.status = 'open'
+        AND e.category = ANY($1::text[])
+        AND e.asker_id != $2
+        AND e.id NOT IN (
+          SELECT errand_id FROM bids WHERE doer_id = $2
+        )
+      ORDER BY e.created_at DESC
+      LIMIT $3
+    `;
+
+    const result = await db.query(query, [preferences, userId, limit]);
+
+    res.json({
+      success: true,
+      data: result.rows.map(row => ({
+        id: row.id,
+        title: row.title,
+        budget: row.budget,
+        category: row.category,
+        location: row.location,
+        deadline: row.deadline,
+        status: row.status,
+      })),
+    });
+  } catch (error) {
+    console.error('Error fetching recommendations:', error);
+    res.status(500).json({ error: 'Failed to fetch recommendations' });
+  }
+});
+
 export default router;
