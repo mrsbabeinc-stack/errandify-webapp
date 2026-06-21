@@ -548,13 +548,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
         {/* Chat Button - For both Asker and Doer (when not open) */}
         {errand && errand.status !== 'open' && (
-          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="mt-6 bg-amber-100 border border-amber-300 rounded-lg p-4">
             <p className="text-sm text-gray-700 mb-3 font-semibold">
               📋 Task: <span className="text-errandify-brown">{errand.title}</span>
             </p>
             <button
               onClick={() => setShowChat(true)}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors"
+              className="w-full bg-errandify-brown text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors"
             >
               💬 Chat with {currentUser?.id === errand.askerId ? 'Doer' : 'Asker'}
             </button>
