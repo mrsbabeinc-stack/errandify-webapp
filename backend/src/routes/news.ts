@@ -229,7 +229,6 @@ function getMockSGNews(): NewsItem[] {
       content: 'The Housing and Development Board has announced a fresh batch of Build-to-Order (BTO) flats across several estates, offering affordable housing solutions for young families and first-time homebuyers.',
       category: 'housing',
       source: 'HDB Official',
-      url: 'https://www.hdb.gov.sg/residential/buying-a-flat/new/bto',
       created_at: new Date(2026, 5, 20, 14, 30, 0).toISOString(),
     },
     {
@@ -239,7 +238,6 @@ function getMockSGNews(): NewsItem[] {
       content: 'Singapore\'s technology sector continues to expand with major multinational tech companies establishing regional headquarters and innovation centers in the city-state.',
       category: 'jobs',
       source: 'Ministry of Manpower',
-      url: 'https://www.mom.gov.sg/careers',
       created_at: new Date(2026, 5, 19, 10, 15, 0).toISOString(),
     },
     {
@@ -249,7 +247,6 @@ function getMockSGNews(): NewsItem[] {
       content: 'Singapore has unveiled its comprehensive Green Plan 2030, outlining ambitious targets for sustainability and environmental protection across all sectors of the economy.',
       category: 'policy',
       source: 'Green Plan Singapore',
-      url: 'https://www.greenplan.sg/',
       created_at: new Date(2026, 5, 18, 9, 45, 0).toISOString(),
     },
     {
@@ -259,7 +256,6 @@ function getMockSGNews(): NewsItem[] {
       content: 'Singapore\'s Land Transport Authority is accelerating expansion of the metro rail transit system to improve connectivity and reduce travel times across the island.',
       category: 'transport',
       source: 'LTA Singapore',
-      url: 'https://www.lta.gov.sg/content/ltagov/en/public_transport.html',
       created_at: new Date(2026, 5, 17, 11, 20, 0).toISOString(),
     },
     {
@@ -269,7 +265,6 @@ function getMockSGNews(): NewsItem[] {
       content: 'The Ministry of Health continues to enhance Singapore\'s world-class healthcare system, ensuring accessibility and affordability for all residents through integrated care services.',
       category: 'healthcare',
       source: 'Ministry of Health',
-      url: 'https://www.moh.gov.sg/healthcare-services-and-facilities/public-hospitals',
       created_at: new Date(2026, 5, 16, 15, 0, 0).toISOString(),
     },
     {
@@ -279,7 +274,6 @@ function getMockSGNews(): NewsItem[] {
       content: 'Singapore\'s Ministry of Education rolls out an enhanced STEM curriculum designed to prepare students for the digital economy and future workforce challenges.',
       category: 'education',
       source: 'Ministry of Education',
-      url: 'https://www.moe.gov.sg/education/schoolfinder',
       created_at: new Date(2026, 5, 15, 8, 30, 0).toISOString(),
     },
     {
@@ -289,7 +283,6 @@ function getMockSGNews(): NewsItem[] {
       content: 'Singapore\'s Ministry of Trade and Industry reports strong economic performance driven by strategic trade partnerships and robust business confidence across key sectors.',
       category: 'policy',
       source: 'Ministry of Trade and Industry',
-      url: 'https://www.mti.gov.sg/about-mti',
       created_at: new Date(2026, 5, 14, 12, 45, 0).toISOString(),
     },
     {
@@ -299,7 +292,6 @@ function getMockSGNews(): NewsItem[] {
       content: 'The Urban Redevelopment Authority has announced an ambitious new town planning initiative aimed at creating more sustainable and livable neighborhoods across Singapore.',
       category: 'policy',
       source: 'Urban Redevelopment Authority',
-      url: 'https://www.ura.gov.sg/maps',
       created_at: new Date(2026, 5, 13, 10, 0, 0).toISOString(),
     },
     {
@@ -309,7 +301,6 @@ function getMockSGNews(): NewsItem[] {
       content: 'Enterprise Singapore launches new support programs and grants to help local businesses expand internationally and navigate the global digital economy.',
       category: 'policy',
       source: 'Enterprise Singapore',
-      url: 'https://www.enterprisesg.gov.sg/grow-your-business',
       created_at: new Date(2026, 5, 12, 13, 20, 0).toISOString(),
     },
     {
@@ -319,7 +310,6 @@ function getMockSGNews(): NewsItem[] {
       content: 'The Economic Development Board announces record-breaking foreign direct investment in Singapore as the city-state strengthens its position as a global business hub.',
       category: 'jobs',
       source: 'Economic Development Board',
-      url: 'https://www.edb.gov.sg/en/about-edb.html',
       created_at: new Date(2026, 5, 11, 16, 10, 0).toISOString(),
     },
     {
@@ -329,7 +319,6 @@ function getMockSGNews(): NewsItem[] {
       content: 'Singapore\'s Cyber Security Agency issues advisory on emerging cybersecurity threats and provides guidelines for businesses to strengthen their digital defenses.',
       category: 'jobs',
       source: 'Cyber Security Agency',
-      url: 'https://www.csa.gov.sg/our-initiatives',
       created_at: new Date(2026, 5, 10, 9, 30, 0).toISOString(),
     },
     {
@@ -339,7 +328,6 @@ function getMockSGNews(): NewsItem[] {
       content: 'The People\'s Association launches innovative youth engagement programs designed to foster community spirit and develop future leaders across Singapore.',
       category: 'policy',
       source: 'People\'s Association',
-      url: 'https://www.pa.gov.sg/programmes-activities',
       created_at: new Date(2026, 5, 9, 6, 0, 0).toISOString(),
     },
   ];
