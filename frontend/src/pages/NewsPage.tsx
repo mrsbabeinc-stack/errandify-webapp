@@ -308,9 +308,10 @@ export default function NewsPage() {
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-errandify-orange font-semibold hover:underline flex items-center gap-1"
+                        className="text-errandify-orange font-semibold hover:underline flex items-center gap-1 text-xs"
+                        title={`Read on ${item.source}`}
                       >
-                        Read full story ↗
+                        🔗 {item.source}
                       </a>
                     )}
                   </div>
