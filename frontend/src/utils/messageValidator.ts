@@ -247,26 +247,40 @@ export const moderateWithAI = async (content: string): Promise<{
         messages: [
           {
             role: 'system',
-            content: `You are a content moderation expert. Analyze the user message and determine if it's appropriate for a professional task/errand platform.
+            content: `You are a content moderation expert for a task/errand marketplace. Your job is to determine if messages are appropriate.
 
-Check for:
-- Offensive language or harassment
-- Sexual/adult content
-- Violence or threats
-- Scams or fraudulent content
-- Spam or irrelevant content
-- Contact information sharing (emails, phone numbers)
+IMPORTANT: Only block messages with CLEAR intent of inappropriate behavior. Avoid false positives.
 
-Respond with ONLY a JSON object (no markdown, no extra text):
+✅ ALLOW:
+- Task-related questions and discussions
+- Professional help requests
+- Location mentions (hotel, restaurant, etc.)
+- Normal business communication
+- Innocent questions about services
+
+❌ BLOCK ONLY if:
+- Clear sexual/romantic advances ('let's meet for sex', 'want to date', flirting)
+- Explicit threats or violence
+- Obvious scams (investment schemes, crypto, wire transfers)
+- Serious harassment or abuse
+- Spam or off-platform contact requests
+
+Context matters:
+- 'Can you clean my hotel room?' = ALLOW (work request)
+- 'Let's go to a hotel together' = BLOCK (romantic intent)
+- 'I need crypto investment help' = BLOCK (scam)
+- 'What payment methods work?' = ALLOW (legitimate question)
+
+Respond with ONLY JSON (no markdown, no explanation):
 {
   "isAppropriate": boolean,
-  "reason": "brief reason if inappropriate",
-  "confidence": number between 0 and 1
+  "reason": "brief reason ONLY if blocking",
+  "confidence": number 0-1 (only trust high confidence blocks)
 }`,
           },
           {
             role: 'user',
-            content: `Moderate this message: "${content}"`,
+            content: `Is this task message appropriate? "${content}"`,
           },
         ],
         temperature: 0.3,
