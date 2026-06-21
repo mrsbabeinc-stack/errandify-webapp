@@ -1083,6 +1083,8 @@ export default function CreateErrandPage() {
                             }));
                             setFullAddress(`1 ${areaData.building}, Unit: __, Singapore ${code}`);
                           }
+                          // Note: If areaData is not found (e.g., postal codes from OneMap/Hana),
+                          // we DON'T override - the location/fullAddress were already set from prefilled data
                         } else if (code.length === 0) {
                           // Clear addresses only if postal code is completely cleared
                           setFormData((prev) => ({
