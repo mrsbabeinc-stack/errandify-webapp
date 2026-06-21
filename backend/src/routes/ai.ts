@@ -1073,4 +1073,146 @@ router.post('/suggestions', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/ai/analyze-preferences - Analyze category selections to generate user profile
+router.post('/analyze-preferences', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { doer_preferences, asker_needs } = req.body;
+    const userId = parseInt(req.userId || '0', 10);
+
+    if (!doer_preferences && !askerNeeds) {
+      return res.status(400).json({ error: 'No preferences provided' });
+    }
+
+    const qwenApiKey = process.env.QWEN_API_KEY;
+    if (!qwenApiKey) {
+      return res.status(500).json({ error: 'AI service not available' });
+    }
+
+    // Prepare category names for AI analysis
+    const categoryMap: Record<string, string> = {
+      'home-maintenance': 'Home Maintenance',
+      'cleaning-household': 'Cleaning & Household',
+      'shopping-errands': 'Shopping & Errands',
+      'delivery-moving': 'Delivery & Moving',
+      'childcare-education': 'Childcare & Education',
+      'pet-care': 'Pet Care',
+      'tech-support': 'Tech Support',
+      'personal-care': 'Personal Care',
+      'elderly-care': 'Elderly Care',
+      'fitness-wellness': 'Fitness & Wellness',
+      'tutoring-learning': 'Tutoring & Learning',
+      'event-planning': 'Event Planning',
+      'gardening-landscaping': 'Gardening & Landscaping',
+      'handyman-repairs': 'Handyman & Repairs',
+      'moving-packing': 'Moving & Packing',
+      'other': 'Other Services',
+    };
+
+    const doerServices = doer_preferences?.map((id: string) => categoryMap[id]).filter(Boolean) || [];
+    const askerServices = asker_needs?.map((id: string) => categoryMap[id]).filter(Boolean) || [];
+
+    // Build prompt for AI analysis
+    const prompt = `Analyze this user profile based on their service preferences:
+
+SERVICES THEY CAN PROVIDE (Doer): ${doerServices.length > 0 ? doerServices.join(', ') : 'None selected yet'}
+
+SERVICES THEY NEED (Asker): ${askerServices.length > 0 ? askerServices.join(', ') : 'None selected yet'}
+
+Based on these selections, provide a concise AI-generated profile (2-3 sentences) that:
+1. Describes their likely expertise/skills as a doer
+2. Describes what type of help they're seeking as an asker
+3. Suggests potential income streams based on their skills
+4. Identifies complementary skills they might consider
+
+Format: Return as JSON with fields: doer_profile, asker_profile, skill_insights, recommendations`;
+
+    console.log('[AI Analysis] Analyzing preferences:', { doerServices, askerServices });
+
+    try {
+      const response = await axios.post(
+        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+        {
+          model: 'qwen-plus',
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${qwenApiKey}`,
+          },
+          timeout: 10000,
+        }
+      );
+
+      const analysisText = response.data?.output?.text?.trim();
+      if (!analysisText) {
+        throw new Error('No analysis returned from AI');
+      }
+
+      // Try to parse JSON from response
+      let analysis;
+      try {
+        // Extract JSON from response (might be wrapped in markdown code blocks)
+        const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
+        analysis = JSON.parse(jsonMatch ? jsonMatch[0] : analysisText);
+      } catch {
+        // Fallback: Create structured analysis from text
+        analysis = {
+          doer_profile: 'Professional service provider',
+          asker_profile: 'Active service seeker',
+          skill_insights: analysisText,
+          recommendations: 'Consider expanding skills in complementary areas',
+        };
+      }
+
+      // Save analysis to database for future reference
+      try {
+        await db.query(
+          `UPDATE users
+           SET doer_profile = $1, asker_profile = $2, skill_insights = $3, updated_at = NOW()
+           WHERE id = $4`,
+          [
+            analysis.doer_profile || null,
+            analysis.asker_profile || null,
+            analysis.skill_insights || null,
+            userId,
+          ]
+        );
+      } catch (dbErr) {
+        console.error('[AI Analysis] Failed to save profile:', dbErr);
+        // Don't fail the request if DB save fails
+      }
+
+      console.log('[AI Analysis] ✅ Profile analysis complete:', analysis);
+
+      res.json({
+        success: true,
+        data: {
+          ...analysis,
+          doer_count: doerServices.length,
+          asker_count: askerServices.length,
+          completeness: Math.round((doerServices.length + askerServices.length) / 32 * 100),
+        },
+      });
+    } catch (qwenErr: any) {
+      console.error('[AI Analysis] Qwen error:', qwenErr.message);
+      res.status(500).json({
+        error: 'AI analysis failed',
+        details: qwenErr.message,
+      });
+    }
+  } catch (error: any) {
+    console.error('[AI Analysis] Error:', error);
+    res.status(500).json({
+      error: 'Failed to analyze preferences',
+      details: error.message,
+    });
+  }
+});
+
 export default router;

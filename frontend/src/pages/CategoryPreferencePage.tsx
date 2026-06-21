@@ -95,6 +95,8 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
 
     try {
       const token = localStorage.getItem('token');
+
+      // Save preferences
       await axios.patch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/preferences`,
         {
@@ -105,6 +107,30 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+
+      // Analyze preferences with AI (non-blocking)
+      try {
+        const analysisResponse = await axios.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/analyze-preferences`,
+          {
+            doer_preferences: doerPreferences,
+            asker_needs: askerNeeds,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 15000,
+          }
+        );
+
+        console.log('AI Analysis:', analysisResponse.data);
+        // Show analysis toast or notification
+        if (analysisResponse.data.success) {
+          console.log('✅ Profile analyzed:', analysisResponse.data.data);
+        }
+      } catch (aiErr) {
+        // AI analysis is optional - don't fail if it errors
+        console.warn('AI analysis skipped:', aiErr);
+      }
 
       if (onComplete) {
         onComplete();
