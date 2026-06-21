@@ -19,6 +19,7 @@ interface ErrandDetail {
   location?: string;
   askerId?: number;
   asker?: { name: string; mobile: string };
+  doerName?: string;
   createdAt: string;
   isRecurring?: boolean;
   bidCount?: number;
@@ -303,8 +304,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           )}
           {/* Header Section */}
           <div className="relative bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-1.5">
-            <div className="flex items-start justify-between gap-1 mb-0.5">
-              <h1 className="text-base font-bold flex-1">{errand.title}</h1>
+            <div className="flex items-center justify-between gap-2 mb-0.5">
+              <div className="flex-1">
+                <h1 className="text-base font-bold">
+                  {errand.title}
+                  {errand.doerName && <span className="text-xs font-normal text-orange-100"> • Posted by {errand.doerName}</span>}
+                </h1>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-1">
               <span
