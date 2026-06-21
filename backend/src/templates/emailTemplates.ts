@@ -193,6 +193,290 @@ export function templateDailyDigest(userName: string, summary: any): string {
   `;
 }
 
+// Event Reminder Templates (7 days, 24 hours, 1 hour, day-of)
+
+export function templateEventReminder7Days(
+  userName: string,
+  eventTitle: string,
+  eventDate: string,
+  eventTime: string,
+  eventLocation: string,
+  eventLink?: string,
+  agenda?: Array<{ time: string; title: string; duration: string }>,
+  preparation?: string
+): string {
+  const agendaHtml = agenda && agenda.length > 0
+    ? `
+      <div style="background-color: #f0f8ff; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <h4 style="margin-top: 0; color: #333;">📋 Agenda</h4>
+        <div style="font-size: 13px; line-height: 1.8; color: #555;">
+          ${agenda.map(item => `
+            <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+              <span style="font-weight: bold; color: #FF7A29; min-width: 60px;">${item.time}</span>
+              <span><strong>${item.title}</strong> (${item.duration})</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `
+    : '';
+
+  const prepHtml = preparation
+    ? `
+      <div style="background-color: #fff9e6; padding: 15px; border-left: 4px solid #ffc107; border-radius: 4px; margin: 15px 0;">
+        <p style="margin-top: 0; font-weight: bold; color: #333;">🎒 How to Prepare</p>
+        <p style="margin: 0; color: #666; font-size: 14px;">${preparation}</p>
+      </div>
+    `
+    : '';
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #FF7A29 0%, #FF9C56 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
+        .button { background-color: #FF7A29; color: white; padding: 12px 24px; border-radius: 24px; text-decoration: none; display: inline-block; margin: 15px 0; }
+        .footer { color: #999; font-size: 12px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1 style="margin: 0;">📅 Mark Your Calendar!</h1>
+        </div>
+        <div class="content">
+          <p>Hi ${userName},</p>
+          <p>We're excited to remind you about an upcoming event you're attending:</p>
+
+          <div style="background-color: white; border-left: 4px solid #FF7A29; padding: 15px; margin: 15px 0; border-radius: 4px;">
+            <h2 style="margin: 0 0 10px 0; color: #333;">${eventTitle}</h2>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>📅 Date:</strong> ${eventDate}</p>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>⏰ Time:</strong> ${eventTime}</p>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>📍 Location:</strong> ${eventLocation}</p>
+            ${eventLink ? `<p style="margin: 5px 0; font-size: 14px;"><strong>🔗 Join Online:</strong> <a href="${eventLink}" style="color: #FF7A29; text-decoration: none;">${eventLink}</a></p>` : ''}
+          </div>
+
+          ${agendaHtml}
+          ${prepHtml}
+
+          <a href="http://localhost:5173/my-kampung" class="button">View Event Details</a>
+
+          <p style="color: #999; font-size: 12px; margin-top: 20px;">You'll receive another reminder 24 hours before the event starts.</p>
+        </div>
+        <div class="footer">
+          <p>© 2026 Errandify. All rights reserved.</p>
+          <p><a href="http://localhost:5173/settings/notifications" style="color: #999; text-decoration: none;">Manage notification preferences</a></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+export function templateEventReminder24Hours(
+  userName: string,
+  eventTitle: string,
+  eventDate: string,
+  eventTime: string,
+  eventLocation: string,
+  eventLink?: string,
+  agenda?: Array<{ time: string; title: string; duration: string }>,
+  preparation?: string
+): string {
+  const agendaHtml = agenda && agenda.length > 0
+    ? `
+      <div style="background-color: #f0f8ff; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <h4 style="margin-top: 0; color: #333;">📋 Today's Agenda</h4>
+        <div style="font-size: 13px; line-height: 1.8; color: #555;">
+          ${agenda.map(item => `
+            <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+              <span style="font-weight: bold; color: #FF7A29; min-width: 60px;">${item.time}</span>
+              <span><strong>${item.title}</strong> (${item.duration})</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `
+    : '';
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #FF7A29 0%, #FF9C56 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
+        .button { background-color: #FF7A29; color: white; padding: 12px 24px; border-radius: 24px; text-decoration: none; display: inline-block; margin: 15px 0; }
+        .footer { color: #999; font-size: 12px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1 style="margin: 0;">🎯 Event Tomorrow!</h1>
+        </div>
+        <div class="content">
+          <p>Hi ${userName},</p>
+          <p style="font-size: 16px; color: #FF7A29; font-weight: bold;">Don't forget! Your event starts tomorrow!</p>
+
+          <div style="background-color: white; border-left: 4px solid #FF7A29; padding: 15px; margin: 15px 0; border-radius: 4px;">
+            <h2 style="margin: 0 0 10px 0; color: #333;">${eventTitle}</h2>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>📅 Date:</strong> ${eventDate}</p>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>⏰ Time:</strong> ${eventTime}</p>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>📍 Location:</strong> ${eventLocation}</p>
+            ${eventLink ? `<p style="margin: 5px 0; font-size: 14px;"><strong>🔗 Join Online:</strong> <a href="${eventLink}" style="color: #FF7A29; text-decoration: none;">${eventLink}</a></p>` : ''}
+          </div>
+
+          ${agendaHtml}
+
+          <a href="http://localhost:5173/my-kampung" class="button">Join Event</a>
+
+          <p style="color: #999; font-size: 12px;">Reminder: The event starts in 24 hours. See you there! 🎉</p>
+        </div>
+        <div class="footer">
+          <p>© 2026 Errandify. All rights reserved.</p>
+          <p><a href="http://localhost:5173/settings/notifications" style="color: #999; text-decoration: none;">Manage notification preferences</a></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+export function templateEventReminder1Hour(
+  userName: string,
+  eventTitle: string,
+  eventTime: string,
+  eventLocation: string,
+  eventLink?: string
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #FF7A29 0%, #FF9C56 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
+        .button { background-color: #FF7A29; color: white; padding: 12px 24px; border-radius: 24px; text-decoration: none; display: inline-block; margin: 15px 0; }
+        .footer { color: #999; font-size: 12px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+        .urgent { background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1 style="margin: 0;">⏰ Event Starting in 1 Hour!</h1>
+        </div>
+        <div class="content">
+          <p>Hi ${userName},</p>
+
+          <div class="urgent">
+            <p style="margin: 0 0 10px 0; font-weight: bold; font-size: 16px; color: #856404;">🚀 Get Ready! Your event starts in 1 hour</p>
+            <p style="margin: 0; color: #856404;"><strong>${eventTitle}</strong> • ${eventTime} • ${eventLocation}</p>
+          </div>
+
+          ${eventLink ? `
+            <div style="background-color: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center;">
+              <p style="margin: 0 0 10px 0; font-weight: bold;">🔗 Click below to join online:</p>
+              <a href="${eventLink}" class="button" style="background-color: #4CAF50;">Join Now</a>
+            </div>
+          ` : ''}
+
+          <p style="font-size: 14px; color: #666;">
+            📋 <strong>Quick reminder:</strong> Make sure you have everything you need and join a few minutes early to avoid missing anything.
+          </p>
+
+          <a href="http://localhost:5173/my-kampung" class="button">View Event</a>
+        </div>
+        <div class="footer">
+          <p>© 2026 Errandify. All rights reserved.</p>
+          <p><a href="http://localhost:5173/settings/notifications" style="color: #999; text-decoration: none;">Manage notification preferences</a></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+export function templateEventReminderDayOf(
+  userName: string,
+  eventTitle: string,
+  eventDate: string,
+  eventTime: string,
+  eventLocation: string,
+  eventLink?: string,
+  agenda?: Array<{ time: string; title: string; duration: string }>
+): string {
+  const agendaHtml = agenda && agenda.length > 0
+    ? `
+      <div style="background-color: #f0f8ff; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <h4 style="margin-top: 0; color: #333;">📋 What's Happening Today</h4>
+        <div style="font-size: 13px; line-height: 1.8; color: #555;">
+          ${agenda.map(item => `
+            <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+              <span style="font-weight: bold; color: #FF7A29; min-width: 60px;">${item.time}</span>
+              <span><strong>${item.title}</strong> (${item.duration})</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `
+    : '';
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #FF7A29 0%, #FF9C56 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
+        .button { background-color: #FF7A29; color: white; padding: 12px 24px; border-radius: 24px; text-decoration: none; display: inline-block; margin: 15px 0; }
+        .footer { color: #999; font-size: 12px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1 style="margin: 0;">✨ Good Morning! Event Today!</h1>
+        </div>
+        <div class="content">
+          <p>Hi ${userName},</p>
+          <p style="font-size: 16px; color: #FF7A29; font-weight: bold;">🎉 Today's the day! Your event is happening now!</p>
+
+          <div style="background-color: white; border-left: 4px solid #FF7A29; padding: 15px; margin: 15px 0; border-radius: 4px;">
+            <h2 style="margin: 0 0 10px 0; color: #333;">${eventTitle}</h2>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>📅 Date:</strong> ${eventDate}</p>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>⏰ Time:</strong> ${eventTime}</p>
+            <p style="margin: 5px 0; font-size: 14px;"><strong>📍 Location:</strong> ${eventLocation}</p>
+            ${eventLink ? `<p style="margin: 5px 0; font-size: 14px;"><strong>🔗 Join Online:</strong> <a href="${eventLink}" style="color: #FF7A29; text-decoration: none;">${eventLink}</a></p>` : ''}
+          </div>
+
+          ${agendaHtml}
+
+          <a href="http://localhost:5173/my-kampung" class="button">Go to Event</a>
+
+          <p style="color: #999; font-size: 12px; text-align: center;">See you soon! We can't wait to see you there. 🚀</p>
+        </div>
+        <div class="footer">
+          <p>© 2026 Errandify. All rights reserved.</p>
+          <p><a href="http://localhost:5173/settings/notifications" style="color: #999; text-decoration: none;">Manage notification preferences</a></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
 export function templateEventConfirmation(userName: string, eventTitle: string, eventDate: string, eventTime: string, eventLocation: string, eventDescription: string): string {
   return `
     <!DOCTYPE html>
