@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { validateMessage, validateImage, validateAudio, validateFileUpload } from '../utils/messageValidator';
+import { addNotification } from '../utils/notificationStore';
 
 interface Message {
   id: number;
