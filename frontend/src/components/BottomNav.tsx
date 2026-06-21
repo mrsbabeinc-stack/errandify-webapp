@@ -21,9 +21,9 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   const navigate = useNavigate();
   const [userImage, setUserImage] = useState<string | null>(null);
 
- useEffect(() => {
+  useEffect(() => {
     fetchProfileImage();
-  }, [location.pathname]);
+  }, []);
 
   const fetchProfileImage = async () => {
     try {
