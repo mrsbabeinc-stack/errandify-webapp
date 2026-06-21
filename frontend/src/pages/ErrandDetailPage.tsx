@@ -317,6 +317,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               >
                 {errand.status}
               </span>
+              {userBidAmount && errand.status !== 'open' && (
+                <span className="text-xs bg-white bg-opacity-20 px-2 py-0.5 rounded">
+                  ✓ Bid submitted. Waiting for asker to review.
+                </span>
+              )}
             </div>
           </div>
 
@@ -516,15 +521,6 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         {/* Your Bid Section - Only for Doers who have bid */}
         {userBidAmount && currentUser && currentUser.id !== errand?.askerId && userRole === 'doer' && (
           <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
-            <h3 className="font-semibold text-green-800 mb-2">Your Bid</h3>
-            <p className="text-sm text-green-700 mb-2">
-              Amount: <span className="font-bold text-lg">SGD ${userBidAmount?.toFixed(2)}</span>
-            </p>
-            {errand?.status === 'open' && (
-              <p className="text-xs text-green-600">
-                ✓ Bid submitted. Waiting for asker to review.
-              </p>
-            )}
             {errand?.status === 'confirmed' && (
               <div>
                 <p className="text-xs text-green-600 mb-3">
