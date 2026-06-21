@@ -1,10 +1,15 @@
-// Message validation and content moderation utilities
+// Message validation and content moderation utilities with AI
 
 export interface ValidationResult {
   isValid: boolean;
   errors: string[];
   warnings: string[];
   suggestions: string[];
+  aiModeration?: {
+    isAppropriate: boolean;
+    reason: string;
+    confidence: number;
+  };
 }
 
 // Patterns to detect contact information
@@ -216,4 +221,82 @@ export const getAutoCorrections = (text: string): Map<string, string> => {
   ]);
 
   return corrections;
+};
+
+// AI-based content moderation using Qwen
+export const moderateWithAI = async (content: string): Promise<{
+  isAppropriate: boolean;
+  reason: string;
+  confidence: number;
+}> => {
+  try {
+    const apiKey = import.meta.env.VITE_QWEN_API_KEY;
+    if (!apiKey) {
+      console.warn('Qwen API key not configured, skipping AI moderation');
+      return { isAppropriate: true, reason: '', confidence: 0 };
+    }
+
+    const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'qwen-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a content moderation expert. Analyze the user message and determine if it's appropriate for a professional task/errand platform.
+
+Check for:
+- Offensive language or harassment
+- Sexual/adult content
+- Violence or threats
+- Scams or fraudulent content
+- Spam or irrelevant content
+- Contact information sharing (emails, phone numbers)
+
+Respond with ONLY a JSON object (no markdown, no extra text):
+{
+  "isAppropriate": boolean,
+  "reason": "brief reason if inappropriate",
+  "confidence": number between 0 and 1
+}`,
+          },
+          {
+            role: 'user',
+            content: `Moderate this message: "${content}"`,
+          },
+        ],
+        temperature: 0.3,
+        top_p: 0.9,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Qwen API error:', response.statusText);
+      return { isAppropriate: true, reason: '', confidence: 0 };
+    }
+
+    const data = await response.json();
+    const output = data.output?.text || '';
+
+    // Extract JSON from response
+    const jsonMatch = output.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.warn('No JSON found in Qwen response:', output);
+      return { isAppropriate: true, reason: '', confidence: 0 };
+    }
+
+    const result = JSON.parse(jsonMatch[0]);
+    return {
+      isAppropriate: result.isAppropriate !== false,
+      reason: result.reason || '',
+      confidence: result.confidence || 0.5,
+    };
+  } catch (error) {
+    console.error('AI moderation error:', error);
+    return { isAppropriate: true, reason: '', confidence: 0 };
+  }
 };
