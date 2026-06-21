@@ -118,80 +118,116 @@ export default function ReferralPage() {
   }
 
   return (
-    <div className="min-h-screen bg-errandify-bg px-2 py-2 pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 via-errandify-bg to-errandify-bg px-2 py-2 pb-24">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-3">
           <button onClick={() => navigate(-1)} className="text-lg text-gray-600 font-bold">‹</button>
-          <h1 className="text-lg font-bold text-errandify-brown">🎁 Referral</h1>
+          <h1 className="flex-1 text-xl font-bold text-errandify-brown">🚀 Earn Together</h1>
+          <span className="text-xl">💰</span>
         </div>
 
-        {/* QR Code */}
-        <div className="bg-white rounded-lg p-2 border border-gray-200 mb-2 text-center">
-          <canvas ref={canvasRef} className="border-2 border-errandify-orange rounded mx-auto" />
+        {/* Hero Message */}
+        <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white rounded-lg p-3 mb-3 shadow-lg">
+          <p className="font-bold text-sm mb-1">Share & Earn Instantly!</p>
+          <p className="text-xs opacity-90">Invite friends and earn 50 EP each. No limit! 🎯</p>
+        </div>
+
+        {/* QR Code Section - Enhanced */}
+        <div className="bg-white rounded-lg p-3 border-2 border-errandify-orange mb-3 shadow-md">
+          <p className="text-xs font-bold text-center text-gray-700 mb-2">📱 Scan to Join</p>
+          <div className="flex justify-center mb-2">
+            <canvas ref={canvasRef} className="border-3 border-errandify-orange rounded-lg" />
+          </div>
           <button
             onClick={handleDownloadQR}
-            className="w-full mt-2 bg-errandify-orange text-white px-3 py-1.5 rounded text-xs font-bold"
+            className="w-full bg-gradient-to-r from-errandify-orange to-orange-500 text-white px-3 py-2 rounded font-bold text-xs hover:shadow-lg transition"
           >
-            Download QR
+            ⬇️ Save QR Code
           </button>
         </div>
 
-        {/* Code & Link */}
-        <div className="space-y-1 mb-2">
-          <div className="bg-white rounded border border-gray-200 p-2 flex gap-1">
-            <input
-              type="text"
-              value={referralData?.code || ''}
-              readOnly
-              className="flex-1 bg-gray-50 px-2 text-xs font-bold text-errandify-orange border-0"
-            />
-            <button
-              onClick={handleCopyCode}
-              className={`px-2 py-1 rounded text-xs font-bold transition ${
-                copied === 'code' ? 'bg-green-500 text-white' : 'bg-errandify-orange text-white'
-              }`}
-            >
-              {copied === 'code' ? '✓' : 'Copy'}
-            </button>
+        {/* Code & Link - Social Style */}
+        <div className="space-y-1.5 mb-3">
+          <div>
+            <label className="text-xs font-bold text-gray-600 block mb-0.5">Share Your Code</label>
+            <div className="bg-white rounded border-2 border-errandify-orange p-2 flex gap-1 shadow-sm">
+              <input
+                type="text"
+                value={referralData?.code || ''}
+                readOnly
+                className="flex-1 bg-orange-50 px-2 text-sm font-bold text-errandify-orange border-0 rounded"
+              />
+              <button
+                onClick={handleCopyCode}
+                className={`px-3 py-1 rounded font-bold text-xs transition ${
+                  copied === 'code' ? 'bg-green-500 text-white' : 'bg-errandify-orange text-white hover:shadow-md'
+                }`}
+              >
+                {copied === 'code' ? '✓ Copied!' : 'Copy'}
+              </button>
+            </div>
           </div>
-          <div className="bg-white rounded border border-gray-200 p-2 flex gap-1">
-            <input
-              type="text"
-              value={referralData?.link || ''}
-              readOnly
-              className="flex-1 bg-gray-50 px-2 text-xs border-0 truncate"
-            />
-            <button
-              onClick={handleCopyLink}
-              className={`px-2 py-1 rounded text-xs font-bold transition ${
-                copied === 'link' ? 'bg-green-500 text-white' : 'bg-errandify-orange text-white'
-              }`}
-            >
-              {copied === 'link' ? '✓' : 'Copy'}
-            </button>
+          <div>
+            <label className="text-xs font-bold text-gray-600 block mb-0.5">Or Share Link</label>
+            <div className="bg-white rounded border-2 border-blue-400 p-2 flex gap-1 shadow-sm">
+              <input
+                type="text"
+                value={referralData?.link || ''}
+                readOnly
+                className="flex-1 bg-blue-50 px-2 text-xs border-0 rounded truncate font-mono"
+              />
+              <button
+                onClick={handleCopyLink}
+                className={`px-3 py-1 rounded font-bold text-xs transition ${
+                  copied === 'link' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white hover:shadow-md'
+                }`}
+              >
+                {copied === 'link' ? '✓ Copied!' : 'Copy'}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-1 mb-2 bg-orange-50 rounded-lg p-2 border border-orange-200 text-center">
-          <div>
-            <p className="text-xl font-bold text-errandify-orange">{referralData?.referredCount}</p>
-            <p className="text-xs text-gray-600">Referred</p>
+        {/* Stats - Prominent */}
+        <div className="grid grid-cols-2 gap-2 mb-3 bg-gradient-to-r from-orange-100 to-yellow-100 rounded-lg p-3 border-2 border-orange-300 shadow-md">
+          <div className="text-center">
+            <p className="text-3xl font-bold text-errandify-orange">{referralData?.referredCount}</p>
+            <p className="text-xs font-bold text-gray-700 mt-0.5">Friends Referred 👥</p>
           </div>
-          <div>
-            <p className="text-xl font-bold text-errandify-orange">{referralData?.earnedPoints} EP</p>
-            <p className="text-xs text-gray-600">Earned</p>
+          <div className="text-center">
+            <p className="text-3xl font-bold text-errandify-orange">{referralData?.earnedPoints}</p>
+            <p className="text-xs font-bold text-gray-700 mt-0.5">Points Earned ⭐</p>
           </div>
         </div>
 
-        {/* Info */}
-        <div className="bg-blue-50 rounded-lg p-2 border border-blue-200 text-xs text-gray-700 space-y-0.5">
-          <p className="font-bold">How it works:</p>
-          <p>1️⃣ Share your code/link</p>
-          <p>2️⃣ Friends sign up</p>
-          <p>3️⃣ They complete first job</p>
-          <p>4️⃣ Both earn 50 EP! 🎉</p>
+        {/* How It Works - Engaging */}
+        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-3 border-2 border-blue-300 mb-3 shadow-md">
+          <p className="font-bold text-gray-900 mb-2 text-sm">✨ How It Works:</p>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center font-bold text-xs">1</span>
+              <span className="font-medium">Share code/link with friends</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center font-bold text-xs">2</span>
+              <span className="font-medium">They sign up & do their first job</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center font-bold text-xs">3</span>
+              <span className="font-medium">You both get 50 EP! 🎉</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center font-bold text-xs">∞</span>
+              <span className="font-medium">No limit! Keep earning 💰</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Leaderboard Teaser */}
+        <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg p-3 border-2 border-purple-300 text-center shadow-md">
+          <p className="text-xs font-bold text-gray-900 mb-1">🏆 Top Referrers Get Bonuses!</p>
+          <p className="text-xs text-gray-700">Refer 10+ friends and unlock exclusive rewards</p>
         </div>
       </div>
       <HanaAssistant />
