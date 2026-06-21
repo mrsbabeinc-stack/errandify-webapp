@@ -112,7 +112,7 @@ export default function MyPocketPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-errandify-bg px-4 py-4">
+      <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-32">
         <div className="max-w-2xl mx-auto text-center py-12">
           <p className="text-gray-600">Loading wallet...</p>
         </div>
@@ -122,7 +122,7 @@ export default function MyPocketPage() {
 
   if (!wallet) {
     return (
-      <div className="min-h-screen bg-errandify-bg px-4 py-4">
+      <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-32">
         <div className="max-w-2xl mx-auto text-center py-12">
           <p className="text-red-600 mb-4">{error || 'Failed to load wallet'}</p>
           <button
@@ -137,7 +137,7 @@ export default function MyPocketPage() {
   }
 
   return (
-    <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-20">
+    <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-32">
       <div className="max-w-2xl mx-auto">
         <button onClick={() => navigate(-1)} className="mb-4 text-lg text-gray-600 font-bold">‹ Back</button>
         {/* Header */}
