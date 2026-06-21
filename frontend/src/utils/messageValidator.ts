@@ -71,10 +71,10 @@ export const validateMessage = (content: string): ValidationResult => {
     return result;
   }
 
-  // SPECIAL CHECK: "sex" + "party" = block (sex party detection)
+  // SPECIAL CHECK: "sex" + "party/gathering/event/meet/group/farm" = block
   const hasSex = /sex/i.test(content);
-  const hasParty = /party|gathering|event|meet|group/i.test(content);
-  if (hasSex && hasParty) {
+  const hasIllicitContext = /party|gathering|event|meet|group|farm|trade|business|operation|house|den|ring/i.test(content);
+  if (hasSex && hasIllicitContext) {
     result.errors.push('❌ Sexual content not allowed. Keep messages task-focused.');
     result.isValid = false;
     return result;
