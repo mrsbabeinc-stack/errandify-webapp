@@ -276,7 +276,6 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
           >
             Clear
           </button>
-          </div>
 
           {/* Favorites Filter */}
           <button
@@ -290,6 +289,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
             ❤️ {filterFavorites ? 'Showing Favorites' : 'Show Favorites'}
             {favorites.size > 0 && ` (${favorites.size})`}
           </button>
+          </div>
         )}
 
         {/* Errands List */}
