@@ -58,8 +58,11 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
     { icon: '❤️', label: 'Trust', onClick: () => navigate('/trusted-users'), color: 'from-rose-100 to-rose-50' },
     { icon: '🚫', label: 'Block', onClick: () => navigate('/block-list'), color: 'from-orange-100 to-orange-50' },
     { icon: '🏦', label: 'Pay', onClick: () => navigate('/payout-settings'), color: 'from-amber-100 to-amber-50' },
-    { icon: '📊', label: 'History', onClick: () => navigate('/transaction-history'), color: 'from-yellow-100 to-yellow-50' },
+    { icon: '📊', label: 'Txn', onClick: () => navigate('/transaction-history'), color: 'from-yellow-100 to-yellow-50' },
     { icon: '🔔', label: 'Notify', onClick: () => navigate('/settings/notifications'), color: 'from-yellow-100 to-yellow-50' },
+    { icon: '🌍', label: 'Lang', onClick: () => navigate('/settings/language'), color: 'from-green-100 to-green-50' },
+    { icon: '🔐', label: 'Pass', onClick: () => navigate('/settings/change-password'), color: 'from-red-100 to-red-50' },
+    { icon: '🛡️', label: '2FA', onClick: () => navigate('/settings/2fa'), color: 'from-green-100 to-green-50' },
     { icon: '⭐', label: 'Points', onClick: () => navigate('/errandify-points'), color: 'from-orange-400 to-amber-400 text-white' },
     { icon: '💎', label: 'Redeem', onClick: () => navigate('/my-rewards'), color: 'from-rose-400 to-orange-400 text-white' },
     { icon: '📈', label: 'Hist', onClick: () => navigate('/points-history'), color: 'from-amber-100 to-amber-50' },
@@ -105,14 +108,14 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
 
       {/* MEGA COMPACT GRID */}
       <div className="max-w-4xl mx-auto px-2 py-2">
-        <div className="grid grid-cols-4 gap-1">
+        <div className="grid grid-cols-6 gap-1">
           {menuItems.map((item, idx) => (
             <button
               key={idx}
               onClick={item.onClick}
-              className={`bg-gradient-to-br ${item.color} rounded-lg p-2 hover:shadow-md transition text-center`}
+              className={`bg-gradient-to-br ${item.color} rounded-lg p-1.5 hover:shadow-md transition text-center`}
             >
-              <p className="text-lg mb-0.5">{item.icon}</p>
+              <p className="text-base mb-0.5">{item.icon}</p>
               <p className="text-xs font-bold text-gray-800">{item.label}</p>
             </button>
           ))}
