@@ -29,9 +29,16 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   console.log('[ErrandsPage] Mounted, userRole:', userRole);
 
   useEffect(() => {
+    // Redirect doers to MyBids page
+    if (userRole === 'doer') {
+      console.log('[ErrandsPage] Redirecting doer to /my-bids');
+      navigate('/my-bids', { replace: true });
+      return;
+    }
+
     console.log('[ErrandsPage] useEffect triggered, userRole:', userRole);
     fetchErrands();
-  }, [userRole]);
+  }, [userRole, navigate]);
 
   const fetchErrands = async () => {
     let url = '';
