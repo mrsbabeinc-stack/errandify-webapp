@@ -27,10 +27,11 @@ const INAPPROPRIATE_PATTERNS = {
   profanity: /damn|shit|crap|bloody|fuck|ass|bitch|bastard|hell|piss/gi,
   threats: /kill|hurt|violence|attack|harm|rape|murder|die|dead/gi,
   harassment: /stupid|idiot|moron|dumb|fool|retard|loser|pathetic/gi,
-  sexualContent: /sex|porn|naked|nude|xxx|sexual|cock|pussy|dick|vagina|breast|horny|aroused|masturbat|cum/gi,
-  drugs: /cocaine|heroin|meth|weed|cannabis|marijuana|acid|lsd|mdma|ecstasy|crack|fentanyl|opium|morphine|codeine|tramadol|oxycodon|percocet|vicodin|xanax|valium|ketamine|pcp|angel dust|ice|crystal|methamphetamine|amphetamine|dexedrine|adderall|ritalin|speed|shrooms|psilocybin|psychedelic|hash|hashish|thc|cannabinoid/gi,
+  sexualContent: /sex|porn|naked|nude|xxx|sexual|cock|pussy|dick|vagina|breast|horny|aroused|masturbat|cum|prostitut|escort|adult services|sugar|onlyfans/gi,
+  drugs: /cocaine|heroin|meth|weed|cannabis|marijuana|acid|lsd|mdma|ecstasy|crack|fentanyl|opium|morphine|codeine|tramadol|oxycodon|percocet|vicodin|xanax|valium|ketamine|pcp|angel dust|ice|crystal|methamphetamine|amphetamine|dexedrine|adderall|ritalin|speed|shrooms|psilocybin|psychedelic|hash|hashish|thc|cannabinoid|dealer|supplier|buy drugs|sell drugs|score|fix|shoot|inject|snort/gi,
   violence: /rape|abuse|assault|torture|molest|incest|pedophil|child abuse/gi,
-  scam: /bitcoin|crypto|investment|forex|mlm|pyramid|scheme|urgent|wire transfer|western union|money gram/gi,
+  gambling: /poker|blackjack|roulette|casino|betting|gamble|wager|odds|bet money|jackpot|slot machine|dice game|lottery scam|illegal betting/gi,
+  scam: /bitcoin|crypto|investment|forex|mlm|pyramid|scheme|urgent|wire transfer|western union|money gram|pay me first|advance payment|nigerian prince|lottery|sweepstakes|get rich quick/gi,
 };
 
 // Blocked file types
@@ -108,6 +109,11 @@ export const validateMessage = (content: string): ValidationResult => {
 
   if (INAPPROPRIATE_PATTERNS.violence.test(content)) {
     result.errors.push('❌ Violent/abusive content not allowed.');
+    result.isValid = false;
+  }
+
+  if (INAPPROPRIATE_PATTERNS.gambling.test(content)) {
+    result.errors.push('❌ Gambling and betting references not allowed.');
     result.isValid = false;
   }
 
@@ -249,33 +255,40 @@ export const moderateWithAI = async (content: string): Promise<{
             role: 'system',
             content: `You are a content moderation expert for a task/errand marketplace. Your job is to determine if messages are appropriate.
 
-IMPORTANT: Only block messages with CLEAR intent of inappropriate behavior. Avoid false positives.
+IMPORTANT: Block ANY mention of:
+1. DRUGS - Any illegal drug reference (weed, cocaine, heroin, etc.) = AUTO BLOCK
+2. SEX/PROSTITUTION - Sexual services or adult content = AUTO BLOCK
+3. GAMBLING - Betting, casinos, poker, lotteries = AUTO BLOCK
+4. SCAMS - Crypto, forex, MLM, wire transfers, pyramid schemes = AUTO BLOCK
+5. VIOLENCE/THREATS - Any violence, threats, or harmful intent = AUTO BLOCK
+
+These categories should NEVER be allowed - even in casual context.
 
 ✅ ALLOW:
 - Task-related questions and discussions
 - Professional help requests
-- Location mentions (hotel, restaurant, etc.)
+- Location mentions (hotel for cleaning, restaurant for delivery, etc.)
 - Normal business communication
-- Innocent questions about services
+- Legitimate service questions
 
-❌ BLOCK ONLY if:
-- Clear sexual/romantic advances ('let's meet for sex', 'want to date', flirting)
-- Explicit threats or violence
-- Obvious scams (investment schemes, crypto, wire transfers)
-- Serious harassment or abuse
-- Spam or off-platform contact requests
+Context-sensitive blocks:
+- 'Can you help clean my hotel?' = ALLOW (work request)
+- 'Want to meet at a hotel?' = BLOCK (romantic intent)
+- 'How do I set up a business?' = ALLOW (legitimate)
+- 'Want to join my investment opportunity?' = BLOCK (MLM/scam)
 
-Context matters:
-- 'Can you clean my hotel room?' = ALLOW (work request)
-- 'Let's go to a hotel together' = BLOCK (romantic intent)
-- 'I need crypto investment help' = BLOCK (scam)
-- 'What payment methods work?' = ALLOW (legitimate question)
+HARD BLOCKS (automatic, zero tolerance):
+- Any drug mention = BLOCK
+- Any gambling mention = BLOCK
+- Any sexual services mention = BLOCK
+- Any obvious scam language = BLOCK
+- Any violence/threats = BLOCK
 
-Respond with ONLY JSON (no markdown, no explanation):
+Respond with ONLY JSON:
 {
   "isAppropriate": boolean,
-  "reason": "brief reason ONLY if blocking",
-  "confidence": number 0-1 (only trust high confidence blocks)
+  "reason": "brief reason if blocking",
+  "confidence": number 0-1
 }`,
           },
           {
