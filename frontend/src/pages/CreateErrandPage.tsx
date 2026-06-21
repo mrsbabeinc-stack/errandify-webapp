@@ -794,41 +794,41 @@ export default function CreateErrandPage() {
 
 
   return (
-    <div className="min-h-screen bg-errandify-bg pb-24">
-      <div className="max-w-2xl mx-auto px-3 py-2">
+    <div className="min-h-screen bg-errandify-bg pb-20">
+      <div className="max-w-2xl mx-auto px-3 py-1">
         {/* Header */}
         <button
           onClick={() => navigate(-1)}
-          className="text-errandify-orange font-semibold mb-2 text-sm"
+          className="text-errandify-orange font-semibold mb-0.5 text-sm"
         >
           ← Back
         </button>
 
-        <h1 className="text-lg font-bold text-errandify-brown mb-3">Create Your Errand</h1>
+        <h1 className="text-lg font-bold text-errandify-brown mb-0.5">Create Your Errand</h1>
 
         {/* Error Display */}
         {error && (
-          <div className="mb-2 p-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs">
+          <div className="mb-0.5 p-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs">
             {error}
           </div>
         )}
 
         {/* Blocked Content Alert */}
         {aiSuggestions.blocked && (
-          <div className="mb-2 p-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs">
+          <div className="mb-0.5 p-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs">
             {aiSuggestions.error}
           </div>
         )}
 
         {/* Main Form */}
-        <div className="bg-white rounded-lg shadow-sm space-y-2 p-3">
+        <div className="bg-white rounded-lg shadow-sm space-y-1 p-2">
           {/* Section 1: Essentials (Title, Description, Category) */}
-          <div className="space-y-2">
+          <div className="space-y-1">
             <h3 className="font-bold text-errandify-brown text-sm">About Your Errand</h3>
 
             {/* Title - Required */}
             <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-1">
+              <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
                 Errand Title *
               </label>
               <input
@@ -840,14 +840,14 @@ export default function CreateErrandPage() {
                   debouncedFetchAiSuggestions(e.target.value, formData.description);
                 }}
                 placeholder="What do you need help with?"
-                className="w-full px-2 py-1 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
               />
 
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-1">
+              <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
                 Description
               </label>
               <div className="relative">
@@ -858,7 +858,7 @@ export default function CreateErrandPage() {
                   placeholder="Describe your errand..."
                   rows={2}
                   maxLength={150}
-                  className="w-full px-2 py-1 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm resize-none"
+                  className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm resize-none"
                 />
                 <span className="absolute bottom-0 right-0 text-xs text-gray-500">{formData.description.length}/150</span>
               </div>
@@ -883,14 +883,14 @@ export default function CreateErrandPage() {
 
             {/* Category - Auto-detected */}
             <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-2">
+              <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
                 Category *
               </label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                className="w-full px-3 py-1 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
               >
                 <option value="">Select a category</option>
                 {Object.entries(categoryNames).map(([key, name]) => (
@@ -903,12 +903,12 @@ export default function CreateErrandPage() {
           </div>
 
           {/* Section 2: Logistics (Budget, Deadline, Duration) */}
-          <div className="border-t pt-2 space-y-2">
+          <div className="border-t pt-1 space-y-1">
             <h3 className="font-bold text-errandify-brown text-sm">Timeline & Budget</h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
                   Budget (SGD) {aiSuggestions.suggestedBudget && <span className="text-xs text-gray-400">(suggested)</span>}
                 </label>
                 <input
@@ -917,7 +917,7 @@ export default function CreateErrandPage() {
                   value={formData.budget}
                   onChange={handleChange}
                   placeholder="Enter amount"
-                  className={`w-full px-3 py-2 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm ${
+                  className={`w-full px-3 py-1 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm ${
                     aiSuggestions.suggestedBudget
                       ? 'border-gray-200 text-gray-500'
                       : 'border-gray-300 text-gray-900'
@@ -925,7 +925,7 @@ export default function CreateErrandPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
                   Errand Date
                 </label>
                 <input
@@ -933,14 +933,14 @@ export default function CreateErrandPage() {
                   name="deadline"
                   value={formData.deadline}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                  className="w-full px-3 py-1 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
                 />
               </div>
             </div>
 
             {/* Time Field */}
             <div className="relative">
-              <label className="block text-sm font-semibold text-errandify-brown mb-2">
+              <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
                 Errand Time <span className="text-xs text-gray-400 font-normal">e.g. HH:MM AM/PM</span>
               </label>
               <div className="relative">
@@ -957,7 +957,7 @@ export default function CreateErrandPage() {
                   onFocus={() => setShowTimePicker(true)}
                   onBlur={() => setTimeout(() => setShowTimePicker(false), 200)}
                   placeholder="HH:MM"
-                  className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm placeholder:text-gray-400 cursor-pointer"
+                  className="w-full px-3 py-1 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm placeholder:text-gray-400 cursor-pointer"
                 />
 
                 {/* Clock icon indicator */}
@@ -970,7 +970,7 @@ export default function CreateErrandPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-2">
+              <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
                 Duration (How Long It Will Take)
               </label>
               <div className="flex gap-2 items-end">
@@ -981,13 +981,13 @@ export default function CreateErrandPage() {
                     value={formData.duration}
                     onChange={handleChange}
                     placeholder="1"
-                    className="flex-1 px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                    className="flex-1 px-3 py-1 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
                   />
                   <select
                     name="durationUnit"
                     value={formData.durationUnit}
                     onChange={handleChange}
-                    className="px-2 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                    className="px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
                   >
                     <option>Min</option>
                     <option>Hr</option>
@@ -1009,9 +1009,9 @@ export default function CreateErrandPage() {
             </div>
 
             {formData.isRecurring && (
-              <div className="grid grid-cols-3 gap-3 bg-gray-50 p-3 rounded">
+              <div className="grid grid-cols-3 gap-2 bg-gray-50 p-2 rounded">
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1 block">
+                  <label className="text-xs font-semibold text-gray-600 mb-0.5 block">
                     Every
                   </label>
                   <input
@@ -1019,18 +1019,18 @@ export default function CreateErrandPage() {
                     name="repeatEvery"
                     value={formData.repeatEvery}
                     onChange={handleChange}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                    className="w-full px-2 py-0.5 border border-gray-300 rounded text-sm"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1 block">
+                  <label className="text-xs font-semibold text-gray-600 mb-0.5 block">
                     Unit
                   </label>
                   <select
                     name="repeatUnit"
                     value={formData.repeatUnit}
                     onChange={handleChange}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                    className="w-full px-2 py-0.5 border border-gray-300 rounded text-sm"
                   >
                     <option value="day">Day</option>
                     <option value="week">Week</option>
@@ -1038,7 +1038,7 @@ export default function CreateErrandPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1 block">
+                  <label className="text-xs font-semibold text-gray-600 mb-0.5 block">
                     Times
                   </label>
                   <input
@@ -1046,7 +1046,7 @@ export default function CreateErrandPage() {
                     name="occurrences"
                     value={formData.occurrences}
                     onChange={handleChange}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                    className="w-full px-2 py-0.5 border border-gray-300 rounded text-sm"
                   />
                 </div>
               </div>
@@ -1054,7 +1054,7 @@ export default function CreateErrandPage() {
           </div>
 
           {/* Section 3: Location - Only area shown here */}
-          <div className="border-t pt-2 space-y-2">
+          <div className="border-t pt-1 space-y-1">
             <h3 className="font-bold text-errandify-brown text-sm">Errand Location</h3>
 
             {/* Remote Work Checkbox */}
@@ -1079,9 +1079,9 @@ export default function CreateErrandPage() {
             {/* Postal Code and Full Address - Only shown when NOT remote work */}
             {!isRemoteWork && (
               <>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <div>
-                    <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                    <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
                       Postal Code (Singapore)
                     </label>
                     <input
@@ -1117,15 +1117,15 @@ export default function CreateErrandPage() {
                         }
                         // Otherwise: don't update location (partial postal codes won't modify anything)
                       }}
-                      className="w-full px-3 py-2 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                      className="w-full px-3 py-1 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                    <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
                       Area (Shown to Potential Doers)
                     </label>
-                    <div className={`w-full px-3 py-2 border-b-2 border-gray-300 bg-gray-50 text-sm ${formData.location ? 'text-gray-900' : 'text-gray-400'}`}>
+                    <div className={`w-full px-3 py-1 border-b-2 border-gray-300 bg-gray-50 text-sm ${formData.location ? 'text-gray-900' : 'text-gray-400'}`}>
                       {formData.location || 'Enter postal code above'}
                     </div>
                   </div>
@@ -1133,7 +1133,7 @@ export default function CreateErrandPage() {
 
                 {/* Full Address - Shown only to confirmed doer */}
                 <div>
-                  <label className="block text-sm font-semibold text-errandify-brown mb-2">
+                  <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
                     Full Address <span className="text-xs text-gray-600">(Shown to Confirmed Doer - Add Unit Number if Required)</span>
                   </label>
                   <textarea
@@ -1141,7 +1141,7 @@ export default function CreateErrandPage() {
                     onChange={(e) => setFullAddress(e.target.value)}
                     placeholder="e.g., Block 1, Tanjong Pagar Plaza, Unit #5-10, Singapore 082001"
                     rows={2}
-                    className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
+                    className="w-full px-3 py-1 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
                   />
 
                   {/* GPS Location Notice */}
@@ -1164,14 +1164,14 @@ export default function CreateErrandPage() {
           </div>
 
           {/* Section 4: Skills Required */}
-          <div className="border-t pt-2 space-y-2">
+          <div className="border-t pt-1 space-y-1">
             <h3 className="font-bold text-errandify-brown text-sm">Skills Required (Optional)</h3>
 
             {/* AI Suggestions */}
             {aiSuggestions.skills.length > 0 && (
               <div>
-                <p className="text-xs text-gray-600 font-semibold mb-2">🤖 AI Suggested Skills — Please select:</p>
-                <div className="flex flex-wrap gap-2 mb-3">
+                <p className="text-xs text-gray-600 font-semibold mb-0.5">🤖 AI Suggested Skills — Please select:</p>
+                <div className="flex flex-wrap gap-2 mb-0.5">
                   {aiSuggestions.skills.map((skill) => (
                     <button
                       key={skill}
@@ -1205,11 +1205,11 @@ export default function CreateErrandPage() {
                 onChange={(e) => setSkillInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && addSkill()}
                 placeholder="Add custom skill..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-errandify-orange"
+                className="flex-1 px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-errandify-orange"
               />
               <button
                 onClick={addSkill}
-                className="px-3 py-2 bg-errandify-orange text-white rounded-lg hover:bg-orange-600 font-semibold text-sm transition-colors"
+                className="px-3 py-1 bg-errandify-orange text-white rounded-lg hover:bg-orange-600 font-semibold text-sm transition-colors"
               >
                 +
               </button>
@@ -1232,7 +1232,7 @@ export default function CreateErrandPage() {
 
           {/* Section 5: Certifications Required - Only show if category needs them or AI has suggestions */}
           {(aiSuggestions.certifications.required.length > 0 || aiSuggestions.certifications.optional.length > 0) && (
-          <div className="border-t pt-2 space-y-2">
+          <div className="border-t pt-1 space-y-1">
             <h3 className="font-bold text-errandify-brown text-sm">
               Certifications Required {formData.certifications.required.length > 0 ? '✓' : ''}
             </h3>
@@ -1241,10 +1241,10 @@ export default function CreateErrandPage() {
             {/* Required Certifications from AI */}
             {aiSuggestions.certifications.required.length > 0 && (
               <div>
-                <p className="text-xs text-gray-600 font-semibold mb-2">
+                <p className="text-xs text-gray-600 font-semibold mb-0.5">
                   🤖 Required Certifications — Please select:
                 </p>
-                <div className="flex flex-wrap gap-2 mb-3">
+                <div className="flex flex-wrap gap-2 mb-0.5">
                   {aiSuggestions.certifications.required.map((cert) => (
                     <button
                       key={cert}
@@ -1265,10 +1265,10 @@ export default function CreateErrandPage() {
             {/* Optional Certifications from AI */}
             {aiSuggestions.certifications.optional.length > 0 && (
               <div>
-                <p className="text-xs text-gray-600 font-semibold mb-2">
+                <p className="text-xs text-gray-600 font-semibold mb-0.5">
                   🤖 Optional Certifications — Please select:
                 </p>
-                <div className="flex flex-wrap gap-2 mb-3">
+                <div className="flex flex-wrap gap-2 mb-0.5">
                   {aiSuggestions.certifications.optional.map((cert) => (
                     <button
                       key={cert}
@@ -1290,7 +1290,7 @@ export default function CreateErrandPage() {
             {aiSuggestions.certifications.required.length === 0 &&
               aiSuggestions.certifications.optional.length === 0 && (
                 <div>
-                  <p className="text-xs text-gray-600 font-semibold mb-2">
+                  <p className="text-xs text-gray-600 font-semibold mb-0.5">
                     Common Certifications:
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -1325,17 +1325,17 @@ export default function CreateErrandPage() {
             {/* Selected Certifications Display */}
             {(formData.certifications.required.length > 0 ||
               formData.certifications.optional.length > 0) && (
-              <div className="p-3 bg-orange-50 rounded text-sm mt-3 space-y-3">
+              <div className="p-2 bg-orange-50 rounded text-sm mt-3 space-y-3">
                 <p className="font-semibold text-errandify-orange-900">Selected Certifications:</p>
 
                 {formData.certifications.required.length > 0 && (
                   <div>
-                    <p className="text-xs text-errandify-orange-800 font-semibold mb-2">Required:</p>
+                    <p className="text-xs text-errandify-orange-800 font-semibold mb-0.5">Required:</p>
                     <div className="flex flex-wrap gap-2">
                       {formData.certifications.required.map((cert) => (
                         <div
                           key={cert}
-                          className="bg-orange-200 text-errandify-orange-800 text-xs px-2 py-1 rounded flex items-center gap-2"
+                          className="bg-orange-200 text-errandify-orange-800 text-xs px-2 py-0.5 rounded flex items-center gap-2"
                         >
                           <span>{cert}</span>
                           <label className="flex items-center gap-1 cursor-pointer">
@@ -1364,12 +1364,12 @@ export default function CreateErrandPage() {
 
                 {formData.certifications.optional.length > 0 && (
                   <div>
-                    <p className="text-xs text-errandify-orange-700 font-semibold mb-2">Optional:</p>
+                    <p className="text-xs text-errandify-orange-700 font-semibold mb-0.5">Optional:</p>
                     <div className="flex flex-wrap gap-2">
                       {formData.certifications.optional.map((cert) => (
                         <div
                           key={cert}
-                          className="bg-orange-100 text-errandify-orange-700 text-xs px-2 py-1 rounded flex items-center gap-2"
+                          className="bg-orange-100 text-errandify-orange-700 text-xs px-2 py-0.5 rounded flex items-center gap-2"
                         >
                           <span>{cert}</span>
                           <label className="flex items-center gap-1 cursor-pointer">
@@ -1402,11 +1402,11 @@ export default function CreateErrandPage() {
         </div>
 
         {/* Section 6: Notes - At end of form */}
-        <div className="border-t pt-2 space-y-2">
+        <div className="border-t pt-1 space-y-1">
           <h3 className="font-bold text-errandify-brown text-sm">Additional Notes</h3>
 
           <div>
-            <label className="block text-sm font-semibold text-errandify-brown mb-2">
+            <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
               Notes (Shown to Confirmed Doer) <span className="text-xs text-gray-600">(optional)</span>
             </label>
             <div className="relative">
@@ -1417,7 +1417,7 @@ export default function CreateErrandPage() {
                 placeholder="e.g., access instructions, special requirements, or preferences"
                 rows={2}
                 maxLength={300}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
+                className="w-full px-3 py-1 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
               />
               <span className="absolute bottom-1 right-2 text-xs text-gray-500">{formData.specialNote.length}/300</span>
             </div>
@@ -1443,8 +1443,8 @@ export default function CreateErrandPage() {
 
         {/* Quick Summary & Post Button */}
         <div className="mt-6 space-y-3">
-          <div className="bg-orange-50 border-l-4 border-errandify-orange p-3 rounded text-sm">
-            <p className="font-semibold text-errandify-brown mb-1">Ready to post?</p>
+          <div className="bg-orange-50 border-l-4 border-errandify-orange p-2 rounded text-sm">
+            <p className="font-semibold text-errandify-brown mb-0.5">Ready to post?</p>
             <p className="text-gray-700 text-xs">
               {formData.title} • {categoryNames[formData.category] || 'No category'} •{' '}
               {formData.budget ? `SGD $${formData.budget}` : 'No budget'}
@@ -1454,7 +1454,7 @@ export default function CreateErrandPage() {
           <button
             onClick={() => setShowConfirm(true)}
             disabled={!formData.title || !formData.category || loading}
-            className="w-full bg-errandify-orange text-white py-2 rounded-lg font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="w-full bg-errandify-orange text-white py-1 rounded-lg font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {loading ? 'Posting...' : 'Post Now'}
           </button>
@@ -1469,7 +1469,7 @@ export default function CreateErrandPage() {
               <h2 className="text-xl font-bold text-errandify-brown">Confirm & Post</h2>
             </div>
 
-            <div className="p-6 pt-2 flex-1 overflow-y-auto space-y-3 text-sm text-gray-700">
+            <div className="p-6 pt-1 flex-1 overflow-y-auto space-y-3 text-sm text-gray-700">
               <p>
                 <span className="font-semibold">Title:</span> {formData.title}
               </p>
