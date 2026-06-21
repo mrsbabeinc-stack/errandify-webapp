@@ -17,6 +17,12 @@ interface TaskChatboxProps {
   taskTitle: string;
   isOpen: boolean;
   onClose: () => void;
+  errandDetails?: {
+    budget?: number;
+    deadline?: string;
+    location?: string;
+    description?: string;
+  };
 }
 
 export default function TaskChatbox({
@@ -24,6 +30,7 @@ export default function TaskChatbox({
   taskTitle,
   isOpen,
   onClose,
+  errandDetails,
 }: TaskChatboxProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -134,7 +141,10 @@ export default function TaskChatbox({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end z-50 md:items-center md:justify-center">
-      <div className="bg-white rounded-t-lg md:rounded-lg w-full md:max-w-md md:h-96 flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
+      <div className="bg-white rounded-t-lg md:rounded-lg w-full md:max-w-4xl md:h-96 flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
+        <div className="flex flex-1 overflow-hidden">
+          {/* Chat Column */}
+          <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="bg-errandify-brown text-white p-3 flex items-start justify-between rounded-t-lg gap-2">
           <div className="flex-1">
@@ -293,6 +303,45 @@ export default function TaskChatbox({
             🛡️ All messages scanned for safety. Violations reported to admin.
           </p>
         </form>
+          </div>
+
+          {/* Right Sidebar - Errand Details */}
+          {errandDetails && (
+            <div className="hidden md:flex md:w-64 flex-col border-l border-gray-200 bg-gray-50 p-4 overflow-y-auto">
+              <h4 className="font-bold text-sm text-gray-800 mb-3">Errand Details</h4>
+
+              {errandDetails.budget && (
+                <div className="mb-3">
+                  <p className="text-xs text-gray-600">Budget</p>
+                  <p className="text-sm font-bold text-errandify-orange">SGD ${errandDetails.budget}</p>
+                </div>
+              )}
+
+              {errandDetails.deadline && (
+                <div className="mb-3">
+                  <p className="text-xs text-gray-600">Deadline</p>
+                  <p className="text-sm text-gray-700">
+                    {new Date(errandDetails.deadline).toLocaleDateString('en-SG')} {new Date(errandDetails.deadline).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              )}
+
+              {errandDetails.location && (
+                <div className="mb-3">
+                  <p className="text-xs text-gray-600">Location</p>
+                  <p className="text-sm text-gray-700">📍 {errandDetails.location}</p>
+                </div>
+              )}
+
+              {errandDetails.description && (
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Description</p>
+                  <p className="text-xs text-gray-700 leading-relaxed line-clamp-3">{errandDetails.description}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
