@@ -109,14 +109,26 @@ export default function TaskChatbox({
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    // First: Quick pattern validation for contact info
+    // First: Quick pattern validation (contact info + drugs/violence/scams)
     const validation = validateMessage(newMessage);
     setValidationErrors(validation.errors);
     setValidationWarnings(validation.warnings);
     setValidationSuggestions(validation.suggestions);
 
+    // If pattern check found ERRORS, block immediately
     if (!validation.isValid) {
+      const friendlyMessage = `⚠️ Message Not Appropriate
+
+Your message doesn't meet our community standards. Please keep messages:
+• Task-focused and professional
+• Respectful and appropriate
+• Free of illegal/harmful references
+
+📝 Try rephrasing to discuss the task instead.`;
+
+      setValidationErrors([friendlyMessage]);
       setError('Message contains prohibited content');
+      setBlockReason('Detected inappropriate content');
       return;
     }
 
@@ -125,7 +137,7 @@ export default function TaskChatbox({
     setBlockReason('');
 
     try {
-      // Second: AI-based content moderation
+      // Second: AI-based content moderation (for context-dependent issues)
       const aiModeration = await moderateWithAI(newMessage);
 
       if (!aiModeration.isAppropriate) {
