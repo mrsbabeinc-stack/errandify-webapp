@@ -12,6 +12,7 @@ export default function FAQPage() {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<'all' | 'general' | 'asker' | 'doer' | 'payment' | 'safety' | 'conduct'>('general');
   const [selectedFaq, setSelectedFaq] = useState<FAQItem | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -371,9 +372,13 @@ export default function FAQPage() {
     },
   ];
 
-  const filteredFAQs = activeCategory === 'all'
-    ? faqs
-    : faqs.filter(f => f.category === activeCategory);
+  const filteredFAQs = faqs.filter(faq => {
+    const matchesCategory = activeCategory === 'all' || faq.category === activeCategory;
+    const matchesSearch = !searchQuery ||
+      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const categoryLabels = {
     all: 'All Questions',
@@ -400,6 +405,19 @@ export default function FAQPage() {
           <div className="w-20"></div>
         </div>
 
+        {/* SEARCH BAR */}
+        <div className="border-t border-gray-200">
+          <div className="max-w-6xl mx-auto px-4 py-3">
+            <input
+              type="text"
+              placeholder="🔍 Search questions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange text-sm"
+            />
+          </div>
+        </div>
+
         {/* COMPACT CATEGORY TABS */}
         <div className="border-t border-gray-200 overflow-x-auto">
           <div className="max-w-6xl mx-auto px-4 flex gap-2 py-2">
@@ -422,7 +440,27 @@ export default function FAQPage() {
 
       {/* CONTENT - COMPACT GRID */}
       <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Results Info */}
+        {searchQuery && (
+          <div className="mb-4 text-sm text-gray-600">
+            Found <span className="font-bold text-errandify-orange">{filteredFAQs.length}</span> result{filteredFAQs.length !== 1 ? 's' : ''} for "<span className="font-semibold">{searchQuery}</span>"
+          </div>
+        )}
+
+        {/* No Results */}
+        {filteredFAQs.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600 mb-4">😕 No FAQs found</p>
+            <p className="text-sm text-gray-500 mb-6">Try a different search term or browse by category</p>
+            <button
+              onClick={() => setSearchQuery('')}
+              className="bg-errandify-orange text-white px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition text-sm"
+            >
+              Clear search
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredFAQs.map(faq => (
             <button
               key={faq.id}
@@ -445,7 +483,8 @@ export default function FAQPage() {
               </div>
             </button>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* DETAIL PAGE - FULL SCREEN */}
         {selectedFaq && (
