@@ -102,12 +102,26 @@ export default function MyKampungPage() {
   const fetchCommunityData = async () => {
     try {
       const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      // Fetch news first (doesn't require auth)
+      try {
+        const newsRes = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/news`,
+          { timeout: 5000 }
+        );
+        console.log('News API response:', newsRes.data);
+        setNewsItems(newsRes.data.data || []);
+      } catch (err) {
+        console.log('News API not available, using mock data', err);
+        setMockNewsData();
+      }
+
+      // If no token, still show news but skip other API calls
       if (!token) {
         setMockData();
         return;
       }
-
-      const headers = { Authorization: `Bearer ${token}` };
 
       // Try to fetch from API endpoints
       try {
@@ -158,17 +172,6 @@ export default function MyKampungPage() {
         setBlogPosts(blogsRes.data.data || []);
       } catch (err) {
         console.log('Blog API not available');
-      }
-
-      try {
-        const newsRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/news`,
-          { headers, timeout: 5000 }
-        );
-        setNewsItems(newsRes.data.data || []);
-      } catch (err) {
-        console.log('News API not available, using mock data');
-        setMockNewsData();
       }
 
       // If all APIs failed, use mock data
