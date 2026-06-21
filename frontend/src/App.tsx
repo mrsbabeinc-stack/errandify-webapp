@@ -60,6 +60,24 @@ export default function App() {
   const handleLogin = (role: 'asker' | 'doer') => {
     setIsAuthenticated(true);
     setUserRole(role);
+    // Update localStorage with the selected role
+    const user = localStorage.getItem('user');
+    if (user) {
+      const userData = JSON.parse(user);
+      userData.role = role;
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
+  };
+
+  const handleRoleChange = (role: 'asker' | 'doer') => {
+    setUserRole(role);
+    // Update localStorage with the selected role
+    const user = localStorage.getItem('user');
+    if (user) {
+      const userData = JSON.parse(user);
+      userData.role = role;
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
   };
 
   const handleLogout = () => {
@@ -194,7 +212,7 @@ export default function App() {
         <Route
           element={
             isAuthenticated ? (
-              <Layout userRole={userRole} onRoleChange={setUserRole} onLogout={handleLogout} />
+              <Layout userRole={userRole} onRoleChange={handleRoleChange} onLogout={handleLogout} />
             ) : (
               <Navigate to="/" replace />
             )
