@@ -696,7 +696,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           // Try with axios first (more reliable)
           const axiosResponse = await axios.get(oneMapUrl, {
             timeout: 5000,
-            headers: { 'Accept': 'application/json' }
+            headers: { 'Accept': 'application/json' },
+            httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
           });
 
           if (axiosResponse.data?.results?.[0]) {
@@ -710,7 +711,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
             area = 'Singapore';
           }
         } catch (axiosErr) {
-          console.warn(`[Extract] Axios OneMap lookup failed, using postal code only`);
+          const axiosErrMsg = axiosErr instanceof Error ? axiosErr.message : String(axiosErr);
+          console.warn(`[Extract] Axios OneMap lookup failed (${axiosErrMsg}), using postal code only`);
           fullAddress = `Singapore ${postalCode}`;
           area = 'Singapore';
         }
