@@ -10,6 +10,7 @@ interface NewsItem {
   image?: string;
   source?: string;
   location?: string;
+  postal_code?: string;
   posted_by?: string;
   author?: string;
   created_at?: string;
@@ -18,12 +19,15 @@ interface NewsItem {
 
 export default function NewsPage() {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'community' | 'singapore' | 'errandify'>('all');
+  const [activeTypeFilter, setActiveTypeFilter] = useState<'all' | 'community' | 'singapore' | 'errandify'>('all');
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchNews();
-  }, [activeFilter]);
+  }, [activeTypeFilter]);
 
   const fetchNews = async () => {
     try {
@@ -33,7 +37,7 @@ export default function NewsPage() {
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/news`,
         {
           params: {
-            type: activeFilter === 'all' ? undefined : activeFilter,
+            type: activeTypeFilter === 'all' ? undefined : activeTypeFilter,
             limit: 50,
           },
           headers: { Authorization: `Bearer ${token}` },
@@ -48,6 +52,43 @@ export default function NewsPage() {
       setLoading(false);
     }
   };
+
+  // Get all unique categories from current news items
+  const categories = Array.from(
+    new Set(newsItems.map((item) => item.category).filter(Boolean))
+  ).sort();
+
+  // Filter news based on all active filters
+  const filteredNews = newsItems
+    .filter((item) => {
+      // Type filter
+      if (activeTypeFilter !== 'all' && item.type !== activeTypeFilter) {
+        return false;
+      }
+
+      // Category filter
+      if (activeCategoryFilter !== 'all' && item.category !== activeCategoryFilter) {
+        return false;
+      }
+
+      // Search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        return (
+          item.title.toLowerCase().includes(query) ||
+          item.content.toLowerCase().includes(query) ||
+          item.location?.toLowerCase().includes(query) ||
+          item.source?.toLowerCase().includes(query)
+        );
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.created_at || '').getTime();
+      const dateB = new Date(b.created_at || '').getTime();
+      return sortBy === 'newest' ? dateB - dateA : dateA - dateB;
+    });
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -115,7 +156,18 @@ export default function NewsPage() {
           <p className="text-xs text-gray-600">Community updates, Singapore news & features</p>
         </div>
 
-        {/* Filter Tabs */}
+        {/* Search Bar */}
+        <div className="mb-2">
+          <input
+            type="text"
+            placeholder="Search news by title, location, source..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+          />
+        </div>
+
+        {/* Type Filter Tabs */}
         <div className="flex gap-1 mb-2 overflow-x-auto pb-1">
           {[
             { key: 'all', label: 'All News', icon: '📰' },
@@ -125,9 +177,9 @@ export default function NewsPage() {
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveFilter(tab.key as any)}
+              onClick={() => setActiveTypeFilter(tab.key as any)}
               className={`py-1 px-2 rounded text-xs font-semibold whitespace-nowrap transition ${
-                activeFilter === tab.key
+                activeTypeFilter === tab.key
                   ? 'bg-errandify-orange text-white'
                   : 'bg-gray-200 text-gray-700'
               }`}
@@ -137,11 +189,61 @@ export default function NewsPage() {
           ))}
         </div>
 
+        {/* Category Filter & Sort */}
+        <div className="flex gap-1 mb-2 overflow-x-auto pb-1">
+          {/* Category chips */}
+          <button
+            onClick={() => setActiveCategoryFilter('all')}
+            className={`py-1 px-2 rounded text-xs font-semibold whitespace-nowrap transition ${
+              activeCategoryFilter === 'all'
+                ? 'bg-blue-600 text-white'
+                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+            }`}
+          >
+            All Categories
+          </button>
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setActiveCategoryFilter(category || 'all')}
+              className={`py-1 px-2 rounded text-xs font-semibold whitespace-nowrap transition ${
+                activeCategoryFilter === category
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+
+          {/* Sort dropdown */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest')}
+            className="py-1 px-2 rounded text-xs font-semibold border border-gray-300 focus:outline-none focus:ring-2 focus:ring-errandify-orange ml-auto"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+        </div>
+
+        {/* Results Summary */}
+        {!loading && (
+          <div className="mb-2 text-xs text-gray-600">
+            {filteredNews.length} of {newsItems.length} news items
+            {searchQuery && ` matching "${searchQuery}"`}
+            {activeCategoryFilter !== 'all' && ` in ${activeCategoryFilter}`}
+          </div>
+        )}
+
         {/* News Items */}
         {loading ? (
           <div className="text-center py-8 text-gray-500 text-xs">Loading news...</div>
         ) : filteredNews.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 text-xs">No news available</div>
+          <div className="text-center py-8 text-gray-500 text-xs">
+            <p>No news found</p>
+            <p className="text-xs mt-1">Try adjusting your filters or search term</p>
+          </div>
         ) : (
           <div className="space-y-2">
             {filteredNews.map((item) => (

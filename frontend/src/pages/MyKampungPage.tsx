@@ -76,6 +76,9 @@ export default function MyKampungPage() {
   );
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [newsItems, setNewsItems] = useState<any[]>([]);
+  const [newsTypeFilter, setNewsTypeFilter] = useState<'all' | 'community' | 'singapore' | 'errandify'>('all');
+  const [newsCategoryFilter, setNewsCategoryFilter] = useState<string>('all');
+  const [newsSearchQuery, setNewsSearchQuery] = useState('');
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
@@ -924,13 +927,99 @@ export default function MyKampungPage() {
         {/* ANNOUNCEMENTS TAB */}
         {/* NEWS TAB */}
         {activeTab === 'news' && (
-          <div className="space-y-2">
-            {newsItems.length === 0 ? (
-              <div className="bg-white rounded p-4 text-center border border-gray-200 text-xs text-gray-500">
-                No news available
-              </div>
-            ) : (
-              newsItems.map((item: any) => {
+          <div>
+            {/* News Search */}
+            <div className="mb-2">
+              <input
+                type="text"
+                placeholder="Search news..."
+                value={newsSearchQuery}
+                onChange={(e) => setNewsSearchQuery(e.target.value)}
+                className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+              />
+            </div>
+
+            {/* News Type Filter */}
+            <div className="flex gap-1 mb-2 overflow-x-auto pb-1">
+              {[
+                { key: 'all', label: 'All', icon: '📰' },
+                { key: 'community', label: 'Community', icon: '🏘️' },
+                { key: 'singapore', label: 'Singapore', icon: '🇸🇬' },
+                { key: 'errandify', label: 'Errandify', icon: '🚀' },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setNewsTypeFilter(tab.key as any)}
+                  className={`py-1 px-2 rounded text-xs font-semibold whitespace-nowrap transition ${
+                    newsTypeFilter === tab.key
+                      ? 'bg-errandify-orange text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  {tab.icon} {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* News Category Filter */}
+            {(() => {
+              const categories = Array.from(
+                new Set(newsItems.map((item: any) => item.category).filter(Boolean))
+              ).sort();
+              return categories.length > 0 ? (
+                <div className="flex gap-1 mb-2 overflow-x-auto pb-1">
+                  <button
+                    onClick={() => setNewsCategoryFilter('all')}
+                    className={`py-1 px-2 rounded text-xs font-semibold whitespace-nowrap transition ${
+                      newsCategoryFilter === 'all'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-blue-100 text-blue-700'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {categories.map((cat: any) => (
+                    <button
+                      key={cat}
+                      onClick={() => setNewsCategoryFilter(cat)}
+                      className={`py-1 px-2 rounded text-xs font-semibold whitespace-nowrap transition ${
+                        newsCategoryFilter === cat
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              ) : null;
+            })()}
+
+            {/* Filtered News Items */}
+            {(() => {
+              const filteredNews = newsItems
+                .filter((item: any) => {
+                  if (newsTypeFilter !== 'all' && item.type !== newsTypeFilter) return false;
+                  if (newsCategoryFilter !== 'all' && item.category !== newsCategoryFilter) return false;
+                  if (newsSearchQuery.trim()) {
+                    const query = newsSearchQuery.toLowerCase();
+                    return (
+                      item.title.toLowerCase().includes(query) ||
+                      item.content.toLowerCase().includes(query) ||
+                      item.location?.toLowerCase().includes(query)
+                    );
+                  }
+                  return true;
+                });
+
+              return (
+                <div className="space-y-2">
+                  {filteredNews.length === 0 ? (
+                    <div className="bg-white rounded p-4 text-center border border-gray-200 text-xs text-gray-500">
+                      No news found
+                    </div>
+                  ) : (
+                    filteredNews.map((item: any) => {
                 const typeColors: Record<string, string> = {
                   community: 'bg-green-50 border-green-300',
                   singapore: 'bg-blue-50 border-blue-300',
@@ -995,8 +1084,11 @@ export default function MyKampungPage() {
                     </div>
                   </div>
                 );
-              })
-            )}
+                    })
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
 
