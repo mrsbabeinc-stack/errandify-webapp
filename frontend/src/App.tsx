@@ -15,6 +15,7 @@ import DoerBrowsePage from './pages/DoerBrowsePage';
 import ErrandsPage from './pages/ErrandsPage';
 import ErrandDetailPage from './pages/ErrandDetailPage';
 import ChatPage from './pages/ChatPage';
+import NotificationsPage from './pages/NotificationsPage';
 import ProfilePage from './pages/ProfilePage';
 import ReviewPage from './pages/ReviewPage';
 import MyProfilePage from './pages/MyProfilePage';
@@ -204,6 +205,7 @@ export default function App() {
           <Route path="/errand/:id" element={<ErrandDetailPage userRole={userRole} />} />
           <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole} />} />
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/my-kampung" element={<MyKampungPage />} />
           <Route path="/my-pocket" element={<MyPocketPage />} />
           <Route path="/wallet" element={<MyPocketPage />} />
