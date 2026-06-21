@@ -185,6 +185,37 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
       ['rejected', bid.errand_id, id]
     );
 
+    // Notify other bidders that the job is closed
+    try {
+      const otherBids = await db.query(
+        'SELECT DISTINCT doer_id FROM bids WHERE errand_id = $1 AND id != $2',
+        [bid.errand_id, id]
+      );
+
+      const errandData = await db.query(
+        'SELECT title FROM errands WHERE id = $1',
+        [bid.errand_id]
+      );
+      const errandTitle = errandData.rows[0]?.title || 'A task';
+
+      for (const otherBid of otherBids.rows) {
+        await db.query(
+          `INSERT INTO notifications (user_id, type, title, body, action_url, created_at, read)
+           VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
+          [
+            otherBid.doer_id,
+            'job_closed',
+            '🔒 Job Closed',
+            `The task "${errandTitle}" has been assigned to another doer. The job is no longer available.`,
+            `/errand/${bid.errand_id}`,
+          ]
+        );
+      }
+    } catch (notifErr) {
+      console.warn('[Bids] Failed to notify other bidders:', notifErr);
+      // Don't fail the entire request if notification fails
+    }
+
     // Update errand status to 'confirmed' and set 24h confirmation deadline
     await db.query(
       'UPDATE errands SET status = $1, accepted_bid_id = $2, confirmation_expires_at = NOW() + INTERVAL \'24 hours\' WHERE id = $3',
