@@ -46,8 +46,10 @@ export default function TaskChatbox({
   const [doerName, setDoerName] = useState<string>('Doer');
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [showImageMenu, setShowImageMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
@@ -314,15 +316,41 @@ export default function TaskChatbox({
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange"
               disabled={isLoading}
             />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="px-2 py-2 text-gray-500 hover:text-errandify-orange transition text-lg"
-              title="Attach image"
-              disabled={isLoading || isRecording}
-            >
-              🖼️
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowImageMenu(!showImageMenu)}
+                className="px-2 py-2 text-gray-500 hover:text-errandify-orange transition text-lg"
+                title="Attach image"
+                disabled={isLoading || isRecording}
+              >
+                🖼️
+              </button>
+              {showImageMenu && (
+                <div className="absolute bottom-full mb-2 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      fileInputRef.current?.click();
+                      setShowImageMenu(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 border-b border-gray-200"
+                  >
+                    📁 From Gallery
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      cameraInputRef.current?.click();
+                      setShowImageMenu(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                  >
+                    📸 From Camera
+                  </button>
+                </div>
+              )}
+            </div>
             <button
               type="button"
               onClick={isRecording ? stopRecording : startRecording}
@@ -350,11 +378,19 @@ export default function TaskChatbox({
             </button>
           </div>
 
-          {/* Hidden file input */}
+          {/* Hidden file inputs */}
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            onChange={handleImageSelect}
+            className="hidden"
+          />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
             onChange={handleImageSelect}
             className="hidden"
           />
