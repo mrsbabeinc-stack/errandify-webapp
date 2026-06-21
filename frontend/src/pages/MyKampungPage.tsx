@@ -98,36 +98,68 @@ export default function MyKampungPage() {
   const fetchCommunityData = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        setMockData();
+        return;
+      }
+
       const headers = { Authorization: `Bearer ${token}` };
 
-      const [postsRes, discussionsRes, announcementsRes, eventsRes, blogsRes] = await Promise.all([
-        axios.get(
+      // Try to fetch from API endpoints
+      try {
+        const postsRes = await axios.get(
           `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/community/posts`,
-          { headers }
-        ),
-        axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/community/discussions`,
-          { headers }
-        ),
-        axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/announcements`,
-          { headers }
-        ),
-        axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/events`,
-          { headers }
-        ),
-        axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/blog`,
-          { headers }
-        ),
-      ]);
+          { headers, timeout: 3000 }
+        );
+        setPosts(postsRes.data.data || []);
+      } catch (err) {
+        console.log('Community posts API not available, using mock data');
+      }
 
-      setPosts(postsRes.data.data || []);
-      setDiscussions(discussionsRes.data.data || []);
-      setAnnouncements(announcementsRes.data.data || []);
-      setEvents(eventsRes.data.data || []);
-      setBlogPosts(blogsRes.data.data || []);
+      try {
+        const discussionsRes = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/community/discussions`,
+          { headers, timeout: 3000 }
+        );
+        setDiscussions(discussionsRes.data.data || []);
+      } catch (err) {
+        console.log('Discussions API not available');
+      }
+
+      try {
+        const announcementsRes = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/announcements`,
+          { headers, timeout: 3000 }
+        );
+        setAnnouncements(announcementsRes.data.data || []);
+      } catch (err) {
+        console.log('Announcements API not available');
+      }
+
+      try {
+        const eventsRes = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/events`,
+          { headers, timeout: 3000 }
+        );
+        setEvents(eventsRes.data.data || []);
+      } catch (err) {
+        console.log('Events API not available');
+      }
+
+      try {
+        const blogsRes = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/blog`,
+          { headers, timeout: 3000 }
+        );
+        setBlogPosts(blogsRes.data.data || []);
+      } catch (err) {
+        console.log('Blog API not available');
+      }
+
+      // If all APIs failed, use mock data
+      if (posts.length === 0 && discussions.length === 0 && announcements.length === 0) {
+        setMockData();
+      }
     } catch (err) {
       console.error('Failed to fetch community data:', err);
       setMockData();
