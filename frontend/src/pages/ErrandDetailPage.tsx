@@ -5,6 +5,7 @@ import BidSubmissionModal from '../components/BidSubmissionModal';
 import BidsViewer from '../components/BidsViewer';
 import TaskChatbox from '../components/TaskChatbox';
 import RecurringErrandSessionSelector from '../components/RecurringErrandSessionSelector';
+import TaskQA from '../components/TaskQA';
 
 interface ErrandDetail {
   id: number;
@@ -617,6 +618,15 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </div>
             )}
           </div>
+        )}
+
+        {/* Q&A Section */}
+        {errand && (
+          <TaskQA
+            errandId={errand.id}
+            isAsker={currentUser?.id === errand.askerId}
+            userRole={userRole}
+          />
         )}
 
         {/* Bids Section - Only for Asker */}
