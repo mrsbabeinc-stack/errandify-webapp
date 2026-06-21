@@ -80,25 +80,16 @@ export const validateMessage = (content: string): ValidationResult => {
     return result;
   }
 
-  // SPECIAL CHECK: Leetspeak/shortcut versions - use flexible pattern matching
-  // Replace common leetspeak characters and check simplified version
-  const normalized = content
+  // SPECIAL CHECK: Leetspeak/shortcut versions - smart normalization
+  // Remove all special chars and numbers first, keep only letters
+  const cleaned = content
     .toLowerCase()
-    .replace(/[0@]/g, 'a')     // 0, @ = a
-    .replace(/[1!]/g, 'i')     // 1, ! = i
-    .replace(/[3]/g, 'e')      // 3 = e
-    .replace(/[4]/g, 'a')      // 4 = a
-    .replace(/[5$]/g, 's')     // 5, $ = s
-    .replace(/[7]/g, 't')      // 7 = t
-    .replace(/[8]/g, 'b')      // 8 = b
-    .replace(/[9]/g, 'g')      // 9 = g
-    .replace(/x/g, '*')        // x = wildcard
-    .replace(/\*/g, '')        // remove wildcards
-    .replace(/[!@#$%^&()_+\-=\[\]{};:'",.<>?/\\|`~]/g, ''); // remove special chars
+    .replace(/[0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~\s]/g, ''); // remove numbers, special chars, spaces
 
-  const inappropriateNormalized = /fuck|shit|damn|sex|cock|porn|dildo|orgy|threesome|gangbang|horny|weed|massage|escort|prostitute|anal|oral|bondage|penetrate|cam|joi|solo|extra|happy|release|drug|cocaine|heroin|meth|cannabis|marijuana/i.test(normalized);
+  // Check if cleaned text contains inappropriate patterns
+  const inappropriatePatterns = /fuck|shit|damn|sex|cock|porn|dildo|orgy|threesome|gangbang|horny|weed|massage|escort|prostitute|anal|oral|bondage|penetrate|cam|joi|solo|extra|happy|release|drug|cocaine|heroin|meth|cannabis|marijuana|fck|fk|prost|cck|prn|fxk|fxxx|sxx|drg/i.test(cleaned);
 
-  if (inappropriateNormalized) {
+  if (inappropriatePatterns) {
     result.errors.push('❌ Message contains inappropriate content. Keep messages professional and task-focused.');
     result.isValid = false;
     return result;
