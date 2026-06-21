@@ -30,7 +30,7 @@ const INAPPROPRIATE_PATTERNS = {
   harassment: /stupid|idiot|moron|dumb|fool|retard|loser|pathetic/gi,
 
   // SEXUAL - Explicit terms only (avoid innocent words like "massage" alone)
-  sexualContent: /porn|xxx|cock|pussy|dick|vagina|horny|aroused|masturbat|cum|prostitut|escort|onlyfans|sleep with|spend the night|intimate|private time|pay for sex|call girl|sex worker|adult entertainer|outcall|incall|orgy|gangbang|threesome|dildo|vibrator|orgasm|blow job|blowjob|hand job|handjob|foreplay|penetrat|bondage|bdsm|fetish|kink|nudes|sext|camgirl|stripper|lap dance|body rub|happy ending|ending service|special service|extra service|vip service|release|tantric|nuru|yoni|sensual|full service|gfe|companionship/gi,
+  sexualContent: /porn|xxx|cock|pussy|dick|vagina|horny|aroused|masturbat|cum|prostitut|escort|onlyfans|sleep with|spend the night|intimate|private time|pay for sex|call girl|sex worker|adult entertainer|outcall|incall|orgy|gangbang|threesome|dildo|vibrator|orgasm|blow job|blowjob|hand job|handjob|foreplay|penetrat|bondage|bdsm|fetish|kink|nudes|sext|camgirl|stripper|lap dance|body rub|happy ending|ending service|special service|extra service|vip service|release|tantric|nuru|yoni|sensual|full service|gfe|companionship|mistress|dominatrix|domina|sub|submissive|dom|master|slave|whip|spank|dungeon/gi,
 
   // DRUGS - Specific drug names (not words like "high" which has context)
   drugs: /cocaine|heroin|meth|weed|cannabis|marijuana|acid|lsd|mdma|ecstasy|crack|fentanyl|opium|morphine|codeine|tramadol|oxycodon|percocet|vicodin|xanax|valium|ketamine|pcp|shrooms|psilocybin|hash|hashish|thc|cannabinoid|dealer|supplier|inject|snort|shoot|stoned|trip/gi,
