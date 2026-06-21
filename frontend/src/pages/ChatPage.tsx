@@ -18,6 +18,7 @@ interface Conversation {
   postal?: string;
   budget?: number;
   description?: string;
+  unreadCount?: number;
 }
 
 export default function ChatPage({ userRole }: ChatPageProps) {
@@ -29,9 +30,15 @@ export default function ChatPage({ userRole }: ChatPageProps) {
   const [showChatbox, setShowChatbox] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [unreadCounts, setUnreadCounts] = useState<Map<number, number>>(new Map());
+  const [notification, setNotification] = useState<{ message: string; type: 'info' | 'warning' } | null>(null);
 
   useEffect(() => {
     fetchConversations();
+    // Poll for new messages every 3 seconds
+    const interval = setInterval(fetchConversations, 3000);
+    return () => clearInterval(interval);
   }, [userRole]);
 
   const fetchConversations = async () => {
@@ -131,7 +138,15 @@ export default function ChatPage({ userRole }: ChatPageProps) {
   });
 
   return (
-    <div className="px-4 py-4 max-w-3xl mx-auto pb-24">
+    <div className="px-4 py-4 max-w-3xl mx-auto pb-24 relative">
+      {/* Notification Toast */}
+      {notification && (
+        <div className={`fixed top-4 left-4 right-4 p-3 rounded-lg shadow-lg text-sm font-semibold z-40 animate-bounce ${
+          notification.type === 'info' ? 'bg-blue-500 text-white' : 'bg-amber-500 text-white'
+        }`}>
+          {notification.message}
+        </div>
+      )}
       <h1 className="text-lg font-bold text-errandify-brown mb-2">Messages</h1>
       <p className="text-xs text-gray-600 mb-4">
         Chat with users about errands
@@ -223,7 +238,13 @@ export default function ChatPage({ userRole }: ChatPageProps) {
       ) : (
         <div className="grid gap-3">
           {filteredConversations.map((conversation) => (
-            <div key={conversation.id} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
+            <div key={conversation.id} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow relative">
+              {/* Unread Badge */}
+              {unreadCounts.get(conversation.id) && unreadCounts.get(conversation.id)! > 0 && (
+                <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                  {unreadCounts.get(conversation.id)}
+                </div>
+              )}
               <div className="flex justify-between items-start gap-2 mb-1">
                 <div className="flex-1">
                   <h3 className="font-semibold text-sm text-gray-800 line-clamp-1">{conversation.title}</h3>
