@@ -227,54 +227,36 @@ export default function MyProfilePage() {
 
         {/* Profile Card - Enhanced */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-
-              {/* User ID */}
-              {profile.userId && (
-                <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-2 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600 font-semibold">Your User ID</p>
-                    <code className="text-sm font-mono font-bold text-errandify-brown">{profile.userId}</code>
-                  </div>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(profile.userId || '');
-                    }}
-                    className="text-xs text-errandify-orange hover:text-orange-600 font-semibold transition px-2 py-1 hover:bg-orange-50 rounded"
-                  >
-                    Copy
-                  </button>
-                </div>
-              )}
-
-              <p className="text-xs text-gray-500 mt-2">Role: {profile.role === 'asker' ? 'Asker' : 'Doer'}</p>
-              {profile.chasCardColor && profile.chasCardColor !== 'none' && (
-                <div className="mt-2 inline-block">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${
-                    profile.chasCardColor === 'blue' ? 'bg-orange-600' : 'bg-green-600'
-                  }`}>
-                    CHAS {profile.chasCardColor.toUpperCase()} ({profile.chasSubsidyPercentage}% subsidy)
-                  </span>
-                </div>
-              )}
+          {/* User ID */}
+          {profile.userId && (
+            <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-600 font-semibold">Your User ID</p>
+                <code className="text-sm font-mono font-bold text-errandify-brown">{profile.userId}</code>
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(profile.userId || '');
+                }}
+                className="text-xs text-errandify-orange hover:text-orange-600 font-semibold transition px-2 py-1 hover:bg-orange-50 rounded"
+              >
+                Copy
+              </button>
             </div>
-          </div>
+          )}
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 py-4 border-y border-gray-200 mb-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-errandify-orange">{ratings.reviewCount}</p>
-              <p className="text-xs text-gray-600">Reviews</p>
+          {/* CHAS Card Info */}
+          {profile.chasCardColor && profile.chasCardColor !== 'none' && (
+            <div className="mb-6">
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold text-white ${
+                profile.chasCardColor === 'blue' ? 'bg-blue-600' : 'bg-green-600'
+              }`}>
+                CHAS {profile.chasCardColor.toUpperCase()} ({profile.chasSubsidyPercentage}% subsidy)
+              </span>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
-              <p className="text-xs text-gray-600">Rating</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-errandify-orange">{profile.categories.length}</p>
-              <p className="text-xs text-gray-600">Categories</p>
-            </div>
-          </div>
+          )}
 
+          {/* Edit Profile Form or View */}
           {isEditing ? (
             <div className="space-y-4">
               <div>
