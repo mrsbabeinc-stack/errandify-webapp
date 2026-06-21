@@ -103,9 +103,12 @@ export const validateMessage = (content: string): ValidationResult => {
     return result;
   }
 
-  // SPECIAL CHECK: Code words and hidden meanings for sexual context
-  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my place|your place|come over|after.*time/i.test(lowerContent);
-  const suggestiveContext = /\bzzz\b.*\btogether\b/i.test(lowerContent); // "zzz together" = sleep/sex code
+  // SPECIAL CHECK: Code words and hidden meanings - remove numbers from phrase checking
+  // Remove numbers from content to catch obfuscated phrases like "over9" = "over"
+  const cleanedPhrase = lowerContent.replace(/[0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]+/g, ' ');
+
+  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|over/i.test(cleanedPhrase);
+  const suggestiveContext = /\bzzz\b.*\btogether\b|\bcome\b.*\bover\b|\byour\b.*\bplace\b|\bmy\b.*\bplace\b/i.test(cleanedPhrase); // "zzz together", "come over", "your place" = sexual codes
 
   if (codeWords || suggestiveContext) {
     result.errors.push('❌ Message contains inappropriate content. Keep messages task-focused and professional.');
