@@ -71,6 +71,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     fetchErrandDetail();
   }, [id]);
 
+  // Redirect askers to their own errands page if they try to browse others' posts
+  useEffect(() => {
+    if (errand && userRole === 'asker' && currentUser && currentUser.id !== errand.askerId) {
+      navigate('/errands', { replace: true });
+    }
+  }, [errand, userRole, currentUser, navigate]);
+
   const fetchErrandDetail = async () => {
     try {
       const token = localStorage.getItem('token');
