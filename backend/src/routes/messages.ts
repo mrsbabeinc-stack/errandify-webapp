@@ -109,6 +109,40 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
       // Track flag count
       const userFlagCount = await getRecentFlagCount(senderId, taskId);
 
+      // Get sender info for admin notification
+      const senderResult = await db.query(
+        `SELECT id, display_name, email FROM users WHERE id = $1`,
+        [senderId]
+      );
+      const sender = senderResult.rows[0];
+
+      // Create admin notification for flagged message
+      try {
+        await db.query(
+          `INSERT INTO admin_notifications (type, severity, user_id, message, details, created_at)
+           VALUES ($1, $2, $3, $4, $5, NOW())`,
+          [
+            'flagged_message',
+            'medium',
+            senderId,
+            `Message flagged from ${sender?.display_name || 'User ' + senderId}`,
+            JSON.stringify({
+              messageId: message.id,
+              taskId: taskId,
+              taskTitle: task.title,
+              userId: senderId,
+              userName: sender?.display_name,
+              userEmail: sender?.email,
+              content: content.substring(0, 200),
+              flagCount: userFlagCount,
+            }),
+          ]
+        );
+        console.log(`[Moderation] Flagged message #${message.id} from user ${senderId} (flag count: ${userFlagCount})`);
+      } catch (notifErr) {
+        console.warn('[Moderation] Failed to create admin notification:', notifErr);
+      }
+
       if (userFlagCount >= 3) {
         // Auto-suspend user for 24 hours
         await db.query(
@@ -116,11 +150,31 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
           [senderId]
         );
 
-        // TODO: Notify admin of auto-suspension
+        // Create admin notification for auto-suspension
+        try {
+          await db.query(
+            `INSERT INTO admin_notifications (type, severity, user_id, message, details, created_at)
+             VALUES ($1, $2, $3, $4, $5, NOW())`,
+            [
+              'user_suspended',
+              'high',
+              senderId,
+              `User ${sender?.display_name || 'User ' + senderId} auto-suspended (3+ flagged messages)`,
+              JSON.stringify({
+                userId: senderId,
+                userName: sender?.display_name,
+                userEmail: sender?.email,
+                reason: '3 or more flagged messages',
+                suspendedUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                flagCount: userFlagCount,
+              }),
+            ]
+          );
+          console.log(`[Moderation] User ${senderId} auto-suspended for 24 hours (${userFlagCount} flags)`);
+        } catch (notifErr) {
+          console.warn('[Moderation] Failed to create suspension notification:', notifErr);
+        }
       }
-
-      // TODO: Notify admin of flagged message
-      // TODO: Notify user that message was flagged
     }
 
     // TODO: Emit socket.io event for real-time update
