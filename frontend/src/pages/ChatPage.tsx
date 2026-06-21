@@ -16,6 +16,8 @@ interface Conversation {
   deadline?: string;
   location?: string;
   postal?: string;
+  budget?: number;
+  description?: string;
 }
 
 export default function ChatPage({ userRole }: ChatPageProps) {
@@ -59,6 +61,8 @@ export default function ChatPage({ userRole }: ChatPageProps) {
           deadline: errand.deadline,
           location: errand.location,
           postal: errand.postal_code,
+          budget: errand.budget,
+          description: errand.description,
         }));
 
         setConversations(conversations);
@@ -260,6 +264,12 @@ export default function ChatPage({ userRole }: ChatPageProps) {
           taskTitle={selectedConversation.title}
           isOpen={showChatbox}
           onClose={handleCloseChat}
+          errandDetails={{
+            budget: selectedConversation.budget,
+            deadline: selectedConversation.deadline,
+            location: selectedConversation.location,
+            description: selectedConversation.description,
+          }}
         />
       )}
     </div>
