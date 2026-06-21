@@ -236,7 +236,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                     <p>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     <button
                       onClick={() => handleOpenChat(conversation.id)}
-                      className="bg-errandify-brown text-white px-2 py-1 rounded text-xs font-semibold hover:bg-opacity-90 transition-colors whitespace-nowrap flex items-center gap-1"
+                      className="bg-errandify-orange text-white px-2 py-1 rounded text-xs font-semibold hover:bg-opacity-90 transition-colors whitespace-nowrap flex items-center gap-1"
                     >
                       💬 Chat
                     </button>
