@@ -102,7 +102,12 @@ export default function TaskCompleteEvidencePage() {
       // First upload photos if any
       let uploadedUrls: string[] = [];
       if (uploadedFiles.length > 0) {
-        uploadedUrls = await uploadFiles();
+        try {
+          uploadedUrls = await uploadFiles();
+        } catch (uploadErr: any) {
+          console.warn('Photo upload failed, continuing without photos:', uploadErr);
+          // Continue without photos - notes are sufficient for MVP
+        }
       }
 
       const token = localStorage.getItem('token');
