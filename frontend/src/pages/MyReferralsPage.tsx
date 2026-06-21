@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface ReferralStats {
   myCode: string;
@@ -328,6 +329,7 @@ export default function MyReferralsPage() {
           </ul>
         </div>
       </div>
+      <HanaAssistant />
     </div>
   );
 }

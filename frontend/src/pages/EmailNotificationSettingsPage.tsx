@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface EmailSettings {
   enabled: boolean;
@@ -266,6 +267,7 @@ export default function EmailNotificationSettingsPage() {
           </p>
         </div>
       </div>
+      <HanaAssistant />
     </div>
   );
 }

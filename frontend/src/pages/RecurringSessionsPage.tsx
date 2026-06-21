@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface Session {
   id: number;
@@ -192,6 +193,7 @@ export default function RecurringSessionsPage() {
           </div>
         )}
       </div>
+      <HanaAssistant />
     </div>
   );
 }

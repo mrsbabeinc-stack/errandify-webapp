@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface ErrandsPageProps {
   userRole: 'asker' | 'doer';
@@ -362,6 +363,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
 
       {/* Bottom Spacing */}
       <div className="h-8"></div>
+      <HanaAssistant />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import HanaAssistant from '../components/HanaAssistant';
 import { moderatePost, getModerationStatus, getModerationMessage } from '../services/moderationService';
 import blogPostsData from '../data/blogPosts';
 
@@ -1454,6 +1455,7 @@ export default function MyKampungPage() {
           </div>
         )}
       </div>
+      <HanaAssistant />
     </div>
   );
 }

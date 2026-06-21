@@ -6,6 +6,7 @@ import BidsViewer from '../components/BidsViewer';
 import TaskChatbox from '../components/TaskChatbox';
 import RecurringErrandSessionSelector from '../components/RecurringErrandSessionSelector';
 import TaskQA from '../components/TaskQA';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface ErrandDetail {
   id: number;
@@ -583,6 +584,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           onClose={() => setShowChat(false)}
         />
       )}
+      <HanaAssistant />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import HanaAssistant from '../components/HanaAssistant';
 
 export default function MyRewardsPage() {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export default function MyRewardsPage() {
           ))}
         </div>
       </div>
+      <HanaAssistant />
     </div>
   );
 }

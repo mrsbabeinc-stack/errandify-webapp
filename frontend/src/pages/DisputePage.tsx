@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface Dispute {
   id: number;
@@ -131,7 +132,7 @@ export default function DisputePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 py-8 px-6">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 py-8 px-6 pb-32">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -395,6 +396,7 @@ export default function DisputePage() {
           </div>
         </div>
       )}
+      <HanaAssistant />
     </div>
   );
 }

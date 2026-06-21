@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import TaskChatbox from '../components/TaskChatbox';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface ChatPageProps {
   userRole: 'asker' | 'doer';
@@ -167,6 +168,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
           onClose={handleCloseChat}
         />
       )}
+      <HanaAssistant />
     </div>
   );
 }

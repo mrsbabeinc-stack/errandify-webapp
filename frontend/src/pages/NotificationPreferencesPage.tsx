@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface NotificationPreferences {
   bid_accepted: boolean;
@@ -136,7 +137,7 @@ export default function NotificationPreferencesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 py-8 px-4 pb-32">
       <div className="max-w-2xl mx-auto">
         {/* Back Button */}
         <button
@@ -242,6 +243,7 @@ export default function NotificationPreferencesPage() {
           </p>
         </div>
       </div>
+      <HanaAssistant />
     </div>
   );
 }

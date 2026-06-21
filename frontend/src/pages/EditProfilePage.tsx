@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface UserData {
   id: number;
@@ -414,6 +415,7 @@ export default function EditProfilePage() {
           </form>
         </div>
       </div>
+      <HanaAssistant />
     </div>
   );
 }

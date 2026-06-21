@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface CategorySelectionPageProps {
   userRole: 'asker' | 'doer';
@@ -102,7 +103,7 @@ export default function CategorySelectionPage({ userRole }: CategorySelectionPag
   };
 
   return (
-    <div className="min-h-screen bg-errandify-bg px-4 py-6">
+    <div className="min-h-screen bg-errandify-bg px-4 py-6 pb-32">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-errandify-brown mb-2">
@@ -170,6 +171,7 @@ export default function CategorySelectionPage({ userRole }: CategorySelectionPag
             {loading ? 'Loading...' : 'Continue'}
           </button>
         </div>
+        <HanaAssistant />
       </div>
     </div>
   );

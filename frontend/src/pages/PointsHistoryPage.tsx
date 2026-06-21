@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import HanaAssistant from '../components/HanaAssistant';
 
 export default function PointsHistoryPage() {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export default function PointsHistoryPage() {
           ))}
         </div>
       </div>
+      <HanaAssistant />
     </div>
   );
 }
