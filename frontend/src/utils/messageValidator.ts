@@ -88,7 +88,7 @@ export const validateMessage = (content: string): ValidationResult => {
   // f[any]ck, s[any]x, c[any]ck, fxx, sxx, etc.
   const obfuscationPatterns = [
     /f[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*c[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*k/i, // fuck variants (fck, f*ck, fcgk)
-    /f[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]{2,}k/i, // fxx, fxxx, fyyk variants
+    /f[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]{2,}[kx]/i, // fxx, fxxx, fyyk, fxxk, fxxxk variants
     /s[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*x/i, // sex variants
     /c[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*ck/i, // cock variants
     /p[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*rn/i, // porn variants
@@ -109,7 +109,7 @@ export const validateMessage = (content: string): ValidationResult => {
   const cleanedPhrase = lowerContent.replace(/[0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]+/g, ' ');
 
   // Remove LOL, SUP, WYD - too many false positives for casual greetings
-  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|one night stand|casual sex|hookup|booty call|fwb|friends with benefits|no strings attached|nsa|quick fix|quick meet|weekend getaway|getaway|fun time|good time|party time|lets party|lets have fun|dtf|bwc|bbc|gwm|ddf|pd|pw|bb|blow.*someone|blow me|blow job|lick.*me|lick.*someone|eat.*me|eat.*someone|suck.*me|suck.*someone|swallow.*sperm|swallow.*cum|facial|creampie/i.test(cleanedPhrase);
+  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|one night stand|casual sex|hookup|booty call|fwb|friends with benefits|no strings attached|nsa|quick fix|quick meet|weekend getaway|getaway|fun time|good time|party time|lets party|lets have fun|dtf|bwc|bbc|gwm|ddf|pd|pw|bb|blow.*someone|blow me|blow job|lick.*me|lick.*someone|eat.*me|eat.*someone|suck.*me|suck.*someone|swallow.*sperm|swallow.*cum|facial|creampie|lgpt/i.test(cleanedPhrase);
 
   // Special check: LOL only in context with other suspicious phrases
   const hasLOL = /\blol\b/i.test(cleanedPhrase);
