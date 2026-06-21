@@ -1090,18 +1090,10 @@ export default function MyKampungPage() {
                   errandify: '🚀',
                 };
 
-                const handleArticleClick = (e: React.MouseEvent) => {
-                  if (item.url) {
-                    e.preventDefault();
-                    window.open(item.url, '_blank');
-                  }
-                };
-
                 return (
                   <div
                     key={item.id}
-                    className={`rounded-lg border-2 p-3 cursor-pointer hover:shadow-lg transition ${typeColors[item.type] || 'bg-gray-50 border-gray-200'}`}
-                    onClick={handleArticleClick}
+                    className={`rounded-lg border-2 p-3 ${typeColors[item.type] || 'bg-gray-50 border-gray-200'}`}
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1">
