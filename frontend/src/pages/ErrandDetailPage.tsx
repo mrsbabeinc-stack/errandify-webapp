@@ -9,6 +9,7 @@ import TaskQA from '../components/TaskQA';
 
 interface ErrandDetail {
   id: number;
+  errandId?: string;
   title: string;
   description?: string;
   category: string;
@@ -274,6 +275,24 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
         {/* Main Errand Card */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          {/* Errand ID Banner */}
+          {errand.errandId && (
+            <div className="bg-gray-100 px-3 py-1.5 border-b border-gray-200 flex items-center justify-between">
+              <span className="text-xs text-gray-600 font-semibold">Errand ID:</span>
+              <div className="flex items-center gap-2">
+                <code className="text-sm font-mono text-errandify-brown font-bold">{errand.errandId}</code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(errand.errandId || '');
+                  }}
+                  className="text-xs text-errandify-orange hover:text-orange-600 font-semibold transition"
+                  title="Copy ID"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          )}
           {/* Header Section */}
           <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-1.5">
             <div className="flex items-start justify-between gap-1 mb-0.5">
