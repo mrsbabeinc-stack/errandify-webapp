@@ -107,8 +107,8 @@ export const validateMessage = (content: string): ValidationResult => {
   // Remove numbers from content to catch obfuscated phrases like "over9" = "over"
   const cleanedPhrase = lowerContent.replace(/[0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]+/g, ' ');
 
-  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|over/i.test(cleanedPhrase);
-  const suggestiveContext = /\bzzz\b.*\btogether\b|\bcome\b.*\bover\b|\byour\b.*\bplace\b|\bmy\b.*\bplace\b/i.test(cleanedPhrase); // "zzz together", "come over", "your place" = sexual codes
+  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|over|one night stand|casual sex|hookup|booty call|fwb|friends with benefits|no strings attached|nsa|quick fix|quick meet|weekend getaway|getaway|fun time|good time|party time|lets party|lets have fun/i.test(cleanedPhrase);
+  const suggestiveContext = /\bzzz\b.*\btogether\b|\bcome\b.*\bover\b|\byour\b.*\bplace\b|\bmy\b.*\bplace\b|\bone\b.*\bnight\b.*\bstand\b/i.test(cleanedPhrase); // "zzz together", "come over", "your place", "one night stand" = sexual codes
 
   if (codeWords || suggestiveContext) {
     result.errors.push('❌ Message contains inappropriate content. Keep messages task-focused and professional.');
