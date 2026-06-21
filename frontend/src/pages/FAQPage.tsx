@@ -193,6 +193,182 @@ export default function FAQPage() {
       question: 'How do I report inappropriate behaviour?',
       answer: 'If you experience or witness inappropriate behaviour, report it immediately via email (togather@errandify.ai) or through the app. Include details and any evidence. We take every report seriously, investigate promptly, and take swift action to protect our community.',
     },
+
+    // Community Conduct
+    {
+      id: 'c1',
+      category: 'conduct',
+      question: 'What communication standards does Errandify expect?',
+      answer: 'Keep messages professional, task-focused, and respectful. We monitor for harassment, discrimination, abuse, and sexual content. Our AI system automatically blocks inappropriate content to keep the community safe and welcoming for everyone.',
+    },
+    {
+      id: 'c2',
+      category: 'conduct',
+      question: 'What happens if I send inappropriate messages?',
+      answer: 'Our system automatically detects and blocks inappropriate content like sexual solicitation, drugs, violence, or harassment. You\'ll get a message explaining why. Repeated violations may result in account warnings or suspension. We believe in giving users a chance to improve.',
+    },
+    {
+      id: 'c3',
+      category: 'conduct',
+      question: 'Can I share contact information or move off-platform?',
+      answer: 'We recommend completing tasks through Errandify for safety and dispute protection. Sharing email, phone, or asking to move to WhatsApp/Telegram is discouraged and may result in account restrictions. Our in-app messaging keeps both parties protected.',
+    },
+    {
+      id: 'c4',
+      category: 'conduct',
+      question: 'What is considered harassment on Errandify?',
+      answer: 'Harassment includes: repeated unwanted messages, threats, discrimination based on race/gender/religion, sexual advances, or bullying. We take zero tolerance on harassment. Report immediately via email (togather@errandify.ai) for swift action.',
+    },
+    {
+      id: 'c5',
+      category: 'conduct',
+      question: 'Can I ask for ratings to be changed?',
+      answer: 'Ratings are honest feedback from users. You cannot request removal, but you can respond professionally to feedback to show character. Collecting evidence of quality work helps for future opportunities. Focus on delivering excellent service to build positive ratings.',
+    },
+
+    // Task Execution & Work Proof
+    {
+      id: 't1',
+      category: 'asker',
+      question: 'How do I confirm work is complete?',
+      answer: 'After the doer finishes, they upload photos/videos as proof of completion. You review the evidence and confirm it looks good. Once confirmed, payment is released to the doer. If there are issues, you can raise a dispute before confirming.',
+    },
+    {
+      id: 't2',
+      category: 'doer',
+      question: 'How do I submit proof of work?',
+      answer: 'After completing the errand, upload photos or videos showing the finished work. Clear, well-lit photos help askers confirm quality. Be honest - good evidence builds your reputation and leads to positive ratings, more bids, and higher earnings.',
+    },
+    {
+      id: 't3',
+      category: 'conduct',
+      question: 'What if proof photos are unclear or suspicious?',
+      answer: 'Askers should only confirm if proof clearly shows completed work. If photos look doctored, don\'t match the description, or seem fake, raise a dispute. We investigate all disputes with evidence. Submitting false proof is grounds for account suspension.',
+    },
+
+    // Ratings & Reviews
+    {
+      id: 'r1',
+      category: 'general',
+      question: 'How does the rating system work?',
+      answer: 'Users rate each other 1-5 stars with optional comments after each errand. Your rating is public and influences how often people choose to work with you. Ratings are permanent - focus on consistent quality to build a strong reputation over time.',
+    },
+    {
+      id: 'r2',
+      category: 'doer',
+      question: 'How can I improve my ratings?',
+      answer: 'Deliver quality work every time, communicate clearly, follow instructions, submit good proof of completion, and respond promptly to questions. Read feedback carefully and adjust. Top-rated doers (4.8+) get priority visibility and can command higher rates.',
+    },
+    {
+      id: 'r3',
+      category: 'asker',
+      question: 'Should I rate doers even if work has issues?',
+      answer: 'Yes. Be fair and honest. If work was poor, rate accordingly and explain in comments. Doers can respond to feedback. Rating honestly helps the community - it guides other askers and gives doers clear feedback to improve.',
+    },
+
+    // Recurring Tasks
+    {
+      id: 'rec1',
+      category: 'asker',
+      question: 'How do recurring errands work?',
+      answer: 'For regular tasks (weekly cleaning, bi-weekly tutoring), set it up as recurring. The doer gets priority matching for future sessions at a pre-agreed rate. Both parties benefit: askers get reliable service, doers get guaranteed income. Easy to pause or modify anytime.',
+    },
+    {
+      id: 'rec2',
+      category: 'doer',
+      question: 'What are the benefits of recurring errands?',
+      answer: 'Recurring errands provide steady income with less bidding competition. You build a relationship with the asker, learn their preferences, and can deliver better service. Many doers prefer recurring work for predictable monthly earnings.',
+    },
+
+    // Disputes & Refunds
+    {
+      id: 'dis1',
+      category: 'general',
+      question: 'What happens if we disagree about the work quality?',
+      answer: 'Payment is held securely until completion is confirmed. If there\'s disagreement, raise a dispute within 48 hours with evidence. We review both sides fairly and resolve based on contract terms and proof. Most disputes settle through communication.',
+    },
+    {
+      id: 'dis2',
+      category: 'asker',
+      question: 'Can I get a refund if work is not done?',
+      answer: 'Yes. If a doer never shows up or doesn\'t complete work, you can request a refund. We investigate with evidence (messages, timestamps) and refund if the doer is at fault. For partial completion, we may refund partially based on what was done.',
+    },
+    {
+      id: 'dis3',
+      category: 'doer',
+      question: 'What if an asker refuses to confirm completed work?',
+      answer: 'If you completed the work and provided proof, but the asker won\'t confirm, raise a dispute. We review your evidence and the asker\'s claims. If work was done properly, we release payment. Don\'t accept unfair disputes without fighting back.',
+    },
+
+    // Referrals & Rewards
+    {
+      id: 'ref1',
+      category: 'general',
+      question: 'How does the referral program work?',
+      answer: 'Share your personal referral link or QR code with friends. When they join and complete their first errand, you both earn Errandify Points (EP). More referrals = more EP. Earn enough EP to redeem for cash, discounts, or donate to charities.',
+    },
+    {
+      id: 'ref2',
+      category: 'general',
+      question: 'How much can I earn from referrals?',
+      answer: 'You earn bonus Errandify Points when referred friends join and complete tasks. Points accumulate and can be redeemed for cash. Top referrers can earn significant monthly bonuses. It\'s a great way to earn while growing the community.',
+    },
+
+    // Errandify Points
+    {
+      id: 'ep1',
+      category: 'general',
+      question: 'What are Errandify Points (EP) and how do I earn them?',
+      answer: 'EP is our community rewards currency. Earn EP with every completed errand (points vary by task value), referrals, and milestone achievements. Redeem EP for cash bonus in your wallet, service discounts, or donate to Singapore charities.',
+    },
+    {
+      id: 'ep2',
+      category: 'general',
+      question: 'How do I redeem Errandify Points?',
+      answer: 'Visit MyRewards to see your EP balance and redemption options: cash bonus to wallet, service discounts, charity donations, or special perks. Redemption is instant. Different tiers unlock better rewards.',
+    },
+
+    // MyKampung
+    {
+      id: 'mk1',
+      category: 'general',
+      question: 'What is MyKampung?',
+      answer: 'MyKampung is our community hub where you explore neighborhood news, training articles, job opportunities, wellness tips, and local discussions. Connect with neighbors, learn new skills, or share advice. It\'s building the modern Kampung spirit.',
+    },
+    {
+      id: 'mk2',
+      category: 'general',
+      question: 'Can I share my own content in MyKampung?',
+      answer: 'Yes! Share articles, questions, achievements, or advice. Content is reviewed for quality and safety before publishing. Being active in MyKampung builds your community reputation and helps neighbors.',
+    },
+
+    // Account & Technical
+    {
+      id: 'acc1',
+      category: 'general',
+      question: 'How do I change my profile or account settings?',
+      answer: 'Go to MyProfile to update your photo, bio, categories, language preferences, and contact info. You can toggle between Asker/Doer roles anytime. Email togather@errandify.ai if you need to update verified info like name or phone.',
+    },
+    {
+      id: 'acc2',
+      category: 'general',
+      question: 'What should I do if I forget my password?',
+      answer: 'On the login screen, click "Forgot Password" and enter your email. We\'ll send a reset link. Click the link and set a new password. Make it strong (mix of letters, numbers, symbols). If you still have issues, email support.',
+    },
+    {
+      id: 'acc3',
+      category: 'general',
+      question: 'Can I delete my account?',
+      answer: 'You can deactivate your account anytime. This hides your profile but keeps your history for disputes/ratings. For permanent deletion (removes all data), contact support at togather@errandify.ai. Note: You cannot delete while errands are active.',
+    },
+
+    // Support & Contact
+    {
+      id: 'sup1',
+      category: 'general',
+      question: 'How do I contact Errandify support?',
+      answer: 'Email togather@errandify.ai with details of your issue. Response time is typically 24-48 hours. For urgent safety concerns, mention "URGENT" in the subject. You can also message through the app or ask in MyKampung community discussions.',
+    },
   ];
 
   const filteredFAQs = activeCategory === 'all'
