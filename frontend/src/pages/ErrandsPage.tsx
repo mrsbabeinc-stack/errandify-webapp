@@ -343,13 +343,24 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                         View
                       </button>
                       {userRole === 'asker' && (
-                        <button
-                          onClick={() => handleCopyErrand(errand)}
-                          className="flex-1 bg-orange-500 text-white py-1.5 rounded font-semibold hover:bg-orange-600 text-xs"
-                          title="Copy this errand"
-                        >
-                          Copy
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleCopyErrand(errand)}
+                            className="flex-1 bg-orange-500 text-white py-1.5 rounded font-semibold hover:bg-orange-600 text-xs"
+                            title="Copy this errand"
+                          >
+                            Copy
+                          </button>
+                          {errand.status === 'confirmed' && (
+                            <button
+                              onClick={() => navigate(`/errand/${errand.id}`)}
+                              className="flex-1 bg-errandify-brown text-white py-1.5 rounded font-semibold hover:bg-opacity-90 text-xs"
+                              title="Chat about this task"
+                            >
+                              💬 MyChat
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
