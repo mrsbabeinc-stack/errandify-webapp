@@ -439,4 +439,45 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
   }
 });
 
+// GET /api/bids/my-bids - Get all bids placed by current doer
+router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const doerId = parseInt(req.userId || '0', 10);
+
+    // Get all bids for this doer with errand details
+    const bidsResult = await db.query(
+      `SELECT b.*, e.title, e.budget, e.category, u.display_name as asker_display_name, u.name as asker_name
+       FROM bids b
+       JOIN errands e ON b.task_id = e.id
+       JOIN users u ON e.asker_id = u.id
+       WHERE b.doer_id = $1
+       ORDER BY b.created_at DESC`,
+      [doerId]
+    );
+
+    res.json({
+      success: true,
+      data: bidsResult.rows.map(bid => ({
+        id: bid.id,
+        errand_id: bid.task_id,
+        doer_id: bid.doer_id,
+        amount: bid.amount,
+        note: bid.note,
+        status: bid.status,
+        created_at: bid.created_at,
+        errand: {
+          title: bid.title,
+          budget: bid.budget,
+          category: bid.category,
+          asker_name: bid.asker_name,
+          asker_display_name: bid.asker_display_name,
+        },
+      })),
+    });
+  } catch (error) {
+    console.error('Get my bids error:', error);
+    res.status(500).json({ error: 'Failed to fetch bids' });
+  }
+});
+
 export default router;

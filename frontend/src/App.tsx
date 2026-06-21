@@ -1,13 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Layout from './components/Layout';
-import NotificationToastContainer from './components/NotificationToastContainer';
-import PushNotificationManager from './components/PushNotificationManager';
-import { NotificationProvider } from './context/NotificationContext';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
-import NotificationPreferencesPage from './pages/NotificationPreferencesPage';
 import CategorySelectionPage from './pages/CategorySelectionPage';
 import CategoryPreferencePage from './pages/CategoryPreferencePage';
 import CreateErrandPage from './pages/CreateErrandPage';
@@ -18,38 +14,22 @@ import DoerBrowsePage from './pages/DoerBrowsePage';
 import ErrandsPage from './pages/ErrandsPage';
 import ErrandDetailPage from './pages/ErrandDetailPage';
 import ChatPage from './pages/ChatPage';
-import MyKampungPage from './pages/MyKampungPage';
-import MyPocketPage from './pages/MyPocketPage';
+import MyVillagePage from './pages/MyVillagePage';
 import ProfilePage from './pages/ProfilePage';
 import ReviewPage from './pages/ReviewPage';
-import TaskExecutionPage from './pages/TaskExecutionPage';
-import RecurringSessionsManager from './components/RecurringSessionsManager';
-import SingPassSignupPage from './pages/SingPassSignupPage';
 import MyProfilePage from './pages/MyProfilePage';
 import ReferralPage from './pages/ReferralPage';
-import MyReferralsPage from './pages/MyReferralsPage';
-import AdminDisputePanel from './pages/AdminDisputePanel';
-import MyBidsPage from './pages/MyBidsPage';
+import TrustedUsersPage from './pages/TrustedUsersPage';
+import BlockListPage from './pages/BlockListPage';
 import PayoutSettingsPage from './pages/PayoutSettingsPage';
-import HowItWorksPage from './pages/HowItWorksPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import ErrandifyPointsPage from './pages/ErrandifyPointsPage';
 import MyRewardsPage from './pages/MyRewardsPage';
 import PointsHistoryPage from './pages/PointsHistoryPage';
 import TestPage from './pages/TestPage';
-import UserProfilePage from './pages/UserProfilePage';
-import EditProfilePage from './pages/EditProfilePage';
-import DisputePage from './pages/DisputePage';
-import SearchBrowsePage from './pages/SearchBrowsePage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
-import RecurringSessionsPage from './pages/RecurringSessionsPage';
-import EmailNotificationSettingsPage from './pages/EmailNotificationSettingsPage';
-import RatingsHistoryPage from './pages/RatingsHistoryPage';
-import DisputesManagementPage from './pages/DisputesManagementPage';
-import AboutErrandifyPage from './pages/AboutErrandifyPage';
-import FAQPage from './pages/FAQPage';
-import BlogDetailPage from './pages/BlogDetailPage';
-import DiscussionDetailPage from './pages/DiscussionDetailPage';
+import MyOfferPage from './pages/MyOfferPage';
+import TaskCompleteEvidencePage from './pages/TaskCompleteEvidencePage';
+import ReviewCompletionPage from './pages/ReviewCompletionPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -92,11 +72,8 @@ export default function App() {
   }
 
   return (
-    <NotificationProvider>
-      <Router>
-        <NotificationToastContainer />
-        {isAuthenticated && <PushNotificationManager />}
-        <Routes>
+    <Router>
+      <Routes>
         {/* Landing page - shown first to unauthenticated users */}
         <Route
           path="/"
@@ -116,17 +93,6 @@ export default function App() {
               <Navigate to="/home" replace />
             ) : (
               <LoginPage onLogin={handleLogin} />
-            )
-          }
-        />
-
-        <Route
-          path="/signup"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/home" replace />
-            ) : (
-              <SingPassSignupPage />
             )
           }
         />
@@ -179,6 +145,29 @@ export default function App() {
           }
         />
 
+        {/* Browse all errands (doer quick access) */}
+        <Route
+          path="/browse"
+          element={
+            isAuthenticated ? (
+              <DoerBrowsePage />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        {/* Browse errands by category (doer flow) */}
+        <Route
+          path="/browse-errands/:categoryId"
+          element={
+            isAuthenticated ? (
+              <BrowseErrandsPage />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
 
         {/* TEST ROUTE - to verify routing works */}
         <Route path="/test" element={<TestPage />} />
@@ -186,30 +175,16 @@ export default function App() {
         {/* Profile sub-pages (outside layout for simpler rendering) */}
         <Route path="/my-profile" element={isAuthenticated ? <MyProfilePage /> : <Navigate to="/login" replace />} />
         <Route path="/referral" element={isAuthenticated ? <ReferralPage /> : <Navigate to="/login" replace />} />
-        <Route path="/my-referrals" element={isAuthenticated ? <MyReferralsPage /> : <Navigate to="/login" replace />} />
+        <Route path="/trusted-users" element={isAuthenticated ? <TrustedUsersPage /> : <Navigate to="/login" replace />} />
+        <Route path="/block-list" element={isAuthenticated ? <BlockListPage /> : <Navigate to="/login" replace />} />
         <Route path="/payout-settings" element={isAuthenticated ? <PayoutSettingsPage /> : <Navigate to="/login" replace />} />
         <Route path="/transaction-history" element={isAuthenticated ? <TransactionHistoryPage /> : <Navigate to="/login" replace />} />
         <Route path="/errandify-points" element={isAuthenticated ? <ErrandifyPointsPage /> : <Navigate to="/login" replace />} />
         <Route path="/my-rewards" element={isAuthenticated ? <MyRewardsPage /> : <Navigate to="/login" replace />} />
         <Route path="/points-history" element={isAuthenticated ? <PointsHistoryPage /> : <Navigate to="/login" replace />} />
-        <Route path="/settings/notifications" element={isAuthenticated ? <NotificationPreferencesPage /> : <Navigate to="/login" replace />} />
-        <Route path="/wallet" element={isAuthenticated ? <MyPocketPage /> : <Navigate to="/login" replace />} />
-        <Route path="/my-pocket" element={isAuthenticated ? <MyPocketPage /> : <Navigate to="/login" replace />} />
-        <Route path="/user/:userId" element={<UserProfilePage />} />
-        <Route path="/edit-profile" element={isAuthenticated ? <EditProfilePage /> : <Navigate to="/login" replace />} />
-        <Route path="/disputes" element={isAuthenticated ? <DisputePage /> : <Navigate to="/login" replace />} />
-        <Route path="/recurring-sessions" element={isAuthenticated ? <RecurringSessionsPage /> : <Navigate to="/login" replace />} />
-        <Route path="/email-notifications" element={isAuthenticated ? <EmailNotificationSettingsPage /> : <Navigate to="/login" replace />} />
-        <Route path="/ratings" element={isAuthenticated ? <RatingsHistoryPage /> : <Navigate to="/login" replace />} />
-        <Route path="/disputes-management" element={isAuthenticated ? <DisputesManagementPage /> : <Navigate to="/login" replace />} />
-        <Route path="/admin" element={isAuthenticated ? <AdminDashboardPage /> : <Navigate to="/login" replace />} />
-        <Route path="/admin/disputes" element={isAuthenticated ? <AdminDisputePanel /> : <Navigate to="/login" replace />} />
-        <Route path="/my-bids" element={isAuthenticated ? <MyBidsPage /> : <Navigate to="/login" replace />} />
-        <Route path="/about" element={<AboutErrandifyPage />} />
-        <Route path="/faq" element={<FAQPage />} />
-        <Route path="/how-it-works" element={<HowItWorksPage />} />
-        <Route path="/blog/:slug" element={<BlogDetailPage />} />
-        <Route path="/discussion/:id" element={<DiscussionDetailPage />} />
+        <Route path="/my-offer" element={isAuthenticated ? <MyOfferPage /> : <Navigate to="/login" replace />} />
+        <Route path="/task/:id/complete" element={isAuthenticated ? <TaskCompleteEvidencePage /> : <Navigate to="/login" replace />} />
+        <Route path="/task/:id/review-completion" element={isAuthenticated ? <ReviewCompletionPage /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout */}
         <Route
@@ -222,22 +197,15 @@ export default function App() {
           }
         >
           <Route path="/home" element={<HomePage userRole={userRole} />} />
-          <Route path="/browse" element={<DoerBrowsePage userRole={userRole} />} />
-          <Route path="/browse-errands/:categoryId" element={<BrowseErrandsPage />} />
-          <Route path="/search" element={<DoerBrowsePage userRole={userRole} />} />
           <Route path="/errands" element={<ErrandsPage userRole={userRole} />} />
-          <Route path="/errand/:id" element={<ErrandDetailPage userRole={userRole} />} />
+          <Route path="/errand/:id" element={<ErrandDetailPage />} />
           <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole} />} />
-          <Route path="/kampung" element={<MyKampungPage />} />
-          <Route path="/my-kampung" element={<MyKampungPage />} />
+          <Route path="/village" element={<MyVillagePage userRole={userRole} />} />
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
           <Route path="/profile" element={<ProfilePage userRole={userRole} onLogout={handleLogout} />} />
-          <Route path="/task/:id/execute" element={<TaskExecutionPage />} />
-          <Route path="/errand/:id/sessions" element={<RecurringSessionsManager errandId={parseInt(window.location.pathname.split('/')[2])} userRole={userRole} />} />
           <Route path="/review/:jobId" element={<ReviewPage />} />
         </Route>
       </Routes>
-      </Router>
-    </NotificationProvider>
+    </Router>
   );
 }

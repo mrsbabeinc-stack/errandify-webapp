@@ -1,6 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 
 interface BottomNavProps {
   onLogout: () => void;
@@ -22,63 +21,41 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   const [userImage, setUserImage] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchProfileImage();
-  }, []);
-
-  const fetchProfileImage = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user-profile/me/full`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const profileImage = response.data.data?.profileImage;
-      if (profileImage) {
-        setUserImage(profileImage);
-      }
-    } catch (err) {
-      // Fallback to localStorage if API fails
-      const user = localStorage.getItem('user');
-      if (user) {
-        try {
-          const userData = JSON.parse(user);
-          setUserImage(userData.profile_image_url || null);
-        } catch {
-          setUserImage(null);
-        }
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        setUserImage(userData.profile_image_url || null);
+      } catch {
+        setUserImage(null);
       }
     }
-  };
+  }, []);
 
   const isActive = (path: string) => location.pathname === path;
 
-  const doerItems: NavItem[] = [
-    { label: 'Browse ToHelp', path: '/', icon: '🔍' },
-    { label: 'MyBids', path: '/my-bids', icon: '💼' },
-    { label: 'MyChat', path: '/chat', icon: '💬' },
-    { label: 'MyKampung', path: '/my-kampung', icon: '🏘️' },
-    { label: 'MyPocket', path: '/wallet', icon: '💰' },
-    { label: 'MyAccount', path: '/profile', icon: '👤', image: userImage || undefined },
-  ];
+  const leftItems: NavItem[] = userRole === 'doer'
+    ? [
+        { label: 'Browse ToHelp', path: '/', icon: '🔍' },
+        { label: 'MyOffer', path: '/my-offer', icon: '💼' },
+      ]
+    : [
+        { label: 'Home', path: '/', icon: '🏠' },
+        { label: 'MyErrands', path: '/errands', icon: '📋' },
+      ];
 
-  const askerItems: NavItem[] = [
-    { label: 'Home', path: '/', icon: '🏠' },
-    { label: 'MyErrands', path: '/errands', icon: '📋' },
-    { label: 'MyChat', path: '/chat', icon: '💬' },
-    { label: 'MyKampung', path: '/my-kampung', icon: '🏘️' },
-    { label: 'MyPocket', path: '/wallet', icon: '💰' },
-    { label: 'MyAccount', path: '/profile', icon: '👤', image: userImage || undefined },
+  const rightItems: NavItem[] = [
+    { label: 'MyVillage', path: '/village', icon: '🏘️' },
+    { label: 'Chat', path: '/chat', icon: '💬' },
+    { label: 'Profile', path: '/profile', icon: '👤', image: userImage || undefined },
   ];
-
-  const navItems = userRole === 'doer' ? doerItems : askerItems;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-errandify-bg border-t border-gray-200 shadow-lg z-40">
+    <nav className="fixed bottom-0 left-0 right-0 bg-errandify-bg border-t border-gray-200 shadow-lg">
       <div className="flex justify-between items-center h-16 px-2 relative">
-        {/* Navigation Items - Evenly distributed for doers, left/right split for askers */}
-        {/* All items evenly distributed with center plus button for askers */}
-        <div className="flex justify-around items-center w-full gap-1 relative">
-          {navItems.map((item, index) => {
+        {/* Left Items */}
+        <div className="flex justify-center gap-3 flex-1">
+          {leftItems.map((item) => {
             const disabled = 'disabled' in item && item.disabled;
             const itemClasses = disabled
               ? 'text-gray-300 cursor-not-allowed opacity-50'
@@ -86,14 +63,57 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
               ? 'bg-errandify-orange text-white'
               : 'text-gray-600 hover:text-errandify-orange';
 
-            // For askers, add spacing around the center plus button (at index 3)
-            const isCenterSpace = userRole === 'asker' && index === 3;
+            if (disabled) {
+              return (
+                <div
+                  key={item.path}
+                  className={`flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-lg transition-all text-sm ${itemClasses}`}
+                >
+                  <span className="text-lg">{item.icon}</span>
+                  <span className="text-xs font-medium">{item.label}</span>
+                </div>
+              );
+            }
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-lg transition-all text-sm ${itemClasses}`}
+              >
+                <span className="text-lg">{item.icon}</span>
+                <span className="text-xs font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Center "+ Create" Button - Only for askers */}
+        {userRole === 'asker' && (
+          <button
+            onClick={onCreateTask}
+            className="absolute left-1/2 -translate-x-1/2 -top-5 w-14 h-14 bg-gradient-to-br from-errandify-orange via-orange-500 to-orange-600 text-white rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all transform flex items-center justify-center font-bold text-2xl border-4 border-errandify-bg active:scale-95"
+            title="Create new errand"
+          >
+            +
+          </button>
+        )}
+
+        {/* Right Items */}
+        <div className="flex justify-center gap-3 flex-1">
+          {rightItems.map((item) => {
+            const disabled = 'disabled' in item && item.disabled;
+            const itemClasses = disabled
+              ? 'text-gray-300 cursor-not-allowed opacity-50'
+              : isActive(item.path)
+              ? 'bg-errandify-orange text-white'
+              : 'text-gray-600 hover:text-errandify-orange';
 
             if (disabled) {
               return (
                 <div
                   key={item.path}
-                  className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 rounded-lg transition-all text-sm flex-1 ${itemClasses}`}
+                  className={`flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-lg transition-all text-sm ${itemClasses}`}
                 >
                   {item.image ? (
                     <img
@@ -113,7 +133,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 rounded-lg transition-all text-sm flex-1 ${itemClasses}`}
+                className={`flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-lg transition-all text-sm ${itemClasses}`}
               >
                 {item.image ? (
                   <img
@@ -128,17 +148,6 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
               </Link>
             );
           })}
-
-          {/* Center "+ Create" Button - Only for askers */}
-          {userRole === 'asker' && (
-            <button
-              onClick={onCreateTask}
-              className="absolute left-1/2 -translate-x-1/2 -top-5 w-14 h-14 bg-gradient-to-br from-errandify-orange via-orange-500 to-orange-600 text-white rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all transform flex items-center justify-center font-bold text-2xl border-4 border-errandify-bg active:scale-95 z-50"
-              title="Create new errand"
-            >
-              +
-            </button>
-          )}
         </div>
       </div>
     </nav>

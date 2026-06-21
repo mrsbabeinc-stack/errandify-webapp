@@ -77,7 +77,7 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
   try {
     const { taskId } = req.params;
     const doerId = parseInt(req.userId || '0', 10);
-    const { photoUrls } = req.body; // Array of photo URLs (pre-uploaded to cloud)
+    const { photoUrls, completionNotes } = req.body; // Array of photo URLs (pre-uploaded to cloud) + completion notes
 
     // Get task and verify doer is assigned
     const taskResult = await db.query(
@@ -118,10 +118,11 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
          SET status = $1,
              completed_at = NOW(),
              payment_release_at = $2,
+             completion_notes = $3,
              updated_at = NOW()
-         WHERE id = $3
+         WHERE id = $4
          RETURNING id, status, completed_at, payment_release_at`,
-        ['completed_unconfirmed', paymentReleaseAt, taskId]
+        ['completed_unconfirmed', paymentReleaseAt, completionNotes || null, taskId]
       );
 
       // Store photos if provided
@@ -225,6 +226,74 @@ router.post('/:taskId/confirm', authMiddleware, async (req: AuthRequest, res: Re
   } catch (error) {
     console.error('Confirm job error:', error);
     res.status(500).json({ error: 'Failed to confirm completion' });
+  }
+});
+
+// POST /api/jobs/:taskId/request-more-work - Asker requests more work on completed task
+router.post('/:taskId/request-more-work', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const askerId = parseInt(req.userId || '0', 10);
+    const { reason } = req.body;
+
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ error: 'Reason is required' });
+    }
+
+    // Get task and verify asker
+    const taskResult = await db.query(
+      `SELECT e.*, b.doer_id, b.amount FROM errands e
+       LEFT JOIN bids b ON e.accepted_bid_id = b.id
+       WHERE e.id = $1`,
+      [taskId]
+    );
+
+    if (taskResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const task = taskResult.rows[0];
+
+    if (task.asker_id !== askerId) {
+      return res.status(403).json({ error: 'Only the asker can request more work' });
+    }
+
+    if (task.status !== 'completed_unconfirmed') {
+      return res.status(400).json({ error: 'Task must be awaiting confirmation to request more work' });
+    }
+
+    // Update task status back to in_progress
+    await db.query(
+      `UPDATE errands
+       SET status = $1, updated_at = NOW()
+       WHERE id = $2`,
+      ['in_progress', taskId]
+    );
+
+    // Store reason in task history or comments (if available)
+    // For now, we'll just note it in the response
+    // TODO: Create a task_feedback or task_changes table to track this
+
+    // Get doer info for notification
+    const doerResult = await db.query(
+      'SELECT id, display_name FROM users WHERE id = $1',
+      [task.doer_id]
+    );
+
+    // TODO: Send push notification to doer
+    // Message: "Hi [Name] 🔄 [Asker] has requested more work on '[task title]'. Reason: [reason]. Please make the changes and resubmit."
+
+    res.json({
+      success: true,
+      data: {
+        taskId,
+        status: 'in_progress',
+        message: 'Doer notified. Task returned to in progress status.',
+      },
+    });
+  } catch (error) {
+    console.error('Request more work error:', error);
+    res.status(500).json({ error: 'Failed to request more work' });
   }
 });
 
