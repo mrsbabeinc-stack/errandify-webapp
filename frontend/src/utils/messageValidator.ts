@@ -103,6 +103,16 @@ export const validateMessage = (content: string): ValidationResult => {
     return result;
   }
 
+  // SPECIAL CHECK: Code words and hidden meanings for sexual context
+  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my place|your place|come over|after.*time/i.test(lowerContent);
+  const suggestiveContext = /\bzzz\b.*\btogether\b/i.test(lowerContent); // "zzz together" = sleep/sex code
+
+  if (codeWords || suggestiveContext) {
+    result.errors.push('❌ Message contains inappropriate content. Keep messages task-focused and professional.');
+    result.isValid = false;
+    return result;
+  }
+
   // Check for contact information
   if (CONTACT_PATTERNS.email.test(content)) {
     result.errors.push('❌ Cannot share email addresses. Use Errandify messaging instead.');
