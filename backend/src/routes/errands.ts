@@ -4,6 +4,17 @@ import db from '../db.js';
 
 const router = Router();
 
+// Generate unique errand ID: ERR-YYYY-XXXXXX
+function generateErrandId(): string {
+  const year = new Date().getFullYear();
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `ERR-${year}-${code}`;
+}
+
 // Get all errands (with filters)
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -289,10 +300,11 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         });
       }
 
+      const errandId = generateErrandId();
       const errandResult = await db.query(
-        `INSERT INTO errands (asker_id, title, description, category, location, postal_code, budget, deadline, is_recurring, recurring_schedule, status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-         RETURNING id, title, description, category, status, budget, deadline, is_recurring, recurring_schedule, created_at`,
+        `INSERT INTO errands (asker_id, title, description, category, location, postal_code, budget, deadline, is_recurring, recurring_schedule, status, errand_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         RETURNING id, errand_id, title, description, category, status, budget, deadline, is_recurring, recurring_schedule, created_at`,
         [
           askerId,
           title,
@@ -304,7 +316,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           deadline || null,
           isRecurring || false,
           recurringConfig,
-          'open'
+          'open',
+          errandId
         ]
       );
 
@@ -382,6 +395,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         success: true,
         data: {
           id: errand.id,
+          errandId: errand.errand_id,
           title: errand.title,
           description: errand.description,
           category: errand.category,
