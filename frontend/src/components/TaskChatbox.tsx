@@ -141,7 +141,7 @@ export default function TaskChatbox({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end z-50 md:items-center md:justify-center">
-      <div className="bg-white rounded-t-lg md:rounded-lg w-full md:max-w-5xl md:h-96 flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
+      <div className="bg-white rounded-t-lg md:rounded-lg w-full md:max-w-2xl md:h-screen md:max-h-[90vh] flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
         {/* Header - Full Width */}
         <div className="bg-errandify-brown text-white p-3 flex items-start justify-between gap-2">
           <div className="flex-1">
@@ -158,7 +158,7 @@ export default function TaskChatbox({
           </button>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col flex-1 overflow-hidden">
           {/* Chat Column */}
           <div className="flex-1 flex flex-col">
 
@@ -295,21 +295,21 @@ export default function TaskChatbox({
 
         </form>
           </div>
+        </div>
 
-          {/* Right Sidebar - Errand Details */}
-          {errandDetails && (
-            <div className="w-56 flex flex-col border-l border-gray-200 bg-gray-50 p-3 overflow-y-auto">
-              <h4 className="font-bold text-xs text-gray-800 mb-2">📋 Errand Details</h4>
-
+        {/* Bottom Panel - Errand Details */}
+        {errandDetails && (
+          <div className="border-t border-gray-200 bg-gray-50 p-3 max-h-32 overflow-y-auto">
+            <div className="grid grid-cols-2 gap-3">
               {errandDetails.budget && (
-                <div className="mb-2">
+                <div>
                   <p className="text-xs text-gray-500">Budget</p>
                   <p className="text-xs font-bold text-errandify-orange">SGD ${errandDetails.budget}</p>
                 </div>
               )}
 
               {errandDetails.deadline && (
-                <div className="mb-2">
+                <div>
                   <p className="text-xs text-gray-500">Deadline</p>
                   <p className="text-xs text-gray-700">
                     {new Date(errandDetails.deadline).toLocaleDateString('en-SG')} {new Date(errandDetails.deadline).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}
@@ -318,20 +318,21 @@ export default function TaskChatbox({
               )}
 
               {errandDetails.location && (
-                <div className="mb-2">
+                <div>
                   <p className="text-xs text-gray-500">Location</p>
                   <p className="text-xs text-gray-700">📍 {errandDetails.location}</p>
                 </div>
               )}
 
               {errandDetails.description && (
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Description</p>
-                  <p className="text-xs text-gray-700 leading-relaxed line-clamp-3">{errandDetails.description}</p>
+                <div className="col-span-2">
+                  <p className="text-xs text-gray-600 mb-0.5">Description</p>
+                  <p className="text-xs text-gray-700 leading-relaxed line-clamp-2">{errandDetails.description}</p>
                 </div>
               )}
             </div>
-          )}
+          </div>
+        )}
         </div>
       </div>
     </div>
