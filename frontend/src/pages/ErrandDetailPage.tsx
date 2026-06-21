@@ -278,11 +278,6 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-1.5">
             <div className="flex items-start justify-between gap-1 mb-0.5">
               <h1 className="text-base font-bold flex-1">{errand.title}</h1>
-              {userBidAmount && (
-                <div className="bg-white text-errandify-orange px-1.5 py-0.5 rounded text-xs font-bold whitespace-nowrap">
-                  Bidded ${userBidAmount}
-                </div>
-              )}
             </div>
             <div className="flex flex-wrap items-center gap-1">
               <span
@@ -301,6 +296,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               >
                 {errand.status}
               </span>
+              {userBidAmount && (
+                <span className="text-xs bg-white text-errandify-orange px-1.5 py-0.5 rounded font-bold">
+                  Bidded ${userBidAmount}
+                </span>
+              )}
               {userBidAmount && errand.status !== 'open' && (
                 <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded">
                   ✓ Bid submitted.
