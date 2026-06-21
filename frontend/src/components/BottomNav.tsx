@@ -21,16 +21,30 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   const navigate = useNavigate();
   const [userImage, setUserImage] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     fetchProfileImage();
     // Check for unread count
     const checkUnread = () => {
+      // Check unread chats
       const stored = localStorage.getItem('unreadChats');
       if (stored) {
         const unreadMap = JSON.parse(stored);
         const total = Object.values(unreadMap).reduce((sum: number, count: any) => sum + count, 0);
         setUnreadCount(total);
+      }
+
+      // Check unread notifications
+      const notificationStored = localStorage.getItem('notifications');
+      if (notificationStored) {
+        try {
+          const notifications = JSON.parse(notificationStored);
+          const unread = notifications.filter((n: any) => !n.read).length;
+          setUnreadNotifications(unread);
+        } catch {
+          setUnreadNotifications(0);
+        }
       }
     };
     checkUnread();
@@ -149,6 +163,12 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                 {item.label === 'MyChat' && unreadCount > 0 && (
                   <div className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
                     {unreadCount}
+                  </div>
+                )}
+                {/* Unread Badge for Notifications */}
+                {item.label === 'Notifications' && unreadNotifications > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                    {unreadNotifications}
                   </div>
                 )}
                 <span className="text-xs font-medium">{item.label}</span>
