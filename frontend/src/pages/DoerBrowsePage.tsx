@@ -22,6 +22,12 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // Redirect askers to their own errands page
+  if (userRole === 'asker') {
+    navigate('/errands', { replace: true });
+    return null;
+  }
+
   const [errands, setErrands] = useState<Errand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
