@@ -334,82 +334,47 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
             {filteredErrands.map((errand) => (
               <div
                 key={errand.id}
-                className="bg-white rounded-lg p-3 shadow hover:shadow-lg transition-shadow cursor-pointer relative"
+                className="bg-white rounded-lg p-2 shadow hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => navigate(`/errand/${errand.id}`)}
               >
-                {/* Bid Badge */}
-                {getUserBid(errand.id) && (
-                  <div className="absolute top-2 right-2 bg-green-100 border border-green-300 rounded px-2 py-1 text-xs font-semibold text-green-700">
-                    Your bid: SGD ${getUserBid(errand.id)?.toFixed(2)}
+                {/* Line 1: Title + Category + Your Bid */}
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <div className="flex-1">
+                    <h3 className="text-xs font-semibold text-errandify-brown leading-tight">
+                      {errand.title}
+                    </h3>
+                    <span className="inline-block bg-orange-100 text-errandify-orange text-xs px-1.5 py-0.5 rounded font-semibold mt-0.5">
+                      {categoryNames[errand.category] || errand.category}
+                    </span>
                   </div>
-                )}
-
-                {/* Favorite Heart Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite(errand.id);
-                  }}
-                  className="absolute top-2 left-2 text-xl transition-transform hover:scale-125"
-                  title={favorites.has(errand.id) ? 'Remove from favorites' : 'Add to favorites'}
-                >
-                  {favorites.has(errand.id) ? '❤️' : '🤍'}
-                </button>
-
-                {/* Title */}
-                <h3 className="text-xs font-semibold text-errandify-brown mb-0.5">
-                  {errand.title}
-                </h3>
-
-                {/* Category Badge */}
-                <div className="mb-1">
-                  <span className="inline-block bg-orange-100 text-errandify-orange text-xs px-2 py-0.5 rounded-full font-semibold">
-                    {categoryNames[errand.category] || errand.category}
-                  </span>
+                  {getUserBid(errand.id) && (
+                    <div className="bg-green-100 border border-green-300 rounded px-1.5 py-0.5 text-xs font-semibold text-green-700 whitespace-nowrap">
+                      ${getUserBid(errand.id)?.toFixed(0)}
+                    </div>
+                  )}
                 </div>
 
-                {/* Description */}
-                <p className="text-gray-600 text-xs mb-1 line-clamp-1">
-                  {errand.description}
-                </p>
-
-                {/* Metadata Grid */}
-                <div className="grid grid-cols-2 gap-1 text-xs">
+                {/* Line 2: Budget + Location + Heart + Rating + Posted by */}
+                <div className="flex items-center gap-2 text-xs text-gray-600">
                   {errand.budget && (
-                    <div className="text-errandify-orange font-semibold">
-                      SGD ${Number(errand.budget).toFixed(2)}
-                    </div>
+                    <span className="text-errandify-orange font-semibold">SGD ${Number(errand.budget).toFixed(0)}</span>
                   )}
                   {errand.location && (
-                    <div className="text-gray-600">
-                      📍 {getMaskedLocation(errand.location)}
-                    </div>
+                    <span>📍 {getMaskedLocation(errand.location)}</span>
                   )}
-                  {errand.deadline && (
-                    <div className="text-gray-600">
-                      📅 {new Date(errand.deadline).toLocaleDateString()}
-                    </div>
-                  )}
-                  <div className="text-gray-600">
-                    ⭐ {errand.askerRating ? errand.askerRating.toFixed(1) : 'New'}
-                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(errand.id);
+                    }}
+                    className="text-lg transition-transform hover:scale-125"
+                    title={favorites.has(errand.id) ? 'Remove from favorites' : 'Add to favorites'}
+                  >
+                    {favorites.has(errand.id) ? '❤️' : '🤍'}
+                  </button>
+                  <span>⭐ {errand.askerRating ? errand.askerRating.toFixed(1) : 'New'}</span>
+                  <span className="font-semibold">{errand.askerName}</span>
                 </div>
-
-                {/* Asker (Alias) */}
-                <div className="border-t pt-2 mb-3">
-                  <p className="text-xs text-gray-600">Posted by: <span className="font-semibold">{errand.askerName}</span></p>
-                </div>
-
-                {/* View Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/errand/${errand.id}`);
-                  }}
-                  className="w-full bg-errandify-orange text-white py-1.5 rounded text-xs font-semibold hover:bg-opacity-90 transition-colors"
-                >
-                  View Details & Bid
-                </button>
               </div>
             ))}
           </div>
