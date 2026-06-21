@@ -126,7 +126,7 @@ export default function EditErrandPage({ userRole }: EditErrandPageProps) {
 
   if (userRole !== 'asker') {
     return (
-      <div className="min-h-screen bg-errandify-bg">
+      <div className="min-h-screen bg-errandify-bg pb-32">
         <div className="max-w-2xl mx-auto px-4 py-8">
           <button
             onClick={() => navigate(-1)}
@@ -158,7 +158,7 @@ export default function EditErrandPage({ userRole }: EditErrandPageProps) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-errandify-bg">
+      <div className="min-h-screen bg-errandify-bg pb-32">
         <div className="max-w-2xl mx-auto px-4 py-8">
           <button
             onClick={() => navigate(-1)}
@@ -175,7 +175,7 @@ export default function EditErrandPage({ userRole }: EditErrandPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-errandify-bg">
+    <div className="min-h-screen bg-errandify-bg pb-32">
       <div className="max-w-2xl mx-auto px-4 py-4">
         <button
           onClick={() => navigate(-1)}

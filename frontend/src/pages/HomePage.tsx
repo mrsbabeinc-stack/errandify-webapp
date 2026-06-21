@@ -76,7 +76,7 @@ export default function HomePage({ userRole }: HomePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-errandify-bg">
+    <div className="min-h-screen bg-errandify-bg pb-32">
       {/* Page Container */}
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Main Tagline */}
