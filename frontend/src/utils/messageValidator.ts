@@ -29,7 +29,7 @@ const INAPPROPRIATE_PATTERNS = {
   threats: /kill|hurt|violence|attack|harm|rape|murder|die|dead|threat/gi,
   harassment: /stupid|idiot|moron|dumb|fool|retard|loser|pathetic/gi,
 
-  // SEXUAL - Explicit terms only (avoid innocent words)
+  // SEXUAL - Explicit terms only (avoid innocent words like "massage" alone)
   sexualContent: /porn|xxx|cock|pussy|dick|vagina|horny|aroused|masturbat|cum|prostitut|escort|onlyfans|sleep with|spend the night|intimate|private time|pay for sex|call girl|sex worker|adult entertainer|outcall|incall|orgy|gangbang|threesome|dildo|vibrator|orgasm|blow job|blowjob|hand job|handjob|foreplay|penetrat|bondage|bdsm|fetish|kink|nudes|sext|camgirl|stripper|lap dance|body rub|happy ending|ending service|special service|extra service|vip service|release/gi,
 
   // DRUGS - Specific drug names (not words like "high" which has context)
@@ -58,6 +58,15 @@ export const validateMessage = (content: string): ValidationResult => {
 
   if (!content || content.trim().length === 0) {
     result.errors.push('Message cannot be empty');
+    result.isValid = false;
+    return result;
+  }
+
+  // SPECIAL CHECK: "massage" + sexual service terms = block (sex work detection)
+  const hasMassage = /massage/i.test(content);
+  const hasHappyEnding = /happy ending|ending service|special service|extra service|vip service|sexual|penetrat|orgasm|release/i.test(content);
+  if (hasMassage && hasHappyEnding) {
+    result.errors.push('❌ Sexual services not allowed. Keep messages task-focused.');
     result.isValid = false;
     return result;
   }
