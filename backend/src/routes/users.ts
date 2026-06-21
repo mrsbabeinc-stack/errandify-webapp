@@ -340,4 +340,30 @@ router.patch('/preferences', authMiddleware, async (req, res) => {
   }
 });
 
+// POST /api/users/category-preferences - Save user's preferred categories for AI recommendations
+router.post('/category-preferences', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const { preferredCategories } = req.body;
+
+    if (!Array.isArray(preferredCategories) || preferredCategories.length === 0) {
+      return res.status(400).json({ error: 'At least one category required' });
+    }
+
+    // Update user's category preferences
+    await db.query(
+      'UPDATE users SET category_preferences = $1 WHERE id = $2',
+      [preferredCategories, userId]
+    );
+
+    res.json({
+      success: true,
+      data: { message: 'Category preferences saved' },
+    });
+  } catch (error) {
+    console.error('Category preferences error:', error);
+    res.status(500).json({ error: 'Failed to save preferences' });
+  }
+});
+
 export default router;
