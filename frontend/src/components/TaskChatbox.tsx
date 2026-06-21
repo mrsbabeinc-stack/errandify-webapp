@@ -29,7 +29,10 @@ export default function TaskChatbox({
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -88,20 +91,46 @@ export default function TaskChatbox({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearImageSelection = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end z-50 md:items-center md:justify-center">
       <div className="bg-white rounded-t-lg md:rounded-lg w-full md:max-w-md md:h-96 flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="bg-errandify-brown text-white p-4 flex items-center justify-between rounded-t-lg">
-          <div>
-            <h3 className="font-bold text-base">Chat: {taskTitle}</h3>
-            <p className="text-xs text-orange-100">Real-time messaging</p>
+        <div className="bg-errandify-brown text-white p-3 flex items-start justify-between rounded-t-lg gap-2">
+          <div className="flex-1">
+            <h3 className="font-bold text-sm">Chat: {taskTitle}</h3>
+            <a
+              href={`/errand/${taskId}`}
+              className="text-xs text-orange-200 hover:text-white underline mt-1 inline-block"
+            >
+              📋 View Errand Details
+            </a>
+            <p className="text-xs text-orange-100 mt-1">✓ AI-checked for safety</p>
           </div>
           <button
             onClick={onClose}
-            className="text-white text-2xl hover:opacity-80"
+            className="text-white text-xl hover:opacity-80 flex-shrink-0"
           >
             ✕
           </button>
@@ -170,12 +199,32 @@ export default function TaskChatbox({
         {/* Input Area */}
         <form
           onSubmit={handleSendMessage}
-          className="border-t border-gray-200 p-4 bg-white"
+          className="border-t border-gray-200 p-3 bg-white space-y-2"
         >
           {error && (
             <p className="text-red-600 text-xs mb-2">{error}</p>
           )}
-          <div className="flex gap-2">
+
+          {/* Image Preview */}
+          {imagePreview && (
+            <div className="relative w-20 h-20">
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="w-full h-full object-cover rounded-lg border border-gray-300"
+              />
+              <button
+                type="button"
+                onClick={clearImageSelection}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold hover:bg-red-600"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {/* Input Controls */}
+          <div className="flex gap-2 items-end">
             <input
               type="text"
               value={newMessage}
@@ -185,15 +234,34 @@ export default function TaskChatbox({
               disabled={isLoading}
             />
             <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-2 py-2 text-gray-500 hover:text-errandify-orange transition text-lg"
+              title="Attach image"
+              disabled={isLoading}
+            >
+              🖼️
+            </button>
+            <button
               type="submit"
-              disabled={isLoading || !newMessage.trim()}
+              disabled={isLoading || (!newMessage.trim() && !selectedImage)}
               className="px-3 py-2 bg-errandify-orange text-white rounded-lg text-sm font-semibold hover:bg-opacity-90 disabled:opacity-50"
             >
               {isLoading ? '⏳' : '→'}
             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
-            💬 Messages are reviewed for community safety
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageSelect}
+            className="hidden"
+          />
+
+          <p className="text-xs text-gray-500">
+            ✓ Messages reviewed by AI for safety
           </p>
         </form>
       </div>
