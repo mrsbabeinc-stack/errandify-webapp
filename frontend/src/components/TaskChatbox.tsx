@@ -106,8 +106,8 @@ export default function TaskChatbox({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end z-40 md:items-center md:justify-center">
-      <div className="bg-white rounded-t-lg md:rounded-lg w-full md:max-w-md md:h-96 flex flex-col max-h-[90vh] shadow-2xl">
+    <div className="fixed inset-0 bg-black/50 flex items-end z-50 md:items-center md:justify-center">
+      <div className="bg-white rounded-t-lg md:rounded-lg w-full md:max-w-md md:h-96 flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="bg-errandify-brown text-white p-4 flex items-center justify-between rounded-t-lg">
           <div>
