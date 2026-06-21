@@ -27,8 +27,8 @@ const INAPPROPRIATE_PATTERNS = {
   profanity: /damn|shit|crap|bloody|fuck|ass|bitch|bastard|hell|piss/gi,
   threats: /kill|hurt|violence|attack|harm|rape|murder|die|dead/gi,
   harassment: /stupid|idiot|moron|dumb|fool|retard|loser|pathetic/gi,
-  sexualContent: /sex|porn|naked|nude|xxx|sexual|cock|pussy|dick|vagina|breast|gay|lesbian|horny|aroused|masturbat|cum/gi,
-  drugs: /cocaine|heroin|meth|weed|cannabis|marijuana|acid|lsd|mdma|ecstasy|crack|fentanyl/gi,
+  sexualContent: /sex|porn|naked|nude|xxx|sexual|cock|pussy|dick|vagina|breast|horny|aroused|masturbat|cum/gi,
+  drugs: /cocaine|heroin|meth|weed|cannabis|marijuana|acid|lsd|mdma|ecstasy|crack|fentanyl|opium|morphine|codeine|tramadol|oxycodon|percocet|vicodin|xanax|valium|ketamine|pcp|angel dust|ice|crystal|methamphetamine|amphetamine|dexedrine|adderall|ritalin|speed|shrooms|psilocybin|psychedelic|hash|hashish|thc|cannabinoid/gi,
   violence: /rape|abuse|assault|torture|molest|incest|pedophil|child abuse/gi,
   scam: /bitcoin|crypto|investment|forex|mlm|pyramid|scheme|urgent|wire transfer|western union|money gram/gi,
 };
