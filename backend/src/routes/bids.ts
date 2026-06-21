@@ -66,6 +66,30 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         [task_id, doerId, parseFloat(amount), note || null, 'pending']
       );
       bid = result.rows[0];
+
+      // Send notification to asker about new bid
+      try {
+        const errandData = await db.query(
+          'SELECT title FROM errands WHERE id = $1',
+          [task_id]
+        );
+        const errandTitle = errandData.rows[0]?.title || 'Your task';
+
+        await db.query(
+          `INSERT INTO notifications (user_id, type, title, body, action_url, created_at, read)
+           VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
+          [
+            errand.asker_id,
+            'bid_received',
+            '💰 New Bid Received',
+            `${doerName} bid $${parseFloat(amount)} on "${errandTitle}"`,
+            `/errand/${task_id}`,
+          ]
+        );
+      } catch (notifErr) {
+        console.warn('[Bids] Failed to send notification:', notifErr);
+        // Don't fail the entire request if notification fails
+      }
     }
 
     res.status(201).json({
