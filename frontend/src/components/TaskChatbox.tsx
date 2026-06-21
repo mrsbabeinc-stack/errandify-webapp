@@ -324,7 +324,7 @@ export default function TaskChatbox({
                 title="Attach image"
                 disabled={isLoading || isRecording}
               >
-                🖼️
+                📎
               </button>
               {showImageMenu && (
                 <div className="absolute bottom-full mb-2 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
