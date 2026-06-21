@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 interface BottomNavProps {
   onLogout: () => void;
@@ -20,17 +21,34 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   const navigate = useNavigate();
   const [userImage, setUserImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const user = localStorage.getItem('user');
-    if (user) {
-      try {
-        const userData = JSON.parse(user);
-        setUserImage(userData.profile_image_url || null);
-      } catch {
-        setUserImage(null);
+ useEffect(() => {
+    fetchProfileImage();
+  }, [location.pathname]);
+
+  const fetchProfileImage = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user-profile/me/full`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const profileImage = response.data.data?.profileImage;
+      if (profileImage) {
+        setUserImage(profileImage);
+      }
+    } catch (err) {
+      // Fallback to localStorage if API fails
+      const user = localStorage.getItem('user');
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          setUserImage(userData.profile_image_url || null);
+        } catch {
+          setUserImage(null);
+        }
       }
     }
-  }, []);
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
