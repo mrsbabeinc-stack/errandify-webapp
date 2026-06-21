@@ -257,7 +257,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
         <div className="space-y-3">
           {pendingBids.map(bid => (
             <div key={bid.id} className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="flex items-start justify-between mb-2">
+              <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3 flex-1">
                   {bid.doerAvatar && (
                     <img
@@ -266,14 +266,34 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
                       className="w-8 h-8 rounded-full"
                     />
                   )}
-                  <div>
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-600 font-medium">Alias:</p>
                     <p className="font-semibold text-gray-900">{bid.doerName}</p>
-                    <p className="text-xs text-gray-500">
-                      Bid placed {bid.createdAt ? new Date(bid.createdAt).toLocaleDateString() : 'Recently'}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs text-gray-500">
+                        Bid placed {bid.createdAt ? new Date(bid.createdAt).toLocaleDateString() : 'Recently'}
+                      </p>
+                      {doerConfidence[bid.doerId]?.avg_rating && (
+                        <span className="text-xs text-yellow-600 font-semibold">
+                          ⭐ {doerConfidence[bid.doerId].avg_rating.toFixed(1)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <p className="font-bold text-errandify-orange text-lg">${bid.amount}</p>
+                <div className="flex flex-col items-end gap-2">
+                  <p className="font-bold text-errandify-orange text-lg">${bid.amount}</p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // TODO: Add to favorites
+                    }}
+                    className="text-xl hover:scale-110 transition-transform"
+                    title="Add to favorites"
+                  >
+                    🤍
+                  </button>
+                </div>
               </div>
 
               {bid.note && (
