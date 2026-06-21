@@ -78,6 +78,7 @@ export default function MyKampungPage() {
   const [newsItems, setNewsItems] = useState<any[]>([]);
   const [newsTypeFilter, setNewsTypeFilter] = useState<'all' | 'community' | 'singapore' | 'errandify'>('all');
   const [newsCategoryFilter, setNewsCategoryFilter] = useState<string>('all');
+  const [selectedNewsItem, setSelectedNewsItem] = useState<any>(null);
   const [newsSearchQuery, setNewsSearchQuery] = useState('');
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -1091,7 +1092,11 @@ export default function MyKampungPage() {
                 };
 
                 return (
-                  <div key={item.id} className={`rounded-lg border-2 p-3 ${typeColors[item.type] || 'bg-gray-50 border-gray-200'}`}>
+                  <div
+                    key={item.id}
+                    className={`rounded-lg border-2 p-3 cursor-pointer hover:shadow-lg transition ${typeColors[item.type] || 'bg-gray-50 border-gray-200'}`}
+                    onClick={() => setSelectedNewsItem(item)}
+                  >
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -1456,6 +1461,108 @@ export default function MyKampungPage() {
               <button className="px-3 py-1 bg-errandify-orange text-white rounded text-xs font-semibold hover:bg-opacity-90">
                 🌟 Nominate
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* NEWS DETAIL MODAL */}
+        {selectedNewsItem && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white rounded-lg max-w-2xl w-full my-8">
+              <div className="p-4 max-h-[80vh] overflow-y-auto">
+                {/* Close button */}
+                <button
+                  onClick={() => setSelectedNewsItem(null)}
+                  className="float-right text-gray-500 hover:text-gray-700 font-bold text-xl"
+                >
+                  ✕
+                </button>
+
+                {/* Header */}
+                <div className="mb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">
+                      {{
+                        community: '🏘️',
+                        singapore: '🇸🇬',
+                        errandify: '🚀',
+                      }[selectedNewsItem.type] || '📰'}
+                    </span>
+                    <span className="text-xs font-semibold text-gray-600">
+                      {selectedNewsItem.type === 'community'
+                        ? 'Community'
+                        : selectedNewsItem.type === 'singapore'
+                        ? 'Singapore'
+                        : 'Errandify'}
+                    </span>
+                    {selectedNewsItem.category && (
+                      <span className="text-xs bg-blue-100 px-2 py-0.5 rounded text-blue-700 font-semibold">
+                        {selectedNewsItem.category}
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-800 mb-2">{selectedNewsItem.title}</h2>
+                  <div className="flex flex-wrap gap-2 text-xs text-gray-600 mb-3">
+                    {selectedNewsItem.source && <span className="bg-gray-100 px-2 py-0.5 rounded">📌 {selectedNewsItem.source}</span>}
+                    {selectedNewsItem.location && <span className="bg-gray-100 px-2 py-0.5 rounded">📍 {selectedNewsItem.location}</span>}
+                    {selectedNewsItem.created_at && (
+                      <span className="bg-gray-100 px-2 py-0.5 rounded">
+                        📅 {new Date(selectedNewsItem.created_at).toLocaleDateString('en-SG', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}{' '}
+                        {new Date(selectedNewsItem.created_at).toLocaleTimeString('en-SG', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true,
+                        })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Image */}
+                {selectedNewsItem.image && (
+                  <div className="mb-4 rounded overflow-hidden h-48 bg-gray-200">
+                    <img
+                      src={selectedNewsItem.image}
+                      alt={selectedNewsItem.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Content */}
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap mb-4">{selectedNewsItem.content}</p>
+
+                {/* External Link */}
+                {selectedNewsItem.url && (
+                  <div className="bg-errandify-orange bg-opacity-10 p-3 rounded border border-errandify-orange rounded">
+                    <p className="text-xs text-gray-600 mb-2">Source: {selectedNewsItem.source}</p>
+                    <a
+                      href={selectedNewsItem.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-errandify-orange font-semibold hover:underline text-sm"
+                    >
+                      🔗 Read original article
+                    </a>
+                  </div>
+                )}
+
+                {/* Close button */}
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={() => setSelectedNewsItem(null)}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded font-semibold hover:bg-gray-300 text-sm"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
