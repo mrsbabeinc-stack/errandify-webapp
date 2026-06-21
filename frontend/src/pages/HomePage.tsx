@@ -143,29 +143,29 @@ export default function HomePage({ userRole }: HomePageProps) {
         </div>
 
         {/* Quick Categories Section - Grouped with Section Headers */}
-        <div className="bg-white rounded-lg p-4 mb-4 border border-gray-200">
-          <h2 className="font-bold text-errandify-brown mb-4">
+        <div className="bg-white rounded-lg p-3 mb-4 border border-gray-200">
+          <h2 className="font-bold text-errandify-brown mb-3 text-sm">
             {userRole === 'asker' ? '🎯 What do you need help with?' : '🤝 How can you help your kampung today?'}
           </h2>
 
-          <div className="space-y-4">
+          <div className="space-y-2">
             {Object.entries(groupedCategories).map(([groupName, cats]) => (
               <div key={groupName}>
                 {/* Group Section Header */}
-                <h3 className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-2 pl-1">
+                <h3 className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1 pl-1">
                   {groupName}
                 </h3>
 
                 {/* Group Categories Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                   {cats.map((category) => (
                     <div key={category.id} className="group relative">
                       <button
                         onClick={() => handleCategoryClick(category.id)}
-                        className={`w-full px-3 py-2 rounded-lg text-xs font-medium transition-all hover:shadow-md bg-gradient-to-r ${category.color}`}
+                        className={`w-full px-2 py-1.5 rounded-lg text-xs font-medium transition-all hover:shadow-md bg-gradient-to-r ${category.color}`}
                       >
-                        <div className="text-lg mb-0.5">{category.icon}</div>
-                        <div className="line-clamp-2">{category.name}</div>
+                        <div className="text-base mb-0.5">{category.icon}</div>
+                        <div className="line-clamp-2 text-xs">{category.name}</div>
                       </button>
 
                       {/* Tooltip */}
@@ -181,7 +181,7 @@ export default function HomePage({ userRole }: HomePageProps) {
             ))}
           </div>
 
-          <p className="text-xs text-gray-500 mt-4">
+          <p className="text-xs text-gray-500 mt-2">
             {userRole === 'asker'
               ? '✨ Hover to learn more • Click to post your errand'
               : '✨ Hover to learn more • Click to help your neighbours'}
