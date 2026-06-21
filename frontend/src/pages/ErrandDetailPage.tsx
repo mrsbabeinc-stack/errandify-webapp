@@ -333,7 +333,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </div>
             )}
 
-            {/* Asker Info - Only show name (contact hidden until accepted) */}
+            {/* Asker Info - Only show alias (contact hidden until accepted) */}
             {errand.asker && (
               <div className="border-t border-gray-200 pt-4">
                 <h2 className="font-semibold text-errandify-brown mb-2 text-base">
@@ -342,9 +342,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 <div className="bg-gray-50 rounded-lg p-3 space-y-1">
                   <div>
                     <p className="text-xs text-gray-600 font-semibold mb-0.5">
-                      Name
+                      Alias
                     </p>
-                    <p className="text-sm text-gray-700">{errand.asker.name}</p>
+                    <p className="text-sm text-gray-700">{errand.asker.display_name || 'Anonymous'}</p>
                   </div>
                   <div className="text-xs text-gray-500 italic mt-2">
                     Contact info shown only after bid is accepted
