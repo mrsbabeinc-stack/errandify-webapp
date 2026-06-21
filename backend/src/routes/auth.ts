@@ -20,6 +20,15 @@ function generateReferralCode(): string {
   return 'REF-' + crypto.randomBytes(3).toString('hex').toUpperCase();
 }
 
+// Helper: Generate User ID (SG-[4-RANDOM]-[LAST-4-OF-NRIC])
+function generateUserId(nric: string): string {
+  // Get last 4 characters of NRIC
+  const last4 = nric.slice(-4).toUpperCase();
+  // Generate 4 random alphanumeric characters
+  const random4 = crypto.randomBytes(4).toString('hex').substring(0, 4).toUpperCase();
+  return `SG-${random4}-${last4}`;
+}
+
 // Helper: Generate 6-digit OTP
 function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -78,16 +87,18 @@ router.post('/signup', async (req: Request, res: Response) => {
 
     // Insert new user with SingPass verification
     const referralCode = generateReferralCode();
+    const userId = generateUserId(nric);
     const referredBy = ref || null; // Track who referred this user
 
     const result = await db.query(
       `INSERT INTO users (
-        nric_hash, display_name, email, mobile,
+        user_id, nric_hash, display_name, email, mobile,
         font_size_pref, language_pref, role, kyc_status, referral_code, referred_by,
         screening_completed, screening_completed_date
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
-      RETURNING id, display_name, email, mobile, role, criminal_conviction`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+      RETURNING id, user_id, display_name, email, mobile, role, criminal_conviction`,
       [
+        userId,
         hashNric(nric),
         displayName,
         email,
@@ -118,6 +129,7 @@ router.post('/signup', async (req: Request, res: Response) => {
         accessToken: token,
         user: {
           id: user.id,
+          userId: user.user_id,
           displayName: user.display_name,
           email: user.email,
           phone: user.mobile,
