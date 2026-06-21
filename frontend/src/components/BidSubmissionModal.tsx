@@ -118,11 +118,6 @@ export default function BidSubmissionModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
               required
             />
-            {taskBudget && (
-              <p className="text-xs text-gray-500 mt-1">
-                Budget: ${taskBudget} {parseInt(bidAmount) > taskBudget && '(above budget)'}
-              </p>
-            )}
           </div>
 
           <div>
