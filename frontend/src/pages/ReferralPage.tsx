@@ -136,18 +136,18 @@ export default function ReferralPage() {
         <div className="bg-white rounded-lg p-2.5 mb-2 shadow-sm border border-amber-200 text-center">
           <p className="text-xs font-semibold text-errandify-brown mb-1.5">📱 Share This Code</p>
           <canvas ref={canvasRef} className="border border-amber-300 rounded mx-auto" />
-          <div className="grid grid-cols-2 gap-1 mt-1.5">
-            <button
-              onClick={handleDownloadQR}
-              className="bg-errandify-brown text-white px-2 py-1.5 rounded font-semibold text-xs hover:shadow-md transition"
-            >
-              Save QR
-            </button>
+          <div className="space-y-1 mt-1.5">
             <button
               onClick={() => setShowShareModal(true)}
-              className="bg-errandify-orange text-white px-2 py-1.5 rounded font-semibold text-xs hover:shadow-md transition"
+              className="w-full bg-gradient-to-r from-errandify-orange to-orange-500 text-white px-3 py-2.5 rounded-lg font-bold text-sm hover:shadow-lg hover:from-orange-500 hover:to-orange-600 transition-all transform hover:scale-105 animate-pulse"
             >
-              📤 Share
+              🚀 SHARE & EARN 💸
+            </button>
+            <button
+              onClick={handleDownloadQR}
+              className="w-full bg-errandify-brown text-white px-2 py-1.5 rounded font-semibold text-xs hover:shadow-md transition"
+            >
+              Save QR Code
             </button>
           </div>
         </div>

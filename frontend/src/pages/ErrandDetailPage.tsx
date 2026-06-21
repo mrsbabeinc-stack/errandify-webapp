@@ -293,10 +293,10 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 </button>
                 <button
                   onClick={() => setShowShareModal(true)}
-                  className="text-xs text-errandify-orange hover:text-orange-600 font-semibold transition"
+                  className="px-2.5 py-1 bg-gradient-to-r from-errandify-orange to-orange-500 text-white text-xs font-bold rounded hover:shadow-md transition transform hover:scale-105 animate-pulse"
                   title="Share this errand"
                 >
-                  📤 Share
+                  🚀 SHARE & EARN
                 </button>
               </div>
             </div>
