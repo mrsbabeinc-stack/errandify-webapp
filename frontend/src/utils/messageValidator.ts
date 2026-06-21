@@ -71,6 +71,15 @@ export const validateMessage = (content: string): ValidationResult => {
     return result;
   }
 
+  // SPECIAL CHECK: "sex" + "party" = block (sex party detection)
+  const hasSex = /sex/i.test(content);
+  const hasParty = /party|gathering|event|meet|group/i.test(content);
+  if (hasSex && hasParty) {
+    result.errors.push('❌ Sexual content not allowed. Keep messages task-focused.');
+    result.isValid = false;
+    return result;
+  }
+
   // Check for contact information
   if (CONTACT_PATTERNS.email.test(content)) {
     result.errors.push('❌ Cannot share email addresses. Use Errandify messaging instead.');
