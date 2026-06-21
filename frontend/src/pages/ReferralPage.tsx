@@ -283,7 +283,7 @@ export default function ReferralPage() {
 
               {/* Share Message */}
               <div className="bg-green-50 rounded-lg p-3 mb-3">
-                <p className="text-xs text-gray-600 mb-2 font-semibold">💬 Share Message:</p>
+                <p className="text-xs text-gray-600 mb-2 font-semibold">💬 Share Message (with link):</p>
                 <textarea
                   readOnly
                   value={`🎯 Join Me on Errandify!
@@ -293,8 +293,7 @@ Hi! I found this amazing app called Errandify where we can help each other with 
 💰 Join with my referral code: ${referralData.code}
 🎁 We both earn 50 Errandify Points when you complete your first task!
 
-📲 Download Errandify & sign up here:
-${referralData.link}
+🔗 ${referralData.link}
 
 Let's help each other in our community! 🤝`}
                   className="w-full px-2 py-1.5 bg-white border border-green-200 rounded text-xs resize-none h-28 font-sm"
@@ -302,7 +301,7 @@ Let's help each other in our community! 🤝`}
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(
-                      `🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n📲 Download Errandify & sign up here:\n${referralData.link}\n\nLet's help each other in our community! 🤝`
+                      `🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n🔗 ${referralData.link}\n\nLet's help each other in our community! 🤝`
                     );
                     setCopied('code');
                     setTimeout(() => setCopied(null), 2000);
@@ -316,7 +315,7 @@ Let's help each other in our community! 🤝`}
               {/* Share Buttons */}
               <div className="grid grid-cols-2 gap-2 mb-4">
                 <a
-                  href={`https://wa.me/?text=${encodeURIComponent(`🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n📲 Download Errandify & sign up here:\n${referralData.link}\n\nLet's help each other in our community! 🤝`)}`}
+                  href={`https://wa.me/?text=${encodeURIComponent(`🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n🔗 ${referralData.link}\n\nLet's help each other in our community! 🤝`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-3 py-2 bg-green-500 text-white text-xs font-semibold rounded hover:bg-green-600 transition text-center"
@@ -326,7 +325,7 @@ Let's help each other in our community! 🤝`}
                 <button
                   onClick={() => {
                     const subject = `Join me on Errandify!`;
-                    const body = `🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n📲 Download Errandify & sign up here:\n${referralData.link}\n\nLet's help each other in our community! 🤝`;
+                    const body = `🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n🔗 ${referralData.link}\n\nLet's help each other in our community! 🤝`;
                     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                   }}
                   className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition"
