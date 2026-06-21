@@ -27,6 +27,7 @@ import TestPage from './pages/TestPage';
 import MyOfferPage from './pages/MyOfferPage';
 import TaskCompleteEvidencePage from './pages/TaskCompleteEvidencePage';
 import ReviewCompletionPage from './pages/ReviewCompletionPage';
+import MyKampungPage from './pages/MyKampungPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -196,6 +197,7 @@ export default function App() {
           <Route path="/errand/:id" element={<ErrandDetailPage userRole={userRole} />} />
           <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole} />} />
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
+          <Route path="/my-kampung" element={<MyKampungPage />} />
           <Route path="/profile" element={<ProfilePage userRole={userRole} onLogout={handleLogout} />} />
           <Route path="/review/:jobId" element={<ReviewPage />} />
         </Route>
