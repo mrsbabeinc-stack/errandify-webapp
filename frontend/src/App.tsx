@@ -14,7 +14,6 @@ import DoerBrowsePage from './pages/DoerBrowsePage';
 import ErrandsPage from './pages/ErrandsPage';
 import ErrandDetailPage from './pages/ErrandDetailPage';
 import ChatPage from './pages/ChatPage';
-import MyVillagePage from './pages/MyVillagePage';
 import ProfilePage from './pages/ProfilePage';
 import ReviewPage from './pages/ReviewPage';
 import MyProfilePage from './pages/MyProfilePage';
@@ -200,7 +199,6 @@ export default function App() {
           <Route path="/errands" element={<ErrandsPage userRole={userRole} />} />
           <Route path="/errand/:id" element={<ErrandDetailPage />} />
           <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole} />} />
-          <Route path="/village" element={<MyVillagePage userRole={userRole} />} />
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
           <Route path="/profile" element={<ProfilePage userRole={userRole} onLogout={handleLogout} />} />
           <Route path="/review/:jobId" element={<ReviewPage />} />
