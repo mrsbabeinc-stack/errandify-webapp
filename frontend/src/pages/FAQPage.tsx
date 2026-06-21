@@ -95,12 +95,6 @@ export default function FAQPage() {
       answer: 'You set your own rates. Earnings depend on category, complexity, time, and location. Most doers earn SGD 20-100+ per errand. Top-rated doers get priority and can charge premium rates.',
     },
     {
-      id: 'd3',
-      category: 'doer',
-      question: 'What is Errandify Points (EP)?',
-      answer: 'EP is our rewards currency. You earn EP with every completed errand. Accumulate EP to redeem for cash, discounts on services, or donated to charities. Referrals also earn bonus EP.',
-    },
-    {
       id: 'd4',
       category: 'doer',
       question: 'How are doers rated and verified?',
