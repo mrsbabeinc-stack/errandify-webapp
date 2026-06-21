@@ -126,7 +126,7 @@ export default function TaskChatbox({
             >
               📋 View Errand Details
             </a>
-            <p className="text-xs text-orange-100 mt-1">✓ AI-checked for safety</p>
+            <p className="text-xs text-orange-100 mt-1">🛡️ AI safety scanning active</p>
           </div>
           <button
             onClick={onClose}
@@ -260,8 +260,8 @@ export default function TaskChatbox({
             className="hidden"
           />
 
-          <p className="text-xs text-gray-500">
-            ✓ Messages reviewed by AI for safety
+          <p className="text-xs text-gray-600">
+            🛡️ All messages scanned for safety. Violations reported to admin.
           </p>
         </form>
       </div>
