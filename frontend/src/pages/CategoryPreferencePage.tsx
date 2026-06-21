@@ -95,79 +95,67 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
   };
 
   return (
-    <div className="min-h-screen bg-errandify-bg pb-32">
-      <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-errandify-bg px-2 py-2 pb-24">
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-errandify-brown mb-2">
-            What Matters To You?
-          </h1>
-          <p className="text-gray-600">
-            Select the categories you're interested in. We'll find the right neighbours to help!
-          </p>
+        <div className="mb-2">
+          <h1 className="text-lg font-bold text-errandify-brown">🎯 What Matters?</h1>
+          <p className="text-xs text-gray-600">Pick categories we'll find helpers for</p>
         </div>
 
-        {/* Hana Bubble */}
-        <div className="bg-orange-50 border-l-4 border-errandify-orange-400 p-4 mb-8 rounded">
-          <p className="text-sm text-gray-700">
-            <span className="text-lg mr-2">🌸</span>
-            Pick what matters to you — I'll find the right neighbours to help! 🌸
-          </p>
+        {/* Hana Tip */}
+        <div className="bg-orange-50 border-l-4 border-errandify-orange p-2 mb-2 rounded text-xs text-gray-700">
+          🌸 Pick what matters — I'll find the right neighbours!
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm mb-6">
+          <div className="p-2 bg-red-50 border border-red-200 text-red-700 rounded text-xs mb-2">
             {error}
           </div>
         )}
 
         {/* Category Grid */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-2 mb-2">
           {CATEGORIES.map((category) => (
             <button
               key={category.id}
               onClick={() => toggleCategory(category.id)}
-              className={`p-6 rounded-lg border-2 transition-all text-center ${
+              className={`p-3 rounded border-2 transition-all text-center text-xs ${
                 selectedCategories.includes(category.id)
                   ? 'bg-orange-50 border-errandify-orange'
                   : 'bg-white border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="text-4xl mb-3">{category.emoji}</div>
-              <div className="font-semibold text-errandify-brown text-sm">
-                {category.name}
-              </div>
+              <div className="text-2xl mb-1">{category.emoji}</div>
+              <div className="font-bold text-errandify-brown">{category.name}</div>
             </button>
           ))}
         </div>
 
         {/* Selection Count */}
-        <div className="text-center mb-6">
-          <p className="text-sm text-gray-600">
-            {selectedCategories.length} selected
-          </p>
-        </div>
+        <p className="text-center text-xs text-gray-600 mb-2">
+          {selectedCategories.length} selected
+        </p>
 
         {/* Action Buttons */}
-        <div className="flex gap-4">
+        <div className="flex gap-2">
           <button
             onClick={() => navigate(-1)}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded text-xs font-bold text-gray-700 hover:bg-gray-50"
           >
-            Skip for Now
+            Skip
           </button>
           <button
             onClick={handleSave}
             disabled={loading || selectedCategories.length === 0}
-            className="flex-1 px-4 py-3 bg-errandify-orange text-white rounded-lg font-semibold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-3 py-2 bg-errandify-orange text-white rounded text-xs font-bold hover:bg-opacity-90 disabled:opacity-50"
           >
-            {loading ? 'Saving...' : 'Continue'}
+            {loading ? '...' : 'Continue'}
           </button>
         </div>
       </div>
 
-      {/* Hana Assistant */}
       <HanaAssistant />
     </div>
   );
