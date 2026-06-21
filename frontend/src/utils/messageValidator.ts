@@ -30,7 +30,7 @@ const INAPPROPRIATE_PATTERNS = {
   harassment: /stupid|idiot|moron|dumb|fool|retard|loser|pathetic/gi,
 
   // SEXUAL - Explicit terms only (avoid innocent words like "massage" alone)
-  sexualContent: /porn|xxx|cock|pussy|dick|vagina|horny|aroused|masturbat|cum|prostitut|escort|onlyfans|sleep with|spend the night|intimate|private time|pay for sex|call girl|sex worker|adult entertainer|outcall|incall|orgy|gangbang|threesome|dildo|vibrator|orgasm|blow job|blowjob|hand job|handjob|foreplay|penetrat|bondage|bdsm|fetish|kink|nudes|sext|camgirl|stripper|lap dance|body rub|happy ending|ending service|special service|extra service|vip service|release|tantric|nuru|yoni|sensual|full service|gfe|companionship|mistress|dominatrix|domina|sub|submissive|dom|master|slave|whip|spank|dungeon/gi,
+  sexualContent: /porn|xxx|cock|pussy|dick|vagina|horny|aroused|masturbat|cum|sperm|swallow|prostitut|escort|onlyfans|sleep with|spend the night|intimate|private time|pay for sex|call girl|sex worker|adult entertainer|outcall|incall|orgy|gangbang|threesome|dildo|vibrator|orgasm|blow job|blowjob|hand job|handjob|foreplay|penetrat|bondage|bdsm|fetish|kink|nudes|sext|camgirl|stripper|lap dance|body rub|happy ending|ending service|special service|extra service|vip service|release|tantric|nuru|yoni|sensual|full service|gfe|companionship|mistress|dominatrix|domina|sub|submissive|dom|master|slave|whip|spank|dungeon|facial|creampie|squirt|ejacul|rimjob|deepthroat/gi,
 
   // DRUGS - Specific drug names (not words like "high" which has context)
   drugs: /cocaine|heroin|meth|weed|cannabis|marijuana|acid|lsd|mdma|ecstasy|crack|fentanyl|opium|morphine|codeine|tramadol|oxycodon|percocet|vicodin|xanax|valium|ketamine|pcp|shrooms|psilocybin|hash|hashish|thc|cannabinoid|dealer|supplier|inject|snort|shoot|stoned|trip/gi,
@@ -109,7 +109,7 @@ export const validateMessage = (content: string): ValidationResult => {
   const cleanedPhrase = lowerContent.replace(/[0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]+/g, ' ');
 
   // Remove LOL, SUP, WYD - too many false positives for casual greetings
-  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|one night stand|casual sex|hookup|booty call|fwb|friends with benefits|no strings attached|nsa|quick fix|quick meet|weekend getaway|getaway|fun time|good time|party time|lets party|lets have fun|dtf|bwc|bbc|gwm|ddf|pd|pw|bb|blow.*someone|blow me|blow job|lick.*me|lick.*someone|eat.*me|eat.*someone|suck.*me|suck.*someone/i.test(cleanedPhrase);
+  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|one night stand|casual sex|hookup|booty call|fwb|friends with benefits|no strings attached|nsa|quick fix|quick meet|weekend getaway|getaway|fun time|good time|party time|lets party|lets have fun|dtf|bwc|bbc|gwm|ddf|pd|pw|bb|blow.*someone|blow me|blow job|lick.*me|lick.*someone|eat.*me|eat.*someone|suck.*me|suck.*someone|swallow.*sperm|swallow.*cum|facial|creampie/i.test(cleanedPhrase);
 
   // Special check: LOL only in context with other suspicious phrases
   const hasLOL = /\blol\b/i.test(cleanedPhrase);
