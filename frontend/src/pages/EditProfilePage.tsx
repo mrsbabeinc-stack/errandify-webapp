@@ -45,7 +45,7 @@ export default function EditProfilePage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user-profile/me/full`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
