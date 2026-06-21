@@ -139,6 +139,24 @@ export default function ErrandDetailPage() {
     }
   };
 
+  const handleStartJob = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${id}/start`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert('✓ Job started! Get to work.');
+      fetchErrandDetail();
+    } catch (error: any) {
+      console.error('Failed to start job:', error);
+      alert(error.response?.data?.error || 'Failed to start job. Please try again.');
+    }
+  };
+
   const handleCompleteErrand = async () => {
     if (!window.confirm('Mark this errand as completed?')) {
       return;
@@ -352,12 +370,26 @@ export default function ErrandDetailPage() {
               </div>
             ) : errand.status === 'confirmed' && currentUser && currentUser.role === 'doer' ? (
               <button
-                onClick={handleCompleteErrand}
+                onClick={handleStartJob}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors text-base mt-2"
+              >
+                ▶️ Start Job
+              </button>
+            ) : errand.status === 'in_progress' && currentUser && currentUser.role === 'doer' ? (
+              <button
+                onClick={() => navigate(`/task/${id}/complete`)}
                 className="w-full bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
               >
                 ✓ Mark as Completed
               </button>
-            ) : errand.status === 'completed' ? (
+            ) : errand.status === 'completed_unconfirmed' && currentUser && currentUser.id === errand?.askerId ? (
+              <button
+                onClick={() => navigate(`/task/${id}/review-completion`)}
+                className="w-full bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition-colors text-base mt-2"
+              >
+                👀 Review Completion
+              </button>
+            ) : errand.status === 'completed_confirmed' || errand.status === 'completed' ? (
               <div className="w-full bg-green-50 border border-green-200 rounded-lg p-3 mt-2 text-center">
                 <p className="text-green-800 font-semibold">✓ Completed</p>
                 <p className="text-xs text-green-600">Awaiting asker rating</p>
