@@ -15,6 +15,7 @@ export default function ReferralPage() {
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     fetchReferralData();
@@ -135,12 +136,20 @@ export default function ReferralPage() {
         <div className="bg-white rounded-lg p-2.5 mb-2 shadow-sm border border-amber-200 text-center">
           <p className="text-xs font-semibold text-errandify-brown mb-1.5">📱 Share This Code</p>
           <canvas ref={canvasRef} className="border border-amber-300 rounded mx-auto" />
-          <button
-            onClick={handleDownloadQR}
-            className="w-full mt-1.5 bg-errandify-brown text-white px-2 py-1.5 rounded font-semibold text-xs hover:shadow-md transition"
-          >
-            Save QR Code
-          </button>
+          <div className="grid grid-cols-2 gap-1 mt-1.5">
+            <button
+              onClick={handleDownloadQR}
+              className="bg-errandify-brown text-white px-2 py-1.5 rounded font-semibold text-xs hover:shadow-md transition"
+            >
+              Save QR
+            </button>
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="bg-errandify-orange text-white px-2 py-1.5 rounded font-semibold text-xs hover:shadow-md transition"
+            >
+              📤 Share
+            </button>
+          </div>
         </div>
 
         {/* Code & Link - Action Buttons */}
@@ -226,6 +235,115 @@ export default function ReferralPage() {
             </p>
           </div>
         </div>
+
+        {/* Share Modal */}
+        {showShareModal && referralData && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
+              <h2 className="text-2xl font-bold text-errandify-brown mb-2">
+                💌 Invite & Earn Together!
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Share your referral code. You both earn 50 EP when they complete their first task! 🎁
+              </p>
+
+              {/* QR Code */}
+              <div className="bg-gray-100 rounded-lg p-4 mb-4 text-center">
+                <p className="text-xs text-gray-600 mb-2 font-semibold">📱 Scan to Join</p>
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(referralData.link)}`}
+                  alt="Referral QR Code"
+                  className="w-32 h-32 mx-auto"
+                />
+                <p className="text-xs text-gray-500 mt-2">Opens signup with your referral code</p>
+              </div>
+
+              {/* Share Link */}
+              <div className="bg-orange-50 rounded-lg p-3 mb-3">
+                <p className="text-xs text-gray-600 mb-2 font-semibold">🔗 Share Link:</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={referralData.link}
+                    className="flex-1 px-2 py-1.5 bg-white border border-orange-200 rounded text-xs font-mono"
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(referralData.link);
+                      setCopied('link');
+                      setTimeout(() => setCopied(null), 2000);
+                    }}
+                    className="px-2 py-1.5 bg-errandify-orange text-white text-xs font-semibold rounded hover:bg-opacity-90 transition"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              {/* Share Message */}
+              <div className="bg-green-50 rounded-lg p-3 mb-3">
+                <p className="text-xs text-gray-600 mb-2 font-semibold">💬 Share Message:</p>
+                <textarea
+                  readOnly
+                  value={`🎯 Join Me on Errandify!
+
+Hi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!
+
+💰 Join with my referral code: ${referralData.code}
+🎁 We both earn 50 Errandify Points when you complete your first task!
+
+📲 Download Errandify & sign up here:
+${referralData.link}
+
+Let's help each other in our community! 🤝`}
+                  className="w-full px-2 py-1.5 bg-white border border-green-200 rounded text-xs resize-none h-28 font-sm"
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      `🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n📲 Download Errandify & sign up here:\n${referralData.link}\n\nLet's help each other in our community! 🤝`
+                    );
+                    setCopied('code');
+                    setTimeout(() => setCopied(null), 2000);
+                  }}
+                  className="mt-2 w-full px-2 py-1.5 bg-green-500 text-white text-xs font-semibold rounded hover:bg-green-600 transition"
+                >
+                  Copy Message
+                </button>
+              </div>
+
+              {/* Share Buttons */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(`🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n📲 Download Errandify & sign up here:\n${referralData.link}\n\nLet's help each other in our community! 🤝`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-2 bg-green-500 text-white text-xs font-semibold rounded hover:bg-green-600 transition text-center"
+                >
+                  WhatsApp
+                </a>
+                <button
+                  onClick={() => {
+                    const subject = `Join me on Errandify!`;
+                    const body = `🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n📲 Download Errandify & sign up here:\n${referralData.link}\n\nLet's help each other in our community! 🤝`;
+                    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                  }}
+                  className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition"
+                >
+                  Email
+                </button>
+              </div>
+
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="w-full px-3 py-2 border border-gray-300 text-gray-700 text-xs font-semibold rounded hover:bg-gray-50 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
