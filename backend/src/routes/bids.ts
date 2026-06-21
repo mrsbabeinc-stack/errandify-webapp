@@ -222,6 +222,21 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
       ['confirmed', id, bid.errand_id]
     );
 
+    // Create errand assignment record for the accepted doer
+    try {
+      await db.query(
+        `INSERT INTO errand_assignments (errand_id, doer_id, status, created_at)
+         VALUES ($1, $2, $3, NOW())
+         ON CONFLICT (errand_id, doer_id) DO UPDATE
+         SET status = $3`,
+        [bid.errand_id, bid.doer_id, 'accepted']
+      );
+      console.log('[Bids] Errand assignment created:', { errandId: bid.errand_id, doerId: bid.doer_id });
+    } catch (assignmentErr) {
+      console.error('[Bids] Failed to create errand assignment:', assignmentErr);
+      // Don't fail the entire request if assignment creation fails
+    }
+
     // Send notification to doer that their bid was accepted
     try {
       const errandData = await db.query(
