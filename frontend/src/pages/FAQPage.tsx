@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface FAQItem {
   id: string;
@@ -293,6 +294,7 @@ export default function FAQPage() {
           </div>
         </div>
       </div>
+      <HanaAssistant />
     </div>
   );
 }

@@ -35,7 +35,9 @@ const CATEGORIES: Category[] = [
 
 export default function CategoryPreferencePage({ userRole, onComplete }: CategoryPreferencePageProps) {
   const navigate = useNavigate();
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [activeRole, setActiveRole] = useState<'asker' | 'doer'>('doer');
+  const [doerPreferences, setDoerPreferences] = useState<string[]>([]);
+  const [askerNeeds, setAskerNeeds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -53,8 +55,11 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
         }
       );
 
-      if (response.data.data.categories) {
-        setSelectedCategories(response.data.data.categories);
+      if (response.data.data.doer_preferences) {
+        setDoerPreferences(response.data.data.doer_preferences);
+      }
+      if (response.data.data.asker_needs) {
+        setAskerNeeds(response.data.data.asker_needs);
       }
     } catch (err) {
       console.error('Failed to fetch user categories:', err);
@@ -62,15 +67,25 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
   };
 
   const toggleCategory = (categoryId: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((id) => id !== categoryId)
-        : [...prev, categoryId]
-    );
+    if (activeRole === 'doer') {
+      setDoerPreferences((prev) =>
+        prev.includes(categoryId)
+          ? prev.filter((id) => id !== categoryId)
+          : [...prev, categoryId]
+      );
+    } else {
+      setAskerNeeds((prev) =>
+        prev.includes(categoryId)
+          ? prev.filter((id) => id !== categoryId)
+          : [...prev, categoryId]
+      );
+    }
   };
 
+  const getCurrentSelected = () => activeRole === 'doer' ? doerPreferences : askerNeeds;
+
   const handleSave = async () => {
-    if (selectedCategories.length === 0) {
+    if (doerPreferences.length === 0 && askerNeeds.length === 0) {
       setError('Please select at least one category');
       return;
     }
@@ -81,8 +96,11 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
     try {
       const token = localStorage.getItem('token');
       await axios.patch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/categories`,
-        { categories: selectedCategories },
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/preferences`,
+        {
+          doer_preferences: doerPreferences,
+          asker_needs: askerNeeds,
+        },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -104,14 +122,44 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
     <div className="min-h-screen bg-errandify-bg px-2 py-2 pb-24">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <button onClick={() => navigate(-1)} className="text-lg text-gray-600 font-bold">‹</button>
           <h1 className="text-lg font-bold text-errandify-brown">🎯 What Matters?</h1>
-          <p className="text-xs text-gray-600">Pick categories we'll find helpers for</p>
+          <div className="w-6"></div>
         </div>
+
+        {/* Role Tabs */}
+        <div className="flex gap-2 mb-2 bg-white rounded-lg border border-gray-200">
+          <button
+            onClick={() => setActiveRole('doer')}
+            className={`flex-1 py-2 text-xs font-bold rounded transition ${
+              activeRole === 'doer'
+                ? 'bg-errandify-orange text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            💼 I Can Help
+          </button>
+          <button
+            onClick={() => setActiveRole('asker')}
+            className={`flex-1 py-2 text-xs font-bold rounded transition ${
+              activeRole === 'asker'
+                ? 'bg-errandify-orange text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            🙋 I Need Help
+          </button>
+        </div>
+
+        {/* Role-Specific Header */}
+        <p className="text-xs text-gray-600 mb-2">
+          {activeRole === 'doer' ? 'Services you can provide' : 'Services you need'}
+        </p>
 
         {/* Hana Tip */}
         <div className="bg-orange-50 border-l-4 border-errandify-orange p-2 mb-2 rounded text-xs text-gray-700">
-          🌸 Pick what matters — I'll find the right neighbours!
+          🌸 {activeRole === 'doer' ? "Tell us what you're good at!" : "Tell us what you need help with!"}
         </div>
 
         {/* Error Message */}
@@ -128,7 +176,7 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
               key={category.id}
               onClick={() => toggleCategory(category.id)}
               className={`p-2 rounded border-2 transition-all text-center text-xs ${
-                selectedCategories.includes(category.id)
+                getCurrentSelected().includes(category.id)
                   ? 'bg-orange-50 border-errandify-orange'
                   : 'bg-white border-gray-200 hover:border-gray-300'
               }`}
@@ -141,7 +189,7 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
 
         {/* Selection Count */}
         <p className="text-center text-xs text-gray-600 mb-2">
-          {selectedCategories.length} selected
+          {getCurrentSelected().length} selected ({doerPreferences.length + askerNeeds.length} total)
         </p>
 
         {/* Action Buttons */}
@@ -154,7 +202,7 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
           </button>
           <button
             onClick={handleSave}
-            disabled={loading || selectedCategories.length === 0}
+            disabled={loading || (doerPreferences.length === 0 && askerNeeds.length === 0)}
             className="flex-1 px-3 py-2 bg-errandify-orange text-white rounded text-xs font-bold hover:bg-opacity-90 disabled:opacity-50"
           >
             {loading ? '...' : 'Continue'}

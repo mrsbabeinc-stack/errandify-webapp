@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
+import HanaAssistant from '../components/HanaAssistant';
 
 export default function ErrandifyPointsPage() {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gray-50 p-4 pb-32">
       <div className="max-w-2xl mx-auto">
         <button onClick={() => navigate(-1)} className="mb-6 text-lg text-gray-600 font-bold">‹ Back</button>
         <h1 className="text-3xl font-bold text-errandify-brown mb-6">Errandify Points</h1>
@@ -21,6 +22,7 @@ export default function ErrandifyPointsPage() {
           <button className="w-full mt-6 bg-errandify-orange text-white py-2 rounded-lg font-bold">Redeem Points</button>
         </div>
       </div>
+      <HanaAssistant />
     </div>
   );
 }

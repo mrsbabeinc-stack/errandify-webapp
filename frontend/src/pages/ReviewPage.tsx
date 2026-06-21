@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface Job {
   id: number;
@@ -75,8 +76,11 @@ export default function ReviewPage() {
   if (!job) return <div className="p-6 text-center">Job not found</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 p-6 pb-32">
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-lg text-gray-600 font-bold mb-4">‹</button>
         {/* Success Message */}
         {!submitting && !loading && !error && (
           <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded">
@@ -193,6 +197,7 @@ export default function ReviewPage() {
           </div>
         </form>
       </div>
+      <HanaAssistant />
     </div>
   );
 }

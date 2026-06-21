@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface EditErrandPageProps {
   userRole: 'asker' | 'doer';
@@ -293,6 +294,7 @@ export default function EditErrandPage({ userRole }: EditErrandPageProps) {
           </form>
         </div>
       </div>
+      <HanaAssistant />
     </div>
   );
 }

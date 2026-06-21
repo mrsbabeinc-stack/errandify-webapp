@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface Badge {
   type: string;
@@ -119,7 +120,7 @@ export default function UserProfilePage() {
   const roleEmoji = profile.user.role === 'doer' ? '👷' : '📋';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 pb-32">
       {/* Header */}
       <div className="bg-gradient-to-r from-errandify-orange-600 to-indigo-600 text-white py-8">
         <div className="max-w-4xl mx-auto px-6">
@@ -321,6 +322,7 @@ export default function UserProfilePage() {
           </div>
         </div>
       </div>
+      <HanaAssistant />
     </div>
   );
 }

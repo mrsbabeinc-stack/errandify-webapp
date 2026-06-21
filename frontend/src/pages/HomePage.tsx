@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface HomePageProps {
   userRole: 'asker' | 'doer';
@@ -189,6 +190,7 @@ export default function HomePage({ userRole }: HomePageProps) {
         </div>
 
       </div>
+      <HanaAssistant />
     </div>
   );
 }

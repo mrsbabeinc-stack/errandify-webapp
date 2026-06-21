@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import HanaAssistant from '../components/HanaAssistant';
 
 interface Errand {
   id: number;
@@ -148,7 +149,7 @@ export default function SearchBrowsePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 py-8 px-6">
+    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 py-8 px-6 pb-32">
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <button onClick={() => navigate(-1)} className="mb-4 text-lg text-gray-600 font-bold">‹ Back</button>
@@ -364,6 +365,7 @@ export default function SearchBrowsePage() {
           </div>
         </div>
       </div>
+      <HanaAssistant />
     </div>
   );
 }
