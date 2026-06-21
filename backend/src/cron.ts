@@ -1,5 +1,6 @@
 import db from './db.js';
 import { sendDailyDigests, sendPaymentReminders } from './services/emailNotifications.js';
+import axios from 'axios';
 
 /**
  * Cron jobs for Errandify job execution flow
@@ -250,5 +251,211 @@ export function startCrons() {
 
   console.log(`[CRON] Daily digest scheduled for ${nextDigestTime.toISOString()}`);
 
+  // Event reminders - run every hour
+  setInterval(checkEventReminders7Days, 60 * 60 * 1000);
+  setInterval(checkEventReminders24Hours, 60 * 60 * 1000);
+  setInterval(checkEventReminders1Hour, 60 * 60 * 1000);
+  setInterval(checkEventRemindersDayOf, 60 * 60 * 1000);
+
   console.log('[CRON] All cron jobs started successfully');
+}
+
+/**
+ * Check for events 7 days away and send reminders
+ */
+export async function checkEventReminders7Days() {
+  try {
+    console.log('[CRON] Checking for events 7 days away...');
+
+    // Find events that are 7 days away (within 1-hour window)
+    const result = await db.query(
+      `SELECT e.id, e.title, e.date, e.time, e.location, e.event_link, e.agenda, e.preparation,
+              ea.user_id, u.email, u.display_name
+       FROM events e
+       JOIN event_attendees ea ON e.id = ea.event_id
+       JOIN users u ON ea.user_id = u.id
+       WHERE e.reminder_7days_sent = false
+       AND e.date = CURRENT_DATE + INTERVAL '7 days'
+       AND e.status = 'active'`
+    );
+
+    console.log(`[CRON] Found ${result.rows.length} attendees to remind (7 days)`);
+
+    for (const row of result.rows) {
+      try {
+        await axios.post(
+          `${process.env.API_URL || 'http://localhost:3000'}/api/email/send-event-reminder-7days`,
+          {
+            email: row.email,
+            eventTitle: row.title,
+            eventDate: row.date,
+            eventTime: row.time,
+            eventLocation: row.location,
+            eventLink: row.event_link,
+            agenda: row.agenda,
+            preparation: row.preparation,
+          },
+          { headers: { Authorization: `Bearer ${process.env.INTERNAL_API_TOKEN}` } }
+        );
+
+        // Mark reminder as sent
+        await db.query(
+          `UPDATE events SET reminder_7days_sent = true WHERE id = $1`,
+          [row.id]
+        );
+      } catch (error) {
+        console.error(`[CRON] Error sending 7-day reminder for event ${row.id}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error('[CRON] Event 7-day reminder check failed:', error);
+  }
+}
+
+/**
+ * Check for events 24 hours away and send reminders
+ */
+export async function checkEventReminders24Hours() {
+  try {
+    console.log('[CRON] Checking for events 24 hours away...');
+
+    const result = await db.query(
+      `SELECT e.id, e.title, e.date, e.time, e.location, e.event_link, e.agenda,
+              ea.user_id, u.email, u.display_name
+       FROM events e
+       JOIN event_attendees ea ON e.id = ea.event_id
+       JOIN users u ON ea.user_id = u.id
+       WHERE e.reminder_24h_sent = false
+       AND e.date = CURRENT_DATE + INTERVAL '1 day'
+       AND e.status = 'active'`
+    );
+
+    console.log(`[CRON] Found ${result.rows.length} attendees to remind (24 hours)`);
+
+    for (const row of result.rows) {
+      try {
+        await axios.post(
+          `${process.env.API_URL || 'http://localhost:3000'}/api/email/send-event-reminder-24hours`,
+          {
+            email: row.email,
+            eventTitle: row.title,
+            eventDate: row.date,
+            eventTime: row.time,
+            eventLocation: row.location,
+            eventLink: row.event_link,
+            agenda: row.agenda,
+          },
+          { headers: { Authorization: `Bearer ${process.env.INTERNAL_API_TOKEN}` } }
+        );
+
+        await db.query(
+          `UPDATE events SET reminder_24h_sent = true WHERE id = $1`,
+          [row.id]
+        );
+      } catch (error) {
+        console.error(`[CRON] Error sending 24h reminder for event ${row.id}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error('[CRON] Event 24h reminder check failed:', error);
+  }
+}
+
+/**
+ * Check for events in 1 hour and send reminders
+ */
+export async function checkEventReminders1Hour() {
+  try {
+    console.log('[CRON] Checking for events in 1 hour...');
+
+    // For same-day events, check within 1 hour window
+    const result = await db.query(
+      `SELECT e.id, e.title, e.time, e.location, e.event_link,
+              ea.user_id, u.email, u.display_name
+       FROM events e
+       JOIN event_attendees ea ON e.id = ea.event_id
+       JOIN users u ON ea.user_id = u.id
+       WHERE e.reminder_1h_sent = false
+       AND e.date = CURRENT_DATE
+       AND e.time::time BETWEEN NOW()::time + INTERVAL '55 minutes' AND NOW()::time + INTERVAL '1 hour 5 minutes'
+       AND e.status = 'active'`
+    );
+
+    console.log(`[CRON] Found ${result.rows.length} attendees to remind (1 hour)`);
+
+    for (const row of result.rows) {
+      try {
+        await axios.post(
+          `${process.env.API_URL || 'http://localhost:3000'}/api/email/send-event-reminder-1hour`,
+          {
+            email: row.email,
+            eventTitle: row.title,
+            eventTime: row.time,
+            eventLocation: row.location,
+            eventLink: row.event_link,
+          },
+          { headers: { Authorization: `Bearer ${process.env.INTERNAL_API_TOKEN}` } }
+        );
+
+        await db.query(
+          `UPDATE events SET reminder_1h_sent = true WHERE id = $1`,
+          [row.id]
+        );
+      } catch (error) {
+        console.error(`[CRON] Error sending 1h reminder for event ${row.id}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error('[CRON] Event 1h reminder check failed:', error);
+  }
+}
+
+/**
+ * Check for events on the day and send morning reminders
+ */
+export async function checkEventRemindersDayOf() {
+  try {
+    console.log('[CRON] Checking for events happening today...');
+
+    const result = await db.query(
+      `SELECT e.id, e.title, e.date, e.time, e.location, e.event_link, e.agenda,
+              ea.user_id, u.email, u.display_name
+       FROM events e
+       JOIN event_attendees ea ON e.id = ea.event_id
+       JOIN users u ON ea.user_id = u.id
+       WHERE e.reminder_dayof_sent = false
+       AND e.date = CURRENT_DATE
+       AND EXTRACT(HOUR FROM NOW()) BETWEEN 8 AND 9
+       AND e.status = 'active'`
+    );
+
+    console.log(`[CRON] Found ${result.rows.length} attendees to remind (day-of)`);
+
+    for (const row of result.rows) {
+      try {
+        await axios.post(
+          `${process.env.API_URL || 'http://localhost:3000'}/api/email/send-event-reminder-dayof`,
+          {
+            email: row.email,
+            eventTitle: row.title,
+            eventDate: row.date,
+            eventTime: row.time,
+            eventLocation: row.location,
+            eventLink: row.event_link,
+            agenda: row.agenda,
+          },
+          { headers: { Authorization: `Bearer ${process.env.INTERNAL_API_TOKEN}` } }
+        );
+
+        await db.query(
+          `UPDATE events SET reminder_dayof_sent = true WHERE id = $1`,
+          [row.id]
+        );
+      } catch (error) {
+        console.error(`[CRON] Error sending day-of reminder for event ${row.id}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error('[CRON] Event day-of reminder check failed:', error);
+  }
 }
