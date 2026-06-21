@@ -286,21 +286,34 @@ export default function NewsPage() {
                 )}
 
                 {/* Footer */}
-                <div className="flex items-center justify-between text-xs text-gray-600">
-                  <div className="flex gap-2">
-                    {item.source && <span>📌 {item.source}</span>}
-                    {item.location && <span>📍 {item.location}</span>}
+                <div className="space-y-1 text-xs text-gray-600">
+                  <div className="flex flex-wrap gap-2">
+                    {item.source && <span className="bg-white px-2 py-0.5 rounded font-semibold">📌 {item.source}</span>}
+                    {item.location && <span className="bg-white px-2 py-0.5 rounded font-semibold">📍 {item.location}</span>}
                   </div>
-                  {item.url && (
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-errandify-orange font-semibold hover:underline"
-                    >
-                      Read more →
-                    </a>
-                  )}
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs text-gray-500 font-semibold">
+                      📅 {item.created_at ? new Date(item.created_at).toLocaleDateString('en-SG', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: '2-digit'
+                      }) : ''} {item.created_at ? new Date(item.created_at).toLocaleTimeString('en-SG', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      }) : ''}
+                    </span>
+                    {item.url && (
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-errandify-orange font-semibold hover:underline flex items-center gap-1"
+                      >
+                        Read full story ↗
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

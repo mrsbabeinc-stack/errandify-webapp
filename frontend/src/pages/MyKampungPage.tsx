@@ -188,45 +188,96 @@ export default function MyKampungPage() {
       {
         id: 'community-1',
         type: 'community',
-        title: '🏘️ Block 456 Neighborhood Cleanup This Saturday',
-        content: 'Join us for a community cleanup at Bishan Park. Bring gloves and bags. Light refreshments provided!',
+        title: '🏘️ Block 456 Neighborhood Cleanup This Saturday 9am',
+        content: 'Join us for a community cleanup at Bishan Park. Bring gloves and bags. Light refreshments provided! Meet at block entrance.',
         category: 'event',
         location: 'Bishan',
         postal_code: '570456',
-        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'singapore-1',
-        type: 'singapore',
-        title: 'HDB Announces 2,000 New BTO Units in Jurong West',
-        content: 'Housing & Development Board launches new Build-to-Order flat units with competitive pricing for young families.',
-        source: 'HDB Official',
-        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'errandify-1',
-        type: 'errandify',
-        title: '✨ New Feature: Recurring Tasks Launched!',
-        content: 'Schedule tasks to repeat daily, weekly, or monthly. Perfect for ongoing needs. Enable auto-booking with trusted doers.',
-        category: 'feature',
-        created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        created_at: new Date(2026, 5, 20, 14, 30, 0).toISOString(),
       },
       {
         id: 'community-2',
         type: 'community',
-        title: '🐕 Lost Golden Retriever - Reward!',
-        content: 'Missing since Tuesday near Bishan Park. Please call 9876-5432 if spotted. $200 reward offered.',
+        title: '🐕 Lost Golden Retriever - $200 Reward!',
+        content: 'Missing since Tuesday 3pm near Bishan Park MRT. Answers to "Max". Very friendly. Please call 9876-5432 if spotted. Reward offered.',
         category: 'lost_found',
         location: 'Bishan Park',
-        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        postal_code: '570450',
+        created_at: new Date(2026, 5, 19, 10, 15, 0).toISOString(),
+      },
+      {
+        id: 'community-3',
+        type: 'community',
+        title: '🏪 New Hawker Stall Alert: Handmade Noodles Opening Friday',
+        content: 'Exciting news! Traditional handmade noodle stall opening at Blk 789 Hawker Centre this Friday. Opening special: 30% off first 100 customers. From 11am-9pm.',
+        category: 'business',
+        location: 'Bishan',
+        postal_code: '570789',
+        created_at: new Date(2026, 5, 18, 9, 45, 0).toISOString(),
+      },
+      {
+        id: 'community-4',
+        type: 'community',
+        title: '⚠️ Condo Maintenance Notice: Water Shut-off Tomorrow 2-6pm',
+        content: 'All residents: Water supply will be shut off tomorrow 2-6pm for pipe maintenance. No water from taps during this period. Plan accordingly.',
+        category: 'announcement',
+        location: 'Bishan Heights Condo',
+        postal_code: '570456',
+        created_at: new Date(2026, 5, 17, 11, 20, 0).toISOString(),
+      },
+      {
+        id: 'community-5',
+        type: 'community',
+        title: '👥 Badminton Group Looking for Members - Wednesday Nights',
+        content: 'Casual badminton group meets every Wednesday 7-9pm at Block 123 Sports Hall. All levels welcome. $3 court rental per person. New players always welcome!',
+        category: 'event',
+        location: 'Bishan',
+        postal_code: '570123',
+        created_at: new Date(2026, 5, 16, 15, 0, 0).toISOString(),
+      },
+      {
+        id: 'errandify-1',
+        type: 'errandify',
+        title: '✨ New Feature: Recurring Tasks Now Live!',
+        content: 'Schedule tasks to repeat daily, weekly, or monthly! Perfect for ongoing needs like cleaning, pet care, and more. Enable auto-booking with your trusted doers.',
+        category: 'feature',
+        created_at: new Date(2026, 5, 20, 10, 0, 0).toISOString(),
       },
       {
         id: 'errandify-2',
         type: 'errandify',
-        title: '🎯 Summer Challenge: Earn 500 Points!',
-        content: 'Complete 5 tasks in June and earn 500 bonus Errandify Points. Redeemable for discounts on future tasks.',
+        title: '🎯 Summer Challenge: Earn 500 Bonus Points!',
+        content: 'Complete 5 tasks in June and earn 500 bonus Errandify Points! Redeemable for discounts on any future tasks. Challenge ends June 30. Start now!',
         category: 'campaign',
-        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        created_at: new Date(2026, 5, 18, 14, 30, 0).toISOString(),
+      },
+      {
+        id: 'errandify-3',
+        type: 'errandify',
+        title: '⭐ User Spotlight: Wei Ming - From 50 to 200 Tasks!',
+        content: 'Meet Wei Ming, one of our top doers who just completed 200 tasks! Read how he built a 4.9★ rating, earns $8K/month, and manages work-life balance.',
+        category: 'spotlight',
+        created_at: new Date(2026, 5, 15, 11, 45, 0).toISOString(),
+      },
+      {
+        id: 'sg-1',
+        type: 'singapore',
+        title: 'HDB Launches 5,000 New BTO Flats Across Multiple Towns',
+        content: 'Housing & Development Board opens applications for 5,000 Build-to-Order units in Jurong West, Tengah, and Ang Mo Kio with flexible payment schemes for first-time homebuyers.',
+        category: 'housing',
+        source: 'HDB Official',
+        url: 'https://www.hdb.gov.sg/',
+        created_at: new Date(2026, 5, 20, 14, 30, 0).toISOString(),
+      },
+      {
+        id: 'sg-2',
+        type: 'singapore',
+        title: 'Singapore Tech Job Market Booms: 15,000 New Positions',
+        content: 'Tech companies posting record job openings as Singapore positions itself as a digital hub. Average salaries for software engineers reach $120K+ annually.',
+        category: 'jobs',
+        source: 'Ministry of Manpower',
+        url: 'https://www.mom.gov.sg/',
+        created_at: new Date(2026, 5, 19, 10, 15, 0).toISOString(),
       },
     ]);
   };
@@ -1066,21 +1117,33 @@ export default function MyKampungPage() {
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between text-xs text-gray-600">
-                      <div className="flex gap-2">
-                        {item.source && <span>📌 {item.source}</span>}
-                        {item.location && <span>📍 {item.location}</span>}
+                    <div className="space-y-1 text-xs text-gray-600">
+                      <div className="flex flex-wrap gap-2">
+                        {item.source && <span className="bg-white px-2 py-0.5 rounded">📌 {item.source}</span>}
+                        {item.location && <span className="bg-white px-2 py-0.5 rounded">📍 {item.location}</span>}
                       </div>
-                      {item.url && (
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-errandify-orange font-semibold hover:underline"
-                        >
-                          Read →
-                        </a>
-                      )}
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-xs text-gray-500">
+                          📅 {item.created_at ? new Date(item.created_at).toLocaleDateString('en-SG', {
+                            month: 'short',
+                            day: 'numeric'
+                          }) : ''} {item.created_at ? new Date(item.created_at).toLocaleTimeString('en-SG', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          }) : ''}
+                        </span>
+                        {item.url && (
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-errandify-orange font-semibold hover:underline flex items-center gap-1"
+                          >
+                            Read full story →
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
