@@ -123,9 +123,6 @@ export default function BidSubmissionModal({
                 Budget: ${taskBudget} {parseInt(bidAmount) > taskBudget && '(above budget)'}
               </p>
             )}
-            <p className="text-xs text-gray-500 mt-1">
-              Increments of $5
-            </p>
           </div>
 
           <div>
