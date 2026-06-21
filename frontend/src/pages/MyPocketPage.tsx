@@ -24,6 +24,7 @@ export default function MyPocketPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [userRole, setUserRole] = useState<'asker' | 'doer' | null>(null);
+  const [activeTab, setActiveTab] = useState<'txns' | 'history' | 'rewards'>('txns');
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -183,58 +184,99 @@ export default function MyPocketPage() {
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Tabs */}
         <div className="bg-white rounded-lg border border-gray-200 mb-3">
           <div className="flex text-xs font-semibold border-b border-gray-100">
             <button
-              onClick={() => navigate('/my-rewards')}
-              className="flex-1 p-2 hover:bg-gray-50 text-center"
+              onClick={() => setActiveTab('txns')}
+              className={`flex-1 p-2 text-center transition ${activeTab === 'txns' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
-              💎 Rewards
+              📋 Txns
             </button>
             <button
-              onClick={() => navigate('/points-history')}
-              className="flex-1 p-2 hover:bg-gray-50 text-center border-l border-gray-100"
+              onClick={() => setActiveTab('history')}
+              className={`flex-1 p-2 text-center transition border-l border-gray-100 ${activeTab === 'history' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
               📈 History
             </button>
             <button
-              onClick={() => navigate('/transaction-history')}
-              className="flex-1 p-2 hover:bg-gray-50 text-center border-l border-gray-100"
+              onClick={() => setActiveTab('rewards')}
+              className={`flex-1 p-2 text-center transition border-l border-gray-100 ${activeTab === 'rewards' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
-              📋 Txns
+              💎 Rewards
             </button>
           </div>
-        </div>
 
-        {/* Recent Activity */}
-        {wallet.transactions.length === 0 ? (
-          <div className="text-center text-gray-500 text-xs py-3">
-            <p>No transactions yet</p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 text-xs">
-            {wallet.transactions.map((tx) => (
-              <div key={tx.id} className="p-2 flex items-center justify-between hover:bg-gray-50">
-                <div className="flex-1">
-                  <p className="font-medium text-gray-800">{tx.description.split(':')[1]?.trim() || tx.description}</p>
-                  <p className="text-gray-500 text-xs">{formatDate(tx.createdAt)}</p>
-                </div>
-                <p
-                  className={`font-bold ${
-                    tx.type === 'earn'
-                      ? 'text-green-600'
-                      : tx.type === 'refund'
-                        ? 'text-errandify-orange-600'
-                        : 'text-gray-800'
-                  }`}
-                >
-                  {tx.type === 'earn' ? '+' : '-'}{formatCurrency(tx.amount)}
-                </p>
+          {/* Tab Content */}
+          <div className="text-xs">
+            {/* Transactions Tab */}
+            {activeTab === 'txns' && (
+              <>
+                {wallet.transactions.length === 0 ? (
+                  <div className="text-center text-gray-500 py-3">
+                    <p>No transactions yet</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {wallet.transactions.map((tx) => (
+                      <div key={tx.id} className="p-2 flex items-center justify-between hover:bg-gray-50">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-800">{tx.description.split(':')[1]?.trim() || tx.description}</p>
+                          <p className="text-gray-500">{formatDate(tx.createdAt)}</p>
+                        </div>
+                        <p className={`font-bold ${tx.type === 'earn' ? 'text-green-600' : tx.type === 'refund' ? 'text-errandify-orange-600' : 'text-gray-800'}`}>
+                          {tx.type === 'earn' ? '+' : '-'}{formatCurrency(tx.amount)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Points History Tab */}
+            {activeTab === 'history' && (
+              <div className="divide-y divide-gray-100">
+                {[
+                  { activity: 'Completed Errand', points: '+10 EP', date: '2026-06-15' },
+                  { activity: 'Referred Friend', points: '+50 EP', date: '2026-06-12' },
+                  { activity: 'Redeemed Discount', points: '-50 EP', date: '2026-06-10' },
+                  { activity: 'Review Submitted', points: '+5 EP', date: '2026-06-08' },
+                  { activity: 'Bonus Achievement', points: '+25 EP', date: '2026-06-05' },
+                ].map((item, idx) => (
+                  <div key={idx} className="p-2 flex justify-between hover:bg-gray-50">
+                    <div>
+                      <p className="font-bold text-gray-900">{item.activity}</p>
+                      <p className="text-gray-500">{item.date}</p>
+                    </div>
+                    <p className={`font-bold ${item.points.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>{item.points}</p>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+
+            {/* Rewards Tab */}
+            {activeTab === 'rewards' && (
+              <div className="divide-y divide-gray-100">
+                {[
+                  { name: '$5 Discount', cost: '50 EP', available: true },
+                  { name: '$10 Discount', cost: '100 EP', available: true },
+                  { name: '$20 Discount', cost: '200 EP', available: false },
+                ].map((reward, idx) => (
+                  <div key={idx} className="p-2 flex justify-between items-center hover:bg-gray-50">
+                    <div>
+                      <p className="font-bold text-gray-900">{reward.name}</p>
+                      <p className="text-errandify-orange font-bold">{reward.cost}</p>
+                    </div>
+                    <button className={`px-2 py-1 rounded text-xs font-bold ${reward.available ? 'bg-errandify-orange text-white' : 'bg-gray-300 text-gray-500'}`}>
+                      {reward.available ? 'Redeem' : 'Need'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
