@@ -22,12 +22,6 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Redirect askers to their own errands page
-  if (userRole === 'asker') {
-    navigate('/errands', { replace: true });
-    return null;
-  }
-
   const [errands, setErrands] = useState<Errand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,6 +32,13 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   const [userBids, setUserBids] = useState<Record<string, number>>({}); // taskId -> bidAmount
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [filterFavorites, setFilterFavorites] = useState(false);
+
+  // Redirect askers to their own errands page
+  useEffect(() => {
+    if (userRole === 'asker') {
+      navigate('/errands', { replace: true });
+    }
+  }, [userRole, navigate]);
 
   const categories = [
     { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50' },
