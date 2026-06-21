@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { AuthRequest, authMiddleware } from '../middleware/auth.js';
+import { AuthRequest, authMiddleware, isUserOnline } from '../middleware/auth.js';
 import db from '../db.js';
 import axios from 'axios';
 import { sendEmail } from '../services/email.js';
@@ -236,18 +236,37 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
       [taskId]
     );
 
+    // Get online status for both participants
+    const userStatusResult = await db.query(
+      `SELECT id, last_active_at FROM users WHERE id = $1 OR id = $2`,
+      [task.asker_id, task.doer_id]
+    );
+
+    const userStatusMap = userStatusResult.rows.reduce((acc: any, row: any) => {
+      acc[row.id] = isUserOnline(row.last_active_at);
+      return acc;
+    }, {});
+
     res.json({
       success: true,
-      data: messagesResult.rows.map(m => ({
-        id: m.id,
-        taskId: m.task_id,
-        senderId: m.sender_id,
-        senderName: m.display_name,
-        senderAvatar: m.avatar_url,
-        content: m.flagged ? '[Message flagged]' : m.content,
-        flagged: m.flagged,
-        createdAt: m.created_at,
-      })),
+      data: {
+        messages: messagesResult.rows.map(m => ({
+          id: m.id,
+          taskId: m.task_id,
+          senderId: m.sender_id,
+          senderName: m.display_name,
+          senderAvatar: m.avatar_url,
+          content: m.flagged ? '[Message flagged]' : m.content,
+          flagged: m.flagged,
+          createdAt: m.created_at,
+        })),
+        participantStatus: {
+          askerId: task.asker_id,
+          askerOnline: userStatusMap[task.asker_id],
+          doerId: task.doer_id,
+          doerOnline: userStatusMap[task.doer_id],
+        },
+      },
     });
   } catch (error) {
     console.error('Get messages error:', error);
