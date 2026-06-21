@@ -885,51 +885,84 @@ export default function MyKampungPage() {
 
         {/* BLOG TAB */}
         {activeTab === 'blog' && (
-          <div className="space-y-3">
+          <div>
             {blogPosts.length === 0 ? (
-              <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
-                <p className="text-gray-500">No blog posts yet</p>
+              <div className="bg-white rounded p-4 text-center border border-gray-200 text-xs text-gray-500">
+                No blog posts yet
               </div>
             ) : (
-              blogPosts.map((post) => (
-                <div
-                  key={post.id}
-                  onClick={() => navigate(`/blog/${post.slug}`)}
-                  className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-lg transition cursor-pointer"
-                >
-                  <h3 className="font-semibold text-gray-800 hover:text-errandify-orange transition">{post.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{post.excerpt}</p>
-
-                  <div className="flex items-center justify-between gap-2 mt-3 flex-wrap">
-                    <div className="flex items-center gap-2 flex-wrap text-xs">
-                      <span className={`font-semibold px-2 py-1 rounded-full ${getCategoryColor(post.category)}`}>
-                        {post.category === 'guide' ? '📚 Guide' :
-                         post.category === 'stories' ? '📖 Story' :
-                         post.category === 'tips' ? '💡 Tips' :
-                         '📰 News'}
-                      </span>
-                      <span className="text-gray-500">By {post.author}</span>
-                      <span className="text-gray-500">•</span>
-                      <span className="text-gray-500">{post.readTime} min</span>
-                      <span className="text-gray-500">•</span>
-                      <span className="text-gray-500">{formatDate(post.createdAt)}</span>
+              <>
+                {/* Featured Post (First) */}
+                {blogPosts.length > 0 && (
+                  <div
+                    key={blogPosts[0].id}
+                    onClick={() => navigate(`/blog/${blogPosts[0].slug}`)}
+                    className="bg-gradient-to-br from-errandify-orange to-orange-500 text-white rounded-lg p-4 mb-3 shadow-md hover:shadow-lg transition cursor-pointer"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1">
+                        <span className="inline-block bg-white text-errandify-orange px-2 py-0.5 rounded-full text-xs font-bold mb-2">
+                          ⭐ Featured
+                        </span>
+                        <h3 className="font-bold text-sm mb-1">{blogPosts[0].title}</h3>
+                      </div>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLikeBlog(post.id);
-                      }}
-                      className={`text-xs font-semibold px-3 py-1 rounded-lg transition ${
-                        post.isLiked
-                          ? 'bg-red-100 text-red-600'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {post.isLiked ? '❤️' : '🤍'} {post.likes}
-                    </button>
+                    <p className="text-xs opacity-90 line-clamp-2 mb-2">{blogPosts[0].excerpt}</p>
+                    <div className="flex items-center gap-2 text-xs opacity-80">
+                      <span>📖 {blogPosts[0].category === 'guide' ? 'Guide' : blogPosts[0].category === 'stories' ? 'Story' : blogPosts[0].category === 'tips' ? 'Tips' : 'News'}</span>
+                      <span>•</span>
+                      <span>{blogPosts[0].readTime} min</span>
+                      <span>•</span>
+                      <span>{blogPosts[0].author}</span>
+                    </div>
                   </div>
+                )}
+
+                {/* Other Posts Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {blogPosts.slice(1).map((post) => (
+                    <div
+                      key={post.id}
+                      onClick={() => navigate(`/blog/${post.slug}`)}
+                      className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-md hover:border-errandify-orange transition cursor-pointer"
+                    >
+                      {/* Category Badge */}
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(post.category)}`}>
+                          {post.category === 'guide' ? '📚' : post.category === 'stories' ? '📖' : post.category === 'tips' ? '💡' : '📰'}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLikeBlog(post.id);
+                          }}
+                          className={`text-xs font-semibold px-2 py-0.5 rounded transition ${
+                            post.isLiked
+                              ? 'bg-red-100 text-red-600'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {post.isLiked ? '❤️' : '🤍'}
+                        </button>
+                      </div>
+
+                      {/* Title */}
+                      <h4 className="text-xs font-bold text-gray-800 hover:text-errandify-orange line-clamp-2 mb-1">
+                        {post.title}
+                      </h4>
+
+                      {/* Excerpt */}
+                      <p className="text-xs text-gray-600 line-clamp-2 mb-2">{post.excerpt}</p>
+
+                      {/* Footer */}
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{post.readTime} min</span>
+                        <span>{post.author}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))
+              </>
             )}
           </div>
         )}
