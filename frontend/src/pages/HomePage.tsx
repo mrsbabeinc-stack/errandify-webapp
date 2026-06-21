@@ -124,7 +124,7 @@ export default function HomePage({ userRole }: HomePageProps) {
           ) : (
             <>
               <button
-                onClick={() => navigate('/search')}
+                onClick={() => navigate('/browse')}
                 className="bg-errandify-orange text-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
                 <span className="text-2xl mb-1 block">🔍</span>
