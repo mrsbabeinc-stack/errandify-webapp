@@ -229,27 +229,24 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 </span>
               </div>
 
-              {/* Posted by and Chat on bottom right */}
-              <div className="flex justify-between items-center gap-2">
-                <div></div>
-                <div className="flex items-center gap-2">
-                  <p className="text-xs text-gray-600">Posted by {conversation.otherPartyName}</p>
-                  <button
-                    onClick={() => handleOpenChat(conversation.id)}
-                    className="bg-errandify-brown text-white px-2 py-1 rounded text-xs font-semibold hover:bg-opacity-90 transition-colors whitespace-nowrap flex items-center gap-1"
-                  >
-                    💬 Chat
-                  </button>
-                </div>
-              </div>
-
-              {/* Start Date/Time and Area - 2 lines */}
+              {/* Start Date/Time and Area - 2 lines with buttons on right */}
               <div className="text-xs text-gray-600 mb-3 space-y-0.5">
                 {conversation.deadline && (
-                  <p>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                  <div className="flex justify-between items-center">
+                    <p>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    <button
+                      onClick={() => handleOpenChat(conversation.id)}
+                      className="bg-errandify-brown text-white px-2 py-1 rounded text-xs font-semibold hover:bg-opacity-90 transition-colors whitespace-nowrap flex items-center gap-1"
+                    >
+                      💬 Chat
+                    </button>
+                  </div>
                 )}
                 {(conversation.location || conversation.postal) && (
-                  <p>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</p>
+                  <div className="flex justify-between items-center">
+                    <p>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</p>
+                    <p className="text-gray-600">Posted by {conversation.otherPartyName}</p>
+                  </div>
                 )}
               </div>
             </div>
