@@ -103,37 +103,68 @@ async function getCommunityNews(limit: number, offset: number, postal_code?: str
 async function getSGNews(limit: number, offset: number): Promise<NewsItem[]> {
   try {
     const apiKey = process.env.NEWS_API_KEY || '';
-    if (!apiKey) {
-      console.warn('NEWS_API_KEY not configured, using mock data');
+    if (!apiKey || apiKey === '4b8d2c7f9e1a6b3c5d8f2a4e7c9b1d3f') {
+      console.warn('NEWS_API_KEY not configured or using placeholder, using mock data');
       return getMockSGNews();
     }
 
+    console.log('[NEWS API] Fetching Singapore news with key:', apiKey.substring(0, 10) + '...');
+
     const response = await axios.get('https://newsapi.org/v2/everything', {
       params: {
-        q: 'Singapore policy OR housing OR jobs OR technology',
+        q: 'Singapore',
         country: 'sg',
         sortBy: 'publishedAt',
         language: 'en',
-        pageSize: limit,
-        page: Math.floor(offset / limit) + 1,
+        pageSize: Math.min(limit, 100),
+        page: Math.floor(offset / Math.min(limit, 100)) + 1,
         apiKey: apiKey,
       },
-      timeout: 5000,
+      timeout: 8000,
     });
 
-    return response.data.articles.map((article: any) => ({
-      id: article.url,
-      type: 'singapore',
-      title: article.title,
-      content: article.description || article.content,
-      source: article.source.name,
-      image: article.urlToImage,
-      url: article.url,
-      created_at: article.publishedAt,
-      author: article.author,
-    }));
-  } catch (error) {
-    console.error('Error fetching Singapore news:', error);
+    if (!response.data.articles || response.data.articles.length === 0) {
+      console.log('[NEWS API] No articles returned, using mock data');
+      return getMockSGNews();
+    }
+
+    console.log(`[NEWS API] Got ${response.data.articles.length} articles from NewsAPI`);
+
+    // Categorize articles based on keywords
+    const categorizeArticle = (title: string, content: string): string => {
+      const text = (title + ' ' + content).toLowerCase();
+      if (text.includes('hdb') || text.includes('housing') || text.includes('flat') || text.includes('bto')) return 'housing';
+      if (text.includes('job') || text.includes('employment') || text.includes('career') || text.includes('salary')) return 'jobs';
+      if (text.includes('transport') || text.includes('mrt') || text.includes('lrt') || text.includes('ev') || text.includes('charging')) return 'transport';
+      if (text.includes('health') || text.includes('medical') || text.includes('healthcare') || text.includes('hospital')) return 'healthcare';
+      if (text.includes('education') || text.includes('school') || text.includes('university') || text.includes('student')) return 'education';
+      if (text.includes('economy') || text.includes('growth') || text.includes('business') || text.includes('gdp')) return 'policy';
+      if (text.includes('green') || text.includes('environment') || text.includes('sustainable') || text.includes('climate')) return 'policy';
+      if (text.includes('tech') || text.includes('digital') || text.includes('ai') || text.includes('innovation')) return 'jobs';
+      return 'policy';
+    };
+
+    return response.data.articles
+      .slice(0, limit)
+      .map((article: any, index: number) => ({
+        id: `sg-api-${index}-${article.url.substring(article.url.length - 20)}`,
+        type: 'singapore',
+        title: article.title,
+        content: article.description || article.content || 'Read the full story for details.',
+        category: categorizeArticle(article.title, article.description || ''),
+        source: article.source?.name || 'Singapore News',
+        image: article.urlToImage,
+        url: article.url,
+        created_at: new Date(article.publishedAt).toISOString(),
+        author: article.author,
+      }));
+  } catch (error: any) {
+    console.error('[NEWS API] Error fetching Singapore news:', error.message);
+    if (error.response?.status === 401) {
+      console.error('[NEWS API] Invalid API key');
+    } else if (error.response?.status === 429) {
+      console.error('[NEWS API] Rate limit exceeded');
+    }
     return getMockSGNews();
   }
 }
