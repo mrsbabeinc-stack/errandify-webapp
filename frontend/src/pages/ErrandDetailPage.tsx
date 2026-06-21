@@ -53,6 +53,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [showChat, setShowChat] = useState(false);
   const [userBidAmount, setUserBidAmount] = useState<number | null>(null);
   const [confirmationTimeLeft, setConfirmationTimeLeft] = useState<string>('');
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -289,6 +290,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   title="Copy ID"
                 >
                   Copy
+                </button>
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  className="text-xs text-errandify-orange hover:text-orange-600 font-semibold transition"
+                  title="Share this errand"
+                >
+                  📤 Share
                 </button>
               </div>
             </div>
@@ -601,6 +609,104 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           isOpen={showChat}
           onClose={() => setShowChat(false)}
         />
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && errand && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
+            <h2 className="text-xl font-bold text-errandify-brown mb-4">
+              Share This Errand
+            </h2>
+
+            {/* Get user's referral code */}
+            {currentUser && (
+              <>
+                <p className="text-sm text-gray-600 mb-4">
+                  Share with friends! They'll get your referral code and both of you earn rewards when they complete their first task.
+                </p>
+
+                {/* Share Link */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                  <p className="text-xs text-gray-600 mb-2 font-semibold">Share Link:</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}`}
+                      className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-xs font-mono"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          `${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}`
+                        );
+                      }}
+                      className="px-3 py-2 bg-errandify-orange text-white text-xs font-semibold rounded hover:bg-opacity-90 transition"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                {/* Share Message */}
+                <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                  <p className="text-xs text-gray-600 mb-2 font-semibold">Share Message:</p>
+                  <textarea
+                    readOnly
+                    value={`Hey! Check out this errand on Errandify: "${errand.title}"
+
+Join with my code: ${currentUser.referral_code || 'REF-CODE'}
+
+Download & sign up: ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}
+
+We both earn rewards when you complete your first task! 🎁`}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-xs resize-none h-24"
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        `Hey! Check out this errand on Errandify: "${errand.title}"\n\nJoin with my code: ${currentUser.referral_code || 'REF-CODE'}\n\nDownload & sign up: ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nWe both earn rewards when you complete your first task! 🎁`
+                      );
+                    }}
+                    className="mt-2 w-full px-3 py-2 bg-blue-500 text-white text-xs font-semibold rounded hover:bg-blue-600 transition"
+                  >
+                    Copy Message
+                  </button>
+                </div>
+
+                {/* Share Buttons */}
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`Hey! Check out this errand on Errandify: "${errand.title}"\n\nJoin with my code: ${currentUser.referral_code || 'REF-CODE'}\n\n${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-2 bg-green-500 text-white text-xs font-semibold rounded hover:bg-green-600 transition text-center"
+                  >
+                    WhatsApp
+                  </a>
+                  <button
+                    onClick={() => {
+                      const subject = `Check out: ${errand.title}`;
+                      const body = `Hey! Check out this errand on Errandify: "${errand.title}"\n\nJoin with my code: ${currentUser.referral_code || 'REF-CODE'}\n\nDownload & sign up: ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nWe both earn rewards when you complete your first task! 🎁`;
+                      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                    }}
+                    className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition"
+                  >
+                    Email
+                  </button>
+                </div>
+              </>
+            )}
+
+            <button
+              onClick={() => setShowShareModal(false)}
+              className="w-full px-3 py-2 border border-gray-300 text-gray-700 text-xs font-semibold rounded hover:bg-gray-50 transition"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
