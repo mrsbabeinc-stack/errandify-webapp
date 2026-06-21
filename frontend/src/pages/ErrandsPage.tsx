@@ -168,7 +168,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-errandify-bg">
+    <div className="min-h-screen bg-errandify-bg pb-32">
       <div className="max-w-3xl mx-auto px-4">
         {/* Page Header */}
         <div className="mb-4">
