@@ -315,17 +315,24 @@ export default function TaskChatbox({
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Validation Messages */}
+        {/* Validation Messages - Prominent Display */}
         {(validationErrors.length > 0 || validationWarnings.length > 0 || validationSuggestions.length > 0) && (
-          <div className="px-3 py-2 bg-gray-50 border-t border-gray-200 space-y-1 text-xs">
+          <div className={`px-3 py-3 border-t border-gray-200 space-y-2 text-sm ${
+            validationErrors.length > 0
+              ? 'bg-red-50 border-l-4 border-l-red-500'
+              : 'bg-amber-50 border-l-4 border-l-amber-500'
+          }`}>
+            {validationErrors.length > 0 && (
+              <div className="font-bold text-red-700">⚠️ Message Cannot Be Sent</div>
+            )}
             {validationErrors.map((err, i) => (
-              <p key={i} className="text-red-600">{err}</p>
+              <p key={i} className="text-red-700 font-semibold">{err}</p>
             ))}
             {validationWarnings.map((warn, i) => (
-              <p key={i} className="text-amber-600">{warn}</p>
+              <p key={i} className="text-amber-700">{warn}</p>
             ))}
             {validationSuggestions.map((sug, i) => (
-              <p key={i} className="text-blue-600">{sug}</p>
+              <p key={i} className="text-blue-700">{sug}</p>
             ))}
           </div>
         )}
