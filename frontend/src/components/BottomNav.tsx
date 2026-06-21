@@ -37,7 +37,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   const leftItems: NavItem[] = userRole === 'doer'
     ? [
         { label: 'Browse ToHelp', path: '/', icon: '🔍' },
-        { label: 'MyErrands', path: '/errands', icon: '📋' },
+        { label: 'MyOffer', path: '/my-offer', icon: '💼' },
       ]
     : [
         { label: 'Home', path: '/', icon: '🏠' },
