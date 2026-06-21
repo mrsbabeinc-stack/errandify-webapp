@@ -745,6 +745,28 @@ export default function CreateErrandPage() {
         console.log('[DEBUG] *** SUCCESS - ERRAND POSTED ***');
         setPaymentRequired(false);
         setShowConfirm(false);
+
+        // Analyze task with AI (non-blocking)
+        try {
+          await axios.post(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/analyze-task`,
+            {
+              title: formData.title,
+              description: formData.description,
+              location: formData.location,
+              category: formData.category,
+              budget: formData.budget,
+            },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+              timeout: 20000,
+            }
+          );
+          console.log('[DEBUG] AI task analysis completed');
+        } catch (aiErr) {
+          console.warn('[DEBUG] AI analysis skipped:', aiErr);
+        }
+
         alert('✓ Errand posted successfully! Dummy payment confirmed.');
         navigate('/home');
       } else {
