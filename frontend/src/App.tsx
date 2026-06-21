@@ -36,6 +36,7 @@ import BlockListPage from './pages/BlockListPage';
 import FAQPage from './pages/FAQPage';
 import MyAccountPage from './pages/MyAccountPage';
 import HowItWorksPage from './pages/HowItWorksPage';
+import AboutErrandifyPage from './pages/AboutErrandifyPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -212,6 +213,7 @@ export default function App() {
         <Route path="/task/:id/review-completion" element={isAuthenticated ? <ReviewCompletionPage /> : <Navigate to="/login" replace />} />
         <Route path="/faq" element={<FAQPage />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/about" element={<AboutErrandifyPage />} />
         <Route path="/my-account" element={isAuthenticated ? <MyAccountPage /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout */}
