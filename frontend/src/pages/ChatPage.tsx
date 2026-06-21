@@ -222,8 +222,8 @@ export default function ChatPage({ userRole }: ChatPageProps) {
             <div key={conversation.id} className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start gap-3 mb-2">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-sm text-gray-800 line-clamp-2">{conversation.title}</h3>
-                  <p className="text-xs text-gray-600 mt-1">with {conversation.otherPartyName}</p>
+                  <h3 className="font-semibold text-sm text-gray-800 line-clamp-1">{conversation.title}</h3>
+                  <p className="text-xs text-gray-600 mt-0.5">Posted by {conversation.otherPartyName}</p>
                 </div>
                 <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${getStatusColor(conversation.status)}`}>
                   {getStatusLabel(conversation.status)}
