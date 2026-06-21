@@ -191,7 +191,7 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 py-8 px-6">
+    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 py-8 px-6 pb-32">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
