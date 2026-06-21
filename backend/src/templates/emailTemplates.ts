@@ -193,6 +193,69 @@ export function templateDailyDigest(userName: string, summary: any): string {
   `;
 }
 
+export function templateEventConfirmation(userName: string, eventTitle: string, eventDate: string, eventTime: string, eventLocation: string, eventDescription: string): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #FF7A29 0%, #FF9C56 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
+        .event-details { background-color: white; border-left: 4px solid #FF7A29; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .detail-row { display: flex; align-items: center; margin: 10px 0; font-size: 14px; }
+        .detail-icon { margin-right: 10px; font-size: 18px; }
+        .button { background-color: #FF7A29; color: white; padding: 12px 24px; border-radius: 24px; text-decoration: none; display: inline-block; margin: 20px 0; }
+        .footer { color: #999; font-size: 12px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1 style="margin: 0;">✅ Event Confirmed!</h1>
+        </div>
+        <div class="content">
+          <p>Hi ${userName},</p>
+          <p>You're all set! Your spot for <strong>"${eventTitle}"</strong> is confirmed. See you there!</p>
+
+          <div class="event-details">
+            <h3 style="margin-top: 0; color: #333;">${eventTitle}</h3>
+            <div class="detail-row">
+              <span class="detail-icon">📅</span>
+              <span>${eventDate}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-icon">⏰</span>
+              <span>${eventTime}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-icon">📍</span>
+              <span>${eventLocation}</span>
+            </div>
+            <div style="margin: 15px 0 0 0; padding-top: 15px; border-top: 1px solid #eee;">
+              <p style="margin: 0; color: #666; font-size: 13px;">${eventDescription}</p>
+            </div>
+          </div>
+
+          <p style="background-color: #e8f4f8; padding: 12px; border-radius: 4px; color: #333;">
+            💡 <strong>Tip:</strong> Add this event to your calendar so you don't forget!
+          </p>
+
+          <a href="http://localhost:5173/home" class="button">View Event Details</a>
+
+          <p>Questions? Reply to this email or contact our support team.</p>
+        </div>
+        <div class="footer">
+          <p>© 2026 Errandify. All rights reserved.</p>
+          <p><a href="http://localhost:5173/settings/notifications" style="color: #999; text-decoration: none;">Manage notification preferences</a></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
 export function templatePaymentReminder(userName: string, taskTitle: string, hoursLeft: number): string {
   return `
     <!DOCTYPE html>
