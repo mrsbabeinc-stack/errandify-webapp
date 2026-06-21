@@ -69,206 +69,136 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-errandify-bg to-white pb-24">
-      {/* Profile Hero Card */}
+    <div className="min-h-screen bg-errandify-bg pb-20">
+      {/* COMPACT HEADER */}
       {!loading && userProfile && (
-        <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-6 shadow-lg">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex-shrink-0">
-                  {userProfile.profileImage ? (
-                    <img
-                      src={userProfile.profileImage}
-                      alt={userProfile.displayName}
-                      className="w-16 h-16 rounded-full object-cover border-3 border-white"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-white bg-opacity-30 flex items-center justify-center border-3 border-white text-3xl">
-                      👤
-                    </div>
-                  )}
+        <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-3 shadow-md">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {userProfile.profileImage ? (
+                <img
+                  src={userProfile.profileImage}
+                  alt={userProfile.displayName}
+                  className="w-10 h-10 rounded-full object-cover border-2 border-white"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-white bg-opacity-30 flex items-center justify-center border-2 border-white text-lg">
+                  👤
                 </div>
-                <div>
-                  <h1 className="text-2xl font-bold">{userProfile.displayName}</h1>
-                  {userProfile.averageRating && (
-                    <p className="text-sm opacity-90">⭐ {userProfile.averageRating.toFixed(1)} ({userProfile.totalRatings || 0} reviews)</p>
-                  )}
-                </div>
+              )}
+              <div>
+                <p className="font-bold text-sm">{userProfile.displayName}</p>
+                {userProfile.averageRating && (
+                  <p className="text-xs opacity-90">⭐ {userProfile.averageRating.toFixed(1)}</p>
+                )}
               </div>
-              <button
-                onClick={handleEditProfile}
-                className="bg-white text-errandify-orange px-4 py-2 rounded-lg font-bold hover:opacity-90 transition"
-              >
-                ✏️ Edit
-              </button>
             </div>
+            <button
+              onClick={handleEditProfile}
+              className="bg-white text-errandify-orange px-3 py-1 rounded text-xs font-bold"
+            >
+              ✏️
+            </button>
           </div>
         </div>
       )}
 
-      {/* Menu Grid */}
-      <div className="max-w-2xl mx-auto px-3 py-6 space-y-6">
-        {/* Account Section */}
-        <div>
-          <h2 className="text-lg font-bold text-errandify-brown mb-3">👤 Account</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <button
-              onClick={handleViewProfile}
-              className="bg-white rounded-lg shadow-sm p-4 border-t-4 border-errandify-orange hover:shadow-md transition text-left"
-            >
-              <p className="font-bold text-gray-800">View Profile</p>
-              <p className="text-xs text-gray-600">See your public profile</p>
-            </button>
-            <button
-              onClick={handleEditProfile}
-              className="bg-white rounded-lg shadow-sm p-4 border-t-4 border-blue-500 hover:shadow-md transition text-left"
-            >
-              <p className="font-bold text-gray-800">Edit Profile</p>
-              <p className="text-xs text-gray-600">Update your information</p>
-            </button>
-            <button
-              onClick={handleReferral}
-              className="bg-white rounded-lg shadow-sm p-4 border-t-4 border-purple-500 hover:shadow-md transition text-left"
-            >
-              <p className="font-bold text-gray-800">🎁 Referral</p>
-              <p className="text-xs text-gray-600">Earn from invites</p>
-            </button>
-            <button
-              onClick={handleCategoryPreferences}
-              className="bg-white rounded-lg shadow-sm p-4 border-t-4 border-green-500 hover:shadow-md transition text-left"
-            >
-              <p className="font-bold text-gray-800">🎯 Categories</p>
-              <p className="text-xs text-gray-600">Manage your skills</p>
-            </button>
-          </div>
-        </div>
-
-        {/* Community Section */}
-        <div>
-          <h2 className="text-lg font-bold text-errandify-brown mb-3">🤝 Community</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <button
-              onClick={handleTrustedUsers}
-              className="bg-white rounded-lg shadow-sm p-4 border-t-4 border-red-500 hover:shadow-md transition text-left"
-            >
-              <p className="font-bold text-gray-800">❤️ Trusted Users</p>
-              <p className="text-xs text-gray-600">Your trusted network</p>
-            </button>
-            <button
-              onClick={handleBlockList}
-              className="bg-white rounded-lg shadow-sm p-4 border-t-4 border-orange-600 hover:shadow-md transition text-left"
-            >
-              <p className="font-bold text-gray-800">🚫 Blocked Users</p>
-              <p className="text-xs text-gray-600">Manage blocklist</p>
-            </button>
-          </div>
-        </div>
-
-        {/* Wallet Section */}
-        <div>
-          <h2 className="text-lg font-bold text-errandify-brown mb-3">💳 Wallet & Payouts</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <button
-              onClick={handlePayoutSetting}
-              className="bg-white rounded-lg shadow-sm p-4 border-t-4 border-blue-600 hover:shadow-md transition text-left"
-            >
-              <p className="font-bold text-gray-800">🏦 Payout Settings</p>
-              <p className="text-xs text-gray-600">Configure payouts</p>
-            </button>
-            <button
-              onClick={handleTransactionHistory}
-              className="bg-white rounded-lg shadow-sm p-4 border-t-4 border-indigo-600 hover:shadow-md transition text-left"
-            >
-              <p className="font-bold text-gray-800">📊 Transaction History</p>
-              <p className="text-xs text-gray-600">View earnings</p>
-            </button>
-          </div>
-        </div>
-
-        {/* Notifications & Preferences Section */}
-        <div>
-          <h2 className="text-lg font-bold text-errandify-brown mb-3">⚙️ Preferences</h2>
-          <div className="bg-white rounded-lg shadow-sm p-4 border-t-4 border-yellow-500 hover:shadow-md transition">
-            <button
-              onClick={handleNotificationPreferences}
-              className="w-full text-left"
-            >
-              <p className="font-bold text-gray-800">🔔 Notifications</p>
-              <p className="text-xs text-gray-600">Manage how you receive alerts</p>
-            </button>
-          </div>
-        </div>
-
-        {/* Rewards Section */}
-        <div>
-          <h2 className="text-lg font-bold text-errandify-brown mb-3">🎁 Rewards</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <button
-              onClick={handleErrandifyPoints}
-              className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg shadow-md p-4 hover:shadow-lg transition text-white"
-            >
-              <p className="font-bold">⭐ Errandify Points</p>
-              <p className="text-xs opacity-90">View your points balance</p>
-            </button>
-            <button
-              onClick={handleMyRewards}
-              className="bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg shadow-md p-4 hover:shadow-lg transition text-white"
-            >
-              <p className="font-bold">💎 Redeem Rewards</p>
-              <p className="text-xs opacity-90">Redeem your points</p>
-            </button>
-            <button
-              onClick={handlePointsHistory}
-              className="bg-white rounded-lg shadow-sm p-4 border-t-4 border-amber-500 hover:shadow-md transition text-left md:col-span-2"
-            >
-              <p className="font-bold text-gray-800">📈 Points History</p>
-              <p className="text-xs text-gray-600">Track your earned points</p>
-            </button>
-          </div>
-        </div>
-
-        {/* Help Section */}
-        <div>
-          <h2 className="text-lg font-bold text-errandify-brown mb-3">ℹ️ Help & Support</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <button
-              onClick={() => navigate('/how-it-works')}
-              className="bg-white rounded-lg shadow-sm p-4 border-t-4 border-blue-400 hover:shadow-md transition text-left"
-            >
-              <p className="font-bold text-gray-800">🎯 How It Works</p>
-              <p className="text-xs text-gray-600">Learn the basics</p>
-            </button>
-            <button
-              onClick={() => navigate('/about')}
-              className="bg-white rounded-lg shadow-sm p-4 border-t-4 border-orange-400 hover:shadow-md transition text-left"
-            >
-              <p className="font-bold text-gray-800">🏘️ About</p>
-              <p className="text-xs text-gray-600">About Errandify</p>
-            </button>
-            <button
-              onClick={() => navigate('/faq')}
-              className="bg-white rounded-lg shadow-sm p-4 border-t-4 border-green-400 hover:shadow-md transition text-left"
-            >
-              <p className="font-bold text-gray-800">❓ FAQ</p>
-              <p className="text-xs text-gray-600">Frequently asked</p>
-            </button>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-4">
-          <button
-            onClick={handleDeleteAccount}
-            className="flex-1 bg-red-50 border-2 border-red-200 text-red-600 py-3 rounded-lg font-bold hover:bg-red-100 transition"
-          >
-            🗑️ Delete Account
+      {/* COMPACT MENU GRID */}
+      <div className="max-w-4xl mx-auto px-3 py-3 space-y-3">
+        {/* ACCOUNT - 4 ITEMS */}
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={handleViewProfile} className="bg-white rounded p-2 shadow-sm hover:shadow-md transition border-l-4 border-errandify-orange">
+            <p className="font-bold text-xs text-gray-800">View</p>
+            <p className="text-xs text-gray-500">Profile</p>
           </button>
-          <button
-            onClick={handleLogout}
-            className="flex-1 bg-gradient-to-r from-errandify-orange to-orange-500 text-white py-3 rounded-lg font-bold hover:shadow-lg transition"
-          >
-            🚪 Log Out
+          <button onClick={handleEditProfile} className="bg-white rounded p-2 shadow-sm hover:shadow-md transition border-l-4 border-blue-500">
+            <p className="font-bold text-xs text-gray-800">Edit</p>
+            <p className="text-xs text-gray-500">Profile</p>
+          </button>
+          <button onClick={handleReferral} className="bg-white rounded p-2 shadow-sm hover:shadow-md transition border-l-4 border-purple-500">
+            <p className="font-bold text-xs text-gray-800">🎁</p>
+            <p className="text-xs text-gray-500">Referral</p>
+          </button>
+          <button onClick={handleCategoryPreferences} className="bg-white rounded p-2 shadow-sm hover:shadow-md transition border-l-4 border-green-500">
+            <p className="font-bold text-xs text-gray-800">🎯</p>
+            <p className="text-xs text-gray-500">Skills</p>
+          </button>
+        </div>
+
+        {/* COMMUNITY - 2 ITEMS */}
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={handleTrustedUsers} className="bg-white rounded p-2 shadow-sm hover:shadow-md transition border-l-4 border-red-500">
+            <p className="font-bold text-xs text-gray-800">❤️</p>
+            <p className="text-xs text-gray-500">Trusted</p>
+          </button>
+          <button onClick={handleBlockList} className="bg-white rounded p-2 shadow-sm hover:shadow-md transition border-l-4 border-orange-600">
+            <p className="font-bold text-xs text-gray-800">🚫</p>
+            <p className="text-xs text-gray-500">Blocked</p>
+          </button>
+        </div>
+
+        {/* WALLET - 2 ITEMS */}
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={handlePayoutSetting} className="bg-white rounded p-2 shadow-sm hover:shadow-md transition border-l-4 border-blue-600">
+            <p className="font-bold text-xs text-gray-800">🏦</p>
+            <p className="text-xs text-gray-500">Payout</p>
+          </button>
+          <button onClick={handleTransactionHistory} className="bg-white rounded p-2 shadow-sm hover:shadow-md transition border-l-4 border-indigo-600">
+            <p className="font-bold text-xs text-gray-800">📊</p>
+            <p className="text-xs text-gray-500">History</p>
+          </button>
+        </div>
+
+        {/* NOTIFICATIONS - 1 ITEM */}
+        <button onClick={handleNotificationPreferences} className="w-full bg-white rounded p-2 shadow-sm hover:shadow-md transition border-l-4 border-yellow-500">
+          <div className="flex justify-between items-center">
+            <div className="text-left">
+              <p className="font-bold text-xs text-gray-800">🔔 Notifications</p>
+              <p className="text-xs text-gray-500">Manage alerts</p>
+            </div>
+            <span className="text-gray-400">›</span>
+          </div>
+        </button>
+
+        {/* REWARDS - 3 ITEMS */}
+        <div className="grid grid-cols-3 gap-2">
+          <button onClick={handleErrandifyPoints} className="bg-gradient-to-br from-purple-500 to-pink-500 rounded p-2 shadow-sm hover:shadow-md transition text-white">
+            <p className="font-bold text-xs">⭐</p>
+            <p className="text-xs">Points</p>
+          </button>
+          <button onClick={handleMyRewards} className="bg-gradient-to-br from-green-500 to-emerald-500 rounded p-2 shadow-sm hover:shadow-md transition text-white">
+            <p className="font-bold text-xs">💎</p>
+            <p className="text-xs">Redeem</p>
+          </button>
+          <button onClick={handlePointsHistory} className="bg-white rounded p-2 shadow-sm hover:shadow-md transition border-l-4 border-amber-500">
+            <p className="font-bold text-xs text-gray-800">📈</p>
+            <p className="text-xs text-gray-500">History</p>
+          </button>
+        </div>
+
+        {/* HELP - 3 ITEMS */}
+        <div className="grid grid-cols-3 gap-2">
+          <button onClick={() => navigate('/how-it-works')} className="bg-white rounded p-2 shadow-sm hover:shadow-md transition border-l-4 border-blue-400">
+            <p className="font-bold text-xs text-gray-800">🎯</p>
+            <p className="text-xs text-gray-500">How It</p>
+          </button>
+          <button onClick={() => navigate('/about')} className="bg-white rounded p-2 shadow-sm hover:shadow-md transition border-l-4 border-orange-400">
+            <p className="font-bold text-xs text-gray-800">🏘️</p>
+            <p className="text-xs text-gray-500">About</p>
+          </button>
+          <button onClick={() => navigate('/faq')} className="bg-white rounded p-2 shadow-sm hover:shadow-md transition border-l-4 border-green-400">
+            <p className="font-bold text-xs text-gray-800">❓</p>
+            <p className="text-xs text-gray-500">FAQ</p>
+          </button>
+        </div>
+
+        {/* ACTION BUTTONS */}
+        <div className="flex gap-2 pt-2">
+          <button onClick={handleDeleteAccount} className="flex-1 bg-red-50 border-2 border-red-200 text-red-600 py-2 rounded text-xs font-bold hover:bg-red-100 transition">
+            🗑️ Delete
+          </button>
+          <button onClick={handleLogout} className="flex-1 bg-gradient-to-r from-errandify-orange to-orange-500 text-white py-2 rounded text-xs font-bold hover:shadow-md transition">
+            🚪 Logout
           </button>
         </div>
       </div>
