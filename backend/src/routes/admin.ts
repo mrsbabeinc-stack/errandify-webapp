@@ -307,4 +307,135 @@ router.post(
   }
 );
 
+// GET /api/admin/moderation - Get all moderation notifications
+router.get('/moderation', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { type } = req.query;
+
+    let query = `
+      SELECT an.id, an.type, an.severity, an.user_id, an.message, an.details, an.created_at, an.resolved,
+             u.display_name, u.email
+      FROM admin_notifications an
+      JOIN users u ON an.user_id = u.id
+      WHERE an.created_at > NOW() - INTERVAL '30 days'
+    `;
+    const params: any[] = [];
+
+    if (type === 'flagged_message') {
+      query += ` AND an.type = 'flagged_message'`;
+    } else if (type === 'user_suspended') {
+      query += ` AND an.type = 'user_suspended'`;
+    }
+
+    query += ` ORDER BY an.created_at DESC LIMIT 100`;
+
+    const result = await db.query(query, params);
+
+    const notifications = result.rows.map(row => ({
+      id: row.id,
+      type: row.type,
+      severity: row.severity,
+      userId: row.user_id,
+      userName: row.display_name,
+      userEmail: row.email,
+      message: row.message,
+      details: typeof row.details === 'string' ? JSON.parse(row.details) : row.details,
+      createdAt: row.created_at,
+      resolved: row.resolved,
+    }));
+
+    // Get stats
+    const statsResult = await db.query(`
+      SELECT
+        (SELECT COUNT(*) FROM admin_notifications WHERE type = 'flagged_message' AND created_at > NOW() - INTERVAL '30 days') as total_flagged,
+        (SELECT COUNT(*) FROM admin_notifications WHERE type = 'user_suspended' AND created_at > NOW() - INTERVAL '30 days') as total_suspended,
+        (SELECT COUNT(*) FROM admin_notifications WHERE resolved = false AND created_at > NOW() - INTERVAL '30 days') as active_notifications
+    `);
+
+    const stats = {
+      totalFlagged: parseInt(statsResult.rows[0].total_flagged),
+      totalSuspended: parseInt(statsResult.rows[0].total_suspended),
+      activeNotifications: parseInt(statsResult.rows[0].active_notifications),
+    };
+
+    res.json({
+      success: true,
+      data: {
+        notifications,
+        stats,
+      },
+    });
+  } catch (error) {
+    console.error('Moderation fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch moderation data' });
+  }
+});
+
+// PUT /api/admin/moderation/:notificationId/resolve - Mark notification as resolved
+router.put('/moderation/:notificationId/resolve', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { notificationId } = req.params;
+    const adminId = parseInt(req.userId || '0', 10);
+
+    await db.query(
+      `UPDATE admin_notifications SET resolved = true, resolved_by = $1, resolved_at = NOW() WHERE id = $2`,
+      [adminId, notificationId]
+    );
+
+    res.json({ success: true, message: 'Notification marked as resolved' });
+  } catch (error) {
+    console.error('Resolve error:', error);
+    res.status(500).json({ error: 'Failed to resolve' });
+  }
+});
+
+// POST /api/admin/users/:userId/suspend - Manually suspend user
+router.post('/users/:userId/suspend', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { days = 1 } = req.body;
+    const adminId = parseInt(req.userId || '0', 10);
+
+    const suspendUntil = new Date();
+    suspendUntil.setDate(suspendUntil.getDate() + days);
+
+    await db.query(
+      `UPDATE users SET suspended_until = $1 WHERE id = $2`,
+      [suspendUntil, userId]
+    );
+
+    // Create admin notification
+    const userResult = await db.query(
+      `SELECT display_name, email FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    const user = userResult.rows[0];
+
+    await db.query(
+      `INSERT INTO admin_notifications (type, severity, user_id, message, details, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [
+        'user_suspended',
+        'high',
+        userId,
+        `User ${user.display_name} manually suspended for ${days} day(s) by admin`,
+        JSON.stringify({
+          userId,
+          userName: user.display_name,
+          userEmail: user.email,
+          reason: `Manually suspended by admin for ${days} day(s)`,
+          suspendedUntil: suspendUntil.toISOString(),
+          adminId,
+        }),
+      ]
+    );
+
+    res.json({ success: true, message: `User suspended for ${days} day(s)` });
+  } catch (error) {
+    console.error('Suspension error:', error);
+    res.status(500).json({ error: 'Failed to suspend user' });
+  }
+});
+
 export default router;
