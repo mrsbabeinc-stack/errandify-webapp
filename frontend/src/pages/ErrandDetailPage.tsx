@@ -263,11 +263,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   return (
     <div className="min-h-screen bg-errandify-bg pb-32">
       {/* Page Container */}
-      <div className="max-w-3xl mx-auto px-4">
+      <div className="max-w-3xl mx-auto px-3">
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="text-errandify-orange font-semibold mb-6 text-sm"
+          className="text-errandify-orange font-semibold mb-2 text-xs"
         >
           ← Back
         </button>
@@ -275,18 +275,18 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         {/* Main Errand Card */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-4">
-            <h1 className="text-xl font-bold mb-2">{errand.title}</h1>
-            <div className="flex flex-wrap items-center gap-3">
+          <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-3">
+            <h1 className="text-lg font-bold mb-1">{errand.title}</h1>
+            <div className="flex flex-wrap items-center gap-2">
               <span
                 className={`${getCategoryColor(
                   errand.category
-                )} px-3 py-1 rounded-full text-sm font-semibold`}
+                )} px-2 py-0.5 rounded-full text-xs font-semibold`}
               >
                 {errand.category}
               </span>
               <span
-                className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                   errand.status === 'open'
                     ? 'bg-green-400 text-white'
                     : 'bg-gray-400 text-white'
@@ -298,22 +298,22 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           </div>
 
           {/* Content Section */}
-          <div className="p-3 space-y-3">
-            {/* Budget + Deadline + Location - Compact 3-Column */}
-            <div className="grid grid-cols-1 gap-2">
+          <div className="p-2 space-y-2">
+            {/* Budget + Deadline + Location */}
+            <div className="grid grid-cols-1 gap-1.5">
               {errand.budget && (
-                <div className="bg-orange-50 border-l-4 border-errandify-orange p-2 rounded">
+                <div className="bg-orange-50 border-l-4 border-errandify-orange p-1.5 rounded">
                   <p className="text-xs text-gray-600">Budget</p>
-                  <p className="text-lg font-bold text-errandify-orange">
+                  <p className="text-base font-bold text-errandify-orange">
                     SGD ${parseFloat(String(errand.budget)).toFixed(0)}
                   </p>
                 </div>
               )}
 
               {errand.deadline && (
-                <div className="bg-orange-50 p-2 rounded-lg">
+                <div className="bg-orange-50 p-1.5 rounded-lg">
                   <p className="text-xs text-gray-600 mb-0.5">Deadline</p>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-xs text-gray-700">
                     {new Date(errand.deadline).toLocaleDateString('en-SG', {
                       weekday: 'short',
                       month: 'short',
@@ -327,10 +327,10 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               )}
 
               {errand.location && (
-                <div className="bg-green-50 p-2 rounded-lg">
+                <div className="bg-green-50 p-1.5 rounded-lg">
                   <p className="text-xs text-gray-600 mb-0.5">Location</p>
-                  <p className="text-sm text-gray-700">📍 {getMaskedLocation(errand.location)}</p>
-                  <p className="text-xs text-gray-500 mt-1">Exact address shown to confirmed doer only</p>
+                  <p className="text-xs text-gray-700">📍 {getMaskedLocation(errand.location)}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Exact address shown to confirmed doer only</p>
                 </div>
               )}
             </div>
