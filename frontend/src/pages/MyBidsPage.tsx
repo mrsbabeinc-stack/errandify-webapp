@@ -8,7 +8,7 @@ interface Bid {
   doer_id: number;
   amount: number;
   note?: string;
-  status: 'pending' | 'accepted' | 'confirmed' | 'rejected' | 'withdrawn';
+  status: 'pending' | 'accepted' | 'confirmed' | 'in_progress' | 'job_completed' | 'completed' | 'rejected' | 'withdrawn';
   created_at: string;
   errand?: {
     title: string;
@@ -55,6 +55,12 @@ export default function MyBidsPage() {
         return 'bg-blue-100 text-blue-800 border-blue-300';
       case 'confirmed':
         return 'bg-green-100 text-green-800 border-green-300';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'job_completed':
+        return 'bg-orange-100 text-orange-800 border-orange-300';
+      case 'completed':
+        return 'bg-green-100 text-green-800 border-green-300';
       case 'rejected':
         return 'bg-red-100 text-red-800 border-red-300';
       case 'withdrawn':
@@ -67,13 +73,19 @@ export default function MyBidsPage() {
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
       pending: '⏳ Pending Review',
-      accepted: '✅ Accepted - Confirm Job',
-      confirmed: '🟢 Confirmed - Start Job',
+      accepted: '✅ Accepted - Confirm',
+      confirmed: '🟢 Confirmed - Start',
+      in_progress: '🔄 In Progress',
+      job_completed: '✔️ Job Completed',
+      completed: '🎉 Completed',
       rejected: '❌ Rejected',
       withdrawn: '↩️ Withdrawn',
     };
     return labels[status] || status;
   };
+
+  // Get active job (confirmed or in_progress)
+  const activeBid = bids.find(b => b.status === 'confirmed' || b.status === 'in_progress');
 
   const filteredBids = filterStatus === 'all' ? bids : bids.filter(b => b.status === filterStatus);
 
@@ -97,24 +109,65 @@ export default function MyBidsPage() {
             ← Back
           </button>
           <h1 className="text-2xl font-bold text-errandify-brown">My Bids</h1>
-          <p className="text-gray-600 text-sm">Track all your bid applications</p>
+          <p className="text-gray-600 text-sm">Track all your bids and active jobs</p>
         </div>
+
+        {/* Active Job Sticky Header */}
+        {activeBid && (
+          <div className={`mb-6 p-4 rounded-lg border-2 ${
+            activeBid.status === 'in_progress'
+              ? 'bg-blue-50 border-blue-300'
+              : 'bg-green-50 border-green-300'
+          }`}>
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                  {activeBid.status === 'in_progress' ? '🔄 Currently Working' : '🟢 Active Job'}
+                </p>
+                <h3 className="text-lg font-bold text-errandify-brown mt-1">
+                  {activeBid.errand?.title}
+                </h3>
+                <p className="text-sm text-gray-700 mt-1">
+                  {activeBid.errand?.asker_name} • SGD ${activeBid.amount.toFixed(2)}
+                </p>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(activeBid.status)}`}>
+                {getStatusLabel(activeBid.status)}
+              </span>
+            </div>
+
+            {/* Action Button */}
+            <button
+              onClick={() => navigate(`/errand/${activeBid.errand_id}`)}
+              className={`w-full py-3 rounded-lg font-bold text-white transition-all ${
+                activeBid.status === 'in_progress'
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-green-600 hover:bg-green-700'
+              }`}
+            >
+              {activeBid.status === 'confirmed' ? '▶️ Start Job' : '✏️ Continue Working'}
+            </button>
+          </div>
+        )}
 
         {/* Filter Tabs */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-          {['all', 'pending', 'accepted', 'confirmed', 'rejected'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              className={`px-4 py-2 rounded-full font-semibold text-xs whitespace-nowrap transition-all ${
-                filterStatus === status
-                  ? 'bg-errandify-orange text-white'
-                  : 'bg-white border border-gray-300 text-gray-700 hover:border-errandify-orange'
-              }`}
-            >
-              {status === 'all' ? '📋 All' : status.charAt(0).toUpperCase() + status.slice(1)}
-            </button>
-          ))}
+          {['all', 'pending', 'accepted', 'confirmed', 'in_progress', 'job_completed', 'completed', 'rejected'].map((status) => {
+            const count = bids.filter(b => b.status === status).length;
+            return (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={`px-4 py-2 rounded-full font-semibold text-xs whitespace-nowrap transition-all ${
+                  filterStatus === status
+                    ? 'bg-errandify-orange text-white'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:border-errandify-orange'
+                }`}
+              >
+                {status === 'all' ? '📋 All' : `${status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ')} ${count > 0 ? `(${count})` : ''}`}
+              </button>
+            );
+          })}
         </div>
 
         {/* Error */}
@@ -137,7 +190,7 @@ export default function MyBidsPage() {
               onClick={() => navigate('/browse')}
               className="mt-4 px-4 py-2 bg-errandify-orange text-white rounded-lg font-semibold text-sm hover:bg-opacity-90"
             >
-              Browse Errands
+              Browse ToHelp
             </button>
           </div>
         ) : (
@@ -145,7 +198,11 @@ export default function MyBidsPage() {
             {filteredBids.map((bid) => (
               <div
                 key={bid.id}
-                className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow"
+                className={`bg-white rounded-lg p-4 border transition-all ${
+                  bid === activeBid
+                    ? 'border-green-300 shadow-md'
+                    : 'border-gray-200 hover:shadow-md'
+                }`}
               >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-2">
@@ -175,7 +232,7 @@ export default function MyBidsPage() {
                 {/* Note */}
                 {bid.note && (
                   <div className="mb-3 p-2 bg-gray-50 rounded text-xs text-gray-700">
-                    {bid.note}
+                    💬 {bid.note}
                   </div>
                 )}
 
@@ -190,7 +247,7 @@ export default function MyBidsPage() {
 
                   {bid.status === 'pending' && (
                     <button
-                      onClick={() => alert('Edit bid feature coming soon')}
+                      onClick={() => navigate(`/errand/${bid.errand_id}`)}
                       className="flex-1 px-3 py-2 bg-errandify-orange text-white rounded font-semibold text-xs hover:bg-opacity-90"
                     >
                       Edit Bid
@@ -202,7 +259,7 @@ export default function MyBidsPage() {
                       onClick={() => navigate(`/errand/${bid.errand_id}`)}
                       className="flex-1 px-3 py-2 bg-green-600 text-white rounded font-semibold text-xs hover:bg-green-700"
                     >
-                      Confirm Job
+                      ✅ Confirm
                     </button>
                   )}
 
@@ -211,7 +268,16 @@ export default function MyBidsPage() {
                       onClick={() => navigate(`/errand/${bid.errand_id}`)}
                       className="flex-1 px-3 py-2 bg-blue-600 text-white rounded font-semibold text-xs hover:bg-blue-700"
                     >
-                      Start Job
+                      ▶️ Start
+                    </button>
+                  )}
+
+                  {bid.status === 'in_progress' && (
+                    <button
+                      onClick={() => navigate(`/errand/${bid.errand_id}`)}
+                      className="flex-1 px-3 py-2 bg-blue-600 text-white rounded font-semibold text-xs hover:bg-blue-700"
+                    >
+                      ✏️ End Job
                     </button>
                   )}
                 </div>
