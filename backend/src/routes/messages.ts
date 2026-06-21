@@ -227,7 +227,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
     // Get messages (last 50)
     const messagesResult = await db.query(
       `SELECT m.id, m.task_id, m.sender_id, m.content, m.flagged, m.created_at,
-              u.display_name, u.avatar_url
+              u.display_name, u.profile_image_url
        FROM task_messages m
        JOIN users u ON m.sender_id = u.id
        WHERE m.task_id = $1
@@ -260,7 +260,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
           taskId: m.task_id,
           senderId: m.sender_id,
           senderName: m.display_name,
-          senderAvatar: m.avatar_url,
+          senderAvatar: m.profile_image_url,
           content: m.flagged ? '[Message flagged]' : m.content,
           flagged: m.flagged,
           createdAt: m.created_at,
@@ -274,7 +274,8 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
       },
     });
   } catch (error) {
-    console.error('Get messages error:', error);
+    console.error('Get messages error:', error instanceof Error ? error.message : error);
+    console.error('Full error:', error);
     res.status(500).json({ error: 'Failed to fetch messages' });
   }
 });

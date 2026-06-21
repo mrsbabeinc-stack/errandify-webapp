@@ -609,6 +609,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           taskTitle={errand.title}
           isOpen={showChat}
           onClose={() => setShowChat(false)}
+          errandDetails={{
+            budget: errand.budget,
+            deadline: errand.deadline,
+            location: errand.location,
+            description: errand.description,
+          }}
         />
       )}
 
