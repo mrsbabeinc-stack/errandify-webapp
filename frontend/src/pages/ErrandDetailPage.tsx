@@ -339,7 +339,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               )}
 
               {errand.location && (
-                <div className="bg-green-50 p-1 rounded-lg">
+                <div className="bg-orange-50 p-1 rounded-lg">
                   <p className="text-xs text-gray-600">Location</p>
                   <p className="text-xs text-gray-700">📍 {getMaskedLocation(errand.location)}</p>
                   <p className="text-xs text-gray-500 mt-0.5">Exact address shown to confirmed doer only</p>
