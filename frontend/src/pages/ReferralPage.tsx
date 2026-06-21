@@ -158,13 +158,13 @@ export default function ReferralPage() {
               />
               <button
                 onClick={handleCopyCode}
-                className={`px-3 py-1.5 rounded font-bold text-xs transition ${
+                className={`px-3 py-1.5 rounded font-bold text-xs whitespace-nowrap transition ${
                   copied === 'code'
                     ? 'bg-green-600 text-white'
                     : 'bg-errandify-brown text-white hover:shadow-md'
                 }`}
               >
-                {copied === 'code' ? '✅' : '📋'}
+                {copied === 'code' ? '✅ Done!' : 'Copy'}
               </button>
             </div>
           </div>
@@ -181,13 +181,13 @@ export default function ReferralPage() {
               />
               <button
                 onClick={handleCopyLink}
-                className={`px-3 py-1.5 rounded font-bold text-xs transition ${
+                className={`px-3 py-1.5 rounded font-bold text-xs whitespace-nowrap transition ${
                   copied === 'link'
                     ? 'bg-green-600 text-white'
                     : 'bg-errandify-brown text-white hover:shadow-md'
                 }`}
               >
-                {copied === 'link' ? '✅' : '📋'}
+                {copied === 'link' ? '✅ Done!' : 'Copy'}
               </button>
             </div>
           </div>
