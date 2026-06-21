@@ -870,16 +870,16 @@ export default function MyKampungPage() {
               </div>
             ) : (
               posts.map((post) => (
-                <div key={post.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold">
+                <div key={post.id} className="bg-white rounded-lg border border-gray-200 p-2.5 shadow-sm hover:shadow-md transition">
+                  <div className="flex items-start gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-xs">
                       {post.author.charAt(0)}
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-gray-800">{post.author}</h3>
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getCategoryColor(post.category)}`}>
-                          {post.category === 'success_story' ? '🏆 Success' : post.category === 'tip' ? '💡 Tip' : post.category === 'question' ? '❓ Q&A' : '🤝 Help'}
+                      <div className="flex items-center gap-1">
+                        <h3 className="font-semibold text-gray-800 text-sm">{post.author}</h3>
+                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getCategoryColor(post.category)}`}>
+                          {post.category === 'success_story' ? '🏆' : post.category === 'tip' ? '💡' : post.category === 'question' ? '❓' : '🤝'}
                         </span>
                       </div>
                       <p className="text-xs text-gray-600">⭐ {post.authorRating.toFixed(1)} • {formatDate(post.createdAt)}</p>
@@ -887,19 +887,16 @@ export default function MyKampungPage() {
                   </div>
 
                   {post.moderationStatus?.flagged && (
-                    <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="mb-2 p-1.5 bg-amber-50 border border-amber-200 rounded-lg">
                       <p className="text-xs text-amber-700">
                         ⚠️ <span className="font-semibold">{post.moderationStatus.category}</span>
-                        {post.moderationStatus.confidence && (
-                          <span> ({(post.moderationStatus.confidence * 100).toFixed(0)}% confidence)</span>
-                        )}
                       </p>
                     </div>
                   )}
 
-                  <p className="text-sm text-gray-700 mb-4">{post.content}</p>
+                  <p className="text-xs text-gray-700 mb-2 line-clamp-2">{post.content}</p>
 
-                  <div className="flex items-center gap-4 text-xs text-gray-600 border-t border-gray-100 pt-3">
+                  <div className="flex items-center gap-2 text-xs text-gray-600 border-t border-gray-100 pt-2">
                     <button
                       onClick={() => handleLikePost(post.id)}
                       className={`flex items-center gap-1 font-medium transition ${
@@ -950,30 +947,24 @@ export default function MyKampungPage() {
                 <div
                   key={discussion.id}
                   onClick={() => navigate(`/discussion/${discussion.id}`)}
-                  className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition cursor-pointer"
+                  className="bg-white rounded-lg border border-gray-200 p-2.5 shadow-sm hover:shadow-md transition cursor-pointer"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold text-gray-800 hover:text-errandify-orange">{discussion.title}</h3>
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getCategoryColor(discussion.category)}`}>
-                          {discussion.category.charAt(0).toUpperCase() + discussion.category.slice(1)}
+                      <div className="flex items-center gap-1 mb-1">
+                        <h3 className="font-semibold text-gray-800 hover:text-errandify-orange text-sm line-clamp-2">{discussion.title}</h3>
+                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap ${getCategoryColor(discussion.category)}`}>
+                          {discussion.category.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600">Started by {discussion.author}</p>
+                      <p className="text-xs text-gray-600">by {discussion.author}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 text-xs text-gray-600 border-t border-gray-100 pt-3 mt-3">
-                    <div className="flex items-center gap-1">
-                      💬 {discussion.replies} replies
-                    </div>
-                    <div className="flex items-center gap-1">
-                      👁️ {discussion.views} views
-                    </div>
-                    <div className="flex items-center gap-1 ml-auto">
-                      {formatDate(discussion.lastUpdated)}
-                    </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-600 border-t border-gray-100 pt-1.5 mt-1.5">
+                    <span>💬 {discussion.replies}</span>
+                    <span>👁️ {discussion.views}</span>
+                    <span className="ml-auto">{formatDate(discussion.lastUpdated)}</span>
                   </div>
                 </div>
               ))
