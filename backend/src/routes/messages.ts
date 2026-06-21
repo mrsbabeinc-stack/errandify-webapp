@@ -236,16 +236,21 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
       [taskId]
     );
 
-    // Get online status for both participants
-    const userStatusResult = await db.query(
-      `SELECT id, last_active_at FROM users WHERE id = $1 OR id = $2`,
-      [task.asker_id, task.doer_id]
-    );
-
-    const userStatusMap = userStatusResult.rows.reduce((acc: any, row: any) => {
-      acc[row.id] = isUserOnline(row.last_active_at);
-      return acc;
-    }, {});
+    // Get online status for both participants (handle null doer_id)
+    const userStatusMap: any = {};
+    if (task.asker_id || task.doer_id) {
+      const statusIds = [task.asker_id, task.doer_id].filter((id: any) => id != null);
+      if (statusIds.length > 0) {
+        const placeholders = statusIds.map((_: any, i: number) => `$${i + 1}`).join(',');
+        const userStatusResult = await db.query(
+          `SELECT id, last_active_at FROM users WHERE id IN (${placeholders})`,
+          statusIds
+        );
+        userStatusResult.rows.forEach((row: any) => {
+          userStatusMap[row.id] = isUserOnline(row.last_active_at);
+        });
+      }
+    }
 
     res.json({
       success: true,
@@ -262,9 +267,9 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
         })),
         participantStatus: {
           askerId: task.asker_id,
-          askerOnline: userStatusMap[task.asker_id],
+          askerOnline: userStatusMap[task.asker_id] || false,
           doerId: task.doer_id,
-          doerOnline: userStatusMap[task.doer_id],
+          doerOnline: task.doer_id ? userStatusMap[task.doer_id] || false : false,
         },
       },
     });
