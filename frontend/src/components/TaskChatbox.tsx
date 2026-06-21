@@ -32,6 +32,9 @@ export default function TaskChatbox({
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [otherUserOnline, setOtherUserOnline] = useState<boolean | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [askerId, setAskerId] = useState<number | null>(null);
+  const [doerId, setDoerId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -58,11 +61,14 @@ export default function TaskChatbox({
         }
       );
       setMessages(response.data.data.messages || response.data.data);
-      // Update online status if available
+      // Update online status and user IDs if available
       if (response.data.data.participantStatus) {
         const currentUser = localStorage.getItem('user');
         if (currentUser) {
           const user = JSON.parse(currentUser);
+          setCurrentUserId(user.id);
+          setAskerId(response.data.data.participantStatus.askerId);
+          setDoerId(response.data.data.participantStatus.doerId);
           const isAsker = user.id === response.data.data.participantStatus.askerId;
           const onlineStatus = isAsker
             ? response.data.data.participantStatus.doerOnline
@@ -132,8 +138,8 @@ export default function TaskChatbox({
         {/* Header */}
         <div className="bg-errandify-brown text-white p-3 flex items-start justify-between rounded-t-lg gap-2">
           <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-sm">Chat: {taskTitle}</h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-bold text-sm">Chat with {currentUserId === askerId ? 'Doer' : 'Asker'}</h3>
               <span className={`inline-block w-2 h-2 rounded-full ${otherUserOnline ? 'bg-green-400' : 'bg-gray-400'}`} title={otherUserOnline ? 'Online' : 'Offline'} />
             </div>
             <a
@@ -176,10 +182,17 @@ export default function TaskChatbox({
                   />
                 )}
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-semibold text-gray-900">
                       {msg.senderName}
                     </p>
+                    <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
+                      msg.senderId === askerId
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {msg.senderId === askerId ? 'Asker' : 'Doer'}
+                    </span>
                     <p className="text-xs text-gray-500">
                       {new Date(msg.createdAt).toLocaleTimeString('en-SG', {
                         hour: '2-digit',
