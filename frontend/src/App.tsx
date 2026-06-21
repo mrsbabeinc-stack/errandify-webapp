@@ -179,29 +179,6 @@ export default function App() {
           }
         />
 
-        {/* Browse all errands (doer quick access) */}
-        <Route
-          path="/browse"
-          element={
-            isAuthenticated ? (
-              <DoerBrowsePage userRole={userRole} />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
-
-        {/* Browse errands by category (doer flow) */}
-        <Route
-          path="/browse-errands/:categoryId"
-          element={
-            isAuthenticated ? (
-              <BrowseErrandsPage />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
 
         {/* TEST ROUTE - to verify routing works */}
         <Route path="/test" element={<TestPage />} />
@@ -221,7 +198,6 @@ export default function App() {
         <Route path="/user/:userId" element={<UserProfilePage />} />
         <Route path="/edit-profile" element={isAuthenticated ? <EditProfilePage /> : <Navigate to="/login" replace />} />
         <Route path="/disputes" element={isAuthenticated ? <DisputePage /> : <Navigate to="/login" replace />} />
-        <Route path="/search" element={isAuthenticated ? <DoerBrowsePage userRole={userRole} /> : <Navigate to="/login" replace />} />
         <Route path="/recurring-sessions" element={isAuthenticated ? <RecurringSessionsPage /> : <Navigate to="/login" replace />} />
         <Route path="/email-notifications" element={isAuthenticated ? <EmailNotificationSettingsPage /> : <Navigate to="/login" replace />} />
         <Route path="/ratings" element={isAuthenticated ? <RatingsHistoryPage /> : <Navigate to="/login" replace />} />
@@ -246,6 +222,9 @@ export default function App() {
           }
         >
           <Route path="/home" element={<HomePage userRole={userRole} />} />
+          <Route path="/browse" element={<DoerBrowsePage userRole={userRole} />} />
+          <Route path="/browse-errands/:categoryId" element={<BrowseErrandsPage />} />
+          <Route path="/search" element={<DoerBrowsePage userRole={userRole} />} />
           <Route path="/errands" element={<ErrandsPage userRole={userRole} />} />
           <Route path="/errand/:id" element={<ErrandDetailPage userRole={userRole} />} />
           <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole} />} />
