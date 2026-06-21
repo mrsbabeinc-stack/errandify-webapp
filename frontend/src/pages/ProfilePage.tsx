@@ -1,5 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+interface UserProfile {
+  id: number;
+  displayName: string;
+  profileImage?: string;
+  bio?: string;
+  averageRating?: number;
+  totalRatings?: number;
+}
 
 interface ProfilePageProps {
   userRole: 'asker' | 'doer';
@@ -8,6 +18,27 @@ interface ProfilePageProps {
 
 export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
   const navigate = useNavigate();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user-profile/me/full`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUserProfile(response.data.data);
+    } catch (err) {
+      console.error('Failed to fetch profile:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -40,6 +71,49 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
 
   return (
     <div className="px-4 py-4 max-w-3xl mx-auto">
+      {/* Profile Header Card */}
+      {!loading && userProfile && (
+        <div className="mb-6 bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg p-6 text-white shadow-lg">
+          <div className="flex items-center gap-4">
+            {/* Profile Photo */}
+            <div className="flex-shrink-0">
+              {userProfile.profileImage ? (
+                <img
+                  src={userProfile.profileImage}
+                  alt={userProfile.displayName}
+                  className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-white bg-opacity-30 flex items-center justify-center border-4 border-white text-3xl">
+                  👤
+                </div>
+              )}
+            </div>
+
+            {/* Profile Info */}
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold">{userProfile.displayName}</h1>
+              {userProfile.bio && (
+                <p className="text-sm text-white text-opacity-90 mt-1">{userProfile.bio}</p>
+              )}
+              {userProfile.averageRating && (
+                <p className="text-sm text-white text-opacity-90 mt-2">
+                  ⭐ {userProfile.averageRating.toFixed(1)} ({userProfile.totalRatings || 0} reviews)
+                </p>
+              )}
+            </div>
+
+            {/* Edit Button */}
+            <button
+              onClick={handleEditProfile}
+              className="px-4 py-2 bg-white text-errandify-orange rounded-lg font-semibold hover:bg-gray-100 transition-colors text-sm whitespace-nowrap"
+            >
+              ✏️ Edit
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* MyAccount Section */}
       <div className="mb-6">
         <h2 className="text-sm font-bold text-errandify-brown mb-3 flex items-center gap-2">
