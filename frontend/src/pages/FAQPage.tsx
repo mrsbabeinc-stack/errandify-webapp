@@ -10,8 +10,7 @@ interface FAQItem {
 
 export default function FAQPage() {
   const navigate = useNavigate();
-  const [activeCategory, setActiveCategory] = useState<'all' | 'general' | 'asker' | 'doer' | 'payment' | 'safety' | 'conduct'>('all');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<'all' | 'general' | 'asker' | 'doer' | 'payment' | 'safety' | 'conduct'>('general');
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -386,33 +385,31 @@ export default function FAQPage() {
   };
 
   return (
-    <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-20">
-      <div className="max-w-2xl mx-auto">
-        <button onClick={handleBack} className="mb-4 text-lg text-gray-600 font-bold hover:text-gray-800 transition">
-          ‹ Back to Home
-        </button>
-
-        <div className="mb-6 text-center">
-          <p className="text-xs font-semibold text-errandify-orange italic mb-3">Simplifying Life, Amplifying Humanity</p>
-          <h1 className="text-3xl font-bold text-errandify-brown mb-2">❓ Frequently Asked Questions</h1>
-          <p className="text-gray-600 mb-3">Find answers to common questions about Errandify</p>
-          <p className="text-sm font-semibold text-errandify-brown">💬 Get Help • 🤝 Give Help • 💰 Get Paid</p>
+    <div className="min-h-screen bg-errandify-bg pb-20">
+      {/* HEADER */}
+      <div className="bg-white shadow sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <button
+            onClick={handleBack}
+            className="text-errandify-orange font-semibold text-sm hover:underline"
+          >
+            ← Back
+          </button>
+          <h1 className="text-2xl font-bold text-errandify-brown">❓ FAQ</h1>
+          <div className="w-20"></div>
         </div>
 
-        {/* Category Filter */}
-        <div className="mb-6 bg-white rounded-lg p-1 border border-gray-200">
-          <div className="flex flex-wrap gap-1">
-            {(['all', 'general', 'asker', 'doer', 'payment', 'safety', 'conduct'] as const).map(cat => (
+        {/* COMPACT CATEGORY TABS */}
+        <div className="border-t border-gray-200 overflow-x-auto">
+          <div className="max-w-6xl mx-auto px-4 flex gap-2 py-2">
+            {(['general', 'asker', 'doer', 'payment', 'safety', 'conduct'] as const).map(cat => (
               <button
                 key={cat}
-                onClick={() => {
-                  setActiveCategory(cat);
-                  setExpandedId(null);
-                }}
-                className={`flex-1 min-w-[100px] py-2 px-3 rounded-lg font-semibold text-xs transition ${
+                onClick={() => setActiveCategory(cat)}
+                className={`px-3 py-1 rounded-full font-semibold text-xs whitespace-nowrap transition ${
                   activeCategory === cat
                     ? 'bg-errandify-orange text-white'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 {categoryLabels[cat]}
@@ -420,53 +417,47 @@ export default function FAQPage() {
             ))}
           </div>
         </div>
+      </div>
 
-        {/* FAQ Items */}
-        <div className="space-y-3">
+      {/* CONTENT - COMPACT GRID */}
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredFAQs.map(faq => (
-            <button
+            <div
               key={faq.id}
-              onClick={() => setExpandedId(expandedId === faq.id ? null : faq.id)}
-              className="w-full bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-errandify-orange transition"
+              className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition"
             >
               {/* Question */}
-              <div className="p-4 flex items-start gap-3 text-left hover:bg-gray-50 transition">
-                <span className="text-errandify-orange font-bold text-xl flex-shrink-0">
-                  {expandedId === faq.id ? '−' : '+'}
-                </span>
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-800">{faq.question}</p>
-                </div>
-              </div>
+              <h3 className="font-bold text-errandify-brown text-sm mb-2 leading-tight">
+                {faq.question}
+              </h3>
 
-              {/* Answer */}
-              {expandedId === faq.id && (
-                <div className="px-4 pb-4 border-t border-gray-100 bg-gray-50">
-                  <p className="text-sm text-gray-700 leading-relaxed">{faq.answer}</p>
-                </div>
-              )}
-            </button>
+              {/* Answer - Always visible, compact */}
+              <p className="text-xs text-gray-700 leading-relaxed line-clamp-3">
+                {faq.answer}
+              </p>
+
+              {/* Read More Link */}
+              <button
+                onClick={() => navigate(`/how-it-works`)}
+                className="mt-2 text-errandify-orange text-xs font-semibold hover:underline"
+              >
+                Learn more →
+              </button>
+            </div>
           ))}
         </div>
 
-        {/* Still Need Help */}
-        <div className="mt-8 bg-orange-50 rounded-lg p-6 border border-orange-200 text-center">
-          <h2 className="font-bold text-gray-800 mb-2">Didn't find your answer?</h2>
-          <p className="text-sm text-gray-600 mb-4">Our support team is here to help!</p>
-          <div className="space-y-2 text-sm">
-            <p className="text-gray-700">
-              <strong>📧 Email:</strong>{' '}
-              <a href="mailto:togather@errandify.ai" className="text-errandify-orange hover:underline">
-                togather@errandify.ai
-              </a>
-            </p>
-            <p className="text-gray-700">
-              <strong>💬 Chat:</strong> Message us through the app
-            </p>
-            <p className="text-gray-700">
-              <strong>🏘️ Community:</strong> Ask in MyKampung discussions
-            </p>
-          </div>
+        {/* STILL NEED HELP - COMPACT */}
+        <div className="mt-8 bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg p-6 text-white text-center">
+          <h2 className="font-bold mb-2">Need More Help?</h2>
+          <p className="text-sm mb-4">
+            📧{' '}
+            <a href="mailto:togather@errandify.ai" className="underline hover:no-underline">
+              togather@errandify.ai
+            </a>
+            {' '} • 💬 Message us in app
+          </p>
         </div>
       </div>
     </div>
