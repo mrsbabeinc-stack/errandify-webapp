@@ -687,45 +687,36 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     let fullAddress = `Singapore ${postalCode}`;
 
     if (postalCode && postalCode.length === 6) {
-      // Try OneMap API with proper error handling and timeout
+      // Try OneMap API with proper error handling
       try {
         console.log(`[Extract] OneMap lookup: Postal code ${postalCode}`);
         const oneMapUrl = `https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=Y&getAddrDetails=Y`;
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        try {
+          // Try with axios first (more reliable)
+          const axiosResponse = await axios.get(oneMapUrl, {
+            timeout: 5000,
+            headers: { 'Accept': 'application/json' }
+          });
 
-        const response = await fetch(oneMapUrl, {
-          signal: controller.signal,
-          headers: { 'Accept': 'application/json' }
-        });
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data?.results?.[0]) {
-            const addr = data.results[0];
+          if (axiosResponse.data?.results?.[0]) {
+            const addr = axiosResponse.data.results[0];
             fullAddress = addr.ADDRESS || `Singapore ${postalCode}`;
-            // Extract area: use ROAD_NAME, or fallback to first part of ADDRESS
             area = addr.ROAD_NAME?.trim() || addr.BUILDING_NAME?.trim() || 'Singapore';
-            // Clean up area - remove excessive words, just get street name
-            if (area && area !== 'Singapore' && area.length > 0) {
-              // Area is good (e.g., "HENDERSON CRESCENT")
-            }
             console.log(`[Extract] ✅ OneMap found: ${fullAddress}, area: ${area}`);
           } else {
             console.log(`[Extract] OneMap: No results for ${postalCode}`);
             fullAddress = `Singapore ${postalCode}`;
             area = 'Singapore';
           }
-        } else {
-          console.log(`[Extract] OneMap HTTP ${response.status}`);
+        } catch (axiosErr) {
+          console.warn(`[Extract] Axios OneMap lookup failed, using postal code only`);
           fullAddress = `Singapore ${postalCode}`;
           area = 'Singapore';
         }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        console.warn(`[Extract] OneMap lookup failed (${errorMsg}), using postal code only`);
+        console.warn(`[Extract] OneMap lookup error (${errorMsg}), using postal code only`);
         fullAddress = `Singapore ${postalCode}`;
         area = 'Singapore';
       }
