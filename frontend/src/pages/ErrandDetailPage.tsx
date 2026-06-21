@@ -276,7 +276,23 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header Section */}
           <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-3">
-            <h1 className="text-lg font-bold mb-1">{errand.title}</h1>
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <h1 className="text-lg font-bold flex-1">{errand.title}</h1>
+              {errand.status === 'open' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' && (
+                <button
+                  onClick={() => {
+                    if (errand.isRecurring) {
+                      setShowSessionSelector(true);
+                    } else {
+                      setShowBidModal(true);
+                    }
+                  }}
+                  className="bg-white text-errandify-orange px-3 py-1 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-gray-100 transition-colors"
+                >
+                  💰 Bid
+                </button>
+              )}
+            </div>
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className={`${getCategoryColor(
