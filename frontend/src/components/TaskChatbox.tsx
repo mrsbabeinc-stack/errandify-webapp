@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { validateMessage, validateImage, validateAudio, validateFileUpload } from '../utils/messageValidator';
+import { validateMessage, validateImage, validateAudio, validateFileUpload, moderateWithAI } from '../utils/messageValidator';
 import { addNotification } from '../utils/notificationStore';
 
 interface Message {
@@ -108,7 +108,7 @@ export default function TaskChatbox({
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    // Validate message
+    // First: Quick pattern validation for contact info
     const validation = validateMessage(newMessage);
     setValidationErrors(validation.errors);
     setValidationWarnings(validation.warnings);
@@ -123,6 +123,17 @@ export default function TaskChatbox({
     setError('');
 
     try {
+      // Second: AI-based content moderation
+      const aiModeration = await moderateWithAI(newMessage);
+
+      if (!aiModeration.isAppropriate) {
+        setValidationErrors([`❌ ${aiModeration.reason || 'Message content not appropriate for this platform. Keep messages task-focused and professional.'}`]);
+        setError('Message failed safety check');
+        setIsLoading(false);
+        return;
+      }
+
+      // Third: Send message if all checks pass
       const token = localStorage.getItem('token');
       await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/tasks/${taskId}/send`,
