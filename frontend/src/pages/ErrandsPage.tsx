@@ -306,9 +306,23 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                       </div>
                     </div>
 
-                    {/* Right: Expand Arrow */}
-                    <div className="text-gray-400 flex-shrink-0 text-sm">
-                      {expandedErrandId === errand.id ? '▼' : '▶'}
+                    {/* Right: MyChat Icon or Expand Arrow */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {userRole === 'asker' && errand.status === 'confirmed' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/errand/${errand.id}`);
+                          }}
+                          className="text-lg hover:scale-110 transition-transform"
+                          title="Chat about this task"
+                        >
+                          💬
+                        </button>
+                      )}
+                      <div className="text-gray-400 text-sm">
+                        {expandedErrandId === errand.id ? '▼' : '▶'}
+                      </div>
                     </div>
                   </div>
                 </button>
@@ -343,24 +357,13 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                         View
                       </button>
                       {userRole === 'asker' && (
-                        <>
-                          <button
-                            onClick={() => handleCopyErrand(errand)}
-                            className="flex-1 bg-orange-500 text-white py-1.5 rounded font-semibold hover:bg-orange-600 text-xs"
-                            title="Copy this errand"
-                          >
-                            Copy
-                          </button>
-                          {errand.status === 'confirmed' && (
-                            <button
-                              onClick={() => navigate(`/errand/${errand.id}`)}
-                              className="flex-1 bg-errandify-brown text-white py-1.5 rounded font-semibold hover:bg-opacity-90 text-xs"
-                              title="Chat about this task"
-                            >
-                              💬 MyChat
-                            </button>
-                          )}
-                        </>
+                        <button
+                          onClick={() => handleCopyErrand(errand)}
+                          className="flex-1 bg-orange-500 text-white py-1.5 rounded font-semibold hover:bg-orange-600 text-xs"
+                          title="Copy this errand"
+                        >
+                          Copy
+                        </button>
                       )}
                     </div>
                   </div>
