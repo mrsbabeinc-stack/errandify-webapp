@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import axios from 'axios';
+import https from 'https';
 import * as biasDetector from '../modules/bias-detector.js';
 import * as contentMod from '../modules/content-moderation.js';
 import * as privacyLogger from '../modules/privacy-logger.js';
@@ -693,26 +694,30 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         const oneMapUrl = `https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=Y&getAddrDetails=Y`;
 
         try {
+          console.log(`[Extract] Making OneMap request to: ${oneMapUrl}`);
           // Try with axios first (more reliable)
           const axiosResponse = await axios.get(oneMapUrl, {
             timeout: 5000,
             headers: { 'Accept': 'application/json' },
-            httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
+            httpsAgent: new https.Agent({ rejectUnauthorized: false })
           });
+
+          console.log(`[Extract] OneMap response status:`, axiosResponse.status);
+          console.log(`[Extract] OneMap response data:`, axiosResponse.data);
 
           if (axiosResponse.data?.results?.[0]) {
             const addr = axiosResponse.data.results[0];
             fullAddress = addr.ADDRESS || `Singapore ${postalCode}`;
             area = addr.ROAD_NAME?.trim() || addr.BUILDING_NAME?.trim() || 'Singapore';
-            console.log(`[Extract] ✅ OneMap found: ${fullAddress}, area: ${area}`);
+            console.log(`[Extract] ✅ OneMap SUCCESS: address=${fullAddress}, area=${area}`);
           } else {
-            console.log(`[Extract] OneMap: No results for ${postalCode}`);
+            console.log(`[Extract] OneMap: No results found in response`);
             fullAddress = `Singapore ${postalCode}`;
             area = 'Singapore';
           }
         } catch (axiosErr) {
           const axiosErrMsg = axiosErr instanceof Error ? axiosErr.message : String(axiosErr);
-          console.warn(`[Extract] Axios OneMap lookup failed (${axiosErrMsg}), using postal code only`);
+          console.warn(`[Extract] ❌ OneMap FAILED: ${axiosErrMsg}`);
           fullAddress = `Singapore ${postalCode}`;
           area = 'Singapore';
         }
