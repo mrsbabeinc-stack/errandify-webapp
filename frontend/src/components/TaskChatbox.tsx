@@ -140,7 +140,7 @@ export default function TaskChatbox({
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-bold text-sm">Chat with {currentUserId === askerId ? 'Doer' : 'Asker'}</h3>
-              <span className={`inline-block w-2 h-2 rounded-full ${otherUserOnline ? 'bg-green-400' : 'bg-gray-400'}`} title={otherUserOnline ? 'Online' : 'Offline'} />
+              <span className={`inline-block w-2 h-2 rounded-full ${otherUserOnline ? 'bg-green-400' : 'bg-red-400'}`} title={otherUserOnline ? 'Online' : 'Offline'} />
             </div>
             <a
               href={`/errand/${taskId}`}
@@ -148,7 +148,7 @@ export default function TaskChatbox({
             >
               📋 View Errand Details
             </a>
-            <p className="text-xs text-orange-100 mt-1">🛡️ AI safety scanning active • {otherUserOnline ? '🟢 Online' : '⚫ Offline'}</p>
+            <p className="text-xs text-orange-100 mt-1">🛡️ AI safety scanning active • {otherUserOnline ? '🟢 Online' : '🔴 Offline'}</p>
           </div>
           <button
             onClick={onClose}
