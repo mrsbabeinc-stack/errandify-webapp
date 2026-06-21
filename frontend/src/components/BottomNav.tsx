@@ -36,8 +36,8 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
 
   const doerItems: NavItem[] = [
     { label: 'Browse ToHelp', path: '/', icon: '🔍' },
-    { label: 'MyErrands', path: '/errands', icon: '📋' },
-    { label: 'Chat', path: '/chat', icon: '💬' },
+    { label: 'My Bids', path: '/my-bids', icon: '💼' },
+    { label: 'MyChat', path: '/chat', icon: '💬' },
     { label: 'MyKampung', path: '/my-kampung', icon: '🏘️' },
     { label: 'MyPocket', path: '/wallet', icon: '💰' },
     { label: 'MyAccount', path: '/profile', icon: '👤', image: userImage || undefined },
@@ -46,7 +46,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   const askerItems: NavItem[] = [
     { label: 'Home', path: '/', icon: '🏠' },
     { label: 'MyErrands', path: '/errands', icon: '📋' },
-    { label: 'Chat', path: '/chat', icon: '💬' },
+    { label: 'MyChat', path: '/chat', icon: '💬' },
     { label: 'MyKampung', path: '/my-kampung', icon: '🏘️' },
     { label: 'MyPocket', path: '/wallet', icon: '💰' },
     { label: 'MyAccount', path: '/profile', icon: '👤', image: userImage || undefined },

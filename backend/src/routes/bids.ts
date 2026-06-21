@@ -311,4 +311,45 @@ router.get('/user/:userId/confidence', async (req: AuthRequest, res: Response) =
   }
 });
 
+// GET /api/bids/my-bids - Get all bids placed by current doer
+router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const doerId = parseInt(req.userId || '0', 10);
+
+    const result = await db.query(
+      `SELECT b.*,
+              e.title, e.budget, e.category,
+              u.display_name as asker_name
+       FROM bids b
+       JOIN errands e ON b.errand_id = e.id
+       JOIN users u ON e.asker_id = u.id
+       WHERE b.doer_id = $1
+       ORDER BY b.created_at DESC`,
+      [doerId]
+    );
+
+    res.json({
+      success: true,
+      data: result.rows.map(row => ({
+        id: row.id,
+        errand_id: row.errand_id,
+        doer_id: row.doer_id,
+        amount: row.amount,
+        note: row.note,
+        status: row.status,
+        created_at: row.created_at,
+        errand: {
+          title: row.title,
+          budget: row.budget,
+          category: row.category,
+          asker_name: row.asker_name,
+        },
+      })),
+    });
+  } catch (error) {
+    console.error('Error fetching my bids:', error);
+    res.status(500).json({ error: 'Failed to fetch bids' });
+  }
+});
+
 export default router;
