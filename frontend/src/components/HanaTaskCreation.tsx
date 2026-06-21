@@ -359,7 +359,9 @@ export default function HanaTaskCreation({
   const buildSummary = (data: TaskData) => {
     let summary = '✓ Task Summary:\n\n';
     if (data.title) summary += `📝 ${data.title}\n`;
-    if (data.location) summary += `📍 ${data.location}\n`;
+    if (data.fullAddress) summary += `📍 ${data.fullAddress}\n`;
+    else if (data.location) summary += `📍 ${data.location}\n`;
+    if (data.postalCode) summary += `🏘️ ${data.postalCode}\n`;
     if (data.date) {
       const dateStr = new Date(data.date).toLocaleDateString('en-SG');
       summary += `📅 ${dateStr}`;
