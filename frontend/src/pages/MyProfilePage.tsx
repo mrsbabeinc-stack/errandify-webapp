@@ -12,6 +12,11 @@ interface UserProfile {
   monthlyHouseholdIncome?: number;
   chasCardColor?: string;
   chasSubsidyPercentage?: number;
+  bio?: string;
+  completedTasks?: number;
+  totalEarnings?: number;
+  responseTime?: number;
+  availableForWork?: boolean;
 }
 
 interface Rating {
@@ -127,6 +132,28 @@ export default function MyProfilePage() {
   if (error) return <div className="p-6 text-center text-red-600">{error}</div>;
   if (!profile) return <div className="p-6 text-center">Profile not found</div>;
 
+  const getProfileCompleteness = () => {
+    let complete = 0;
+    if (profile.name) complete++;
+    if (profile.mobile) complete++;
+    if (profile.categories.length > 0) complete++;
+    if (profile.bio) complete++;
+    if (profile.monthlyHouseholdIncome) complete++;
+    return Math.round((complete / 5) * 100);
+  };
+
+  const getBadges = () => {
+    const badges = [];
+    if (ratings.averageRating >= 4.8) badges.push({ icon: '⭐', label: 'Trusted Expert', color: 'bg-blue-50 border-blue-200' });
+    if (ratings.reviewCount >= 50) badges.push({ icon: '🏆', label: 'Top Performer', color: 'bg-yellow-50 border-yellow-200' });
+    if (ratings.averageRating === 5 && ratings.reviewCount >= 10) badges.push({ icon: '✨', label: 'Perfect Rating', color: 'bg-purple-50 border-purple-200' });
+    if (profile.completedTasks && profile.completedTasks >= 100) badges.push({ icon: '🚀', label: 'Century Club', color: 'bg-green-50 border-green-200' });
+    return badges;
+  };
+
+  const completeness = getProfileCompleteness();
+  const badges = getBadges();
+
   return (
     <div className="min-h-screen bg-errandify-bg pb-24">
       <div className="max-w-2xl mx-auto px-4 py-6">
@@ -139,13 +166,67 @@ export default function MyProfilePage() {
 
         <h1 className="text-3xl font-bold text-errandify-brown mb-6">My Profile</h1>
 
-        {/* Profile Card */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="flex gap-4 mb-6">
-            <div className="text-5xl">👤</div>
+        {/* Profile Header Card - Enhanced */}
+        <div className="bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg shadow-lg p-6 mb-6 text-white">
+          <div className="flex gap-4 mb-4">
+            <div className="text-6xl drop-shadow-lg">👤</div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-800">{profile.name}</h2>
-              <p className="text-sm text-gray-600">✅ Verified User</p>
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-2xl font-bold">{profile.name}</h2>
+                <span className="text-xl">✅</span>
+              </div>
+              <p className="text-orange-50 text-sm mb-2">{profile.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
+
+              {/* Badges Row */}
+              {badges.length > 0 && (
+                <div className="flex gap-2 flex-wrap mt-2">
+                  {badges.map((badge, idx) => (
+                    <div key={idx} className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full backdrop-blur">
+                      {badge.icon} {badge.label}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Profile Completion Bar */}
+          <div className="mt-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-semibold">Profile Completeness</span>
+              <span className="text-sm font-bold">{completeness}%</span>
+            </div>
+            <div className="w-full bg-white bg-opacity-30 rounded-full h-2">
+              <div
+                className="bg-white rounded-full h-2 transition-all duration-300"
+                style={{ width: `${completeness}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Stats Cards */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="bg-white rounded-lg shadow p-4 text-center">
+            <p className="text-3xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
+            <p className="text-xs text-gray-600 font-semibold">⭐ Rating</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4 text-center">
+            <p className="text-3xl font-bold text-errandify-orange">{ratings.reviewCount}</p>
+            <p className="text-xs text-gray-600 font-semibold">👥 Reviews</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4 text-center">
+            <p className="text-3xl font-bold text-errandify-orange">{profile.categories.length}</p>
+            <p className="text-xs text-gray-600 font-semibold">🎯 Skills</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4 text-center">
+            <p className="text-3xl font-bold text-errandify-orange">{profile.completedTasks || 0}</p>
+            <p className="text-xs text-gray-600 font-semibold">✅ Tasks</p>
+          </div>
+        </div>
+
+        {/* Profile Card - Enhanced */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
 
               {/* User ID */}
               {profile.userId && (
@@ -311,9 +392,119 @@ export default function MyProfilePage() {
 
         {ratings.reviewCount === 0 && (
           <div className="bg-white rounded-lg shadow p-6 text-center">
-            <p className="text-gray-600">No reviews yet. Complete some errands to get reviews!</p>
+            <p className="text-gray-600 mb-3">No reviews yet. Complete some errands to get reviews!</p>
+            <button
+              onClick={() => navigate(profile.role === 'asker' ? '/create-errand' : '/browse')}
+              className="bg-errandify-orange text-white px-4 py-2 rounded font-semibold text-sm hover:bg-opacity-90"
+            >
+              {profile.role === 'asker' ? 'Post an Errand' : 'Browse Errands'}
+            </button>
           </div>
         )}
+
+        {/* Engagement Sections */}
+        <div className="space-y-6">
+          {/* Top Skills Section */}
+          {profile.categories.length > 0 && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-bold text-errandify-brown mb-4">🎯 Your Skills</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {profile.categories.slice(0, 4).map((cat, idx) => (
+                  <div key={idx} className="bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-3 text-center">
+                    <p className="text-sm font-bold text-errandify-brown">{cat}</p>
+                    <p className="text-xs text-gray-600">Ready to help</p>
+                  </div>
+                ))}
+              </div>
+              {profile.categories.length > 4 && (
+                <button
+                  onClick={() => navigate('/category-preferences')}
+                  className="w-full mt-3 text-sm text-errandify-orange font-semibold hover:underline"
+                >
+                  View all {profile.categories.length} skills →
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Next Steps CTA */}
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6">
+            <div className="flex gap-3">
+              <span className="text-3xl">🚀</span>
+              <div className="flex-1">
+                <h3 className="font-bold text-blue-900 mb-1">
+                  {completeness === 100 ? 'Profile Complete! 🎉' : 'Complete Your Profile'}
+                </h3>
+                <p className="text-sm text-blue-800 mb-3">
+                  {completeness === 100
+                    ? 'Your profile looks great! Keep building your reputation with quality work.'
+                    : `Add more details to attract more ${profile.role === 'asker' ? 'doers' : 'askers'}.`}
+                </p>
+                {completeness < 100 && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-blue-700 transition"
+                  >
+                    Complete Profile ({completeness}%)
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Share Profile CTA */}
+          <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg p-6">
+            <div className="flex gap-3">
+              <span className="text-3xl">📱</span>
+              <div className="flex-1">
+                <h3 className="font-bold text-green-900 mb-1">Share Your Profile</h3>
+                <p className="text-sm text-green-800 mb-3">
+                  {profile.role === 'asker'
+                    ? 'Spread the word and earn referral points!'
+                    : 'Let friends know you\'re available for work.'}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => navigate('/referral')}
+                    className="bg-green-600 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-green-700 transition flex-1"
+                  >
+                    🎁 Referral Program
+                  </button>
+                  <button
+                    onClick={() => {
+                      const profileUrl = `${window.location.origin}/profile/${profile.id}`;
+                      navigator.clipboard.writeText(profileUrl);
+                      alert('Profile link copied!');
+                    }}
+                    className="bg-green-600 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-green-700 transition flex-1"
+                  >
+                    🔗 Copy Link
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Help & Support */}
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <h3 className="font-bold text-gray-800 mb-2">Need Help?</h3>
+            <p className="text-sm text-gray-600 mb-4">Check our FAQ or contact support</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate('/faq')}
+                className="flex-1 border border-errandify-orange text-errandify-orange py-2 rounded font-semibold text-sm hover:bg-orange-50 transition"
+              >
+                📖 FAQ
+              </button>
+              <a
+                href="mailto:togather@errandify.ai"
+                className="flex-1 bg-errandify-orange text-white py-2 rounded font-semibold text-sm hover:bg-opacity-90 transition text-center"
+              >
+                📧 Support
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
