@@ -275,30 +275,14 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         {/* Main Errand Card */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-3">
-            <div className="flex items-start justify-between gap-2 mb-1">
+          <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-2">
+            <div className="flex items-start justify-between gap-2">
               <h1 className="text-lg font-bold flex-1">{errand.title}</h1>
-              <div className="flex flex-col items-end gap-1">
-                {userBidAmount && (
-                  <div className="bg-white text-errandify-orange px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap">
-                    Bidded ${userBidAmount}
-                  </div>
-                )}
-                {errand.status === 'open' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' && (
-                  <button
-                    onClick={() => {
-                      if (errand.isRecurring) {
-                        setShowSessionSelector(true);
-                      } else {
-                        setShowBidModal(true);
-                      }
-                    }}
-                    className="bg-white text-errandify-orange px-3 py-1 rounded-lg font-bold text-xs whitespace-nowrap hover:bg-gray-100 transition-colors"
-                  >
-                    💰 {userBidAmount ? 'Update' : 'Bid'}
-                  </button>
-                )}
-              </div>
+              {userBidAmount && (
+                <div className="bg-white text-errandify-orange px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap">
+                  Bidded ${userBidAmount}
+                </div>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <span
@@ -326,9 +310,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           </div>
 
           {/* Content Section */}
-          <div className="p-2 space-y-2">
+          <div className="p-1.5 space-y-1.5">
             {/* Budget + Deadline + Location */}
-            <div className="grid grid-cols-1 gap-1.5">
+            <div className="grid grid-cols-1 gap-1">
               {errand.budget && (
                 <div className="bg-orange-50 border-l-4 border-errandify-orange p-1.5 rounded">
                   <p className="text-xs text-gray-600">Budget</p>
