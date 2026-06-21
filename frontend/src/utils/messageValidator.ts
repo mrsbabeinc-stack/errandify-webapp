@@ -85,9 +85,10 @@ export const validateMessage = (content: string): ValidationResult => {
   const lowerContent = content.toLowerCase();
 
   // Create flexible patterns that allow ANY chars between key letters
-  // f[any]ck, s[any]x, c[any]ck, etc.
+  // f[any]ck, s[any]x, c[any]ck, fxx, sxx, etc.
   const obfuscationPatterns = [
-    /f[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*c[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*k/i, // fuck variants
+    /f[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*c[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*k/i, // fuck variants (fck, f*ck, fcgk)
+    /f[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]{2,}k/i, // fxx, fxxx, fyyk variants
     /s[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*x/i, // sex variants
     /c[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*ck/i, // cock variants
     /p[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*rn/i, // porn variants
