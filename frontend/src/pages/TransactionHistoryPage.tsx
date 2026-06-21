@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import HanaAssistant from '../components/HanaAssistant';
 
 export default function TransactionHistoryPage() {
   const navigate = useNavigate();
@@ -31,7 +30,6 @@ export default function TransactionHistoryPage() {
           ))}
         </div>
       </div>
-      <HanaAssistant />
     </div>
   );
 }

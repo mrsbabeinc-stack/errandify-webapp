@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import HanaAssistant from '../components/HanaAssistant';
 
 interface NotificationPreferences {
   bid_accepted: boolean;
@@ -243,7 +242,6 @@ export default function NotificationPreferencesPage() {
           </p>
         </div>
       </div>
-      <HanaAssistant />
     </div>
   );
 }

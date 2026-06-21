@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import HanaAssistant from '../components/HanaAssistant';
 
 interface TaskDetail {
   id: number;
@@ -355,7 +354,6 @@ export default function ReviewCompletionPage() {
           </div>
         </div>
       </div>
-      <HanaAssistant />
     </div>
   );
 }

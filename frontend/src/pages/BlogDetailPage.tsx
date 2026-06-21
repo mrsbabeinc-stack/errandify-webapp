@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import HanaAssistant from '../components/HanaAssistant';
 import blogPostsData from '../data/blogPosts';
 
 export default function BlogDetailPage() {
@@ -197,7 +196,6 @@ export default function BlogDetailPage() {
             Sign In / Join Now
           </button>
         </div>
-        <HanaAssistant />
       </div>
     </div>
   );

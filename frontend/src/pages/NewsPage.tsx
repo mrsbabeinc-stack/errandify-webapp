@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import HanaAssistant from '../components/HanaAssistant';
 
 interface NewsItem {
   id: string;
@@ -322,7 +321,6 @@ export default function NewsPage() {
           </div>
         )}
       </div>
-      <HanaAssistant />
     </div>
   );
 }

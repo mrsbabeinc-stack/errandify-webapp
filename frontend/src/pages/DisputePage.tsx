@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import HanaAssistant from '../components/HanaAssistant';
 
 interface Dispute {
   id: number;
@@ -396,7 +395,6 @@ export default function DisputePage() {
           </div>
         </div>
       )}
-      <HanaAssistant />
     </div>
   );
 }

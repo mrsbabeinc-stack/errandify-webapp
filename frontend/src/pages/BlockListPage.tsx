@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import HanaAssistant from '../components/HanaAssistant';
 
 interface BlockedUser {
   id: number;
@@ -125,7 +124,6 @@ export default function BlockListPage() {
         )}
       </div>
 
-      <HanaAssistant />
     </div>
   );
 }

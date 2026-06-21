@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import HanaAssistant from '../components/HanaAssistant';
 import TaskChat from '../components/TaskChat';
 
 interface TaskStatus {
@@ -347,7 +346,6 @@ export default function TaskExecutionPage() {
           <TaskChat taskId={parseInt(id || '0', 10)} taskTitle={task.title} />
         </div>
       </div>
-      <HanaAssistant />
     </div>
   );
 }

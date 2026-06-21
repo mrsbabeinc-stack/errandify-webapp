@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import HanaAssistant from '../components/HanaAssistant';
 
 interface Discussion {
   id: number;
@@ -166,7 +165,6 @@ export default function DiscussionDetailPage() {
           </div>
         </article>
       </div>
-      <HanaAssistant />
     </div>
   );
 }

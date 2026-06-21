@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import HanaAssistant from '../components/HanaAssistant';
 
 interface Bid {
   id: number;
@@ -302,7 +301,6 @@ export default function MyBidsPage() {
           </div>
         )}
       </div>
-      <HanaAssistant />
     </div>
   );
 }

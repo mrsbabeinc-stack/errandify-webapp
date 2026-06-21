@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import HanaAssistant from '../components/HanaAssistant';
 
 export default function AboutErrandifyPage() {
   const navigate = useNavigate();
@@ -313,7 +312,6 @@ export default function AboutErrandifyPage() {
           </div>
         </div>
       </div>
-      <HanaAssistant />
     </div>
   );
 }

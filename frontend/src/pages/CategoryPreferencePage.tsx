@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import HanaAssistant from '../components/HanaAssistant';
 
 interface CategoryPreferencePageProps {
   userRole: 'asker' | 'doer';
@@ -236,7 +235,6 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
         </div>
       </div>
 
-      <HanaAssistant />
     </div>
   );
 }

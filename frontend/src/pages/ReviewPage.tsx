@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import HanaAssistant from '../components/HanaAssistant';
 
 interface Job {
   id: number;
@@ -197,7 +196,6 @@ export default function ReviewPage() {
           </div>
         </form>
       </div>
-      <HanaAssistant />
     </div>
   );
 }
