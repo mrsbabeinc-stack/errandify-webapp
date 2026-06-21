@@ -209,6 +209,9 @@ export default function HanaTaskCreation({
       const extracted = response.data.data;
       console.log('[Hana] Extracted budget:', extracted.budget, 'type:', typeof extracted.budget);
       console.log('[Hana] Extracted title:', extracted.title);
+      console.log('[Hana] Extracted fullAddress:', extracted.fullAddress);
+      console.log('[Hana] Extracted postalCode:', extracted.postalCode);
+      console.log('[Hana] Extracted location:', extracted.location);
 
       // Update task data with extracted info
       const updatedTaskData: TaskData = {
@@ -226,6 +229,8 @@ export default function HanaTaskCreation({
         notes: extracted.notes || '',
         suggestedSkills: extracted.suggestedSkills || [],
       };
+
+      console.log('[Hana] Updated task data:', updatedTaskData);
 
       setTaskData(updatedTaskData);
 
