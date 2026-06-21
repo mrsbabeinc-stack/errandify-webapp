@@ -71,10 +71,11 @@ interface BlogPost {
 export default function MyKampungPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<'feed' | 'discussions' | 'announcements' | 'events' | 'blog' | 'recognition'>(
+  const [activeTab, setActiveTab] = useState<'feed' | 'news' | 'discussions' | 'announcements' | 'events' | 'blog' | 'recognition'>(
     (location.state as any)?.tab || 'feed'
   );
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [newsItems, setNewsItems] = useState<any[]>([]);
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
@@ -156,6 +157,17 @@ export default function MyKampungPage() {
         console.log('Blog API not available');
       }
 
+      try {
+        const newsRes = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/news`,
+          { headers, timeout: 5000 }
+        );
+        setNewsItems(newsRes.data.data || []);
+      } catch (err) {
+        console.log('News API not available, using mock data');
+        setMockNewsData();
+      }
+
       // If all APIs failed, use mock data
       if (posts.length === 0 && discussions.length === 0 && announcements.length === 0) {
         setMockData();
@@ -166,6 +178,54 @@ export default function MyKampungPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const setMockNewsData = () => {
+    setNewsItems([
+      {
+        id: 'community-1',
+        type: 'community',
+        title: '🏘️ Block 456 Neighborhood Cleanup This Saturday',
+        content: 'Join us for a community cleanup at Bishan Park. Bring gloves and bags. Light refreshments provided!',
+        category: 'event',
+        location: 'Bishan',
+        postal_code: '570456',
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'singapore-1',
+        type: 'singapore',
+        title: 'HDB Announces 2,000 New BTO Units in Jurong West',
+        content: 'Housing & Development Board launches new Build-to-Order flat units with competitive pricing for young families.',
+        source: 'HDB Official',
+        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'errandify-1',
+        type: 'errandify',
+        title: '✨ New Feature: Recurring Tasks Launched!',
+        content: 'Schedule tasks to repeat daily, weekly, or monthly. Perfect for ongoing needs. Enable auto-booking with trusted doers.',
+        category: 'feature',
+        created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'community-2',
+        type: 'community',
+        title: '🐕 Lost Golden Retriever - Reward!',
+        content: 'Missing since Tuesday near Bishan Park. Please call 9876-5432 if spotted. $200 reward offered.',
+        category: 'lost_found',
+        location: 'Bishan Park',
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'errandify-2',
+        type: 'errandify',
+        title: '🎯 Summer Challenge: Earn 500 Points!',
+        content: 'Complete 5 tasks in June and earn 500 bonus Errandify Points. Redeemable for discounts on future tasks.',
+        category: 'campaign',
+        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ]);
   };
 
   const setMockData = () => {
@@ -327,6 +387,9 @@ export default function MyKampungPage() {
 
     // Use real, SEO-optimized blog posts from blogPosts data
     setBlogPosts(blogPostsData);
+
+    // Mock news data
+    setMockNewsData();
 
     // Mock recognition data
     setRecognitions([
@@ -657,14 +720,14 @@ export default function MyKampungPage() {
             💭 Discussions
           </button>
           <button
-            onClick={() => setActiveTab('announcements')}
+            onClick={() => setActiveTab('news')}
             className={`py-1 px-2 rounded text-xs font-semibold transition whitespace-nowrap ${
-              activeTab === 'announcements'
+              activeTab === 'news'
                 ? 'bg-errandify-orange text-white'
-                : 'text-gray-700 hover:bg-gray-100'
+                : 'bg-gray-200 text-gray-700'
             }`}
           >
-            📢 News
+            📰 News
           </button>
           <button
             onClick={() => setActiveTab('events')}
@@ -859,6 +922,84 @@ export default function MyKampungPage() {
         )}
 
         {/* ANNOUNCEMENTS TAB */}
+        {/* NEWS TAB */}
+        {activeTab === 'news' && (
+          <div className="space-y-2">
+            {newsItems.length === 0 ? (
+              <div className="bg-white rounded p-4 text-center border border-gray-200 text-xs text-gray-500">
+                No news available
+              </div>
+            ) : (
+              newsItems.map((item: any) => {
+                const typeColors: Record<string, string> = {
+                  community: 'bg-green-50 border-green-300',
+                  singapore: 'bg-blue-50 border-blue-300',
+                  errandify: 'bg-orange-50 border-orange-300',
+                };
+                const typeIcons: Record<string, string> = {
+                  community: '🏘️',
+                  singapore: '🇸🇬',
+                  errandify: '🚀',
+                };
+
+                return (
+                  <div key={item.id} className={`rounded-lg border-2 p-3 ${typeColors[item.type] || 'bg-gray-50 border-gray-200'}`}>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-lg">{typeIcons[item.type]}</span>
+                          <span className="text-xs font-bold text-gray-600">
+                            {item.type === 'community' ? 'Community' : item.type === 'singapore' ? 'Singapore' : 'Errandify'}
+                          </span>
+                          {item.category && (
+                            <span className="text-xs bg-white px-2 py-0.5 rounded font-semibold text-gray-700">
+                              {item.category}
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-sm font-bold text-gray-800 line-clamp-2">{item.title}</h3>
+                      </div>
+                      <span className="text-xs text-gray-500 whitespace-nowrap">{formatDate(item.created_at)}</span>
+                    </div>
+
+                    <p className="text-xs text-gray-700 line-clamp-2 mb-2">{item.content}</p>
+
+                    {item.image && (
+                      <div className="mb-2 rounded overflow-hidden h-24 bg-gray-200">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between text-xs text-gray-600">
+                      <div className="flex gap-2">
+                        {item.source && <span>📌 {item.source}</span>}
+                        {item.location && <span>📍 {item.location}</span>}
+                      </div>
+                      {item.url && (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-errandify-orange font-semibold hover:underline"
+                        >
+                          Read →
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
         {activeTab === 'announcements' && (
           <div className="space-y-3">
             {announcements.length === 0 ? (
