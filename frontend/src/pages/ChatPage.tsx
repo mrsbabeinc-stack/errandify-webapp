@@ -13,6 +13,9 @@ interface Conversation {
   otherPartyName: string;
   status: string;
   lastMessageAt?: string;
+  deadline?: string;
+  location?: string;
+  postal?: string;
 }
 
 export default function ChatPage({ userRole }: ChatPageProps) {
@@ -51,6 +54,9 @@ export default function ChatPage({ userRole }: ChatPageProps) {
           otherPartyName: errand.askerName || errand.doerName || 'Unknown',
           status: errand.status,
           lastMessageAt: errand.updatedAt,
+          deadline: errand.deadline,
+          location: errand.location,
+          postal: errand.postal_code,
         }));
 
         setConversations(conversations);
@@ -137,6 +143,20 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${getStatusColor(conversation.status)}`}>
                   {getStatusLabel(conversation.status)}
                 </span>
+              </div>
+
+              {/* Start Date/Time and Area */}
+              <div className="text-xs text-gray-600 mb-3 space-y-1">
+                {conversation.deadline && (
+                  <p>
+                    📅 <strong>Start:</strong> {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                )}
+                {(conversation.location || conversation.postal) && (
+                  <p>
+                    📍 <strong>Area:</strong> {conversation.postal && `${conversation.postal}`}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}
+                  </p>
+                )}
               </div>
               <div className="flex gap-2 mt-3">
                 <button
