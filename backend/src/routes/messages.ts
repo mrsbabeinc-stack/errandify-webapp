@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import axios from 'axios';
+import { sendEmail } from '../services/email.js';
 
 const router = Router();
 
@@ -49,6 +50,60 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
     );
 
     const message = messageResult.rows[0];
+
+    // Send email notification to the other user
+    try {
+      const recipientId = isAsker ? task.doer_id : task.asker_id;
+      const senderName = task.asker_id === senderId ? task.asker_name || 'Asker' : 'Doer';
+
+      // Get recipient email
+      const recipientResult = await db.query(
+        `SELECT email, display_name FROM users WHERE id = $1`,
+        [recipientId]
+      );
+
+      if (recipientResult.rows.length > 0 && recipientResult.rows[0].email) {
+        const recipientEmail = recipientResult.rows[0].email;
+        const recipientName = recipientResult.rows[0].display_name;
+
+        // Send email notification
+        await sendEmail({
+          to: recipientEmail,
+          subject: `💬 New message from ${senderName} on "${task.title}"`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: #f5f5f5; padding: 20px; border-radius: 8px;">
+                <h2 style="color: #333; margin-top: 0;">New Message from ${senderName}</h2>
+                <p style="color: #666; font-size: 14px;">On task: <strong>"${task.title}"</strong></p>
+
+                <div style="background: white; padding: 15px; border-left: 4px solid #8B5A2B; margin: 20px 0; border-radius: 4px;">
+                  <p style="margin: 0; color: #333; line-height: 1.6;">${content}</p>
+                </div>
+
+                <div style="margin: 20px 0;">
+                  <a href="${process.env.APP_URL || 'http://localhost:5173'}/errand/${taskId}"
+                     style="background: #8B5A2B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+                    View in Chat
+                  </a>
+                </div>
+
+                <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
+                  You're receiving this email because ${senderName} sent you a message on Errandify.
+                  <br/>
+                  <a href="${process.env.APP_URL || 'http://localhost:5173'}/settings" style="color: #8B5A2B; text-decoration: none;">Update notification preferences</a>
+                </p>
+              </div>
+            </div>
+          `,
+          text: `New message from ${senderName} on "${task.title}"\n\n${content}\n\nView in chat: ${process.env.APP_URL || 'http://localhost:5173'}/errand/${taskId}`,
+        });
+
+        console.log(`[Email] Sent chat notification to ${recipientEmail}`);
+      }
+    } catch (emailErr) {
+      console.warn('[Email] Failed to send chat notification:', emailErr);
+      // Don't fail the message if email fails
+    }
 
     if (isFlagged) {
       // Track flag count
