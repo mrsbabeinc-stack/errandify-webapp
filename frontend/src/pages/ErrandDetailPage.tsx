@@ -665,6 +665,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   <textarea
                     readOnly
                     value={`🎯 ${errand.title}
+📌 Errand ID: ${errand.errandId}
 
 Hi! I found this perfect errand on Errandify and thought of you!
 
@@ -675,12 +676,12 @@ Hi! I found this perfect errand on Errandify and thought of you!
 ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}
 
 Let's help each other! 🤝`}
-                    className="w-full px-2 py-1.5 bg-white border border-green-200 rounded text-xs resize-none h-28 font-sm"
+                    className="w-full px-2 py-1.5 bg-white border border-green-200 rounded text-xs resize-none h-32 font-sm"
                   />
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(
-                        `🎯 ${errand.title}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n📲 Download Errandify & sign up here:\n${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`
+                        `🎯 ${errand.title}\n📌 Errand ID: ${errand.errandId}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n📲 Download Errandify & sign up here:\n${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`
                       );
                     }}
                     className="mt-2 w-full px-2 py-1.5 bg-green-500 text-white text-xs font-semibold rounded hover:bg-green-600 transition"
@@ -692,7 +693,7 @@ Let's help each other! 🤝`}
                 {/* Share Buttons */}
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   <a
-                    href={`https://wa.me/?text=${encodeURIComponent(`🎯 ${errand.title}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n📲 Download Errandify & sign up here:\n${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`)}`}
+                    href={`https://wa.me/?text=${encodeURIComponent(`🎯 ${errand.title}\n📌 Errand ID: ${errand.errandId}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n📲 Download Errandify & sign up here:\n${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-2 bg-green-500 text-white text-xs font-semibold rounded hover:bg-green-600 transition text-center"
@@ -702,7 +703,7 @@ Let's help each other! 🤝`}
                   <button
                     onClick={() => {
                       const subject = `Join me on Errandify - ${errand.title}`;
-                      const body = `🎯 ${errand.title}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n📲 Download Errandify & sign up here:\n${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`;
+                      const body = `🎯 ${errand.title}\n📌 Errand ID: ${errand.errandId}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n📲 Download Errandify & sign up here:\n${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`;
                       window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                     }}
                     className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition"
