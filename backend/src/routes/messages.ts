@@ -19,8 +19,9 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
 
     // Verify user is involved in task
     const taskResult = await db.query(
-      `SELECT e.*, b.doer_id FROM errands e
+      `SELECT e.*, b.doer_id, u.display_name as asker_name FROM errands e
        LEFT JOIN bids b ON e.accepted_bid_id = b.id
+       LEFT JOIN users u ON e.asker_id = u.id
        WHERE e.id = $1`,
       [taskId]
     );
