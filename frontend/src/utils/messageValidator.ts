@@ -107,8 +107,8 @@ export const validateMessage = (content: string): ValidationResult => {
   // Remove numbers from content to catch obfuscated phrases like "over9" = "over"
   const cleanedPhrase = lowerContent.replace(/[0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]+/g, ' ');
 
-  // Remove LOL from acronym check - too many false positives
-  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|over|one night stand|casual sex|hookup|booty call|fwb|friends with benefits|no strings attached|nsa|quick fix|quick meet|weekend getaway|getaway|fun time|good time|party time|lets party|lets have fun|dtf|wyd|sup|bwc|bbc|gwm|ddf|pd|pw|bb/i.test(cleanedPhrase);
+  // Remove LOL, SUP, WYD - too many false positives for casual greetings
+  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|over|one night stand|casual sex|hookup|booty call|fwb|friends with benefits|no strings attached|nsa|quick fix|quick meet|weekend getaway|getaway|fun time|good time|party time|lets party|lets have fun|dtf|bwc|bbc|gwm|ddf|pd|pw|bb/i.test(cleanedPhrase);
 
   // Special check: LOL only in context with other suspicious phrases
   const hasLOL = /\blol\b/i.test(cleanedPhrase);
