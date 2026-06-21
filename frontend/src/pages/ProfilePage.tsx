@@ -28,6 +28,7 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
   const handlePayoutSetting = () => navigate('/payout-settings');
   const handleTransactionHistory = () => navigate('/transaction-history');
   const handleNotificationPreferences = () => navigate('/settings/notifications');
+  const handleCategoryPreferences = () => navigate('/category-preferences');
   const handleErrandifyPoints = () => navigate('/errandify-points');
   const handleMyRewards = () => navigate('/my-rewards');
   const handlePointsHistory = () => navigate('/points-history');
@@ -132,6 +133,15 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
             <div className="flex items-center gap-2 text-left">
               <span className="text-lg">🔔</span>
               <span className="text-sm font-medium text-gray-700">Notification Preferences</span>
+            </div>
+            <span className="text-gray-400">›</span>
+          </button>
+
+          {/* Category Preferences */}
+          <button onClick={handleCategoryPreferences} className="w-full bg-white rounded-lg p-3 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors border border-gray-100">
+            <div className="flex items-center gap-2 text-left">
+              <span className="text-lg">🎯</span>
+              <span className="text-sm font-medium text-gray-700">Task Preferences (For AI Recommendations)</span>
             </div>
             <span className="text-gray-400">›</span>
           </button>
