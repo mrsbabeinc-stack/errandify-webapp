@@ -118,148 +118,80 @@ export default function ReferralPage() {
   }
 
   return (
-    <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-20">
+    <div className="min-h-screen bg-errandify-bg px-2 py-2 pb-24">
       <div className="max-w-2xl mx-auto">
-        <button onClick={() => navigate(-1)} className="mb-4 text-lg text-gray-600 font-bold">
-          ‹ Back
-        </button>
-
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-errandify-brown mb-2">🎁 Referral Program</h1>
-          <p className="text-gray-600">Share your code & earn Errandify Points when friends join</p>
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-2">
+          <button onClick={() => navigate(-1)} className="text-lg text-gray-600 font-bold">‹</button>
+          <h1 className="text-lg font-bold text-errandify-brown">🎁 Referral</h1>
         </div>
 
-        {/* Main Content */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
-          {/* QR Code */}
+        {/* QR Code */}
+        <div className="bg-white rounded-lg p-2 border border-gray-200 mb-2 text-center">
+          <canvas ref={canvasRef} className="border-2 border-errandify-orange rounded mx-auto" />
+          <button
+            onClick={handleDownloadQR}
+            className="w-full mt-2 bg-errandify-orange text-white px-3 py-1.5 rounded text-xs font-bold"
+          >
+            Download QR
+          </button>
+        </div>
+
+        {/* Code & Link */}
+        <div className="space-y-1 mb-2">
+          <div className="bg-white rounded border border-gray-200 p-2 flex gap-1">
+            <input
+              type="text"
+              value={referralData?.code || ''}
+              readOnly
+              className="flex-1 bg-gray-50 px-2 text-xs font-bold text-errandify-orange border-0"
+            />
+            <button
+              onClick={handleCopyCode}
+              className={`px-2 py-1 rounded text-xs font-bold transition ${
+                copied === 'code' ? 'bg-green-500 text-white' : 'bg-errandify-orange text-white'
+              }`}
+            >
+              {copied === 'code' ? '✓' : 'Copy'}
+            </button>
+          </div>
+          <div className="bg-white rounded border border-gray-200 p-2 flex gap-1">
+            <input
+              type="text"
+              value={referralData?.link || ''}
+              readOnly
+              className="flex-1 bg-gray-50 px-2 text-xs border-0 truncate"
+            />
+            <button
+              onClick={handleCopyLink}
+              className={`px-2 py-1 rounded text-xs font-bold transition ${
+                copied === 'link' ? 'bg-green-500 text-white' : 'bg-errandify-orange text-white'
+              }`}
+            >
+              {copied === 'link' ? '✓' : 'Copy'}
+            </button>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-1 mb-2 bg-orange-50 rounded-lg p-2 border border-orange-200 text-center">
           <div>
-            <h2 className="font-semibold text-gray-800 mb-4">Share Your Referral Code</h2>
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex flex-col items-center gap-3">
-                <canvas ref={canvasRef} className="border-4 border-errandify-orange rounded-lg shadow-md" />
-                <button
-                  onClick={handleDownloadQR}
-                  className="bg-errandify-orange text-white px-6 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition text-sm"
-                >
-                  ⬇️ Download QR Code
-                </button>
-              </div>
-
-              {/* Or Divider */}
-              <div className="w-full flex items-center gap-3 text-gray-400">
-                <div className="flex-1 border-t"></div>
-                <span className="text-sm">or</span>
-                <div className="flex-1 border-t"></div>
-              </div>
-
-              {/* Share Options */}
-              <div className="w-full space-y-3">
-                {/* Code */}
-                <div>
-                  <label className="text-xs font-bold text-gray-600 block mb-2">Referral Code</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={referralData.code}
-                      readOnly
-                      className="flex-1 bg-gray-100 rounded-lg px-4 py-3 font-mono text-lg font-bold text-errandify-orange border border-gray-200"
-                    />
-                    <button
-                      onClick={handleCopyCode}
-                      className={`px-4 py-3 rounded-lg font-semibold text-sm transition whitespace-nowrap ${
-                        copied === 'code'
-                          ? 'bg-green-500 text-white'
-                          : 'bg-errandify-orange text-white hover:bg-opacity-90'
-                      }`}
-                    >
-                      {copied === 'code' ? '✓ Copied' : 'Copy'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Link */}
-                <div>
-                  <label className="text-xs font-bold text-gray-600 block mb-2">Referral Link</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={referralData.link}
-                      readOnly
-                      className="flex-1 bg-gray-100 rounded-lg px-4 py-3 text-sm border border-gray-200 truncate"
-                    />
-                    <button
-                      onClick={handleCopyLink}
-                      className={`px-4 py-3 rounded-lg font-semibold text-sm transition whitespace-nowrap ${
-                        copied === 'link'
-                          ? 'bg-green-500 text-white'
-                          : 'bg-errandify-orange text-white hover:bg-opacity-90'
-                      }`}
-                    >
-                      {copied === 'link' ? '✓ Copied' : 'Copy'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p className="text-xl font-bold text-errandify-orange">{referralData?.referredCount}</p>
+            <p className="text-xs text-gray-600">Referred</p>
           </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-4 bg-orange-50 rounded-lg p-4 border border-orange-200">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-errandify-orange">{referralData.referredCount}</p>
-              <p className="text-sm text-gray-600 mt-1">Friends Referred</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-errandify-orange">{referralData.earnedPoints} EP</p>
-              <p className="text-sm text-gray-600 mt-1">Points Earned</p>
-            </div>
+          <div>
+            <p className="text-xl font-bold text-errandify-orange">{referralData?.earnedPoints} EP</p>
+            <p className="text-xs text-gray-600">Earned</p>
           </div>
+        </div>
 
-          {/* How It Works */}
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <h3 className="font-semibold text-gray-900 mb-3">How It Works</h3>
-            <ol className="text-sm text-gray-700 space-y-2">
-              <li className="flex gap-3">
-                <span className="font-bold text-errandify-orange flex-shrink-0">1.</span>
-                <span>Share your code or link with friends</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="font-bold text-errandify-orange flex-shrink-0">2.</span>
-                <span>They sign up using your referral code</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="font-bold text-errandify-orange flex-shrink-0">3.</span>
-                <span>They complete their first errand</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="font-bold text-errandify-orange flex-shrink-0">4.</span>
-                <span>You both earn 50 Errandify Points! 🎉</span>
-              </li>
-            </ol>
-          </div>
-
-          {/* Benefits */}
-          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-            <h3 className="font-semibold text-gray-900 mb-3">Your Benefits</h3>
-            <ul className="text-sm text-gray-700 space-y-2">
-              <li className="flex gap-2">
-                <span>⭐</span>
-                <span>Earn 50 EP per successful referral</span>
-              </li>
-              <li className="flex gap-2">
-                <span>🎁</span>
-                <span>Your friend gets 50 EP too!</span>
-              </li>
-              <li className="flex gap-2">
-                <span>💰</span>
-                <span>Unlimited referrals - earn as much as you want</span>
-              </li>
-              <li className="flex gap-2">
-                <span>🏆</span>
-                <span>Top referrers get bonus rewards</span>
-              </li>
-            </ul>
-          </div>
+        {/* Info */}
+        <div className="bg-blue-50 rounded-lg p-2 border border-blue-200 text-xs text-gray-700 space-y-0.5">
+          <p className="font-bold">How it works:</p>
+          <p>1️⃣ Share your code/link</p>
+          <p>2️⃣ Friends sign up</p>
+          <p>3️⃣ They complete first job</p>
+          <p>4️⃣ Both earn 50 EP! 🎉</p>
         </div>
       </div>
       <HanaAssistant />
