@@ -4,15 +4,38 @@ import db from '../db.js';
 
 const router = Router();
 
-// Generate unique errand ID: ERR-YYYY-XXXXXX
-function generateErrandId(): string {
+// Category codes mapping
+const categoryCodeMap: { [key: string]: string } = {
+  'home-maintenance': 'HM',
+  'cleaning-household': 'CL',
+  'food-beverage': 'FD',
+  'furniture-assembly': 'FR',
+  'shopping-errands': 'SH',
+  'delivery-moving': 'DV',
+  'travel-mobility': 'TR',
+  'event-planning': 'EV',
+  'childcare-education': 'CH',
+  'eldercare-healthcare': 'EL',
+  'pet-care': 'PC',
+  'personal-care': 'PS',
+  'tech-support': 'TC',
+  'creative-arts': 'AR',
+  'admin-business': 'AD',
+  'charity-community': 'CC',
+};
+
+// Generate unique errand ID: ERR2026-XX-XXXXXX
+// Format: ERR[YEAR]-[CATEGORY_CODE]-[6_RANDOM_CHARS]
+// Example: ERR2026-FD-K9M7X2 (Food & Beverage)
+function generateErrandId(category: string): string {
   const year = new Date().getFullYear();
+  const categoryCode = categoryCodeMap[category.toLowerCase()] || 'XX';
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
   for (let i = 0; i < 6; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `ERR-${year}-${code}`;
+  return `ERR${year}-${categoryCode}-${code}`;
 }
 
 // Get all errands (with filters)
@@ -300,7 +323,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         });
       }
 
-      const errandId = generateErrandId();
+      const errandId = generateErrandId(category);
       const errandResult = await db.query(
         `INSERT INTO errands (asker_id, title, description, category, location, postal_code, budget, deadline, is_recurring, recurring_schedule, status, errand_id)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
