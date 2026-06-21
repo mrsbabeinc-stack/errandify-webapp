@@ -64,11 +64,39 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       [errandId, userId, question]
     );
 
-    // Get the doer name
+    // Get the doer name and errand details
     const userResult = await db.query(
       'SELECT display_name FROM users WHERE id = $1',
       [userId]
     );
+
+    const errandResult = await db.query(
+      'SELECT title, asker_id FROM errands WHERE id = $1',
+      [errandId]
+    );
+
+    // Notify asker that doer asked a question
+    try {
+      const doerName = userResult.rows[0]?.display_name || 'A neighbour';
+      const errandTitle = errandResult.rows[0]?.title || 'your task';
+      const askerId = errandResult.rows[0]?.asker_id;
+
+      if (askerId) {
+        await db.query(
+          `INSERT INTO notifications (user_id, type, title, body, action_url, created_at, read)
+           VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
+          [
+            askerId,
+            'question_asked',
+            '💬 Someone has a question!',
+            `${doerName} asked a great question about "${errandTitle}". Answer it and help them do an amazing job!`,
+            `/errand/${errandId}`,
+          ]
+        );
+      }
+    } catch (notifErr) {
+      console.warn('[Questions] Failed to send question notification:', notifErr);
+    }
 
     res.status(201).json({
       success: true,
@@ -120,6 +148,29 @@ router.post('/:questionId/reply', authMiddleware, async (req: AuthRequest, res: 
        RETURNING id, errand_id, doer_id, question, asker_reply, asker_reply_at, created_at`,
       [reply, questionId]
     );
+
+    // Notify doer that their question was answered
+    try {
+      const errandResult = await db.query(
+        'SELECT title FROM errands WHERE id = $1',
+        [question.errand_id]
+      );
+      const errandTitle = errandResult.rows[0]?.title || 'your task';
+
+      await db.query(
+        `INSERT INTO notifications (user_id, type, title, body, action_url, created_at, read)
+         VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
+        [
+          question.doer_id,
+          'question_answered',
+          '✨ Your question got answered!',
+          `The neighbour replied to your question about "${errandTitle}". Check out their answer!`,
+          `/errand/${question.errand_id}`,
+        ]
+      );
+    } catch (notifErr) {
+      console.warn('[Questions] Failed to send reply notification:', notifErr);
+    }
 
     res.json({
       success: true,
