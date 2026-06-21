@@ -344,11 +344,15 @@ export default function HanaTaskCreation({
 
       setTaskData(enhancedTaskData as any);
 
-      // Show summary for user to confirm
-      const summary = buildSummary(enhancedTaskData as any);
-      setHanaMessage(summary);
-      setCurrentStep('confirm');
+      // Auto-proceed directly to form with pre-filled data
+      setHanaMessage('✅ Got it! Opening form with your details...');
       triggerSpeaking();
+
+      // Auto-fill form and proceed after a short delay
+      setTimeout(() => {
+        console.log('[Hana] Calling onComplete with:', enhancedTaskData);
+        onComplete(enhancedTaskData as any);
+      }, 1000);
     } catch (err: any) {
       console.error('Extraction error:', err);
       const errorMsg = err.response?.data?.error || err.message || 'Unknown error';
