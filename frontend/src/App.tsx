@@ -16,8 +16,6 @@ import ErrandsPage from './pages/ErrandsPage';
 import ErrandDetailPage from './pages/ErrandDetailPage';
 import ChatPage from './pages/ChatPage';
 import NotificationsPage from './pages/NotificationsPage';
-import BlogPage from './pages/BlogPage';
-import BlogPostPage from './pages/BlogPostPage';
 import ProfilePage from './pages/ProfilePage';
 import ReviewPage from './pages/ReviewPage';
 import MyProfilePage from './pages/MyProfilePage';
@@ -208,8 +206,6 @@ export default function App() {
           <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole} />} />
           <Route path="/chat" element={<ChatPage userRole={userRole} />} />
           <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/blog" element={<BlogPage />} />
-          <Route path="/blog/:slug" element={<BlogPostPage />} />
           <Route path="/my-kampung" element={<MyKampungPage />} />
           <Route path="/my-pocket" element={<MyPocketPage />} />
           <Route path="/wallet" element={<MyPocketPage />} />
