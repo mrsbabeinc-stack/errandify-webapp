@@ -221,11 +221,11 @@ export default function MyBidsPage() {
                 <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
                   <div>
                     <p className="text-gray-600">Your Bid</p>
-                    <p className="font-bold text-errandify-orange text-lg">SGD ${bid.amount.toFixed(2)}</p>
+                    <p className="font-bold text-errandify-orange text-lg">SGD ${Math.round(bid.amount)}</p>
                   </div>
                   <div>
                     <p className="text-gray-600">Budget</p>
-                    <p className="font-semibold text-gray-800">SGD ${bid.errand?.budget?.toFixed(2) || 'N/A'}</p>
+                    <p className="font-semibold text-gray-800">SGD ${bid.errand?.budget ? Math.round(bid.errand.budget) : 'N/A'}</p>
                   </div>
                 </div>
 

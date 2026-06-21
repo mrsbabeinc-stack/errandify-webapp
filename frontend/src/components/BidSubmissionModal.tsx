@@ -90,7 +90,7 @@ export default function BidSubmissionModal({
         <p className="text-gray-600 text-sm mb-4">"{taskTitle}"</p>
         {isUpdating && (
           <p className="text-xs text-blue-600 mb-3 bg-blue-50 p-2 rounded">
-            Previous bid: ${existingBidAmount?.toFixed(2)}
+            Previous bid: ${existingBidAmount}
           </p>
         )}
 
@@ -101,19 +101,31 @@ export default function BidSubmissionModal({
             </label>
             <input
               type="number"
-              min="0"
-              step="0.01"
+              min="5"
+              step="5"
               value={bidAmount}
-              onChange={(e) => setBidAmount(e.target.value)}
+              onChange={(e) => {
+                // Only allow multiples of 5
+                const val = e.target.value;
+                if (val === '') {
+                  setBidAmount('');
+                } else {
+                  const num = Math.max(5, Math.round(parseInt(val) / 5) * 5);
+                  setBidAmount(num.toString());
+                }
+              }}
               placeholder={`Task budget: $${taskBudget}`}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
               required
             />
             {taskBudget && (
               <p className="text-xs text-gray-500 mt-1">
-                Budget: ${taskBudget} {parseFloat(bidAmount) > taskBudget && '(above budget)'}
+                Budget: ${taskBudget} {parseInt(bidAmount) > taskBudget && '(above budget)'}
               </p>
             )}
+            <p className="text-xs text-gray-500 mt-1">
+              Increments of $5
+            </p>
           </div>
 
           <div>
