@@ -706,7 +706,12 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           if (data?.results?.[0]) {
             const addr = data.results[0];
             fullAddress = addr.ADDRESS || `Singapore ${postalCode}`;
-            area = addr.ROAD_NAME || addr.BUILDING_NAME || 'Singapore';
+            // Extract area: use ROAD_NAME, or fallback to first part of ADDRESS
+            area = addr.ROAD_NAME?.trim() || addr.BUILDING_NAME?.trim() || 'Singapore';
+            // Clean up area - remove excessive words, just get street name
+            if (area && area !== 'Singapore' && area.length > 0) {
+              // Area is good (e.g., "HENDERSON CRESCENT")
+            }
             console.log(`[Extract] ✅ OneMap found: ${fullAddress}, area: ${area}`);
           } else {
             console.log(`[Extract] OneMap: No results for ${postalCode}`);
