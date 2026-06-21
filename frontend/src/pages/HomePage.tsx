@@ -132,11 +132,11 @@ export default function HomePage({ userRole }: HomePageProps) {
               </button>
 
               <button
-                onClick={() => navigate('/errands')}
+                onClick={() => navigate('/my-bids')}
                 className="bg-errandify-brown text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
-                <span className="text-3xl mb-2 block">✓</span>
-                <span className="font-semibold text-sm">Confirmed ToHelp</span>
+                <span className="text-3xl mb-2 block">💼</span>
+                <span className="font-semibold text-sm">My Bids</span>
               </button>
             </>
           )}
