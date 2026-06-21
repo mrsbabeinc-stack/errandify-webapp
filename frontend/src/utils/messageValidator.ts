@@ -80,16 +80,24 @@ export const validateMessage = (content: string): ValidationResult => {
     return result;
   }
 
-  // SPECIAL CHECK: Leetspeak/shortcut versions - smart normalization
-  // Remove all special chars and numbers first, keep only letters
-  const cleaned = content
-    .toLowerCase()
-    .replace(/[0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~\s]/g, ''); // remove numbers, special chars, spaces
+  // SPECIAL CHECK: Advanced obfuscation detection
+  // Strategy: Check for letters with ANY characters between them
+  const lowerContent = content.toLowerCase();
 
-  // Check if cleaned text contains inappropriate patterns
-  const inappropriatePatterns = /fuck|shit|damn|sex|cock|porn|dildo|orgy|threesome|gangbang|horny|weed|massage|escort|prostitute|anal|oral|bondage|penetrate|cam|joi|solo|extra|happy|release|drug|cocaine|heroin|meth|cannabis|marijuana|fck|fk|prost|cck|prn|fxk|fxxx|sxx|drg/i.test(cleaned);
+  // Create flexible patterns that allow ANY chars between key letters
+  // f[any]ck, s[any]x, c[any]ck, etc.
+  const obfuscationPatterns = [
+    /f[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*c[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*k/i, // fuck variants
+    /s[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*x/i, // sex variants
+    /c[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*ck/i, // cock variants
+    /p[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*rn/i, // porn variants
+    /s[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*xt/i, // sext variants
+    /d[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*g/i, // drug variants
+  ];
 
-  if (inappropriatePatterns) {
+  const hasObfuscation = obfuscationPatterns.some(pattern => pattern.test(lowerContent));
+
+  if (hasObfuscation) {
     result.errors.push('❌ Message contains inappropriate content. Keep messages professional and task-focused.');
     result.isValid = false;
     return result;
