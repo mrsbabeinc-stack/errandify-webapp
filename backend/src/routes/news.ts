@@ -102,76 +102,11 @@ async function getCommunityNews(limit: number, offset: number, postal_code?: str
  * Get Singapore-wide news from NewsAPI
  */
 async function getSGNews(limit: number, offset: number): Promise<NewsItem[]> {
-  try {
-    const apiKey = process.env.NEWS_API_KEY || '';
-    if (!apiKey) {
-      console.warn('NEWS_API_KEY not configured, using mock data');
-      return getMockSGNews();
-    }
-
-    console.log('[NEWS API] Fetching Singapore news with key:', apiKey.substring(0, 10) + '...');
-
-    const httpsAgent = new https.Agent({
-      rejectUnauthorized: false,
-    });
-
-    const response = await axios.get('https://newsapi.org/v2/everything', {
-      params: {
-        q: 'Singapore policy OR housing OR jobs OR transport OR technology',
-        sortBy: 'publishedAt',
-        language: 'en',
-        pageSize: Math.min(limit, 100),
-        page: Math.floor(offset / Math.min(limit, 100)) + 1,
-        apiKey: apiKey,
-      },
-      timeout: 8000,
-      httpsAgent,
-    });
-
-    if (!response.data.articles || response.data.articles.length === 0) {
-      console.log('[NEWS API] No articles returned, using mock data');
-      return getMockSGNews();
-    }
-
-    console.log(`[NEWS API] Got ${response.data.articles.length} articles from NewsAPI`);
-
-    // Categorize articles based on keywords
-    const categorizeArticle = (title: string, content: string): string => {
-      const text = (title + ' ' + content).toLowerCase();
-      if (text.includes('hdb') || text.includes('housing') || text.includes('flat') || text.includes('bto')) return 'housing';
-      if (text.includes('job') || text.includes('employment') || text.includes('career') || text.includes('salary')) return 'jobs';
-      if (text.includes('transport') || text.includes('mrt') || text.includes('lrt') || text.includes('ev') || text.includes('charging')) return 'transport';
-      if (text.includes('health') || text.includes('medical') || text.includes('healthcare') || text.includes('hospital')) return 'healthcare';
-      if (text.includes('education') || text.includes('school') || text.includes('university') || text.includes('student')) return 'education';
-      if (text.includes('economy') || text.includes('growth') || text.includes('business') || text.includes('gdp')) return 'policy';
-      if (text.includes('green') || text.includes('environment') || text.includes('sustainable') || text.includes('climate')) return 'policy';
-      if (text.includes('tech') || text.includes('digital') || text.includes('ai') || text.includes('innovation')) return 'jobs';
-      return 'policy';
-    };
-
-    return response.data.articles
-      .slice(0, limit)
-      .map((article: any, index: number) => ({
-        id: `sg-api-${index}-${article.url.substring(article.url.length - 20)}`,
-        type: 'singapore',
-        title: article.title,
-        content: article.description || article.content || 'Read the full story for details.',
-        category: categorizeArticle(article.title, article.description || ''),
-        source: article.source?.name || 'Singapore News',
-        image: article.urlToImage,
-        url: article.url,
-        created_at: new Date(article.publishedAt).toISOString(),
-        author: article.author,
-      }));
-  } catch (error: any) {
-    console.error('[NEWS API] Error fetching Singapore news:', error.message);
-    if (error.response?.status === 401) {
-      console.error('[NEWS API] Invalid API key');
-    } else if (error.response?.status === 429) {
-      console.error('[NEWS API] Rate limit exceeded');
-    }
-    return getMockSGNews();
-  }
+  // For now, use mock data with verified Singapore news
+  // NewsAPI free tier returns too many irrelevant results
+  // Will switch to NewsAPI when we upgrade to paid tier
+  console.log('[NEWS API] Using verified mock Singapore news data');
+  return getMockSGNews();
 }
 
 /**
