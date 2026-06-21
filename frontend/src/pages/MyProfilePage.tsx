@@ -4,6 +4,7 @@ import axios from 'axios';
 
 interface UserProfile {
   id: number;
+  userId?: string;
   name: string;
   mobile: string;
   role: 'asker' | 'doer';
@@ -145,7 +146,26 @@ export default function MyProfilePage() {
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-gray-800">{profile.name}</h2>
               <p className="text-sm text-gray-600">✅ Verified User</p>
-              <p className="text-xs text-gray-500">Role: {profile.role === 'asker' ? 'Asker' : 'Doer'}</p>
+
+              {/* User ID */}
+              {profile.userId && (
+                <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-2 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-600 font-semibold">Your User ID</p>
+                    <code className="text-sm font-mono font-bold text-errandify-brown">{profile.userId}</code>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(profile.userId || '');
+                    }}
+                    className="text-xs text-errandify-orange hover:text-orange-600 font-semibold transition px-2 py-1 hover:bg-orange-50 rounded"
+                  >
+                    Copy
+                  </button>
+                </div>
+              )}
+
+              <p className="text-xs text-gray-500 mt-2">Role: {profile.role === 'asker' ? 'Asker' : 'Doer'}</p>
               {profile.chasCardColor && profile.chasCardColor !== 'none' && (
                 <div className="mt-2 inline-block">
                   <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${
