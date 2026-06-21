@@ -27,7 +27,7 @@ const INAPPROPRIATE_PATTERNS = {
   profanity: /damn|shit|crap|bloody|fuck|ass|bitch|bastard|hell|piss/gi,
   threats: /kill|hurt|violence|attack|harm|rape|murder|die|dead|threat|attack/gi,
   harassment: /stupid|idiot|moron|dumb|fool|retard|loser|pathetic/gi,
-  sexualContent: /sex|porn|naked|nude|xxx|sexual|cock|pussy|dick|vagina|breast|horny|aroused|masturbat|cum|prostitut|escort|sugar|onlyfans/gi,
+  sexualContent: /sex|porn|naked|nude|xxx|sexual|cock|pussy|dick|vagina|breast|horny|aroused|masturbat|cum|prostitut|escort|sugar|onlyfans|sleep with|spend the night|overnight|intimate|private time|pay for sex|call girl|sex worker|adult entertainer|massage|outcall|incall/gi,
   drugs: /drug|cocaine|heroin|meth|weed|cannabis|marijuana|acid|lsd|mdma|ecstasy|crack|fentanyl|opium|morphine|codeine|tramadol|oxycodon|percocet|vicodin|xanax|valium|ketamine|pcp|ice|crystal|methamphetamine|amphetamine|dexedrine|adderall|ritalin|speed|shrooms|psilocybin|psychedelic|hash|hashish|thc|cannabinoid|dealer|supplier|inject|snort|shoot|high|get high|stoned|trip/gi,
   violence: /rape|abuse|assault|torture|molest|incest|pedophil/gi,
   gambling: /poker|blackjack|roulette|casino|betting|gamble|wager|jackpot|slot|lottery|bet money/gi,
