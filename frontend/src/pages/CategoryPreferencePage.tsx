@@ -15,16 +15,18 @@ interface Category {
 }
 
 const CATEGORIES: Category[] = [
-  { id: 'eldercare', name: 'ElderCare', emoji: '👵' },
-  { id: 'childcare', name: 'ChildCare', emoji: '🧒' },
-  { id: 'homehelp', name: 'HomeHelp', emoji: '🏠' },
+  { id: 'homehelp', name: 'Home Help', emoji: '🏠' },
+  { id: 'childcare', name: 'Childcare', emoji: '👶' },
+  { id: 'eldercare', name: 'Elder Care', emoji: '👴' },
+  { id: 'petcare', name: 'Pet Care', emoji: '🐾' },
+  { id: 'cleaning', name: 'Cleaning', emoji: '🧹' },
+  { id: 'repairs', name: 'Repairs & DIY', emoji: '🔧' },
   { id: 'delivery', name: 'Delivery', emoji: '📦' },
-  { id: 'wellness', name: 'Wellness', emoji: '🌿' },
-  { id: 'petcare', name: 'PetCare', emoji: '🐾' },
-  { id: 'events', name: 'Events', emoji: '🎉' },
-  { id: 'donate', name: 'Donate', emoji: '🤝' },
-  { id: 'localbiz', name: 'LocalBiz', emoji: '🍜' },
-  { id: 'tripcarry', name: 'TripCarry', emoji: '✈️' },
+  { id: 'fitness', name: 'Fitness & Wellness', emoji: '💪' },
+  { id: 'tutoring', name: 'Tutoring & Learning', emoji: '📚' },
+  { id: 'errands', name: 'Errands & Tasks', emoji: '✅' },
+  { id: 'events', name: 'Event Planning', emoji: '🎉' },
+  { id: 'moving', name: 'Moving & Packing', emoji: '📦' },
 ];
 
 export default function CategoryPreferencePage({ userRole, onComplete }: CategoryPreferencePageProps) {
@@ -116,19 +118,19 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
         )}
 
         {/* Category Grid */}
-        <div className="grid grid-cols-3 gap-2 mb-2">
+        <div className="grid grid-cols-4 gap-1.5 mb-2 overflow-y-auto max-h-80">
           {CATEGORIES.map((category) => (
             <button
               key={category.id}
               onClick={() => toggleCategory(category.id)}
-              className={`p-3 rounded border-2 transition-all text-center text-xs ${
+              className={`p-2 rounded border-2 transition-all text-center text-xs ${
                 selectedCategories.includes(category.id)
                   ? 'bg-orange-50 border-errandify-orange'
                   : 'bg-white border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="text-2xl mb-1">{category.emoji}</div>
-              <div className="font-bold text-errandify-brown">{category.name}</div>
+              <div className="text-xl mb-0.5">{category.emoji}</div>
+              <div className="font-bold text-errandify-brown text-xs">{category.name}</div>
             </button>
           ))}
         </div>
