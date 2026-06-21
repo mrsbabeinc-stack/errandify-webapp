@@ -309,7 +309,7 @@ export default function TaskChatbox({
               {errandDetails.budget && (
                 <div className="mb-3">
                   <p className="text-xs text-gray-500">Budget</p>
-                  <p className="text-sm font-bold text-errandify-orange">SGD ${errandDetails.budget}</p>
+                  <p className="text-sm font-bold text-gray-800">SGD ${errandDetails.budget}</p>
                 </div>
               )}
 
