@@ -858,9 +858,9 @@ export default function CreateErrandPage() {
                   placeholder="Describe your errand..."
                   rows={2}
                   maxLength={150}
-                  className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm resize-none"
+                  className="w-full px-2 pb-4 pt-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm resize-none"
                 />
-                <span className="absolute bottom-0 right-0 text-xs text-gray-500">{formData.description.length}/150</span>
+                <span className="absolute bottom-1 right-0 text-xs text-gray-400">{formData.description.length}/150</span>
               </div>
 
               {/* AI Suggestion for Description - Compact inline */}
