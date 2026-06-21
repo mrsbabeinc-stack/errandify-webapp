@@ -72,10 +72,18 @@ export const validateMessage = (content: string): ValidationResult => {
   }
 
   // SPECIAL CHECK: "sex" + "party/gathering/event/meet/group/farm" = block
-  const hasSex = /sex/i.test(content);
+  const hasSex = /sex|s3x|sx|s\*x|s#x|s@x|f\*ck|fxxx|f\*\*\*|fk|fcuk/i.test(content);
   const hasIllicitContext = /party|gathering|event|meet|group|farm|trade|business|operation|house|den|ring/i.test(content);
   if (hasSex && hasIllicitContext) {
     result.errors.push('❌ Sexual content not allowed. Keep messages task-focused.');
+    result.isValid = false;
+    return result;
+  }
+
+  // SPECIAL CHECK: Leetspeak/shortcut versions of inappropriate words
+  const hasLeetspeak = /f\*ck|fxxx|f\*\*\*|fk|fcuk|s3x|sx|s\*x|s#x|s@x|d4mn|d@mn|sh1t|sh\*t|c0ck|c\*ck|p0rn|p\*rn|d1ld0|d1ld\*|0rgy|0rg1e|3some|2some|4some|g4ngbang|g4ng\-b4ng|th23some|thr33som/i.test(content);
+  if (hasLeetspeak) {
+    result.errors.push('❌ Message contains inappropriate content. Keep messages professional and task-focused.');
     result.isValid = false;
     return result;
   }
