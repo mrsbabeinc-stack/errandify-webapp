@@ -229,7 +229,7 @@ function getMockSGNews(): NewsItem[] {
       content: 'The Housing and Development Board has announced a fresh batch of Build-to-Order (BTO) flats across several estates, offering affordable housing solutions for young families and first-time homebuyers.',
       category: 'housing',
       source: 'Channel NewsAsia',
-      url: 'https://www.channelnewsasia.com',
+      url: 'https://www.channelnewsasia.com/singapore/hdb-launches-new-bto-flats-3876543',
       created_at: new Date(2026, 5, 20, 14, 30, 0).toISOString(),
     },
     {
@@ -239,7 +239,7 @@ function getMockSGNews(): NewsItem[] {
       content: 'Singapore\'s technology sector continues to expand with major multinational tech companies establishing regional headquarters and innovation centers in the city-state.',
       category: 'jobs',
       source: 'The Straits Times',
-      url: 'https://www.straitstimes.com',
+      url: 'https://www.straitstimes.com/singapore/singapore-tech-jobs-growth-2026',
       created_at: new Date(2026, 5, 19, 10, 15, 0).toISOString(),
     },
     {
@@ -249,7 +249,7 @@ function getMockSGNews(): NewsItem[] {
       content: 'Singapore has unveiled its comprehensive Green Plan 2030, outlining ambitious targets for sustainability and environmental protection across all sectors of the economy.',
       category: 'policy',
       source: 'Today Online',
-      url: 'https://www.todayonline.com',
+      url: 'https://www.todayonline.com/singapore/singapore-green-plan-2030-net-zero',
       created_at: new Date(2026, 5, 18, 9, 45, 0).toISOString(),
     },
     {
@@ -259,7 +259,7 @@ function getMockSGNews(): NewsItem[] {
       content: 'Singapore\'s Land Transport Authority is accelerating expansion of the metro rail transit system to improve connectivity and reduce travel times across the island.',
       category: 'transport',
       source: 'Channel NewsAsia',
-      url: 'https://www.channelnewsasia.com',
+      url: 'https://www.channelnewsasia.com/singapore/mrt-expansion-2026-connectivity',
       created_at: new Date(2026, 5, 17, 11, 20, 0).toISOString(),
     },
     {
@@ -269,7 +269,7 @@ function getMockSGNews(): NewsItem[] {
       content: 'The Ministry of Health continues to enhance Singapore\'s world-class healthcare system, ensuring accessibility and affordability for all residents through integrated care services.',
       category: 'healthcare',
       source: 'The Straits Times',
-      url: 'https://www.straitstimes.com',
+      url: 'https://www.straitstimes.com/singapore/singapore-healthcare-ranked-asias-best',
       created_at: new Date(2026, 5, 16, 15, 0, 0).toISOString(),
     },
     {
@@ -279,7 +279,7 @@ function getMockSGNews(): NewsItem[] {
       content: 'Singapore\'s Ministry of Education rolls out an enhanced STEM curriculum designed to prepare students for the digital economy and future workforce challenges.',
       category: 'education',
       source: 'Today Online',
-      url: 'https://www.todayonline.com',
+      url: 'https://www.todayonline.com/singapore/moe-stem-curriculum-2026',
       created_at: new Date(2026, 5, 15, 8, 30, 0).toISOString(),
     },
     {
@@ -289,7 +289,7 @@ function getMockSGNews(): NewsItem[] {
       content: 'Singapore\'s Ministry of Trade and Industry reports strong economic performance driven by strategic trade partnerships and robust business confidence across key sectors.',
       category: 'policy',
       source: 'Channel NewsAsia',
-      url: 'https://www.channelnewsasia.com',
+      url: 'https://www.channelnewsasia.com/singapore/singapore-economy-growth-q2-2026',
       created_at: new Date(2026, 5, 14, 12, 45, 0).toISOString(),
     },
     {
@@ -299,7 +299,7 @@ function getMockSGNews(): NewsItem[] {
       content: 'The Urban Redevelopment Authority has announced an ambitious new town planning initiative aimed at creating more sustainable and livable neighborhoods across Singapore.',
       category: 'policy',
       source: 'The Straits Times',
-      url: 'https://www.straitstimes.com',
+      url: 'https://www.straitstimes.com/singapore/ura-new-town-planning-initiative-2026',
       created_at: new Date(2026, 5, 13, 10, 0, 0).toISOString(),
     },
     {
@@ -309,7 +309,7 @@ function getMockSGNews(): NewsItem[] {
       content: 'Enterprise Singapore launches new support programs and grants to help local businesses expand internationally and navigate the global digital economy.',
       category: 'policy',
       source: 'Today Online',
-      url: 'https://www.todayonline.com',
+      url: 'https://www.todayonline.com/singapore/enterprise-singapore-business-grants-2026',
       created_at: new Date(2026, 5, 12, 13, 20, 0).toISOString(),
     },
     {
@@ -319,7 +319,7 @@ function getMockSGNews(): NewsItem[] {
       content: 'The Economic Development Board announces record-breaking foreign direct investment in Singapore as the city-state strengthens its position as a global business hub.',
       category: 'jobs',
       source: 'Channel NewsAsia',
-      url: 'https://www.channelnewsasia.com',
+      url: 'https://www.channelnewsasia.com/singapore/singapore-foreign-investment-2026',
       created_at: new Date(2026, 5, 11, 16, 10, 0).toISOString(),
     },
     {
@@ -329,7 +329,7 @@ function getMockSGNews(): NewsItem[] {
       content: 'Singapore\'s Cyber Security Agency issues advisory on emerging cybersecurity threats and provides guidelines for businesses to strengthen their digital defenses.',
       category: 'jobs',
       source: 'The Straits Times',
-      url: 'https://www.straitstimes.com',
+      url: 'https://www.straitstimes.com/singapore/csa-cybersecurity-alert-2026',
       created_at: new Date(2026, 5, 10, 9, 30, 0).toISOString(),
     },
     {
@@ -339,7 +339,7 @@ function getMockSGNews(): NewsItem[] {
       content: 'The People\'s Association launches innovative youth engagement programs designed to foster community spirit and develop future leaders across Singapore.',
       category: 'policy',
       source: 'Today Online',
-      url: 'https://www.todayonline.com',
+      url: 'https://www.todayonline.com/singapore/pa-youth-programs-2026',
       created_at: new Date(2026, 5, 9, 6, 0, 0).toISOString(),
     },
   ];
