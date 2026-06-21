@@ -42,6 +42,8 @@ export default function TaskChatbox({
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [askerId, setAskerId] = useState<number | null>(null);
   const [doerId, setDoerId] = useState<number | null>(null);
+  const [askerName, setAskerName] = useState<string>('Asker');
+  const [doerName, setDoerName] = useState<string>('Doer');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -73,13 +75,16 @@ export default function TaskChatbox({
         const currentUser = localStorage.getItem('user');
         if (currentUser) {
           const user = JSON.parse(currentUser);
+          const status = response.data.data.participantStatus;
           setCurrentUserId(user.id);
-          setAskerId(response.data.data.participantStatus.askerId);
-          setDoerId(response.data.data.participantStatus.doerId);
-          const isAsker = user.id === response.data.data.participantStatus.askerId;
+          setAskerId(status.askerId);
+          setDoerId(status.doerId);
+          setAskerName(status.askerName || 'Asker');
+          setDoerName(status.doerName || 'Doer');
+          const isAsker = user.id === status.askerId;
           const onlineStatus = isAsker
-            ? response.data.data.participantStatus.doerOnline
-            : response.data.data.participantStatus.askerOnline;
+            ? status.doerOnline
+            : status.askerOnline;
           setOtherUserOnline(onlineStatus);
         }
       }
@@ -146,7 +151,7 @@ export default function TaskChatbox({
         <div className="bg-errandify-brown text-white p-3 flex items-start justify-between gap-2">
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-bold text-sm">Chat with {currentUserId === askerId ? 'Doer' : 'Asker'}</h3>
+              <h3 className="font-bold text-sm">Chat with {currentUserId === askerId ? doerName : askerName}</h3>
               <span className={`inline-block w-2 h-2 rounded-full ${otherUserOnline ? 'bg-green-400' : 'bg-red-400'}`} title={otherUserOnline ? 'Online' : 'Offline'} />
             </div>
           </div>

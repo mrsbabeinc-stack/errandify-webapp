@@ -206,8 +206,13 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
 
     // Verify user is involved in task
     const taskResult = await db.query(
-      `SELECT e.*, b.doer_id FROM errands e
+      `SELECT e.*, b.doer_id,
+              asker.display_name as asker_name,
+              doer.display_name as doer_name
+       FROM errands e
        LEFT JOIN bids b ON e.id = b.errand_id AND b.status = 'accepted'
+       LEFT JOIN users asker ON e.asker_id = asker.id
+       LEFT JOIN users doer ON b.doer_id = doer.id
        WHERE e.id = $1`,
       [taskId]
     );
@@ -267,8 +272,10 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
         })),
         participantStatus: {
           askerId: task.asker_id,
+          askerName: task.asker_name || 'Unknown',
           askerOnline: userStatusMap[task.asker_id] || false,
           doerId: task.doer_id,
+          doerName: task.doer_name || 'Unknown',
           doerOnline: task.doer_id ? userStatusMap[task.doer_id] || false : false,
         },
       },
