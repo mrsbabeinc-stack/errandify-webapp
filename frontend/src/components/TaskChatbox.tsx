@@ -362,7 +362,7 @@ export default function TaskChatbox({
               title={isRecording ? 'Stop recording' : 'Start voice recording'}
               disabled={isLoading}
             >
-              {isRecording ? '⏹️' : '🎤'}
+              {isRecording ? '⏹️' : '🎙️'}
             </button>
             {isRecording && (
               <span className="text-xs text-red-500 font-semibold">
