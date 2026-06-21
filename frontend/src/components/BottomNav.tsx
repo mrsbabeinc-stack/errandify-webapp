@@ -29,12 +29,18 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user-profile/me/full`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      const profileImage = response.data.data?.profileImage;
-      if (profileImage) {
-        setUserImage(profileImage);
+      // Users don't have avatar yet, just load from localStorage
+      const user = localStorage.getItem('user');
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          setUserImage(userData.profile_image_url || null);
+        } catch {
+          setUserImage(null);
+        }
       }
     } catch (err) {
       // Fallback to localStorage if API fails
