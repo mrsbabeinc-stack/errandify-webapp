@@ -18,13 +18,12 @@ export default function NotificationsPage() {
     // Initialize with sample notifications if empty
     let notifs = getNotifications();
     if (notifs.length === 0) {
-      // Add sample notifications to demo the system
       const sampleNotifications = [
         {
           type: 'offer' as const,
           title: 'New bid received!',
           message: 'Sarah bid $35 on your office cleaning task',
-          action: { label: 'View bid', url: '/errands' }
+          action: { label: 'View', url: '/errands' }
         },
         {
           type: 'message' as const,
@@ -42,13 +41,13 @@ export default function NotificationsPage() {
           type: 'system' as const,
           title: 'Welcome to Errandify!',
           message: 'Complete your profile to start receiving tasks',
-          action: { label: 'Complete profile', url: '/my-profile' }
+          action: { label: 'Go', url: '/my-profile' }
         },
         {
           type: 'offer' as const,
           title: 'Task accepted!',
           message: 'You accepted the tutoring task from Maria',
-          action: { label: 'Start chat', url: '/chat' }
+          action: { label: 'Chat', url: '/chat' }
         }
       ];
 
@@ -103,155 +102,141 @@ export default function NotificationsPage() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'message':
-        return '💬';
-      case 'offer':
-        return '💰';
-      case 'status':
-        return '📊';
-      case 'system':
-        return '⚙️';
-      default:
-        return '📢';
+      case 'message': return '💬';
+      case 'offer': return '💰';
+      case 'status': return '📊';
+      case 'system': return '⚙️';
+      default: return '📢';
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'message':
-        return 'bg-blue-100 text-blue-700';
-      case 'offer':
-        return 'bg-green-100 text-green-700';
-      case 'status':
-        return 'bg-purple-100 text-purple-700';
-      case 'system':
-        return 'bg-gray-100 text-gray-700';
-      default:
-        return 'bg-orange-100 text-orange-700';
+      case 'message': return 'bg-blue-500';
+      case 'offer': return 'bg-green-500';
+      case 'status': return 'bg-purple-500';
+      case 'system': return 'bg-gray-500';
+      default: return 'bg-orange-500';
     }
   };
 
   return (
-    <div className="px-4 py-4 max-w-3xl mx-auto pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-bold text-errandify-brown">🔔 Notifications</h1>
-        <div className="flex gap-2">
-          {notifications.some((n) => !n.read) && (
-            <button
-              onClick={handleMarkAllRead}
-              className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-200"
-            >
-              Mark all read
-            </button>
-          )}
-          {notifications.length > 0 && (
-            <button
-              onClick={handleClearAll}
-              className="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-lg hover:bg-red-200"
-            >
-              Clear all
-            </button>
-          )}
+    <div className="min-h-screen bg-errandify-bg pb-20">
+      {/* HEADER */}
+      <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white sticky top-0 z-50 shadow-md">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+          <h1 className="text-lg font-bold">🔔 Notifications</h1>
+          <div className="flex gap-2">
+            {notifications.some((n) => !n.read) && (
+              <button
+                onClick={handleMarkAllRead}
+                className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-2 py-1 rounded transition"
+              >
+                Mark all
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button
+                onClick={handleClearAll}
+                className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-2 py-1 rounded transition"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* TABS */}
+        <div className="max-w-4xl mx-auto px-4 flex gap-2 py-2 border-t border-white border-opacity-20">
+          <button
+            onClick={() => setFilter('all')}
+            className={`text-xs font-bold px-3 py-1 rounded transition ${
+              filter === 'all'
+                ? 'bg-white text-errandify-orange'
+                : 'text-white hover:bg-white hover:bg-opacity-10'
+            }`}
+          >
+            All ({notifications.length})
+          </button>
+          <button
+            onClick={() => setFilter('unread')}
+            className={`text-xs font-bold px-3 py-1 rounded transition ${
+              filter === 'unread'
+                ? 'bg-white text-errandify-orange'
+                : 'text-white hover:bg-white hover:bg-opacity-10'
+            }`}
+          >
+            Unread ({notifications.filter((n) => !n.read).length})
+          </button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-            filter === 'all'
-              ? 'bg-errandify-orange text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          All ({notifications.length})
-        </button>
-        <button
-          onClick={() => setFilter('unread')}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-            filter === 'unread'
-              ? 'bg-errandify-orange text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Unread ({notifications.filter((n) => !n.read).length})
-        </button>
-      </div>
-
-      {/* Notifications List */}
-      {filteredNotifications.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-          <p className="text-gray-500 mb-2">📭 No {filter === 'unread' ? 'unread' : ''} notifications</p>
-          <p className="text-xs text-gray-400">You're all caught up!</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filteredNotifications.map((notification) => (
-            <div
-              key={notification.id}
-              className={`p-4 rounded-lg border transition ${
-                notification.read
-                  ? 'bg-white border-gray-200 hover:bg-gray-50'
-                  : 'bg-blue-50 border-blue-200'
-              }`}
-            >
-              <div className="flex gap-3">
-                {/* Icon */}
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 text-lg ${getTypeColor(notification.type)}`}>
-                  {getTypeIcon(notification.type)}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="font-semibold text-sm text-gray-900">{notification.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                    </div>
-                    {!notification.read && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5" />
-                    )}
+      {/* CONTENT */}
+      <div className="max-w-4xl mx-auto px-4 py-3">
+        {filteredNotifications.length === 0 ? (
+          <div className="text-center py-8 bg-white rounded-lg border border-gray-200 mt-2">
+            <p className="text-gray-500 text-sm">📭 No {filter === 'unread' ? 'unread' : ''} notifications</p>
+          </div>
+        ) : (
+          <div className="space-y-1 mt-2">
+            {filteredNotifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`p-3 rounded-lg border text-sm transition ${
+                  notification.read
+                    ? 'bg-white border-gray-200'
+                    : 'bg-blue-50 border-blue-300 font-semibold'
+                }`}
+              >
+                <div className="flex gap-2 items-start">
+                  {/* Icon Badge */}
+                  <div className={`${getTypeColor(notification.type)} text-white w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs`}>
+                    {getTypeIcon(notification.type)}
                   </div>
 
-                  {/* Timestamp & Actions */}
-                  <div className="flex items-center gap-2 mt-2">
-                    <p className="text-xs text-gray-500">
-                      {new Date(notification.timestamp).toLocaleDateString()} {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-gray-900 font-semibold">{notification.title}</h3>
+                    <p className="text-gray-600 text-xs mt-0.5 line-clamp-2">{notification.message}</p>
 
-                    {notification.action && (
+                    {/* Actions */}
+                    <div className="flex gap-2 mt-2 items-center flex-wrap">
+                      <span className="text-xs text-gray-500">
+                        {new Date(notification.timestamp).toLocaleDateString()} {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+
+                      {notification.action && (
+                        <button
+                          onClick={() => navigate(notification.action!.url)}
+                          className="text-xs text-errandify-orange hover:underline font-bold"
+                        >
+                          {notification.action.label} →
+                        </button>
+                      )}
+
+                      {!notification.read && (
+                        <button
+                          onClick={() => handleRead(notification.id)}
+                          className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
+                        >
+                          Mark read
+                        </button>
+                      )}
+
                       <button
-                        onClick={() => navigate(notification.action!.url)}
-                        className="text-xs text-errandify-orange hover:underline font-semibold"
+                        onClick={() => handleDelete(notification.id)}
+                        className="text-xs text-gray-400 hover:text-red-600 ml-auto"
                       >
-                        {notification.action.label}
+                        ✕
                       </button>
-                    )}
-
-                    {!notification.read && (
-                      <button
-                        onClick={() => handleRead(notification.id)}
-                        className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
-                      >
-                        Mark read
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() => handleDelete(notification.id)}
-                      className="text-xs text-gray-400 hover:text-red-600 ml-auto"
-                    >
-                      ✕
-                    </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
