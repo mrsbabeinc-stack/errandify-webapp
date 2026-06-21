@@ -9,8 +9,11 @@ interface TaskDetail {
   status: string;
   budget: number;
   doer_id?: number;
+  asker_id?: number;
   doer?: { display_name: string };
   description?: string;
+  completion_notes?: string;
+  accepted_bid_id?: number;
 }
 
 interface Photo {
@@ -46,7 +49,26 @@ export default function ReviewCompletionPage() {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setTask(taskResponse.data.data);
+      const taskData = taskResponse.data.data;
+      setTask(taskData);
+
+      // Fetch doer info if not included in task response
+      if (!taskData.doer && taskData.accepted_bid_id) {
+        try {
+          // Try to fetch bid details to get doer info
+          const bidResponse = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${taskData.accepted_bid_id}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          if (bidResponse.data.data?.doer_name) {
+            taskData.doer = { display_name: bidResponse.data.data.doer_name };
+          }
+        } catch (e) {
+          console.warn('Could not fetch doer info:', e);
+        }
+      }
 
       // Fetch completion photos
       const photosResponse = await axios.get(
@@ -58,7 +80,7 @@ export default function ReviewCompletionPage() {
       setPhotos(photosResponse.data.data || []);
 
       // Fetch completion notes from task
-      const notes = taskResponse.data.data?.completion_notes;
+      const notes = taskData?.completion_notes;
       if (notes) {
         setCompletionNotes(notes);
       }
