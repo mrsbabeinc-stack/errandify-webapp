@@ -142,23 +142,13 @@ export default function TaskChatbox({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end z-50 md:items-center md:justify-center">
       <div className="bg-white rounded-t-lg md:rounded-lg w-full md:max-w-5xl md:h-96 flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
-        <div className="flex flex-1 overflow-hidden">
-          {/* Chat Column */}
-          <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="bg-errandify-brown text-white p-3 flex items-start justify-between rounded-t-lg gap-2">
+        {/* Header - Full Width */}
+        <div className="bg-errandify-brown text-white p-3 flex items-start justify-between gap-2">
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-bold text-sm">Chat with {currentUserId === askerId ? 'Doer' : 'Asker'}</h3>
               <span className={`inline-block w-2 h-2 rounded-full ${otherUserOnline ? 'bg-green-400' : 'bg-red-400'}`} title={otherUserOnline ? 'Online' : 'Offline'} />
             </div>
-            <a
-              href={`/errand/${taskId}`}
-              className="text-xs text-orange-200 hover:text-white underline mt-1 inline-block"
-            >
-              📋 View Errand Details
-            </a>
-            <p className="text-xs text-orange-100 mt-1">🛡️ AI safety scanning active • {otherUserOnline ? '🟢 Online' : '🔴 Offline'}</p>
           </div>
           <button
             onClick={onClose}
@@ -167,6 +157,10 @@ export default function TaskChatbox({
             ✕
           </button>
         </div>
+
+        <div className="flex flex-1 overflow-hidden">
+          {/* Chat Column */}
+          <div className="flex-1 flex flex-col">
 
 
         {/* Messages Area */}
@@ -299,8 +293,8 @@ export default function TaskChatbox({
             className="hidden"
           />
 
-          <p className="text-xs text-gray-600">
-            🛡️ All messages scanned for safety. Violations reported to admin.
+          <p className="text-xs text-gray-500 text-center">
+            Messages scanned for safety
           </p>
         </form>
           </div>
