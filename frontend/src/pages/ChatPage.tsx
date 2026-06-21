@@ -219,18 +219,18 @@ export default function ChatPage({ userRole }: ChatPageProps) {
       ) : (
         <div className="grid gap-3">
           {filteredConversations.map((conversation) => (
-            <div key={conversation.id} className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start gap-3 mb-2">
+            <div key={conversation.id} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-start gap-2 mb-1">
                 <div className="flex-1">
                   <h3 className="font-semibold text-sm text-gray-800 line-clamp-1">{conversation.title}</h3>
                 </div>
-                <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${getStatusColor(conversation.status)}`}>
+                <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${getStatusColor(conversation.status)}`}>
                   {getStatusLabel(conversation.status)}
                 </span>
               </div>
 
               {/* Start Date/Time and Area - 2 lines with buttons on right */}
-              <div className="text-xs text-gray-600 mb-3 space-y-0.5">
+              <div className="text-xs text-gray-600 space-y-0">
                 {conversation.deadline && (
                   <div className="flex justify-between items-center">
                     <p>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
