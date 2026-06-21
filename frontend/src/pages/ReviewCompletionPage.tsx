@@ -33,6 +33,7 @@ export default function ReviewCompletionPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+  const [nominateAsStarOfMonth, setNominateAsStarOfMonth] = useState(false);
 
   useEffect(() => {
     fetchTaskAndCompletion();
@@ -111,7 +112,32 @@ export default function ReviewCompletionPage() {
         }
       );
 
-      alert('✓ Completion approved! Payment released.');
+      // If nomination is checked, submit nomination
+      if (nominateAsStarOfMonth && task?.doer) {
+        try {
+          await axios.post(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/community/nominate`,
+            {
+              doer_id: task.doer_id,
+              doer_name: task.doer.display_name,
+              task_id: task.id,
+              task_title: task.title,
+              nomination_reason: `Exceptional work on ${task.title}`,
+              budget: task.budget,
+            },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          alert('✓ Completion approved! Payment released.\n✓ Doer nominated as Star of the Month!');
+        } catch (nominationErr) {
+          console.warn('Nomination failed but completion approved:', nominationErr);
+          alert('✓ Completion approved! Payment released.\n⚠️ Nomination could not be submitted.');
+        }
+      } else {
+        alert('✓ Completion approved! Payment released.');
+      }
+
       navigate('/errands');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to approve completion');
@@ -274,6 +300,24 @@ export default function ReviewCompletionPage() {
                 </p>
               </div>
             )}
+
+            {/* Nomination Checkbox */}
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={nominateAsStarOfMonth}
+                  onChange={(e) => setNominateAsStarOfMonth(e.target.checked)}
+                  className="w-5 h-5 mt-0.5 cursor-pointer accent-errandify-orange"
+                />
+                <div>
+                  <p className="font-semibold text-errandify-brown">🌟 Nominate as Star of the Month</p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Recognize {task?.doer?.display_name || 'this doer'} for exceptional work and add them to the Hall of Stars
+                  </p>
+                </div>
+              </label>
+            </div>
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3 mt-6">
