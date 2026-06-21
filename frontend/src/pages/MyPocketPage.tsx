@@ -191,13 +191,13 @@ export default function MyPocketPage() {
               onClick={() => setActiveTab('txns')}
               className={`flex-1 p-2 text-center transition ${activeTab === 'txns' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
-              📋 Txns
+              📋 Transactions
             </button>
             <button
               onClick={() => setActiveTab('history')}
               className={`flex-1 p-2 text-center transition border-l border-gray-100 ${activeTab === 'history' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
-              📈 History
+              ⭐ EP Points
             </button>
             <button
               onClick={() => setActiveTab('rewards')}
