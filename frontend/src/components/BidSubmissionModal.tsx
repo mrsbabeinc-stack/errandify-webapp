@@ -89,8 +89,8 @@ export default function BidSubmissionModal({
         </h2>
         <p className="text-gray-600 text-sm mb-4">"{taskTitle}"</p>
         {isUpdating && (
-          <p className="text-xs text-blue-600 mb-3 bg-blue-50 p-2 rounded">
-            Previous bid: ${existingBidAmount}
+          <p className="text-xs text-orange-600 mb-3 bg-orange-50 p-2 rounded">
+            Previous bid: ${existingBidAmount} • Update to a new amount below
           </p>
         )}
 
@@ -99,25 +99,51 @@ export default function BidSubmissionModal({
             <label className="block text-sm font-semibold text-errandify-brown mb-2">
               Your Bid Amount ($)
             </label>
-            <input
-              type="number"
-              min="5"
-              step="5"
-              value={bidAmount}
-              onChange={(e) => {
-                // Only allow multiples of 5
-                const val = e.target.value;
-                if (val === '') {
-                  setBidAmount('');
-                } else {
-                  const num = Math.max(5, Math.round(parseInt(val) / 5) * 5);
-                  setBidAmount(num.toString());
-                }
-              }}
-              placeholder={`Task budget: $${taskBudget}`}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
-              required
-            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const current = parseInt(bidAmount) || taskBudget;
+                  const newVal = Math.max(5, current - 5);
+                  setBidAmount(newVal.toString());
+                }}
+                className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded font-bold text-lg transition-colors"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                min="5"
+                step="1"
+                value={bidAmount}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '') {
+                    setBidAmount('');
+                  } else {
+                    const num = Math.max(5, parseInt(val));
+                    setBidAmount(num.toString());
+                  }
+                }}
+                placeholder={`Task budget: $${taskBudget}`}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange text-center text-lg font-bold"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const current = parseInt(bidAmount) || taskBudget;
+                  const newVal = current + 5;
+                  setBidAmount(newVal.toString());
+                }}
+                className="px-3 py-2 bg-errandify-orange hover:bg-opacity-90 text-white rounded font-bold text-lg transition-colors"
+              >
+                +
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Use +/− buttons or type directly to adjust bid
+            </p>
           </div>
 
           <div>
