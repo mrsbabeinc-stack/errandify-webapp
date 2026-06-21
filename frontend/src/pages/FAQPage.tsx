@@ -11,6 +11,7 @@ interface FAQItem {
 export default function FAQPage() {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<'all' | 'general' | 'asker' | 'doer' | 'payment' | 'safety' | 'conduct'>('general');
+  const [selectedFaq, setSelectedFaq] = useState<FAQItem | null>(null);
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -423,9 +424,10 @@ export default function FAQPage() {
       <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredFAQs.map(faq => (
-            <div
+            <button
               key={faq.id}
-              className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition"
+              onClick={() => setSelectedFaq(faq)}
+              className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition text-left"
             >
               {/* Question */}
               <h3 className="font-bold text-errandify-brown text-sm mb-2 leading-tight">
@@ -437,16 +439,50 @@ export default function FAQPage() {
                 {faq.answer}
               </p>
 
-              {/* Read More Link */}
-              <button
-                onClick={() => navigate(`/how-it-works`)}
-                className="mt-2 text-errandify-orange text-xs font-semibold hover:underline"
-              >
-                Learn more →
-              </button>
-            </div>
+              {/* View More Link */}
+              <div className="mt-2 text-errandify-orange text-xs font-semibold hover:underline">
+                View full answer →
+              </div>
+            </button>
           ))}
         </div>
+
+        {/* COMPACT DETAIL MODAL */}
+        {selectedFaq && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end z-50">
+            <div className="bg-white w-full rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-errandify-brown flex-1 pr-4">{selectedFaq.question}</h2>
+                <button
+                  onClick={() => setSelectedFaq(null)}
+                  className="text-2xl text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Answer */}
+              <p className="text-sm text-gray-700 leading-relaxed mb-6">{selectedFaq.answer}</p>
+
+              {/* Category Tag */}
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-xs font-semibold text-gray-600">Category:</span>
+                <span className="inline-block px-2 py-1 bg-errandify-orange text-white rounded-full text-xs font-bold capitalize">
+                  {selectedFaq.category}
+                </span>
+              </div>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedFaq(null)}
+                className="w-full bg-errandify-orange text-white py-2 rounded-lg font-semibold hover:bg-opacity-90 transition text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* STILL NEED HELP - COMPACT */}
         <div className="mt-8 bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg p-6 text-white text-center">
