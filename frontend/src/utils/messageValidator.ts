@@ -22,15 +22,26 @@ const CONTACT_PATTERNS = {
   url: /(https?:\/\/[^\s]+|www\.[^\s]+)/gi,
 };
 
-// Patterns for inappropriate content - COMPREHENSIVE
+// Patterns for inappropriate content - BALANCED (comprehensive but avoiding false positives)
 const INAPPROPRIATE_PATTERNS = {
+  // HARD BLOCKS - Zero tolerance, no context needed
   profanity: /damn|shit|crap|bloody|fuck|ass|bitch|bastard|hell|piss/gi,
-  threats: /kill|hurt|violence|attack|harm|rape|murder|die|dead|threat|attack/gi,
+  threats: /kill|hurt|violence|attack|harm|rape|murder|die|dead|threat/gi,
   harassment: /stupid|idiot|moron|dumb|fool|retard|loser|pathetic/gi,
-  sexualContent: /sex|porn|naked|nude|xxx|sexual|cock|pussy|dick|vagina|breast|horny|aroused|masturbat|cum|prostitut|escort|sugar|onlyfans|sleep with|spend the night|overnight|intimate|private time|pay for sex|call girl|sex worker|adult entertainer|massage|outcall|incall|orgy|gangbang|threesome|dildo|vibrator|orgasm|blowjob|handjob|foreplay|penetrat|bondage|bdsm|fetish|kink|nudes|sext|camgirl|stripper|lap dance/gi,
-  drugs: /drug|cocaine|heroin|meth|weed|cannabis|marijuana|acid|lsd|mdma|ecstasy|crack|fentanyl|opium|morphine|codeine|tramadol|oxycodon|percocet|vicodin|xanax|valium|ketamine|pcp|ice|crystal|methamphetamine|amphetamine|dexedrine|adderall|ritalin|speed|shrooms|psilocybin|psychedelic|hash|hashish|thc|cannabinoid|dealer|supplier|inject|snort|shoot|high|get high|stoned|trip/gi,
+
+  // SEXUAL - Explicit terms only (avoid innocent words)
+  sexualContent: /porn|xxx|cock|pussy|dick|vagina|horny|aroused|masturbat|cum|prostitut|escort|onlyfans|sleep with|spend the night|intimate|private time|pay for sex|call girl|sex worker|adult entertainer|outcall|incall|orgy|gangbang|threesome|dildo|vibrator|orgasm|blowjob|handjob|foreplay|penetrat|bondage|bdsm|fetish|kink|nudes|sext|camgirl|stripper|lap dance|body rub/gi,
+
+  // DRUGS - Specific drug names (not words like "high" which has context)
+  drugs: /cocaine|heroin|meth|weed|cannabis|marijuana|acid|lsd|mdma|ecstasy|crack|fentanyl|opium|morphine|codeine|tramadol|oxycodon|percocet|vicodin|xanax|valium|ketamine|pcp|shrooms|psilocybin|hash|hashish|thc|cannabinoid|dealer|supplier|inject|snort|shoot|stoned|trip/gi,
+
+  // VIOLENCE - Serious terms only
   violence: /rape|abuse|assault|torture|molest|incest|pedophil/gi,
+
+  // GAMBLING - Specific terms
   gambling: /poker|blackjack|roulette|casino|betting|gamble|wager|jackpot|slot|lottery|bet money/gi,
+
+  // SCAMS - Obvious fraud terms
   scam: /bitcoin|crypto|forex|mlm|pyramid|scheme|wire transfer|western union|money gram|nigerian|sweepstakes|get rich|pay me first|advance payment/gi,
 };
 
