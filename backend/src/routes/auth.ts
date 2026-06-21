@@ -275,9 +275,9 @@ router.post('/demo-login', async (req: Request, res: Response) => {
     }
 
     // Demo account mapping
-    const demoAccounts: Record<string, { mobile: string; name: string; nric: string }> = {
-      sarah: { mobile: '98765432', name: 'Sarah Tan', nric: 'S1234567A' },
-      john: { mobile: '87654321', name: 'John Lee', nric: 'S7654321B' },
+    const demoAccounts: Record<string, { mobile: string; name: string; nric: string; defaultRole: string }> = {
+      sarah: { mobile: '98765432', name: 'Sarah Tan', nric: 'S1234567A', defaultRole: 'doer' },
+      john: { mobile: '87654321', name: 'John Lee', nric: 'S7654321B', defaultRole: 'doer' },
     };
 
     const demoUser = demoAccounts[account.toLowerCase()];
@@ -310,7 +310,7 @@ router.post('/demo-login', async (req: Request, res: Response) => {
           '123 Demo Street, Singapore 123456',
           16,
           'en',
-          'asker',
+          demoUser.defaultRole,
           'verified',
           referralCode,
         ]
