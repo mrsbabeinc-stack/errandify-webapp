@@ -35,6 +35,8 @@ export default function CreateErrandPage() {
   const [error, setError] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successErrandId, setSuccessErrandId] = useState('');
   const [skillInput, setSkillInput] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [fullAddress, setFullAddress] = useState('');
@@ -766,8 +768,14 @@ export default function CreateErrandPage() {
           console.warn('[DEBUG] AI analysis skipped:', aiErr);
         }
 
-        alert('✓ Errand posted successfully! Dummy payment confirmed.');
-        navigate('/home');
+        // Show success modal with errand ID
+        if (response.data.data?.errandId) {
+          setSuccessErrandId(response.data.data.errandId);
+          setShowSuccess(true);
+        } else {
+          alert('✓ Errand posted successfully! Dummy payment confirmed.');
+          navigate('/home');
+        }
       } else {
         console.error('[DEBUG] *** API RETURNED success:false ***:', response.data);
         setError('Failed to post errand');
@@ -1543,6 +1551,53 @@ export default function CreateErrandPage() {
                 {loading ? '⏳ Posting...' : '✓ Post'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal with Errand ID */}
+      {showSuccess && successErrandId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
+            <div className="text-5xl mb-4">🎉</div>
+            <h2 className="text-2xl font-bold text-errandify-brown mb-2">
+              Errand Posted!
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Your errand is now live and doers can see it.
+            </p>
+
+            {/* Errand ID Display */}
+            <div className="bg-gray-100 rounded-lg p-4 mb-4">
+              <p className="text-xs text-gray-600 mb-1">Your Errand ID:</p>
+              <div className="flex items-center justify-between gap-2">
+                <code className="text-lg font-mono font-bold text-errandify-brown flex-1">
+                  {successErrandId}
+                </code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(successErrandId);
+                  }}
+                  className="px-3 py-1.5 bg-errandify-orange text-white text-xs font-semibold rounded hover:bg-opacity-90 transition"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 mb-4">
+              Save this ID to reference your errand in chat and communications.
+            </p>
+
+            <button
+              onClick={() => {
+                setShowSuccess(false);
+                navigate('/home');
+              }}
+              className="w-full bg-errandify-orange text-white py-2 rounded-lg font-semibold hover:bg-opacity-90 transition"
+            >
+              Go to Home
+            </button>
           </div>
         </div>
       )}
