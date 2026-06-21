@@ -333,7 +333,6 @@ export default function TaskChatbox({
             </div>
           )}
         </div>
-        </div>
       </div>
     </div>
   );
