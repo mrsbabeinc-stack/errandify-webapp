@@ -4,6 +4,68 @@ import db from '../db.js';
 
 const router = Router();
 
+// GET /api/wallet - Get user's wallet balance and stats (default endpoint)
+router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Calculate earnings from completed tasks where user is doer
+    const earningsResult = await db.query(
+      `SELECT
+         COALESCE(SUM(CASE WHEN e.status IN ('completed_confirmed', 'completed_unconfirmed')
+           THEN e.budget * 0.8 ELSE 0 END), 0) as completed_earnings,
+         COALESCE(SUM(CASE WHEN e.status = 'in_progress'
+           THEN e.budget * 0.8 ELSE 0 END), 0) as pending_earnings,
+         COUNT(CASE WHEN e.status IN ('completed_confirmed', 'completed_unconfirmed')
+           THEN 1 END) as completed_tasks,
+         COUNT(CASE WHEN e.status = 'in_progress'
+           THEN 1 END) as in_progress_tasks
+       FROM errands e
+       JOIN errand_assignments ea ON e.id = ea.errand_id
+       WHERE ea.doer_id = $1`,
+      [userId]
+    );
+
+    const earnings = earningsResult.rows[0];
+
+    // Get pending payouts and spent amount (for askers)
+    const spentResult = await db.query(
+      `SELECT
+         COALESCE(SUM(CASE WHEN e.status IN ('posted', 'open', 'confirmed', 'in_progress')
+           THEN e.budget ELSE 0 END), 0) as pending_spent,
+         COALESCE(SUM(CASE WHEN e.status IN ('completed_confirmed', 'completed_unconfirmed', 'cancelled')
+           THEN e.budget ELSE 0 END), 0) as completed_spent,
+         COUNT(CASE WHEN e.status IN ('posted', 'open', 'confirmed', 'in_progress')
+           THEN 1 END) as active_postings,
+         COUNT(CASE WHEN e.status IN ('completed_confirmed', 'completed_unconfirmed')
+           THEN 1 END) as completed_postings
+       FROM errands e
+       WHERE e.asker_id = $1`,
+      [userId]
+    );
+
+    const spent = spentResult.rows[0];
+
+    res.json({
+      success: true,
+      data: {
+        balance: Math.max(0, (earnings.completed_earnings || 0) - (spent.pending_spent || 0)),
+        totalEarned: earnings.completed_earnings || 0,
+        totalSpent: spent.completed_spent || 0,
+        pendingPayouts: earnings.pending_earnings || 0,
+        errandifyPoints: 0,
+        transactions: [],
+      },
+    });
+  } catch (error: any) {
+    console.error('Failed to fetch wallet:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch wallet',
+    });
+  }
+});
+
 // GET /api/wallet/balance - Get user's wallet balance and stats
 router.get('/balance', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
