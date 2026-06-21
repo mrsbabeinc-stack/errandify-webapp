@@ -98,7 +98,7 @@ export default function NotificationsPage() {
   const filteredNotifications =
     filter === 'unread'
       ? notifications.filter((n) => !n.read)
-      : notifications;
+      : notifications.filter((n) => !n.read || filter === 'all');
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -126,24 +126,14 @@ export default function NotificationsPage() {
       <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white sticky top-0 z-50 shadow-md">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="text-lg font-bold">🔔 Notifications</h1>
-          <div className="flex gap-2">
-            {notifications.some((n) => !n.read) && (
-              <button
-                onClick={handleMarkAllRead}
-                className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-2 py-1 rounded transition"
-              >
-                Mark all
-              </button>
-            )}
-            {notifications.length > 0 && (
-              <button
-                onClick={handleClearAll}
-                className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-2 py-1 rounded transition"
-              >
-                Clear
-              </button>
-            )}
-          </div>
+          {notifications.some((n) => !n.read) && (
+            <button
+              onClick={handleMarkAllRead}
+              className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-2 py-1 rounded transition"
+            >
+              Mark all read
+            </button>
+          )}
         </div>
 
         {/* TABS */}
@@ -175,7 +165,7 @@ export default function NotificationsPage() {
       <div className="max-w-4xl mx-auto px-4 py-3">
         {filteredNotifications.length === 0 ? (
           <div className="text-center py-8 bg-white rounded-lg border border-gray-200 mt-2">
-            <p className="text-gray-500 text-sm">📭 No {filter === 'unread' ? 'unread' : ''} notifications</p>
+            <p className="text-gray-500 text-sm">📭 {filter === 'unread' ? 'All caught up!' : 'No notifications'}</p>
           </div>
         ) : (
           <div className="space-y-1 mt-2">
@@ -222,13 +212,6 @@ export default function NotificationsPage() {
                           Mark read
                         </button>
                       )}
-
-                      <button
-                        onClick={() => handleDelete(notification.id)}
-                        className="text-xs text-gray-400 hover:text-red-600 ml-auto"
-                      >
-                        ✕
-                      </button>
                     </div>
                   </div>
                 </div>
