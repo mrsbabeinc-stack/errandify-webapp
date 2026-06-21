@@ -366,4 +366,58 @@ router.post('/category-preferences', authMiddleware, async (req: AuthRequest, re
   }
 });
 
+// GET /api/user/referral - Get user's referral code & stats
+router.get('/referral', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Get user's referral code
+    const userResult = await db.query(
+      'SELECT referral_code FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const referralCode = userResult.rows[0].referral_code;
+
+    // Get referral stats: how many people joined with this code
+    const referralStatsResult = await db.query(
+      `SELECT COUNT(*) as referred_count, SUM(CASE WHEN kyc_status = 'completed' THEN 1 ELSE 0 END) as completed_count
+       FROM users WHERE referred_by = $1`,
+      [referralCode]
+    );
+
+    const referredCount = parseInt(referralStatsResult.rows[0].referred_count || '0', 10);
+    const completedCount = parseInt(referralStatsResult.rows[0].completed_count || '0', 10);
+
+    // Calculate earned points: 50 EP per completed referral
+    const earnedPoints = completedCount * 50;
+
+    // Generate referral link
+    const referralLink = `${process.env.FRONTEND_URL || 'https://errandify.ai'}/signup?ref=${referralCode}`;
+
+    console.log('[Referral] User:', userId, 'Code:', referralCode, 'Referred:', referredCount, 'Completed:', completedCount, 'Earned:', earnedPoints);
+
+    res.json({
+      success: true,
+      data: {
+        code: referralCode,
+        link: referralLink,
+        referredCount,
+        completedCount,
+        earnedPoints,
+      },
+    });
+  } catch (error: any) {
+    console.error('Referral endpoint error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch referral data',
+      details: error.message,
+    });
+  }
+});
+
 export default router;
