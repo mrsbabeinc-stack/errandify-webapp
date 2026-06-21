@@ -254,48 +254,50 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
 
         {/* Category Selection Card - Compact Grid - Only for Doers */}
         {userRole === 'doer' && (
-          <div className="bg-white rounded-lg p-3 border border-gray-200 mb-4">
-          <h3 className="text-xs font-semibold text-errandify-brown mb-2 uppercase tracking-wide">
+          <div className="bg-white rounded-lg p-2 border border-gray-200 mb-3">
+          <h3 className="text-xs font-semibold text-errandify-brown mb-1.5 uppercase tracking-wide">
             Categories
           </h3>
-          <div className="grid grid-cols-4 gap-2 mb-3">
+          <div className="grid grid-cols-4 gap-1.5 mb-2">
             {categories.map((category) => {
               const isSelected = selectedCategories.includes(category.id);
               return (
                 <button
                   key={category.id}
                   onClick={() => handleCategoryToggle(category.id)}
-                  className={`px-2 py-1.5 rounded text-xs font-medium transition-all hover:shadow-md ${
+                  className={`px-1.5 py-1 rounded text-xs font-medium transition-all hover:shadow-md ${
                     isSelected
                       ? 'bg-errandify-orange text-white shadow-md ring-1 ring-orange-300'
                       : `bg-gradient-to-r ${category.color}`
                   }`}
                 >
-                  <div className="text-lg mb-0.5">{category.icon}</div>
+                  <div className="text-sm mb-0.5">{category.icon}</div>
                   <div className="text-xs leading-tight">{category.name.split(' ')[0]}</div>
                 </button>
               );
             })}
           </div>
-          <button
-            onClick={() => setSelectedCategories([])}
-            className="text-xs text-errandify-orange font-semibold hover:underline"
-          >
-            Clear
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setSelectedCategories([])}
+              className="text-xs text-errandify-orange font-semibold hover:underline"
+            >
+              Clear
+            </button>
 
-          {/* Favorites Filter */}
-          <button
-            onClick={() => setFilterFavorites(!filterFavorites)}
-            className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
-              filterFavorites
-                ? 'bg-red-500 text-white shadow-md ring-1 ring-red-300'
-                : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
-            }`}
-          >
-            ❤️ {filterFavorites ? 'Showing Favorites' : 'Show Favorites'}
-            {favorites.size > 0 && ` (${favorites.size})`}
-          </button>
+            {/* Favorites Filter - Inline */}
+            <button
+              onClick={() => setFilterFavorites(!filterFavorites)}
+              className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${
+                filterFavorites
+                  ? 'bg-red-500 text-white shadow-md ring-1 ring-red-300'
+                  : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+              }`}
+            >
+              ❤️ {filterFavorites ? 'Favorites' : 'Show Favorites'}
+              {favorites.size > 0 && ` (${favorites.size})`}
+            </button>
+          </div>
           </div>
         )}
 
