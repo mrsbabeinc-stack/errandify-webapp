@@ -15,6 +15,56 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
   useEffect(() => {
+    // Initialize with sample notifications if empty
+    let notifs = getNotifications();
+    if (notifs.length === 0) {
+      // Add sample notifications to demo the system
+      const sampleNotifications = [
+        {
+          type: 'offer' as const,
+          title: 'New bid received!',
+          message: 'Sarah bid $35 on your office cleaning task',
+          action: { label: 'View bid', url: '/errands' }
+        },
+        {
+          type: 'message' as const,
+          title: 'New message from John',
+          message: 'Hi! Can you do this task on Saturday?',
+          action: { label: 'Reply', url: '/chat' }
+        },
+        {
+          type: 'status' as const,
+          title: 'Task completed!',
+          message: 'Your grocery delivery has been completed',
+          action: { label: 'Review', url: '/review/1' }
+        },
+        {
+          type: 'system' as const,
+          title: 'Welcome to Errandify!',
+          message: 'Complete your profile to start receiving tasks',
+          action: { label: 'Complete profile', url: '/my-profile' }
+        },
+        {
+          type: 'offer' as const,
+          title: 'Task accepted!',
+          message: 'You accepted the tutoring task from Maria',
+          action: { label: 'Start chat', url: '/chat' }
+        }
+      ];
+
+      sampleNotifications.forEach(notif => {
+        const stored = getNotifications();
+        const newNotif = {
+          ...notif,
+          id: `notif-${Date.now()}-${Math.random()}`,
+          timestamp: new Date(Date.now() - Math.random() * 86400000).toISOString(),
+          read: Math.random() > 0.6
+        };
+        stored.unshift(newNotif);
+        localStorage.setItem('appNotifications', JSON.stringify(stored));
+      });
+    }
+
     loadNotifications();
     const interval = setInterval(loadNotifications, 2000);
     return () => clearInterval(interval);
