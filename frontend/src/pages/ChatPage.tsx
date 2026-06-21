@@ -145,17 +145,13 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 </span>
               </div>
 
-              {/* Start Date/Time and Area */}
-              <div className="text-xs text-gray-600 mb-3 space-y-1">
+              {/* Start Date/Time and Area - 2 lines */}
+              <div className="text-xs text-gray-600 mb-3 space-y-0.5">
                 {conversation.deadline && (
-                  <p>
-                    📅 <strong>Start:</strong> {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+                  <p>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                 )}
                 {(conversation.location || conversation.postal) && (
-                  <p>
-                    📍 <strong>Area:</strong> {conversation.postal && `${conversation.postal}`}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}
-                  </p>
+                  <p>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</p>
                 )}
               </div>
               <div className="flex gap-2 mt-3">
