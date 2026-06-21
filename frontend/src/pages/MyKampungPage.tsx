@@ -834,51 +834,105 @@ export default function MyKampungPage() {
 
         {/* EVENTS TAB */}
         {activeTab === 'events' && (
-          <div className="space-y-3">
+          <div>
             {events.length === 0 ? (
-              <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
-                <p className="text-gray-500">No events scheduled</p>
+              <div className="bg-white rounded p-4 text-center border border-gray-200 text-xs text-gray-500">
+                No events scheduled
               </div>
             ) : (
-              events.map((event) => (
-                <div key={event.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition">
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div>
-                      <h3 className="font-semibold text-gray-800">{event.title}</h3>
-                      <span className={`inline-block text-xs font-semibold px-2 py-1 rounded-full mt-1 ${getCategoryColor(event.type)}`}>
-                        {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => handleAttendEvent(event.id)}
-                      className={`px-3 py-2 rounded-lg font-semibold text-xs transition whitespace-nowrap ${
-                        event.isAttending
-                          ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                          : 'bg-errandify-orange text-white hover:bg-opacity-90'
-                      }`}
-                    >
-                      {event.isAttending ? 'Attending ✓' : 'Attend'}
-                    </button>
-                  </div>
+              <>
+                {/* Upcoming Events Timeline */}
+                <div className="space-y-2">
+                  {events.map((event, index) => {
+                    const typeColors: Record<string, { bg: string; border: string; icon: string }> = {
+                      workshop: { bg: 'bg-purple-50', border: 'border-purple-300', icon: '🛠️' },
+                      webinar: { bg: 'bg-blue-50', border: 'border-blue-300', icon: '🎥' },
+                      meetup: { bg: 'bg-pink-50', border: 'border-pink-300', icon: '👥' },
+                      competition: { bg: 'bg-orange-50', border: 'border-orange-300', icon: '🏆' },
+                    };
 
-                  <p className="text-sm text-gray-700 mb-3">{event.description}</p>
+                    const eventStyle = typeColors[event.type] || typeColors.workshop;
 
-                  <div className="space-y-2 text-xs text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <span>📅</span>
-                      <span>{event.date} at {event.time}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span>📍</span>
-                      <span>{event.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span>👥</span>
-                      <span>{event.attendees} attending</span>
-                    </div>
-                  </div>
+                    return (
+                      <div
+                        key={event.id}
+                        className={`${eventStyle.bg} rounded-lg border-2 ${eventStyle.border} p-3 hover:shadow-md transition cursor-pointer group`}
+                      >
+                        <div className="flex items-start gap-2">
+                          {/* Timeline Dot */}
+                          <div className="flex flex-col items-center mt-0.5">
+                            <div className="w-2.5 h-2.5 rounded-full bg-errandify-orange"></div>
+                            {index < events.length - 1 && (
+                              <div className="w-0.5 h-8 bg-gray-200 -my-1"></div>
+                            )}
+                          </div>
+
+                          {/* Event Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-lg">{eventStyle.icon}</span>
+                                  <h3 className="text-sm font-bold text-gray-800 group-hover:text-errandify-orange">{event.title}</h3>
+                                </div>
+                                <p className="text-xs text-gray-600 line-clamp-1">{event.description}</p>
+                              </div>
+                              <button
+                                onClick={() => handleAttendEvent(event.id)}
+                                className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap transition ${
+                                  event.isAttending
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-errandify-orange text-white hover:bg-opacity-90'
+                                }`}
+                              >
+                                {event.isAttending ? '✓' : '+'}
+                              </button>
+                            </div>
+
+                            {/* Event Details */}
+                            <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-gray-700">
+                              <span className="font-semibold px-2 py-0.5 bg-white rounded">
+                                📅 {event.date}
+                              </span>
+                              <span className="font-semibold px-2 py-0.5 bg-white rounded">
+                                ⏰ {event.time}
+                              </span>
+                              <span className="font-semibold px-2 py-0.5 bg-white rounded">
+                                📍 {event.location}
+                              </span>
+                              <span className="font-semibold px-2 py-0.5 bg-white rounded">
+                                👥 {event.attendees}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))
+
+                {/* Summary Stats */}
+                {events.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+                    <div className="bg-orange-50 rounded p-2 text-center border border-orange-200">
+                      <p className="text-sm font-bold text-errandify-orange">{events.length}</p>
+                      <p className="text-xs text-gray-600">Total Events</p>
+                    </div>
+                    <div className="bg-green-50 rounded p-2 text-center border border-green-200">
+                      <p className="text-sm font-bold text-green-700">{events.filter(e => e.isAttending).length}</p>
+                      <p className="text-xs text-gray-600">Attending</p>
+                    </div>
+                    <div className="bg-blue-50 rounded p-2 text-center border border-blue-200">
+                      <p className="text-sm font-bold text-blue-700">{events.reduce((sum, e) => sum + e.attendees, 0)}</p>
+                      <p className="text-xs text-gray-600">Total Attendees</p>
+                    </div>
+                    <div className="bg-purple-50 rounded p-2 text-center border border-purple-200">
+                      <p className="text-sm font-bold text-purple-700">{events.filter(e => !e.isAttending).length}</p>
+                      <p className="text-xs text-gray-600">Can Join</p>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
