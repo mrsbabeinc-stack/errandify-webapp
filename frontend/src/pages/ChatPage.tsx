@@ -30,7 +30,6 @@ export default function ChatPage({ userRole }: ChatPageProps) {
   const [showChatbox, setShowChatbox] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<Map<number, number>>(new Map());
   const [notification, setNotification] = useState<{ message: string; type: 'info' | 'warning' } | null>(null);
 
