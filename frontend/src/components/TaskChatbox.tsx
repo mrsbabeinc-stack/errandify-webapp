@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { validateMessage, validateImage, validateAudio, validateFileUpload } from '../utils/messageValidator';
 
 interface Message {
   id: number;
@@ -47,6 +48,9 @@ export default function TaskChatbox({
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [showImageMenu, setShowImageMenu] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
+  const [validationSuggestions, setValidationSuggestions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -103,6 +107,17 @@ export default function TaskChatbox({
     e.preventDefault();
     if (!newMessage.trim()) return;
 
+    // Validate message
+    const validation = validateMessage(newMessage);
+    setValidationErrors(validation.errors);
+    setValidationWarnings(validation.warnings);
+    setValidationSuggestions(validation.suggestions);
+
+    if (!validation.isValid) {
+      setError('Message contains prohibited content');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
@@ -116,6 +131,9 @@ export default function TaskChatbox({
         }
       );
       setNewMessage('');
+      setValidationErrors([]);
+      setValidationWarnings([]);
+      setValidationSuggestions([]);
       fetchMessages();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to send message');
@@ -130,7 +148,24 @@ export default function TaskChatbox({
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    if (!file) return;
+
+    // Validate image
+    const imageValidation = validateImage(file);
+    const fileValidation = validateFileUpload(file);
+
+    if (!imageValidation.isValid || !fileValidation.isValid) {
+      const allErrors = [...imageValidation.errors, ...fileValidation.errors];
+      setError(allErrors.join(' '));
+      return;
+    }
+
+    if (imageValidation.warnings.length > 0 || fileValidation.warnings.length > 0) {
+      const allWarnings = [...imageValidation.warnings, ...fileValidation.warnings];
+      setValidationWarnings(allWarnings);
+    }
+
+    if (file.type.startsWith('image/')) {
       setSelectedImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -278,6 +313,21 @@ export default function TaskChatbox({
           )}
           <div ref={messagesEndRef} />
         </div>
+
+        {/* Validation Messages */}
+        {(validationErrors.length > 0 || validationWarnings.length > 0 || validationSuggestions.length > 0) && (
+          <div className="px-3 py-2 bg-gray-50 border-t border-gray-200 space-y-1 text-xs">
+            {validationErrors.map((err, i) => (
+              <p key={i} className="text-red-600">{err}</p>
+            ))}
+            {validationWarnings.map((warn, i) => (
+              <p key={i} className="text-amber-600">{warn}</p>
+            ))}
+            {validationSuggestions.map((sug, i) => (
+              <p key={i} className="text-blue-600">{sug}</p>
+            ))}
+          </div>
+        )}
 
         {/* Input Area */}
         <form
