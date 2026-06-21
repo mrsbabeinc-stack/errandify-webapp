@@ -107,10 +107,17 @@ export const validateMessage = (content: string): ValidationResult => {
   // Remove numbers from content to catch obfuscated phrases like "over9" = "over"
   const cleanedPhrase = lowerContent.replace(/[0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]+/g, ' ');
 
-  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|over|one night stand|casual sex|hookup|booty call|fwb|friends with benefits|no strings attached|nsa|quick fix|quick meet|weekend getaway|getaway|fun time|good time|party time|lets party|lets have fun|dtf|wyd|sup|lol|bwc|bbc|gwm|ddf|pd|pw|bb/i.test(cleanedPhrase);
+  // Remove LOL from acronym check - too many false positives
+  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|over|one night stand|casual sex|hookup|booty call|fwb|friends with benefits|no strings attached|nsa|quick fix|quick meet|weekend getaway|getaway|fun time|good time|party time|lets party|lets have fun|dtf|wyd|sup|bwc|bbc|gwm|ddf|pd|pw|bb/i.test(cleanedPhrase);
+
+  // Special check: LOL only in context with other suspicious phrases
+  const hasLOL = /\blol\b/i.test(cleanedPhrase);
+  const hasSuspiciousContext = /tonight|tonight|horny|hookup|come over|your place|my place|dtf|fwb|nsa|casual|quick|getaway|party/i.test(cleanedPhrase);
+  const lolInSuspiciousContext = hasLOL && hasSuspiciousContext;
+
   const suggestiveContext = /\bzzz\b.*\btogether\b|\bcome\b.*\bover\b|\byour\b.*\bplace\b|\bmy\b.*\bplace\b|\bone\b.*\bnight\b.*\bstand\b|\bdtf\b/i.test(cleanedPhrase); // "zzz together", "come over", "your place", "one night stand", "dtf" = sexual codes
 
-  if (codeWords || suggestiveContext) {
+  if (codeWords || suggestiveContext || lolInSuspiciousContext) {
     result.errors.push('❌ Message contains inappropriate content. Keep messages task-focused and professional.');
     result.isValid = false;
     return result;
