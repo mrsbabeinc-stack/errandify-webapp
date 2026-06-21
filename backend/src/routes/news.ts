@@ -112,8 +112,7 @@ async function getSGNews(limit: number, offset: number): Promise<NewsItem[]> {
 
     const response = await axios.get('https://newsapi.org/v2/everything', {
       params: {
-        q: 'Singapore',
-        country: 'sg',
+        q: 'Singapore policy OR housing OR jobs OR transport OR technology',
         sortBy: 'publishedAt',
         language: 'en',
         pageSize: Math.min(limit, 100),
