@@ -34,6 +34,8 @@ export default function EditProfilePage() {
   });
 
   const [newSkill, setNewSkill] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -87,6 +89,65 @@ export default function EditProfilePage() {
       ...prev,
       skills: prev.skills.filter((s) => s !== skill),
     }));
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file (JPG, PNG, etc.)');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be smaller than 5MB');
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        setFormData((prev) => ({
+          ...prev,
+          profileImageUrl: base64,
+        }));
+        setSuccess('✅ Photo ready to save!');
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      setError('Failed to read file');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      handleFileUpload(files[0]);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileUpload(e.target.files[0]);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -201,28 +262,69 @@ export default function EditProfilePage() {
               />
             </div>
 
-            {/* Profile Image URL */}
+            {/* Profile Photo Upload */}
             <div>
-              <label className="block text-sm font-bold text-gray-800 mb-2">Profile Photo URL</label>
-              <input
-                type="url"
-                name="profileImageUrl"
-                value={formData.profileImageUrl}
-                onChange={handleInputChange}
-                placeholder="https://example.com/photo.jpg"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-errandify-orange-500 transition"
-              />
+              <label className="block text-sm font-bold text-gray-800 mb-3">Profile Photo 📷</label>
+
+              {/* Drag and Drop Area */}
+              <div
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                className={`w-full p-6 border-2 border-dashed rounded-lg text-center cursor-pointer transition ${
+                  dragActive
+                    ? 'border-errandify-orange bg-orange-50'
+                    : 'border-gray-300 bg-gray-50 hover:border-errandify-orange'
+                }`}
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileInputChange}
+                  disabled={uploading}
+                  className="hidden"
+                  id="profile-photo-input"
+                />
+                <label htmlFor="profile-photo-input" className="cursor-pointer block">
+                  <div className="text-3xl mb-2">📸</div>
+                  <p className="text-sm font-semibold text-gray-800">
+                    {dragActive ? 'Drop your photo here!' : 'Drag & drop your photo here'}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">or click to browse</p>
+                  <p className="text-xs text-gray-500 mt-2">JPG, PNG • Max 5MB</p>
+                </label>
+              </div>
+
+              {/* Preview */}
               {formData.profileImageUrl && (
-                <div className="mt-3 flex items-center gap-4">
-                  <p className="text-sm text-gray-600">Preview:</p>
-                  <img
-                    src={formData.profileImageUrl}
-                    alt="Profile"
-                    className="w-16 h-16 rounded-full object-cover border-2 border-errandify-orange-300"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
+                <div className="mt-4 flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
+                  <div>
+                    <img
+                      src={formData.profileImageUrl}
+                      alt="Profile preview"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-errandify-orange"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '📷';
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-800">✅ Photo ready!</p>
+                    <p className="text-xs text-gray-600">Click \"Save Changes\" to upload</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        profileImageUrl: '',
+                      }))
+                    }
+                    className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+                  >
+                    Remove
+                  </button>
                 </div>
               )}
             </div>
