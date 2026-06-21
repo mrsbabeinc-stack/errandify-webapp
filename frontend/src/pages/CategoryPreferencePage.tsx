@@ -15,18 +15,22 @@ interface Category {
 }
 
 const CATEGORIES: Category[] = [
-  { id: 'homehelp', name: 'Home Help', emoji: '🏠' },
-  { id: 'childcare', name: 'Childcare', emoji: '👶' },
-  { id: 'eldercare', name: 'Elder Care', emoji: '👴' },
-  { id: 'petcare', name: 'Pet Care', emoji: '🐾' },
-  { id: 'cleaning', name: 'Cleaning', emoji: '🧹' },
-  { id: 'repairs', name: 'Repairs & DIY', emoji: '🔧' },
-  { id: 'delivery', name: 'Delivery', emoji: '📦' },
-  { id: 'fitness', name: 'Fitness & Wellness', emoji: '💪' },
-  { id: 'tutoring', name: 'Tutoring & Learning', emoji: '📚' },
-  { id: 'errands', name: 'Errands & Tasks', emoji: '✅' },
-  { id: 'events', name: 'Event Planning', emoji: '🎉' },
-  { id: 'moving', name: 'Moving & Packing', emoji: '📦' },
+  { id: 'home-maintenance', name: 'Home Maintenance', emoji: '🏠' },
+  { id: 'cleaning-household', name: 'Cleaning & Household', emoji: '🧹' },
+  { id: 'shopping-errands', name: 'Shopping & Errands', emoji: '🛍️' },
+  { id: 'delivery-moving', name: 'Delivery & Moving', emoji: '📦' },
+  { id: 'childcare-education', name: 'Childcare & Education', emoji: '🧒' },
+  { id: 'pet-care', name: 'Pet Care', emoji: '🐕' },
+  { id: 'tech-support', name: 'Tech Support', emoji: '💻' },
+  { id: 'personal-care', name: 'Personal Care', emoji: '💆' },
+  { id: 'elderly-care', name: 'Elderly Care', emoji: '👴' },
+  { id: 'fitness-wellness', name: 'Fitness & Wellness', emoji: '💪' },
+  { id: 'tutoring-learning', name: 'Tutoring & Learning', emoji: '📚' },
+  { id: 'event-planning', name: 'Event Planning', emoji: '🎉' },
+  { id: 'gardening-landscaping', name: 'Gardening & Landscaping', emoji: '🌱' },
+  { id: 'handyman-repairs', name: 'Handyman & Repairs', emoji: '🔧' },
+  { id: 'moving-packing', name: 'Moving & Packing', emoji: '📦' },
+  { id: 'other', name: 'Other Services', emoji: '⭐' },
 ];
 
 export default function CategoryPreferencePage({ userRole, onComplete }: CategoryPreferencePageProps) {
@@ -118,7 +122,7 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
         )}
 
         {/* Category Grid */}
-        <div className="grid grid-cols-4 gap-1.5 mb-2 overflow-y-auto max-h-80">
+        <div className="grid grid-cols-4 gap-1 mb-2 overflow-y-auto max-h-96">
           {CATEGORIES.map((category) => (
             <button
               key={category.id}
