@@ -20,9 +20,22 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   const location = useLocation();
   const navigate = useNavigate();
   const [userImage, setUserImage] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     fetchProfileImage();
+    // Check for unread count
+    const checkUnread = () => {
+      const stored = localStorage.getItem('unreadChats');
+      if (stored) {
+        const unreadMap = JSON.parse(stored);
+        const total = Object.values(unreadMap).reduce((sum: number, count: any) => sum + count, 0);
+        setUnreadCount(total);
+      }
+    };
+    checkUnread();
+    const interval = setInterval(checkUnread, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchProfileImage = async () => {
@@ -119,7 +132,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 rounded-lg transition-all text-sm flex-1 ${itemClasses}`}
+                className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 rounded-lg transition-all text-sm flex-1 relative ${itemClasses}`}
               >
                 {item.image ? (
                   <img
@@ -129,6 +142,12 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                   />
                 ) : (
                   <span className="text-lg">{item.icon}</span>
+                )}
+                {/* Unread Badge for MyChat */}
+                {item.label === 'MyChat' && unreadCount > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                    {unreadCount}
+                  </div>
                 )}
                 <span className="text-xs font-medium">{item.label}</span>
               </Link>
