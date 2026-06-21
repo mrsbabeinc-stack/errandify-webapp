@@ -223,19 +223,24 @@ export default function ChatPage({ userRole }: ChatPageProps) {
               <div className="flex justify-between items-start gap-3 mb-2">
                 <div className="flex-1">
                   <h3 className="font-semibold text-sm text-gray-800 line-clamp-1">{conversation.title}</h3>
-                  <div className="flex items-center justify-between gap-2 mt-0.5">
-                    <p className="text-xs text-gray-600">Posted by {conversation.otherPartyName}</p>
-                    <button
-                      onClick={() => handleOpenChat(conversation.id)}
-                      className="bg-errandify-brown text-white px-2 py-1 rounded text-xs font-semibold hover:bg-opacity-90 transition-colors whitespace-nowrap flex items-center gap-1"
-                    >
-                      💬 Chat
-                    </button>
-                  </div>
                 </div>
                 <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${getStatusColor(conversation.status)}`}>
                   {getStatusLabel(conversation.status)}
                 </span>
+              </div>
+
+              {/* Posted by and Chat on bottom right */}
+              <div className="flex justify-between items-center gap-2">
+                <div></div>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-gray-600">Posted by {conversation.otherPartyName}</p>
+                  <button
+                    onClick={() => handleOpenChat(conversation.id)}
+                    className="bg-errandify-brown text-white px-2 py-1 rounded text-xs font-semibold hover:bg-opacity-90 transition-colors whitespace-nowrap flex items-center gap-1"
+                  >
+                    💬 Chat
+                  </button>
+                </div>
               </div>
 
               {/* Start Date/Time and Area - 2 lines */}
