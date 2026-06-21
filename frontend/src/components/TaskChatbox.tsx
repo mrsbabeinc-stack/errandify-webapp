@@ -31,6 +31,7 @@ export default function TaskChatbox({
   const [error, setError] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [otherUserOnline, setOtherUserOnline] = useState<boolean | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -56,7 +57,19 @@ export default function TaskChatbox({
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setMessages(response.data.data);
+      setMessages(response.data.data.messages || response.data.data);
+      // Update online status if available
+      if (response.data.data.participantStatus) {
+        const currentUser = localStorage.getItem('user');
+        if (currentUser) {
+          const user = JSON.parse(currentUser);
+          const isAsker = user.id === response.data.data.participantStatus.askerId;
+          const onlineStatus = isAsker
+            ? response.data.data.participantStatus.doerOnline
+            : response.data.data.participantStatus.askerOnline;
+          setOtherUserOnline(onlineStatus);
+        }
+      }
     } catch (err: any) {
       console.error('Failed to fetch messages:', err);
     }
@@ -119,14 +132,17 @@ export default function TaskChatbox({
         {/* Header */}
         <div className="bg-errandify-brown text-white p-3 flex items-start justify-between rounded-t-lg gap-2">
           <div className="flex-1">
-            <h3 className="font-bold text-sm">Chat: {taskTitle}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-sm">Chat: {taskTitle}</h3>
+              <span className={`inline-block w-2 h-2 rounded-full ${otherUserOnline ? 'bg-green-400' : 'bg-gray-400'}`} title={otherUserOnline ? 'Online' : 'Offline'} />
+            </div>
             <a
               href={`/errand/${taskId}`}
               className="text-xs text-orange-200 hover:text-white underline mt-1 inline-block"
             >
               📋 View Errand Details
             </a>
-            <p className="text-xs text-orange-100 mt-1">🛡️ AI safety scanning active</p>
+            <p className="text-xs text-orange-100 mt-1">🛡️ AI safety scanning active • {otherUserOnline ? '🟢 Online' : '⚫ Offline'}</p>
           </div>
           <button
             onClick={onClose}
