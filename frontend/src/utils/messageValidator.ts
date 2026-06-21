@@ -109,14 +109,14 @@ export const validateMessage = (content: string): ValidationResult => {
   const cleanedPhrase = lowerContent.replace(/[0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]+/g, ' ');
 
   // Remove LOL, SUP, WYD - too many false positives for casual greetings
-  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|one night stand|casual sex|hookup|booty call|fwb|friends with benefits|no strings attached|nsa|quick fix|quick meet|weekend getaway|getaway|fun time|good time|party time|lets party|lets have fun|dtf|bwc|bbc|gwm|ddf|pd|pw|bb/i.test(cleanedPhrase);
+  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|one night stand|casual sex|hookup|booty call|fwb|friends with benefits|no strings attached|nsa|quick fix|quick meet|weekend getaway|getaway|fun time|good time|party time|lets party|lets have fun|dtf|bwc|bbc|gwm|ddf|pd|pw|bb|blow.*someone|blow me|blow job/i.test(cleanedPhrase);
 
   // Special check: LOL only in context with other suspicious phrases
   const hasLOL = /\blol\b/i.test(cleanedPhrase);
   const hasSuspiciousContext = /tonight|tonight|horny|hookup|come over|your place|my place|dtf|fwb|nsa|casual|quick|getaway|party/i.test(cleanedPhrase);
   const lolInSuspiciousContext = hasLOL && hasSuspiciousContext;
 
-  const suggestiveContext = /\bzzz\b.*\btogether\b|\bcome\b.*\bover\b|\byour\b.*\bplace\b|\bmy\b.*\bplace\b|\bone\b.*\bnight\b.*\bstand\b|\bdtf\b/i.test(cleanedPhrase); // "zzz together", "come over", "your place", "one night stand", "dtf" = sexual codes
+  const suggestiveContext = /\bzzz\b.*\btogether\b|\bcome\b.*\bover\b|\byour\b.*\bplace\b|\bmy\b.*\bplace\b|\bone\b.*\bnight\b.*\bstand\b|\bdtf\b|\bblow\b.*\bsomeone\b|\bblow\b.*\bme\b/i.test(cleanedPhrase); // "zzz together", "come over", "your place", "one night stand", "dtf", "blow someone" = sexual codes
 
   if (codeWords || suggestiveContext || lolInSuspiciousContext) {
     result.errors.push('❌ Message contains inappropriate content. Keep messages task-focused and professional.');
