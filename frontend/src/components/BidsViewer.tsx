@@ -269,7 +269,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
                   <div>
                     <p className="font-semibold text-gray-900">{bid.doerName}</p>
                     <p className="text-xs text-gray-500">
-                      Bid placed {new Date(bid.createdAt).toLocaleDateString()}
+                      Bid placed {bid.createdAt ? new Date(bid.createdAt).toLocaleDateString() : 'Recently'}
                     </p>
                   </div>
                 </div>
