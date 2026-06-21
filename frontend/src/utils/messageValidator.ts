@@ -25,13 +25,13 @@ const CONTACT_PATTERNS = {
 // Patterns for inappropriate content - COMPREHENSIVE
 const INAPPROPRIATE_PATTERNS = {
   profanity: /damn|shit|crap|bloody|fuck|ass|bitch|bastard|hell|piss/gi,
-  threats: /kill|hurt|violence|attack|harm|rape|murder|die|dead/gi,
+  threats: /kill|hurt|violence|attack|harm|rape|murder|die|dead|threat|attack/gi,
   harassment: /stupid|idiot|moron|dumb|fool|retard|loser|pathetic/gi,
-  sexualContent: /sex|porn|naked|nude|xxx|sexual|cock|pussy|dick|vagina|breast|horny|aroused|masturbat|cum|prostitut|escort|adult services|sugar|onlyfans/gi,
-  drugs: /cocaine|heroin|meth|weed|cannabis|marijuana|acid|lsd|mdma|ecstasy|crack|fentanyl|opium|morphine|codeine|tramadol|oxycodon|percocet|vicodin|xanax|valium|ketamine|pcp|angel dust|ice|crystal|methamphetamine|amphetamine|dexedrine|adderall|ritalin|speed|shrooms|psilocybin|psychedelic|hash|hashish|thc|cannabinoid|dealer|supplier|buy drugs|sell drugs|score|fix|shoot|inject|snort/gi,
-  violence: /rape|abuse|assault|torture|molest|incest|pedophil|child abuse/gi,
-  gambling: /poker|blackjack|roulette|casino|betting|gamble|wager|odds|bet money|jackpot|slot machine|dice game|lottery scam|illegal betting/gi,
-  scam: /bitcoin|crypto|investment|forex|mlm|pyramid|scheme|urgent|wire transfer|western union|money gram|pay me first|advance payment|nigerian prince|lottery|sweepstakes|get rich quick/gi,
+  sexualContent: /sex|porn|naked|nude|xxx|sexual|cock|pussy|dick|vagina|breast|horny|aroused|masturbat|cum|prostitut|escort|sugar|onlyfans/gi,
+  drugs: /drug|cocaine|heroin|meth|weed|cannabis|marijuana|acid|lsd|mdma|ecstasy|crack|fentanyl|opium|morphine|codeine|tramadol|oxycodon|percocet|vicodin|xanax|valium|ketamine|pcp|ice|crystal|methamphetamine|amphetamine|dexedrine|adderall|ritalin|speed|shrooms|psilocybin|psychedelic|hash|hashish|thc|cannabinoid|dealer|supplier|inject|snort|shoot|high|get high|stoned|trip/gi,
+  violence: /rape|abuse|assault|torture|molest|incest|pedophil/gi,
+  gambling: /poker|blackjack|roulette|casino|betting|gamble|wager|jackpot|slot|lottery|bet money/gi,
+  scam: /bitcoin|crypto|forex|mlm|pyramid|scheme|wire transfer|western union|money gram|nigerian|sweepstakes|get rich|pay me first|advance payment/gi,
 };
 
 // Blocked file types
@@ -81,43 +81,43 @@ export const validateMessage = (content: string): ValidationResult => {
     result.warnings.push('⚠️ Links should only point to relevant resources. Suspicious links may be flagged.');
   }
 
-  // Check for inappropriate content
-  if (INAPPROPRIATE_PATTERNS.profanity.test(content)) {
+  // Check for inappropriate content using match (avoids .test() g flag state issue)
+  if (content.match(INAPPROPRIATE_PATTERNS.profanity)) {
     result.errors.push('❌ Profanity not allowed. Keep messages professional.');
     result.isValid = false;
   }
 
-  if (INAPPROPRIATE_PATTERNS.threats.test(content)) {
+  if (content.match(INAPPROPRIATE_PATTERNS.threats)) {
     result.errors.push('❌ Threatening language not allowed.');
     result.isValid = false;
   }
 
-  if (INAPPROPRIATE_PATTERNS.harassment.test(content)) {
+  if (content.match(INAPPROPRIATE_PATTERNS.harassment)) {
     result.errors.push('❌ Disrespectful/harassing language not allowed.');
     result.isValid = false;
   }
 
-  if (INAPPROPRIATE_PATTERNS.sexualContent.test(content)) {
+  if (content.match(INAPPROPRIATE_PATTERNS.sexualContent)) {
     result.errors.push('❌ Sexual content not allowed. Keep messages task-focused.');
     result.isValid = false;
   }
 
-  if (INAPPROPRIATE_PATTERNS.drugs.test(content)) {
+  if (content.match(INAPPROPRIATE_PATTERNS.drugs)) {
     result.errors.push('❌ References to illegal drugs not allowed.');
     result.isValid = false;
   }
 
-  if (INAPPROPRIATE_PATTERNS.violence.test(content)) {
+  if (content.match(INAPPROPRIATE_PATTERNS.violence)) {
     result.errors.push('❌ Violent/abusive content not allowed.');
     result.isValid = false;
   }
 
-  if (INAPPROPRIATE_PATTERNS.gambling.test(content)) {
+  if (content.match(INAPPROPRIATE_PATTERNS.gambling)) {
     result.errors.push('❌ Gambling and betting references not allowed.');
     result.isValid = false;
   }
 
-  if (INAPPROPRIATE_PATTERNS.scam.test(content)) {
+  if (content.match(INAPPROPRIATE_PATTERNS.scam)) {
     result.errors.push('❌ Scam/fraudulent content not allowed.');
     result.isValid = false;
   }

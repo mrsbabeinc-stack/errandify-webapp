@@ -111,12 +111,18 @@ export default function TaskChatbox({
 
     // First: Quick pattern validation (contact info + drugs/violence/scams)
     const validation = validateMessage(newMessage);
+
+    // Log for debugging
+    console.log('Message:', newMessage);
+    console.log('Validation result:', validation);
+
     setValidationErrors(validation.errors);
     setValidationWarnings(validation.warnings);
     setValidationSuggestions(validation.suggestions);
 
     // If pattern check found ERRORS, block immediately
     if (!validation.isValid) {
+      console.log('Message BLOCKED by pattern validation');
       const friendlyMessage = `⚠️ Message Not Appropriate
 
 Your message doesn't meet our community standards. Please keep messages:
@@ -139,8 +145,10 @@ Your message doesn't meet our community standards. Please keep messages:
     try {
       // Second: AI-based content moderation (for context-dependent issues)
       const aiModeration = await moderateWithAI(newMessage);
+      console.log('AI moderation result:', aiModeration);
 
       if (!aiModeration.isAppropriate) {
+        console.log('Message BLOCKED by AI moderation');
         const friendlyMessage = `⚠️ Message Not Appropriate
 
 Your message doesn't meet our community standards. Please keep messages:
@@ -158,6 +166,7 @@ Your message doesn't meet our community standards. Please keep messages:
       }
 
       // Third: Send message if all checks pass
+      console.log('Message APPROVED - sending...');
       const token = localStorage.getItem('token');
       await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/tasks/${taskId}/send`,
@@ -166,6 +175,7 @@ Your message doesn't meet our community standards. Please keep messages:
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      console.log('Message sent successfully');
       setNewMessage('');
       setValidationErrors([]);
       setValidationWarnings([]);
