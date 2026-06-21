@@ -29,6 +29,8 @@ import TaskCompleteEvidencePage from './pages/TaskCompleteEvidencePage';
 import ReviewCompletionPage from './pages/ReviewCompletionPage';
 import MyKampungPage from './pages/MyKampungPage';
 import MyPocketPage from './pages/MyPocketPage';
+import TrustedUsersPage from './pages/TrustedUsersPage';
+import BlockListPage from './pages/BlockListPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -179,6 +181,8 @@ export default function App() {
         <Route path="/errandify-points" element={isAuthenticated ? <ErrandifyPointsPage /> : <Navigate to="/login" replace />} />
         <Route path="/my-rewards" element={isAuthenticated ? <MyRewardsPage /> : <Navigate to="/login" replace />} />
         <Route path="/points-history" element={isAuthenticated ? <PointsHistoryPage /> : <Navigate to="/login" replace />} />
+        <Route path="/trusted-users" element={isAuthenticated ? <TrustedUsersPage /> : <Navigate to="/login" replace />} />
+        <Route path="/block-list" element={isAuthenticated ? <BlockListPage /> : <Navigate to="/login" replace />} />
         <Route path="/my-offer" element={isAuthenticated ? <MyOfferPage /> : <Navigate to="/login" replace />} />
         <Route path="/task/:id/complete" element={isAuthenticated ? <TaskCompleteEvidencePage /> : <Navigate to="/login" replace />} />
         <Route path="/task/:id/review-completion" element={isAuthenticated ? <ReviewCompletionPage /> : <Navigate to="/login" replace />} />
