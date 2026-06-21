@@ -145,27 +145,52 @@ export default function ReferralPage() {
         </div>
 
         {/* Code & Link - Action Buttons */}
-        <div className="space-y-1 mb-2">
-          <button
-            onClick={handleCopyCode}
-            className={`w-full p-2 rounded font-semibold text-xs transition ${
-              copied === 'code'
-                ? 'bg-errandify-brown text-white'
-                : 'bg-amber-100 text-errandify-brown border border-amber-300 hover:shadow-md'
-            }`}
-          >
-            {copied === 'code' ? '✅ Code Copied!' : `Code: ${referralData?.code}`}
-          </button>
-          <button
-            onClick={handleCopyLink}
-            className={`w-full p-2 rounded font-semibold text-xs transition ${
-              copied === 'link'
-                ? 'bg-errandify-brown text-white'
-                : 'bg-amber-100 text-errandify-brown border border-amber-300 hover:shadow-md'
-            }`}
-          >
-            {copied === 'link' ? '✅ Link Copied!' : 'Copy Share Link'}
-          </button>
+        <div className="space-y-1.5 mb-2">
+          {/* Code Button */}
+          <div className="bg-white rounded-lg p-2 border border-amber-200 shadow-sm">
+            <p className="text-xs font-semibold text-errandify-brown mb-1">📋 Your Referral Code</p>
+            <div className="flex gap-1">
+              <input
+                type="text"
+                value={referralData?.code || ''}
+                readOnly
+                className="flex-1 bg-amber-50 px-2 py-1.5 rounded font-bold text-errandify-orange border border-amber-300 text-xs text-center"
+              />
+              <button
+                onClick={handleCopyCode}
+                className={`px-3 py-1.5 rounded font-bold text-xs transition ${
+                  copied === 'code'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-errandify-brown text-white hover:shadow-md'
+                }`}
+              >
+                {copied === 'code' ? '✅' : '📋'}
+              </button>
+            </div>
+          </div>
+
+          {/* Link Button */}
+          <div className="bg-white rounded-lg p-2 border border-amber-200 shadow-sm">
+            <p className="text-xs font-semibold text-errandify-brown mb-1">🔗 Share Link</p>
+            <div className="flex gap-1">
+              <input
+                type="text"
+                value={referralData?.link || ''}
+                readOnly
+                className="flex-1 bg-amber-50 px-2 py-1.5 rounded text-errandify-orange border border-amber-300 text-xs truncate"
+              />
+              <button
+                onClick={handleCopyLink}
+                className={`px-3 py-1.5 rounded font-bold text-xs transition ${
+                  copied === 'link'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-errandify-brown text-white hover:shadow-md'
+                }`}
+              >
+                {copied === 'link' ? '✅' : '📋'}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Stats - Elegant */}
