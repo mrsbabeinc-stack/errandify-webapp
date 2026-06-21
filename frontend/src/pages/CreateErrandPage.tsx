@@ -963,41 +963,46 @@ export default function CreateErrandPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
-                Duration (How Long It Will Take)
-              </label>
-              <div className="flex gap-2 items-end">
-                <div className="flex-1 flex gap-2">
-                  <input
-                    type="number"
-                    name="duration"
-                    value={formData.duration}
-                    onChange={handleChange}
-                    placeholder="1"
-                    className="flex-1 px-3 py-1 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
-                  />
-                  <select
-                    name="durationUnit"
-                    value={formData.durationUnit}
-                    onChange={handleChange}
-                    className="px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
-                  >
-                    <option>Min</option>
-                    <option>Hr</option>
-                    <option>Day</option>
-                    <option>Week</option>
-                  </select>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
+            <div className="grid grid-cols-3 gap-2 items-end">
+              <div>
+                <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
+                  Duration
+                </label>
+                <input
+                  type="number"
+                  name="duration"
+                  value={formData.duration}
+                  onChange={handleChange}
+                  placeholder="1"
+                  className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
+                  Unit
+                </label>
+                <select
+                  name="durationUnit"
+                  value={formData.durationUnit}
+                  onChange={handleChange}
+                  className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                >
+                  <option>Min</option>
+                  <option>Hr</option>
+                  <option>Day</option>
+                  <option>Week</option>
+                </select>
+              </div>
+              <div>
+                <label className="flex items-center gap-1 cursor-pointer whitespace-nowrap">
                   <input
                     type="checkbox"
                     name="isRecurring"
                     checked={formData.isRecurring}
                     onChange={handleChange}
-                    className="w-4 h-4"
+                    className="w-3 h-3"
                   />
-                  <span className="text-sm font-semibold text-errandify-brown">Recurring?</span>
+                  <span className="text-xs font-semibold text-errandify-brown">Recurring</span>
                 </label>
               </div>
             </div>
