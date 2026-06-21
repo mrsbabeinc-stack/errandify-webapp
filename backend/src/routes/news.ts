@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
+import https from 'https';
 import db from '../db.js';
 
 const router = Router();
@@ -103,12 +104,16 @@ async function getCommunityNews(limit: number, offset: number, postal_code?: str
 async function getSGNews(limit: number, offset: number): Promise<NewsItem[]> {
   try {
     const apiKey = process.env.NEWS_API_KEY || '';
-    if (!apiKey || apiKey === '4b8d2c7f9e1a6b3c5d8f2a4e7c9b1d3f') {
-      console.warn('NEWS_API_KEY not configured or using placeholder, using mock data');
+    if (!apiKey) {
+      console.warn('NEWS_API_KEY not configured, using mock data');
       return getMockSGNews();
     }
 
     console.log('[NEWS API] Fetching Singapore news with key:', apiKey.substring(0, 10) + '...');
+
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false,
+    });
 
     const response = await axios.get('https://newsapi.org/v2/everything', {
       params: {
@@ -120,6 +125,7 @@ async function getSGNews(limit: number, offset: number): Promise<NewsItem[]> {
         apiKey: apiKey,
       },
       timeout: 8000,
+      httpsAgent,
     });
 
     if (!response.data.articles || response.data.articles.length === 0) {
