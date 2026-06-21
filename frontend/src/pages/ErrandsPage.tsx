@@ -25,6 +25,8 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedErrandId, setExpandedErrandId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   console.log('[ErrandsPage] Mounted, userRole:', userRole);
 
@@ -174,21 +176,71 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
     );
   }
 
+  // Filter errands
+  const filteredErrands = errands.filter((errand) => {
+    const matchesSearch = !searchQuery ||
+      errand.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      errand.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || errand.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  // Get unique statuses
+  const uniqueStatuses = Array.from(new Set(errands.map(e => e.status)));
+
   return (
     <div className="min-h-screen bg-errandify-bg pb-32">
-      <div className="max-w-3xl mx-auto px-4">
-        {/* Page Header */}
-        <div className="mb-4">
+      <div className="max-w-3xl mx-auto px-2 py-2">
+        {/* Page Header - Compact */}
+        <div className="mb-2">
           <h1 className="text-lg font-bold text-errandify-brown">
             {pageTitle}
           </h1>
-          <p className="text-xs text-gray-600 mt-0.5">
+          <p className="text-xs text-gray-600">
             {pageSubtitle}
           </p>
         </div>
 
+        {/* Search Bar */}
+        <div className="mb-2">
+          <input
+            type="text"
+            placeholder="Search by title or category..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+          />
+        </div>
+
+        {/* Status Filter - Horizontal Chips */}
+        <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
+          <button
+            onClick={() => setStatusFilter('all')}
+            className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+              statusFilter === 'all'
+                ? 'bg-errandify-orange text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            All
+          </button>
+          {uniqueStatuses.map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                statusFilter === status
+                  ? 'bg-errandify-orange text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+
         {/* Content Section */}
-        <div className="space-y-2">
+        <div className="space-y-1">
           {error ? (
             <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
               {error}
@@ -203,46 +255,44 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                 {userRole === 'asker' ? 'Post an Errand' : 'Browse Errands'}
               </button>
             </div>
+          ) : filteredErrands.length === 0 ? (
+            <div className="text-center py-6 bg-white rounded border border-gray-200 text-xs text-gray-500">
+              No errands found
+            </div>
           ) : (
-            errands.map((errand) => (
+            filteredErrands.map((errand) => (
               <div
                 key={errand.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
+                className="bg-white rounded border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
               >
-                {/* Compact Header */}
+                {/* Ultra-Compact Header */}
                 <button
                   onClick={() =>
                     setExpandedErrandId(
                       expandedErrandId === errand.id ? null : errand.id
                     )
                   }
-                  className="w-full p-4 text-left hover:bg-gray-50 transition-colors"
+                  className="w-full p-2 text-left hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-2">
                     {/* Left: Title & Quick Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-errandify-brown mb-2 truncate text-base">
+                      <h3 className="font-bold text-errandify-brown truncate text-sm">
                         {errand.title}
                       </h3>
 
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1 mt-0.5">
                         <span className="text-gray-500 text-xs">
-                          ⏱ {formatDate(errand.createdAt)}
+                          {formatDate(errand.createdAt)}
                         </span>
 
                         <span
                           className={`${getCategoryColor(
                             errand.category
-                          )} px-2 py-0.5 rounded-full text-xs font-semibold`}
+                          )} px-1.5 py-0.5 rounded text-xs font-semibold`}
                         >
                           {errand.category}
                         </span>
-
-                        {errand.isRecurring && (
-                          <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-semibold">
-                            🔄 Recurring
-                          </span>
-                        )}
 
                         {errand.budget && (
                           <span className="text-errandify-orange font-bold text-xs">
@@ -250,28 +300,26 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                           </span>
                         )}
 
-                        <span className="text-errandify-orange-600 font-semibold text-xs">
+                        <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-semibold">
                           {errand.status}
                         </span>
                       </div>
                     </div>
 
                     {/* Right: Expand Arrow */}
-                    <div className="text-gray-400 text-lg flex-shrink-0 pt-1">
+                    <div className="text-gray-400 flex-shrink-0 text-sm">
                       {expandedErrandId === errand.id ? '▼' : '▶'}
                     </div>
                   </div>
                 </button>
 
-                {/* Expanded Details */}
+                {/* Expanded Details - Compact */}
                 {expandedErrandId === errand.id && (
-                  <div className="border-t border-gray-100 px-4 py-4 bg-gray-50 space-y-3">
+                  <div className="border-t border-gray-200 px-2 py-2 bg-gray-50 space-y-1.5 text-xs">
                     {errand.description && (
                       <div>
-                        <p className="text-xs font-semibold text-gray-600 mb-1">
-                          Details
-                        </p>
-                        <p className="text-sm text-gray-700 line-clamp-3">
+                        <p className="font-semibold text-gray-600">Details</p>
+                        <p className="text-gray-700 line-clamp-2">
                           {errand.description}
                         </p>
                       </div>
@@ -279,30 +327,28 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
 
                     {errand.deadline && (
                       <div>
-                        <p className="text-xs font-semibold text-gray-600 mb-1">
-                          Deadline
-                        </p>
-                        <p className="text-sm text-gray-700">
+                        <p className="font-semibold text-gray-600">Deadline</p>
+                        <p className="text-gray-700">
                           {new Date(errand.deadline).toLocaleDateString()}
                         </p>
                       </div>
                     )}
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2 mt-2">
+                    <div className="flex gap-1.5 mt-1">
                       <button
                         onClick={() => navigate(`/errand/${errand.id}`)}
-                        className="flex-1 bg-errandify-orange text-white py-2 rounded-lg font-semibold hover:bg-opacity-90 text-sm"
+                        className="flex-1 bg-errandify-orange text-white py-1.5 rounded font-semibold hover:bg-opacity-90 text-xs"
                       >
-                        View Details
+                        View
                       </button>
                       {userRole === 'asker' && (
                         <button
                           onClick={() => handleCopyErrand(errand)}
-                          className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 text-sm"
-                          title="Copy this errand to create a new one"
+                          className="flex-1 bg-orange-500 text-white py-1.5 rounded font-semibold hover:bg-orange-600 text-xs"
+                          title="Copy this errand"
                         >
-                          📋 Copy
+                          Copy
                         </button>
                       )}
                     </div>
