@@ -293,9 +293,6 @@ export default function TaskChatbox({
             className="hidden"
           />
 
-          <p className="text-xs text-gray-500 text-center">
-            Messages scanned for safety
-          </p>
         </form>
           </div>
 
