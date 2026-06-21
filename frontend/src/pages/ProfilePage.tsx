@@ -106,36 +106,36 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
         </div>
       )}
 
-      {/* MENU GRID - BALANCED COMPACT */}
-      <div className="max-w-6xl mx-auto px-3 py-4">
-        <div className="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-5">
+      {/* MENU GRID - COMPACT */}
+      <div className="max-w-6xl mx-auto px-2 py-2">
+        <div className="grid grid-cols-4 gap-1.5 md:grid-cols-5 lg:grid-cols-6">
           {menuItems.map((item, idx) => (
             <button
               key={idx}
               onClick={item.onClick}
-              className={`bg-gradient-to-br ${item.color} rounded-lg p-3 hover:shadow-lg transition text-center`}
+              className={`bg-gradient-to-br ${item.color} rounded p-2 hover:shadow-md transition text-center`}
             >
-              <p className="text-2xl mb-1">{item.icon}</p>
+              <p className="text-xl mb-0.5">{item.icon}</p>
               <p className="text-xs font-bold text-gray-800 line-clamp-2">{item.label}</p>
             </button>
           ))}
         </div>
 
         {/* ACTION BUTTONS */}
-        <div className="grid grid-cols-2 gap-2 mt-4">
+        <div className="grid grid-cols-2 gap-1.5 mt-2">
           <button
             onClick={() => {
               if (window.confirm('Are you sure you want to delete your account?')) {
                 navigate('/delete-account');
               }
             }}
-            className="bg-white border-2 border-red-300 text-red-600 py-2 rounded-lg text-sm font-bold hover:bg-red-50 transition"
+            className="bg-white border-2 border-red-300 text-red-600 py-1.5 rounded text-xs font-bold hover:bg-red-50 transition"
           >
-            🗑️ Delete Account
+            🗑️ Delete
           </button>
           <button
             onClick={handleLogout}
-            className="bg-gradient-to-r from-orange-500 to-rose-500 text-white py-2 rounded-lg text-sm font-bold hover:shadow-lg transition"
+            className="bg-gradient-to-r from-orange-500 to-rose-500 text-white py-1.5 rounded text-xs font-bold hover:shadow-md transition"
           >
             🚪 Logout
           </button>
