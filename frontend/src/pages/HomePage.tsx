@@ -78,23 +78,23 @@ export default function HomePage({ userRole }: HomePageProps) {
   return (
     <div className="min-h-screen bg-errandify-bg pb-32">
       {/* Page Container */}
-      <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto px-4 py-4">
         {/* Main Tagline */}
-        <div className="mb-6 text-center">
-          <p className="text-xs font-semibold text-errandify-orange italic mb-4">Simplifying Life, Amplifying Humanity</p>
+        <div className="mb-3 text-center">
+          <p className="text-xs font-semibold text-errandify-orange italic mb-2">Simplifying Life, Amplifying Humanity</p>
         </div>
 
         {/* Welcome Section */}
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-errandify-brown mb-2">
+        <div className="mb-4 text-center">
+          <h1 className="text-2xl font-bold text-errandify-brown mb-1">
             Welcome home, {userName}! 👋
           </h1>
-          <p className="text-gray-600 mb-3">
+          <p className="text-gray-600 text-sm mb-2">
             {userRole === 'asker'
               ? 'Need help with something? Post an errand and let your kampung help you out'
               : 'Looking to help your neighbours? Browse ToHelp and earn some rewards'}
           </p>
-          <p className="text-sm font-semibold text-errandify-brown">
+          <p className="text-xs font-semibold text-errandify-brown">
             {userRole === 'asker'
               ? '💬 Get Help • 🤝 Give Help • 💰 Get Paid'
               : '💬 Get Help • 🤝 Give Help • 💰 Get Paid'}
@@ -102,7 +102,7 @@ export default function HomePage({ userRole }: HomePageProps) {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-4">
           {userRole === 'asker' ? (
             <>
               <button
@@ -132,18 +132,18 @@ export default function HomePage({ userRole }: HomePageProps) {
               </button>
 
               <button
-                onClick={() => navigate('/my-bids')}
+                onClick={() => navigate('/my-offer')}
                 className="bg-errandify-brown text-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
               >
                 <span className="text-3xl mb-2 block">💼</span>
-                <span className="font-semibold text-sm">MyBids</span>
+                <span className="font-semibold text-sm">MyOffer</span>
               </button>
             </>
           )}
         </div>
 
         {/* Quick Categories Section - Grouped with Section Headers */}
-        <div className="bg-white rounded-lg p-6 mb-8 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 mb-4 border border-gray-200">
           <h2 className="font-bold text-errandify-brown mb-4">
             {userRole === 'asker' ? '🎯 What do you need help with?' : '🤝 How can you help your kampung today?'}
           </h2>
@@ -188,41 +188,6 @@ export default function HomePage({ userRole }: HomePageProps) {
           </p>
         </div>
 
-        {/* Role-Specific Feature List */}
-        <div className="bg-white rounded-lg p-6 mb-8 border border-gray-200">
-          <h2 className="font-bold text-errandify-brown mb-4">How Errandify Works</h2>
-          {userRole === 'asker' ? (
-            <ul className="space-y-3 text-sm text-gray-700">
-              <li className="flex items-start gap-3">
-                <span className="text-lg">📝</span>
-                <span><strong>Post an Errand:</strong> Describe what you need done</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-lg">👥</span>
-                <span><strong>Find a Doer:</strong> Browse qualified neighbours who can help</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-lg">✓</span>
-                <span><strong>Review & Approve:</strong> Get it done and rate your doer</span>
-              </li>
-            </ul>
-          ) : (
-            <ul className="space-y-3 text-sm text-gray-700">
-              <li className="flex items-start gap-3">
-                <span className="text-lg">🔍</span>
-                <span><strong>Browse Errands:</strong> See what's available in your area</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-lg">💪</span>
-                <span><strong>Apply & Accept:</strong> Pick errands that match your skills</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-lg">💰</span>
-                <span><strong>Get Paid:</strong> Earn money by helping others</span>
-              </li>
-            </ul>
-          )}
-        </div>
       </div>
     </div>
   );
