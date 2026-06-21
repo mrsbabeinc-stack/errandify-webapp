@@ -302,7 +302,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             </div>
           )}
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-1.5">
+          <div className="relative bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-1.5">
             <div className="flex items-start justify-between gap-1 mb-0.5">
               <h1 className="text-base font-bold flex-1">{errand.title}</h1>
             </div>
@@ -335,6 +335,18 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               )}
             </div>
           </div>
+
+          {/* Chat Button - Top Right (when not open) */}
+          {errand.status !== 'open' && (
+            <div className="absolute top-3 right-3">
+              <button
+                onClick={() => setShowChat(true)}
+                className="bg-errandify-brown text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-opacity-90 transition-colors"
+              >
+                💬 Chat
+              </button>
+            </div>
+          )}
 
           {/* Content Section */}
           <div className="p-1 space-y-1">
@@ -546,23 +558,6 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           </div>
         )}
 
-        {/* Chat Button - For both Asker and Doer (when not open) */}
-        {errand && errand.status !== 'open' && (
-          <div className="mt-6 bg-amber-100 border border-amber-300 rounded-lg p-4">
-            <p className="text-sm text-gray-700 mb-3 font-semibold">
-              📋 Task: <span className="text-errandify-brown">{errand.title}</span>
-            </p>
-            <button
-              onClick={() => setShowChat(true)}
-              className="w-full bg-errandify-brown text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors"
-            >
-              💬 Chat with {currentUser?.id === errand.askerId ? 'Doer' : 'Asker'}
-            </button>
-            <p className="text-xs text-gray-600 mt-2 italic">
-              Questions? Use chat for direct communication about this task.
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Page Container End */}
