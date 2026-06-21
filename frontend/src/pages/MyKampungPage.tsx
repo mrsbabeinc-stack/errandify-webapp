@@ -1540,7 +1540,7 @@ export default function MyKampungPage() {
 
                 {/* External Link */}
                 {selectedNewsItem.url && (
-                  <div className="bg-errandify-orange bg-opacity-10 p-3 rounded border border-errandify-orange rounded">
+                  <div className="bg-errandify-orange bg-opacity-10 p-3 rounded border border-errandify-orange">
                     <p className="text-xs text-gray-600 mb-2">Source: {selectedNewsItem.source}</p>
                     <a
                       href={selectedNewsItem.url}
