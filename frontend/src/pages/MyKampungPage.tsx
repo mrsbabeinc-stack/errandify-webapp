@@ -936,69 +936,67 @@ export default function MyKampungPage() {
 
         {/* RECOGNITION TAB */}
         {activeTab === 'recognition' && (
-          <div className="space-y-4">
-            <div className="text-center mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-6 border border-yellow-200">
-              <h2 className="text-2xl font-bold text-errandify-brown mb-2">🌟 Hall of Stars</h2>
-              <p className="text-gray-600">Celebrating the amazing doers in our community who go above and beyond</p>
+          <div className="space-y-1">
+            <div className="text-center mb-2 bg-orange-50 rounded p-2 border border-orange-200">
+              <h2 className="text-sm font-bold text-errandify-brown">🌟 Hall of Stars</h2>
+              <p className="text-xs text-gray-600">Amazing doers in our community</p>
             </div>
 
             {recognitions.length === 0 ? (
-              <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
-                <p className="text-gray-500">No recognitions yet</p>
+              <div className="bg-white rounded p-2 text-center border border-gray-200 text-xs text-gray-500">
+                No recognitions yet
               </div>
             ) : (
               recognitions
                 .sort((a, b) => b.votes - a.votes)
                 .map((recognition) => (
-                <div key={recognition.id} className="bg-white rounded-lg border border-yellow-200 p-6 shadow-sm hover:shadow-md transition">
-                  <div className="flex items-start gap-4">
+                <div key={recognition.id} className="bg-white rounded border border-yellow-200 p-2 hover:shadow transition">
+                  <div className="flex items-start gap-2">
                     {/* Avatar */}
-                    <div className="w-16 h-16 bg-gradient-to-br from-yellow-300 to-orange-400 rounded-full flex items-center justify-center text-2xl flex-shrink-0">
+                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-300 to-orange-400 rounded-full flex items-center justify-center text-lg flex-shrink-0">
                       {recognition.name.charAt(0)}
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-xl font-bold text-gray-800">{recognition.name}</h3>
-                            <span className="text-lg">{recognition.title}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1">
+                            <h3 className="text-xs font-bold text-gray-800 truncate">{recognition.name}</h3>
+                            <span className="text-xs">{recognition.title}</span>
                           </div>
-                          <p className="text-sm text-gray-600">⭐ {recognition.rating.toFixed(1)} rating</p>
+                          <p className="text-xs text-gray-600">⭐ {recognition.rating.toFixed(1)}</p>
                         </div>
                         <button
                           onClick={() => handleFavoriteRecognition(recognition.id)}
-                          className="flex-shrink-0 text-3xl hover:scale-110 transition"
-                          title={favorites.includes(recognition.id) ? 'Remove from favorites' : 'Add to favorites'}
+                          className="flex-shrink-0 text-lg hover:scale-110 transition"
+                          title={favorites.includes(recognition.id) ? 'Remove' : 'Add'}
                         >
                           {favorites.includes(recognition.id) ? '❤️' : '🤍'}
                         </button>
                       </div>
 
-                      <p className="text-gray-700 mb-3">{recognition.description}</p>
+                      <p className="text-xs text-gray-700 line-clamp-1 mt-0.5">{recognition.description}</p>
 
-                      <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-100 mb-4">
-                        <p className="text-sm text-gray-700 italic">"{recognition.testimonial}"</p>
-                        <p className="text-xs text-gray-500 mt-1">— {recognition.nominatedBy}</p>
+                      <div className="bg-yellow-50 rounded p-1.5 border border-yellow-100 my-1">
+                        <p className="text-xs text-gray-700 italic line-clamp-1">"{recognition.testimonial}"</p>
+                        <p className="text-xs text-gray-500">— {recognition.nominatedBy}</p>
                       </div>
 
-                      {/* Bottom actions - Date and Vote */}
-                      <div className="flex items-center justify-between gap-3">
+                      {/* Vote Button */}
+                      <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">{new Date(recognition.nominationDate).toLocaleDateString()}</span>
 
-                        {/* Prominent Vote Button */}
                         <button
                           onClick={() => handleVoteRecognition(recognition.id)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition font-semibold text-sm ${
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold transition ${
                             userVotes.includes(recognition.id)
-                              ? 'bg-blue-500 text-white scale-105'
-                              : 'bg-blue-100 text-blue-600 hover:bg-blue-200 hover:scale-105'
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-blue-100 text-blue-600'
                           }`}
-                          title={userVotes.includes(recognition.id) ? 'Remove your vote' : 'Vote for this amazing doer'}
                         >
-                          <span className="text-xl">{userVotes.includes(recognition.id) ? '👍' : '👏'}</span>
-                          <span>{recognition.votes} vote{recognition.votes !== 1 ? 's' : ''}</span>
+                          <span>{userVotes.includes(recognition.id) ? '👍' : '👏'}</span>
+                          <span>{recognition.votes}</span>
                         </button>
                       </div>
                     </div>
@@ -1007,11 +1005,11 @@ export default function MyKampungPage() {
               ))
             )}
 
-            <div className="bg-orange-50 rounded-lg border border-orange-200 p-6 text-center">
-              <h3 className="font-bold text-errandify-brown mb-2">Know someone amazing?</h3>
-              <p className="text-sm text-gray-700 mb-3">Nominate a doer who's impressed you and celebrate their great work!</p>
-              <button className="px-6 py-2 bg-errandify-orange text-white rounded-lg hover:bg-opacity-90 transition font-medium text-sm">
-                🌟 Nominate Someone
+            <div className="bg-orange-50 rounded border border-orange-200 p-2 text-center">
+              <h3 className="text-xs font-bold text-errandify-brown">Know someone amazing?</h3>
+              <p className="text-xs text-gray-700 my-0.5">Nominate a doer!</p>
+              <button className="px-3 py-1 bg-errandify-orange text-white rounded text-xs font-semibold hover:bg-opacity-90">
+                🌟 Nominate
               </button>
             </div>
           </div>
