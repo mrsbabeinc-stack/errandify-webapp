@@ -91,6 +91,7 @@ export default function MyKampungPage() {
   const [favorites, setFavorites] = useState<number[]>([]);
   const [userVotes, setUserVotes] = useState<number[]>([]);
   const [selectedBlogPost, setSelectedBlogPost] = useState<any>(null);
+  const [readBlogPosts, setReadBlogPosts] = useState<Set<number>>(new Set());
 
   // Check if user is admin
   const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
@@ -677,6 +678,10 @@ export default function MyKampungPage() {
     setBlogPosts(blogPosts.map(p =>
       p.id === postId ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 } : p
     ));
+  };
+
+  const handleBlogPostRead = (postId: number) => {
+    setReadBlogPosts(prev => new Set(prev).add(postId));
   };
 
   const getCategoryColor = (category: string) => {
@@ -1304,14 +1309,26 @@ export default function MyKampungPage() {
                   <div
                     key={blogPosts[0].id}
                     onClick={() => setSelectedBlogPost(blogPosts[0])}
-                    className="bg-gradient-to-br from-errandify-orange to-orange-500 text-white rounded-lg p-4 mb-3 shadow-md hover:shadow-lg transition cursor-pointer"
+                    className={`rounded-lg p-4 mb-3 shadow-md hover:shadow-lg transition cursor-pointer ${
+                      readBlogPosts.has(blogPosts[0].id)
+                        ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800'
+                        : 'bg-gradient-to-br from-errandify-orange to-orange-500 text-white'
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1">
-                        <span className="inline-block bg-white text-errandify-orange px-2 py-0.5 rounded-full text-xs font-bold mb-2">
-                          ⭐ Featured
-                        </span>
-                        <h3 className="font-bold text-sm mb-1">{blogPosts[0].title}</h3>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold ${
+                            readBlogPosts.has(blogPosts[0].id)
+                              ? 'bg-gray-200 text-gray-700'
+                              : 'bg-white text-errandify-orange'
+                          }`}>
+                            {readBlogPosts.has(blogPosts[0].id) ? '✓ Read' : '⭐ Featured'}
+                          </span>
+                        </div>
+                        <h3 className={`font-bold text-sm mb-1 ${readBlogPosts.has(blogPosts[0].id) ? 'opacity-70' : ''}`}>
+                          {blogPosts[0].title}
+                        </h3>
                       </div>
                     </div>
                     <p className="text-xs opacity-90 line-clamp-2 mb-2">{blogPosts[0].excerpt}</p>
@@ -1331,13 +1348,22 @@ export default function MyKampungPage() {
                     <div
                       key={post.id}
                       onClick={() => setSelectedBlogPost(post)}
-                      className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-md hover:border-errandify-orange transition cursor-pointer"
+                      className={`rounded-lg border p-3 hover:shadow-md transition cursor-pointer ${
+                        readBlogPosts.has(post.id)
+                          ? 'bg-gray-50 border-gray-300 hover:border-gray-400'
+                          : 'bg-white border-gray-200 hover:border-errandify-orange'
+                      }`}
                     >
                       {/* Category Badge */}
                       <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(post.category)}`}>
-                          {post.category === 'guide' ? '📚' : post.category === 'stories' ? '📖' : post.category === 'tips' ? '💡' : '📰'}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(post.category)}`}>
+                            {post.category === 'guide' ? '📚' : post.category === 'stories' ? '📖' : post.category === 'tips' ? '💡' : '📰'}
+                          </span>
+                          {readBlogPosts.has(post.id) && (
+                            <span className="text-xs font-semibold text-gray-600">✓</span>
+                          )}
+                        </div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1354,7 +1380,11 @@ export default function MyKampungPage() {
                       </div>
 
                       {/* Title */}
-                      <h4 className="text-xs font-bold text-gray-800 hover:text-errandify-orange line-clamp-2 mb-1">
+                      <h4 className={`text-xs font-bold line-clamp-2 mb-1 ${
+                        readBlogPosts.has(post.id)
+                          ? 'text-gray-600 hover:text-gray-800'
+                          : 'text-gray-800 hover:text-errandify-orange'
+                      }`}>
                         {post.title}
                       </h4>
 
@@ -1376,7 +1406,10 @@ export default function MyKampungPage() {
 
         {/* BLOG POST MODAL */}
         {selectedBlogPost && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center p-4"
+            onMouseEnter={() => handleBlogPostRead(selectedBlogPost.id)}
+          >
             <div className="bg-white rounded-t-2xl sm:rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               {/* Header */}
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
