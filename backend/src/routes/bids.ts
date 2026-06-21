@@ -81,8 +81,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           [
             errand.asker_id,
             'bid_received',
-            '💰 New Bid Received',
-            `${doerName} bid $${parseFloat(amount)} on "${errandTitle}"`,
+            '🙌 Great! Someone wants to help!',
+            `${doerName} has offered to help with "${errandTitle}" for $${parseFloat(amount)}. Check it out!`,
             `/errand/${task_id}`,
           ]
         );
@@ -205,8 +205,8 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
           [
             otherBid.doer_id,
             'job_closed',
-            '🔒 Job Closed',
-            `The task "${errandTitle}" has been assigned to another doer. The job is no longer available.`,
+            '👋 Someone was faster!',
+            `The neighbour chose another helper for "${errandTitle}". No worries — plenty of other tasks coming your way! Check out our latest jobs.`,
             `/errand/${bid.errand_id}`,
           ]
         );
@@ -236,8 +236,8 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
         [
           bid.doer_id,
           'bid_accepted',
-          '✅ Bid Accepted',
-          `Your bid of $${bid.amount} for "${errandTitle}" has been accepted! Please confirm the job.`,
+          '🎉 You\'re in! Bid accepted!',
+          `Wonderful news! Your offer of $${bid.amount} for "${errandTitle}" was chosen. The neighbour is excited to work with you. Please confirm you're ready to help!`,
           `/errand/${bid.errand_id}`,
         ]
       );
@@ -314,8 +314,8 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Respons
         [
           bid.doer_id,
           'bid_rejected',
-          '❌ Bid Not Selected',
-          `Your bid of $${bid.amount} for "${errandTitle}" was not selected${reasonText ? ` (${reasonText})` : ''}`,
+          '👍 Thanks for bidding!',
+          `The neighbour went with another helper for "${errandTitle}". Your offer was great — keep helping out! More tasks are popping up every day.${reasonText ? ` Feedback: ${reasonText}` : ''}`,
           `/errand/${bid.errand_id}`,
         ]
       );
