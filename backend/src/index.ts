@@ -25,6 +25,7 @@ import userDataExportRoutes from './routes/userDataExport.js';
 import errandSearchRoutes from './routes/errandSearch.js';
 import adminRoutes from './routes/admin.js';
 import questionsRoutes from './routes/questions.js';
+import emailRoutes from './routes/email.js';
 import { startCrons } from './cron.js';
 
 const app = express();
@@ -64,6 +65,7 @@ app.use('/api/user-profile', userProfileRoutes);
 app.use('/api/user-data', userDataExportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/questions', questionsRoutes);
+app.use('/api/email', emailRoutes);
 app.use('/api', hanaRoutes);
 
 // Error handling

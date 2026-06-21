@@ -440,10 +440,63 @@ export default function MyKampungPage() {
     }
   };
 
-  const handleAttendEvent = (eventId: number) => {
+  const handleAttendEvent = async (eventId: number) => {
+    const event = events.find(e => e.id === eventId);
+    if (!event) return;
+
+    const isJoining = !event.isAttending;
+
+    // Update local state
     setEvents(events.map(e =>
       e.id === eventId ? { ...e, isAttending: !e.isAttending, attendees: e.isAttending ? e.attendees - 1 : e.attendees + 1 } : e
     ));
+
+    // Send notification and email if joining
+    if (isJoining) {
+      try {
+        const token = localStorage.getItem('token');
+        const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
+
+        // Send in-app notification
+        await axios.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`,
+          {
+            recipientId: user?.id,
+            type: 'event_signup',
+            title: '✅ Event Confirmed!',
+            message: `You're all set! Your spot for "${event.title}" on ${event.date} at ${event.time} is confirmed. See you there!`,
+            eventId: event.id,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // Send email notification
+        await axios.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/email/send-event-confirmation`,
+          {
+            userId: user?.id,
+            email: user?.email,
+            eventId: event.id,
+            eventTitle: event.title,
+            eventDate: event.date,
+            eventTime: event.time,
+            eventLocation: event.location,
+            eventDescription: event.description,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // Show in-app toast
+        alert(`🎉 You're signed up for "${event.title}"!\n\n📧 Confirmation email sent to your inbox.`);
+      } catch (err) {
+        console.warn('Failed to send notification/email:', err);
+        // Still show success even if notification fails
+        alert(`✅ You're signed up for "${event.title}"!`);
+      }
+    } else {
+      // Unattending
+      alert(`You've been removed from "${event.title}".`);
+    }
   };
 
   const handleFavoriteRecognition = (recognitionId: number) => {
