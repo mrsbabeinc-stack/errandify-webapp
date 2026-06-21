@@ -640,6 +640,23 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           </div>
         )}
 
+        {/* Bid Count Section - Only for Doers */}
+        {currentUser && currentUser.id !== errand?.askerId && errand?.status === 'open' && (
+          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-800">📊 Bids Received</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {errand.bidCount === 0
+                    ? 'No bids yet. Be the first!'
+                    : `${errand.bidCount} bid${errand.bidCount !== 1 ? 's' : ''} from other doers`}
+                </p>
+              </div>
+              <div className="text-3xl font-bold text-blue-600">{errand.bidCount || 0}</div>
+            </div>
+          </div>
+        )}
+
         {/* Chat Button - For both Asker and Doer */}
         {errand && errand.status !== 'open' && (
           <button
