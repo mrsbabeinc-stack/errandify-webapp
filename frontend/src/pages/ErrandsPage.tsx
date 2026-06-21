@@ -312,7 +312,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/errand/${errand.id}`);
+                            navigate(`/chat?errandId=${errand.id}`);
                           }}
                           className="text-lg hover:scale-110 transition-transform"
                           title="Chat about this task"
