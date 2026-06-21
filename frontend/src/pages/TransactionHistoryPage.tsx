@@ -12,23 +12,22 @@ export default function TransactionHistoryPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 flex flex-col">
-      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full">
-        <button onClick={() => navigate(-1)} className="mb-2 text-lg text-gray-600 font-bold self-start">‹ Back</button>
-        <h1 className="text-xl font-bold text-errandify-brown mb-3">Transaction History</h1>
-
-        <div className="bg-white rounded-lg shadow-md flex-1 flex flex-col overflow-hidden">
-          <div className="space-y-1 p-3 overflow-y-auto">
-            {txs.map(tx => (
-              <div key={tx.id} className="bg-gray-50 rounded p-2 flex justify-between border border-gray-200">
-                <div>
-                  <p className="font-bold text-gray-900 text-sm">{tx.type}</p>
-                  <p className="text-xs text-gray-500">{tx.date}</p>
-                </div>
-                <p className={`font-bold text-sm ${tx.amount.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>{tx.amount}</p>
+    <div className="min-h-screen bg-errandify-bg px-2 py-2 pb-24">
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-2 mb-2">
+          <button onClick={() => navigate(-1)} className="text-lg text-gray-600 font-bold">‹</button>
+          <h1 className="text-lg font-bold text-errandify-brown">📋 Transactions</h1>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 text-xs">
+          {txs.map(tx => (
+            <div key={tx.id} className="p-2 flex justify-between hover:bg-gray-50">
+              <div>
+                <p className="font-bold text-gray-900">{tx.type}</p>
+                <p className="text-gray-500">{tx.date}</p>
               </div>
-            ))}
-          </div>
+              <p className={`font-bold ${tx.amount.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>{tx.amount}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

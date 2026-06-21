@@ -14,23 +14,22 @@ export default function PointsHistoryPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 flex flex-col">
-      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full">
-        <button onClick={() => navigate(-1)} className="mb-2 text-lg text-gray-600 font-bold self-start">‹ Back</button>
-        <h1 className="text-xl font-bold text-errandify-brown mb-3">Points History</h1>
-
-        <div className="bg-white rounded-lg shadow-md flex-1 flex flex-col overflow-hidden">
-          <div className="space-y-1 p-3 overflow-y-auto">
-            {history.map(item => (
-              <div key={item.id} className="bg-gray-50 rounded p-2 flex justify-between border border-gray-200">
-                <div>
-                  <p className="font-bold text-gray-900 text-sm">{item.activity}</p>
-                  <p className="text-xs text-gray-500">{item.date}</p>
-                </div>
-                <p className={`font-bold text-sm ${item.points.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>{item.points}</p>
+    <div className="min-h-screen bg-errandify-bg px-2 py-2 pb-24">
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-2 mb-2">
+          <button onClick={() => navigate(-1)} className="text-lg text-gray-600 font-bold">‹</button>
+          <h1 className="text-lg font-bold text-errandify-brown">📈 Points History</h1>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 text-xs">
+          {history.map(item => (
+            <div key={item.id} className="p-2 flex justify-between hover:bg-gray-50">
+              <div>
+                <p className="font-bold text-gray-900">{item.activity}</p>
+                <p className="text-gray-500">{item.date}</p>
               </div>
-            ))}
-          </div>
+              <p className={`font-bold ${item.points.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>{item.points}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>
