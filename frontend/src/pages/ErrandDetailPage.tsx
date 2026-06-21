@@ -294,8 +294,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 </button>
                 <button
                   onClick={() => setShowShareModal(true)}
-                  className="px-2.5 py-1 bg-gradient-to-r from-errandify-orange to-orange-500 text-white text-xs font-bold rounded hover:shadow-md transition transform hover:scale-105 animate-pulse"
-                  title="Share this errand"
+                  disabled={errand.status !== 'open'}
+                  className={`px-2.5 py-1 text-xs font-bold rounded transition transform ${
+                    errand.status === 'open'
+                      ? 'bg-gradient-to-r from-errandify-orange to-orange-500 text-white hover:shadow-md hover:scale-105 animate-pulse cursor-pointer'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50'
+                  }`}
+                  title={errand.status === 'open' ? 'Share this errand' : 'Cannot share: job is already confirmed'}
                 >
                   🚀 SHARE & EARN
                 </button>
