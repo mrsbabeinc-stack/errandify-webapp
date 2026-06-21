@@ -223,7 +223,15 @@ export default function ChatPage({ userRole }: ChatPageProps) {
               <div className="flex justify-between items-start gap-3 mb-2">
                 <div className="flex-1">
                   <h3 className="font-semibold text-sm text-gray-800 line-clamp-1">{conversation.title}</h3>
-                  <p className="text-xs text-gray-600 mt-0.5">Posted by {conversation.otherPartyName}</p>
+                  <div className="flex items-center justify-between gap-2 mt-0.5">
+                    <p className="text-xs text-gray-600">Posted by {conversation.otherPartyName}</p>
+                    <button
+                      onClick={() => handleOpenChat(conversation.id)}
+                      className="bg-errandify-brown text-white px-2 py-1 rounded text-xs font-semibold hover:bg-opacity-90 transition-colors whitespace-nowrap flex items-center gap-1"
+                    >
+                      💬 Chat
+                    </button>
+                  </div>
                 </div>
                 <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${getStatusColor(conversation.status)}`}>
                   {getStatusLabel(conversation.status)}
@@ -238,14 +246,6 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 {(conversation.location || conversation.postal) && (
                   <p>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</p>
                 )}
-              </div>
-              <div className="flex gap-2 mt-3">
-                <button
-                  onClick={() => handleOpenChat(conversation.id)}
-                  className="w-full bg-errandify-orange text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors"
-                >
-                  💬 Chat
-                </button>
               </div>
             </div>
           ))}
