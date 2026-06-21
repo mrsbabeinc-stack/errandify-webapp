@@ -242,18 +242,10 @@ export default function ChatPage({ userRole }: ChatPageProps) {
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={() => handleOpenChat(conversation.id)}
-                  className="flex-1 bg-errandify-orange text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors"
+                  className="w-full bg-errandify-orange text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors"
                 >
                   💬 Chat
                 </button>
-                {['in_progress', 'confirmed'].includes(conversation.status) && (
-                  <button
-                    onClick={() => navigate(`/task/${conversation.id}/execute`)}
-                    className="flex-1 bg-green-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-green-600 transition-colors"
-                  >
-                    🚀 Work
-                  </button>
-                )}
               </div>
             </div>
           ))}
