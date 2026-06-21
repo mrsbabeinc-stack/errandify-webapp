@@ -137,152 +137,104 @@ export default function MyPocketPage() {
   }
 
   return (
-    <div className="min-h-screen bg-errandify-bg px-4 py-4 pb-32">
+    <div className="min-h-screen bg-errandify-bg px-2 py-2 pb-24">
       <div className="max-w-2xl mx-auto">
-        <button onClick={() => navigate(-1)} className="mb-4 text-lg text-gray-600 font-bold">‹ Back</button>
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-errandify-brown mb-1">💼 MyPocket</h1>
-          <p className="text-sm text-gray-600">Track your earnings from helping neighbours and manage your rewards</p>
+        <div className="flex items-center justify-between mb-2">
+          <button onClick={() => navigate(-1)} className="text-lg text-gray-600 font-bold">‹</button>
+          <h1 className="text-xl font-bold text-errandify-brown">💼 MyPocket</h1>
+          <div className="w-6"></div>
         </div>
 
         {/* Main Balance Card */}
-        <div className="bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-xl p-6 mb-6 shadow-lg">
-          <p className="text-sm opacity-90 mb-1">Your Errandify Balance</p>
-          <h2 className="text-4xl font-bold mb-4">{formatCurrency(wallet.balance)}</h2>
-          <div className="flex gap-3">
+        <div className="bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-lg p-3 mb-3 shadow-md">
+          <p className="text-xs opacity-90">Balance</p>
+          <h2 className="text-3xl font-bold mb-2">{formatCurrency(wallet.balance)}</h2>
+          <div className="flex gap-2 text-xs">
             <button
               onClick={() => navigate('/payout-settings')}
-              className="flex-1 bg-white text-errandify-orange font-semibold py-2 rounded-lg hover:bg-opacity-90 transition text-sm"
+              className="flex-1 bg-white text-errandify-orange font-semibold py-1.5 rounded transition"
             >
-              Payout Settings
+              Payout
             </button>
             {wallet.pendingPayouts > 0 && (
               <button
                 onClick={() => navigate('/transaction-history')}
-                className="flex-1 border-2 border-white text-white font-semibold py-2 rounded-lg hover:bg-white hover:text-errandify-orange transition text-sm"
+                className="flex-1 border border-white text-white font-semibold py-1.5 rounded transition"
               >
-                Pending: {formatCurrency(wallet.pendingPayouts)}
+                💰 {formatCurrency(wallet.pendingPayouts)}
               </button>
             )}
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {/* Total Earned */}
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <p className="text-xs text-gray-600 mb-2">Total Earned</p>
-            <p className="text-xl font-bold text-green-600">{formatCurrency(wallet.totalEarned)}</p>
-            <p className="text-xs text-gray-500 mt-2">As a Doer</p>
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
+          <div className="bg-white rounded-lg p-2 border border-gray-200 text-center">
+            <p className="text-gray-600 mb-0.5">Earned</p>
+            <p className="font-bold text-green-600">{formatCurrency(wallet.totalEarned)}</p>
           </div>
-
-          {/* Total Spent */}
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <p className="text-xs text-gray-600 mb-2">Total Spent</p>
-            <p className="text-xl font-bold text-errandify-orange-600">{formatCurrency(wallet.totalSpent)}</p>
-            <p className="text-xs text-gray-500 mt-2">On Tasks</p>
+          <div className="bg-white rounded-lg p-2 border border-gray-200 text-center">
+            <p className="text-gray-600 mb-0.5">Spent</p>
+            <p className="font-bold text-errandify-orange-600">{formatCurrency(wallet.totalSpent)}</p>
           </div>
-
-          {/* Errandify Points */}
-          <div className="bg-white rounded-lg p-4 border border-gray-200 col-span-2">
-            <p className="text-xs text-gray-600 mb-2">⭐ Errandify Points</p>
-            <p className="text-2xl font-bold text-errandify-orange">{wallet.errandifyPoints} EP</p>
-            <p className="text-xs text-gray-500 mt-2">Earn points on every task completed</p>
+          <div className="bg-white rounded-lg p-2 border border-gray-200 text-center">
+            <p className="text-gray-600 mb-0.5">Points</p>
+            <p className="font-bold text-errandify-orange">{wallet.errandifyPoints}</p>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg p-4 mb-6 border border-gray-200">
-          <p className="text-sm font-bold text-gray-700 mb-3">Quick Actions</p>
-          <div className="space-y-2">
+        <div className="bg-white rounded-lg border border-gray-200 mb-3">
+          <div className="flex text-xs font-semibold border-b border-gray-100">
             <button
               onClick={() => navigate('/my-rewards')}
-              className="w-full text-left p-3 hover:bg-gray-50 rounded-lg flex items-center justify-between transition"
+              className="flex-1 p-2 hover:bg-gray-50 text-center"
             >
-              <span className="flex items-center gap-2">
-                <span>💎</span>
-                <span className="text-sm font-medium">Redeem Rewards</span>
-              </span>
-              <span className="text-gray-400">›</span>
+              💎 Rewards
             </button>
             <button
               onClick={() => navigate('/points-history')}
-              className="w-full text-left p-3 hover:bg-gray-50 rounded-lg flex items-center justify-between transition"
+              className="flex-1 p-2 hover:bg-gray-50 text-center border-l border-gray-100"
             >
-              <span className="flex items-center gap-2">
-                <span>📈</span>
-                <span className="text-sm font-medium">Points History</span>
-              </span>
-              <span className="text-gray-400">›</span>
+              📈 History
             </button>
             <button
               onClick={() => navigate('/transaction-history')}
-              className="w-full text-left p-3 hover:bg-gray-50 rounded-lg flex items-center justify-between transition"
+              className="flex-1 p-2 hover:bg-gray-50 text-center border-l border-gray-100"
             >
-              <span className="flex items-center gap-2">
-                <span>📋</span>
-                <span className="text-sm font-medium">Transaction History</span>
-              </span>
-              <span className="text-gray-400">›</span>
+              📋 Txns
             </button>
           </div>
         </div>
 
-        {/* Recent Transactions */}
-        <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
-          <div className="p-4 border-b border-gray-200">
-            <p className="text-sm font-bold text-gray-700">Recent Activity</p>
+        {/* Recent Activity */}
+        {wallet.transactions.length === 0 ? (
+          <div className="text-center text-gray-500 text-xs py-3">
+            <p>No transactions yet</p>
           </div>
-
-          {wallet.transactions.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              <p className="text-sm">No transactions yet</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {wallet.transactions.map((tx) => (
-                <div key={tx.id} className="p-4 hover:bg-gray-50 transition">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-800">{tx.description}</p>
-                      <p className="text-xs text-gray-500 mt-1">{formatDate(tx.createdAt)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p
-                        className={`text-sm font-bold ${
-                          tx.type === 'earn'
-                            ? 'text-green-600'
-                            : tx.type === 'refund'
-                              ? 'text-errandify-orange-600'
-                              : 'text-gray-800'
-                        }`}
-                      >
-                        {tx.type === 'earn' ? '+' : '-'}
-                        {formatCurrency(tx.amount)}
-                      </p>
-                      {tx.taskId && (
-                        <button
-                          onClick={() => navigate(`/errand/${tx.taskId}`)}
-                          className="text-xs text-errandify-orange hover:underline mt-1"
-                        >
-                          View Task
-                        </button>
-                      )}
-                    </div>
-                  </div>
+        ) : (
+          <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 text-xs">
+            {wallet.transactions.map((tx) => (
+              <div key={tx.id} className="p-2 flex items-center justify-between hover:bg-gray-50">
+                <div className="flex-1">
+                  <p className="font-medium text-gray-800">{tx.description.split(':')[1]?.trim() || tx.description}</p>
+                  <p className="text-gray-500 text-xs">{formatDate(tx.createdAt)}</p>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Info Footer */}
-        <div className="mt-6 p-4 bg-orange-50 rounded-lg border border-errandify-orange-200">
-          <p className="text-xs text-errandify-orange-900">
-            <strong>💡 Tip:</strong> Earn Errandify Points on every completed task. Redeem them for discounts, rewards, or donate to charity!
-          </p>
-        </div>
+                <p
+                  className={`font-bold ${
+                    tx.type === 'earn'
+                      ? 'text-green-600'
+                      : tx.type === 'refund'
+                        ? 'text-errandify-orange-600'
+                        : 'text-gray-800'
+                  }`}
+                >
+                  {tx.type === 'earn' ? '+' : '-'}{formatCurrency(tx.amount)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
