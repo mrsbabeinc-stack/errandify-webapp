@@ -322,26 +322,11 @@ export default function HanaCustomerService() {
       const reply = response.data?.data?.reply || response.data?.reply || 'How else can I help?';
       console.log('[Hana] Reply text:', reply);
 
-      // Try to detect category from user input
-      let suggestedCategory = undefined;
-      try {
-        const categoryRes = await axios.post(
-          '/api/ai/detect-category',
-          { title: input },
-          { headers: { 'Content-Type': 'application/json' } }
-        );
-        suggestedCategory = categoryRes.data?.data?.category;
-        console.log('[Hana] Detected category:', suggestedCategory);
-      } catch (err) {
-        console.log('[Hana] Could not detect category');
-      }
-
       const hanaMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'hana',
         text: reply,
         timestamp: new Date(),
-        suggestedCategory,
       };
 
       setMessages((prev) => [...prev, hanaMessage]);
