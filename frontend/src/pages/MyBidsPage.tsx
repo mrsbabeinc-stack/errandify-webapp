@@ -92,7 +92,7 @@ export default function MyBidsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-errandify-bg p-6">
-        <p className="text-gray-600">Loading your bids...</p>
+        <p className="text-gray-600">Loading your offers...</p>
       </div>
     );
   }
@@ -108,8 +108,8 @@ export default function MyBidsPage() {
           >
             ← Back
           </button>
-          <h1 className="text-2xl font-bold text-errandify-brown">MyBids</h1>
-          <p className="text-gray-600 text-sm">Track all your bids and active jobs</p>
+          <h1 className="text-2xl font-bold text-errandify-brown">MyOffers</h1>
+          <p className="text-gray-600 text-sm">Track all your offers and active jobs</p>
         </div>
 
         {/* Active Job Sticky Header */}
@@ -181,10 +181,10 @@ export default function MyBidsPage() {
         {filteredBids.length === 0 ? (
           <div className="bg-white rounded-lg p-8 text-center">
             <p className="text-gray-600 mb-2">
-              {filterStatus === 'all' ? 'No bids yet' : `No ${filterStatus} bids`}
+              {filterStatus === 'all' ? 'No offers yet' : `No ${filterStatus} offers`}
             </p>
             <p className="text-xs text-gray-500">
-              Start browsing errands and place your first bid!
+              Start browsing errands and place your first offer!
             </p>
             <button
               onClick={() => navigate('/browse')}
@@ -217,10 +217,10 @@ export default function MyBidsPage() {
                   </span>
                 </div>
 
-                {/* Bid Amount & Details */}
+                {/* Offer Amount & Details */}
                 <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
                   <div>
-                    <p className="text-gray-600">Your Bid</p>
+                    <p className="text-gray-600">Your Offer</p>
                     <p className="font-bold text-errandify-orange text-lg">SGD ${Math.round(bid.amount)}</p>
                   </div>
                   <div>
@@ -250,7 +250,7 @@ export default function MyBidsPage() {
                       onClick={() => navigate(`/errand/${bid.errand_id}`)}
                       className="flex-1 px-3 py-2 bg-errandify-orange text-white rounded font-semibold text-xs hover:bg-opacity-90"
                     >
-                      Edit Bid
+                      Edit Offer
                     </button>
                   )}
 
@@ -284,7 +284,7 @@ export default function MyBidsPage() {
 
                 {/* Timestamp */}
                 <p className="text-xs text-gray-500 mt-2">
-                  Bid placed {new Date(bid.created_at).toLocaleDateString()}
+                  Offer placed {new Date(bid.created_at).toLocaleDateString()}
                 </p>
               </div>
             ))}
@@ -295,7 +295,7 @@ export default function MyBidsPage() {
         {filteredBids.length > 0 && (
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-800">
-              📊 <span className="font-semibold">{filteredBids.length}</span> bid
+              📊 <span className="font-semibold">{filteredBids.length}</span> offer
               {filteredBids.length !== 1 ? 's' : ''} {filterStatus === 'all' ? 'total' : `in "${filterStatus}" status`}
             </p>
           </div>

@@ -116,15 +116,15 @@ export default function AboutErrandifyPage() {
               <div className="flex gap-3 items-start">
                 <div className="bg-errandify-orange text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">2</div>
                 <div>
-                  <p className="font-semibold text-gray-800">Doers Submit Bids</p>
-                  <p className="text-sm text-gray-600">Skilled neighbours review your budget and submit bids – they can bid at, below, or above your budget.</p>
+                  <p className="font-semibold text-gray-800">Doers Submit Offers</p>
+                  <p className="text-sm text-gray-600">Skilled neighbours review your budget and submit offers – they can offer at, below, or above your budget.</p>
                 </div>
               </div>
               <div className="flex gap-3 items-start">
                 <div className="bg-errandify-orange text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">3</div>
                 <div>
                   <p className="font-semibold text-gray-800">You Choose Your Helper</p>
-                  <p className="text-sm text-gray-600">Review profiles, ratings, and bids. Pick the best fit for your needs.</p>
+                  <p className="text-sm text-gray-600">Review profiles, ratings, and offers. Pick the best fit for your needs.</p>
                 </div>
               </div>
               <div className="flex gap-3 items-start">
@@ -154,11 +154,11 @@ export default function AboutErrandifyPage() {
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span>Submit bids at your own rates – you set the price</span>
+                <span>Submit offers at your own rates – you set the price</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span>Earn 80% of your bid (after 20% platform fee) – fair compensation for your work</span>
+                <span>Earn 80% of your offer (after 20% platform fee) – fair compensation for your work</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
@@ -185,7 +185,7 @@ export default function AboutErrandifyPage() {
               </li>
               <li className="flex gap-2">
                 <span>✓</span>
-                <span>Receive bids from verified, rated neighbours</span>
+                <span>Receive offers from verified, rated neighbours</span>
               </li>
               <li className="flex gap-2">
                 <span>✓</span>

@@ -137,7 +137,7 @@ export default function UserProfilePage() {
         {profile.user.restricted && (
           <div className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
             <p className="text-yellow-900 font-semibold">⚠️ This user has restrictions</p>
-            <p className="text-yellow-800 text-sm">Limited to specific task categories</p>
+            <p className="text-yellow-800 text-sm">Limited to specific errand categories</p>
           </div>
         )}
 
@@ -226,7 +226,7 @@ export default function UserProfilePage() {
               <p className="text-3xl font-bold text-errandify-orange-600">
                 {profile.stats.tasksCompletedAsDoer}
               </p>
-              <p className="text-sm text-gray-600 mt-1">Tasks Done</p>
+              <p className="text-sm text-gray-600 mt-1">Errands Done</p>
             </div>
             <div className="text-center">
               <p className="text-3xl font-bold text-green-600">
@@ -290,7 +290,7 @@ export default function UserProfilePage() {
                     </div>
                   </div>
                   <p className="text-gray-700 mb-2">"{review.comment}"</p>
-                  <p className="text-sm text-gray-500 italic">For: {review.taskTitle}</p>
+                  <p className="text-sm text-gray-500 italic">For: {review.taskTitle} (Errand)</p>
                 </div>
               ))}
             </div>
@@ -301,7 +301,7 @@ export default function UserProfilePage() {
         {profile.recentReviews.length === 0 && profile.rating.totalRatings === 0 && (
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
             <p className="text-gray-500 mb-2">No reviews yet</p>
-            <p className="text-gray-400 text-sm">Check back after they complete their first task!</p>
+            <p className="text-gray-400 text-sm">Check back after they complete their first errand!</p>
           </div>
         )}
 

@@ -109,7 +109,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
           }
         );
 
-        alert('✓ Bid accepted! Payment confirmed and amount held in escrow.');
+        alert('✓ Offer confirmed! Payment confirmed and amount held in escrow.');
       }
 
       onBidAccepted();
@@ -158,7 +158,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
   if (bids.length === 0) {
     return (
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <p className="text-gray-600 text-sm">No bids yet. Doers will see your errand and bid soon!</p>
+        <p className="text-gray-600 text-sm">No offers yet. Doers will see your errand and bid soon!</p>
       </div>
     );
   }
@@ -202,7 +202,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
 
       {acceptedBid && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="font-semibold text-green-900 mb-2">✓ Bid Accepted</p>
+          <p className="font-semibold text-green-900 mb-2">✓ Offer Confirmed</p>
           <p className="text-sm text-green-800">
             {acceptedBid.doerName} has been chosen for ${acceptedBid.amount}
           </p>
@@ -212,7 +212,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-errandify-brown">
-            {acceptedBid ? 'Other Bids' : `Bids (${pendingBids.length})`}
+            {acceptedBid ? 'Other Offers' : `Offers (${pendingBids.length})`}
           </h3>
         </div>
 
@@ -271,7 +271,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
                     <p className="font-semibold text-gray-900">{bid.doerName}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <p className="text-xs text-gray-500">
-                        Bid placed {bid.createdAt ? new Date(bid.createdAt).toLocaleDateString() : 'Recently'}
+                        Offer placed {bid.createdAt ? new Date(bid.createdAt).toLocaleDateString() : 'Recently'}
                       </p>
                       {doerConfidence[bid.doerId]?.avg_rating && (
                         <span className="text-xs text-yellow-600 font-semibold">
@@ -330,7 +330,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
               )}
 
               {taskBudget && bid.amount > taskBudget && (
-                <p className="text-xs text-orange-600 mb-2">⚠️ Bid exceeds budget</p>
+                <p className="text-xs text-orange-600 mb-2">⚠️ Offer exceeds budget</p>
               )}
 
               <div className="flex gap-2">
@@ -338,13 +338,13 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
                   onClick={() => handleAcceptBid(bid.id)}
                   className="flex-1 px-3 py-2 bg-errandify-orange text-white rounded font-semibold text-sm hover:bg-opacity-90"
                 >
-                  Accept
+                  Confirm Offer
                 </button>
                 <button
                   onClick={() => handleRejectBid(bid.id)}
                   className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded font-semibold text-sm hover:bg-gray-50"
                 >
-                  Reject
+                  Decline
                 </button>
               </div>
             </div>
@@ -355,14 +355,14 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
       {rejectingBidId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-errandify-brown mb-4">Reject Bid</h2>
+            <h2 className="text-xl font-bold text-errandify-brown mb-4">Decline Offer</h2>
             <p className="text-sm text-gray-600 mb-4">
-              Tell the doer why you're rejecting their bid. This helps them improve future bids.
+              Tell the doer why you're declining their offer. This helps them improve future offers.
             </p>
 
             <div className="space-y-3 mb-4">
               {[
-                { value: 'accepted_another', label: '✓ Accepted another bid' },
+                { value: 'accepted_another', label: '✓ Accepted another offer' },
                 { value: 'budget_changed', label: '💰 Budget changed' },
                 { value: 'skill_mismatch', label: '🎯 Need different skills' },
                 { value: 'price_too_high', label: '💸 Price too high' },
@@ -403,7 +403,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
                 onClick={confirmRejectBid}
                 className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600"
               >
-                Reject & Notify
+                Decline & Notify
               </button>
             </div>
           </div>

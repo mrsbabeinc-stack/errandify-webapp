@@ -284,7 +284,7 @@ export default function MyAccountPage() {
               </div>
               <div className="bg-white rounded shadow p-1.5 border-l-4 border-green-500 text-center">
                 <p className="text-lg font-bold text-errandify-orange leading-none">{profileData.completedTasks || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold leading-none">✅ Errands</p>
+                <p className="text-xs text-gray-600 font-semibold leading-none">✅ Errands Completed</p>
               </div>
               <div className="bg-white rounded shadow p-1.5 border-l-4 border-blue-500 text-center">
                 <p className="text-lg font-bold text-errandify-orange leading-none">${profileData.totalEarnings || 0}</p>
@@ -415,7 +415,7 @@ export default function MyAccountPage() {
                   </div>
                   <div className="bg-white rounded shadow p-1.5 text-center border-l-2 border-orange-400">
                     <p className="text-base font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
-                    <p className="text-xs text-gray-600 font-semibold">✅</p>
+                    <p className="text-xs text-gray-600 font-semibold">✅ Errands</p>
                   </div>
                 </div>
 
