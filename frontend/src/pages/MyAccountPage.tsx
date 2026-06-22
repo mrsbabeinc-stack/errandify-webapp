@@ -441,7 +441,6 @@ export default function MyAccountPage() {
                   )}
                 </div>
               </div>
-            </div>
         )}
 
         {/* SETTINGS SECTION */}
