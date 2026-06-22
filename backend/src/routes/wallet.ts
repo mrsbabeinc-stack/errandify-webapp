@@ -454,4 +454,37 @@ router.get('/point-history', authMiddleware, async (req: AuthRequest, res: Respo
   }
 });
 
+// GET /api/wallet/my-vouchers - Get user's redeemed vouchers
+router.get('/my-vouchers', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Fetch redemption transactions (vouchers redeemed by user)
+    const result = await db.query(
+      `SELECT id, user_id, points, type, description, created_at
+       FROM point_transactions
+       WHERE user_id = $1 AND type = 'redemption'
+       ORDER BY created_at DESC
+       LIMIT 50`,
+      [userId]
+    );
+
+    const vouchers = result.rows.map((row: any) => ({
+      id: row.id,
+      voucherName: row.description,
+      points: Math.abs(row.points),
+      description: row.description,
+      created_at: row.created_at,
+    }));
+
+    res.json({
+      success: true,
+      data: vouchers,
+    });
+  } catch (error: any) {
+    console.error('My vouchers error:', error);
+    res.status(500).json({ error: 'Failed to fetch vouchers' });
+  }
+});
+
 export default router;
