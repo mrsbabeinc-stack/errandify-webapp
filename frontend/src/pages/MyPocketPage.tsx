@@ -26,6 +26,12 @@ export default function MyPocketPage() {
   const [userRole, setUserRole] = useState<'asker' | 'doer' | null>(null);
   const [activeTab, setActiveTab] = useState<'txns' | 'history' | 'payout'>('txns');
   const [showBankDetails, setShowBankDetails] = useState(false);
+  const [isEditingPayout, setIsEditingPayout] = useState(false);
+  const [bankDetails, setBankDetails] = useState({
+    bankName: 'STRIPE TEST BANK',
+    accountHolder: 'John Lee',
+    accountNumber: '•••• •••• •••• 3456',
+  });
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -310,6 +316,88 @@ export default function MyPocketPage() {
                       <p className="font-bold text-green-600">+$100 SGD</p>
                     </div>
                   </div>
+                </div>
+
+                {/* Bank Details Section */}
+                <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                  <button
+                    onClick={() => setShowBankDetails(!showBankDetails)}
+                    className="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition"
+                  >
+                    <h3 className="text-xs font-bold text-gray-800">🏦 Bank Account Details</h3>
+                    <span className="text-lg">{showBankDetails ? '▼' : '▶'}</span>
+                  </button>
+
+                  {showBankDetails && (
+                    <div className="border-t border-gray-100 p-2 space-y-2">
+                      {!isEditingPayout ? (
+                        <>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-gray-600">Bank</span>
+                            <span className="font-bold">{bankDetails.bankName}</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-gray-600">Account Holder</span>
+                            <span className="font-bold">{bankDetails.accountHolder}</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-gray-600">Account</span>
+                            <span className="font-bold">{bankDetails.accountNumber}</span>
+                          </div>
+                          <button
+                            onClick={() => setIsEditingPayout(true)}
+                            className="w-full mt-2 bg-errandify-orange text-white py-1 rounded text-xs font-bold hover:bg-orange-600"
+                          >
+                            ✏️ Edit Bank Details
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-600 block mb-1">Bank Name</label>
+                            <input
+                              type="text"
+                              value={bankDetails.bankName}
+                              onChange={(e) => setBankDetails({...bankDetails, bankName: e.target.value})}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-600 block mb-1">Account Holder</label>
+                            <input
+                              type="text"
+                              value={bankDetails.accountHolder}
+                              onChange={(e) => setBankDetails({...bankDetails, accountHolder: e.target.value})}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-600 block mb-1">Account Number</label>
+                            <input
+                              type="text"
+                              value={bankDetails.accountNumber}
+                              onChange={(e) => setBankDetails({...bankDetails, accountNumber: e.target.value})}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                            />
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              onClick={() => setIsEditingPayout(false)}
+                              className="flex-1 bg-errandify-orange text-white py-1 rounded text-xs font-bold hover:bg-orange-600"
+                            >
+                              ✓ Save
+                            </button>
+                            <button
+                              onClick={() => setIsEditingPayout(false)}
+                              className="flex-1 border border-gray-300 text-gray-700 py-1 rounded text-xs font-bold hover:bg-gray-50"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
