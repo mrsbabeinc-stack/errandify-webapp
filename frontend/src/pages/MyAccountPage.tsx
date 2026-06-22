@@ -33,7 +33,7 @@ interface Rating {
 
 export default function MyAccountPage() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'blocked' | 'notify' | null>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | null>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
@@ -409,14 +409,22 @@ export default function MyAccountPage() {
               👤 MyProfile
             </button>
             <button
-              onClick={() => navigate('/my-pocket')}
-              className="px-2 py-1 text-xs font-bold transition rounded text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+              onClick={() => setActiveSection('pocket')}
+              className={`px-2 py-1 text-xs font-bold transition rounded ${
+                activeSection === 'pocket'
+                  ? 'bg-errandify-orange text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
             >
               💰 MyPocket
             </button>
             <button
-              onClick={() => navigate('/my-rewards')}
-              className="px-2 py-1 text-xs font-bold transition rounded text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+              onClick={() => setActiveSection('rewards')}
+              className={`px-2 py-1 text-xs font-bold transition rounded ${
+                activeSection === 'rewards'
+                  ? 'bg-errandify-orange text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
             >
               💎 MyRewardSpace
             </button>
@@ -863,7 +871,165 @@ export default function MyAccountPage() {
           </div>
         )}
 
-{/* BLOCKED SECTION */}
+        {/* MYPOCKET SECTION */}
+        {activeSection === 'pocket' && (
+          <div className="space-y-2">
+            {/* Balance Card */}
+            <div className="bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-lg p-3 shadow-md">
+              <p className="text-xs opacity-90">Balance</p>
+              <h2 className="text-3xl font-bold mb-1">$450.50</h2>
+              <div className="flex gap-2 text-xs">
+                <div className="bg-white bg-opacity-20 rounded px-2 py-1">
+                  <p className="font-bold">Earned</p>
+                  <p>$1,250.00</p>
+                </div>
+                <div className="bg-white bg-opacity-20 rounded px-2 py-1">
+                  <p className="font-bold">Spent</p>
+                  <p>$320.50</p>
+                </div>
+                <div className="bg-white bg-opacity-20 rounded px-2 py-1">
+                  <p className="font-bold">Pending</p>
+                  <p>$150.00</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Transactions */}
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="bg-errandify-orange text-white p-2">
+                <h3 className="text-xs font-bold">📋 Recent Transactions</h3>
+              </div>
+              <div className="divide-y divide-gray-100 text-xs">
+                <div className="p-2 flex justify-between hover:bg-gray-50">
+                  <div>
+                    <p className="font-bold text-gray-900">Completed Errand (#5): Clean apartment</p>
+                    <p className="text-gray-500">Today 10:28 AM</p>
+                  </div>
+                  <p className="font-bold text-green-600">+$80</p>
+                </div>
+                <div className="p-2 flex justify-between hover:bg-gray-50">
+                  <div>
+                    <p className="font-bold text-gray-900">Posted Errand (#8): Home repairs</p>
+                    <p className="text-gray-500">Yesterday 10:25 PM</p>
+                  </div>
+                  <p className="font-bold text-red-600">-$120</p>
+                </div>
+                <div className="p-2 flex justify-between hover:bg-gray-50">
+                  <div>
+                    <p className="font-bold text-gray-900">Referral: @SunnyLove joined</p>
+                    <p className="text-gray-500">2 days ago</p>
+                  </div>
+                  <p className="font-bold text-green-600">+$50</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Payout Status */}
+            <div className="bg-white rounded-lg border border-gray-200 p-3">
+              <h3 className="text-xs font-bold text-errandify-brown mb-2">💳 Payout Status</h3>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Bank</span>
+                  <span className="font-bold">STRIPE TEST BANK</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Account</span>
+                  <span className="font-bold">•••• •••• •••• 3456</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status</span>
+                  <span className="font-bold text-green-600">✓ Approved</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MYREWARDSPACE SECTION */}
+        {activeSection === 'rewards' && (
+          <div className="space-y-2">
+            {/* Errandify Points Card */}
+            <div className="bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-lg p-3">
+              <p className="text-xs opacity-90 mb-1">Available Points</p>
+              <p className="text-3xl font-bold mb-2">25 EP</p>
+              <p className="text-xs opacity-80 bg-orange-700 bg-opacity-50 rounded p-1.5">
+                ⚠️ Expiring Soon: 25 pts will expire on 30/06/2027
+              </p>
+            </div>
+
+            {/* Redeem & Gift Buttons */}
+            <div className="flex gap-2">
+              <button className="flex-1 bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600">
+                🎁 Redeem Now
+              </button>
+              <button className="flex-1 border-2 border-errandify-orange text-errandify-orange py-2 rounded font-bold text-xs hover:bg-orange-50">
+                🎀 Send A Gift
+              </button>
+            </div>
+
+            {/* Available Rewards */}
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="bg-errandify-orange text-white p-2">
+                <h3 className="text-xs font-bold">🎁 MyRewards</h3>
+              </div>
+              <div className="divide-y divide-gray-100 text-xs">
+                <div className="p-2 flex justify-between items-center hover:bg-gray-50">
+                  <div>
+                    <p className="font-bold text-gray-900">$5 Discount</p>
+                    <p className="text-errandify-orange font-bold">50 EP</p>
+                  </div>
+                  <button className="bg-errandify-orange text-white px-2 py-1 rounded text-xs font-bold">Redeem</button>
+                </div>
+                <div className="p-2 flex justify-between items-center hover:bg-gray-50">
+                  <div>
+                    <p className="font-bold text-gray-900">$10 Discount</p>
+                    <p className="text-errandify-orange font-bold">100 EP</p>
+                  </div>
+                  <button className="bg-errandify-orange text-white px-2 py-1 rounded text-xs font-bold">Redeem</button>
+                </div>
+                <div className="p-2 flex justify-between items-center hover:bg-gray-50">
+                  <div>
+                    <p className="font-bold text-gray-900">$20 Discount</p>
+                    <p className="text-errandify-orange font-bold">200 EP</p>
+                  </div>
+                  <button className="bg-gray-300 text-gray-500 px-2 py-1 rounded text-xs font-bold">Need</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Point History */}
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="bg-errandify-orange text-white p-2">
+                <h3 className="text-xs font-bold">📜 Point History</h3>
+              </div>
+              <div className="divide-y divide-gray-100 text-xs">
+                <div className="p-2 flex justify-between hover:bg-gray-50">
+                  <div>
+                    <p className="font-bold text-gray-900">Completed Errand</p>
+                    <p className="text-gray-500">17-06-2026</p>
+                  </div>
+                  <p className="font-bold text-green-600">+10 EP</p>
+                </div>
+                <div className="p-2 flex justify-between hover:bg-gray-50">
+                  <div>
+                    <p className="font-bold text-gray-900">Referred Friend @SunnyLove</p>
+                    <p className="text-gray-500">12-06-2026</p>
+                  </div>
+                  <p className="font-bold text-green-600">+50 EP</p>
+                </div>
+                <div className="p-2 flex justify-between hover:bg-gray-50">
+                  <div>
+                    <p className="font-bold text-gray-900">Redeemed Discount</p>
+                    <p className="text-gray-500">10-06-2026</p>
+                  </div>
+                  <p className="font-bold text-red-600">-50 EP</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BLOCKED SECTION */}
         {activeSection === 'blocked' && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="bg-errandify-orange text-white p-2">
