@@ -301,7 +301,6 @@ export default function MyAccountPage() {
 
           if (result && result.includes('APPROVED')) {
             setProfileImage(base64Image);
-            alert('✅ Profile photo approved!');
           } else {
             const reason = result?.replace('REJECTED: ', '') || 'Image does not meet community standards';
             alert(`❌ Photo rejected: ${reason}`);
@@ -310,7 +309,6 @@ export default function MyAccountPage() {
           console.error('Image moderation error:', error);
           // Fallback: accept image if moderation fails
           setProfileImage(base64Image);
-          alert('⚠️ Could not verify image. Uploaded anyway - please ensure it follows community guidelines.');
         }
       };
       reader.readAsDataURL(file);
