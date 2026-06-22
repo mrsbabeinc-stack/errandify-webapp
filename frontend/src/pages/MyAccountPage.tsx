@@ -42,6 +42,7 @@ export default function MyAccountPage() {
     accountHolder: 'John Lee',
     accountNumber: '•••• •••• •••• 3456',
   });
+  const [successMessage, setSuccessMessage] = useState('');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -426,7 +427,7 @@ export default function MyAccountPage() {
   const badges = ratings.averageRating >= 4.8 ? [{ icon: '⭐' }] : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-errandify-bg to-white pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-yellow-50 via-orange-50 to-pink-50 pb-24">
       {/* HERO HEADER */}
       <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white sticky top-0 z-50 shadow-lg">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -1033,29 +1034,37 @@ export default function MyAccountPage() {
         {/* MYPOCKET SECTION */}
         {activeSection === 'pocket' && (
           <div className="space-y-2">
-            {/* Balance Card */}
-            <div className="bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-lg p-3 shadow-md">
-              <p className="text-xs opacity-90">Balance</p>
-              <h2 className="text-3xl font-bold mb-1">$450.50</h2>
+            {/* Success Message */}
+            {successMessage && (
+              <div className="bg-gradient-to-r from-green-400 to-green-500 text-white p-2 rounded-lg text-center font-bold text-sm shadow-lg">
+                {successMessage}
+              </div>
+            )}
+
+            {/* Balance Card - Happy Celebration */}
+            <div className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 text-white rounded-lg p-3 shadow-lg">
+              <p className="text-xs opacity-90">✨ Your Balance ✨</p>
+              <h2 className="text-4xl font-bold mb-1">💰 $450.50</h2>
+              <p className="text-xs font-semibold">🎉 Great work! You've earned $1,250 so far!</p>
               <div className="flex gap-2 text-xs">
-                <div className="bg-white bg-opacity-20 rounded px-2 py-1 group relative cursor-help">
-                  <p className="font-bold">Earned</p>
-                  <p>$1,250.00</p>
-                  <div className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-8 left-0 whitespace-nowrap z-10">
+                <div className="bg-gradient-to-br from-green-300 to-green-500 text-white rounded-lg px-3 py-2 group relative cursor-help shadow-md">
+                  <p className="font-bold">💚 Earned</p>
+                  <p className="text-lg font-bold">$1,250.00</p>
+                  <div className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-12 left-0 whitespace-nowrap z-10">
                     Total from completed errands
                   </div>
                 </div>
-                <div className="bg-white bg-opacity-20 rounded px-2 py-1 group relative cursor-help">
-                  <p className="font-bold">Spent</p>
-                  <p>$320.50</p>
-                  <div className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-8 left-0 whitespace-nowrap z-10">
+                <div className="bg-gradient-to-br from-blue-300 to-blue-500 text-white rounded-lg px-3 py-2 group relative cursor-help shadow-md">
+                  <p className="font-bold">💙 Spent</p>
+                  <p className="text-lg font-bold">$320.50</p>
+                  <div className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-12 left-0 whitespace-nowrap z-10">
                     Total paid for posted errands
                   </div>
                 </div>
-                <div className="bg-white bg-opacity-20 rounded px-2 py-1 group relative cursor-help">
-                  <p className="font-bold">Pending</p>
-                  <p>$150.00</p>
-                  <div className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-8 left-0 whitespace-nowrap z-10">
+                <div className="bg-gradient-to-br from-purple-300 to-purple-500 text-white rounded-lg px-3 py-2 group relative cursor-help shadow-md">
+                  <p className="font-bold">💜 Pending</p>
+                  <p className="text-lg font-bold">$150.00</p>
+                  <div className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-12 left-0 whitespace-nowrap z-10">
                     Waiting 48h after completion
                   </div>
                 </div>
@@ -1229,10 +1238,14 @@ export default function MyAccountPage() {
                         </div>
                         <div className="flex gap-1 mt-1">
                           <button
-                            onClick={() => setIsEditingBankDetails(false)}
-                            className="flex-1 bg-errandify-orange text-white py-0.5 rounded text-xs font-bold hover:bg-orange-600"
+                            onClick={() => {
+                              setIsEditingBankDetails(false);
+                              setSuccessMessage('🎉 Bank details saved!');
+                              setTimeout(() => setSuccessMessage(''), 2000);
+                            }}
+                            className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-0.5 rounded text-xs font-bold hover:from-green-600 hover:to-green-700 shadow-md"
                           >
-                            ✓ Save
+                            ✅ Save
                           </button>
                           <button
                             onClick={() => setIsEditingBankDetails(false)}
