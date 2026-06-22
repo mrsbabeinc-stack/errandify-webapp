@@ -51,6 +51,8 @@ export default function MyAccountPage() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [walletData, setWalletData] = useState<any>({ errandifyPoints: 0 });
+  const [showRedeemModal, setShowRedeemModal] = useState(false);
+  const [pendingRedeem, setPendingRedeem] = useState<{ rewardId: string; points: number; name: string } | null>(null);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -341,20 +343,35 @@ export default function MyAccountPage() {
     }
   };
 
-  const handleRedeemReward = async (rewardId: string, points: number) => {
+  const handleRedeemReward = (rewardId: string, points: number, name: string) => {
+    // Check if user has enough points
+    if ((walletData.errandifyPoints || 0) < points) {
+      alert(`❌ Insufficient points! You need ${points} EP but only have ${walletData.errandifyPoints || 0} EP`);
+      return;
+    }
+    // Show confirmation modal
+    setPendingRedeem({ rewardId, points, name });
+    setShowRedeemModal(true);
+  };
+
+  const handleConfirmRedeem = async () => {
+    if (!pendingRedeem) return;
+
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/redeem`,
         {
-          rewardId,
-          points,
+          rewardId: pendingRedeem.rewardId,
+          points: pendingRedeem.points,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success) {
         setSuccessMessage(`✅ ${response.data.message}`);
+        setShowRedeemModal(false);
+        setPendingRedeem(null);
 
         // Refresh wallet data after redeem
         try {
@@ -1450,8 +1467,13 @@ export default function MyAccountPage() {
                           <p className="text-purple-600 font-bold">⭐ 50 EP</p>
                         </div>
                         <button
-                          onClick={() => handleRedeemReward('discount-5', 50)}
-                          className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:shadow-md transform hover:scale-105 transition"
+                          onClick={() => handleRedeemReward('discount-5', 50, '$5 Discount')}
+                          disabled={(walletData.errandifyPoints || 0) < 50}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transform transition ${
+                            (walletData.errandifyPoints || 0) < 50
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-md hover:scale-105'
+                          }`}
                         >
                           ✅ Redeem
                         </button>
@@ -1462,8 +1484,13 @@ export default function MyAccountPage() {
                           <p className="text-purple-600 font-bold">⭐ 100 EP</p>
                         </div>
                         <button
-                          onClick={() => handleRedeemReward('discount-10', 100)}
-                          className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:shadow-md transform hover:scale-105 transition"
+                          onClick={() => handleRedeemReward('discount-10', 100, '$10 Discount')}
+                          disabled={(walletData.errandifyPoints || 0) < 100}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transform transition ${
+                            (walletData.errandifyPoints || 0) < 100
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white hover:shadow-md hover:scale-105'
+                          }`}
                         >
                           ✅ Redeem
                         </button>
@@ -1548,8 +1575,13 @@ export default function MyAccountPage() {
                         <p className="text-xs text-gray-500">No Expiry ♾️</p>
                       </div>
                       <button
-                        onClick={() => handleRedeemReward('starbucks-voucher', 500)}
-                        className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 rounded-lg font-bold text-sm hover:shadow-md transform hover:scale-105 transition mt-2"
+                        onClick={() => handleRedeemReward('starbucks-voucher', 500, 'Starbucks Voucher')}
+                        disabled={(walletData.errandifyPoints || 0) < 500}
+                        className={`w-full py-2 rounded-lg font-bold text-sm transform transition mt-2 ${
+                          (walletData.errandifyPoints || 0) < 500
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-md hover:scale-105'
+                        }`}
                       >
                         🎁 Redeem (500 EP)
                       </button>
@@ -1765,6 +1797,57 @@ export default function MyAccountPage() {
           <div className="mt-4 pt-4 border-t-2 border-gray-200">
             <div className="flex gap-1 overflow-x-auto pb-2 flex-wrap">
               {/* Quick links section if needed in future */}
+            </div>
+          </div>
+        )}
+
+        {/* REDEEM CONFIRMATION MODAL */}
+        {showRedeemModal && pendingRedeem && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-gradient-to-b from-yellow-50 to-orange-50 rounded-lg shadow-xl max-w-sm w-full p-6 space-y-4">
+              {/* Loading spinner */}
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 rounded-full border-4 border-orange-200 border-t-orange-500 animate-spin"></div>
+              </div>
+
+              {/* Title */}
+              <h2 className="text-2xl font-bold text-center text-errandify-brown">Almost Yours...</h2>
+              <p className="text-center text-lg font-bold text-gray-700">{pendingRedeem.name}</p>
+
+              {/* Points breakdown */}
+              <div className="bg-white rounded-lg p-3 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Your Points</span>
+                  <span className="font-bold text-gray-900">{walletData.errandifyPoints || 0} EP</span>
+                </div>
+                <div className="flex justify-between border-t border-gray-200 pt-2">
+                  <span className="text-gray-600">Voucher Claim</span>
+                  <span className="font-bold text-red-600">-{pendingRedeem.points} EP</span>
+                </div>
+                <div className="flex justify-between font-bold text-base pt-2 border-t border-gray-200">
+                  <span className="text-gray-800">Balance</span>
+                  <span className="text-red-600">-{(walletData.errandifyPoints || 0) - pendingRedeem.points} EP</span>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={handleConfirmRedeem}
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-lg font-bold hover:shadow-lg transition"
+                >
+                  ✅ Confirm & Redeem
+                </button>
+                <button
+                  onClick={() => {
+                    setShowRedeemModal(false);
+                    setPendingRedeem(null);
+                  }}
+                  className="flex-1 border-2 border-orange-300 text-orange-600 py-3 rounded-lg font-bold hover:bg-orange-50 transition"
+                >
+                  ✕ Not Now
+                </button>
+              </div>
             </div>
           </div>
         )}
