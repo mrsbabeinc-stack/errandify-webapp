@@ -8,6 +8,7 @@ interface UserProfile {
   id?: number;
   userId?: string;
   name: string;
+  alias?: string;
   email: string;
   mobile: string;
   role: 'asker' | 'doer';
@@ -18,6 +19,7 @@ interface UserProfile {
   errandifyPoints?: number;
   categories?: string[];
   bio?: string;
+  profileImage?: string;
   monthlyHouseholdIncome?: number;
   chasCardColor?: string;
   chasSubsidyPercentage?: number;
@@ -43,6 +45,8 @@ export default function MyAccountPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
     display_name: '',
+    alias: '',
+    bio: '',
     email: '',
     mobile: '',
     monthly_household_income: '',
@@ -51,6 +55,8 @@ export default function MyAccountPage() {
   const [certificates, setCertificates] = useState<Array<{ id: string; name: string }>>([]);
   const [certificateTitle, setCertificateTitle] = useState('');
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -147,6 +153,39 @@ export default function MyAccountPage() {
       console.error('Error saving profile:', error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/login');
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert('Failed to delete account');
+    }
+  };
+
+  const handleProfileImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setProfileImage(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -400,13 +439,26 @@ export default function MyAccountPage() {
             {/* SHARED INFO */}
             {profileTab === 'shared' && (
               <div className="space-y-2">
+                {/* Profile Photo + Alias Header */}
+                <div className="bg-white rounded border border-gray-200 p-3 flex items-center gap-3">
+                  {profileImage ? (
+                    <img src={profileImage} alt="Profile" className="w-20 h-20 rounded-full object-cover border-2 border-errandify-orange flex-shrink-0" />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center text-4xl flex-shrink-0">👤</div>
+                  )}
+                  <div className="flex-1">
+                    <h2 className="text-base font-bold text-errandify-brown">{editForm.alias || profileData.name}</h2>
+                    <p className="text-xs text-gray-600 mt-1">{editForm.bio || 'No bio yet'}</p>
+                  </div>
+                </div>
+
                 {/* Personal Information */}
                 <div className="bg-white rounded border border-gray-200 p-2">
                   <h3 className="text-xs font-bold text-errandify-brown mb-2">✅ Personal Information</h3>
                   <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Alias:</span>
-                      <span className="font-semibold text-gray-900">{profileData.name || 'Not set'}</span>
+                      <span className="font-semibold text-gray-900">{editForm.alias || profileData.name || 'Not set'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Gender:</span>
@@ -539,6 +591,85 @@ export default function MyAccountPage() {
                         <p className="text-gray-800">{profileData.mobile || 'Not set'}</p>
                       </div>
                     </div>
+                  )}
+                </div>
+
+                {/* Profile Photo Upload */}
+                <div className="bg-white rounded shadow p-3">
+                  <h3 className="text-xs font-bold text-errandify-brown mb-2">📸 Profile Photo</h3>
+                  <div className="flex gap-3 items-start">
+                    {profileImage && (
+                      <img src={profileImage} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-errandify-orange" />
+                    )}
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProfileImageUpload}
+                        className="w-full text-xs mb-1"
+                      />
+                      <p className="text-xs text-gray-600">JPG, PNG or WebP. Max 5MB. Will auto-adjust.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Alias Setup */}
+                <div className="bg-white rounded shadow p-3">
+                  <h3 className="text-xs font-bold text-errandify-brown mb-2">🎭 Set Alias</h3>
+                  <input
+                    type="text"
+                    value={editForm.alias || ''}
+                    onChange={(e) => setEditForm({ ...editForm, alias: e.target.value })}
+                    placeholder="Enter your alias (instead of name)"
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                  />
+                  <p className="text-xs text-gray-600 mt-1">This is how others will see you in the app</p>
+                </div>
+
+                {/* Bio */}
+                <div className="bg-white rounded shadow p-3">
+                  <h3 className="text-xs font-bold text-errandify-brown mb-2">✍️ Bio</h3>
+                  <textarea
+                    value={editForm.bio || ''}
+                    onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                    placeholder="Write a short bio about yourself"
+                    maxLength={200}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs resize-none"
+                    rows={3}
+                  />
+                  <p className="text-xs text-gray-600 mt-1">{editForm.bio?.length || 0}/200</p>
+                </div>
+
+                {/* Danger Zone - Delete Account */}
+                <div className="bg-red-50 border-l-4 border-red-500 rounded p-3">
+                  <h3 className="text-xs font-bold text-red-900 mb-2">⚠️ Danger Zone</h3>
+                  {showDeleteConfirm ? (
+                    <div className="space-y-2">
+                      <p className="text-xs text-red-900">
+                        Are you sure? This action cannot be undone and will permanently delete your account and all data.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleDeleteAccount}
+                          className="flex-1 bg-red-600 text-white py-1.5 rounded font-bold text-xs hover:bg-red-700 transition"
+                        >
+                          Yes, Delete My Account
+                        </button>
+                        <button
+                          onClick={() => setShowDeleteConfirm(false)}
+                          className="flex-1 border border-red-400 text-red-700 py-1.5 rounded font-bold text-xs hover:bg-red-50 transition"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="w-full bg-red-600 text-white py-1.5 rounded font-bold text-xs hover:bg-red-700 transition"
+                    >
+                      🗑️ Delete Account
+                    </button>
                   )}
                 </div>
 
