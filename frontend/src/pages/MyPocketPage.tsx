@@ -257,33 +257,63 @@ export default function MyPocketPage() {
 
             {/* Payout Tab */}
             {activeTab === 'payout' && (
-              <div className="p-3 space-y-3">
+              <div className="p-2 space-y-3">
                 <div className="bg-blue-50 border border-blue-200 rounded p-2">
                   <p className="text-xs text-blue-900 font-semibold">💡 How It Works</p>
                   <p className="text-xs text-blue-800 mt-1">After an errand is completed, earnings will be transferred to your account within 48 hours (if no dispute is raised).</p>
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded p-3">
+                <div className="bg-white border border-gray-200 rounded p-2">
                   <h3 className="text-xs font-bold text-errandify-brown mb-2">Payout Details</h3>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-600">Bank</span>
-                      <span className="text-xs font-bold text-gray-900">STRIPE TEST BANK</span>
+                      <span className="text-gray-600">Bank</span>
+                      <span className="font-bold text-gray-900">STRIPE TEST BANK</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-600">Account</span>
-                      <span className="text-xs font-bold text-gray-900">•••• •••• •••• 3456</span>
+                      <span className="text-gray-600">Account</span>
+                      <span className="font-bold text-gray-900">•••• •••• •••• 3456</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-600">Status</span>
-                      <span className="text-xs font-bold text-green-600">✓ Approved</span>
+                      <span className="text-gray-600">Status</span>
+                      <span className="font-bold text-green-600">✓ Approved</span>
                     </div>
                   </div>
                 </div>
 
-                <button className="w-full bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600 transition">
+                <button className="w-full bg-errandify-orange text-white py-1.5 rounded font-bold text-xs hover:bg-orange-600 transition">
                   ✏️ Change Bank Account
                 </button>
+
+                {/* Payout & Drawout Transactions */}
+                <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                  <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-2">
+                    <h3 className="text-xs font-bold">📊 Payout & Drawout Transactions</h3>
+                  </div>
+                  <div className="divide-y divide-gray-100 text-xs">
+                    <div className="p-2 flex justify-between items-center hover:bg-gray-50">
+                      <div>
+                        <p className="font-bold text-gray-900">Errand Payout</p>
+                        <p className="text-gray-500">17-06-2026 10:28 PM</p>
+                      </div>
+                      <p className="font-bold text-green-600">+$0.8 SGD</p>
+                    </div>
+                    <div className="p-2 flex justify-between items-center hover:bg-gray-50">
+                      <div>
+                        <p className="font-bold text-gray-900">Errand Payment</p>
+                        <p className="text-gray-500">15-06-2026 10:25 PM</p>
+                      </div>
+                      <p className="font-bold text-red-600">-$12.16 SGD</p>
+                    </div>
+                    <div className="p-2 flex justify-between items-center hover:bg-gray-50">
+                      <div>
+                        <p className="font-bold text-gray-900">Refund</p>
+                        <p className="text-gray-500">14-06-2026 10:05 PM</p>
+                      </div>
+                      <p className="font-bold text-green-600">+$100 SGD</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
