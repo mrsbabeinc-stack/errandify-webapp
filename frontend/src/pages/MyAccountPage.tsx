@@ -226,12 +226,6 @@ export default function MyAccountPage() {
               📊 MyTransactions
             </button>
             <button
-              onClick={() => navigate('/notification-preferences')}
-              className="pb-2 font-bold text-sm transition text-gray-600 hover:text-gray-800 border-b-4 border-transparent"
-            >
-              🔔 Notifications
-            </button>
-            <button
               onClick={() => navigate('/my-pocket')}
               className="pb-2 font-bold text-sm transition text-gray-600 hover:text-gray-800 border-b-4 border-transparent"
             >
@@ -242,6 +236,12 @@ export default function MyAccountPage() {
               className="pb-2 font-bold text-sm transition text-gray-600 hover:text-gray-800 border-b-4 border-transparent"
             >
               🚫 Blocked
+            </button>
+            <button
+              onClick={() => navigate('/notification-preferences')}
+              className="pb-2 font-bold text-sm transition text-gray-600 hover:text-gray-800 border-b-4 border-transparent"
+            >
+              🔔 Notifications
             </button>
           </div>
         </div>
