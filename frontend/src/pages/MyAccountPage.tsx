@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AdCarousel from '../components/AdCarousel';
+import EventBanner from '../components/EventBanner';
 
 interface UserProfile {
   id?: number;
@@ -209,6 +211,14 @@ export default function MyAccountPage() {
 
       {/* CONTENT */}
       <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* AD CAROUSEL + EVENT BANNER */}
+        <div className="mb-6">
+          <AdCarousel />
+          <div className="mt-2">
+            <EventBanner />
+          </div>
+        </div>
+
         {/* ===== DASHBOARD TAB ===== */}
         {activeTab === 'dashboard' && (
           <div className="space-y-8">
