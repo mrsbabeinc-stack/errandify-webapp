@@ -223,34 +223,34 @@ export default function MyAccountPage() {
         {activeTab === 'dashboard' && (
           <div className="space-y-8">
             {/* PROFILE HERO CARD - ULTRA COMPACT */}
-            <div className="relative bg-white rounded-lg shadow p-3 border-l-4 border-errandify-orange overflow-hidden mb-2">
+            <div className="relative bg-white rounded shadow p-2 border-l-4 border-errandify-orange overflow-hidden mb-1.5">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-bold text-errandify-brown truncate">{profileData.name}</h2>
+                  <h2 className="text-base font-bold text-errandify-brown truncate">{profileData.name}</h2>
                   <p className="text-gray-600 text-xs">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
+                  <p className="text-lg font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
                   <p className="text-xs text-gray-600">⭐</p>
                 </div>
               </div>
               {badges.length > 0 && (
-                <div className="flex gap-0.5 flex-wrap mt-1">
+                <div className="flex gap-0.5 flex-wrap mt-0.5">
                   {badges.map((badge, idx) => (
-                    <span key={idx} className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-xs font-bold">
+                    <span key={idx} className="bg-orange-100 text-orange-700 px-1 py-0 rounded text-xs font-bold">
                       {badge.icon}
                     </span>
                   ))}
                 </div>
               )}
-              <div className="mt-1">
+              <div className="mt-0.5">
                 <div className="flex justify-between items-center mb-0.5">
                   <span className="text-xs font-semibold text-gray-600">Completeness</span>
                   <span className="text-xs font-bold">{completeness}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-1">
+                <div className="w-full bg-gray-200 rounded-full h-0.5">
                   <div
-                    className="bg-errandify-orange rounded-full h-1 transition-all duration-300"
+                    className="bg-errandify-orange rounded-full h-0.5 transition-all duration-300"
                     style={{ width: `${completeness}%` }}
                   />
                 </div>
@@ -258,7 +258,7 @@ export default function MyAccountPage() {
             </div>
 
             {/* STATS GRID - ULTRA COMPACT */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 mb-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 mb-1.5">
               <div className="bg-white rounded-lg shadow p-2 border-l-4 border-amber-500 text-center">
                 <p className="text-lg font-bold text-errandify-orange">{ratings.reviewCount}</p>
                 <p className="text-xs text-gray-600 font-semibold">👥 Reviews</p>
