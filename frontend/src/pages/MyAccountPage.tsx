@@ -50,6 +50,7 @@ export default function MyAccountPage() {
   const [recipientSearch, setRecipientSearch] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
+  const [walletData, setWalletData] = useState<any>({ errandifyPoints: 0 });
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -98,6 +99,18 @@ export default function MyAccountPage() {
         if (savedProfileImage) {
           console.log('Setting profile image from localStorage');
           setProfileImage(savedProfileImage);
+        }
+
+        // Fetch wallet data for Errandify Points
+        try {
+          const walletRes = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setWalletData(walletRes.data.data || {});
+          console.log('Wallet data:', walletRes.data.data);
+        } catch (walletError) {
+          console.error('Wallet fetch error:', walletError);
         }
 
         try {
@@ -1366,10 +1379,12 @@ export default function MyAccountPage() {
             {/* Errandify Points Card - HAPPY */}
             <div className="bg-gradient-to-br from-yellow-300 via-amber-300 to-orange-400 text-white rounded-lg shadow-lg p-4">
               <p className="text-sm opacity-90 mb-1">✨ Available Errandify Points ✨</p>
-              <p className="text-4xl font-bold mb-2">🌟 25 EP 🌟</p>
-              <p className="text-xs bg-orange-500 bg-opacity-60 rounded-lg p-2 backdrop-blur">
-                ⏰ Expiring Soon: 25 pts expire 30/06/2027 - Use them now!
-              </p>
+              <p className="text-4xl font-bold mb-2">🌟 {walletData.errandifyPoints || 0} EP 🌟</p>
+              {walletData.errandifyPoints && walletData.errandifyPoints < 100 && (
+                <p className="text-xs bg-orange-500 bg-opacity-60 rounded-lg p-2 backdrop-blur">
+                  ⏰ Expiring Soon: {walletData.errandifyPoints} pts expire 30/06/2027 - Use them now!
+                </p>
+              )}
             </div>
 
             {/* Sub-tabs for Rewards */}
