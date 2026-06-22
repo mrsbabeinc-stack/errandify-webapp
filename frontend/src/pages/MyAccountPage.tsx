@@ -35,6 +35,13 @@ export default function MyAccountPage() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | null>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
+  const [pocketTab, setPocketTab] = useState<'txns' | 'history' | 'payout'>('txns');
+  const [isEditingBankDetails, setIsEditingBankDetails] = useState(false);
+  const [bankDetails, setBankDetails] = useState({
+    bankName: 'STRIPE TEST BANK',
+    accountHolder: 'John Lee',
+    accountNumber: '•••• •••• •••• 3456',
+  });
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -1031,67 +1038,189 @@ export default function MyAccountPage() {
               <p className="text-xs opacity-90">Balance</p>
               <h2 className="text-3xl font-bold mb-1">$450.50</h2>
               <div className="flex gap-2 text-xs">
-                <div className="bg-white bg-opacity-20 rounded px-2 py-1">
+                <div className="bg-white bg-opacity-20 rounded px-2 py-1 group relative cursor-help">
                   <p className="font-bold">Earned</p>
                   <p>$1,250.00</p>
+                  <div className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-8 left-0 whitespace-nowrap z-10">
+                    Total from completed errands
+                  </div>
                 </div>
-                <div className="bg-white bg-opacity-20 rounded px-2 py-1">
+                <div className="bg-white bg-opacity-20 rounded px-2 py-1 group relative cursor-help">
                   <p className="font-bold">Spent</p>
                   <p>$320.50</p>
+                  <div className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-8 left-0 whitespace-nowrap z-10">
+                    Total paid for posted errands
+                  </div>
                 </div>
-                <div className="bg-white bg-opacity-20 rounded px-2 py-1">
+                <div className="bg-white bg-opacity-20 rounded px-2 py-1 group relative cursor-help">
                   <p className="font-bold">Pending</p>
                   <p>$150.00</p>
+                  <div className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-8 left-0 whitespace-nowrap z-10">
+                    Waiting 48h after completion
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Transactions */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="bg-errandify-orange text-white p-2">
-                <h3 className="text-xs font-bold">📋 Recent Transactions</h3>
+            {/* Tabs */}
+            <div className="bg-white rounded-lg border border-gray-200 mb-2">
+              <div className="flex text-xs font-semibold border-b border-gray-100">
+                <button
+                  onClick={() => setPocketTab('txns')}
+                  className={`flex-1 p-1.5 text-center transition whitespace-nowrap text-xs ${pocketTab === 'txns' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
+                >
+                  📋 Txns
+                </button>
+                <button
+                  onClick={() => setPocketTab('history')}
+                  className={`flex-1 p-1.5 text-center transition border-l border-gray-100 whitespace-nowrap text-xs ${pocketTab === 'history' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
+                >
+                  ⭐ Points
+                </button>
+                <button
+                  onClick={() => setPocketTab('payout')}
+                  className={`flex-1 p-1.5 text-center transition border-l border-gray-100 whitespace-nowrap text-xs ${pocketTab === 'payout' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
+                >
+                  💳 Payout
+                </button>
               </div>
-              <div className="divide-y divide-gray-100 text-xs">
-                <div className="p-2 flex justify-between hover:bg-gray-50">
-                  <div>
-                    <p className="font-bold text-gray-900">Completed Errand (#5): Clean apartment</p>
-                    <p className="text-gray-500">Today 10:28 AM</p>
-                  </div>
-                  <p className="font-bold text-green-600">+$80</p>
-                </div>
-                <div className="p-2 flex justify-between hover:bg-gray-50">
-                  <div>
-                    <p className="font-bold text-gray-900">Posted Errand (#8): Home repairs</p>
-                    <p className="text-gray-500">Yesterday 10:25 PM</p>
-                  </div>
-                  <p className="font-bold text-red-600">-$120</p>
-                </div>
-                <div className="p-2 flex justify-between hover:bg-gray-50">
-                  <div>
-                    <p className="font-bold text-gray-900">Referral: @SunnyLove joined</p>
-                    <p className="text-gray-500">2 days ago</p>
-                  </div>
-                  <p className="font-bold text-green-600">+$50</p>
-                </div>
-              </div>
-            </div>
 
-            {/* Payout Status */}
-            <div className="bg-white rounded-lg border border-gray-200 p-3">
-              <h3 className="text-xs font-bold text-errandify-brown mb-2">💳 Payout Status</h3>
-              <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Bank</span>
-                  <span className="font-bold">STRIPE TEST BANK</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Account</span>
-                  <span className="font-bold">•••• •••• •••• 3456</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Status</span>
-                  <span className="font-bold text-green-600">✓ Approved</span>
-                </div>
+              {/* Tab Content */}
+              <div className="text-xs">
+                {/* Transactions Tab */}
+                {pocketTab === 'txns' && (
+                  <div className="divide-y divide-gray-100">
+                    <div className="p-2 flex justify-between hover:bg-gray-50">
+                      <div>
+                        <p className="font-bold text-gray-900">Completed Errand (#5): Clean apartment</p>
+                        <p className="text-gray-500">Today 10:28 AM</p>
+                      </div>
+                      <p className="font-bold text-green-600">+$80</p>
+                    </div>
+                    <div className="p-2 flex justify-between hover:bg-gray-50">
+                      <div>
+                        <p className="font-bold text-gray-900">Posted Errand (#8): Home repairs</p>
+                        <p className="text-gray-500">Yesterday 10:25 PM</p>
+                      </div>
+                      <p className="font-bold text-red-600">-$120</p>
+                    </div>
+                    <div className="p-2 flex justify-between hover:bg-gray-50">
+                      <div>
+                        <p className="font-bold text-gray-900">Referral: @SunnyLove joined</p>
+                        <p className="text-gray-500">2 days ago</p>
+                      </div>
+                      <p className="font-bold text-green-600">+$50</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Points Tab */}
+                {pocketTab === 'history' && (
+                  <div className="divide-y divide-gray-100">
+                    <div className="p-2 flex justify-between hover:bg-gray-50">
+                      <div>
+                        <p className="font-bold text-gray-900">Completed Errand</p>
+                        <p className="text-gray-500">2026-06-20</p>
+                      </div>
+                      <p className="font-bold text-green-600">+10 EP</p>
+                    </div>
+                    <div className="p-2 flex justify-between hover:bg-gray-50">
+                      <div>
+                        <p className="font-bold text-gray-900">Referred Friend</p>
+                        <p className="text-gray-500">@SunnyLove - 2026-06-15</p>
+                      </div>
+                      <p className="font-bold text-green-600">+50 EP</p>
+                    </div>
+                    <div className="p-2 flex justify-between hover:bg-gray-50">
+                      <div>
+                        <p className="font-bold text-gray-900">Redeemed Discount</p>
+                        <p className="text-gray-500">2026-06-10</p>
+                      </div>
+                      <p className="font-bold text-red-600">-50 EP</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Payout Tab */}
+                {pocketTab === 'payout' && (
+                  <div className="p-2 space-y-2">
+                    {/* Payout Transactions */}
+                    <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-2 rounded">
+                      <h3 className="text-xs font-bold">📊 Payout Transactions</h3>
+                    </div>
+                    <div className="divide-y divide-gray-100 text-xs mb-2">
+                      <div className="p-2 flex justify-between hover:bg-gray-50">
+                        <div>
+                          <p className="font-bold text-gray-900">Errand Payout</p>
+                          <p className="text-gray-500">17-06-2026 10:28 PM</p>
+                        </div>
+                        <p className="font-bold text-green-600">+$0.8 SGD</p>
+                      </div>
+                      <div className="p-2 flex justify-between hover:bg-gray-50">
+                        <div>
+                          <p className="font-bold text-gray-900">Errand Payment</p>
+                          <p className="text-gray-500">15-06-2026 10:25 PM</p>
+                        </div>
+                        <p className="font-bold text-red-600">-$12.16 SGD</p>
+                      </div>
+                    </div>
+
+                    {/* Bank Details Section */}
+                    <button
+                      onClick={() => setIsEditingBankDetails(!isEditingBankDetails)}
+                      className="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition border border-gray-200 rounded"
+                    >
+                      <h3 className="text-xs font-bold text-gray-800">🏦 Bank Account Details</h3>
+                      <span className="text-lg">{isEditingBankDetails ? '▼' : '▶'}</span>
+                    </button>
+
+                    {isEditingBankDetails && (
+                      <div className="border border-gray-200 p-2 space-y-1.5 rounded">
+                        <div>
+                          <label className="text-xs font-semibold text-gray-600 block mb-0.5">Bank Name</label>
+                          <input
+                            type="text"
+                            value={bankDetails.bankName}
+                            onChange={(e) => setBankDetails({...bankDetails, bankName: e.target.value})}
+                            className="w-full px-1.5 py-0.5 border border-gray-300 rounded text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-600 block mb-0.5">Account Holder</label>
+                          <input
+                            type="text"
+                            value={bankDetails.accountHolder}
+                            onChange={(e) => setBankDetails({...bankDetails, accountHolder: e.target.value})}
+                            className="w-full px-1.5 py-0.5 border border-gray-300 rounded text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-600 block mb-0.5">Account Number</label>
+                          <input
+                            type="text"
+                            value={bankDetails.accountNumber}
+                            onChange={(e) => setBankDetails({...bankDetails, accountNumber: e.target.value})}
+                            className="w-full px-1.5 py-0.5 border border-gray-300 rounded text-xs"
+                          />
+                        </div>
+                        <div className="flex gap-1 mt-1">
+                          <button
+                            onClick={() => setIsEditingBankDetails(false)}
+                            className="flex-1 bg-errandify-orange text-white py-0.5 rounded text-xs font-bold hover:bg-orange-600"
+                          >
+                            ✓ Save
+                          </button>
+                          <button
+                            onClick={() => setIsEditingBankDetails(false)}
+                            className="flex-1 border border-gray-300 text-gray-700 py-0.5 rounded text-xs font-bold hover:bg-gray-50"
+                          >
+                            ✕ Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
