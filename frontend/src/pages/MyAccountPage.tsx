@@ -529,7 +529,7 @@ export default function MyAccountPage() {
                     <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-2xl flex-shrink-0">👤</div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-base font-bold text-errandify-brown truncate">{profileData.name}</h2>
+                    <h2 className="text-base font-bold text-errandify-brown truncate">{storedAlias || profileData.name}</h2>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
