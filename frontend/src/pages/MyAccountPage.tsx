@@ -178,12 +178,75 @@ export default function MyAccountPage() {
     }
   };
 
-  const handleProfileImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size exceeds 5MB limit');
+        return;
+      }
+
       const reader = new FileReader();
-      reader.onload = (event) => {
-        setProfileImage(event.target?.result as string);
+      reader.onload = async (event) => {
+        const base64Image = event.target?.result as string;
+
+        // Moderate image with AI
+        try {
+          const qwenApiKey = import.meta.env.VITE_QWEN_API_KEY;
+          if (!qwenApiKey) {
+            console.error('Qwen API key not configured');
+            alert('Image moderation not configured. Please contact support.');
+            return;
+          }
+
+          const base64Data = base64Image.split(',')[1];
+
+          const response = await axios.post(
+            'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+            {
+              model: 'qwen-vl-plus',
+              input: {
+                messages: [
+                  {
+                    role: 'user',
+                    content: [
+                      {
+                        type: 'image',
+                        image: `data:image/jpeg;base64,${base64Data}`,
+                      },
+                      {
+                        type: 'text',
+                        text: 'Is this image appropriate for a professional profile photo on a marketplace? Check for: nudity, violence, hate symbols, weapons, drugs, or anything offensive. Reply with only "APPROVED" if appropriate, or "REJECTED: [reason]" if not.',
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${qwenApiKey}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          const result = response.data.output?.choices?.[0]?.message?.content;
+
+          if (result && result.includes('APPROVED')) {
+            setProfileImage(base64Image);
+            alert('✅ Profile photo approved!');
+          } else {
+            const reason = result?.replace('REJECTED: ', '') || 'Image does not meet community standards';
+            alert(`❌ Photo rejected: ${reason}`);
+          }
+        } catch (error) {
+          console.error('Image moderation error:', error);
+          // Fallback: accept image if moderation fails
+          setProfileImage(base64Image);
+          alert('⚠️ Could not verify image. Uploaded anyway - please ensure it follows community guidelines.');
+        }
       };
       reader.readAsDataURL(file);
     }
