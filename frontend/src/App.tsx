@@ -237,7 +237,7 @@ export default function App() {
           <Route path="/my-kampung" element={<MyKampungPage />} />
           <Route path="/my-pocket" element={<MyPocketPage />} />
           <Route path="/wallet" element={<MyPocketPage />} />
-          <Route path="/profile" element={<ProfilePage userRole={userRole} onLogout={handleLogout} />} />
+          <Route path="/profile" element={<Navigate to="/my-account" replace />} />
           <Route path="/review/:jobId" element={<ReviewPage />} />
         </Route>
       </Routes>
