@@ -774,17 +774,23 @@ export default function MyAccountPage() {
                         <p className="text-gray-600 font-semibold">Mobile</p>
                         <p className="text-gray-800">{profileData.mobile || 'Not set'}</p>
                       </div>
-                      {user?.chasCardColor && user.chasCardColor !== 'none' && (
-                        <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                          <p className="text-gray-600 font-semibold text-xs mb-1">CHAS Card</p>
-                          <p className="text-sm">
-                            <span className={`font-bold ${user.chasCardColor === 'blue' ? 'text-blue-600' : 'text-green-600'}`}>
-                              {user.chasCardColor.toUpperCase()}
-                            </span>
-                            {' '} - {user.chasSubsidyPercentage}% Subsidy
-                          </p>
-                        </div>
-                      )}
+                      {(() => {
+                        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                        if (storedUser?.chasCardColor && storedUser.chasCardColor !== 'none') {
+                          return (
+                            <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                              <p className="text-gray-600 font-semibold text-xs mb-1">CHAS Card</p>
+                              <p className="text-sm">
+                                <span className={`font-bold ${storedUser.chasCardColor === 'blue' ? 'text-blue-600' : 'text-green-600'}`}>
+                                  {storedUser.chasCardColor.toUpperCase()}
+                                </span>
+                                {' '} - {storedUser.chasSubsidyPercentage}% Subsidy
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   )}
                 </div>
