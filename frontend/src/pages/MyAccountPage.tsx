@@ -31,7 +31,7 @@ interface Rating {
 
 export default function MyAccountPage() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'settings' | null>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'notifications' | 'blocked' | null>('dashboard');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -193,8 +193,8 @@ export default function MyAccountPage() {
         </div>
 
         {/* STICKY TABS - Below banner */}
-        <div className="sticky top-20 z-40 bg-white border-b-2 border-gray-200 mb-4 -mx-4 px-4 py-2">
-          <div className="flex gap-4">
+        <div className="sticky top-20 z-40 bg-white border-b-2 border-gray-200 mb-4 -mx-4 px-4 py-2 overflow-x-auto">
+          <div className="flex gap-4 whitespace-nowrap">
             <button
               onClick={() => setActiveSection('dashboard')}
               className={`pb-2 font-bold text-sm transition ${
@@ -214,6 +214,18 @@ export default function MyAccountPage() {
               }`}
             >
               👤 My Profile
+            </button>
+            <button
+              onClick={() => navigate('/notification-preferences')}
+              className="pb-2 font-bold text-sm transition text-gray-600 hover:text-gray-800 border-b-4 border-transparent"
+            >
+              🔔 Notifications
+            </button>
+            <button
+              onClick={() => navigate('/block-list')}
+              className="pb-2 font-bold text-sm transition text-gray-600 hover:text-gray-800 border-b-4 border-transparent"
+            >
+              🚫 Blocked
             </button>
           </div>
         </div>
@@ -443,46 +455,15 @@ export default function MyAccountPage() {
               </div>
         )}
 
-        {/* SETTINGS SECTION */}
-        {activeSection === 'settings' && (
-          <div className="bg-white rounded shadow p-4">
-            <h3 className="text-sm font-bold text-errandify-brown mb-3">⚙️ Settings</h3>
-            {profileData.userId && (
-              <div className="mb-3 bg-amber-50 border border-amber-200 rounded p-2">
-                <p className="text-xs text-gray-600 font-semibold">User ID</p>
-                <code className="text-xs font-mono">{profileData.userId}</code>
-                <button
-                  onClick={() => navigator.clipboard.writeText(profileData.userId || '')}
-                  className="text-xs text-errandify-orange font-semibold ml-2"
-                >
-                  Copy
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* BOTTOM QUICK LINKS - ONLY SHOW ON DASHBOARD */}
         {activeSection === 'dashboard' && (
           <div className="mt-4 pt-4 border-t-2 border-gray-200">
             <div className="flex gap-1 overflow-x-auto pb-2 flex-wrap">
               <button
-                onClick={() => setActiveSection('profile')}
-                className="px-3 py-1.5 rounded text-xs font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200"
-              >
-                👤 My Profile
-              </button>
-              <button
                 onClick={() => navigate('/notification-preferences')}
                 className="px-3 py-1.5 rounded text-xs font-semibold bg-purple-100 text-purple-700 hover:bg-purple-200"
               >
                 🔔 Notifications
-              </button>
-              <button
-                onClick={() => navigate('/my-kampung')}
-                className="px-3 py-1.5 rounded text-xs font-semibold bg-green-100 text-green-700 hover:bg-green-200"
-              >
-                🏘️ Kampung
               </button>
               <button
                 onClick={() => navigate('/my-pocket')}
