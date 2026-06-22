@@ -20,6 +20,7 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'account' | 'community' | 'wallet' | 'rewards' | 'security' | 'help'>('account');
 
   useEffect(() => {
     fetchUserProfile();
@@ -50,33 +51,54 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
     }
   };
 
-  const menuItems = [
-    { icon: '👁️', label: 'View Profile', onClick: () => navigate('/my-profile'), color: 'from-amber-100 to-amber-50' },
-    { icon: '✏️', label: 'Edit Profile', onClick: () => navigate('/edit-profile'), color: 'from-orange-100 to-orange-50' },
-    { icon: '🎁', label: 'Referral', onClick: () => navigate('/referral'), color: 'from-rose-100 to-rose-50' },
-    { icon: '🎯', label: 'Skills', onClick: () => navigate('/category-preferences'), color: 'from-red-100 to-red-50' },
-    { icon: '❤️', label: 'Trusted', onClick: () => navigate('/trusted-users'), color: 'from-rose-100 to-rose-50' },
-    { icon: '🚫', label: 'Blocked', onClick: () => navigate('/block-list'), color: 'from-orange-100 to-orange-50' },
-    { icon: '🏦', label: 'Payout', onClick: () => navigate('/payout-settings'), color: 'from-amber-100 to-amber-50' },
-    { icon: '📊', label: 'History', onClick: () => navigate('/transaction-history'), color: 'from-yellow-100 to-yellow-50' },
-    { icon: '🔔', label: 'Notifications', onClick: () => navigate('/settings/notifications'), color: 'from-yellow-100 to-yellow-50' },
-    { icon: '🌍', label: 'Language', onClick: () => navigate('/settings/language'), color: 'from-green-100 to-green-50' },
-    { icon: '🔐', label: 'Password', onClick: () => navigate('/settings/change-password'), color: 'from-red-100 to-red-50' },
-    { icon: '🛡️', label: '2FA', onClick: () => navigate('/settings/2fa'), color: 'from-green-100 to-green-50' },
-    { icon: '⭐', label: 'Points', onClick: () => navigate('/errandify-points'), color: 'from-orange-400 to-amber-400 text-white' },
-    { icon: '💎', label: 'Redeem', onClick: () => navigate('/my-rewards'), color: 'from-rose-400 to-orange-400 text-white' },
-    { icon: '📈', label: 'Pts History', onClick: () => navigate('/points-history'), color: 'from-amber-100 to-amber-50' },
-    { icon: '🎯', label: 'How It Works', onClick: () => navigate('/how-it-works'), color: 'from-orange-100 to-orange-50' },
-    { icon: '🏘️', label: 'About', onClick: () => navigate('/about'), color: 'from-amber-100 to-amber-50' },
-    { icon: '❓', label: 'FAQ', onClick: () => navigate('/faq'), color: 'from-rose-100 to-rose-50' },
+  const tabs = [
+    { id: 'account' as const, label: '👤 Account', icon: '👤' },
+    { id: 'community' as const, label: '🤝 Community', icon: '🤝' },
+    { id: 'wallet' as const, label: '💳 Wallet', icon: '💳' },
+    { id: 'rewards' as const, label: '🎁 Rewards', icon: '🎁' },
+    { id: 'security' as const, label: '🔒 Security', icon: '🔒' },
+    { id: 'help' as const, label: 'ℹ️ Help', icon: 'ℹ️' },
   ];
+
+  const menuByTab = {
+    account: [
+      { icon: '👁️', label: 'View Profile', onClick: () => navigate('/my-profile') },
+      { icon: '✏️', label: 'Edit Profile', onClick: () => navigate('/edit-profile') },
+      { icon: '🎁', label: 'Referral Program', onClick: () => navigate('/referral') },
+      { icon: '🎯', label: 'Skills & Categories', onClick: () => navigate('/category-preferences') },
+    ],
+    community: [
+      { icon: '❤️', label: 'Trusted Users', onClick: () => navigate('/trusted-users') },
+      { icon: '🚫', label: 'Blocked Users', onClick: () => navigate('/block-list') },
+    ],
+    wallet: [
+      { icon: '🏦', label: 'Payout Settings', onClick: () => navigate('/payout-settings') },
+      { icon: '📊', label: 'Transaction History', onClick: () => navigate('/transaction-history') },
+    ],
+    rewards: [
+      { icon: '⭐', label: 'Errandify Points', onClick: () => navigate('/errandify-points') },
+      { icon: '💎', label: 'Redeem Rewards', onClick: () => navigate('/my-rewards') },
+      { icon: '📈', label: 'Points History', onClick: () => navigate('/points-history') },
+    ],
+    security: [
+      { icon: '🔔', label: 'Notifications', onClick: () => navigate('/settings/notifications') },
+      { icon: '🌍', label: 'Language & Region', onClick: () => navigate('/settings/language') },
+      { icon: '🔐', label: 'Change Password', onClick: () => navigate('/settings/change-password') },
+      { icon: '🛡️', label: 'Two-Factor Auth', onClick: () => navigate('/settings/2fa') },
+    ],
+    help: [
+      { icon: '🎯', label: 'How It Works', onClick: () => navigate('/how-it-works') },
+      { icon: '🏘️', label: 'About Errandify', onClick: () => navigate('/about') },
+      { icon: '❓', label: 'FAQ', onClick: () => navigate('/faq') },
+    ],
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 pb-20">
       {/* HEADER */}
       {!loading && userProfile && (
         <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white p-4 shadow-md">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               {userProfile.profileImage ? (
                 <img
@@ -106,36 +128,57 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
         </div>
       )}
 
-      {/* MENU GRID - COMPACT */}
-      <div className="max-w-6xl mx-auto px-2 py-2">
-        <div className="grid grid-cols-4 gap-1.5 md:grid-cols-5 lg:grid-cols-6">
-          {menuItems.map((item, idx) => (
+      {/* TAB NAVIGATION */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+        <div className="max-w-5xl mx-auto px-2 flex overflow-x-auto gap-1">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3 py-3 text-sm font-bold whitespace-nowrap transition ${
+                activeTab === tab.id
+                  ? 'border-b-4 border-orange-500 text-orange-600'
+                  : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* CONTENT */}
+      <div className="max-w-5xl mx-auto px-3 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {menuByTab[activeTab].map((item, idx) => (
             <button
               key={idx}
               onClick={item.onClick}
-              className={`bg-gradient-to-br ${item.color} rounded p-2 hover:shadow-md transition text-center`}
+              className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-400 hover:shadow-md hover:border-orange-500 transition text-left"
             >
-              <p className="text-xl mb-0.5">{item.icon}</p>
-              <p className="text-xs font-bold text-gray-800 line-clamp-2">{item.label}</p>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{item.icon}</span>
+                <span className="font-bold text-gray-800">{item.label}</span>
+              </div>
             </button>
           ))}
         </div>
 
         {/* ACTION BUTTONS */}
-        <div className="grid grid-cols-2 gap-1.5 mt-2">
+        <div className="grid grid-cols-2 gap-3 mt-6">
           <button
             onClick={() => {
               if (window.confirm('Are you sure you want to delete your account?')) {
                 navigate('/delete-account');
               }
             }}
-            className="bg-white border-2 border-red-300 text-red-600 py-1.5 rounded text-xs font-bold hover:bg-red-50 transition"
+            className="bg-white border-2 border-red-300 text-red-600 py-2 rounded-lg text-sm font-bold hover:bg-red-50 transition"
           >
-            🗑️ Delete
+            🗑️ Delete Account
           </button>
           <button
             onClick={handleLogout}
-            className="bg-gradient-to-r from-orange-500 to-rose-500 text-white py-1.5 rounded text-xs font-bold hover:shadow-md transition"
+            className="bg-gradient-to-r from-orange-500 to-rose-500 text-white py-2 rounded-lg text-sm font-bold hover:shadow-lg transition"
           >
             🚪 Logout
           </button>
