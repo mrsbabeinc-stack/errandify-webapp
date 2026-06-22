@@ -338,7 +338,7 @@ export default function MyAccountPage() {
                 className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
                 <p className="text-lg mb-0">❓</p>
-                <p className="font-bold text-xs text-gray-800">Help</p>
+                <p className="font-bold text-xs text-gray-800">FAQ</p>
               </button>
             </div>
           </div>
