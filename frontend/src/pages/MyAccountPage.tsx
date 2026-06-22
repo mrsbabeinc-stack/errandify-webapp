@@ -78,11 +78,15 @@ export default function MyAccountPage() {
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setProfileData(profileRes.data.data);
+
+          // Get CHAS data from stored user info (from login) if available
+          const storedMonthlyIncome = user?.monthlyHouseholdIncome;
+
           setEditForm({
             display_name: profileRes.data.data.name || '',
             email: profileRes.data.data.email || '',
             mobile: profileRes.data.data.mobile || '',
-            monthly_household_income: profileRes.data.data.monthlyHouseholdIncome ? String(profileRes.data.data.monthlyHouseholdIncome) : '',
+            monthly_household_income: storedMonthlyIncome ? String(storedMonthlyIncome) : profileRes.data.data.monthlyHouseholdIncome ? String(profileRes.data.data.monthlyHouseholdIncome) : '',
           });
         } catch (error) {
           console.error('Profile API error:', error);
@@ -799,6 +803,21 @@ export default function MyAccountPage() {
                         <p className="text-gray-600 font-semibold">Mobile</p>
                         <p className="text-gray-800">{profileData.mobile || 'Not set'}</p>
                       </div>
+                      <div>
+                        <p className="text-gray-600 font-semibold">Monthly Household Income</p>
+                        <p className="text-gray-800">${editForm.monthly_household_income || 'Not set'}</p>
+                      </div>
+                      {user?.chasCardColor && user.chasCardColor !== 'none' && (
+                        <div>
+                          <p className="text-gray-600 font-semibold">CHAS Eligibility</p>
+                          <p className="text-gray-800">
+                            <span className={`font-bold ${user.chasCardColor === 'blue' ? 'text-blue-600' : 'text-green-600'}`}>
+                              {user.chasCardColor.toUpperCase()} Card
+                            </span>
+                            {' '} - {user.chasSubsidyPercentage}% Subsidy
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
