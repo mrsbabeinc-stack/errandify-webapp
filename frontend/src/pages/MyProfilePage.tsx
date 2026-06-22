@@ -71,11 +71,15 @@ export default function MyProfilePage() {
         });
 
         // Fetch ratings
-        const ratingsRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/ratings`
-        );
-
-        setRatings(ratingsRes.data.data);
+        try {
+          const ratingsRes = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/ratings`
+          );
+          setRatings(ratingsRes.data.data);
+        } catch (ratingsErr) {
+          console.warn('Could not fetch ratings:', ratingsErr);
+          // Don't block page load if ratings fail - use defaults
+        }
       } catch (err: any) {
         console.error('Profile fetch error:', err);
         setError(err.response?.data?.error || 'Failed to load profile');
