@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import './MyAccountPage.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AdCarousel from '../components/AdCarousel';
@@ -53,6 +54,8 @@ export default function MyAccountPage() {
   const [walletData, setWalletData] = useState<any>({ errandifyPoints: 0 });
   const [showRedeemModal, setShowRedeemModal] = useState(false);
   const [pendingRedeem, setPendingRedeem] = useState<{ rewardId: string; points: number; name: string } | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successReward, setSuccessReward] = useState<{ name: string; points: number } | null>(null);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -369,9 +372,10 @@ export default function MyAccountPage() {
       );
 
       if (response.data.success) {
-        setSuccessMessage(`✅ ${response.data.message}`);
+        // Show success modal
+        setSuccessReward({ name: pendingRedeem.name, points: pendingRedeem.points });
+        setShowSuccessModal(true);
         setShowRedeemModal(false);
-        setPendingRedeem(null);
 
         // Refresh wallet data after redeem
         try {
@@ -385,10 +389,17 @@ export default function MyAccountPage() {
           console.error('Failed to refresh wallet:', walletError);
         }
 
-        setTimeout(() => setSuccessMessage(''), 2000);
+        // Auto-close success modal after 3 seconds
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          setPendingRedeem(null);
+          setSuccessReward(null);
+        }, 3000);
       }
     } catch (error: any) {
       alert(`❌ ${error.response?.data?.error || 'Failed to redeem reward'}`);
+      setShowRedeemModal(false);
+      setPendingRedeem(null);
     }
   };
 
@@ -1848,6 +1859,40 @@ export default function MyAccountPage() {
                   ✕ Not Now
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* SUCCESS CONFIRMATION MODAL */}
+        {showSuccessModal && successReward && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="bg-gradient-to-b from-green-50 to-emerald-50 rounded-lg shadow-2xl max-w-sm w-full p-6 space-y-4 text-center animate-bounce-in">
+              {/* Celebration emoji */}
+              <div className="flex justify-center gap-2 text-5xl mb-4">
+                <span className="animate-bounce" style={{ animationDelay: '0s' }}>🎉</span>
+                <span className="animate-bounce" style={{ animationDelay: '0.1s' }}>✨</span>
+                <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>🎁</span>
+              </div>
+
+              {/* Success message */}
+              <h2 className="text-3xl font-bold text-green-700">🎊 Congratulations! 🎊</h2>
+              <p className="text-lg font-bold text-gray-800">Your reward is ready!</p>
+
+              {/* Reward details */}
+              <div className="bg-white rounded-lg p-4 border-2 border-green-300 space-y-2">
+                <p className="text-sm text-gray-600">You redeemed</p>
+                <p className="text-2xl font-bold text-gray-900">{successReward.name}</p>
+                <p className="text-sm text-green-700 font-semibold">-{successReward.points} EP</p>
+              </div>
+
+              {/* Happy message */}
+              <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg p-3 border-2 border-yellow-300">
+                <p className="font-bold text-orange-900">🌟 Thank you for choosing Errandify!</p>
+                <p className="text-sm text-orange-800 mt-1">Your voucher will be emailed to you shortly. Happy earning! 💪</p>
+              </div>
+
+              {/* Auto-close hint */}
+              <p className="text-xs text-gray-500">This modal will close in 3 seconds...</p>
             </div>
           </div>
         )}
