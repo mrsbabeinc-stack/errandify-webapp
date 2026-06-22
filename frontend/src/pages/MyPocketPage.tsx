@@ -25,6 +25,7 @@ export default function MyPocketPage() {
   const [error, setError] = useState('');
   const [userRole, setUserRole] = useState<'asker' | 'doer' | null>(null);
   const [activeTab, setActiveTab] = useState<'txns' | 'history' | 'payout'>('txns');
+  const [showBankDetails, setShowBankDetails] = useState(false);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -255,7 +256,7 @@ export default function MyPocketPage() {
               </div>
             )}
 
-            {/* Payout Tab - Transactions Only */}
+            {/* Payout Tab */}
             {activeTab === 'payout' && (
               <div className="p-2 space-y-2">
                 <div className="bg-blue-50 border border-blue-200 rounded p-2">
@@ -293,12 +294,40 @@ export default function MyPocketPage() {
                   </div>
                 </div>
 
+                {/* Bank Account Management - Collapsible */}
                 <button
-                  onClick={() => navigate('/payout-settings')}
-                  className="w-full bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600 transition"
+                  onClick={() => setShowBankDetails(!showBankDetails)}
+                  className="w-full bg-white border border-gray-200 rounded p-2 flex items-center justify-between hover:bg-gray-50 transition"
                 >
-                  💳 Manage Bank Account
+                  <span className="text-xs font-bold text-gray-800">💳 Bank Account</span>
+                  <span className="text-lg">{showBankDetails ? '▼' : '▶'}</span>
                 </button>
+
+                {/* Bank Details - Expanded */}
+                {showBankDetails && (
+                  <div className="bg-white border border-gray-200 rounded p-2 space-y-2">
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between items-center pb-1 border-b border-gray-100">
+                        <span className="text-gray-600 font-semibold">Bank</span>
+                        <span className="font-bold text-gray-900">STRIPE TEST BANK</span>
+                      </div>
+
+                      <div className="flex justify-between items-center pb-1 border-b border-gray-100">
+                        <span className="text-gray-600 font-semibold">Account</span>
+                        <span className="font-bold text-gray-900">•••• •••• •••• 3456</span>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 font-semibold">Status</span>
+                        <span className="font-bold text-green-600">✓ Approved</span>
+                      </div>
+                    </div>
+
+                    <button className="w-full bg-errandify-orange text-white py-1.5 rounded font-bold text-xs hover:bg-orange-600 transition">
+                      ✏️ Edit Account
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
