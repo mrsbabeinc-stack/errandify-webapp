@@ -255,7 +255,7 @@ export default function MyAccountPage() {
               </div>
               <div className="bg-white rounded-lg shadow p-3 border-l-4 border-green-500 text-center">
                 <p className="text-xl font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold">✅ Tasks</p>
+                <p className="text-xs text-gray-600 font-semibold">✅ Errands</p>
               </div>
               <div className="bg-white rounded-lg shadow p-3 border-l-4 border-blue-500 text-center">
                 <p className="text-xl font-bold text-errandify-orange">${profileData.totalEarnings || 0}</p>
@@ -263,7 +263,7 @@ export default function MyAccountPage() {
               </div>
               <div className="bg-white rounded-lg shadow p-3 border-l-4 border-purple-500 text-center">
                 <p className="text-xl font-bold text-errandify-orange">{profileData.errandifyPoints || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold">⭐ Points</p>
+                <p className="text-xs text-gray-600 font-semibold">⭐ EP (Points)</p>
               </div>
             </div>
 
@@ -392,7 +392,7 @@ export default function MyAccountPage() {
                   </div>
                   <div className="bg-white rounded-lg shadow p-3 text-center border-l-2 border-orange-400">
                     <p className="text-2xl font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
-                    <p className="text-xs text-gray-600 font-semibold">✅ Tasks</p>
+                    <p className="text-xs text-gray-600 font-semibold">✅ Errands</p>
                   </div>
                 </div>
 
