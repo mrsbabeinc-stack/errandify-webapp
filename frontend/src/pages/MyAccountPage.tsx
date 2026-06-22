@@ -178,12 +178,6 @@ export default function MyAccountPage() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
-
   const handleDeleteAccount = async () => {
     try {
       const token = localStorage.getItem('token');
