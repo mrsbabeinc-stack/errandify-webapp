@@ -216,22 +216,22 @@ export default function MyPocketPage() {
 
         {/* Tabs */}
         <div className="bg-white rounded-lg border border-gray-200 mb-3">
-          <div className="flex text-xs font-semibold border-b border-gray-100 overflow-x-auto">
+          <div className="flex text-xs font-semibold border-b border-gray-100">
             <button
               onClick={() => setActiveTab('txns')}
-              className={`flex-1 p-2 text-center transition whitespace-nowrap ${activeTab === 'txns' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
+              className={`flex-1 p-1.5 text-center transition whitespace-nowrap text-xs ${activeTab === 'txns' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
-              📋 Transactions
+              📋 Txns
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex-1 p-2 text-center transition border-l border-gray-100 whitespace-nowrap ${activeTab === 'history' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
+              className={`flex-1 p-1.5 text-center transition border-l border-gray-100 whitespace-nowrap text-xs ${activeTab === 'history' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
-              ⭐ EP Points
+              ⭐ Points
             </button>
             <button
               onClick={() => setActiveTab('payout')}
-              className={`flex-1 p-2 text-center transition border-l border-gray-100 whitespace-nowrap ${activeTab === 'payout' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
+              className={`flex-1 p-1.5 text-center transition border-l border-gray-100 whitespace-nowrap text-xs ${activeTab === 'payout' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
               💳 Payout
             </button>
