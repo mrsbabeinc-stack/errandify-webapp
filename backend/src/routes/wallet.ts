@@ -9,6 +9,14 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.userId || '0', 10);
 
+    // Get user's errandify points
+    const userResult = await db.query(
+      `SELECT errandify_points FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    const errandifyPoints = userResult.rows[0]?.errandify_points || 0;
+
     // Calculate earnings from completed tasks where user is doer
     const earningsResult = await db.query(
       `SELECT
@@ -53,7 +61,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         totalEarned: earnings.completed_earnings || 0,
         totalSpent: spent.completed_spent || 0,
         pendingPayouts: earnings.pending_earnings || 0,
-        errandifyPoints: 0,
+        errandifyPoints: errandifyPoints,
         transactions: [],
       },
     });
