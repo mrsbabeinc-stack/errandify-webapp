@@ -57,6 +57,8 @@ export default function MyAccountPage() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [storedAlias, setStoredAlias] = useState<string>('');
+  const [storedBio, setStoredBio] = useState<string>('');
 
   // Track unsaved changes
   useEffect(() => {
@@ -71,6 +73,12 @@ export default function MyAccountPage() {
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+        // Load stored alias and bio from localStorage
+        const savedAlias = localStorage.getItem('userAlias') || '';
+        const savedBio = localStorage.getItem('userBio') || '';
+        setStoredAlias(savedAlias);
+        setStoredBio(savedBio);
+
         try {
           const profileRes = await axios.get(
             `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
@@ -82,6 +90,8 @@ export default function MyAccountPage() {
             display_name: profileRes.data.data.name || '',
             email: profileRes.data.data.email || '',
             mobile: profileRes.data.data.mobile || '',
+            alias: savedAlias || '',
+            bio: savedBio || '',
           });
         } catch (error) {
           console.error('Profile API error:', error);
@@ -104,6 +114,8 @@ export default function MyAccountPage() {
             display_name: fallbackProfile.name,
             email: fallbackProfile.email,
             mobile: fallbackProfile.mobile,
+            alias: savedAlias || '',
+            bio: savedBio || '',
           });
         }
 
@@ -182,9 +194,11 @@ export default function MyAccountPage() {
       // For now, store in localStorage if needed
       if (editForm.alias) {
         localStorage.setItem('userAlias', editForm.alias);
+        setStoredAlias(editForm.alias);
       }
       if (editForm.bio) {
         localStorage.setItem('userBio', editForm.bio);
+        setStoredBio(editForm.bio);
       }
 
       // Only call API if there are fields to update
@@ -653,8 +667,8 @@ export default function MyAccountPage() {
                     <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center text-4xl flex-shrink-0">👤</div>
                   )}
                   <div className="flex-1">
-                    <h2 className="text-base font-bold text-errandify-brown">{editForm.alias || profileData.name}</h2>
-                    <p className="text-xs text-gray-600 mt-1">{editForm.bio || 'No bio yet'}</p>
+                    <h2 className="text-base font-bold text-errandify-brown">{storedAlias || editForm.alias || profileData.name}</h2>
+                    <p className="text-xs text-gray-600 mt-1">{storedBio || editForm.bio || 'No bio yet'}</p>
                   </div>
                 </div>
 
@@ -664,7 +678,7 @@ export default function MyAccountPage() {
                   <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Alias:</span>
-                      <span className="font-semibold text-gray-900">{editForm.alias || profileData.name || 'Not set'}</span>
+                      <span className="font-semibold text-gray-900">{storedAlias || editForm.alias || profileData.name || 'Not set'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Gender:</span>
