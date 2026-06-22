@@ -184,35 +184,6 @@ export default function MyAccountPage() {
         </div>
       </div>
 
-      {/* TAB NAVIGATION */}
-      <div className="bg-white border-b border-gray-200 sticky top-20 z-40 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 flex gap-2 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`px-4 py-3 text-sm font-bold whitespace-nowrap transition ${
-              activeTab === 'dashboard'
-                ? 'border-b-4 border-errandify-orange text-errandify-orange'
-                : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
-            }`}
-          >
-            📊 Dashboard
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('profile-shared');
-              setProfileTab('shared');
-            }}
-            className={`px-4 py-3 text-sm font-bold whitespace-nowrap transition ${
-              activeTab === 'profile-shared'
-                ? 'border-b-4 border-errandify-orange text-errandify-orange'
-                : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
-            }`}
-          >
-            👤 My Profile
-          </button>
-        </div>
-      </div>
-
       {/* CONTENT - SIMPLE DASHBOARD ONLY */}
       <div className="max-w-6xl mx-auto px-4 py-6 w-full">
         {!activeSection && (
