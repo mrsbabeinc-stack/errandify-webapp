@@ -226,12 +226,12 @@ export default function MyAccountPage() {
             <div className="relative bg-white rounded shadow p-2 border-l-4 border-errandify-orange overflow-hidden mb-1">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-base font-bold text-errandify-brown truncate">{profileData.name}</h2>
-                  <p className="text-gray-600 text-xs">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
+                  <h2 className="text-base font-bold text-errandify-brown truncate leading-tight">{profileData.name}</h2>
+                  <p className="text-gray-600 text-xs leading-tight">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-lg font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
-                  <p className="text-xs text-gray-600">⭐</p>
+                  <p className="text-lg font-bold text-errandify-orange leading-tight">{ratings.averageRating.toFixed(1)}</p>
+                  <p className="text-xs text-gray-600 leading-tight">⭐</p>
                 </div>
               </div>
               {badges.length > 0 && (
@@ -245,8 +245,8 @@ export default function MyAccountPage() {
               )}
               <div className="mt-0.5">
                 <div className="flex justify-between items-center mb-0.5">
-                  <span className="text-xs font-semibold text-gray-600">Completeness</span>
-                  <span className="text-xs font-bold">{completeness}%</span>
+                  <span className="text-xs font-semibold text-gray-600 leading-tight">Completeness</span>
+                  <span className="text-xs font-bold leading-tight">{completeness}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-0.5">
                   <div
@@ -260,20 +260,20 @@ export default function MyAccountPage() {
             {/* STATS GRID - ULTRA COMPACT */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-1 mb-1">
               <div className="bg-white rounded shadow p-1.5 border-l-4 border-amber-500 text-center">
-                <p className="text-lg font-bold text-errandify-orange">{ratings.reviewCount}</p>
-                <p className="text-xs text-gray-600 font-semibold">👥 Reviews</p>
+                <p className="text-lg font-bold text-errandify-orange leading-tight">{ratings.reviewCount}</p>
+                <p className="text-xs text-gray-600 font-semibold leading-tight">👥 Reviews</p>
               </div>
               <div className="bg-white rounded shadow p-1.5 border-l-4 border-green-500 text-center">
-                <p className="text-lg font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold">✅ Errands</p>
+                <p className="text-lg font-bold text-errandify-orange leading-tight">{profileData.completedTasks || 0}</p>
+                <p className="text-xs text-gray-600 font-semibold leading-tight">✅ Errands</p>
               </div>
               <div className="bg-white rounded shadow p-1.5 border-l-4 border-blue-500 text-center">
-                <p className="text-lg font-bold text-errandify-orange">${profileData.totalEarnings || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold">💰 Earnings</p>
+                <p className="text-lg font-bold text-errandify-orange leading-tight">${profileData.totalEarnings || 0}</p>
+                <p className="text-xs text-gray-600 font-semibold leading-tight">💰 Earnings</p>
               </div>
               <div className="bg-white rounded shadow p-1.5 border-l-4 border-purple-500 text-center">
-                <p className="text-lg font-bold text-errandify-orange">{profileData.errandifyPoints || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold">⭐ EP</p>
+                <p className="text-lg font-bold text-errandify-orange leading-tight">{profileData.errandifyPoints || 0}</p>
+                <p className="text-xs text-gray-600 font-semibold leading-tight">⭐ EP</p>
               </div>
             </div>
 
