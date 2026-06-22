@@ -390,19 +390,19 @@ export default function MyAccountPage() {
                 <div className="grid grid-cols-2 gap-1.5 mb-2">
                   <div className="bg-white rounded shadow p-2 text-center border-l-2 border-orange-400">
                     <p className="text-lg font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
-                    <p className="text-xs text-gray-600 font-semibold">⭐</p>
+                    <p className="text-xs text-gray-600 font-semibold">⭐ Rating</p>
                   </div>
                   <div className="bg-white rounded shadow p-2 text-center border-l-2 border-orange-400">
                     <p className="text-lg font-bold text-errandify-orange">{ratings.reviewCount}</p>
-                    <p className="text-xs text-gray-600 font-semibold">👥</p>
+                    <p className="text-xs text-gray-600 font-semibold">👥 Reviews</p>
                   </div>
                   <div className="bg-white rounded shadow p-2 text-center border-l-2 border-orange-400">
                     <p className="text-lg font-bold text-errandify-orange">{profileData.categories?.length || 0}</p>
-                    <p className="text-xs text-gray-600 font-semibold">🎯</p>
+                    <p className="text-xs text-gray-600 font-semibold">🎯 Skills</p>
                   </div>
                   <div className="bg-white rounded shadow p-2 text-center border-l-2 border-orange-400">
                     <p className="text-lg font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
-                    <p className="text-xs text-gray-600 font-semibold">✅</p>
+                    <p className="text-xs text-gray-600 font-semibold">✅ Errands</p>
                   </div>
                 </div>
 
