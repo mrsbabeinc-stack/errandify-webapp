@@ -56,6 +56,7 @@ export default function MyAccountPage() {
   const [pendingRedeem, setPendingRedeem] = useState<{ rewardId: string; points: number; name: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successReward, setSuccessReward] = useState<{ name: string; points: number } | null>(null);
+  const [pointHistory, setPointHistory] = useState<any[]>([]);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -116,6 +117,18 @@ export default function MyAccountPage() {
           console.log('Wallet data:', walletRes.data.data);
         } catch (walletError) {
           console.error('Wallet fetch error:', walletError);
+        }
+
+        // Fetch point transaction history
+        try {
+          const historyRes = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/point-history`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setPointHistory(historyRes.data.data || []);
+          console.log('Point history:', historyRes.data.data);
+        } catch (historyError) {
+          console.error('Point history fetch error:', historyError);
         }
 
         try {
@@ -387,6 +400,18 @@ export default function MyAccountPage() {
           console.log('Wallet refreshed after redeem:', walletRes.data.data);
         } catch (walletError) {
           console.error('Failed to refresh wallet:', walletError);
+        }
+
+        // Refresh point history after redeem
+        try {
+          const historyRes = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/point-history`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setPointHistory(historyRes.data.data || []);
+          console.log('Point history refreshed after redeem:', historyRes.data.data);
+        } catch (historyError) {
+          console.error('Failed to refresh point history:', historyError);
         }
 
         // Auto-close success modal after 3 seconds
@@ -1518,27 +1543,52 @@ export default function MyAccountPage() {
                       <h3 className="text-sm font-bold">📜✨ Point History ✨</h3>
                     </div>
                     <div className="divide-y divide-amber-100 space-y-2">
-                      <div className="p-3 bg-amber-50 hover:bg-amber-100 transition rounded-lg flex justify-between">
-                        <div>
-                          <p className="font-bold text-gray-900">✅ Errand Completion</p>
-                          <p className="text-gray-500">17-06-2026 10:28 PM</p>
+                      {pointHistory.length === 0 ? (
+                        <div className="text-center py-6 text-gray-500">
+                          <p>No transaction history yet</p>
                         </div>
-                        <p className="font-bold text-green-600">+5 EP</p>
-                      </div>
-                      <div className="p-3 bg-amber-50 hover:bg-amber-100 transition rounded-lg flex justify-between">
-                        <div>
-                          <p className="font-bold text-gray-900">🎁 Point Granted</p>
-                          <p className="text-gray-500">15-06-2026 02:54 PM</p>
-                        </div>
-                        <p className="font-bold text-green-600">+20 EP</p>
-                      </div>
-                      <div className="p-3 bg-amber-50 hover:bg-amber-100 transition rounded-lg flex justify-between">
-                        <div>
-                          <p className="font-bold text-gray-900">👥 Referred Friend @SunnyLove</p>
-                          <p className="text-gray-500">12-06-2026 01:15 PM</p>
-                        </div>
-                        <p className="font-bold text-green-600">+50 EP</p>
-                      </div>
+                      ) : (
+                        pointHistory.map((transaction: any, idx: number) => {
+                          const isDebit = transaction.type === 'redemption' || transaction.type === 'gift' || (transaction.points && transaction.points < 0);
+                          const points = Math.abs(transaction.points || 0);
+                          const date = new Date(transaction.created_at).toLocaleDateString('en-SG', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          });
+
+                          let icon = '📊';
+                          let label = transaction.description || transaction.type;
+
+                          if (transaction.type === 'redemption') {
+                            icon = '🎁';
+                            label = `Redeemed: ${transaction.description}`;
+                          } else if (transaction.type === 'gift') {
+                            icon = '🎀';
+                            label = `Gift to friend`;
+                          } else if (transaction.type === 'earned') {
+                            icon = '✅';
+                            label = `Errand completed`;
+                          } else if (transaction.type === 'referral') {
+                            icon = '👥';
+                            label = `Referral bonus`;
+                          }
+
+                          return (
+                            <div key={idx} className={`p-3 ${isDebit ? 'bg-red-50 hover:bg-red-100' : 'bg-green-50 hover:bg-green-100'} transition rounded-lg flex justify-between`}>
+                              <div>
+                                <p className="font-bold text-gray-900">{icon} {label}</p>
+                                <p className="text-gray-500 text-xs">{date}</p>
+                              </div>
+                              <p className={`font-bold ${isDebit ? 'text-red-600' : 'text-green-600'}`}>
+                                {isDebit ? '-' : '+'}{points} EP
+                              </p>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                 )}
