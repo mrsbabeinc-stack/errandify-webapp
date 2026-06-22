@@ -852,10 +852,17 @@ export default function MyAccountPage() {
                       />
                       <input
                         type="file"
-                        onChange={(e) => setCertificateFile(e.files?.[0] || null)}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          setCertificateFile(file);
+                          console.log('File selected:', file?.name);
+                        }}
                         className="w-full text-xs"
                         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                       />
+                      {certificateFile && (
+                        <p className="text-xs text-green-600 font-semibold">✓ File selected: {certificateFile.name}</p>
+                      )}
                       <button
                         onClick={async () => {
                           if (!certificateTitle) {
@@ -886,9 +893,9 @@ export default function MyAccountPage() {
                           alert('✅ Certificate added successfully!');
                         }}
                         disabled={!certificateTitle || !certificateFile}
-                        className="w-full bg-errandify-orange text-white py-1 rounded font-semibold text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-errandify-orange text-white py-1.5 rounded font-semibold text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-600 disabled:hover:bg-errandify-orange"
                       >
-                        Add
+                        {certificateTitle && certificateFile ? '✅ Add Certificate' : '⊙ Add Certificate'}
                       </button>
                     </div>
                   )}
