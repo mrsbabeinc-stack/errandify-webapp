@@ -251,4 +251,158 @@ router.get('/breakdown', authMiddleware, async (req: AuthRequest, res: Response)
   }
 });
 
+// GET /api/wallet/search-users - Search for users by alias to gift points
+router.get('/search-users', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const { query = '' } = req.query;
+
+    // Search for users by display_name or user_id, exclude current user
+    const result = await db.query(
+      `SELECT id, display_name, user_id
+       FROM users
+       WHERE (display_name ILIKE $1 OR user_id ILIKE $1)
+       AND id != $2
+       LIMIT 10`,
+      [`%${query}%`, userId]
+    );
+
+    res.json({
+      success: true,
+      data: result.rows.map((row) => ({
+        id: row.id,
+        displayName: row.display_name,
+        userId: row.user_id,
+      })),
+    });
+  } catch (error) {
+    console.error('Search users error:', error);
+    res.status(500).json({ error: 'Failed to search users' });
+  }
+});
+
+// POST /api/wallet/gift-points - Send points to another user
+router.post('/gift-points', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const senderId = parseInt(req.userId || '0', 10);
+    const { recipientId, points } = req.body;
+
+    // Validate input
+    if (!recipientId || !points || points <= 0) {
+      return res.status(400).json({ error: 'Invalid recipient or points amount' });
+    }
+
+    const pointsAmount = parseInt(points, 10);
+    if (pointsAmount > 25) {
+      return res.status(400).json({ error: 'Cannot send more than 25 points at a time' });
+    }
+
+    // Get sender's current points (from errandify_points table if it exists, or calculate)
+    const senderResult = await db.query(
+      `SELECT errandify_points FROM users WHERE id = $1`,
+      [senderId]
+    );
+
+    if (senderResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Sender not found' });
+    }
+
+    const senderPoints = senderResult.rows[0].errandify_points || 0;
+    if (senderPoints < pointsAmount) {
+      return res.status(400).json({ error: 'Insufficient points' });
+    }
+
+    // Verify recipient exists
+    const recipientResult = await db.query(
+      `SELECT id FROM users WHERE id = $1`,
+      [recipientId]
+    );
+
+    if (recipientResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Recipient not found' });
+    }
+
+    // Update sender's points (deduct)
+    await db.query(
+      `UPDATE users SET errandify_points = errandify_points - $1 WHERE id = $2`,
+      [pointsAmount, senderId]
+    );
+
+    // Update recipient's points (add)
+    await db.query(
+      `UPDATE users SET errandify_points = errandify_points + $1 WHERE id = $2`,
+      [pointsAmount, recipientId]
+    );
+
+    // Log the transaction
+    await db.query(
+      `INSERT INTO point_transactions (sender_id, recipient_id, points, type, created_at)
+       VALUES ($1, $2, $3, 'gift', NOW())`,
+      [senderId, recipientId, pointsAmount]
+    );
+
+    res.json({
+      success: true,
+      message: `Successfully sent ${pointsAmount} EP to recipient!`,
+      data: {
+        senderPoints: senderPoints - pointsAmount,
+      },
+    });
+  } catch (error) {
+    console.error('Gift points error:', error);
+    res.status(500).json({ error: 'Failed to send points' });
+  }
+});
+
+// POST /api/wallet/redeem - Redeem a reward
+router.post('/redeem', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const { rewardId, points } = req.body;
+
+    if (!rewardId || !points || points <= 0) {
+      return res.status(400).json({ error: 'Invalid reward or points' });
+    }
+
+    // Get user's current points
+    const userResult = await db.query(
+      `SELECT errandify_points FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const currentPoints = userResult.rows[0].errandify_points || 0;
+    if (currentPoints < points) {
+      return res.status(400).json({ error: 'Insufficient points' });
+    }
+
+    // Deduct points
+    await db.query(
+      `UPDATE users SET errandify_points = errandify_points - $1 WHERE id = $2`,
+      [points, userId]
+    );
+
+    // Log redemption
+    await db.query(
+      `INSERT INTO point_transactions (user_id, points, type, description, created_at)
+       VALUES ($1, $2, 'redemption', $3, NOW())`,
+      [userId, -points, `Redeemed reward #${rewardId}`]
+    );
+
+    res.json({
+      success: true,
+      message: 'Reward redeemed successfully!',
+      data: {
+        remainingPoints: currentPoints - points,
+      },
+    });
+  } catch (error) {
+    console.error('Redeem error:', error);
+    res.status(500).json({ error: 'Failed to redeem reward' });
+  }
+});
+
 export default router;

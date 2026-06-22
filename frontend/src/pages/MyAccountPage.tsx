@@ -47,6 +47,9 @@ export default function MyAccountPage() {
   const [selectedVoucherCategory, setSelectedVoucherCategory] = useState('all');
   const [giftPoints, setGiftPoints] = useState('');
   const [selectedRecipient, setSelectedRecipient] = useState('');
+  const [recipientSearch, setRecipientSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -269,6 +272,80 @@ export default function MyAccountPage() {
     } catch (error) {
       console.error('Error deleting account:', error);
       alert('Failed to delete account');
+    }
+  };
+
+  const handleSearchRecipient = async (query: string) => {
+    setRecipientSearch(query);
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/search-users?query=${encodeURIComponent(query)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setSearchResults(response.data.data || []);
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleGiftPoints = async () => {
+    if (!selectedRecipient || !giftPoints) {
+      alert('⚠️ Please select recipient and enter points');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/gift-points`,
+        {
+          recipientId: selectedRecipient,
+          points: parseInt(giftPoints),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        setSuccessMessage(`🎉 ${response.data.message}`);
+        setGiftPoints('');
+        setSelectedRecipient('');
+        setRecipientSearch('');
+        setSearchResults([]);
+        setTimeout(() => setSuccessMessage(''), 2000);
+      }
+    } catch (error: any) {
+      alert(`❌ ${error.response?.data?.error || 'Failed to send points'}`);
+    }
+  };
+
+  const handleRedeemReward = async (rewardId: string, points: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/redeem`,
+        {
+          rewardId,
+          points,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        setSuccessMessage(`✅ ${response.data.message}`);
+        setTimeout(() => setSuccessMessage(''), 2000);
+      }
+    } catch (error: any) {
+      alert(`❌ ${error.response?.data?.error || 'Failed to redeem reward'}`);
     }
   };
 
@@ -1340,14 +1417,24 @@ export default function MyAccountPage() {
                           <p className="font-bold text-gray-900">💰 $5 Discount</p>
                           <p className="text-purple-600 font-bold">⭐ 50 EP</p>
                         </div>
-                        <button className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:shadow-md transform hover:scale-105 transition">✅ Redeem</button>
+                        <button
+                          onClick={() => handleRedeemReward('discount-5', 50)}
+                          className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:shadow-md transform hover:scale-105 transition"
+                        >
+                          ✅ Redeem
+                        </button>
                       </div>
                       <div className="p-3 bg-purple-50 hover:bg-purple-100 transition rounded-lg flex justify-between items-center">
                         <div>
                           <p className="font-bold text-gray-900">💳 $10 Discount</p>
                           <p className="text-purple-600 font-bold">⭐ 100 EP</p>
                         </div>
-                        <button className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:shadow-md transform hover:scale-105 transition">✅ Redeem</button>
+                        <button
+                          onClick={() => handleRedeemReward('discount-10', 100)}
+                          className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:shadow-md transform hover:scale-105 transition"
+                        >
+                          ✅ Redeem
+                        </button>
                       </div>
                       <div className="p-3 bg-gray-50 hover:bg-gray-100 transition rounded-lg flex justify-between items-center">
                         <div>
@@ -1428,8 +1515,11 @@ export default function MyAccountPage() {
                         <p className="font-bold text-pink-600">💰 500 EP</p>
                         <p className="text-xs text-gray-500">No Expiry ♾️</p>
                       </div>
-                      <button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 rounded-lg font-bold text-sm hover:shadow-md transform hover:scale-105 transition mt-2">
-                        🎁 Redeem
+                      <button
+                        onClick={() => handleRedeemReward('starbucks-voucher', 500)}
+                        className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 rounded-lg font-bold text-sm hover:shadow-md transform hover:scale-105 transition mt-2"
+                      >
+                        🎁 Redeem (500 EP)
                       </button>
                     </div>
                   </div>
@@ -1447,6 +1537,7 @@ export default function MyAccountPage() {
                         <input
                           type="number"
                           max="25"
+                          min="1"
                           value={giftPoints}
                           onChange={(e) => setGiftPoints(e.target.value)}
                           className="w-full px-2 py-1.5 border-2 border-rose-300 rounded text-sm focus:border-rose-500 focus:outline-none"
@@ -1454,36 +1545,61 @@ export default function MyAccountPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-gray-700 block mb-1">Select Recipient</label>
+                        <label className="text-xs font-bold text-gray-700 block mb-1">Search Recipient by Name or ID</label>
                         <input
                           type="text"
-                          placeholder="Search user by alias..."
+                          value={recipientSearch}
+                          onChange={(e) => handleSearchRecipient(e.target.value)}
                           className="w-full px-2 py-1.5 border-2 border-rose-300 rounded text-sm focus:border-rose-500 focus:outline-none"
+                          placeholder="Type to search..."
                         />
-                        <div className="mt-2 space-y-1 max-h-24 overflow-y-auto bg-white border border-rose-200 rounded p-2">
-                          {['USER0000089', 'USER0000109', 'USER0000084', 'USER0000071'].map((user) => (
-                            <button
-                              key={user}
-                              onClick={() => setSelectedRecipient(user)}
-                              className={`w-full text-left px-2 py-1 rounded text-xs font-bold transition ${
-                                selectedRecipient === user
-                                  ? 'bg-rose-500 text-white'
-                                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                              }`}
-                            >
-                              👤 {user}
-                            </button>
-                          ))}
-                        </div>
+                        {searching && <p className="text-xs text-gray-500 mt-1">🔍 Searching...</p>}
+                        {searchResults.length > 0 && (
+                          <div className="mt-2 space-y-1 max-h-28 overflow-y-auto bg-white border border-rose-200 rounded p-2">
+                            {searchResults.map((user) => (
+                              <button
+                                key={user.id}
+                                onClick={() => {
+                                  setSelectedRecipient(user.id);
+                                  setRecipientSearch(user.displayName);
+                                  setSearchResults([]);
+                                }}
+                                className={`w-full text-left px-2 py-1.5 rounded text-xs font-bold transition ${
+                                  selectedRecipient === user.id
+                                    ? 'bg-rose-500 text-white'
+                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                }`}
+                              >
+                                👤 {user.displayName} ({user.userId})
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {recipientSearch && searchResults.length === 0 && !searching && (
+                          <p className="text-xs text-gray-500 mt-1">No users found</p>
+                        )}
                       </div>
                       <div className="flex gap-2 pt-2 border-t border-rose-200">
-                        <button className="flex-1 bg-gradient-to-r from-rose-500 to-pink-600 text-white py-2 rounded-lg font-bold text-sm hover:shadow-md transform hover:scale-105 transition">
+                        <button
+                          onClick={handleGiftPoints}
+                          className="flex-1 bg-gradient-to-r from-rose-500 to-pink-600 text-white py-2 rounded-lg font-bold text-sm hover:shadow-md transform hover:scale-105 transition disabled:opacity-50"
+                          disabled={!selectedRecipient || !giftPoints}
+                        >
                           🎀 Send Gift
                         </button>
-                        <button className="flex-1 border-2 border-rose-300 text-rose-600 py-2 rounded-lg font-bold text-sm hover:bg-rose-50 transition">
-                          ✕ Cancel
+                        <button
+                          onClick={() => {
+                            setGiftPoints('');
+                            setSelectedRecipient('');
+                            setRecipientSearch('');
+                            setSearchResults([]);
+                          }}
+                          className="flex-1 border-2 border-rose-300 text-rose-600 py-2 rounded-lg font-bold text-sm hover:bg-rose-50 transition"
+                        >
+                          ✕ Clear
                         </button>
                       </div>
+                      {selectedRecipient && <p className="text-xs text-gray-600 text-center">✅ Recipient selected: {recipientSearch}</p>}
                     </div>
                   </div>
                 )}
