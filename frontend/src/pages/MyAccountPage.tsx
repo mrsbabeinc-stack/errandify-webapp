@@ -223,7 +223,7 @@ export default function MyAccountPage() {
         {activeTab === 'dashboard' && (
           <div className="space-y-8">
             {/* PROFILE HERO CARD - ULTRA COMPACT */}
-            <div className="relative bg-white rounded shadow p-2 border-l-4 border-errandify-orange overflow-hidden mb-1.5">
+            <div className="relative bg-white rounded shadow p-2 border-l-4 border-errandify-orange overflow-hidden mb-1">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <h2 className="text-base font-bold text-errandify-brown truncate">{profileData.name}</h2>
