@@ -709,6 +709,24 @@ export default function MyAccountPage() {
                   <p className="text-xs text-green-800 mt-0.5">Only you see this</p>
                 </div>
 
+                {/* CHAS Card (Top Priority) */}
+                {(() => {
+                  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                  if (storedUser?.chasCardColor && storedUser.chasCardColor !== 'none') {
+                    const bgColor = storedUser.chasCardColor === 'blue' ? 'bg-blue-100' : 'bg-green-100';
+                    const textColor = storedUser.chasCardColor === 'blue' ? 'text-blue-700' : 'text-green-700';
+                    return (
+                      <div className={`rounded shadow p-3 ${bgColor}`}>
+                        <p className="text-xs font-bold text-gray-600 mb-1">CHAS Card</p>
+                        <p className={`text-2xl font-bold ${textColor}`}>
+                          {storedUser.chasCardColor.toUpperCase()}
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
                 {/* Edit Form */}
                 <div className="bg-white rounded shadow p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -774,23 +792,6 @@ export default function MyAccountPage() {
                         <p className="text-gray-600 font-semibold">Mobile</p>
                         <p className="text-gray-800">{profileData.mobile || 'Not set'}</p>
                       </div>
-                      {(() => {
-                        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-                        if (storedUser?.chasCardColor && storedUser.chasCardColor !== 'none') {
-                          return (
-                            <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                              <p className="text-gray-600 font-semibold text-xs mb-1">CHAS Card</p>
-                              <p className="text-sm">
-                                <span className={`font-bold ${storedUser.chasCardColor === 'blue' ? 'text-blue-600' : 'text-green-600'}`}>
-                                  {storedUser.chasCardColor.toUpperCase()}
-                                </span>
-                                {' '} - {storedUser.chasSubsidyPercentage}% Subsidy
-                              </p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
                     </div>
                   )}
                 </div>
