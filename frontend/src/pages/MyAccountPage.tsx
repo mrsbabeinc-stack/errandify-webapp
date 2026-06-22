@@ -540,29 +540,28 @@ export default function MyAccountPage() {
         {activeSection === 'dashboard' && (
           <div className="space-y-1.5">
             {/* DASHBOARD CONTENT */}
-            {/* PROFILE HERO CARD */}
-            <div className="relative bg-white rounded-lg shadow p-3 border-l-4 border-errandify-orange overflow-hidden mb-1.5">
+            {/* PROFILE HERO CARD - HAPPY */}
+            <div className="relative bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 rounded-lg shadow-lg p-3 border-l-4 border-yellow-300 overflow-hidden mb-1.5">
               <div className="flex items-center justify-between gap-3">
                 {/* Profile Photo + Name */}
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   {profileImage ? (
-                    <img src={profileImage} alt="Profile" className="w-12 h-12 rounded-full object-cover border-2 border-errandify-orange flex-shrink-0" />
+                    <img src={profileImage} alt="Profile" className="w-12 h-12 rounded-full object-cover border-4 border-white flex-shrink-0 shadow-md" />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-2xl flex-shrink-0">👤</div>
+                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-2xl flex-shrink-0 shadow-md">👤</div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-base font-bold text-errandify-brown truncate">{storedAlias || profileData.name}</h2>
+                    <h2 className="text-base font-bold text-white truncate drop-shadow">✨ {storedAlias || profileData.name} ✨</h2>
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
-                  <p className="text-xs text-gray-600">⭐</p>
+                <div className="text-right flex-shrink-0 bg-white bg-opacity-20 px-2 py-1 rounded-lg backdrop-blur">
+                  <p className="text-2xl font-bold text-white drop-shadow">⭐ {ratings.averageRating.toFixed(1)}</p>
                 </div>
               </div>
               {badges.length > 0 && (
-                <div className="flex gap-0.5 flex-wrap mt-1">
+                <div className="flex gap-0.5 flex-wrap mt-2">
                   {badges.map((badge, idx) => (
-                    <span key={idx} className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-xs font-bold">
+                    <span key={idx} className="bg-white bg-opacity-30 text-white px-2 py-1 rounded-full text-sm font-bold shadow-md backdrop-blur">
                       {badge.icon}
                     </span>
                   ))}
@@ -668,22 +667,22 @@ export default function MyAccountPage() {
             {/* SHARED INFO */}
             {profileTab === 'shared' && (
               <div className="space-y-2">
-                {/* Profile Photo + Alias Header */}
-                <div className="bg-white rounded border border-gray-200 p-3 flex items-center gap-3">
+                {/* Profile Photo + Alias Header - HAPPY */}
+                <div className="bg-gradient-to-r from-blue-400 to-cyan-400 rounded-lg shadow-md p-4 flex items-center gap-4">
                   {profileImage ? (
-                    <img src={profileImage} alt="Profile" className="w-20 h-20 rounded-full object-cover border-2 border-errandify-orange flex-shrink-0" />
+                    <img src={profileImage} alt="Profile" className="w-20 h-20 rounded-full object-cover border-4 border-white flex-shrink-0 shadow-lg" />
                   ) : (
-                    <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center text-4xl flex-shrink-0">👤</div>
+                    <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center text-4xl flex-shrink-0 shadow-lg">👤</div>
                   )}
                   <div className="flex-1">
-                    <h2 className="text-base font-bold text-errandify-brown">{storedAlias || editForm.alias || profileData.name}</h2>
-                    <p className="text-xs text-gray-600 mt-1">{storedBio || editForm.bio || 'No bio yet'}</p>
+                    <h2 className="text-lg font-bold text-white drop-shadow">💎 {storedAlias || editForm.alias || profileData.name}</h2>
+                    <p className="text-sm text-white mt-1 opacity-90">💭 {storedBio || editForm.bio || 'No bio yet'}</p>
                   </div>
                 </div>
 
                 {/* Personal Information */}
-                <div className="bg-white rounded border border-gray-200 p-2">
-                  <h3 className="text-xs font-bold text-errandify-brown mb-2">✅ Personal Information</h3>
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-green-300 shadow-md p-3">
+                  <h3 className="text-sm font-bold text-green-700 mb-2">👤 Personal Information</h3>
                   <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Alias:</span>
@@ -1267,51 +1266,51 @@ export default function MyAccountPage() {
         {/* MYREWARDSPACE SECTION */}
         {activeSection === 'rewards' && (
           <div className="space-y-2">
-            {/* Errandify Points Card */}
-            <div className="bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-lg p-3">
-              <p className="text-xs opacity-90 mb-1">Available Points</p>
-              <p className="text-3xl font-bold mb-2">25 EP</p>
-              <p className="text-xs opacity-80 bg-orange-700 bg-opacity-50 rounded p-1.5">
-                ⚠️ Expiring Soon: 25 pts will expire on 30/06/2027
+            {/* Errandify Points Card - HAPPY */}
+            <div className="bg-gradient-to-br from-yellow-300 via-amber-300 to-orange-400 text-white rounded-lg shadow-lg p-4">
+              <p className="text-sm opacity-90 mb-1">✨ Available Errandify Points ✨</p>
+              <p className="text-4xl font-bold mb-2">🌟 25 EP 🌟</p>
+              <p className="text-xs bg-orange-500 bg-opacity-60 rounded-lg p-2 backdrop-blur">
+                ⏰ Expiring Soon: 25 pts expire 30/06/2027 - Use them now!
               </p>
             </div>
 
             {/* Redeem & Gift Buttons */}
             <div className="flex gap-2">
-              <button className="flex-1 bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600">
+              <button className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-2.5 rounded-lg font-bold text-xs hover:from-green-600 hover:to-green-700 shadow-md transform hover:scale-105 transition">
                 🎁 Redeem Now
               </button>
-              <button className="flex-1 border-2 border-errandify-orange text-errandify-orange py-2 rounded font-bold text-xs hover:bg-orange-50">
+              <button className="flex-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white py-2.5 rounded-lg font-bold text-xs hover:from-pink-600 hover:to-rose-600 shadow-md transform hover:scale-105 transition">
                 🎀 Send A Gift
               </button>
             </div>
 
             {/* Available Rewards */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="bg-errandify-orange text-white p-2">
-                <h3 className="text-xs font-bold">🎁 MyRewards</h3>
+            <div className="bg-white rounded-lg shadow-lg border-2 border-purple-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-3">
+                <h3 className="text-sm font-bold">🎁✨ MyRewards - Redeem Your Treasures ✨🎁</h3>
               </div>
-              <div className="divide-y divide-gray-100 text-xs">
-                <div className="p-2 flex justify-between items-center hover:bg-gray-50">
+              <div className="divide-y divide-purple-100 text-xs">
+                <div className="p-3 flex justify-between items-center hover:bg-purple-50 transition">
                   <div>
-                    <p className="font-bold text-gray-900">$5 Discount</p>
-                    <p className="text-errandify-orange font-bold">50 EP</p>
+                    <p className="font-bold text-gray-900">💰 $5 Discount</p>
+                    <p className="text-purple-600 font-bold text-sm">⭐ 50 EP</p>
                   </div>
-                  <button className="bg-errandify-orange text-white px-2 py-1 rounded text-xs font-bold">Redeem</button>
+                  <button className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:shadow-md transform hover:scale-105 transition">✅ Redeem</button>
                 </div>
-                <div className="p-2 flex justify-between items-center hover:bg-gray-50">
+                <div className="p-3 flex justify-between items-center hover:bg-purple-50 transition">
                   <div>
-                    <p className="font-bold text-gray-900">$10 Discount</p>
-                    <p className="text-errandify-orange font-bold">100 EP</p>
+                    <p className="font-bold text-gray-900">💳 $10 Discount</p>
+                    <p className="text-purple-600 font-bold text-sm">⭐ 100 EP</p>
                   </div>
-                  <button className="bg-errandify-orange text-white px-2 py-1 rounded text-xs font-bold">Redeem</button>
+                  <button className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:shadow-md transform hover:scale-105 transition">✅ Redeem</button>
                 </div>
-                <div className="p-2 flex justify-between items-center hover:bg-gray-50">
+                <div className="p-3 flex justify-between items-center hover:bg-purple-50 transition">
                   <div>
-                    <p className="font-bold text-gray-900">$20 Discount</p>
-                    <p className="text-errandify-orange font-bold">200 EP</p>
+                    <p className="font-bold text-gray-900">💎 $20 Discount</p>
+                    <p className="text-purple-600 font-bold text-sm">⭐ 200 EP (Need 175 more!)</p>
                   </div>
-                  <button className="bg-gray-300 text-gray-500 px-2 py-1 rounded text-xs font-bold">Need</button>
+                  <button className="bg-gray-300 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold cursor-not-allowed">🔒 Need More</button>
                 </div>
               </div>
             </div>
@@ -1350,13 +1349,14 @@ export default function MyAccountPage() {
 
         {/* BLOCKED SECTION */}
         {activeSection === 'blocked' && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="bg-errandify-orange text-white p-2">
-              <h3 className="text-xs font-bold">🚫 Blocked Users</h3>
+          <div className="bg-white rounded-lg shadow-lg border-2 border-red-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-red-500 to-rose-600 text-white p-3">
+              <h3 className="text-sm font-bold">🚫 Blocked Users - Your Safe Space</h3>
             </div>
-            <div className="text-center text-gray-600 py-6 px-4">
-              <p className="mb-2 text-sm">No blocked users yet</p>
-              <p className="text-xs">Users you block won't be able to contact you or see your profile</p>
+            <div className="text-center text-gray-600 py-8 px-4">
+              <p className="mb-2 text-lg">✨ You're All Clear! ✨</p>
+              <p className="text-sm font-semibold">No blocked users yet</p>
+              <p className="text-xs mt-2 text-gray-500">Users you block won't be able to contact you or see your profile</p>
             </div>
           </div>
         )}
@@ -1364,13 +1364,13 @@ export default function MyAccountPage() {
         {/* NOTIFICATION PREFERENCES SECTION */}
         {activeSection === 'notify' && (
           <div>
-            <div className="bg-white rounded-lg shadow p-4 space-y-3">
-              <h2 className="text-lg font-bold text-errandify-brown mb-4">🔔 Notification Preferences</h2>
+            <div className="bg-white rounded-lg shadow-lg p-4 space-y-3 border-2 border-blue-200">
+              <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-4">🔔✨ Notification Preferences - Stay Connected! ✨🔔</h2>
 
               {/* Critical Section */}
-              <div className="border border-red-200 rounded overflow-hidden">
-                <div className="px-3 py-2 bg-red-500 text-white">
-                  <h3 className="text-xs font-bold">🔴 Critical (Always On)</h3>
+              <div className="border-2 border-red-300 rounded-lg overflow-hidden shadow-md">
+                <div className="px-3 py-2 bg-gradient-to-r from-red-500 to-rose-600 text-white">
+                  <h3 className="text-sm font-bold">🔴 Critical (Always On) - Most Important!</h3>
                 </div>
                 <div className="divide-y divide-gray-100 p-2 space-y-2">
                   <div className="flex justify-between items-center text-xs">
