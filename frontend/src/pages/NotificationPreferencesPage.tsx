@@ -113,22 +113,19 @@ export default function NotificationPreferencesPage() {
     );
   }
 
-  const renderEventToggle = (key: keyof NotificationPreferences, label: string, description: string, isCritical = false) => (
-    <div key={key} className="flex items-center justify-between p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition">
-      <div className="flex-1">
-        <p className="text-sm font-semibold text-gray-800">{label}</p>
-        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
-      </div>
+  const renderEventToggle = (key: keyof NotificationPreferences, label: string, isCritical = false) => (
+    <div key={key} className="flex items-center justify-between px-3 py-1.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition">
+      <p className="text-xs font-semibold text-gray-800">{label}</p>
       <button
         onClick={() => handleToggle(key)}
         disabled={isCritical}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ml-4 ${
+        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
           preferences[key] ? 'bg-green-500' : 'bg-gray-300'
         } ${isCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
       >
         <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-            preferences[key] ? 'translate-x-5' : 'translate-x-0.5'
+          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+            preferences[key] ? 'translate-x-4' : 'translate-x-0.5'
           }`}
         />
       </button>
@@ -136,26 +133,24 @@ export default function NotificationPreferencesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 py-8 px-4 pb-32">
-      <div className="max-w-2xl mx-auto">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-6 text-errandify-orange hover:text-orange-700 font-semibold flex items-center gap-2"
-        >
-          ← Back to Profile
-        </button>
-
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">🔔 Notification Preferences</h1>
-          <p className="text-gray-600">Customize which notifications you want to receive</p>
+    <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-indigo-50 py-4 px-3 pb-32">
+      <div className="max-w-3xl mx-auto">
+        {/* Header - Compact */}
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="text-errandify-orange hover:text-orange-700 font-semibold"
+          >
+            ←
+          </button>
+          <h1 className="text-xl font-bold text-gray-800">🔔 Notification Preferences</h1>
+          <div className="w-6" />
         </div>
 
         {/* Message Alert */}
         {message && (
           <div
-            className={`mb-6 p-4 rounded-lg border ${
+            className={`mb-2 p-2 rounded text-xs font-semibold border ${
               message.type === 'success'
                 ? 'bg-green-50 border-green-200 text-green-800'
                 : 'bg-red-50 border-red-200 text-red-800'
@@ -165,81 +160,62 @@ export default function NotificationPreferencesPage() {
           </div>
         )}
 
-        {/* All Notifications in One Card */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+        {/* All Notifications in Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
           {/* Critical Section */}
-          <div className="border-b-2 border-red-100 bg-red-50/30">
-            <div className="px-6 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <span>🔴</span>
-                <span>Critical Events (Always Enabled)</span>
-              </h2>
-              <p className="text-sm text-red-100 mt-1">Essential notifications that keep your business running</p>
+          <div className="bg-white rounded shadow overflow-hidden border border-red-200">
+            <div className="px-3 py-2 bg-red-500 text-white">
+              <h2 className="text-xs font-bold">🔴 Critical (Always On)</h2>
             </div>
             <div className="divide-y divide-gray-100">
-              {renderEventToggle('bid_accepted', 'Bid Accepted', 'When someone accepts your bid', true)}
-              {renderEventToggle('task_reopened', 'Task Reopened', 'When a task you bid on becomes available again', true)}
-              {renderEventToggle('payment_released', 'Payment Released', 'When payment is released for completed work', true)}
+              {renderEventToggle('bid_accepted', '✓ Bid Accepted', true)}
+              {renderEventToggle('task_reopened', '✓ Task Reopened', true)}
+              {renderEventToggle('payment_released', '✓ Payment Released', true)}
             </div>
           </div>
 
-          {/* Medium Section */}
-          <div className="border-b-2 border-yellow-100 bg-yellow-50/30">
-            <div className="px-6 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <span>🟡</span>
-                <span>Important Events</span>
-              </h2>
-              <p className="text-sm text-yellow-100 mt-1">Keep track of task activity and interactions</p>
+          {/* Important Section */}
+          <div className="bg-white rounded shadow overflow-hidden border border-yellow-200">
+            <div className="px-3 py-2 bg-yellow-500 text-white">
+              <h2 className="text-xs font-bold">🟡 Important</h2>
             </div>
             <div className="divide-y divide-gray-100">
-              {renderEventToggle('new_bid_received', 'New Bid Received', 'When you receive a new bid on your task')}
-              {renderEventToggle('message_received', 'Message Received', 'When someone sends you a message')}
-              {renderEventToggle('task_completed', 'Task Completed', 'When a task you posted is completed')}
-              {renderEventToggle('review_received', 'Review Received', 'When someone leaves you a review or rating')}
-              {renderEventToggle('bid_rejected', 'Bid Rejected', 'When your bid is rejected')}
+              {renderEventToggle('new_bid_received', 'New Bid')}
+              {renderEventToggle('message_received', 'Message')}
+              {renderEventToggle('task_completed', 'Task Done')}
+              {renderEventToggle('review_received', 'Review')}
+              {renderEventToggle('bid_rejected', 'Bid Rejected')}
             </div>
           </div>
 
-          {/* Low Section */}
-          <div className="bg-green-50/30">
-            <div className="px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <span>🟢</span>
-                <span>Optional Notifications</span>
-              </h2>
-              <p className="text-sm text-green-100 mt-1">Nice-to-know updates and community highlights</p>
+          {/* Optional Section */}
+          <div className="bg-white rounded shadow overflow-hidden border border-green-200">
+            <div className="px-3 py-2 bg-green-500 text-white">
+              <h2 className="text-xs font-bold">🟢 Optional</h2>
             </div>
             <div className="divide-y divide-gray-100">
-              {renderEventToggle('profile_viewed', 'Profile Viewed', 'When someone views your profile')}
-              {renderEventToggle('referral_activity', 'Referral Activity', 'Updates about your referrals')}
-              {renderEventToggle('platform_updates', 'Platform Updates', 'News and announcements from Errandify')}
+              {renderEventToggle('profile_viewed', 'Profile Viewed')}
+              {renderEventToggle('referral_activity', 'Referral')}
+              {renderEventToggle('platform_updates', 'Updates')}
             </div>
           </div>
         </div>
 
-        {/* Save Button */}
-        <div className="flex gap-3">
+        {/* Save Button - Compact */}
+        <div className="flex gap-2">
           <button
             onClick={() => navigate(-1)}
-            className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition"
+            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded font-semibold text-sm hover:bg-gray-50 transition"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 px-6 py-4 bg-gradient-to-r from-errandify-orange to-orange-600 text-white rounded-xl font-bold hover:shadow-lg disabled:opacity-50 transition transform hover:scale-105"
+            className="flex-1 px-4 py-2 bg-gradient-to-r from-errandify-orange to-orange-600 text-white rounded font-semibold text-sm hover:shadow-lg disabled:opacity-50 transition"
           >
-            {saving ? '⏳ Saving...' : '💾 Save Preferences'}
+            {saving ? '⏳ Saving...' : '💾 Save'}
           </button>
-        </div>
-
-        {/* Info Footer */}
-        <div className="mt-8 p-4 bg-orange-50 rounded-lg border border-errandify-orange-200">
-          <p className="text-sm text-errandify-orange-900">
-            <strong>💡 Tip:</strong> Critical notifications cannot be disabled because they're essential for managing your tasks and payments. You can customize all other notifications to suit your preferences.
-          </p>
         </div>
       </div>
     </div>
