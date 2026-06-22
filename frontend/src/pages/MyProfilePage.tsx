@@ -191,8 +191,11 @@ export default function MyProfilePage() {
           </button>
         </div>
 
-        {/* Profile Header Card - Enhanced */}
-        <div className="bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg shadow-lg p-6 mb-6 text-white">
+        {/* ===== SHARED INFO TAB (Public) ===== */}
+        {activeTab === 'shared' && (
+          <div>
+            {/* Profile Header Card - What Public Sees */}
+            <div className="bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg shadow-lg p-6 mb-6 text-white">
           <div className="flex gap-4 mb-4">
             <div className="text-6xl drop-shadow-lg">👤</div>
             <div className="flex-1">
@@ -409,9 +412,9 @@ export default function MyProfilePage() {
           </div>
         )}
 
-        {/* Engagement Sections */}
-        <div className="space-y-6">
-          {/* Top Skills Section */}
+            {/* Engagement Sections - SHARED */}
+            <div className="space-y-6">
+              {/* Top Skills Section */}
           {profile.categories.length > 0 && (
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-bold text-errandify-brown mb-4">🎯 Your Skills</h3>
@@ -511,7 +514,134 @@ export default function MyProfilePage() {
               </a>
             </div>
           </div>
-        </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== PRIVATE INFO TAB (Only You) ===== */}
+        {activeTab === 'private' && (
+          <div>
+            <div className="space-y-6">
+              {/* Private: Edit Profile Form */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-errandify-brown">📝 Edit Your Profile</h3>
+                  {!isEditing && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-sm text-errandify-orange font-semibold hover:underline"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+
+                {isEditing ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={editForm.display_name}
+                        onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Mobile</label>
+                      <input
+                        type="text"
+                        value={editForm.mobile}
+                        onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Monthly Household Income</label>
+                      <input
+                        type="number"
+                        value={editForm.monthly_household_income}
+                        onChange={(e) => setEditForm({ ...editForm, monthly_household_income: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveProfile}
+                        disabled={saving}
+                        className="flex-1 bg-errandify-orange text-white py-2 rounded font-semibold text-sm hover:bg-opacity-90 transition disabled:opacity-50"
+                      >
+                        {saving ? 'Saving...' : 'Save Changes'}
+                      </button>
+                      <button
+                        onClick={() => setIsEditing(false)}
+                        className="flex-1 border border-gray-300 text-gray-700 py-2 rounded font-semibold text-sm hover:bg-gray-50 transition"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs text-gray-600 font-semibold">Name</p>
+                      <p className="text-sm text-gray-800">{profile.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-600 font-semibold">Mobile</p>
+                      <p className="text-sm text-gray-800">{profile.mobile || 'Not set'}</p>
+                    </div>
+                    {profile.monthlyHouseholdIncome && (
+                      <div>
+                        <p className="text-xs text-gray-600 font-semibold">Monthly Household Income</p>
+                        <p className="text-sm text-gray-800">${profile.monthlyHouseholdIncome}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Private: User ID & CHAS Card */}
+              <div className="bg-white rounded-lg shadow p-6 space-y-4">
+                {profile.userId && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-600 font-semibold">Your User ID</p>
+                      <code className="text-sm font-mono font-bold text-errandify-brown">{profile.userId}</code>
+                    </div>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(profile.userId || '')}
+                      className="text-xs text-errandify-orange hover:text-orange-600 font-semibold transition px-2 py-1 hover:bg-orange-50 rounded"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                )}
+
+                {profile.chasCardColor && profile.chasCardColor !== 'none' && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold text-white ${
+                      profile.chasCardColor === 'blue' ? 'bg-blue-600' : 'bg-green-600'
+                    }`}>
+                      CHAS {profile.chasCardColor.toUpperCase()} ({profile.chasSubsidyPercentage}% subsidy)
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Private: Certificate Management (Placeholder) */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-bold text-errandify-brown mb-4">📜 Qualifications & Certificates</h3>
+                <p className="text-sm text-gray-600 mb-4">Upload certificates to display on your public profile (titles only)</p>
+                <button className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-errandify-orange hover:bg-orange-50 transition text-center">
+                  <p className="text-2xl mb-2">📄</p>
+                  <p className="text-sm font-semibold text-gray-700">Click to upload certificate</p>
+                  <p className="text-xs text-gray-500">Max 5MB, PNG/JPG/PDF</p>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
