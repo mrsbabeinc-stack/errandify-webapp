@@ -193,55 +193,55 @@ export default function MyAccountPage() {
         </div>
 
         {/* STICKY TABS - Below banner */}
-        <div className="sticky top-20 z-40 bg-white border-b-2 border-gray-200 mb-4 -mx-4 px-4 py-2 overflow-x-auto">
-          <div className="flex gap-4 whitespace-nowrap">
+        <div className="sticky top-20 z-40 bg-white border-b border-gray-200 mb-4 -mx-4 px-3 py-1 overflow-x-auto">
+          <div className="flex gap-2 whitespace-nowrap">
             <button
               onClick={() => setActiveSection('dashboard')}
-              className={`pb-2 font-bold text-sm transition ${
+              className={`px-2 py-1 text-xs font-bold transition rounded ${
                 activeSection === 'dashboard'
-                  ? 'border-b-4 border-errandify-orange text-errandify-orange'
-                  : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+                  ? 'bg-errandify-orange text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >
               📊 Dashboard
             </button>
             <button
               onClick={() => setActiveSection('profile')}
-              className={`pb-2 font-bold text-sm transition ${
+              className={`px-2 py-1 text-xs font-bold transition rounded ${
                 activeSection === 'profile'
-                  ? 'border-b-4 border-errandify-orange text-errandify-orange'
-                  : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+                  ? 'bg-errandify-orange text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >
-              👤 MyAccount
+              👤 Account
             </button>
             <button
               onClick={() => setActiveSection('transactions')}
-              className={`pb-2 font-bold text-sm transition ${
+              className={`px-2 py-1 text-xs font-bold transition rounded ${
                 activeSection === 'transactions'
-                  ? 'border-b-4 border-errandify-orange text-errandify-orange'
-                  : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+                  ? 'bg-errandify-orange text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >
-              📊 MyTransactions
+              📊 Transactions
             </button>
             <button
               onClick={() => navigate('/my-pocket')}
-              className="pb-2 font-bold text-sm transition text-gray-600 hover:text-gray-800 border-b-4 border-transparent"
+              className="px-2 py-1 text-xs font-bold transition rounded text-gray-600 hover:text-gray-800 hover:bg-gray-100"
             >
-              💰 MyPocket
+              💰 Pocket
             </button>
             <button
               onClick={() => navigate('/block-list')}
-              className="pb-2 font-bold text-sm transition text-gray-600 hover:text-gray-800 border-b-4 border-transparent"
+              className="px-2 py-1 text-xs font-bold transition rounded text-gray-600 hover:text-gray-800 hover:bg-gray-100"
             >
               🚫 Blocked
             </button>
             <button
               onClick={() => navigate('/notification-preferences')}
-              className="pb-2 font-bold text-sm transition text-gray-600 hover:text-gray-800 border-b-4 border-transparent"
+              className="px-2 py-1 text-xs font-bold transition rounded text-gray-600 hover:text-gray-800 hover:bg-gray-100"
             >
-              🔔 Notifications
+              🔔 Notify
             </button>
           </div>
         </div>
