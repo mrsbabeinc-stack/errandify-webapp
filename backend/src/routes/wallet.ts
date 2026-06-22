@@ -419,4 +419,39 @@ router.post('/redeem', authMiddleware, async (req: AuthRequest, res: Response) =
   }
 });
 
+// GET /api/wallet/point-history - Get user's point transaction history
+router.get('/point-history', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Fetch all point transactions for this user (ordered by most recent first)
+    const result = await db.query(
+      `SELECT id, sender_id, recipient_id, user_id, points, type, description, created_at
+       FROM point_transactions
+       WHERE user_id = $1 OR sender_id = $1 OR recipient_id = $1
+       ORDER BY created_at DESC
+       LIMIT 50`,
+      [userId]
+    );
+
+    const transactions = result.rows.map((row: any) => ({
+      id: row.id,
+      points: row.points,
+      type: row.type,
+      description: row.description,
+      created_at: row.created_at,
+      senderId: row.sender_id,
+      recipientId: row.recipient_id,
+    }));
+
+    res.json({
+      success: true,
+      data: transactions,
+    });
+  } catch (error: any) {
+    console.error('Point history error:', error);
+    res.status(500).json({ error: 'Failed to fetch point history' });
+  }
+});
+
 export default router;
