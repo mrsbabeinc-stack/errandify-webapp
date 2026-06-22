@@ -37,7 +37,7 @@ export default function MyAccountPage() {
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | null>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [pocketTab, setPocketTab] = useState<'txns' | 'history' | 'payout'>('txns');
-  const [rewardTab, setRewardTab] = useState<'overview' | 'pointHistory' | 'vouchers' | 'gift' | 'myVouchers'>('overview');
+  const [rewardTab, setRewardTab] = useState<'overview' | 'pointHistory' | 'gift' | 'myVouchers'>('overview');
   const [isEditingBankDetails, setIsEditingBankDetails] = useState(false);
   const [bankDetails, setBankDetails] = useState({
     bankName: 'STRIPE TEST BANK',
@@ -1494,12 +1494,6 @@ export default function MyAccountPage() {
                   📜 Point History
                 </button>
                 <button
-                  onClick={() => setRewardTab('vouchers')}
-                  className={`flex-1 p-2 text-center transition border-l border-purple-100 whitespace-nowrap ${rewardTab === 'vouchers' ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' : 'hover:bg-purple-50'}`}
-                >
-                  🎟️ Vouchers
-                </button>
-                <button
                   onClick={() => setRewardTab('gift')}
                   className={`flex-1 p-2 text-center transition border-l border-purple-100 whitespace-nowrap ${rewardTab === 'gift' ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' : 'hover:bg-purple-50'}`}
                 >
@@ -1515,12 +1509,31 @@ export default function MyAccountPage() {
 
               {/* TAB CONTENT */}
               <div className="p-3 text-xs">
-                {/* OVERVIEW TAB */}
+                {/* OVERVIEW TAB - Browse & Redeem Rewards */}
                 {rewardTab === 'overview' && (
                   <div className="space-y-2">
                     <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-3 rounded-lg shadow-md">
                       <h3 className="text-sm font-bold">🎁✨ MyRewards - Redeem Your Treasures ✨🎁</h3>
                     </div>
+
+                    {/* Category Filter */}
+                    <div className="flex gap-1 mb-2 overflow-x-auto">
+                      {['All', 'Discount', 'Voucher', 'Services'].map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => setSelectedVoucherCategory(cat.toLowerCase())}
+                          className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition ${
+                            selectedVoucherCategory === cat.toLowerCase()
+                              ? 'bg-purple-500 text-white'
+                              : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Rewards List */}
                     <div className="divide-y divide-purple-100 space-y-2">
                       <div className="p-3 bg-purple-50 hover:bg-purple-100 transition rounded-lg flex justify-between items-center">
                         <div>
@@ -1551,6 +1564,23 @@ export default function MyAccountPage() {
                             (walletData.errandifyPoints || 0) < 100
                               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                               : 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white hover:shadow-md hover:scale-105'
+                          }`}
+                        >
+                          ✅ Redeem
+                        </button>
+                      </div>
+                      <div className="p-3 bg-purple-50 hover:bg-purple-100 transition rounded-lg flex justify-between items-center">
+                        <div>
+                          <p className="font-bold text-gray-900">☕ Starbucks Voucher</p>
+                          <p className="text-purple-600 font-bold">⭐ 500 EP</p>
+                        </div>
+                        <button
+                          onClick={() => handleRedeemReward('starbucks-voucher', 500, 'Starbucks Voucher')}
+                          disabled={(walletData.errandifyPoints || 0) < 500}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transform transition ${
+                            (walletData.errandifyPoints || 0) < 500
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-md hover:scale-105'
                           }`}
                         >
                           ✅ Redeem
@@ -1620,57 +1650,6 @@ export default function MyAccountPage() {
                           );
                         })
                       )}
-                    </div>
-                  </div>
-                )}
-
-                {/* VOUCHERS TAB */}
-                {rewardTab === 'vouchers' && (
-                  <div className="space-y-2">
-                    <div className="bg-gradient-to-r from-pink-500 to-rose-600 text-white p-3 rounded-lg shadow-md">
-                      <h3 className="text-sm font-bold">🎟️✨ Kampung Vouchers (1) ✨</h3>
-                    </div>
-                    <div className="flex gap-1 mb-2 overflow-x-auto">
-                      {['All', 'Food', 'Shop', 'Services', 'Travel'].map((cat) => (
-                        <button
-                          key={cat}
-                          onClick={() => setSelectedVoucherCategory(cat.toLowerCase())}
-                          className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition ${
-                            selectedVoucherCategory === cat.toLowerCase()
-                              ? 'bg-pink-500 text-white'
-                              : 'bg-pink-100 text-pink-700 hover:bg-pink-200'
-                          }`}
-                        >
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="p-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg shadow-md mb-2">
-                      <p className="font-bold text-sm">🍷 Errandify Voucher</p>
-                    </div>
-                    <div className="p-3 bg-pink-50 hover:bg-pink-100 transition rounded-lg space-y-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-bold text-gray-900">☕ Starbucks</p>
-                          <p className="text-gray-600 text-xs">Food</p>
-                        </div>
-                        <p className="text-xs text-gray-500">x1</p>
-                      </div>
-                      <div className="flex justify-between items-center pt-2 border-t border-pink-200">
-                        <p className="font-bold text-pink-600">💰 500 EP</p>
-                        <p className="text-xs text-gray-500">No Expiry ♾️</p>
-                      </div>
-                      <button
-                        onClick={() => handleRedeemReward('starbucks-voucher', 500, 'Starbucks Voucher')}
-                        disabled={(walletData.errandifyPoints || 0) < 500}
-                        className={`w-full py-2 rounded-lg font-bold text-sm transform transition mt-2 ${
-                          (walletData.errandifyPoints || 0) < 500
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-md hover:scale-105'
-                        }`}
-                      >
-                        🎁 Redeem (500 EP)
-                      </button>
                     </div>
                   </div>
                 )}
