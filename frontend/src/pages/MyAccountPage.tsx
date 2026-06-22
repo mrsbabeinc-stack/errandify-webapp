@@ -33,7 +33,7 @@ interface Rating {
 
 export default function MyAccountPage() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | null>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | null>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
@@ -404,26 +404,42 @@ export default function MyAccountPage() {
               👤 MyProfile
             </button>
             <button
-              onClick={() => navigate('/my-pocket')}
-              className="px-2 py-1 text-xs font-bold transition rounded text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+              onClick={() => setActiveSection('pocket')}
+              className={`px-2 py-1 text-xs font-bold transition rounded ${
+                activeSection === 'pocket'
+                  ? 'bg-errandify-orange text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
             >
               💰 MyPocket
             </button>
             <button
-              onClick={() => navigate('/my-rewards')}
-              className="px-2 py-1 text-xs font-bold transition rounded text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+              onClick={() => setActiveSection('rewards')}
+              className={`px-2 py-1 text-xs font-bold transition rounded ${
+                activeSection === 'rewards'
+                  ? 'bg-errandify-orange text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
             >
               💎 MyRewardSpace
             </button>
             <button
-              onClick={() => navigate('/block-list')}
-              className="px-2 py-1 text-xs font-bold transition rounded text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+              onClick={() => setActiveSection('blocked')}
+              className={`px-2 py-1 text-xs font-bold transition rounded ${
+                activeSection === 'blocked'
+                  ? 'bg-errandify-orange text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
             >
               🚫 Blocked
             </button>
             <button
-              onClick={() => navigate('/notification-preferences')}
-              className="px-2 py-1 text-xs font-bold transition rounded text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+              onClick={() => setActiveSection('notify')}
+              className={`px-2 py-1 text-xs font-bold transition rounded ${
+                activeSection === 'notify'
+                  ? 'bg-errandify-orange text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
             >
               🔔 Notify
             </button>
@@ -847,6 +863,119 @@ export default function MyAccountPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* MYPOCKET SECTION */}
+        {activeSection === 'pocket' && (
+          <div>
+            {/* Import MyPocketPage content here - for now show placeholder */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <h2 className="text-lg font-bold text-errandify-brown mb-4">💰 MyPocket</h2>
+              <div className="text-center text-gray-600 py-6">
+                <p className="mb-2">Loading MyPocket content...</p>
+                <p className="text-xs">This tab integrates wallet, transactions, and payout info</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MYREWARDSPACE SECTION */}
+        {activeSection === 'rewards' && (
+          <div>
+            {/* Import MyRewardSpace content here - for now show placeholder */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <h2 className="text-lg font-bold text-errandify-brown mb-4">💎 MyRewardSpace</h2>
+              <div className="text-center text-gray-600 py-6">
+                <p className="mb-2">Loading MyRewardSpace content...</p>
+                <p className="text-xs">This tab shows points, rewards, history, and vouchers</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BLOCKED SECTION */}
+        {activeSection === 'blocked' && (
+          <div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <h2 className="text-lg font-bold text-errandify-brown mb-4">🚫 Blocked Users</h2>
+              <div className="text-center text-gray-600 py-6">
+                <p className="mb-2">No blocked users yet</p>
+                <p className="text-xs">Users you block won't be able to contact you or see your profile</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NOTIFICATION PREFERENCES SECTION */}
+        {activeSection === 'notify' && (
+          <div>
+            <div className="bg-white rounded-lg shadow p-4 space-y-3">
+              <h2 className="text-lg font-bold text-errandify-brown mb-4">🔔 Notification Preferences</h2>
+
+              {/* Critical Section */}
+              <div className="border border-red-200 rounded overflow-hidden">
+                <div className="px-3 py-2 bg-red-500 text-white">
+                  <h3 className="text-xs font-bold">🔴 Critical (Always On)</h3>
+                </div>
+                <div className="divide-y divide-gray-100 p-2 space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span>✓ Offer Confirmed</span>
+                    <span className="bg-green-500 text-white px-2 py-1 rounded text-xs">ON</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span>✓ Errand Reopened</span>
+                    <span className="bg-green-500 text-white px-2 py-1 rounded text-xs">ON</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span>✓ Payment Released</span>
+                    <span className="bg-green-500 text-white px-2 py-1 rounded text-xs">ON</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Important Section */}
+              <div className="border border-yellow-200 rounded overflow-hidden">
+                <div className="px-3 py-2 bg-yellow-500 text-white">
+                  <h3 className="text-xs font-bold">🟡 Important</h3>
+                </div>
+                <div className="divide-y divide-gray-100 p-2 space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span>New Offer</span>
+                    <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs">Toggle</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span>Message Received</span>
+                    <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs">Toggle</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span>Errand Done</span>
+                    <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs">Toggle</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Optional Section */}
+              <div className="border border-green-200 rounded overflow-hidden">
+                <div className="px-3 py-2 bg-green-500 text-white">
+                  <h3 className="text-xs font-bold">🟢 Optional</h3>
+                </div>
+                <div className="divide-y divide-gray-100 p-2 space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span>Profile Viewed</span>
+                    <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs">Toggle</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span>Referral Activity</span>
+                    <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs">Toggle</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span>Platform Updates</span>
+                    <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs">Toggle</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
