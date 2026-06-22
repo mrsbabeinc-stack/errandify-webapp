@@ -154,24 +154,38 @@ export default function MyAccountPage() {
       }
 
       const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user?.id;
+
+      console.log('User ID:', userId);
+      console.log('Token exists:', !!token);
 
       if (!token) {
         alert('❌ No authentication token found. Please log in again.');
         return;
       }
 
+      if (!userId) {
+        alert('❌ User ID not found. Please log in again.');
+        return;
+      }
+
       // Only send fields that backend accepts
       const updateData: any = {};
 
-      if (editForm.mobile) {
+      // Only include mobile if it's different from current
+      if (editForm.mobile && editForm.mobile !== profileData?.mobile) {
         updateData.mobile = editForm.mobile;
       }
-      if (editForm.monthly_household_income) {
+
+      // Note: monthly_household_income is optional and may cause DB errors
+      // Only send if explicitly provided and not empty
+      if (editForm.monthly_household_income && editForm.monthly_household_income !== '') {
         // Convert to number if it's a string
         const income = typeof editForm.monthly_household_income === 'string'
           ? parseInt(editForm.monthly_household_income, 10)
           : editForm.monthly_household_income;
-        if (!isNaN(income)) {
+        if (!isNaN(income) && income > 0) {
           updateData.monthly_household_income = income;
         }
       }
@@ -214,6 +228,9 @@ export default function MyAccountPage() {
       alert('✅ Profile saved successfully!');
     } catch (error: any) {
       console.error('Error saving profile:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Update data being sent:', updateData);
       const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to save profile';
       alert(`❌ ${errorMsg}`);
     } finally {
