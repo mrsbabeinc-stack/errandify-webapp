@@ -77,9 +77,11 @@ export default function MyAccountPage() {
         const savedAlias = localStorage.getItem('userAlias') || '';
         const savedBio = localStorage.getItem('userBio') || '';
         const savedProfileImage = localStorage.getItem('userProfileImage');
+        console.log('Loading from localStorage - Profile Image size:', savedProfileImage ? savedProfileImage.length : 0);
         setStoredAlias(savedAlias);
         setStoredBio(savedBio);
         if (savedProfileImage) {
+          console.log('Setting profile image from localStorage');
           setProfileImage(savedProfileImage);
         }
 
@@ -317,7 +319,13 @@ export default function MyAccountPage() {
           if (!qwenApiKey) {
             console.warn('Qwen API key not configured - accepting image without moderation');
             setProfileImage(base64Image);
-            localStorage.setItem('userProfileImage', base64Image);
+            try {
+              localStorage.setItem('userProfileImage', base64Image);
+              console.log('Profile image saved to localStorage, size:', base64Image.length);
+            } catch (e) {
+              console.error('Failed to save profile image to localStorage:', e);
+              alert('⚠️ Profile image too large to save. Storing in memory only.');
+            }
             return;
           }
 
@@ -357,7 +365,13 @@ export default function MyAccountPage() {
 
           if (result && result.includes('APPROVED')) {
             setProfileImage(base64Image);
-            localStorage.setItem('userProfileImage', base64Image);
+            try {
+              localStorage.setItem('userProfileImage', base64Image);
+              console.log('Profile image saved to localStorage, size:', base64Image.length);
+            } catch (e) {
+              console.error('Failed to save profile image to localStorage:', e);
+              alert('⚠️ Profile image too large to save. Storing in memory only.');
+            }
           } else {
             const reason = result?.replace('REJECTED: ', '') || 'Image does not meet community standards';
             alert(`❌ Photo rejected: ${reason}`);
