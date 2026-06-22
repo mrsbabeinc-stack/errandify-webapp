@@ -52,11 +52,11 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
   };
 
   const tabs = [
-    { id: 'account' as const, label: '👤 Account', icon: '👤' },
+    { id: 'account' as const, label: '👤 MyAccount', icon: '👤' },
+    { id: 'preferences' as const, label: '⚙️ Preferences', icon: '⚙️' },
     { id: 'community' as const, label: '🤝 Community', icon: '🤝' },
-    { id: 'wallet' as const, label: '💳 Wallet', icon: '💳' },
+    { id: 'wallet' as const, label: '💼 MyPocket', icon: '💼' },
     { id: 'rewards' as const, label: '🎁 Rewards', icon: '🎁' },
-    { id: 'security' as const, label: '🔒 Security', icon: '🔒' },
     { id: 'help' as const, label: 'ℹ️ Help', icon: 'ℹ️' },
   ];
 
@@ -64,32 +64,32 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
     account: [
       { icon: '👁️', label: 'View Profile', onClick: () => navigate('/my-profile') },
       { icon: '✏️', label: 'Edit Profile', onClick: () => navigate('/edit-profile') },
-      { icon: '🎁', label: 'Referral Program', onClick: () => navigate('/referral') },
-      { icon: '🎯', label: 'Skills & Categories', onClick: () => navigate('/category-preferences') },
+      { icon: '🔗', label: 'Referral', onClick: () => navigate('/referral') },
+    ],
+    preferences: [
+      { icon: '🎯', label: 'Categories', onClick: () => navigate('/category-preferences') },
+      { icon: '🔔', label: 'Notifications', onClick: () => navigate('/settings/notifications') },
+      { icon: '🌍', label: 'Language', onClick: () => navigate('/settings/language') },
     ],
     community: [
       { icon: '❤️', label: 'Trusted Users', onClick: () => navigate('/trusted-users') },
-      { icon: '🚫', label: 'Blocked Users', onClick: () => navigate('/block-list') },
+      { icon: '🚫', label: 'Block List', onClick: () => navigate('/block-list') },
     ],
     wallet: [
-      { icon: '🏦', label: 'Payout Settings', onClick: () => navigate('/payout-settings') },
-      { icon: '📊', label: 'Transaction History', onClick: () => navigate('/transaction-history') },
+      { icon: '💳', label: 'Payout', onClick: () => navigate('/payout-settings') },
+      { icon: '📊', label: 'Txn History', onClick: () => navigate('/transaction-history') },
     ],
     rewards: [
-      { icon: '⭐', label: 'Errandify Points', onClick: () => navigate('/errandify-points') },
-      { icon: '💎', label: 'Redeem Rewards', onClick: () => navigate('/my-rewards') },
-      { icon: '📈', label: 'Points History', onClick: () => navigate('/points-history') },
-    ],
-    security: [
-      { icon: '🔔', label: 'Notifications', onClick: () => navigate('/settings/notifications') },
-      { icon: '🌍', label: 'Language & Region', onClick: () => navigate('/settings/language') },
-      { icon: '🔐', label: 'Change Password', onClick: () => navigate('/settings/change-password') },
-      { icon: '🛡️', label: 'Two-Factor Auth', onClick: () => navigate('/settings/2fa') },
+      { icon: '⭐', label: 'Points', onClick: () => navigate('/errandify-points') },
+      { icon: '💎', label: 'Redeem', onClick: () => navigate('/my-rewards') },
+      { icon: '📈', label: 'History', onClick: () => navigate('/points-history') },
     ],
     help: [
       { icon: '🎯', label: 'How It Works', onClick: () => navigate('/how-it-works') },
-      { icon: '🏘️', label: 'About Errandify', onClick: () => navigate('/about') },
+      { icon: '🏘️', label: 'About', onClick: () => navigate('/about') },
       { icon: '❓', label: 'FAQ', onClick: () => navigate('/faq') },
+      { icon: '🔐', label: 'Password', onClick: () => navigate('/settings/change-password') },
+      { icon: '🛡️', label: '2FA', onClick: () => navigate('/settings/2fa') },
     ],
   };
 
