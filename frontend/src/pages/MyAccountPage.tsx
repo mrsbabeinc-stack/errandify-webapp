@@ -222,6 +222,12 @@ export default function MyAccountPage() {
               🔔 Notifications
             </button>
             <button
+              onClick={() => navigate('/my-pocket')}
+              className="pb-2 font-bold text-sm transition text-gray-600 hover:text-gray-800 border-b-4 border-transparent"
+            >
+              💰 Wallet
+            </button>
+            <button
               onClick={() => navigate('/block-list')}
               className="pb-2 font-bold text-sm transition text-gray-600 hover:text-gray-800 border-b-4 border-transparent"
             >
@@ -459,24 +465,7 @@ export default function MyAccountPage() {
         {activeSection === 'dashboard' && (
           <div className="mt-4 pt-4 border-t-2 border-gray-200">
             <div className="flex gap-1 overflow-x-auto pb-2 flex-wrap">
-              <button
-                onClick={() => navigate('/notification-preferences')}
-                className="px-3 py-1.5 rounded text-xs font-semibold bg-purple-100 text-purple-700 hover:bg-purple-200"
-              >
-                🔔 Notifications
-              </button>
-              <button
-                onClick={() => navigate('/my-pocket')}
-                className="px-3 py-1.5 rounded text-xs font-semibold bg-amber-100 text-amber-700 hover:bg-amber-200"
-              >
-                💰 Wallet
-              </button>
-              <button
-                onClick={() => navigate('/block-list')}
-                className="px-3 py-1.5 rounded text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200"
-              >
-                🚫 Blocked
-              </button>
+              {/* Quick links section if needed in future */}
             </div>
           </div>
         )}
