@@ -172,7 +172,7 @@ export default function MyPocketPage() {
               onClick={() => setActiveTab('payout')}
               className="flex-1 bg-white text-errandify-orange font-semibold py-1.5 rounded transition"
             >
-              Payout
+              Withdraw
             </button>
             {wallet.pendingPayouts > 0 && (
               <button
@@ -220,7 +220,7 @@ export default function MyPocketPage() {
               onClick={() => setActiveTab('payout')}
               className={`flex-1 p-2 text-center transition border-l border-gray-100 whitespace-nowrap ${activeTab === 'payout' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
-              💳 Payout
+              💳 Withdraw
             </button>
           </div>
 
@@ -276,8 +276,8 @@ export default function MyPocketPage() {
             {activeTab === 'payout' && (
               <div className="p-2 space-y-2">
                 <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                  <p className="text-xs text-blue-900 font-semibold">💡 How It Works</p>
-                  <p className="text-xs text-blue-800 mt-1">After 48 hours of errand completion (if no dispute is raised), earnings will be transferred to your account.</p>
+                  <p className="text-xs text-blue-900 font-semibold">💡 How Withdraw Works</p>
+                  <p className="text-xs text-blue-800 mt-1">Withdraw part or full balance to your bank account. After 48 hours of errand completion (if no dispute is raised), earnings will be available to withdraw.</p>
                 </div>
 
                 {/* Payout & Drawout Transactions */}
@@ -339,9 +339,14 @@ export default function MyPocketPage() {
                       </div>
                     </div>
 
-                    <button className="w-full bg-errandify-orange text-white py-1.5 rounded font-bold text-xs hover:bg-orange-600 transition">
-                      ✏️ Edit Account
-                    </button>
+                    <div className="space-y-1.5">
+                      <button className="w-full bg-errandify-orange text-white py-1.5 rounded font-bold text-xs hover:bg-orange-600 transition">
+                        💸 Withdraw Now
+                      </button>
+                      <button className="w-full border border-errandify-orange text-errandify-orange py-1.5 rounded font-bold text-xs hover:bg-orange-50 transition">
+                        ✏️ Edit Account
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
