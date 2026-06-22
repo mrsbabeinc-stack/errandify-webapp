@@ -1328,7 +1328,11 @@ export default function MyAccountPage() {
                             className="w-full px-1.5 py-0.5 border border-gray-300 rounded text-xs"
                           />
                         </div>
-                        <div className="flex gap-1 mt-1">
+                        <div className="bg-blue-50 border border-blue-300 rounded-lg p-2 my-2 text-xs text-blue-900">
+                          <p className="font-bold mb-1">ℹ️ Important</p>
+                          <p>Bank account changes take effect within 24 hours. Earnings in transit will be sent to the previously added account.</p>
+                        </div>
+                        <div className="flex gap-1 mt-2">
                           <button
                             onClick={() => {
                               setIsEditingBankDetails(false);
