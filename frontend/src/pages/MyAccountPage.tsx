@@ -329,32 +329,32 @@ export default function MyAccountPage() {
         {(activeTab === 'profile-shared' || activeTab === 'profile-private') && (
           <div>
             {/* PROFILE SUBTABS */}
-            <div className="flex gap-4 mb-6 border-b-2 border-gray-200">
+            <div className="flex gap-2 mb-3 border-b-2 border-gray-200">
               <button
                 onClick={() => {
                   setActiveTab('profile-shared');
                   setProfileTab('shared');
                 }}
-                className={`pb-3 font-bold text-sm transition ${
+                className={`pb-2 font-bold text-xs transition ${
                   profileTab === 'shared'
                     ? 'border-b-4 border-errandify-orange text-errandify-orange'
                     : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
                 }`}
               >
-                🌐 MyShared Info
+                🌐 MyShared
               </button>
               <button
                 onClick={() => {
                   setActiveTab('profile-private');
                   setProfileTab('private');
                 }}
-                className={`pb-3 font-bold text-sm transition ${
+                className={`pb-2 font-bold text-xs transition ${
                   profileTab === 'private'
                     ? 'border-b-4 border-errandify-orange text-errandify-orange'
                     : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
                 }`}
               >
-                🔒 MyPrivate Info
+                🔒 MyPrivate
               </button>
             </div>
 
