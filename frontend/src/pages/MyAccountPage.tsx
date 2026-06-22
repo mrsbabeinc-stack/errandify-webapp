@@ -773,6 +773,17 @@ export default function MyAccountPage() {
                           className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                         />
                       </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Monthly Household Income (SGD)</label>
+                        <input
+                          type="number"
+                          value={editForm.monthly_household_income}
+                          onChange={(e) => setEditForm({ ...editForm, monthly_household_income: e.target.value })}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="e.g., 3000"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Used to calculate CHAS eligibility</p>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-1.5 text-xs">
