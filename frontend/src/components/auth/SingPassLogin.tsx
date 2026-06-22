@@ -22,8 +22,10 @@ export default function SingPassLogin({ onComplete, onBack }: SingPassLoginProps
         { demo: true }
       );
 
+      console.log('[SingPass] Login response:', response.data.data);
       localStorage.setItem('token', response.data.data.accessToken);
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      console.log('[SingPass] Stored user:', response.data.data.user);
 
       onComplete();
     } catch (err: any) {
@@ -44,8 +46,10 @@ export default function SingPassLogin({ onComplete, onBack }: SingPassLoginProps
         { account: demoAccount }
       );
 
+      console.log('[Demo Login] Response:', response.data.data);
       localStorage.setItem('token', response.data.data.accessToken);
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      console.log('[Demo Login] Stored user:', response.data.data.user);
 
       onComplete();
     } catch (err: any) {
