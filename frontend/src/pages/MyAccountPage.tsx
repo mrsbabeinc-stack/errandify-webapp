@@ -223,6 +223,12 @@ export default function MyAccountPage() {
               💰 MyPocket
             </button>
             <button
+              onClick={() => navigate('/my-rewards')}
+              className="px-2 py-1 text-xs font-bold transition rounded text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+            >
+              💎 MyRewardSpace
+            </button>
+            <button
               onClick={() => navigate('/block-list')}
               className="px-2 py-1 text-xs font-bold transition rounded text-gray-600 hover:text-gray-800 hover:bg-gray-100"
             >
