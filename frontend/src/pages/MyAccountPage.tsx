@@ -1069,13 +1069,13 @@ export default function MyAccountPage() {
                   onClick={() => setPocketTab('txns')}
                   className={`flex-1 p-1.5 text-center transition whitespace-nowrap text-xs ${pocketTab === 'txns' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
                 >
-                  📋 Txns
+                  📋 Transactions
                 </button>
                 <button
                   onClick={() => setPocketTab('history')}
                   className={`flex-1 p-1.5 text-center transition border-l border-gray-100 whitespace-nowrap text-xs ${pocketTab === 'history' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
                 >
-                  ⭐ Points
+                  ⭐ Errandify Points (EP)
                 </button>
                 <button
                   onClick={() => setPocketTab('payout')}
