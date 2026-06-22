@@ -159,19 +159,19 @@ export default function MyAccountPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-errandify-bg to-white pb-24">
-      {/* HERO HEADER */}
-      <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white sticky top-0 z-50 shadow-lg">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
+      {/* HERO HEADER - WARM & ENGAGING */}
+      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white sticky top-0 z-50 shadow-lg">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="text-white font-bold text-lg hover:opacity-80 transition"
+            className="text-white font-bold text-xl hover:opacity-80 transition"
           >
             ←
           </button>
-          <h1 className="text-3xl font-bold">My Account</h1>
+          <h1 className="text-2xl font-bold">✨ My Account</h1>
           <button
             onClick={handleLogout}
-            className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg font-semibold text-sm transition"
+            className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1.5 rounded-lg font-semibold text-sm transition"
           >
             🚪
           </button>
@@ -212,109 +212,104 @@ export default function MyAccountPage() {
         {/* ===== DASHBOARD TAB ===== */}
         {activeTab === 'dashboard' && (
           <div className="space-y-8">
-            {/* PROFILE HERO CARD */}
-            <div className="relative bg-white rounded-2xl shadow-lg p-8 border-l-8 border-errandify-orange overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-errandify-orange opacity-5 rounded-full -mr-20 -mt-20"></div>
-              <div className="relative">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-4xl font-bold text-errandify-brown mb-2">{profileData.name}</h2>
-                    <p className="text-gray-600 text-sm mb-4">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-3xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
-                    <p className="text-xs text-gray-600">⭐ Rating</p>
-                  </div>
+            {/* PROFILE HERO CARD - COMPACT */}
+            <div className="relative bg-white rounded-lg shadow p-4 border-l-4 border-errandify-orange overflow-hidden mb-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-errandify-brown">{profileData.name}</h2>
+                  <p className="text-gray-600 text-xs">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
                 </div>
-
-                {badges.length > 0 && (
-                  <div className="flex gap-2 flex-wrap mb-4">
-                    {badges.map((badge, idx) => (
-                      <span key={idx} className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">
-                        {badge.icon} {badge.label}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-semibold text-gray-600">Profile Completeness</span>
-                    <span className="text-sm font-bold">{completeness}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-errandify-orange rounded-full h-2 transition-all duration-300"
-                      style={{ width: `${completeness}%` }}
-                    />
-                  </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
+                  <p className="text-xs text-gray-600">⭐</p>
+                </div>
+              </div>
+              {badges.length > 0 && (
+                <div className="flex gap-1 flex-wrap mt-2">
+                  {badges.map((badge, idx) => (
+                    <span key={idx} className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs font-bold">
+                      {badge.icon}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="mt-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-semibold text-gray-600">Completeness</span>
+                  <span className="text-xs font-bold">{completeness}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                  <div
+                    className="bg-errandify-orange rounded-full h-1.5 transition-all duration-300"
+                    style={{ width: `${completeness}%` }}
+                  />
                 </div>
               </div>
             </div>
 
-            {/* STATS GRID */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-amber-500 text-center">
-                <p className="text-2xl font-bold text-errandify-orange">{ratings.reviewCount}</p>
-                <p className="text-xs text-gray-600 font-semibold mt-1">👥 Reviews</p>
+            {/* STATS GRID - COMPACT */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+              <div className="bg-white rounded-lg shadow p-3 border-l-4 border-amber-500 text-center">
+                <p className="text-xl font-bold text-errandify-orange">{ratings.reviewCount}</p>
+                <p className="text-xs text-gray-600 font-semibold">👥</p>
               </div>
-              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500 text-center">
-                <p className="text-2xl font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold mt-1">✅ Tasks</p>
+              <div className="bg-white rounded-lg shadow p-3 border-l-4 border-green-500 text-center">
+                <p className="text-xl font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
+                <p className="text-xs text-gray-600 font-semibold">✅</p>
               </div>
-              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500 text-center">
-                <p className="text-2xl font-bold text-errandify-orange">${profileData.totalEarnings || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold mt-1">💰 Earnings</p>
+              <div className="bg-white rounded-lg shadow p-3 border-l-4 border-blue-500 text-center">
+                <p className="text-xl font-bold text-errandify-orange">${profileData.totalEarnings || 0}</p>
+                <p className="text-xs text-gray-600 font-semibold">💰</p>
               </div>
-              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500 text-center">
-                <p className="text-2xl font-bold text-errandify-orange">{profileData.errandifyPoints || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold mt-1">⭐ Points</p>
+              <div className="bg-white rounded-lg shadow p-3 border-l-4 border-purple-500 text-center">
+                <p className="text-xl font-bold text-errandify-orange">{profileData.errandifyPoints || 0}</p>
+                <p className="text-xs text-gray-600 font-semibold">⭐</p>
               </div>
             </div>
 
-            {/* QUICK ACTIONS */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {/* QUICK ACTIONS - COMPACT */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               <button
                 onClick={() => navigate('/category-preferences')}
-                className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-400 hover:shadow-md transition text-left"
+                className="bg-white rounded-lg shadow p-2 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
-                <p className="text-2xl mb-2">🎯</p>
-                <p className="font-bold text-sm text-gray-800">Categories</p>
+                <p className="text-xl mb-0.5">🎯</p>
+                <p className="font-bold text-xs text-gray-800">Categories</p>
               </button>
               <button
                 onClick={() => navigate('/payout-settings')}
-                className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-400 hover:shadow-md transition text-left"
+                className="bg-white rounded-lg shadow p-2 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
-                <p className="text-2xl mb-2">💳</p>
-                <p className="font-bold text-sm text-gray-800">Payout</p>
+                <p className="text-xl mb-0.5">💳</p>
+                <p className="font-bold text-xs text-gray-800">Payout</p>
               </button>
               <button
                 onClick={() => navigate('/errandify-points')}
-                className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-400 hover:shadow-md transition text-left"
+                className="bg-white rounded-lg shadow p-2 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
-                <p className="text-2xl mb-2">💎</p>
-                <p className="font-bold text-sm text-gray-800">Rewards</p>
+                <p className="text-xl mb-0.5">💎</p>
+                <p className="font-bold text-xs text-gray-800">Rewards</p>
               </button>
               <button
                 onClick={() => navigate('/referral')}
-                className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-400 hover:shadow-md transition text-left"
+                className="bg-white rounded-lg shadow p-2 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
-                <p className="text-2xl mb-2">🎁</p>
-                <p className="font-bold text-sm text-gray-800">Referral</p>
+                <p className="text-xl mb-0.5">🎁</p>
+                <p className="font-bold text-xs text-gray-800">Referral</p>
               </button>
               <button
                 onClick={() => navigate('/trusted-users')}
-                className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-400 hover:shadow-md transition text-left"
+                className="bg-white rounded-lg shadow p-2 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
-                <p className="text-2xl mb-2">❤️</p>
-                <p className="font-bold text-sm text-gray-800">Trusted</p>
+                <p className="text-xl mb-0.5">❤️</p>
+                <p className="font-bold text-xs text-gray-800">Trusted</p>
               </button>
               <button
                 onClick={() => navigate('/faq')}
-                className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-400 hover:shadow-md transition text-left"
+                className="bg-white rounded-lg shadow p-2 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
-                <p className="text-2xl mb-2">❓</p>
-                <p className="font-bold text-sm text-gray-800">Help</p>
+                <p className="text-xl mb-0.5">❓</p>
+                <p className="font-bold text-xs text-gray-800">Help</p>
               </button>
             </div>
           </div>
@@ -361,18 +356,18 @@ export default function MyAccountPage() {
                   <p className="text-xs text-blue-800 mt-1">This is exactly what other users see when they view your profile.</p>
                 </div>
 
-                {/* Profile Header */}
-                <div className="bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg shadow-lg p-6 text-white">
-                  <div className="flex gap-4 mb-4">
-                    <div className="text-5xl">👤</div>
+                {/* Profile Header - COMPACT */}
+                <div className="bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg shadow p-4 text-white mb-3">
+                  <div className="flex gap-3 items-center">
+                    <div className="text-3xl">👤</div>
                     <div className="flex-1">
-                      <h2 className="text-2xl font-bold mb-1">{profileData.name}</h2>
-                      <p className="text-orange-50 text-sm mb-3">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
+                      <h2 className="text-lg font-bold mb-0.5">{profileData.name}</h2>
+                      <p className="text-orange-50 text-xs">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
                       {badges.length > 0 && (
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="flex gap-1 flex-wrap mt-1">
                           {badges.map((badge, idx) => (
-                            <div key={idx} className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full">
-                              {badge.icon} {badge.label}
+                            <div key={idx} className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded">
+                              {badge.icon}
                             </div>
                           ))}
                         </div>
@@ -381,23 +376,23 @@ export default function MyAccountPage() {
                   </div>
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white rounded-lg shadow p-4 text-center">
-                    <p className="text-3xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
-                    <p className="text-xs text-gray-600 font-semibold">⭐ Rating</p>
+                {/* Stats - COMPACT */}
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="bg-white rounded-lg shadow p-3 text-center border-l-2 border-orange-400">
+                    <p className="text-2xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
+                    <p className="text-xs text-gray-600 font-semibold">⭐</p>
                   </div>
-                  <div className="bg-white rounded-lg shadow p-4 text-center">
-                    <p className="text-3xl font-bold text-errandify-orange">{ratings.reviewCount}</p>
-                    <p className="text-xs text-gray-600 font-semibold">👥 Reviews</p>
+                  <div className="bg-white rounded-lg shadow p-3 text-center border-l-2 border-orange-400">
+                    <p className="text-2xl font-bold text-errandify-orange">{ratings.reviewCount}</p>
+                    <p className="text-xs text-gray-600 font-semibold">👥</p>
                   </div>
-                  <div className="bg-white rounded-lg shadow p-4 text-center">
-                    <p className="text-3xl font-bold text-errandify-orange">{profileData.categories?.length || 0}</p>
-                    <p className="text-xs text-gray-600 font-semibold">🎯 Skills</p>
+                  <div className="bg-white rounded-lg shadow p-3 text-center border-l-2 border-orange-400">
+                    <p className="text-2xl font-bold text-errandify-orange">{profileData.categories?.length || 0}</p>
+                    <p className="text-xs text-gray-600 font-semibold">🎯</p>
                   </div>
-                  <div className="bg-white rounded-lg shadow p-4 text-center">
-                    <p className="text-3xl font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
-                    <p className="text-xs text-gray-600 font-semibold">✅ Tasks</p>
+                  <div className="bg-white rounded-lg shadow p-3 text-center border-l-2 border-orange-400">
+                    <p className="text-2xl font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
+                    <p className="text-xs text-gray-600 font-semibold">✅</p>
                   </div>
                 </div>
 
