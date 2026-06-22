@@ -341,7 +341,7 @@ export default function MyAccountPage() {
                     : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
                 }`}
               >
-                🌐 My Shared Info
+                🌐 MyShared Info
               </button>
               <button
                 onClick={() => {
@@ -354,7 +354,7 @@ export default function MyAccountPage() {
                     : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
                 }`}
               >
-                🔒 My Private Info
+                🔒 MyPrivate Info
               </button>
             </div>
 
