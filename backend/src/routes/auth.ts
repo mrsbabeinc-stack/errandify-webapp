@@ -303,7 +303,7 @@ router.post('/demo-login', async (req: Request, res: Response) => {
 
     // Check if user exists, if not create them
     let result = await db.query(
-      'SELECT id, display_name, mobile, role FROM users WHERE mobile = $1',
+      'SELECT id, display_name, mobile, role, chas_card_color, chas_subsidy_percentage FROM users WHERE mobile = $1',
       [demoUser.mobile]
     );
 
@@ -317,7 +317,7 @@ router.post('/demo-login', async (req: Request, res: Response) => {
           font_size_pref, language_pref, role, kyc_status, referral_code,
           monthly_household_income, chas_card_color, chas_subsidy_percentage, chas_verified
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-        RETURNING id, display_name, mobile, role, monthly_household_income, chas_card_color, chas_subsidy_percentage`,
+        RETURNING id, display_name, mobile, role, chas_card_color, chas_subsidy_percentage`,
         [
           hashNric(demoUser.nric),
           demoUser.name,
@@ -338,7 +338,7 @@ router.post('/demo-login', async (req: Request, res: Response) => {
     } else {
       // User exists - update display name to ensure correct demo user name
       const updateResult = await db.query(
-        'UPDATE users SET display_name = $1 WHERE mobile = $2 RETURNING id, display_name, mobile, role',
+        'UPDATE users SET display_name = $1 WHERE mobile = $2 RETURNING id, display_name, mobile, role, chas_card_color, chas_subsidy_percentage',
         [demoUser.name, demoUser.mobile]
       );
       user = updateResult.rows[0];
