@@ -696,12 +696,12 @@ export default function MyAccountPage() {
                         </div>
                       )}
                       <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">Name</label>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Name <span className="text-gray-400">(from SingPass - cannot change)</span></label>
                         <input
                           type="text"
                           value={editForm.display_name}
-                          onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          disabled
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs bg-gray-100 text-gray-600 cursor-not-allowed"
                         />
                       </div>
                       <div>
