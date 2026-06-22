@@ -213,7 +213,7 @@ export default function MyAccountPage() {
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >
-              👤 Account
+              👤 MyAccount
             </button>
             <button
               onClick={() => setActiveSection('transactions')}
@@ -229,7 +229,7 @@ export default function MyAccountPage() {
               onClick={() => navigate('/my-pocket')}
               className="px-2 py-1 text-xs font-bold transition rounded text-gray-600 hover:text-gray-800 hover:bg-gray-100"
             >
-              💰 Pocket
+              💰 MyPocket
             </button>
             <button
               onClick={() => navigate('/block-list')}
