@@ -72,8 +72,10 @@ export default function MyAccountPage() {
           });
         } catch (error) {
           console.error('Profile API error:', error);
-          setProfileData({
-            id: user.id,
+          // Use localStorage data as fallback
+          const fallbackProfile: UserProfile = {
+            id: user.id || 0,
+            userId: user.userId || '',
             name: user.name || 'User',
             email: user.email || '',
             mobile: user.mobile || '',
@@ -83,6 +85,13 @@ export default function MyAccountPage() {
             totalEarnings: 0,
             errandifyPoints: 0,
             categories: [],
+          };
+          setProfileData(fallbackProfile);
+          setEditForm({
+            display_name: fallbackProfile.name,
+            email: fallbackProfile.email,
+            mobile: fallbackProfile.mobile,
+            monthly_household_income: '',
           });
         }
 
@@ -147,14 +156,25 @@ export default function MyAccountPage() {
 
   if (!profileData) {
     return (
-      <div className="p-6 text-center">
-        <p className="text-red-600 mb-4">Failed to load account</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-errandify-orange text-white rounded"
-        >
-          Retry
-        </button>
+      <div className="min-h-screen bg-errandify-bg p-6 pb-24 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">⚠️ Failed to load account</p>
+          <p className="text-xs text-gray-600 mb-4">Please try again or log in again</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-errandify-orange text-white rounded font-semibold text-sm"
+            >
+              Retry
+            </button>
+            <button
+              onClick={() => navigate('/login')}
+              className="px-4 py-2 border border-errandify-orange text-errandify-orange rounded font-semibold text-sm"
+            >
+              Login
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
