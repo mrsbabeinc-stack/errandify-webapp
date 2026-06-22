@@ -216,17 +216,17 @@ export default function MyAccountPage() {
       {/* CONTENT - SIMPLE DASHBOARD ONLY */}
       <div className="max-w-6xl mx-auto px-4 py-6 w-full">
         {!activeSection && (
-        {/* AD CAROUSEL + EVENT BANNER */}
-        <div className="mb-4">
-          <AdCarousel />
-          <div className="mt-2">
-            <EventBanner />
-          </div>
-        </div>
+          <div>
+            {/* AD CAROUSEL + EVENT BANNER */}
+            <div className="mb-4">
+              <AdCarousel />
+              <div className="mt-2">
+                <EventBanner />
+              </div>
+            </div>
 
-        {/* ===== DASHBOARD TAB ===== */}
-        {activeTab === 'dashboard' && (
-          <div className="space-y-1.5">
+            {/* DASHBOARD CONTENT */}
+            <div className="space-y-1.5">
             {/* PROFILE HERO CARD - BALANCED */}
             <div className="relative bg-white rounded-lg shadow p-3 border-l-4 border-errandify-orange overflow-hidden mb-1.5">
               <div className="flex items-center justify-between gap-3">
@@ -326,6 +326,7 @@ export default function MyAccountPage() {
                 <p className="text-lg mb-0">❓</p>
                 <p className="font-bold text-xs text-gray-800">Help</p>
               </button>
+            </div>
             </div>
           </div>
         )}
