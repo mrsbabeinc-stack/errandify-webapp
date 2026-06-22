@@ -57,6 +57,14 @@ export default function MyAccountPage() {
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Track unsaved changes
+  useEffect(() => {
+    if (isEditing && (editForm.display_name || editForm.alias || editForm.bio || profileImage)) {
+      setHasUnsavedChanges(true);
+    }
+  }, [editForm, profileImage, isEditing]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -159,6 +167,7 @@ export default function MyAccountPage() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setIsEditing(false);
+      setHasUnsavedChanges(false);
       if (profileData) {
         setProfileData({
           ...profileData,
@@ -681,6 +690,13 @@ export default function MyAccountPage() {
 
                   {isEditing ? (
                     <div className="space-y-2">
+                      {hasUnsavedChanges && (
+                        <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded p-2">
+                          <p className="text-xs text-yellow-900 font-semibold">
+                            ⚠️ You have unsaved changes. Click "Save All Changes" at the end to save.
+                          </p>
+                        </div>
+                      )}
                       <div>
                         <label className="text-xs font-semibold text-gray-600 block mb-1">Name</label>
                         <input
