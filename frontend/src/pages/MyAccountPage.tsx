@@ -360,10 +360,10 @@ export default function MyAccountPage() {
 
             {/* SHARED INFO */}
             {profileTab === 'shared' && (
-              <div className="space-y-6">
-                <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
-                  <p className="text-sm font-bold text-blue-900">👁️ THIS IS YOUR PUBLIC PROFILE</p>
-                  <p className="text-xs text-blue-800 mt-1">This is exactly what other users see when they view your profile.</p>
+              <div className="space-y-3">
+                <div className="bg-blue-50 border-l-4 border-blue-500 rounded p-2 mb-2">
+                  <p className="text-xs font-bold text-blue-900">👁️ PUBLIC PROFILE</p>
+                  <p className="text-xs text-blue-800 mt-0.5">What other users see</p>
                 </div>
 
                 {/* Profile Header - COMPACT */}
@@ -387,22 +387,22 @@ export default function MyAccountPage() {
                 </div>
 
                 {/* Stats - COMPACT */}
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  <div className="bg-white rounded-lg shadow p-3 text-center border-l-2 border-orange-400">
-                    <p className="text-2xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
-                    <p className="text-xs text-gray-600 font-semibold">⭐ Rating</p>
+                <div className="grid grid-cols-2 gap-1.5 mb-2">
+                  <div className="bg-white rounded shadow p-2 text-center border-l-2 border-orange-400">
+                    <p className="text-lg font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
+                    <p className="text-xs text-gray-600 font-semibold">⭐</p>
                   </div>
-                  <div className="bg-white rounded-lg shadow p-3 text-center border-l-2 border-orange-400">
-                    <p className="text-2xl font-bold text-errandify-orange">{ratings.reviewCount}</p>
-                    <p className="text-xs text-gray-600 font-semibold">👥 Reviews</p>
+                  <div className="bg-white rounded shadow p-2 text-center border-l-2 border-orange-400">
+                    <p className="text-lg font-bold text-errandify-orange">{ratings.reviewCount}</p>
+                    <p className="text-xs text-gray-600 font-semibold">👥</p>
                   </div>
-                  <div className="bg-white rounded-lg shadow p-3 text-center border-l-2 border-orange-400">
-                    <p className="text-2xl font-bold text-errandify-orange">{profileData.categories?.length || 0}</p>
-                    <p className="text-xs text-gray-600 font-semibold">🎯 Skills</p>
+                  <div className="bg-white rounded shadow p-2 text-center border-l-2 border-orange-400">
+                    <p className="text-lg font-bold text-errandify-orange">{profileData.categories?.length || 0}</p>
+                    <p className="text-xs text-gray-600 font-semibold">🎯</p>
                   </div>
-                  <div className="bg-white rounded-lg shadow p-3 text-center border-l-2 border-orange-400">
-                    <p className="text-2xl font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
-                    <p className="text-xs text-gray-600 font-semibold">✅ Errands</p>
+                  <div className="bg-white rounded shadow p-2 text-center border-l-2 border-orange-400">
+                    <p className="text-lg font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
+                    <p className="text-xs text-gray-600 font-semibold">✅</p>
                   </div>
                 </div>
 
@@ -424,16 +424,16 @@ export default function MyAccountPage() {
 
             {/* PRIVATE INFO */}
             {profileTab === 'private' && (
-              <div className="space-y-6">
-                <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 mb-6">
-                  <p className="text-sm font-bold text-green-900">🔒 YOUR PRIVATE INFORMATION</p>
-                  <p className="text-xs text-green-800 mt-1">Only you can see this. Edit your profile details, manage certificates, and view sensitive information here.</p>
+              <div className="space-y-3">
+                <div className="bg-green-50 border-l-4 border-green-500 rounded p-2 mb-2">
+                  <p className="text-xs font-bold text-green-900">🔒 PRIVATE</p>
+                  <p className="text-xs text-green-800 mt-0.5">Only you see this</p>
                 </div>
 
                 {/* Edit Form */}
-                <div className="bg-white rounded-lg shadow p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-errandify-brown">📝 Edit Your Profile</h3>
+                <div className="bg-white rounded shadow p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-bold text-errandify-brown">📝 Edit Profile</h3>
                     {!isEditing && (
                       <button
                         onClick={() => setIsEditing(true)}
