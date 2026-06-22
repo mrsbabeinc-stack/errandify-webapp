@@ -31,7 +31,7 @@ interface Rating {
 
 export default function MyAccountPage() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'transactions' | null>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | null>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
@@ -215,16 +215,6 @@ export default function MyAccountPage() {
               }`}
             >
               👤 MyProfile
-            </button>
-            <button
-              onClick={() => setActiveSection('transactions')}
-              className={`px-2 py-1 text-xs font-bold transition rounded ${
-                activeSection === 'transactions'
-                  ? 'bg-errandify-orange text-white'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              📊 Transactions
             </button>
             <button
               onClick={() => navigate('/my-pocket')}
@@ -570,46 +560,6 @@ export default function MyAccountPage() {
                 </div>
               </div>
             )}
-          </div>
-        )}
-
-        {/* TRANSACTIONS SECTION */}
-        {activeSection === 'transactions' && (
-          <div className="bg-white rounded shadow overflow-hidden">
-            <div className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-              <h2 className="text-sm font-bold">📊 My Transactions</h2>
-            </div>
-            <div className="divide-y divide-gray-100">
-              <div className="px-4 py-2 text-xs text-gray-600">
-                <p className="font-semibold mb-1">Transaction Details:</p>
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span>Total Earnings:</span>
-                    <span className="font-bold text-gray-900">${profileData?.totalEarnings || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Completed Tasks:</span>
-                    <span className="font-bold text-gray-900">{profileData?.completedTasks || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Average Rating:</span>
-                    <span className="font-bold text-gray-900">{ratings.averageRating.toFixed(1)}⭐</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Errandify Points:</span>
-                    <span className="font-bold text-gray-900">{profileData?.errandifyPoints || 0}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="px-4 py-3">
-                <button
-                  onClick={() => navigate('/transaction-history')}
-                  className="w-full px-3 py-2 bg-blue-100 text-blue-700 rounded font-semibold text-xs hover:bg-blue-200"
-                >
-                  View Full Transaction History
-                </button>
-              </div>
-            </div>
           </div>
         )}
 
