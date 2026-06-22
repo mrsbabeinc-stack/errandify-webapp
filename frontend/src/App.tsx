@@ -37,6 +37,7 @@ import FAQPage from './pages/FAQPage';
 import MyAccountPage from './pages/MyAccountPage';
 import HowItWorksPage from './pages/HowItWorksPage';
 import AboutErrandifyPage from './pages/AboutErrandifyPage';
+import NotificationPreferencesPage from './pages/NotificationPreferencesPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -215,6 +216,7 @@ export default function App() {
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/about" element={<AboutErrandifyPage />} />
         <Route path="/my-account" element={isAuthenticated ? <MyAccountPage /> : <Navigate to="/login" replace />} />
+        <Route path="/notification-preferences" element={isAuthenticated ? <NotificationPreferencesPage /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout */}
         <Route
