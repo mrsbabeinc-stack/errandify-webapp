@@ -2,53 +2,119 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-interface AccountData {
+interface UserProfile {
+  id?: number;
+  userId?: string;
   name: string;
   email: string;
   mobile: string;
   role: 'asker' | 'doer';
-  rating: number;
-  reviewCount: number;
-  completedTasks: number;
-  totalEarnings: number;
-  errandifyPoints: number;
-  categories: string[];
+  rating?: number;
+  reviewCount?: number;
+  completedTasks?: number;
+  totalEarnings?: number;
+  errandifyPoints?: number;
+  categories?: string[];
   bio?: string;
+  monthlyHouseholdIncome?: number;
+  chasCardColor?: string;
+  chasSubsidyPercentage?: number;
+}
+
+interface Rating {
+  score: number;
+  comment: string;
+  createdAt: string;
 }
 
 export default function MyAccountPage() {
   const navigate = useNavigate();
-  const [accountData, setAccountData] = useState<AccountData | null>(null);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile-shared' | 'profile-private'>('dashboard');
+  const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
+  const [profileData, setProfileData] = useState<UserProfile | null>(null);
+  const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
+    averageRating: 0,
+    reviewCount: 0,
+    reviews: [],
+  });
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    display_name: '',
+    mobile: '',
+    monthly_household_income: '',
+  });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchAccountData();
+    fetchProfileData();
   }, []);
 
-  const fetchAccountData = async () => {
+  const fetchProfileData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      const profileRes = await axios.get(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setAccountData({
-        name: response.data.data.name || '',
-        email: response.data.data.email || '',
-        mobile: response.data.data.mobile || '',
-        role: response.data.data.role || 'asker',
-        rating: response.data.data.rating || 0,
-        reviewCount: response.data.data.reviewCount || 0,
-        completedTasks: response.data.data.completedTasks || 0,
-        totalEarnings: response.data.data.totalEarnings || 0,
-        errandifyPoints: response.data.data.errandifyPoints || 0,
-        categories: response.data.data.categories || [],
-        bio: response.data.data.bio || '',
+
+      setProfileData(profileRes.data.data);
+      setEditForm({
+        display_name: profileRes.data.data.name || '',
+        mobile: profileRes.data.data.mobile || '',
+        monthly_household_income: profileRes.data.data.monthlyHouseholdIncome ? String(profileRes.data.data.monthlyHouseholdIncome) : '',
       });
+
+      try {
+        const ratingsRes = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/ratings`
+        );
+        setRatings(ratingsRes.data.data);
+      } catch {
+        console.warn('Could not fetch ratings');
+      }
     } catch (err) {
-      console.error('Failed to fetch account data:', err);
+      console.error('Failed to fetch profile:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const updateData: any = {
+        display_name: editForm.display_name,
+        mobile: editForm.mobile,
+      };
+      if (editForm.monthly_household_income) {
+        updateData.monthly_household_income = parseInt(editForm.monthly_household_income, 10);
+      }
+
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+        updateData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setProfileData({
+        ...profileData,
+        ...response.data.data,
+      });
+      setIsEditing(false);
+    } catch (err: any) {
+      console.error('Failed to save profile:', err);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -60,13 +126,36 @@ export default function MyAccountPage() {
     }
   };
 
+  const getProfileCompleteness = () => {
+    if (!profileData) return 0;
+    let complete = 0;
+    if (profileData.name) complete++;
+    if (profileData.mobile) complete++;
+    if (profileData.categories && profileData.categories.length > 0) complete++;
+    if (profileData.bio) complete++;
+    if (profileData.monthlyHouseholdIncome) complete++;
+    return Math.round((complete / 5) * 100);
+  };
+
+  const getBadges = () => {
+    const badges = [];
+    if (ratings.averageRating >= 4.8) badges.push({ icon: '⭐', label: 'Trusted Expert' });
+    if (ratings.reviewCount >= 50) badges.push({ icon: '🏆', label: 'Top Performer' });
+    if (ratings.averageRating === 5 && ratings.reviewCount >= 10) badges.push({ icon: '✨', label: 'Perfect Rating' });
+    if (profileData?.completedTasks && profileData.completedTasks >= 100) badges.push({ icon: '🚀', label: 'Century Club' });
+    return badges;
+  };
+
   if (loading) {
     return <div className="p-6 text-center">Loading account...</div>;
   }
 
-  if (!accountData) {
+  if (!profileData) {
     return <div className="p-6 text-center text-red-600">Failed to load account</div>;
   }
+
+  const completeness = getProfileCompleteness();
+  const badges = getBadges();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-errandify-bg to-white pb-24">
@@ -89,315 +178,374 @@ export default function MyAccountPage() {
         </div>
       </div>
 
+      {/* TAB NAVIGATION */}
+      <div className="bg-white border-b border-gray-200 sticky top-20 z-40 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 flex gap-2 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`px-4 py-3 text-sm font-bold whitespace-nowrap transition ${
+              activeTab === 'dashboard'
+                ? 'border-b-4 border-errandify-orange text-errandify-orange'
+                : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+            }`}
+          >
+            📊 Dashboard
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('profile-shared');
+              setProfileTab('shared');
+            }}
+            className={`px-4 py-3 text-sm font-bold whitespace-nowrap transition ${
+              activeTab === 'profile-shared'
+                ? 'border-b-4 border-errandify-orange text-errandify-orange'
+                : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+            }`}
+          >
+            👤 My Profile
+          </button>
+        </div>
+      </div>
+
       {/* CONTENT */}
-      <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-        {/* PROFILE HERO CARD */}
-        <div className="relative bg-white rounded-2xl shadow-lg p-8 border-l-8 border-errandify-orange overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-errandify-orange opacity-5 rounded-full -mr-20 -mt-20"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-4xl font-bold text-errandify-brown mb-2">{accountData.name}</h2>
-                <p className="text-gray-600">👥 {accountData.role === 'asker' ? 'Task Poster' : 'Task Helper'}</p>
-              </div>
-              <div className="text-5xl">👤</div>
-            </div>
-            <button
-              onClick={() => navigate('/my-profile')}
-              className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition"
-            >
-              ✏️ Edit Profile
-            </button>
-          </div>
-        </div>
-
-        {/* STATS SHOWCASE */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-orange-100 to-orange-50 rounded-2xl p-6 border-2 border-errandify-orange shadow-md">
-            <p className="text-sm text-gray-600 font-semibold mb-2">⭐ Rating</p>
-            <p className="text-4xl font-bold text-errandify-orange">{accountData.rating.toFixed(1)}</p>
-            <p className="text-xs text-gray-500 mt-1">Out of 5.0</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl p-6 border-2 border-blue-500 shadow-md">
-            <p className="text-sm text-gray-600 font-semibold mb-2">👥 Reviews</p>
-            <p className="text-4xl font-bold text-blue-600">{accountData.reviewCount}</p>
-            <p className="text-xs text-gray-500 mt-1">Community feedback</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-green-100 to-green-50 rounded-2xl p-6 border-2 border-green-500 shadow-md">
-            <p className="text-sm text-gray-600 font-semibold mb-2">✅ Tasks</p>
-            <p className="text-4xl font-bold text-green-600">{accountData.completedTasks}</p>
-            <p className="text-xs text-gray-500 mt-1">Completed</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-purple-100 to-purple-50 rounded-2xl p-6 border-2 border-purple-500 shadow-md">
-            <p className="text-sm text-gray-600 font-semibold mb-2">⭐ Points</p>
-            <p className="text-4xl font-bold text-purple-600">{accountData.errandifyPoints.toLocaleString()}</p>
-            <p className="text-xs text-gray-500 mt-1">Rewards balance</p>
-          </div>
-        </div>
-
-        {/* TWO COLUMN LAYOUT */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* LEFT COLUMN - PROFILE & EARNINGS */}
-          <div className="space-y-6">
-            {/* ACCOUNT INFO CARD */}
-            <div className="bg-white rounded-2xl shadow-md p-8 border-t-4 border-errandify-orange">
-              <h3 className="text-2xl font-bold text-errandify-brown mb-6 flex items-center gap-2">
-                📋 Account Information
-              </h3>
-              <div className="space-y-4">
-                <div className="pb-4 border-b border-gray-100">
-                  <label className="text-xs font-bold text-gray-500 uppercase">Name</label>
-                  <p className="text-lg text-gray-800 font-semibold mt-1">{accountData.name}</p>
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* ===== DASHBOARD TAB ===== */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-8">
+            {/* PROFILE HERO CARD */}
+            <div className="relative bg-white rounded-2xl shadow-lg p-8 border-l-8 border-errandify-orange overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-errandify-orange opacity-5 rounded-full -mr-20 -mt-20"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-4xl font-bold text-errandify-brown mb-2">{profileData.name}</h2>
+                    <p className="text-gray-600 text-sm mb-4">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
+                    <p className="text-xs text-gray-600">⭐ Rating</p>
+                  </div>
                 </div>
-                <div className="pb-4 border-b border-gray-100">
-                  <label className="text-xs font-bold text-gray-500 uppercase">Email</label>
-                  <p className="text-lg text-gray-800 font-semibold mt-1">{accountData.email || '—'}</p>
-                </div>
-                <div className="pb-4 border-b border-gray-100">
-                  <label className="text-xs font-bold text-gray-500 uppercase">Mobile</label>
-                  <p className="text-lg text-gray-800 font-semibold mt-1">{accountData.mobile || '—'}</p>
-                </div>
+
+                {badges.length > 0 && (
+                  <div className="flex gap-2 flex-wrap mb-4">
+                    {badges.map((badge, idx) => (
+                      <span key={idx} className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">
+                        {badge.icon} {badge.label}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase">Role</label>
-                  <div className="mt-1">
-                    <span className="inline-block px-4 py-2 bg-gradient-to-r from-errandify-orange to-orange-500 text-white rounded-full text-sm font-bold capitalize">
-                      {accountData.role === 'asker' ? '🎯 Task Poster' : '💪 Task Helper'}
-                    </span>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-semibold text-gray-600">Profile Completeness</span>
+                    <span className="text-sm font-bold">{completeness}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-errandify-orange rounded-full h-2 transition-all duration-300"
+                      style={{ width: `${completeness}%` }}
+                    />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* EARNINGS CARD */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-md p-8 border-l-4 border-green-500">
-              <h3 className="text-sm font-bold text-gray-600 uppercase mb-2">💰 Earnings</h3>
-              <p className="text-5xl font-bold text-green-600 mb-4">${accountData.totalEarnings.toLocaleString()}</p>
-              <p className="text-gray-600 mb-6">All-time earnings from completed tasks</p>
+            {/* STATS GRID */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-amber-500 text-center">
+                <p className="text-2xl font-bold text-errandify-orange">{ratings.reviewCount}</p>
+                <p className="text-xs text-gray-600 font-semibold mt-1">👥 Reviews</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500 text-center">
+                <p className="text-2xl font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
+                <p className="text-xs text-gray-600 font-semibold mt-1">✅ Tasks</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500 text-center">
+                <p className="text-2xl font-bold text-errandify-orange">${profileData.totalEarnings || 0}</p>
+                <p className="text-xs text-gray-600 font-semibold mt-1">💰 Earnings</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500 text-center">
+                <p className="text-2xl font-bold text-errandify-orange">{profileData.errandifyPoints || 0}</p>
+                <p className="text-xs text-gray-600 font-semibold mt-1">⭐ Points</p>
+              </div>
+            </div>
+
+            {/* QUICK ACTIONS */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <button
-                onClick={() => navigate('/transaction-history')}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 rounded-xl font-bold hover:shadow-lg transition"
+                onClick={() => navigate('/category-preferences')}
+                className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-400 hover:shadow-md transition text-left"
               >
-                📊 View History
+                <p className="text-2xl mb-2">🎯</p>
+                <p className="font-bold text-sm text-gray-800">Categories</p>
+              </button>
+              <button
+                onClick={() => navigate('/payout-settings')}
+                className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-400 hover:shadow-md transition text-left"
+              >
+                <p className="text-2xl mb-2">💳</p>
+                <p className="font-bold text-sm text-gray-800">Payout</p>
+              </button>
+              <button
+                onClick={() => navigate('/errandify-points')}
+                className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-400 hover:shadow-md transition text-left"
+              >
+                <p className="text-2xl mb-2">💎</p>
+                <p className="font-bold text-sm text-gray-800">Rewards</p>
+              </button>
+              <button
+                onClick={() => navigate('/referral')}
+                className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-400 hover:shadow-md transition text-left"
+              >
+                <p className="text-2xl mb-2">🎁</p>
+                <p className="font-bold text-sm text-gray-800">Referral</p>
+              </button>
+              <button
+                onClick={() => navigate('/trusted-users')}
+                className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-400 hover:shadow-md transition text-left"
+              >
+                <p className="text-2xl mb-2">❤️</p>
+                <p className="font-bold text-sm text-gray-800">Trusted</p>
+              </button>
+              <button
+                onClick={() => navigate('/faq')}
+                className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-400 hover:shadow-md transition text-left"
+              >
+                <p className="text-2xl mb-2">❓</p>
+                <p className="font-bold text-sm text-gray-800">Help</p>
               </button>
             </div>
           </div>
+        )}
 
-          {/* RIGHT COLUMN - SKILLS & REWARDS */}
-          <div className="space-y-6">
-            {/* SKILLS CARD */}
-            {accountData.categories.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-md p-8 border-t-4 border-blue-500">
-                <h3 className="text-2xl font-bold text-errandify-brown mb-6 flex items-center gap-2">
-                  🎯 Your Skills
-                </h3>
-                <div className="flex flex-wrap gap-3 mb-6">
-                  {accountData.categories.map(cat => (
-                    <span
-                      key={cat}
-                      className="bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-bold border border-blue-300"
-                    >
-                      {cat}
-                    </span>
-                  ))}
+        {/* ===== PROFILE TAB ===== */}
+        {(activeTab === 'profile-shared' || activeTab === 'profile-private') && (
+          <div>
+            {/* PROFILE SUBTABS */}
+            <div className="flex gap-4 mb-6 border-b-2 border-gray-200">
+              <button
+                onClick={() => {
+                  setActiveTab('profile-shared');
+                  setProfileTab('shared');
+                }}
+                className={`pb-3 font-bold text-sm transition ${
+                  profileTab === 'shared'
+                    ? 'border-b-4 border-errandify-orange text-errandify-orange'
+                    : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+                }`}
+              >
+                🌐 My Shared Info
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('profile-private');
+                  setProfileTab('private');
+                }}
+                className={`pb-3 font-bold text-sm transition ${
+                  profileTab === 'private'
+                    ? 'border-b-4 border-errandify-orange text-errandify-orange'
+                    : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+                }`}
+              >
+                🔒 My Private Info
+              </button>
+            </div>
+
+            {/* SHARED INFO */}
+            {profileTab === 'shared' && (
+              <div className="space-y-6">
+                <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
+                  <p className="text-sm font-bold text-blue-900">👁️ THIS IS YOUR PUBLIC PROFILE</p>
+                  <p className="text-xs text-blue-800 mt-1">This is exactly what other users see when they view your profile.</p>
                 </div>
-                <button
-                  onClick={() => navigate('/category-preferences')}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition"
-                >
-                  ⚙️ Manage Skills
-                </button>
+
+                {/* Profile Header */}
+                <div className="bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg shadow-lg p-6 text-white">
+                  <div className="flex gap-4 mb-4">
+                    <div className="text-5xl">👤</div>
+                    <div className="flex-1">
+                      <h2 className="text-2xl font-bold mb-1">{profileData.name}</h2>
+                      <p className="text-orange-50 text-sm mb-3">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
+                      {badges.length > 0 && (
+                        <div className="flex gap-2 flex-wrap">
+                          {badges.map((badge, idx) => (
+                            <div key={idx} className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full">
+                              {badge.icon} {badge.label}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white rounded-lg shadow p-4 text-center">
+                    <p className="text-3xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
+                    <p className="text-xs text-gray-600 font-semibold">⭐ Rating</p>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-4 text-center">
+                    <p className="text-3xl font-bold text-errandify-orange">{ratings.reviewCount}</p>
+                    <p className="text-xs text-gray-600 font-semibold">👥 Reviews</p>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-4 text-center">
+                    <p className="text-3xl font-bold text-errandify-orange">{profileData.categories?.length || 0}</p>
+                    <p className="text-xs text-gray-600 font-semibold">🎯 Skills</p>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-4 text-center">
+                    <p className="text-3xl font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
+                    <p className="text-xs text-gray-600 font-semibold">✅ Tasks</p>
+                  </div>
+                </div>
+
+                {/* Skills */}
+                {profileData.categories && profileData.categories.length > 0 && (
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h3 className="text-lg font-bold text-errandify-brown mb-4">🎯 Your Skills</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {profileData.categories.slice(0, 4).map((cat, idx) => (
+                        <div key={idx} className="bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-3 text-center">
+                          <p className="text-sm font-bold text-errandify-brown">{cat}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* POINTS CARD */}
-            <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-lg p-8 text-white">
-              <h3 className="text-sm font-bold opacity-90 uppercase mb-2">⭐ Errandify Points</h3>
-              <p className="text-5xl font-bold mb-2">{accountData.errandifyPoints.toLocaleString()}</p>
-              <p className="text-purple-100 mb-6">Redeem for rewards, discounts & charity</p>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => navigate('/errandify-points')}
-                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white py-3 rounded-xl font-bold transition"
-                >
-                  📖 Details
-                </button>
-                <button
-                  onClick={() => navigate('/my-rewards')}
-                  className="bg-white text-purple-600 hover:bg-gray-100 py-3 rounded-xl font-bold transition"
-                >
-                  🎁 Redeem
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+            {/* PRIVATE INFO */}
+            {profileTab === 'private' && (
+              <div className="space-y-6">
+                <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 mb-6">
+                  <p className="text-sm font-bold text-green-900">🔒 YOUR PRIVATE INFORMATION</p>
+                  <p className="text-xs text-green-800 mt-1">Only you can see this. Edit your profile details, manage certificates, and view sensitive information here.</p>
+                </div>
 
-        {/* FEATURE CARDS GRID */}
-        <div className="space-y-6">
-          {/* PREFERENCES SECTION */}
-          <div>
-            <h2 className="text-2xl font-bold text-errandify-brown mb-4 flex items-center gap-2">
-              🎨 Preferences
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-errandify-orange hover:shadow-lg transition">
-                <h4 className="text-xl font-bold text-errandify-brown mb-2">🏷️ Categories</h4>
-                <p className="text-sm text-gray-600 mb-4">Manage your interests & skills</p>
-                <button
-                  onClick={() => navigate('/category-preferences')}
-                  className="w-full bg-errandify-orange text-white py-2 rounded-lg font-bold hover:opacity-90 transition"
-                >
-                  Manage
-                </button>
-              </div>
+                {/* Edit Form */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-errandify-brown">📝 Edit Your Profile</h3>
+                    {!isEditing && (
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="text-sm text-errandify-orange font-semibold hover:underline"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
 
-              <div className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-blue-500 hover:shadow-lg transition">
-                <h4 className="text-xl font-bold text-blue-600 mb-2">🔔 Notifications</h4>
-                <p className="text-sm text-gray-600 mb-4">Control how you receive alerts</p>
-                <button
-                  onClick={() => navigate('/settings/notifications')}
-                  className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:opacity-90 transition"
-                >
-                  Configure
-                </button>
-              </div>
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Name</label>
+                        <input
+                          type="text"
+                          value={editForm.display_name}
+                          onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Mobile</label>
+                        <input
+                          type="text"
+                          value={editForm.mobile}
+                          onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Monthly Household Income</label>
+                        <input
+                          type="number"
+                          value={editForm.monthly_household_income}
+                          onChange={(e) => setEditForm({ ...editForm, monthly_household_income: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSaveProfile}
+                          disabled={saving}
+                          className="flex-1 bg-errandify-orange text-white py-2 rounded font-semibold text-sm hover:bg-opacity-90 transition disabled:opacity-50"
+                        >
+                          {saving ? 'Saving...' : 'Save Changes'}
+                        </button>
+                        <button
+                          onClick={() => setIsEditing(false)}
+                          className="flex-1 border border-gray-300 text-gray-700 py-2 rounded font-semibold text-sm hover:bg-gray-50 transition"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs text-gray-600 font-semibold">Name</p>
+                        <p className="text-sm text-gray-800">{profileData.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 font-semibold">Mobile</p>
+                        <p className="text-sm text-gray-800">{profileData.mobile || 'Not set'}</p>
+                      </div>
+                      {profileData.monthlyHouseholdIncome && (
+                        <div>
+                          <p className="text-xs text-gray-600 font-semibold">Monthly Household Income</p>
+                          <p className="text-sm text-gray-800">${profileData.monthlyHouseholdIncome}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
-              <div className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-green-500 hover:shadow-lg transition">
-                <h4 className="text-xl font-bold text-green-600 mb-2">🌍 Language</h4>
-                <p className="text-sm text-gray-600 mb-4">Set your language & region</p>
-                <button
-                  onClick={() => navigate('/settings/language')}
-                  className="w-full bg-green-600 text-white py-2 rounded-lg font-bold hover:opacity-90 transition"
-                >
-                  Change
-                </button>
-              </div>
-            </div>
-          </div>
+                {/* Private Info */}
+                <div className="bg-white rounded-lg shadow p-6 space-y-4">
+                  {profileData.userId && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-gray-600 font-semibold">Your User ID</p>
+                        <code className="text-sm font-mono font-bold text-errandify-brown">{profileData.userId}</code>
+                      </div>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(profileData.userId || '')}
+                        className="text-xs text-errandify-orange hover:text-orange-600 font-semibold transition px-2 py-1 hover:bg-orange-50 rounded"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  )}
 
-          {/* COMMUNITY SECTION */}
-          <div>
-            <h2 className="text-2xl font-bold text-errandify-brown mb-4 flex items-center gap-2">
-              🤝 Community
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-red-500 hover:shadow-lg transition">
-                <h4 className="text-xl font-bold text-red-600 mb-2">❤️ Trusted Users</h4>
-                <p className="text-sm text-gray-600 mb-4">Your trusted network</p>
-                <button
-                  onClick={() => navigate('/trusted-users')}
-                  className="w-full bg-red-600 text-white py-2 rounded-lg font-bold hover:opacity-90 transition"
-                >
-                  View List
-                </button>
-              </div>
+                  {profileData.chasCardColor && profileData.chasCardColor !== 'none' && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold text-white ${
+                        profileData.chasCardColor === 'blue' ? 'bg-blue-600' : 'bg-green-600'
+                      }`}>
+                        CHAS {profileData.chasCardColor.toUpperCase()} ({profileData.chasSubsidyPercentage}% subsidy)
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-              <div className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-orange-500 hover:shadow-lg transition">
-                <h4 className="text-xl font-bold text-orange-600 mb-2">🚫 Blocked Users</h4>
-                <p className="text-sm text-gray-600 mb-4">Manage your blocklist</p>
-                <button
-                  onClick={() => navigate('/block-list')}
-                  className="w-full bg-orange-600 text-white py-2 rounded-lg font-bold hover:opacity-90 transition"
-                >
-                  Manage
-                </button>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-purple-500 hover:shadow-lg transition">
-                <h4 className="text-xl font-bold text-purple-600 mb-2">🎁 Referrals</h4>
-                <p className="text-sm text-gray-600 mb-4">Earn from referrals</p>
-                <button
-                  onClick={() => navigate('/referral')}
-                  className="w-full bg-purple-600 text-white py-2 rounded-lg font-bold hover:opacity-90 transition"
-                >
-                  View Program
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* SECURITY SECTION */}
-          <div>
-            <h2 className="text-2xl font-bold text-errandify-brown mb-4 flex items-center gap-2">
-              🔒 Security & Support
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-red-600 hover:shadow-lg transition">
-                <h4 className="text-xl font-bold text-red-600 mb-2">🔐 Password</h4>
-                <p className="text-sm text-gray-600 mb-4">Change your password</p>
-                <button
-                  onClick={() => navigate('/settings/change-password')}
-                  className="w-full bg-red-600 text-white py-2 rounded-lg font-bold hover:opacity-90 transition"
-                >
-                  Change
-                </button>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-green-600 hover:shadow-lg transition">
-                <h4 className="text-xl font-bold text-green-600 mb-2">🛡️ Two-Factor Auth</h4>
-                <p className="text-sm text-gray-600 mb-4">Extra security layer</p>
-                <button
-                  onClick={() => navigate('/settings/2fa')}
-                  className="w-full bg-green-600 text-white py-2 rounded-lg font-bold hover:opacity-90 transition"
-                >
-                  Setup 2FA
-                </button>
-              </div>
-
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-md p-6 border-t-4 border-blue-600 hover:shadow-lg transition">
-                <h4 className="text-xl font-bold text-blue-600 mb-2">📧 Support</h4>
-                <p className="text-sm text-gray-600 mb-4">Need help?</p>
-                <a
-                  href="mailto:togather@errandify.ai"
-                  className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:opacity-90 transition block text-center"
-                >
-                  Contact Us
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* WALLET & PAYOUT SECTION */}
-          <div>
-            <h2 className="text-2xl font-bold text-errandify-brown mb-4 flex items-center gap-2">
-              💳 Wallet & Payouts
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-blue-500 hover:shadow-lg transition">
-                <h4 className="text-xl font-bold text-blue-600 mb-2">🏦 Payout Settings</h4>
-                <p className="text-sm text-gray-600 mb-4">Configure payouts</p>
-                <button
-                  onClick={() => navigate('/payout-settings')}
-                  className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:opacity-90 transition"
-                >
-                  Setup
-                </button>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-indigo-500 hover:shadow-lg transition">
-                <h4 className="text-xl font-bold text-indigo-600 mb-2">💰 Payment Methods</h4>
-                <p className="text-sm text-gray-600 mb-4">Add payment methods</p>
-                <button
-                  onClick={() => navigate('/my-pocket')}
-                  className="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold hover:opacity-90 transition"
-                >
-                  Manage
-                </button>
-              </div>
-
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl shadow-md p-6 border-t-4 border-amber-500">
-                <h4 className="text-xl font-bold text-amber-700 mb-2">⏱️ Payout Schedule</h4>
-                <p className="text-sm text-gray-600 mb-4">Every Friday</p>
-                <div className="bg-white p-3 rounded-lg text-center text-sm font-semibold text-amber-700">
-                  20% Platform Fee
+                {/* Certificates */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-lg font-bold text-errandify-brown mb-4">📜 Qualifications & Certificates</h3>
+                  <p className="text-sm text-gray-600 mb-4">Upload certificates to display on your public profile (titles only)</p>
+                  <button className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-errandify-orange hover:bg-orange-50 transition text-center">
+                    <p className="text-2xl mb-2">📄</p>
+                    <p className="text-sm font-semibold text-gray-700">Click to upload certificate</p>
+                    <p className="text-xs text-gray-500">Max 5MB, PNG/JPG/PDF</p>
+                  </button>
                 </div>
               </div>
-            </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
