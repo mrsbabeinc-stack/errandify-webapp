@@ -24,7 +24,7 @@ export default function MyPocketPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [userRole, setUserRole] = useState<'asker' | 'doer' | null>(null);
-  const [activeTab, setActiveTab] = useState<'txns' | 'history' | 'rewards' | 'payout'>('txns');
+  const [activeTab, setActiveTab] = useState<'txns' | 'history' | 'payout'>('txns');
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -200,12 +200,6 @@ export default function MyPocketPage() {
               ⭐ EP Points
             </button>
             <button
-              onClick={() => setActiveTab('rewards')}
-              className={`flex-1 p-2 text-center transition border-l border-gray-100 whitespace-nowrap ${activeTab === 'rewards' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
-            >
-              💎 Rewards
-            </button>
-            <button
               onClick={() => setActiveTab('payout')}
               className={`flex-1 p-2 text-center transition border-l border-gray-100 whitespace-nowrap ${activeTab === 'payout' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
@@ -256,27 +250,6 @@ export default function MyPocketPage() {
                       <p className="text-gray-500">{item.date}</p>
                     </div>
                     <p className={`font-bold ${item.points.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>{item.points}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Rewards Tab */}
-            {activeTab === 'rewards' && (
-              <div className="divide-y divide-gray-100">
-                {[
-                  { name: '$5 Discount', cost: '50 EP', available: true },
-                  { name: '$10 Discount', cost: '100 EP', available: true },
-                  { name: '$20 Discount', cost: '200 EP', available: false },
-                ].map((reward, idx) => (
-                  <div key={idx} className="p-2 flex justify-between items-center hover:bg-gray-50">
-                    <div>
-                      <p className="font-bold text-gray-900">{reward.name}</p>
-                      <p className="text-errandify-orange font-bold">{reward.cost}</p>
-                    </div>
-                    <button className={`px-2 py-1 rounded text-xs font-bold ${reward.available ? 'bg-errandify-orange text-white' : 'bg-gray-300 text-gray-500'}`}>
-                      {reward.available ? 'Redeem' : 'Need'}
-                    </button>
                   </div>
                 ))}
               </div>
