@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AdCarousel from '../components/AdCarousel';
+import EventBanner from '../components/EventBanner';
 
 interface HomePageProps {
   userRole: 'asker' | 'doer';
@@ -99,6 +101,16 @@ export default function HomePage({ userRole }: HomePageProps) {
               ? '💬 Get Help • 🤝 Give Help • 💰 Get Paid'
               : '💬 Get Help • 🤝 Give Help • 💰 Get Paid'}
           </p>
+        </div>
+
+        {/* AD CAROUSEL */}
+        <div className="mb-2">
+          <AdCarousel />
+        </div>
+
+        {/* EVENT BANNER */}
+        <div className="mb-3">
+          <EventBanner />
         </div>
 
         {/* Quick Actions */}
