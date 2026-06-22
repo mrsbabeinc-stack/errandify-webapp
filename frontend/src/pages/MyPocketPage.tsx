@@ -238,7 +238,7 @@ export default function MyPocketPage() {
                     {wallet.transactions.map((tx) => (
                       <div key={tx.id} className="p-2 flex items-center justify-between hover:bg-gray-50">
                         <div className="flex-1">
-                          <p className="font-medium text-gray-800">{tx.description.split(':')[1]?.trim() || tx.description}</p>
+                          <p className="font-medium text-gray-800">{tx.description}</p>
                           <p className="text-gray-500">{formatDate(tx.createdAt)}</p>
                         </div>
                         <p className={`font-bold ${tx.type === 'earn' ? 'text-green-600' : tx.type === 'refund' ? 'text-errandify-orange-600' : 'text-gray-800'}`}>
