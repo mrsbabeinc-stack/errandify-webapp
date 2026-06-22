@@ -49,7 +49,6 @@ export default function MyAccountPage() {
     bio: '',
     email: '',
     mobile: '',
-    monthly_household_income: '',
   });
   const [saving, setSaving] = useState(false);
   const [certificates, setCertificates] = useState<Array<{ id: string; name: string; fileData?: string; fileName?: string }>>([]);
@@ -79,14 +78,10 @@ export default function MyAccountPage() {
           );
           setProfileData(profileRes.data.data);
 
-          // Get CHAS data from stored user info (from login) if available
-          const storedMonthlyIncome = user?.monthlyHouseholdIncome;
-
           setEditForm({
             display_name: profileRes.data.data.name || '',
             email: profileRes.data.data.email || '',
             mobile: profileRes.data.data.mobile || '',
-            monthly_household_income: storedMonthlyIncome ? String(storedMonthlyIncome) : profileRes.data.data.monthlyHouseholdIncome ? String(profileRes.data.data.monthlyHouseholdIncome) : '',
           });
         } catch (error) {
           console.error('Profile API error:', error);
@@ -109,7 +104,6 @@ export default function MyAccountPage() {
             display_name: fallbackProfile.name,
             email: fallbackProfile.email,
             mobile: fallbackProfile.mobile,
-            monthly_household_income: '',
           });
         }
 
@@ -180,18 +174,6 @@ export default function MyAccountPage() {
       // Only include mobile if it's different from current
       if (editForm.mobile && editForm.mobile !== profileData?.mobile) {
         updateData.mobile = editForm.mobile;
-      }
-
-      // Note: monthly_household_income is optional and may cause DB errors
-      // Only send if explicitly provided and not empty
-      if (editForm.monthly_household_income && editForm.monthly_household_income !== '') {
-        // Convert to number if it's a string
-        const income = typeof editForm.monthly_household_income === 'string'
-          ? parseInt(editForm.monthly_household_income, 10)
-          : editForm.monthly_household_income;
-        if (!isNaN(income) && income > 0) {
-          updateData.monthly_household_income = income;
-        }
       }
 
       console.log('Saving profile with data:', updateData);
@@ -777,17 +759,6 @@ export default function MyAccountPage() {
                           className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                         />
                       </div>
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">Monthly Household Income (SGD)</label>
-                        <input
-                          type="number"
-                          value={editForm.monthly_household_income}
-                          onChange={(e) => setEditForm({ ...editForm, monthly_household_income: e.target.value })}
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                          placeholder="e.g., 3000"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Used to calculate CHAS eligibility</p>
-                      </div>
                     </div>
                   ) : (
                     <div className="space-y-1.5 text-xs">
@@ -803,16 +774,12 @@ export default function MyAccountPage() {
                         <p className="text-gray-600 font-semibold">Mobile</p>
                         <p className="text-gray-800">{profileData.mobile || 'Not set'}</p>
                       </div>
-                      <div>
-                        <p className="text-gray-600 font-semibold">Monthly Household Income</p>
-                        <p className="text-gray-800">${editForm.monthly_household_income || 'Not set'}</p>
-                      </div>
                       {user?.chasCardColor && user.chasCardColor !== 'none' && (
-                        <div>
-                          <p className="text-gray-600 font-semibold">CHAS Eligibility</p>
-                          <p className="text-gray-800">
+                        <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                          <p className="text-gray-600 font-semibold text-xs mb-1">CHAS Card</p>
+                          <p className="text-sm">
                             <span className={`font-bold ${user.chasCardColor === 'blue' ? 'text-blue-600' : 'text-green-600'}`}>
-                              {user.chasCardColor.toUpperCase()} Card
+                              {user.chasCardColor.toUpperCase()}
                             </span>
                             {' '} - {user.chasSubsidyPercentage}% Subsidy
                           </p>
