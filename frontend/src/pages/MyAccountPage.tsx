@@ -251,19 +251,19 @@ export default function MyAccountPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
               <div className="bg-white rounded-lg shadow p-3 border-l-4 border-amber-500 text-center">
                 <p className="text-xl font-bold text-errandify-orange">{ratings.reviewCount}</p>
-                <p className="text-xs text-gray-600 font-semibold">👥</p>
+                <p className="text-xs text-gray-600 font-semibold">👥 Reviews</p>
               </div>
               <div className="bg-white rounded-lg shadow p-3 border-l-4 border-green-500 text-center">
                 <p className="text-xl font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold">✅</p>
+                <p className="text-xs text-gray-600 font-semibold">✅ Tasks</p>
               </div>
               <div className="bg-white rounded-lg shadow p-3 border-l-4 border-blue-500 text-center">
                 <p className="text-xl font-bold text-errandify-orange">${profileData.totalEarnings || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold">💰</p>
+                <p className="text-xs text-gray-600 font-semibold">💰 Earnings</p>
               </div>
               <div className="bg-white rounded-lg shadow p-3 border-l-4 border-purple-500 text-center">
                 <p className="text-xl font-bold text-errandify-orange">{profileData.errandifyPoints || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold">⭐</p>
+                <p className="text-xs text-gray-600 font-semibold">⭐ Points</p>
               </div>
             </div>
 
@@ -380,19 +380,19 @@ export default function MyAccountPage() {
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   <div className="bg-white rounded-lg shadow p-3 text-center border-l-2 border-orange-400">
                     <p className="text-2xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
-                    <p className="text-xs text-gray-600 font-semibold">⭐</p>
+                    <p className="text-xs text-gray-600 font-semibold">⭐ Rating</p>
                   </div>
                   <div className="bg-white rounded-lg shadow p-3 text-center border-l-2 border-orange-400">
                     <p className="text-2xl font-bold text-errandify-orange">{ratings.reviewCount}</p>
-                    <p className="text-xs text-gray-600 font-semibold">👥</p>
+                    <p className="text-xs text-gray-600 font-semibold">👥 Reviews</p>
                   </div>
                   <div className="bg-white rounded-lg shadow p-3 text-center border-l-2 border-orange-400">
                     <p className="text-2xl font-bold text-errandify-orange">{profileData.categories?.length || 0}</p>
-                    <p className="text-xs text-gray-600 font-semibold">🎯</p>
+                    <p className="text-xs text-gray-600 font-semibold">🎯 Skills</p>
                   </div>
                   <div className="bg-white rounded-lg shadow p-3 text-center border-l-2 border-orange-400">
                     <p className="text-2xl font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
-                    <p className="text-xs text-gray-600 font-semibold">✅</p>
+                    <p className="text-xs text-gray-600 font-semibold">✅ Tasks</p>
                   </div>
                 </div>
 
