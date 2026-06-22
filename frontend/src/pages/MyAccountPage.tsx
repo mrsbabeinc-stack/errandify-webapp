@@ -219,11 +219,9 @@ export default function MyAccountPage() {
         </div>
 
         {/* DASHBOARD - Always show first */}
-        <div>
-          {activeSection === 'dashboard' && (
-
+        {activeSection === 'dashboard' && (
+          <div className="space-y-1.5">
             {/* DASHBOARD CONTENT */}
-            <div className="space-y-1.5">
             {/* PROFILE HERO CARD */}
             <div className="relative bg-white rounded-lg shadow p-3 border-l-4 border-errandify-orange overflow-hidden mb-1.5">
               <div className="flex items-center justify-between gap-3">
@@ -324,11 +322,12 @@ export default function MyAccountPage() {
                 <p className="font-bold text-xs text-gray-800">Help</p>
               </button>
             </div>
-            )}
+          </div>
+        )}
 
-            {/* PROFILE SECTION */}
-            {activeSection === 'profile' && (
-              <div className="space-y-3">
+        {/* PROFILE SECTION */}
+        {activeSection === 'profile' && (
+          <div className="space-y-3">
                 <div className="bg-white rounded shadow p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-errandify-brown">📝 Your Profile</h3>
@@ -442,28 +441,27 @@ export default function MyAccountPage() {
                   )}
                 </div>
               </div>
-            )}
+            </div>
+        )}
 
-            {/* SETTINGS SECTION */}
-            {activeSection === 'settings' && (
-              <div className="bg-white rounded shadow p-4">
-                <h3 className="text-sm font-bold text-errandify-brown mb-3">⚙️ Settings</h3>
-                {profileData.userId && (
-                  <div className="mb-3 bg-amber-50 border border-amber-200 rounded p-2">
-                    <p className="text-xs text-gray-600 font-semibold">User ID</p>
-                    <code className="text-xs font-mono">{profileData.userId}</code>
-                    <button
-                      onClick={() => navigator.clipboard.writeText(profileData.userId || '')}
-                      className="text-xs text-errandify-orange font-semibold ml-2"
-                    >
-                      Copy
-                    </button>
-                  </div>
-                )}
+        {/* SETTINGS SECTION */}
+        {activeSection === 'settings' && (
+          <div className="bg-white rounded shadow p-4">
+            <h3 className="text-sm font-bold text-errandify-brown mb-3">⚙️ Settings</h3>
+            {profileData.userId && (
+              <div className="mb-3 bg-amber-50 border border-amber-200 rounded p-2">
+                <p className="text-xs text-gray-600 font-semibold">User ID</p>
+                <code className="text-xs font-mono">{profileData.userId}</code>
+                <button
+                  onClick={() => navigator.clipboard.writeText(profileData.userId || '')}
+                  className="text-xs text-errandify-orange font-semibold ml-2"
+                >
+                  Copy
+                </button>
               </div>
             )}
-        </div>
-        </div>
+          </div>
+        )}
 
         {/* BOTTOM QUICK LINKS - ONLY SHOW ON DASHBOARD */}
         {activeSection === 'dashboard' && (
