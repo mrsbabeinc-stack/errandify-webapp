@@ -487,4 +487,176 @@ router.get('/my-vouchers', authMiddleware, async (req: AuthRequest, res: Respons
   }
 });
 
+// ==================== REWARD MANAGEMENT ====================
+
+// GET /api/wallet/rewards - Get all active rewards
+router.get('/rewards', async (req: any, res: Response) => {
+  try {
+    const result = await db.query(
+      `SELECT id, name, description, category, cost_points, icon, status, created_at
+       FROM rewards
+       WHERE status = 'active'
+       ORDER BY cost_points ASC`
+    );
+
+    res.json({
+      success: true,
+      data: result.rows,
+    });
+  } catch (error: any) {
+    console.error('Get rewards error:', error);
+    res.status(500).json({ error: 'Failed to fetch rewards' });
+  }
+});
+
+// GET /api/wallet/rewards/all - Get all rewards (admin)
+router.get('/rewards/all', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Check if user is admin
+    const userResult = await db.query(
+      `SELECT role FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (userResult.rows.length === 0 || userResult.rows[0].role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const result = await db.query(
+      `SELECT id, name, description, category, cost_points, icon, status, created_at
+       FROM rewards
+       ORDER BY cost_points ASC`
+    );
+
+    res.json({
+      success: true,
+      data: result.rows,
+    });
+  } catch (error: any) {
+    console.error('Get all rewards error:', error);
+    res.status(500).json({ error: 'Failed to fetch rewards' });
+  }
+});
+
+// POST /api/wallet/rewards - Create new reward (admin)
+router.post('/rewards', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const { name, description, category, cost_points, icon } = req.body;
+
+    // Check if user is admin
+    const userResult = await db.query(
+      `SELECT role FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (userResult.rows.length === 0 || userResult.rows[0].role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    if (!name || !cost_points) {
+      return res.status(400).json({ error: 'Name and cost_points are required' });
+    }
+
+    const result = await db.query(
+      `INSERT INTO rewards (name, description, category, cost_points, icon, status)
+       VALUES ($1, $2, $3, $4, $5, 'active')
+       RETURNING *`,
+      [name, description || null, category || 'other', cost_points, icon || '🎁']
+    );
+
+    res.status(201).json({
+      success: true,
+      data: result.rows[0],
+    });
+  } catch (error: any) {
+    console.error('Create reward error:', error);
+    res.status(500).json({ error: 'Failed to create reward' });
+  }
+});
+
+// PUT /api/wallet/rewards/:id - Update reward (admin)
+router.put('/rewards/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const rewardId = parseInt(req.params.id, 10);
+    const { name, description, category, cost_points, icon, status } = req.body;
+
+    // Check if user is admin
+    const userResult = await db.query(
+      `SELECT role FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (userResult.rows.length === 0 || userResult.rows[0].role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const result = await db.query(
+      `UPDATE rewards
+       SET name = COALESCE($1, name),
+           description = COALESCE($2, description),
+           category = COALESCE($3, category),
+           cost_points = COALESCE($4, cost_points),
+           icon = COALESCE($5, icon),
+           status = COALESCE($6, status),
+           updated_at = NOW()
+       WHERE id = $7
+       RETURNING *`,
+      [name, description, category, cost_points, icon, status, rewardId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Reward not found' });
+    }
+
+    res.json({
+      success: true,
+      data: result.rows[0],
+    });
+  } catch (error: any) {
+    console.error('Update reward error:', error);
+    res.status(500).json({ error: 'Failed to update reward' });
+  }
+});
+
+// DELETE /api/wallet/rewards/:id - Delete reward (admin)
+router.delete('/rewards/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const rewardId = parseInt(req.params.id, 10);
+
+    // Check if user is admin
+    const userResult = await db.query(
+      `SELECT role FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (userResult.rows.length === 0 || userResult.rows[0].role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    // Soft delete - mark as inactive instead of removing
+    const result = await db.query(
+      `UPDATE rewards SET status = 'inactive', updated_at = NOW() WHERE id = $1 RETURNING *`,
+      [rewardId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Reward not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Reward deleted successfully',
+      data: result.rows[0],
+    });
+  } catch (error: any) {
+    console.error('Delete reward error:', error);
+    res.status(500).json({ error: 'Failed to delete reward' });
+  }
+});
+
 export default router;
