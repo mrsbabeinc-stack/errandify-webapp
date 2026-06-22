@@ -38,11 +38,26 @@ export default function MyAccountPage() {
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-        const profileRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setProfileData(profileRes.data.data);
+        try {
+          const profileRes = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setProfileData(profileRes.data.data);
+        } catch (error) {
+          console.error('Profile API error:', error);
+          // Fallback to user data from localStorage
+          setProfileData({
+            id: user.id,
+            name: user.name || 'User',
+            role: user.role || 'doer',
+            reviewCount: 0,
+            completedTasks: 0,
+            totalEarnings: 0,
+            errandifyPoints: 0,
+            categories: [],
+          });
+        }
 
         try {
           const ratingsRes = await axios.get(
@@ -74,7 +89,17 @@ export default function MyAccountPage() {
   }
 
   if (!profileData) {
-    return <div className="p-6 text-center text-red-600">Failed to load account</div>;
+    return (
+      <div className="p-6 text-center">
+        <p className="text-red-600 mb-4">Failed to load account</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-errandify-orange text-white rounded"
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
   const completeness = Math.round((2 / 5) * 100);
