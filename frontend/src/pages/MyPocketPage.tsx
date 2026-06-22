@@ -255,35 +255,13 @@ export default function MyPocketPage() {
               </div>
             )}
 
-            {/* Payout Tab */}
+            {/* Payout Tab - Transactions Only */}
             {activeTab === 'payout' && (
-              <div className="p-2 space-y-3">
+              <div className="p-2 space-y-2">
                 <div className="bg-blue-50 border border-blue-200 rounded p-2">
                   <p className="text-xs text-blue-900 font-semibold">💡 How It Works</p>
                   <p className="text-xs text-blue-800 mt-1">After an errand is completed, earnings will be transferred to your account within 48 hours (if no dispute is raised).</p>
                 </div>
-
-                <div className="bg-white border border-gray-200 rounded p-2">
-                  <h3 className="text-xs font-bold text-errandify-brown mb-2">Payout Details</h3>
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Bank</span>
-                      <span className="font-bold text-gray-900">STRIPE TEST BANK</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Account</span>
-                      <span className="font-bold text-gray-900">•••• •••• •••• 3456</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Status</span>
-                      <span className="font-bold text-green-600">✓ Approved</span>
-                    </div>
-                  </div>
-                </div>
-
-                <button className="w-full bg-errandify-orange text-white py-1.5 rounded font-bold text-xs hover:bg-orange-600 transition">
-                  ✏️ Change Bank Account
-                </button>
 
                 {/* Payout & Drawout Transactions */}
                 <div className="bg-white border border-gray-200 rounded overflow-hidden">
@@ -314,6 +292,13 @@ export default function MyPocketPage() {
                     </div>
                   </div>
                 </div>
+
+                <button
+                  onClick={() => navigate('/payout-settings')}
+                  className="w-full bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600 transition"
+                >
+                  💳 Manage Bank Account
+                </button>
               </div>
             )}
           </div>
