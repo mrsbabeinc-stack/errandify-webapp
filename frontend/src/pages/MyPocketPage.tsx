@@ -171,9 +171,13 @@ export default function MyPocketPage() {
             {wallet.pendingPayouts > 0 && (
               <button
                 onClick={() => navigate('/transaction-history')}
-                className="flex-1 border border-white text-white font-semibold py-1.5 rounded transition"
+                className="flex-1 border border-white text-white font-semibold py-1.5 rounded transition group relative"
+                title="Money earned but waiting to be paid out"
               >
                 💰 {formatCurrency(wallet.pendingPayouts)}
+                <div className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
+                  Pending: Waiting 48h after completion
+                </div>
               </button>
             )}
           </div>
@@ -181,17 +185,26 @@ export default function MyPocketPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
-          <div className="bg-white rounded-lg p-2 border border-gray-200 text-center">
+          <div className="bg-white rounded-lg p-2 border border-gray-200 text-center group relative cursor-help">
             <p className="text-gray-600 mb-0.5">Earned</p>
             <p className="font-bold text-green-600">{formatCurrency(wallet.totalEarned)}</p>
+            <div className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
+              Total from completed errands
+            </div>
           </div>
-          <div className="bg-white rounded-lg p-2 border border-gray-200 text-center">
+          <div className="bg-white rounded-lg p-2 border border-gray-200 text-center group relative cursor-help">
             <p className="text-gray-600 mb-0.5">Spent</p>
             <p className="font-bold text-errandify-orange-600">{formatCurrency(wallet.totalSpent)}</p>
+            <div className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
+              Total paid for posted errands
+            </div>
           </div>
-          <div className="bg-white rounded-lg p-2 border border-gray-200 text-center">
+          <div className="bg-white rounded-lg p-2 border border-gray-200 text-center group relative cursor-help">
             <p className="text-gray-600 mb-0.5">Points</p>
             <p className="font-bold text-errandify-orange">{wallet.errandifyPoints}</p>
+            <div className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
+              Errandify Points balance
+            </div>
           </div>
         </div>
 
