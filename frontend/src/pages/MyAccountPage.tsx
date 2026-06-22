@@ -400,51 +400,60 @@ export default function MyAccountPage() {
             {/* SHARED INFO */}
             {profileTab === 'shared' && (
               <div className="space-y-2">
-                {/* Profile Card */}
-                <div className="bg-white rounded border border-gray-200 overflow-hidden">
-                  <div className="bg-gradient-to-r from-errandify-orange to-orange-500 p-3 text-white">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-sm font-bold">{profileData.name}</h2>
-                        <p className="text-xs opacity-90">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold">{ratings.averageRating.toFixed(1)}</p>
-                        <p className="text-xs">⭐ Rating</p>
-                      </div>
+                {/* Personal Information */}
+                <div className="bg-white rounded border border-gray-200 p-2">
+                  <h3 className="text-xs font-bold text-errandify-brown mb-2">✅ Personal Information</h3>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Alias:</span>
+                      <span className="font-semibold text-gray-900">{profileData.name || 'Not set'}</span>
                     </div>
-                  </div>
-
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-3 gap-1 p-2 border-t border-gray-100">
-                    <div className="text-center">
-                      <p className="text-sm font-bold text-errandify-orange">{ratings.reviewCount}</p>
-                      <p className="text-xs text-gray-600">Reviews</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
-                      <p className="text-xs text-gray-600">Errands</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm font-bold text-errandify-orange">{profileData.categories?.length || 0}</p>
-                      <p className="text-xs text-gray-600">Skills</p>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Gender:</span>
+                      <span className="font-semibold text-gray-900">Not set</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Skills */}
-                {profileData.categories && profileData.categories.length > 0 && (
-                  <div className="bg-white rounded border border-gray-200 p-2">
-                    <h3 className="text-xs font-bold text-errandify-brown mb-1.5">🎯 Skills</h3>
-                    <div className="flex flex-wrap gap-1">
-                      {profileData.categories.slice(0, 6).map((cat, idx) => (
-                        <span key={idx} className="bg-orange-100 text-errandify-orange text-xs font-semibold px-2 py-1 rounded">
-                          {cat}
-                        </span>
-                      ))}
+                {/* Stats Cards */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-amber-50 border border-amber-200 rounded p-3 text-center">
+                    <p className="text-2xl font-bold text-errandify-orange">3</p>
+                    <p className="text-xs text-gray-600 mt-1">❤️ Trusted User</p>
+                  </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded p-3 text-center">
+                    <p className="text-2xl font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
+                    <p className="text-xs text-gray-600 mt-1">💪 Errand Completed</p>
+                  </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded p-3 text-center">
+                    <p className="text-2xl font-bold text-errandify-orange">30</p>
+                    <p className="text-xs text-gray-600 mt-1">📋 Errand Posted</p>
+                  </div>
+                </div>
+
+                {/* Certified Badges */}
+                <div className="bg-white rounded border border-gray-200 p-2">
+                  <button className="flex items-center justify-between w-full mb-2">
+                    <h3 className="text-xs font-bold text-errandify-brown">🎖️ Certified Badges</h3>
+                    <span className="text-xs">▼</span>
+                  </button>
+                  <div className="space-y-1">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
+                      <p className="text-xs">🏆 wellness & health coach</p>
                     </div>
                   </div>
-                )}
+                </div>
+
+                {/* Award Badges */}
+                <div className="bg-white rounded border border-gray-200 p-2">
+                  <button className="flex items-center justify-between w-full mb-2">
+                    <h3 className="text-xs font-bold text-errandify-brown">🎗️ Award Badges</h3>
+                    <span className="text-xs">▼</span>
+                  </button>
+                  <div className="text-xs text-gray-600 text-center py-2">
+                    No badges yet
+                  </div>
+                </div>
               </div>
             )}
 
