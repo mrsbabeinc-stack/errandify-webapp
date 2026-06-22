@@ -184,18 +184,46 @@ export default function MyAccountPage() {
 
       {/* MAIN CONTENT */}
       <div className="max-w-6xl mx-auto px-4 py-6 w-full">
+        {/* AD CAROUSEL + EVENT BANNER */}
+        <div className="mb-4">
+          <AdCarousel />
+          <div className="mt-2">
+            <EventBanner />
+          </div>
+        </div>
+
+        {/* STICKY TABS - Below banner */}
+        <div className="sticky top-20 z-40 bg-white border-b-2 border-gray-200 mb-4 -mx-4 px-4 py-2">
+          <div className="flex gap-4">
+            <button
+              onClick={() => setActiveSection('dashboard')}
+              className={`pb-2 font-bold text-sm transition ${
+                activeSection === 'dashboard'
+                  ? 'border-b-4 border-errandify-orange text-errandify-orange'
+                  : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+              }`}
+            >
+              📊 Dashboard
+            </button>
+            <button
+              onClick={() => setActiveSection('profile')}
+              className={`pb-2 font-bold text-sm transition ${
+                activeSection === 'profile'
+                  ? 'border-b-4 border-errandify-orange text-errandify-orange'
+                  : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+              }`}
+            >
+              👤 My Profile
+            </button>
+          </div>
+        </div>
+
         {/* DASHBOARD - Always show first */}
         <div>
-          {/* AD CAROUSEL + EVENT BANNER */}
-          <div className="mb-4">
-            <AdCarousel />
-            <div className="mt-2">
-              <EventBanner />
-            </div>
-          </div>
+          {activeSection === 'dashboard' && (
 
-          {/* DASHBOARD CONTENT */}
-          <div className="space-y-1.5">
+            {/* DASHBOARD CONTENT */}
+            <div className="space-y-1.5">
             {/* PROFILE HERO CARD */}
             <div className="relative bg-white rounded-lg shadow p-3 border-l-4 border-errandify-orange overflow-hidden mb-1.5">
               <div className="flex items-center justify-between gap-3">
@@ -296,18 +324,7 @@ export default function MyAccountPage() {
                 <p className="font-bold text-xs text-gray-800">Help</p>
               </button>
             </div>
-          </div>
-        </div>
-
-        {/* ADDITIONAL SECTIONS - SHOW BELOW DASHBOARD */}
-        {activeSection && (
-          <div className="mt-6 pt-6 border-t-2 border-gray-200">
-            <button
-              onClick={() => setActiveSection('dashboard')}
-              className="mb-3 px-3 py-1 bg-gray-200 text-gray-700 rounded text-xs font-semibold hover:bg-gray-300 transition"
-            >
-              ← Back to Dashboard
-            </button>
+            )}
 
             {/* PROFILE SECTION */}
             {activeSection === 'profile' && (
@@ -445,11 +462,11 @@ export default function MyAccountPage() {
                 )}
               </div>
             )}
-          </div>
-        )}
+        </div>
+        </div>
 
         {/* BOTTOM QUICK LINKS - ONLY SHOW ON DASHBOARD */}
-        {!activeSection && (
+        {activeSection === 'dashboard' && (
           <div className="mt-4 pt-4 border-t-2 border-gray-200">
             <div className="flex gap-1 overflow-x-auto pb-2 flex-wrap">
               <button
