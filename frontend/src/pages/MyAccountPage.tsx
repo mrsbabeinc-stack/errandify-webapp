@@ -58,6 +58,7 @@ export default function MyAccountPage() {
   const [successReward, setSuccessReward] = useState<{ name: string; points: number } | null>(null);
   const [pointHistory, setPointHistory] = useState<any[]>([]);
   const [myVouchers, setMyVouchers] = useState<any[]>([]);
+  const [rewards, setRewards] = useState<any[]>([]);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -142,6 +143,17 @@ export default function MyAccountPage() {
           console.log('My vouchers:', vouchersRes.data.data);
         } catch (vouchersError) {
           console.error('My vouchers fetch error:', vouchersError);
+        }
+
+        // Fetch available rewards
+        try {
+          const rewardsRes = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/rewards`
+          );
+          setRewards(rewardsRes.data.data || []);
+          console.log('Rewards:', rewardsRes.data.data);
+        } catch (rewardsError) {
+          console.error('Rewards fetch error:', rewardsError);
         }
 
         try {
@@ -1533,84 +1545,50 @@ export default function MyAccountPage() {
                       ))}
                     </div>
 
-                    {/* Rewards List */}
+                    {/* Rewards List - Dynamic from Database */}
                     <div className="divide-y divide-purple-100 space-y-2">
-                      <div className="p-3 bg-purple-50 hover:bg-purple-100 transition rounded-lg flex justify-between items-center">
-                        <div>
-                          <p className="font-bold text-gray-900">💰 $5 Discount</p>
-                          <p className="text-purple-600 font-bold">⭐ 50 EP</p>
+                      {rewards.length === 0 ? (
+                        <div className="text-center py-6 text-gray-500">
+                          <p>No rewards available</p>
                         </div>
-                        <button
-                          onClick={() => handleRedeemReward('discount-5', 50, '$5 Discount')}
-                          disabled={(walletData.errandifyPoints || 0) < 50}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transform transition ${
-                            (walletData.errandifyPoints || 0) < 50
-                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-md hover:scale-105'
-                          }`}
-                        >
-                          ✅ Redeem
-                        </button>
-                      </div>
-                      <div className="p-3 bg-purple-50 hover:bg-purple-100 transition rounded-lg flex justify-between items-center">
-                        <div>
-                          <p className="font-bold text-gray-900">💳 $10 Discount</p>
-                          <p className="text-purple-600 font-bold">⭐ 100 EP</p>
-                        </div>
-                        <button
-                          onClick={() => handleRedeemReward('discount-10', 100, '$10 Discount')}
-                          disabled={(walletData.errandifyPoints || 0) < 100}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transform transition ${
-                            (walletData.errandifyPoints || 0) < 100
-                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              : 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white hover:shadow-md hover:scale-105'
-                          }`}
-                        >
-                          ✅ Redeem
-                        </button>
-                      </div>
-                      <div className="p-3 bg-purple-50 hover:bg-purple-100 transition rounded-lg flex justify-between items-center">
-                        <div>
-                          <p className="font-bold text-gray-900">☕ Starbucks Voucher</p>
-                          <p className="text-purple-600 font-bold">⭐ 500 EP</p>
-                        </div>
-                        <button
-                          onClick={() => handleRedeemReward('starbucks-voucher', 500, 'Starbucks Voucher')}
-                          disabled={(walletData.errandifyPoints || 0) < 500}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transform transition ${
-                            (walletData.errandifyPoints || 0) < 500
-                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-md hover:scale-105'
-                          }`}
-                        >
-                          ✅ Redeem
-                        </button>
-                      </div>
-                      <div className={`p-3 transition rounded-lg flex justify-between items-center ${
-                        (walletData.errandifyPoints || 0) < 200
-                          ? 'bg-gray-50 hover:bg-gray-100'
-                          : 'bg-purple-50 hover:bg-purple-100'
-                      }`}>
-                        <div>
-                          <p className="font-bold text-gray-900">💎 $20 Discount</p>
-                          {(walletData.errandifyPoints || 0) < 200 ? (
-                            <p className="text-gray-600 font-bold">⭐ 200 EP (Need {200 - (walletData.errandifyPoints || 0)} more!)</p>
-                          ) : (
-                            <p className="text-purple-600 font-bold">⭐ 200 EP ✅ You can redeem!</p>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => handleRedeemReward('discount-20', 200, '$20 Discount')}
-                          disabled={(walletData.errandifyPoints || 0) < 200}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transform transition ${
-                            (walletData.errandifyPoints || 0) < 200
-                              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                              : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-md hover:scale-105'
-                          }`}
-                        >
-                          {(walletData.errandifyPoints || 0) < 200 ? '🔒 Need More' : '✅ Redeem'}
-                        </button>
-                      </div>
+                      ) : (
+                        rewards.map((reward: any) => {
+                          const userPoints = walletData.errandifyPoints || 0;
+                          const canRedeem = userPoints >= reward.cost_points;
+                          const pointsNeeded = Math.max(0, reward.cost_points - userPoints);
+
+                          return (
+                            <div
+                              key={reward.id}
+                              className={`p-3 transition rounded-lg flex justify-between items-center ${
+                                canRedeem
+                                  ? 'bg-purple-50 hover:bg-purple-100'
+                                  : 'bg-gray-50 hover:bg-gray-100'
+                              }`}
+                            >
+                              <div>
+                                <p className="font-bold text-gray-900">{reward.icon} {reward.name}</p>
+                                {canRedeem ? (
+                                  <p className="text-purple-600 font-bold">⭐ {reward.cost_points} EP ✅ You can redeem!</p>
+                                ) : (
+                                  <p className="text-gray-600 font-bold">⭐ {reward.cost_points} EP {pointsNeeded > 0 && `(Need ${pointsNeeded} more!)`}</p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => handleRedeemReward(`reward-${reward.id}`, reward.cost_points, reward.name)}
+                                disabled={!canRedeem}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transform transition ${
+                                  canRedeem
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-md hover:scale-105'
+                                    : 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                                }`}
+                              >
+                                {canRedeem ? '✅ Redeem' : '🔒 Need More'}
+                              </button>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                 )}
