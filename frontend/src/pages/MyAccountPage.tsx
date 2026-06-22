@@ -36,6 +36,7 @@ export default function MyAccountPage() {
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | null>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [pocketTab, setPocketTab] = useState<'txns' | 'history' | 'payout'>('txns');
+  const [rewardTab, setRewardTab] = useState<'overview' | 'pointHistory' | 'vouchers' | 'gift' | 'refer'>('overview');
   const [isEditingBankDetails, setIsEditingBankDetails] = useState(false);
   const [bankDetails, setBankDetails] = useState({
     bankName: 'STRIPE TEST BANK',
@@ -43,6 +44,9 @@ export default function MyAccountPage() {
     accountNumber: '•••• •••• •••• 3456',
   });
   const [successMessage, setSuccessMessage] = useState('');
+  const [selectedVoucherCategory, setSelectedVoucherCategory] = useState('all');
+  const [giftPoints, setGiftPoints] = useState('');
+  const [selectedRecipient, setSelectedRecipient] = useState('');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -1287,73 +1291,236 @@ export default function MyAccountPage() {
               </p>
             </div>
 
-            {/* Redeem & Gift Buttons */}
-            <div className="flex gap-2">
-              <button className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-2.5 rounded-lg font-bold text-xs hover:from-green-600 hover:to-green-700 shadow-md transform hover:scale-105 transition">
-                🎁 Redeem Now
-              </button>
-              <button className="flex-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white py-2.5 rounded-lg font-bold text-xs hover:from-pink-600 hover:to-rose-600 shadow-md transform hover:scale-105 transition">
-                🎀 Send A Gift
-              </button>
-            </div>
+            {/* Sub-tabs for Rewards */}
+            <div className="bg-white rounded-lg border-2 border-purple-200 shadow-lg overflow-hidden">
+              <div className="flex text-xs font-semibold border-b border-purple-100 overflow-x-auto">
+                <button
+                  onClick={() => setRewardTab('overview')}
+                  className={`flex-1 p-2 text-center transition whitespace-nowrap ${rewardTab === 'overview' ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' : 'hover:bg-purple-50'}`}
+                >
+                  💎 Overview
+                </button>
+                <button
+                  onClick={() => setRewardTab('pointHistory')}
+                  className={`flex-1 p-2 text-center transition border-l border-purple-100 whitespace-nowrap ${rewardTab === 'pointHistory' ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' : 'hover:bg-purple-50'}`}
+                >
+                  📜 Point History
+                </button>
+                <button
+                  onClick={() => setRewardTab('vouchers')}
+                  className={`flex-1 p-2 text-center transition border-l border-purple-100 whitespace-nowrap ${rewardTab === 'vouchers' ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' : 'hover:bg-purple-50'}`}
+                >
+                  🎟️ Vouchers
+                </button>
+                <button
+                  onClick={() => setRewardTab('gift')}
+                  className={`flex-1 p-2 text-center transition border-l border-purple-100 whitespace-nowrap ${rewardTab === 'gift' ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' : 'hover:bg-purple-50'}`}
+                >
+                  🎀 Gift
+                </button>
+                <button
+                  onClick={() => setRewardTab('refer')}
+                  className={`flex-1 p-2 text-center transition border-l border-purple-100 whitespace-nowrap ${rewardTab === 'refer' ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' : 'hover:bg-purple-50'}`}
+                >
+                  👥 Refer
+                </button>
+              </div>
 
-            {/* Available Rewards */}
-            <div className="bg-white rounded-lg shadow-lg border-2 border-purple-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-3">
-                <h3 className="text-sm font-bold">🎁✨ MyRewards - Redeem Your Treasures ✨🎁</h3>
-              </div>
-              <div className="divide-y divide-purple-100 text-xs">
-                <div className="p-3 flex justify-between items-center hover:bg-purple-50 transition">
-                  <div>
-                    <p className="font-bold text-gray-900">💰 $5 Discount</p>
-                    <p className="text-purple-600 font-bold text-sm">⭐ 50 EP</p>
+              {/* TAB CONTENT */}
+              <div className="p-3 text-xs">
+                {/* OVERVIEW TAB */}
+                {rewardTab === 'overview' && (
+                  <div className="space-y-2">
+                    <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-3 rounded-lg shadow-md">
+                      <h3 className="text-sm font-bold">🎁✨ MyRewards - Redeem Your Treasures ✨🎁</h3>
+                    </div>
+                    <div className="divide-y divide-purple-100 space-y-2">
+                      <div className="p-3 bg-purple-50 hover:bg-purple-100 transition rounded-lg flex justify-between items-center">
+                        <div>
+                          <p className="font-bold text-gray-900">💰 $5 Discount</p>
+                          <p className="text-purple-600 font-bold">⭐ 50 EP</p>
+                        </div>
+                        <button className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:shadow-md transform hover:scale-105 transition">✅ Redeem</button>
+                      </div>
+                      <div className="p-3 bg-purple-50 hover:bg-purple-100 transition rounded-lg flex justify-between items-center">
+                        <div>
+                          <p className="font-bold text-gray-900">💳 $10 Discount</p>
+                          <p className="text-purple-600 font-bold">⭐ 100 EP</p>
+                        </div>
+                        <button className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:shadow-md transform hover:scale-105 transition">✅ Redeem</button>
+                      </div>
+                      <div className="p-3 bg-gray-50 hover:bg-gray-100 transition rounded-lg flex justify-between items-center">
+                        <div>
+                          <p className="font-bold text-gray-900">💎 $20 Discount</p>
+                          <p className="text-gray-600 font-bold">⭐ 200 EP (Need 175 more!)</p>
+                        </div>
+                        <button className="bg-gray-300 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold cursor-not-allowed">🔒 Need More</button>
+                      </div>
+                    </div>
                   </div>
-                  <button className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:shadow-md transform hover:scale-105 transition">✅ Redeem</button>
-                </div>
-                <div className="p-3 flex justify-between items-center hover:bg-purple-50 transition">
-                  <div>
-                    <p className="font-bold text-gray-900">💳 $10 Discount</p>
-                    <p className="text-purple-600 font-bold text-sm">⭐ 100 EP</p>
-                  </div>
-                  <button className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:shadow-md transform hover:scale-105 transition">✅ Redeem</button>
-                </div>
-                <div className="p-3 flex justify-between items-center hover:bg-purple-50 transition">
-                  <div>
-                    <p className="font-bold text-gray-900">💎 $20 Discount</p>
-                    <p className="text-purple-600 font-bold text-sm">⭐ 200 EP (Need 175 more!)</p>
-                  </div>
-                  <button className="bg-gray-300 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold cursor-not-allowed">🔒 Need More</button>
-                </div>
-              </div>
-            </div>
+                )}
 
-            {/* Point History */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="bg-errandify-orange text-white p-2">
-                <h3 className="text-xs font-bold">📜 Point History</h3>
-              </div>
-              <div className="divide-y divide-gray-100 text-xs">
-                <div className="p-2 flex justify-between hover:bg-gray-50">
-                  <div>
-                    <p className="font-bold text-gray-900">Completed Errand</p>
-                    <p className="text-gray-500">17-06-2026</p>
+                {/* POINT HISTORY TAB */}
+                {rewardTab === 'pointHistory' && (
+                  <div className="space-y-2">
+                    <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-3 rounded-lg shadow-md">
+                      <h3 className="text-sm font-bold">📜✨ Point History ✨</h3>
+                    </div>
+                    <div className="divide-y divide-amber-100 space-y-2">
+                      <div className="p-3 bg-amber-50 hover:bg-amber-100 transition rounded-lg flex justify-between">
+                        <div>
+                          <p className="font-bold text-gray-900">✅ Errand Completion</p>
+                          <p className="text-gray-500">17-06-2026 10:28 PM</p>
+                        </div>
+                        <p className="font-bold text-green-600">+5 EP</p>
+                      </div>
+                      <div className="p-3 bg-amber-50 hover:bg-amber-100 transition rounded-lg flex justify-between">
+                        <div>
+                          <p className="font-bold text-gray-900">🎁 Point Granted</p>
+                          <p className="text-gray-500">15-06-2026 02:54 PM</p>
+                        </div>
+                        <p className="font-bold text-green-600">+20 EP</p>
+                      </div>
+                      <div className="p-3 bg-amber-50 hover:bg-amber-100 transition rounded-lg flex justify-between">
+                        <div>
+                          <p className="font-bold text-gray-900">👥 Referred Friend @SunnyLove</p>
+                          <p className="text-gray-500">12-06-2026 01:15 PM</p>
+                        </div>
+                        <p className="font-bold text-green-600">+50 EP</p>
+                      </div>
+                    </div>
                   </div>
-                  <p className="font-bold text-green-600">+10 EP</p>
-                </div>
-                <div className="p-2 flex justify-between hover:bg-gray-50">
-                  <div>
-                    <p className="font-bold text-gray-900">Referred Friend @SunnyLove</p>
-                    <p className="text-gray-500">12-06-2026</p>
+                )}
+
+                {/* VOUCHERS TAB */}
+                {rewardTab === 'vouchers' && (
+                  <div className="space-y-2">
+                    <div className="bg-gradient-to-r from-pink-500 to-rose-600 text-white p-3 rounded-lg shadow-md">
+                      <h3 className="text-sm font-bold">🎟️✨ Kampung Vouchers (1) ✨</h3>
+                    </div>
+                    <div className="flex gap-1 mb-2 overflow-x-auto">
+                      {['All', 'Food', 'Shop', 'Services', 'Travel'].map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => setSelectedVoucherCategory(cat.toLowerCase())}
+                          className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition ${
+                            selectedVoucherCategory === cat.toLowerCase()
+                              ? 'bg-pink-500 text-white'
+                              : 'bg-pink-100 text-pink-700 hover:bg-pink-200'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg shadow-md mb-2">
+                      <p className="font-bold text-sm">🍷 Errandify Voucher</p>
+                    </div>
+                    <div className="p-3 bg-pink-50 hover:bg-pink-100 transition rounded-lg space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-bold text-gray-900">☕ Starbucks</p>
+                          <p className="text-gray-600 text-xs">Food</p>
+                        </div>
+                        <p className="text-xs text-gray-500">x1</p>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-pink-200">
+                        <p className="font-bold text-pink-600">💰 500 EP</p>
+                        <p className="text-xs text-gray-500">No Expiry ♾️</p>
+                      </div>
+                      <button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 rounded-lg font-bold text-sm hover:shadow-md transform hover:scale-105 transition mt-2">
+                        🎁 Redeem
+                      </button>
+                    </div>
                   </div>
-                  <p className="font-bold text-green-600">+50 EP</p>
-                </div>
-                <div className="p-2 flex justify-between hover:bg-gray-50">
-                  <div>
-                    <p className="font-bold text-gray-900">Redeemed Discount</p>
-                    <p className="text-gray-500">10-06-2026</p>
+                )}
+
+                {/* GIFT TAB */}
+                {rewardTab === 'gift' && (
+                  <div className="space-y-2">
+                    <div className="bg-gradient-to-r from-rose-500 to-pink-600 text-white p-3 rounded-lg shadow-md">
+                      <h3 className="text-sm font-bold">🎀✨ Send Points as Gift ✨</h3>
+                    </div>
+                    <div className="bg-rose-50 p-3 rounded-lg space-y-2">
+                      <div>
+                        <label className="text-xs font-bold text-gray-700 block mb-1">Points to Send (Max 25)</label>
+                        <input
+                          type="number"
+                          max="25"
+                          value={giftPoints}
+                          onChange={(e) => setGiftPoints(e.target.value)}
+                          className="w-full px-2 py-1.5 border-2 border-rose-300 rounded text-sm focus:border-rose-500 focus:outline-none"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-700 block mb-1">Select Recipient</label>
+                        <input
+                          type="text"
+                          placeholder="Search user by alias..."
+                          className="w-full px-2 py-1.5 border-2 border-rose-300 rounded text-sm focus:border-rose-500 focus:outline-none"
+                        />
+                        <div className="mt-2 space-y-1 max-h-24 overflow-y-auto bg-white border border-rose-200 rounded p-2">
+                          {['USER0000089', 'USER0000109', 'USER0000084', 'USER0000071'].map((user) => (
+                            <button
+                              key={user}
+                              onClick={() => setSelectedRecipient(user)}
+                              className={`w-full text-left px-2 py-1 rounded text-xs font-bold transition ${
+                                selectedRecipient === user
+                                  ? 'bg-rose-500 text-white'
+                                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                              }`}
+                            >
+                              👤 {user}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 pt-2 border-t border-rose-200">
+                        <button className="flex-1 bg-gradient-to-r from-rose-500 to-pink-600 text-white py-2 rounded-lg font-bold text-sm hover:shadow-md transform hover:scale-105 transition">
+                          🎀 Send Gift
+                        </button>
+                        <button className="flex-1 border-2 border-rose-300 text-rose-600 py-2 rounded-lg font-bold text-sm hover:bg-rose-50 transition">
+                          ✕ Cancel
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <p className="font-bold text-red-600">-50 EP</p>
-                </div>
+                )}
+
+                {/* REFER TAB */}
+                {rewardTab === 'refer' && (
+                  <div className="space-y-2">
+                    <div className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white p-3 rounded-lg shadow-md">
+                      <h3 className="text-sm font-bold">👥✨ Refer & Earn - MyKampungKhakis ✨</h3>
+                    </div>
+                    <div className="bg-blue-50 p-3 rounded-lg space-y-2 text-center">
+                      <p className="font-bold text-gray-800">Earn 0 (EP) for every friend who joins!</p>
+                      <div className="bg-white p-3 rounded-lg border-2 border-blue-300 my-2">
+                        <p className="text-xs text-gray-600 mb-2">📱 QR Code</p>
+                        <div className="bg-gray-200 h-24 rounded flex items-center justify-center">
+                          <p className="text-xs text-gray-500">[QR Code Display]</p>
+                        </div>
+                        <p className="text-xs text-blue-600 font-bold mt-2">📥 Tap to Download</p>
+                      </div>
+                      <div className="bg-white p-2 rounded border border-blue-300 space-y-1">
+                        <p className="text-xs text-gray-600">Your Referral Link</p>
+                        <p className="text-xs font-bold text-blue-600 break-all">https://app.errandify.ai/referral?...SunnyLove</p>
+                        <button className="w-full bg-orange-500 text-white py-1 rounded text-xs font-bold hover:bg-orange-600">
+                          📋 Copy
+                        </button>
+                      </div>
+                      <div className="bg-blue-100 p-2 rounded mt-2 text-left">
+                        <p className="text-xs font-bold text-blue-900 mb-1">ℹ️ How It Works</p>
+                        <ul className="text-xs text-blue-800 space-y-1">
+                          <li>✅ Friend creates Individual account using your code</li>
+                          <li>✅ They proceed with Company sign-up (if needed)</li>
+                          <li>✅ After verification, rewards applied to both!</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
