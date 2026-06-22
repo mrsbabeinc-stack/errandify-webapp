@@ -76,22 +76,22 @@ export default function AdCarousel() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-3">
+    <div className="max-w-6xl mx-auto px-4 py-1.5">
       {/* AD CAROUSEL */}
       <div
-        className={`${currentAd.bgColor} rounded-xl shadow-lg p-6 text-white relative overflow-hidden transition-all duration-500`}
+        className={`${currentAd.bgColor} rounded-lg shadow p-4 text-white relative overflow-hidden transition-all duration-500`}
         onMouseEnter={() => setIsAutoPlay(false)}
         onMouseLeave={() => setIsAutoPlay(true)}
       >
         {/* CONTENT */}
-        <div className="flex items-center justify-between gap-6">
+        <div className="flex items-center justify-between gap-3">
           {/* LEFT: Icon */}
-          <div className="text-6xl flex-shrink-0">{currentAd.image}</div>
+          <div className="text-4xl flex-shrink-0">{currentAd.image}</div>
 
           {/* CENTER: Text */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-2xl font-bold mb-1">{currentAd.title}</h3>
-            <p className="text-white text-opacity-90 text-sm">{currentAd.description}</p>
+            <h3 className="text-lg font-bold mb-0.5">{currentAd.title}</h3>
+            <p className="text-white text-opacity-90 text-xs">{currentAd.description}</p>
           </div>
 
           {/* RIGHT: CTA Button */}
@@ -99,7 +99,7 @@ export default function AdCarousel() {
             <div className="flex-shrink-0">
               <a
                 href={currentAd.cta.url}
-                className="bg-white text-gray-800 px-4 py-2 rounded-lg font-bold text-sm hover:bg-opacity-90 transition whitespace-nowrap"
+                className="bg-white text-gray-800 px-3 py-1.5 rounded font-bold text-xs hover:bg-opacity-90 transition whitespace-nowrap"
               >
                 {currentAd.cta.label} →
               </a>
@@ -123,13 +123,13 @@ export default function AdCarousel() {
       </div>
 
       {/* INDICATORS */}
-      <div className="flex justify-center gap-2 mt-3">
+      <div className="flex justify-center gap-1.5 mt-1.5">
         {DEFAULT_ADS.map((_, index) => (
           <button
             key={index}
             onClick={() => handleDotClick(index)}
-            className={`w-2.5 h-2.5 rounded-full transition ${
-              index === currentIndex ? 'bg-errandify-orange w-6' : 'bg-gray-300 hover:bg-gray-400'
+            className={`w-2 h-2 rounded-full transition ${
+              index === currentIndex ? 'bg-errandify-orange w-5' : 'bg-gray-300 hover:bg-gray-400'
             }`}
             aria-label={`Go to ad ${index + 1}`}
           />

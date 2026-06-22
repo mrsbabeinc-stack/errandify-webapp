@@ -80,22 +80,22 @@ export default function EventBanner() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-2">
-      <div className={`${styles.bg} ${styles.border} rounded-lg p-3 flex items-center justify-between gap-3 transition-all duration-300`}>
+    <div className="max-w-6xl mx-auto px-4 py-1">
+      <div className={`${styles.bg} ${styles.border} rounded p-2 flex items-center justify-between gap-2 transition-all duration-300`}>
         {/* LEFT: Icon + Message */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="text-lg flex-shrink-0">{currentEvent.icon}</span>
-          <p className={`${styles.text} text-xs sm:text-sm font-semibold truncate`}>
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <span className="text-base flex-shrink-0">{currentEvent.icon}</span>
+          <p className={`${styles.text} text-xs font-semibold truncate`}>
             {currentEvent.message}
           </p>
         </div>
 
         {/* RIGHT: Action Button + Next + Close */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1 flex-shrink-0">
           {currentEvent.action && (
             <a
               href={currentEvent.action.url}
-              className={`${styles.action} text-xs font-bold px-2 py-1 hover:underline whitespace-nowrap`}
+              className={`${styles.action} text-xs font-bold px-1.5 py-0.5 hover:underline whitespace-nowrap`}
             >
               {currentEvent.action.label}
             </a>
@@ -104,7 +104,7 @@ export default function EventBanner() {
           {SAMPLE_EVENTS.length > 1 && (
             <button
               onClick={handleNext}
-              className={`${styles.action} text-xs font-bold px-2 py-1 hover:bg-white hover:bg-opacity-50 rounded transition`}
+              className={`${styles.action} text-xs font-bold px-1.5 py-0.5 hover:bg-white hover:bg-opacity-50 rounded transition`}
               title="Next event"
             >
               ›
@@ -113,7 +113,7 @@ export default function EventBanner() {
 
           <button
             onClick={() => setDismissed(true)}
-            className={`${styles.action} text-xs font-bold px-2 py-1 hover:bg-white hover:bg-opacity-50 rounded transition`}
+            className={`${styles.action} text-xs font-bold px-1.5 py-0.5 hover:bg-white hover:bg-opacity-50 rounded transition`}
             title="Dismiss"
           >
             ✕
@@ -123,7 +123,7 @@ export default function EventBanner() {
 
       {/* EVENT COUNTER */}
       {SAMPLE_EVENTS.length > 1 && (
-        <div className="text-center text-xs text-gray-500 mt-1">
+        <div className="text-center text-xs text-gray-500 mt-0.5">
           Event {currentEventIndex + 1} of {SAMPLE_EVENTS.length}
         </div>
       )}
