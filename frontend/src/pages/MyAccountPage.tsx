@@ -179,9 +179,10 @@ export default function MyAccountPage() {
         });
       }
       alert('✅ Profile saved successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving profile:', error);
-      alert('Failed to save profile');
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to save profile';
+      alert(`❌ ${errorMsg}`);
     } finally {
       setSaving(false);
     }
