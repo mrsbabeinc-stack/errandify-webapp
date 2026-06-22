@@ -788,15 +788,6 @@ export default function MyAccountPage() {
                   <p className="text-xs text-gray-600 mt-1 mb-2">{editForm.bio?.length || 0}/200</p>
                 </div>
 
-                {/* Save All Changes Button */}
-                <button
-                  onClick={handleSaveProfile}
-                  disabled={saving}
-                  className="w-full bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600 disabled:opacity-50 transition"
-                >
-                  {saving ? '⏳ Saving All Changes...' : '💾 Save All Changes'}
-                </button>
-
                 {/* Delete Account Confirmation Modal */}
                 {showDeleteConfirm && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -888,6 +879,15 @@ export default function MyAccountPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Save All Changes Button - At The End */}
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                  className="w-full bg-errandify-orange text-white py-2.5 rounded font-bold text-xs hover:bg-orange-600 disabled:opacity-50 transition mt-2"
+                >
+                  {saving ? '⏳ Saving All Changes...' : '💾 Save All Changes'}
+                </button>
               </div>
             )}
           </div>
