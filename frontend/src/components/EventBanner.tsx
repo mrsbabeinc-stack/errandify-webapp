@@ -121,12 +121,6 @@ export default function EventBanner() {
         </div>
       </div>
 
-      {/* EVENT COUNTER */}
-      {SAMPLE_EVENTS.length > 1 && (
-        <div className="text-center text-xs text-gray-500 mt-0.5">
-          Event {currentEventIndex + 1} of {SAMPLE_EVENTS.length}
-        </div>
-      )}
     </div>
   );
 }
