@@ -348,12 +348,25 @@ export default function MyAccountPage() {
             ←
           </button>
           <h1 className="text-2xl font-bold">✨ MyAccount</h1>
-          <button
-            onClick={handleLogout}
-            className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1.5 rounded-lg font-semibold text-sm transition"
-          >
-            🚪
-          </button>
+          <div className="relative group">
+            <button className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1.5 rounded-lg font-semibold text-sm transition">
+              ⚙️
+            </button>
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-100 font-semibold first:rounded-t-lg flex items-center gap-2"
+              >
+                🚪 Logout
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-semibold last:rounded-b-lg flex items-center gap-2"
+              >
+                🗑️ Delete Account
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -755,38 +768,31 @@ export default function MyAccountPage() {
                   <p className="text-xs text-gray-600 mt-1">{editForm.bio?.length || 0}/200</p>
                 </div>
 
-                {/* Danger Zone - Delete Account */}
-                <div className="bg-red-50 border-l-4 border-red-500 rounded p-3">
-                  <h3 className="text-xs font-bold text-red-900 mb-2">⚠️ Danger Zone</h3>
-                  {showDeleteConfirm ? (
-                    <div className="space-y-2">
-                      <p className="text-xs text-red-900">
+                {/* Delete Account Confirmation Modal */}
+                {showDeleteConfirm && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-lg p-4 max-w-sm mx-2">
+                      <h2 className="text-lg font-bold text-red-600 mb-2">⚠️ Delete Account</h2>
+                      <p className="text-xs text-gray-700 mb-4">
                         Are you sure? This action cannot be undone and will permanently delete your account and all data.
                       </p>
                       <div className="flex gap-2">
                         <button
-                          onClick={handleDeleteAccount}
-                          className="flex-1 bg-red-600 text-white py-1.5 rounded font-bold text-xs hover:bg-red-700 transition"
-                        >
-                          Yes, Delete My Account
-                        </button>
-                        <button
                           onClick={() => setShowDeleteConfirm(false)}
-                          className="flex-1 border border-red-400 text-red-700 py-1.5 rounded font-bold text-xs hover:bg-red-50 transition"
+                          className="flex-1 border border-gray-300 text-gray-700 py-2 rounded font-bold text-sm hover:bg-gray-50 transition"
                         >
                           Cancel
                         </button>
+                        <button
+                          onClick={handleDeleteAccount}
+                          className="flex-1 bg-red-600 text-white py-2 rounded font-bold text-sm hover:bg-red-700 transition"
+                        >
+                          Yes, Delete
+                        </button>
                       </div>
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => setShowDeleteConfirm(true)}
-                      className="w-full bg-red-600 text-white py-1.5 rounded font-bold text-xs hover:bg-red-700 transition"
-                    >
-                      🗑️ Delete Account
-                    </button>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Certificates */}
                 <div className="bg-white rounded shadow p-3">
