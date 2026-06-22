@@ -8,6 +8,7 @@ const router = Router();
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.userId || '0', 10);
+    console.log('Wallet API - userId:', userId);
 
     // Get user's errandify points
     const userResult = await db.query(
@@ -16,6 +17,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     );
 
     const errandifyPoints = userResult.rows[0]?.errandify_points || 0;
+    console.log('Wallet API - errandifyPoints:', errandifyPoints, 'from user:', userResult.rows[0]);
 
     // Calculate earnings from completed tasks where user is doer
     const earningsResult = await db.query(
@@ -367,6 +369,7 @@ router.post('/redeem', authMiddleware, async (req: AuthRequest, res: Response) =
   try {
     const userId = parseInt(req.userId || '0', 10);
     const { rewardId, points } = req.body;
+    console.log('Redeem API - userId:', userId, 'rewardId:', rewardId, 'points:', points);
 
     if (!rewardId || !points || points <= 0) {
       return res.status(400).json({ error: 'Invalid reward or points' });
@@ -383,15 +386,18 @@ router.post('/redeem', authMiddleware, async (req: AuthRequest, res: Response) =
     }
 
     const currentPoints = userResult.rows[0].errandify_points || 0;
+    console.log('Redeem API - currentPoints:', currentPoints);
+
     if (currentPoints < points) {
       return res.status(400).json({ error: 'Insufficient points' });
     }
 
     // Deduct points
-    await db.query(
-      `UPDATE users SET errandify_points = errandify_points - $1 WHERE id = $2`,
+    const updateResult = await db.query(
+      `UPDATE users SET errandify_points = errandify_points - $1 WHERE id = $2 RETURNING errandify_points`,
       [points, userId]
     );
+    console.log('Redeem API - updated points:', updateResult.rows[0]?.errandify_points);
 
     // Log redemption
     await db.query(

@@ -355,6 +355,19 @@ export default function MyAccountPage() {
 
       if (response.data.success) {
         setSuccessMessage(`✅ ${response.data.message}`);
+
+        // Refresh wallet data after redeem
+        try {
+          const walletRes = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setWalletData(walletRes.data.data || {});
+          console.log('Wallet refreshed after redeem:', walletRes.data.data);
+        } catch (walletError) {
+          console.error('Failed to refresh wallet:', walletError);
+        }
+
         setTimeout(() => setSuccessMessage(''), 2000);
       }
     } catch (error: any) {
