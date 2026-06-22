@@ -253,7 +253,6 @@ export default function MyAccountPage() {
           if (!qwenApiKey) {
             console.warn('Qwen API key not configured - accepting image without moderation');
             setProfileImage(base64Image);
-            alert('⚠️ Image moderation not configured. Image uploaded without verification.');
             return;
           }
 
@@ -837,29 +836,43 @@ export default function MyAccountPage() {
                         placeholder="Certificate title"
                         className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                       />
-                      <input type="file" onChange={(e) => setCertificateFile(e.files?.[0] || null)} className="w-full text-xs" />
+                      <input
+                        type="file"
+                        onChange={(e) => setCertificateFile(e.files?.[0] || null)}
+                        className="w-full text-xs"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      />
                       <button
                         onClick={async () => {
-                          if (certificateTitle && certificateFile) {
-                            // Moderate certificate title
-                            const titleResult = await moderateText(certificateTitle);
-                            if (!titleResult.approved) {
-                              alert('❌ Certificate title contains inappropriate content. Please revise.');
-                              return;
-                            }
-
-                            // File size check (10MB max for certificates)
-                            if (certificateFile.size > 10 * 1024 * 1024) {
-                              alert('Certificate file exceeds 10MB limit');
-                              return;
-                            }
-
-                            setCertificates([...certificates, { id: Date.now().toString(), name: certificateTitle }]);
-                            setCertificateTitle('');
-                            setCertificateFile(null);
+                          if (!certificateTitle) {
+                            alert('Please enter a certificate title');
+                            return;
                           }
+                          if (!certificateFile) {
+                            alert('Please select a certificate file');
+                            return;
+                          }
+
+                          // Moderate certificate title
+                          const titleResult = await moderateText(certificateTitle);
+                          if (!titleResult.approved) {
+                            alert('❌ Certificate title contains inappropriate content. Please revise.');
+                            return;
+                          }
+
+                          // File size check (10MB max for certificates)
+                          if (certificateFile.size > 10 * 1024 * 1024) {
+                            alert('Certificate file exceeds 10MB limit');
+                            return;
+                          }
+
+                          setCertificates([...certificates, { id: Date.now().toString(), name: certificateTitle }]);
+                          setCertificateTitle('');
+                          setCertificateFile(null);
+                          alert('✅ Certificate added successfully!');
                         }}
-                        className="w-full bg-errandify-orange text-white py-1 rounded font-semibold text-xs"
+                        disabled={!certificateTitle || !certificateFile}
+                        className="w-full bg-errandify-orange text-white py-1 rounded font-semibold text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Add
                       </button>
