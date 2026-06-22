@@ -130,16 +130,16 @@ export default function MyAccountPage() {
     setSaving(true);
     try {
       // Moderate alias and bio before saving
-      const aliasApproved = await moderateText(editForm.alias || '');
-      const bioApproved = await moderateText(editForm.bio || '');
+      const aliasResult = await moderateText(editForm.alias || '');
+      const bioResult = await moderateText(editForm.bio || '');
 
-      if (!aliasApproved) {
+      if (!aliasResult.approved) {
         alert('❌ Alias contains inappropriate content. Please revise.');
         setSaving(false);
         return;
       }
 
-      if (!bioApproved) {
+      if (!bioResult.approved) {
         alert('❌ Bio contains inappropriate content. Please revise.');
         setSaving(false);
         return;
@@ -194,12 +194,15 @@ export default function MyAccountPage() {
     }
   };
 
-  const moderateText = async (text: string): Promise<boolean> => {
-    if (!text || text.length === 0) return true;
+  const moderateText = async (text: string): Promise<{ approved: boolean; message?: string }> => {
+    if (!text || text.length === 0) return { approved: true };
 
     try {
       const qwenApiKey = import.meta.env.VITE_QWEN_API_KEY;
-      if (!qwenApiKey) return true; // Skip if API not configured
+      if (!qwenApiKey) {
+        console.warn('Qwen API key not configured - skipping text moderation');
+        return { approved: true, message: '⚠️ Text moderation not configured' };
+      }
 
       const response = await axios.post(
         'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
@@ -223,10 +226,11 @@ export default function MyAccountPage() {
       );
 
       const result = response.data.output?.choices?.[0]?.message?.content;
-      return result && result.includes('APPROVED');
+      const approved = result && result.includes('APPROVED');
+      return { approved };
     } catch (error) {
       console.error('Text moderation error:', error);
-      return true; // Fallback: allow if API fails
+      return { approved: true, message: '⚠️ Could not verify content' }; // Fallback: allow if API fails
     }
   };
 
@@ -247,8 +251,9 @@ export default function MyAccountPage() {
         try {
           const qwenApiKey = import.meta.env.VITE_QWEN_API_KEY;
           if (!qwenApiKey) {
-            console.error('Qwen API key not configured');
-            alert('Image moderation not configured. Please contact support.');
+            console.warn('Qwen API key not configured - accepting image without moderation');
+            setProfileImage(base64Image);
+            alert('⚠️ Image moderation not configured. Image uploaded without verification.');
             return;
           }
 
@@ -837,8 +842,8 @@ export default function MyAccountPage() {
                         onClick={async () => {
                           if (certificateTitle && certificateFile) {
                             // Moderate certificate title
-                            const titleApproved = await moderateText(certificateTitle);
-                            if (!titleApproved) {
+                            const titleResult = await moderateText(certificateTitle);
+                            if (!titleResult.approved) {
                               alert('❌ Certificate title contains inappropriate content. Please revise.');
                               return;
                             }
