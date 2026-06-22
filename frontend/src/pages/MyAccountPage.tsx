@@ -1586,12 +1586,30 @@ export default function MyAccountPage() {
                           ✅ Redeem
                         </button>
                       </div>
-                      <div className="p-3 bg-gray-50 hover:bg-gray-100 transition rounded-lg flex justify-between items-center">
+                      <div className={`p-3 transition rounded-lg flex justify-between items-center ${
+                        (walletData.errandifyPoints || 0) < 200
+                          ? 'bg-gray-50 hover:bg-gray-100'
+                          : 'bg-purple-50 hover:bg-purple-100'
+                      }`}>
                         <div>
                           <p className="font-bold text-gray-900">💎 $20 Discount</p>
-                          <p className="text-gray-600 font-bold">⭐ 200 EP (Need 175 more!)</p>
+                          {(walletData.errandifyPoints || 0) < 200 ? (
+                            <p className="text-gray-600 font-bold">⭐ 200 EP (Need {200 - (walletData.errandifyPoints || 0)} more!)</p>
+                          ) : (
+                            <p className="text-purple-600 font-bold">⭐ 200 EP ✅ You can redeem!</p>
+                          )}
                         </div>
-                        <button className="bg-gray-300 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold cursor-not-allowed">🔒 Need More</button>
+                        <button
+                          onClick={() => handleRedeemReward('discount-20', 200, '$20 Discount')}
+                          disabled={(walletData.errandifyPoints || 0) < 200}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transform transition ${
+                            (walletData.errandifyPoints || 0) < 200
+                              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                              : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-md hover:scale-105'
+                          }`}
+                        >
+                          {(walletData.errandifyPoints || 0) < 200 ? '🔒 Need More' : '✅ Redeem'}
+                        </button>
                       </div>
                     </div>
                   </div>
