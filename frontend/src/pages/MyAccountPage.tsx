@@ -258,20 +258,20 @@ export default function MyAccountPage() {
             </div>
 
             {/* STATS GRID - ULTRA COMPACT */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 mb-1.5">
-              <div className="bg-white rounded-lg shadow p-2 border-l-4 border-amber-500 text-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-1 mb-1">
+              <div className="bg-white rounded shadow p-1.5 border-l-4 border-amber-500 text-center">
                 <p className="text-lg font-bold text-errandify-orange">{ratings.reviewCount}</p>
                 <p className="text-xs text-gray-600 font-semibold">👥 Reviews</p>
               </div>
-              <div className="bg-white rounded-lg shadow p-2 border-l-4 border-green-500 text-center">
+              <div className="bg-white rounded shadow p-1.5 border-l-4 border-green-500 text-center">
                 <p className="text-lg font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
                 <p className="text-xs text-gray-600 font-semibold">✅ Errands</p>
               </div>
-              <div className="bg-white rounded-lg shadow p-2 border-l-4 border-blue-500 text-center">
+              <div className="bg-white rounded shadow p-1.5 border-l-4 border-blue-500 text-center">
                 <p className="text-lg font-bold text-errandify-orange">${profileData.totalEarnings || 0}</p>
                 <p className="text-xs text-gray-600 font-semibold">💰 Earnings</p>
               </div>
-              <div className="bg-white rounded-lg shadow p-2 border-l-4 border-purple-500 text-center">
+              <div className="bg-white rounded shadow p-1.5 border-l-4 border-purple-500 text-center">
                 <p className="text-lg font-bold text-errandify-orange">{profileData.errandifyPoints || 0}</p>
                 <p className="text-xs text-gray-600 font-semibold">⭐ EP</p>
               </div>
