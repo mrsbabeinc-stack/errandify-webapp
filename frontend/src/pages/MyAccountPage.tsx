@@ -512,23 +512,6 @@ export default function MyAccountPage() {
                         </button>
                       </div>
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-xs text-gray-600 font-semibold">Name</p>
-                        <p className="text-sm text-gray-800">{profileData.name}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-600 font-semibold">Mobile</p>
-                        <p className="text-sm text-gray-800">{profileData.mobile || 'Not set'}</p>
-                      </div>
-                      {profileData.monthlyHouseholdIncome && (
-                        <div>
-                          <p className="text-xs text-gray-600 font-semibold">Monthly Household Income</p>
-                          <p className="text-sm text-gray-800">${profileData.monthlyHouseholdIncome}</p>
-                        </div>
-                      )}
-                    </div>
                   )}
                 </div>
 
