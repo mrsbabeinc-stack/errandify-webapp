@@ -154,16 +154,25 @@ export default function MyAccountPage() {
       }
 
       const token = localStorage.getItem('token');
+
+      // Only send fields that backend accepts
+      const updateData: any = {
+        mobile: editForm.mobile,
+        monthly_household_income: editForm.monthly_household_income,
+      };
+
+      // Alias and bio need separate endpoints or future backend support
+      // For now, store in localStorage if needed
+      if (editForm.alias) {
+        localStorage.setItem('userAlias', editForm.alias);
+      }
+      if (editForm.bio) {
+        localStorage.setItem('userBio', editForm.bio);
+      }
+
       await axios.put(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
-        {
-          display_name: editForm.display_name,
-          alias: editForm.alias,
-          bio: editForm.bio,
-          email: editForm.email,
-          mobile: editForm.mobile,
-          monthly_household_income: editForm.monthly_household_income,
-        },
+        updateData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setIsEditing(false);
