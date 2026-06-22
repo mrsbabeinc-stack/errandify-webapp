@@ -170,7 +170,7 @@ export default function MyAccountPage() {
           >
             ←
           </button>
-          <h1 className="text-2xl font-bold">✨ My Account</h1>
+          <h1 className="text-2xl font-bold">✨ MyAccount</h1>
           <button
             onClick={handleLogout}
             className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1.5 rounded-lg font-semibold text-sm transition"
