@@ -37,7 +37,7 @@ export default function MyAccountPage() {
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | null>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [pocketTab, setPocketTab] = useState<'txns' | 'history' | 'payout'>('txns');
-  const [rewardTab, setRewardTab] = useState<'overview' | 'pointHistory' | 'vouchers' | 'gift'>('overview');
+  const [rewardTab, setRewardTab] = useState<'overview' | 'pointHistory' | 'vouchers' | 'gift' | 'myVouchers'>('overview');
   const [isEditingBankDetails, setIsEditingBankDetails] = useState(false);
   const [bankDetails, setBankDetails] = useState({
     bankName: 'STRIPE TEST BANK',
@@ -57,6 +57,7 @@ export default function MyAccountPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successReward, setSuccessReward] = useState<{ name: string; points: number } | null>(null);
   const [pointHistory, setPointHistory] = useState<any[]>([]);
+  const [myVouchers, setMyVouchers] = useState<any[]>([]);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -129,6 +130,18 @@ export default function MyAccountPage() {
           console.log('Point history:', historyRes.data.data);
         } catch (historyError) {
           console.error('Point history fetch error:', historyError);
+        }
+
+        // Fetch my redeemed vouchers
+        try {
+          const vouchersRes = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/my-vouchers`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setMyVouchers(vouchersRes.data.data || []);
+          console.log('My vouchers:', vouchersRes.data.data);
+        } catch (vouchersError) {
+          console.error('My vouchers fetch error:', vouchersError);
         }
 
         try {
@@ -412,6 +425,18 @@ export default function MyAccountPage() {
           console.log('Point history refreshed after redeem:', historyRes.data.data);
         } catch (historyError) {
           console.error('Failed to refresh point history:', historyError);
+        }
+
+        // Refresh my vouchers after redeem
+        try {
+          const vouchersRes = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/my-vouchers`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setMyVouchers(vouchersRes.data.data || []);
+          console.log('My vouchers refreshed after redeem:', vouchersRes.data.data);
+        } catch (vouchersError) {
+          console.error('Failed to refresh my vouchers:', vouchersError);
         }
 
         // Auto-close success modal after 3 seconds
@@ -1480,6 +1505,12 @@ export default function MyAccountPage() {
                 >
                   🎀 Gift
                 </button>
+                <button
+                  onClick={() => setRewardTab('myVouchers')}
+                  className={`flex-1 p-2 text-center transition border-l border-purple-100 whitespace-nowrap ${rewardTab === 'myVouchers' ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' : 'hover:bg-purple-50'}`}
+                >
+                  💳 My Vouchers
+                </button>
               </div>
 
               {/* TAB CONTENT */}
@@ -1564,7 +1595,7 @@ export default function MyAccountPage() {
 
                           if (transaction.type === 'redemption') {
                             icon = '🎁';
-                            label = `Redeemed: ${transaction.description}`;
+                            label = transaction.description || 'Voucher redeemed';
                           } else if (transaction.type === 'gift') {
                             icon = '🎀';
                             label = `Gift to friend`;
@@ -1723,7 +1754,45 @@ export default function MyAccountPage() {
                   </div>
                 )}
 
-                {/* REFER TAB */}
+                {/* MY VOUCHERS TAB */}
+                {rewardTab === 'myVouchers' && (
+                  <div className="space-y-2">
+                    <div className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white p-3 rounded-lg shadow-md">
+                      <h3 className="text-sm font-bold">💳✨ My Redeemed Vouchers ({myVouchers.length}) ✨</h3>
+                    </div>
+                    {myVouchers.length === 0 ? (
+                      <div className="text-center py-8 bg-blue-50 rounded-lg">
+                        <p className="text-gray-600 font-bold">No vouchers redeemed yet</p>
+                        <p className="text-xs text-gray-500 mt-2">Redeem rewards from the Overview tab to see them here!</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {myVouchers.map((voucher: any, idx: number) => {
+                          const date = new Date(voucher.created_at).toLocaleDateString('en-SG', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          });
+
+                          return (
+                            <div key={idx} className="p-3 bg-blue-50 hover:bg-blue-100 transition rounded-lg border-l-4 border-blue-500">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="font-bold text-gray-900">💳 {voucher.voucherName || voucher.description || 'Voucher'}</p>
+                                  <p className="text-xs text-gray-600 mt-1">{date}</p>
+                                  <p className="text-xs text-blue-600 font-semibold mt-1">📦 Status: Ready to Use</p>
+                                </div>
+                                <p className="font-bold text-blue-600 text-sm">Cost: {voucher.points} EP</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
