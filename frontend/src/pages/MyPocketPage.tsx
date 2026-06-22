@@ -277,7 +277,7 @@ export default function MyPocketPage() {
               <div className="p-2 space-y-2">
                 <div className="bg-blue-50 border border-blue-200 rounded p-2">
                   <p className="text-xs text-blue-900 font-semibold">💡 How It Works</p>
-                  <p className="text-xs text-blue-800 mt-1">After an errand is completed, earnings will be transferred to your account within 48 hours (if no dispute is raised).</p>
+                  <p className="text-xs text-blue-800 mt-1">After 48 hours of errand completion (if no dispute is raised), earnings will be transferred to your account.</p>
                 </div>
 
                 {/* Payout & Drawout Transactions */}
