@@ -1097,7 +1097,12 @@ export default function MyAccountPage() {
               <div className="text-xs">
                 {/* Transactions Tab */}
                 {pocketTab === 'txns' && (
-                  <div className="divide-y divide-gray-100">
+                  <div className="p-2 space-y-2">
+                    {/* Transactions Header */}
+                    <div className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white p-2 rounded-lg shadow-md">
+                      <h3 className="text-sm font-bold">📋✨ Recent Transactions ✨</h3>
+                    </div>
+                    <div className="divide-y divide-gray-100">
                     <div className="p-2 flex justify-between hover:bg-gray-50">
                       <div>
                         <p className="font-bold text-gray-900">Completed Errand (#5): Clean apartment</p>
@@ -1119,12 +1124,18 @@ export default function MyAccountPage() {
                       </div>
                       <p className="font-bold text-green-600">+$50</p>
                     </div>
+                    </div>
                   </div>
                 )}
 
                 {/* Points Tab */}
                 {pocketTab === 'history' && (
-                  <div className="divide-y divide-gray-100">
+                  <div className="p-2 space-y-2">
+                    {/* Points Header */}
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white p-2 rounded-lg shadow-md">
+                      <h3 className="text-sm font-bold">⭐✨ Errandify Points History ✨⭐</h3>
+                    </div>
+                    <div className="divide-y divide-gray-100">
                     <div className="p-2 flex justify-between hover:bg-gray-50">
                       <div>
                         <p className="font-bold text-gray-900">Completed Errand</p>
@@ -1146,6 +1157,7 @@ export default function MyAccountPage() {
                       </div>
                       <p className="font-bold text-red-600">-50 EP</p>
                     </div>
+                    </div>
                   </div>
                 )}
 
@@ -1153,8 +1165,8 @@ export default function MyAccountPage() {
                 {pocketTab === 'payout' && (
                   <div className="p-2 space-y-2">
                     {/* Payout Transactions */}
-                    <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-2 rounded">
-                      <h3 className="text-xs font-bold">📊 Payout Transactions</h3>
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-2 rounded-lg shadow-md">
+                      <h3 className="text-sm font-bold">📊✨ Payout Transactions ✨</h3>
                     </div>
                     <div className="divide-y divide-gray-100 text-xs mb-2">
                       <div className="p-2 flex justify-between hover:bg-gray-50">
