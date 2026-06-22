@@ -52,7 +52,7 @@ export default function MyAccountPage() {
     monthly_household_income: '',
   });
   const [saving, setSaving] = useState(false);
-  const [certificates, setCertificates] = useState<Array<{ id: string; name: string }>>([]);
+  const [certificates, setCertificates] = useState<Array<{ id: string; name: string; fileData?: string; fileName?: string }>>([]);
   const [certificateTitle, setCertificateTitle] = useState('');
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -834,9 +834,28 @@ export default function MyAccountPage() {
                   {certificates.length > 0 && (
                     <div className="mb-2 space-y-1">
                       {certificates.map((cert, idx) => (
-                        <div key={cert.id} className="flex justify-between items-center bg-gray-50 p-1.5 rounded text-xs">
-                          <span>{idx + 1}. {cert.name}</span>
-                          <button onClick={() => setCertificates(certificates.filter((_, i) => i !== idx))} className="text-red-600 text-xs">✕</button>
+                        <div key={cert.id} className="flex justify-between items-center bg-gray-50 p-1.5 rounded text-xs hover:bg-gray-100 transition">
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900">{idx + 1}. {cert.name}</p>
+                            {cert.fileName && <p className="text-gray-500 text-xs">{cert.fileName}</p>}
+                          </div>
+                          <div className="flex gap-1">
+                            {cert.fileData && (
+                              <a
+                                href={cert.fileData}
+                                download={cert.fileName || `certificate-${idx + 1}`}
+                                className="text-blue-600 hover:text-blue-800 font-semibold"
+                              >
+                                📥
+                              </a>
+                            )}
+                            <button
+                              onClick={() => setCertificates(certificates.filter((_, i) => i !== idx))}
+                              className="text-red-600 hover:text-red-800 font-semibold"
+                            >
+                              ✕
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -887,10 +906,21 @@ export default function MyAccountPage() {
                             return;
                           }
 
-                          setCertificates([...certificates, { id: Date.now().toString(), name: certificateTitle }]);
-                          setCertificateTitle('');
-                          setCertificateFile(null);
-                          alert('✅ Certificate added successfully!');
+                          // Read file as data URL for preview
+                          const reader = new FileReader();
+                          reader.onload = (e) => {
+                            const fileData = e.target?.result as string;
+                            setCertificates([...certificates, {
+                              id: Date.now().toString(),
+                              name: certificateTitle,
+                              fileData,
+                              fileName: certificateFile.name
+                            }]);
+                            setCertificateTitle('');
+                            setCertificateFile(null);
+                            alert('✅ Certificate added successfully!');
+                          };
+                          reader.readAsDataURL(certificateFile);
                         }}
                         disabled={!certificateTitle || !certificateFile}
                         className="w-full bg-errandify-orange text-white py-1.5 rounded font-semibold text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-600 disabled:hover:bg-errandify-orange"
