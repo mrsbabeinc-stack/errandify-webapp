@@ -288,6 +288,7 @@ export default function MyPocketPage() {
             {/* Payout Tab - Transactions */}
             {activeTab === 'payout' && (
               <div className="p-2 space-y-2">
+                {console.log('Payout tab is active')}
                 {/* Payout & Drawout Transactions */}
                 <div className="bg-white border border-gray-200 rounded overflow-hidden">
                   <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-2">
