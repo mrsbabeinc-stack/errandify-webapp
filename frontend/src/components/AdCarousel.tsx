@@ -37,7 +37,7 @@ const DEFAULT_ADS: Ad[] = [
   {
     id: 4,
     title: '⭐ Build Your Reputation',
-    description: 'Complete tasks and get 5-star reviews',
+    description: 'Complete errands and get 5-star reviews',
     image: '✨',
     bgColor: 'bg-gradient-to-r from-purple-400 to-indigo-400',
     cta: { label: 'Browse Errands', url: '/errands' }

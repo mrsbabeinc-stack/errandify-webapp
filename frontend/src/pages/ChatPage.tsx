@@ -227,7 +227,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
       ) : conversations.length === 0 ? (
         <div className="bg-white rounded-lg p-6 text-center shadow-sm">
           <p className="text-sm text-gray-500 mb-2">No active chats yet</p>
-          <p className="text-xs text-gray-400">Once you accept a task or receive an accepted bid, you can chat here</p>
+          <p className="text-xs text-gray-400">Once you accept an errand or receive a confirmed offer, you can chat here</p>
         </div>
       ) : filteredConversations.length === 0 ? (
         <div className="bg-white rounded-lg p-6 text-center shadow-sm">

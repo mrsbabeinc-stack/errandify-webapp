@@ -414,7 +414,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               <div className="border-t border-gray-200 pt-1 pb-1">
                 <p className="text-xs text-gray-600 font-semibold mb-0.5">Posted By</p>
                 <p className="text-xs text-gray-700 mb-0.5">{errand.asker.display_name || 'Anonymous'}</p>
-                <p className="text-xs text-gray-500 italic">Contact info shown only after bid accepted</p>
+                <p className="text-xs text-gray-500 italic">Contact info shown only after offer confirmed</p>
               </div>
             )}
 
@@ -425,7 +425,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   onClick={() => setShowBidModal(true)}
                   className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
                 >
-                  ✏️ Update Bid
+                  ✏️ Update Offer
                 </button>
               ) : (
                 <button
@@ -438,7 +438,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   }}
                   className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
                 >
-                  {errand.isRecurring ? 'Select Sessions' : 'Submit a Bid'}
+                  {errand.isRecurring ? 'Select Sessions' : 'Submit an Offer'}
                 </button>
               )
             ) : errand.status === 'open' && currentUser && currentUser.id === errand.askerId && !errand.acceptedBidId ? (
@@ -452,7 +452,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   </button>
                 ) : (
                   <div className="flex-1 bg-gray-400 text-white py-3 rounded-lg font-bold text-center text-base cursor-not-allowed">
-                    Locked (Has Bids)
+                    Locked (Has Offers)
                   </div>
                 )}
                 <button
@@ -557,11 +557,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-800">📊 Bids Received</p>
+                <p className="text-sm font-semibold text-gray-800">📊 Offers Received</p>
                 <p className="text-xs text-gray-600 mt-1">
                   {errand.bidCount === 0
-                    ? 'No bids yet. Be the first!'
-                    : `${errand.bidCount} bid${errand.bidCount !== 1 ? 's' : ''} from other doers`}
+                    ? 'No offers yet. Be the first!'
+                    : `${errand.bidCount} offer${errand.bidCount !== 1 ? 's' : ''} from other doers`}
                 </p>
               </div>
               <div className="text-3xl font-bold text-blue-600">{errand.bidCount || 0}</div>

@@ -83,7 +83,7 @@ export default function ReviewPage() {
         {/* Success Message */}
         {!submitting && !loading && !error && (
           <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded">
-            <p className="text-green-700 font-semibold">✅ Thank you for completing this task!</p>
+            <p className="text-green-700 font-semibold">✅ Thank you for completing this errand!</p>
             <p className="text-green-600 text-sm">Your rating helps build trust in the community.</p>
           </div>
         )}

@@ -170,8 +170,8 @@ export default function NotificationPreferencesSection() {
               <p className="text-sm text-red-100 mt-1">Essential notifications that keep your business running</p>
             </div>
             <div className="divide-y divide-gray-100">
-              {renderEventToggle('bid_accepted', 'Bid Accepted', 'When someone accepts your bid', true)}
-              {renderEventToggle('task_reopened', 'Task Reopened', 'When a task you bid on becomes available again', true)}
+              {renderEventToggle('bid_accepted', 'Offer Confirmed', 'When someone confirms your offer', true)}
+              {renderEventToggle('task_reopened', 'Errand Reopened', 'When an errand you bid on becomes available again', true)}
               {renderEventToggle('payment_released', 'Payment Released', 'When payment is released for completed work', true)}
             </div>
           </div>
@@ -183,14 +183,14 @@ export default function NotificationPreferencesSection() {
                 <span>🟡</span>
                 <span>Important Events</span>
               </h2>
-              <p className="text-sm text-yellow-100 mt-1">Keep track of task activity and interactions</p>
+              <p className="text-sm text-yellow-100 mt-1">Keep track of errand activity and interactions</p>
             </div>
             <div className="divide-y divide-gray-100">
-              {renderEventToggle('new_bid_received', 'New Bid Received', 'When you receive a new bid on your task')}
+              {renderEventToggle('new_bid_received', 'New Offer Received', 'When you receive a new offer on your errand')}
               {renderEventToggle('message_received', 'Message Received', 'When someone sends you a message')}
-              {renderEventToggle('task_completed', 'Task Completed', 'When a task you posted is completed')}
+              {renderEventToggle('task_completed', 'Errand Completed', 'When an errand you posted is completed')}
               {renderEventToggle('review_received', 'Review Received', 'When someone leaves you a review or rating')}
-              {renderEventToggle('bid_rejected', 'Bid Rejected', 'When your bid is rejected')}
+              {renderEventToggle('bid_rejected', 'Offer Declined', 'When your offer is declined')}
             </div>
           </div>
 
@@ -225,7 +225,7 @@ export default function NotificationPreferencesSection() {
         {/* Info Footer */}
         <div className="mt-8 p-4 bg-orange-50 rounded-lg border border-errandify-orange-200">
           <p className="text-sm text-errandify-orange-900">
-            <strong>💡 Tip:</strong> Critical notifications cannot be disabled because they're essential for managing your tasks and payments. You can customize all other notifications to suit your preferences.
+            <strong>💡 Tip:</strong> Critical notifications cannot be disabled because they're essential for managing your errands and payments. You can customize all other notifications to suit your preferences.
           </p>
         </div>
       </div>

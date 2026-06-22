@@ -168,8 +168,8 @@ export default function NotificationPreferencesPage() {
               <h2 className="text-xs font-bold">🔴 Critical (Always On)</h2>
             </div>
             <div className="divide-y divide-gray-100">
-              {renderEventToggle('bid_accepted', '✓ Bid Accepted', true)}
-              {renderEventToggle('task_reopened', '✓ Task Reopened', true)}
+              {renderEventToggle('bid_accepted', '✓ Offer Confirmed', true)}
+              {renderEventToggle('task_reopened', '✓ Errand Reopened', true)}
               {renderEventToggle('payment_released', '✓ Payment Released', true)}
             </div>
           </div>
@@ -180,11 +180,11 @@ export default function NotificationPreferencesPage() {
               <h2 className="text-xs font-bold">🟡 Important</h2>
             </div>
             <div className="divide-y divide-gray-100">
-              {renderEventToggle('new_bid_received', 'New Bid')}
+              {renderEventToggle('new_bid_received', 'New Offer')}
               {renderEventToggle('message_received', 'Message')}
-              {renderEventToggle('task_completed', 'Task Done')}
+              {renderEventToggle('task_completed', 'Errand Done')}
               {renderEventToggle('review_received', 'Review')}
-              {renderEventToggle('bid_rejected', 'Bid Rejected')}
+              {renderEventToggle('bid_rejected', 'Offer Declined')}
             </div>
           </div>
 

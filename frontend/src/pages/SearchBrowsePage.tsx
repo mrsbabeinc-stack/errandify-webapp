@@ -155,8 +155,8 @@ export default function SearchBrowsePage() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">🔍 Browse Tasks</h1>
-          <p className="text-gray-600">Find tasks that match your skills and earn money</p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">🔍 Browse Errands</h1>
+          <p className="text-gray-600">Find errands that match your skills and earn money</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -213,7 +213,7 @@ export default function SearchBrowsePage() {
                   <option value="">All Categories</option>
                   {categories.map((cat) => (
                     <option key={cat.name} value={cat.name}>
-                      {cat.name} ({cat.openTasks} tasks)
+                      {cat.name} ({cat.openTasks} errands)
                     </option>
                   ))}
                 </select>
@@ -257,7 +257,7 @@ export default function SearchBrowsePage() {
                     setSearchQuery(e.target.value);
                     fetchSuggestions(e.target.value);
                   }}
-                  placeholder="Search tasks... (e.g., 'cleaning', 'delivery')"
+                  placeholder="Search errands... (e.g., 'cleaning', 'delivery')"
                   className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange-500"
                 />
                 <button
@@ -290,7 +290,7 @@ export default function SearchBrowsePage() {
                           }}
                           className="px-3 py-1 bg-orange-200 text-errandify-orange-900 rounded-full text-xs font-semibold hover:bg-orange-300"
                         >
-                          {cat.category} (~${cat.avgBudget}/task)
+                          {cat.category} (~${cat.avgBudget}/errand)
                         </button>
                       ))}
                     </div>
@@ -301,7 +301,7 @@ export default function SearchBrowsePage() {
 
             {/* Results Count */}
             <div className="mb-4 text-gray-600">
-              Found <strong>{errands.length}</strong> tasks
+              Found <strong>{errands.length}</strong> errands
               {searchQuery && ` for "${searchQuery}"`}
               {selectedCategory && ` in ${selectedCategory}`}
             </div>
@@ -310,11 +310,11 @@ export default function SearchBrowsePage() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin text-4xl mb-4">⏳</div>
-                <p className="text-gray-600">Loading tasks...</p>
+                <p className="text-gray-600">Loading errands...</p>
               </div>
             ) : errands.length === 0 ? (
               <div className="bg-white rounded-lg shadow p-8 text-center">
-                <p className="text-gray-500 text-lg mb-4">No tasks found</p>
+                <p className="text-gray-500 text-lg mb-4">No errands found</p>
                 <p className="text-gray-400 text-sm mb-4">Try different filters or search terms</p>
                 <button
                   onClick={handleReset}
@@ -340,7 +340,7 @@ export default function SearchBrowsePage() {
                             {errand.category}
                           </span>
                           <span>📍 Posted {formatDate(errand.createdAt)}</span>
-                          <span>💬 {errand.bidCount} bids</span>
+                          <span>💬 {errand.bidCount} offers</span>
                         </div>
                       </div>
                       <div className="text-right">

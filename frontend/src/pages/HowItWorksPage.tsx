@@ -47,8 +47,8 @@ export default function HowItWorksPage() {
               <div className="flex gap-4">
                 <div className="bg-errandify-orange text-white rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0 text-lg">2</div>
                 <div>
-                  <h3 className="font-bold text-gray-800 mb-1">Review Bids from Doers</h3>
-                  <p className="text-sm text-gray-600">Doers submit bids at their own rates (at, above, or below your budget). Compare ratings and prices.</p>
+                  <h3 className="font-bold text-gray-800 mb-1">Review Offers from Doers</h3>
+                  <p className="text-sm text-gray-600">Doers submit offers at their own rates (at, above, or below your budget). Compare ratings and prices.</p>
                 </div>
               </div>
 
@@ -95,8 +95,8 @@ export default function HowItWorksPage() {
               <div className="flex gap-4">
                 <div className="bg-errandify-brown text-white rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0 text-lg">2</div>
                 <div>
-                  <h3 className="font-bold text-gray-800 mb-1">Submit Your Bid</h3>
-                  <p className="text-sm text-gray-600">Bid any amount (at, below, or above their budget). When asker picks you, you're locked in and can start!</p>
+                  <h3 className="font-bold text-gray-800 mb-1">Submit Your Offer</h3>
+                  <p className="text-sm text-gray-600">Offer any amount (at, below, or above their budget). When asker picks you, you're locked in and can start!</p>
                 </div>
               </div>
 

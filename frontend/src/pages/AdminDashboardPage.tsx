@@ -172,7 +172,7 @@ export default function AdminDashboardPage() {
                       : 0}
                     %
                   </p>
-                  <p className="text-xs text-gray-500 mt-2">{dashboard.stats.totalBids} total bids</p>
+                  <p className="text-xs text-gray-500 mt-2">{dashboard.stats.totalBids} total offers</p>
                 </div>
               </div>
 
