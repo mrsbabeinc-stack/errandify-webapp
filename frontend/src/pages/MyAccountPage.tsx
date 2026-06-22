@@ -430,22 +430,45 @@ export default function MyAccountPage() {
                   <p className="text-xs text-green-800 mt-0.5">Only you see this</p>
                 </div>
 
-                {/* Edit Form */}
+                {/* View/Edit Profile */}
                 <div className="bg-white rounded shadow p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-bold text-errandify-brown">📝 Edit Profile</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-errandify-brown">📝 Your Profile</h3>
                     {!isEditing && (
                       <button
                         onClick={() => setIsEditing(true)}
-                        className="text-sm text-errandify-orange font-semibold hover:underline"
+                        className="text-xs text-errandify-orange font-semibold hover:underline"
                       >
                         Edit
                       </button>
                     )}
+                    {isEditing && (
+                      <button
+                        onClick={() => setIsEditing(false)}
+                        className="text-xs text-gray-600 font-semibold hover:underline"
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </div>
 
-                  {isEditing ? (
-                    <div className="space-y-4">
+                  {!isEditing ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span className="text-xs text-gray-600 font-semibold">Name</span>
+                        <span className="text-sm text-gray-800">{profileData.name || '—'}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span className="text-xs text-gray-600 font-semibold">Mobile</span>
+                        <span className="text-sm text-gray-800">{profileData.mobile || '—'}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-xs text-gray-600 font-semibold">Monthly Income</span>
+                        <span className="text-sm text-gray-800">${profileData.monthlyHouseholdIncome || '—'}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
                       <div>
                         <label className="text-xs font-semibold text-gray-600 block mb-1">Name</label>
                         <input
@@ -473,17 +496,17 @@ export default function MyAccountPage() {
                           className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
                         />
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 pt-2">
                         <button
                           onClick={handleSaveProfile}
                           disabled={saving}
-                          className="flex-1 bg-errandify-orange text-white py-2 rounded font-semibold text-sm hover:bg-opacity-90 transition disabled:opacity-50"
+                          className="flex-1 bg-errandify-orange text-white py-1.5 rounded font-semibold text-xs hover:bg-opacity-90 transition disabled:opacity-50"
                         >
-                          {saving ? 'Saving...' : 'Save Changes'}
+                          {saving ? 'Saving...' : 'Save'}
                         </button>
                         <button
                           onClick={() => setIsEditing(false)}
-                          className="flex-1 border border-gray-300 text-gray-700 py-2 rounded font-semibold text-sm hover:bg-gray-50 transition"
+                          className="flex-1 border border-gray-300 text-gray-700 py-1.5 rounded font-semibold text-xs hover:bg-gray-50 transition"
                         >
                           Cancel
                         </button>
