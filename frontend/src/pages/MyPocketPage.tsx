@@ -221,13 +221,13 @@ export default function MyPocketPage() {
               onClick={() => setActiveTab('txns')}
               className={`flex-1 p-1.5 text-center transition whitespace-nowrap text-xs ${activeTab === 'txns' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
-              📋 Txns
+              📋 Transactions
             </button>
             <button
               onClick={() => setActiveTab('history')}
               className={`flex-1 p-1.5 text-center transition border-l border-gray-100 whitespace-nowrap text-xs ${activeTab === 'history' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
-              ⭐ Points
+              ⭐ Errandify Points (EP)
             </button>
             <button
               onClick={() => setActiveTab('payout')}
