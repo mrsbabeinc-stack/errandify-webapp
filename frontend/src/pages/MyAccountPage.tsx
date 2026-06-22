@@ -37,7 +37,7 @@ export default function MyAccountPage() {
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | null>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [pocketTab, setPocketTab] = useState<'txns' | 'history' | 'payout'>('txns');
-  const [rewardTab, setRewardTab] = useState<'overview' | 'pointHistory' | 'vouchers' | 'gift' | 'refer'>('overview');
+  const [rewardTab, setRewardTab] = useState<'overview' | 'pointHistory' | 'vouchers' | 'gift'>('overview');
   const [isEditingBankDetails, setIsEditingBankDetails] = useState(false);
   const [bankDetails, setBankDetails] = useState({
     bankName: 'STRIPE TEST BANK',
@@ -1455,12 +1455,6 @@ export default function MyAccountPage() {
                 >
                   🎀 Gift
                 </button>
-                <button
-                  onClick={() => setRewardTab('refer')}
-                  className={`flex-1 p-2 text-center transition border-l border-purple-100 whitespace-nowrap ${rewardTab === 'refer' ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' : 'hover:bg-purple-50'}`}
-                >
-                  👥 Refer
-                </button>
               </div>
 
               {/* TAB CONTENT */}
@@ -1680,38 +1674,6 @@ export default function MyAccountPage() {
                 )}
 
                 {/* REFER TAB */}
-                {rewardTab === 'refer' && (
-                  <div className="space-y-2">
-                    <div className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white p-3 rounded-lg shadow-md">
-                      <h3 className="text-sm font-bold">👥✨ Refer & Earn - MyKampungKhakis ✨</h3>
-                    </div>
-                    <div className="bg-blue-50 p-3 rounded-lg space-y-2 text-center">
-                      <p className="font-bold text-gray-800">Earn 0 (EP) for every friend who joins!</p>
-                      <div className="bg-white p-3 rounded-lg border-2 border-blue-300 my-2">
-                        <p className="text-xs text-gray-600 mb-2">📱 QR Code</p>
-                        <div className="bg-gray-200 h-24 rounded flex items-center justify-center">
-                          <p className="text-xs text-gray-500">[QR Code Display]</p>
-                        </div>
-                        <p className="text-xs text-blue-600 font-bold mt-2">📥 Tap to Download</p>
-                      </div>
-                      <div className="bg-white p-2 rounded border border-blue-300 space-y-1">
-                        <p className="text-xs text-gray-600">Your Referral Link</p>
-                        <p className="text-xs font-bold text-blue-600 break-all">https://app.errandify.ai/referral?...SunnyLove</p>
-                        <button className="w-full bg-orange-500 text-white py-1 rounded text-xs font-bold hover:bg-orange-600">
-                          📋 Copy
-                        </button>
-                      </div>
-                      <div className="bg-blue-100 p-2 rounded mt-2 text-left">
-                        <p className="text-xs font-bold text-blue-900 mb-1">ℹ️ How It Works</p>
-                        <ul className="text-xs text-blue-800 space-y-1">
-                          <li>✅ Friend creates Individual account using your code</li>
-                          <li>✅ They proceed with Company sign-up (if needed)</li>
-                          <li>✅ After verification, rewards applied to both!</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
