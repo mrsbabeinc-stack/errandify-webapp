@@ -187,13 +187,18 @@ export default function MyAccountPage() {
         localStorage.setItem('userBio', editForm.bio);
       }
 
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
-        updateData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // Only call API if there are fields to update
+      if (Object.keys(updateData).length > 0) {
+        const response = await axios.put(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+          updateData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      console.log('Profile save response:', response.data);
+        console.log('Profile save response:', response.data);
+      } else {
+        console.log('No profile fields to update, only saved local data (alias, bio)');
+      }
       setIsEditing(false);
       setHasUnsavedChanges(false);
       if (profileData) {
