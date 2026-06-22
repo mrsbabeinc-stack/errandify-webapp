@@ -501,9 +501,16 @@ export default function MyAccountPage() {
             {/* PROFILE HERO CARD */}
             <div className="relative bg-white rounded-lg shadow p-3 border-l-4 border-errandify-orange overflow-hidden mb-1.5">
               <div className="flex items-center justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-base font-bold text-errandify-brown truncate">{profileData.name}</h2>
-                  <p className="text-gray-600 text-xs">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
+                {/* Profile Photo + Name */}
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {profileImage ? (
+                    <img src={profileImage} alt="Profile" className="w-12 h-12 rounded-full object-cover border-2 border-errandify-orange flex-shrink-0" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-2xl flex-shrink-0">👤</div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-base font-bold text-errandify-brown truncate">{profileData.name}</h2>
+                  </div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="text-xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
