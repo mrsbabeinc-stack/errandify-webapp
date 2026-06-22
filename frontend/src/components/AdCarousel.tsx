@@ -76,22 +76,22 @@ export default function AdCarousel() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-1.5">
+    <div className="max-w-6xl mx-auto px-4 py-2">
       {/* AD CAROUSEL */}
       <div
-        className={`${currentAd.bgColor} rounded-lg shadow p-4 text-white relative overflow-hidden transition-all duration-500`}
+        className={`${currentAd.bgColor} rounded-lg shadow p-5 text-white relative overflow-hidden transition-all duration-500`}
         onMouseEnter={() => setIsAutoPlay(false)}
         onMouseLeave={() => setIsAutoPlay(true)}
       >
         {/* CONTENT */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-4">
           {/* LEFT: Icon */}
-          <div className="text-4xl flex-shrink-0">{currentAd.image}</div>
+          <div className="text-5xl flex-shrink-0">{currentAd.image}</div>
 
           {/* CENTER: Text */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold mb-0.5">{currentAd.title}</h3>
-            <p className="text-white text-opacity-90 text-xs">{currentAd.description}</p>
+            <h3 className="text-xl font-bold mb-1">{currentAd.title}</h3>
+            <p className="text-white text-opacity-90 text-sm">{currentAd.description}</p>
           </div>
 
           {/* RIGHT: CTA Button */}
@@ -99,7 +99,7 @@ export default function AdCarousel() {
             <div className="flex-shrink-0">
               <a
                 href={currentAd.cta.url}
-                className="bg-white text-gray-800 px-3 py-1.5 rounded font-bold text-xs hover:bg-opacity-90 transition whitespace-nowrap"
+                className="bg-white text-gray-800 px-4 py-2 rounded font-bold text-sm hover:bg-opacity-90 transition whitespace-nowrap"
               >
                 {currentAd.cta.label} →
               </a>
