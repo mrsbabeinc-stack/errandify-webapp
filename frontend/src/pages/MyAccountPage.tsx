@@ -330,9 +330,61 @@ export default function MyAccountPage() {
           </div>
         )}
 
+        {/* BOTTOM NAVIGATION - QUICK ACCESS TABS */}
+        {activeTab === 'dashboard' && (
+          <div className="mt-6 pt-4 border-t-2 border-gray-200">
+            <div className="flex gap-1 overflow-x-auto pb-2">
+              <button
+                onClick={() => setActiveTab('profile-shared')}
+                className="px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+              >
+                🌐 My Profile
+              </button>
+              <button
+                onClick={() => navigate('/notification-preferences')}
+                className="px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap bg-purple-100 text-purple-700 hover:bg-purple-200 transition"
+              >
+                🔔 Notifications
+              </button>
+              <button
+                onClick={() => navigate('/my-kampung')}
+                className="px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap bg-green-100 text-green-700 hover:bg-green-200 transition"
+              >
+                🏘️ My Kampung
+              </button>
+              <button
+                onClick={() => navigate('/my-pocket')}
+                className="px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap bg-amber-100 text-amber-700 hover:bg-amber-200 transition"
+              >
+                💰 My Pocket
+              </button>
+              <button
+                onClick={() => navigate('/block-list')}
+                className="px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap bg-red-100 text-red-700 hover:bg-red-200 transition"
+              >
+                🚫 Block List
+              </button>
+              <button
+                onClick={() => setActiveTab('profile-private')}
+                className="px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap bg-orange-100 text-orange-700 hover:bg-orange-200 transition"
+              >
+                🔒 Account Settings
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ===== PROFILE TAB ===== */}
         {(activeTab === 'profile-shared' || activeTab === 'profile-private') && (
           <div>
+            {/* BACK BUTTON */}
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className="mb-3 px-3 py-1 bg-gray-200 text-gray-700 rounded text-xs font-semibold hover:bg-gray-300 transition"
+            >
+              ← Back to Dashboard
+            </button>
+
             {/* PROFILE SUBTABS */}
             <div className="flex gap-2 mb-3 border-b-2 border-gray-200">
               <button
