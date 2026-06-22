@@ -17,6 +17,7 @@ interface UserProfile {
   totalEarnings?: number;
   responseTime?: number;
   availableForWork?: boolean;
+  profilePhoto?: string;
 }
 
 interface Rating {
@@ -43,6 +44,83 @@ export default function MyProfilePage() {
     monthly_household_income: '',
   });
   const [saving, setSaving] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState('');
+
+  const validatePhoto = (file: File): boolean => {
+    setPhotoError('');
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError('File size must be less than 5MB');
+      return false;
+    }
+
+    // Check file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setPhotoError('Only JPG, PNG, and WebP formats are allowed');
+      return false;
+    }
+
+    // Check image dimensions (basic validation)
+    const img = new Image();
+    img.onload = () => {
+      if (img.width < 200 || img.height < 200) {
+        setPhotoError('Image must be at least 200x200 pixels');
+      }
+    };
+    img.src = URL.createObjectURL(file);
+
+    return true;
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!validatePhoto(file)) return;
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPhotoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePhotoUpload = async () => {
+    if (!photoPreview) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+
+      // Convert data URL to blob
+      const response = await fetch(photoPreview);
+      const blob = await response.blob();
+      formData.append('profilePhoto', blob, 'profile-photo.jpg');
+
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile-photo`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      // Update local profile
+      setProfile(prev => prev ? { ...prev, profilePhoto: photoPreview } : null);
+      setPhotoPreview(null);
+      alert('Profile photo updated successfully!');
+    } catch (err) {
+      console.error('Failed to upload photo:', err);
+      setPhotoError('Failed to upload photo. Please try again.');
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -661,6 +739,68 @@ export default function MyProfilePage() {
                     }`}>
                       CHAS {profile.chasCardColor.toUpperCase()} ({profile.chasSubsidyPercentage}% subsidy)
                     </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Private: Profile Photo Upload */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-bold text-errandify-brown mb-4">📸 Profile Photo</h3>
+
+                {/* Current Photo Display */}
+                <div className="mb-4">
+                  {profile.profilePhoto || photoPreview ? (
+                    <div className="relative w-32 h-32 mx-auto mb-4">
+                      <img
+                        src={photoPreview || profile.profilePhoto}
+                        alt="Profile"
+                        className="w-full h-full rounded-lg object-cover shadow"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-20 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition">
+                        <span className="text-white text-sm font-bold">Change Photo</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-32 h-32 mx-auto mb-4 bg-gray-200 rounded-lg flex items-center justify-center text-4xl text-gray-400">
+                      👤
+                    </div>
+                  )}
+                </div>
+
+                {/* Photo Error */}
+                {photoError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                    <p className="text-sm text-red-700 font-semibold">⚠️ {photoError}</p>
+                  </div>
+                )}
+
+                {/* Upload Input */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">Choose Photo</label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handlePhotoChange}
+                    className="w-full text-sm text-gray-500 file:mr-2 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-errandify-orange file:text-white hover:file:bg-orange-600"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">✓ JPG, PNG, WebP • ✓ Min 200x200px • ✓ Max 5MB</p>
+                </div>
+
+                {/* Upload Button */}
+                {photoPreview && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handlePhotoUpload}
+                      className="flex-1 bg-errandify-orange text-white py-2 rounded-lg font-bold text-sm hover:bg-opacity-90 transition"
+                    >
+                      ✓ Upload Photo
+                    </button>
+                    <button
+                      onClick={() => setPhotoPreview(null)}
+                      className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 transition"
+                    >
+                      ✕ Cancel
+                    </button>
                   </div>
                 )}
               </div>
