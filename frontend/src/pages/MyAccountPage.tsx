@@ -32,6 +32,7 @@ interface Rating {
 export default function MyAccountPage() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'transactions' | null>('dashboard');
+  const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -213,7 +214,7 @@ export default function MyAccountPage() {
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >
-              👤 MyAccount
+              👤 MyProfile
             </button>
             <button
               onClick={() => setActiveSection('transactions')}
@@ -355,10 +356,107 @@ export default function MyAccountPage() {
 
         {/* PROFILE SECTION */}
         {activeSection === 'profile' && (
-          <div className="space-y-3">
-                <div className="bg-white rounded shadow p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-errandify-brown">📝 Your Profile</h3>
+          <div>
+            {/* PROFILE SUBTABS */}
+            <div className="flex gap-2 mb-2 border-b border-gray-200">
+              <button
+                onClick={() => setProfileTab('shared')}
+                className={`pb-1.5 font-bold text-xs transition ${
+                  profileTab === 'shared'
+                    ? 'border-b-4 border-errandify-orange text-errandify-orange'
+                    : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+                }`}
+              >
+                🌐 MyShared Info
+              </button>
+              <button
+                onClick={() => setProfileTab('private')}
+                className={`pb-1.5 font-bold text-xs transition ${
+                  profileTab === 'private'
+                    ? 'border-b-4 border-errandify-orange text-errandify-orange'
+                    : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+                }`}
+              >
+                🔒 MyPrivate Info
+              </button>
+            </div>
+
+            {/* SHARED INFO */}
+            {profileTab === 'shared' && (
+              <div className="space-y-2">
+                <div className="bg-blue-50 border-l-4 border-blue-500 rounded p-2 mb-2">
+                  <p className="text-xs font-bold text-blue-900">👁️ PUBLIC PROFILE</p>
+                  <p className="text-xs text-blue-800 mt-0.5">What other users see</p>
+                </div>
+
+                {/* Profile Header */}
+                <div className="bg-gradient-to-r from-errandify-orange to-orange-400 rounded shadow p-3 text-white">
+                  <div className="flex gap-2 items-center">
+                    <div className="text-2xl">👤</div>
+                    <div className="flex-1">
+                      <h2 className="text-base font-bold mb-0.5">{profileData.name}</h2>
+                      <p className="text-orange-50 text-xs">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
+                      {badges.length > 0 && (
+                        <div className="flex gap-1 flex-wrap mt-1">
+                          {badges.map((badge, idx) => (
+                            <div key={idx} className="text-xs bg-white bg-opacity-20 px-1 py-0.5 rounded">
+                              {badge.icon}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-4 gap-1">
+                  <div className="bg-white rounded shadow p-1.5 text-center border-l-2 border-orange-400">
+                    <p className="text-base font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
+                    <p className="text-xs text-gray-600 font-semibold">⭐</p>
+                  </div>
+                  <div className="bg-white rounded shadow p-1.5 text-center border-l-2 border-orange-400">
+                    <p className="text-base font-bold text-errandify-orange">{ratings.reviewCount}</p>
+                    <p className="text-xs text-gray-600 font-semibold">👥</p>
+                  </div>
+                  <div className="bg-white rounded shadow p-1.5 text-center border-l-2 border-orange-400">
+                    <p className="text-base font-bold text-errandify-orange">{profileData.categories?.length || 0}</p>
+                    <p className="text-xs text-gray-600 font-semibold">🎯</p>
+                  </div>
+                  <div className="bg-white rounded shadow p-1.5 text-center border-l-2 border-orange-400">
+                    <p className="text-base font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
+                    <p className="text-xs text-gray-600 font-semibold">✅</p>
+                  </div>
+                </div>
+
+                {/* Skills */}
+                {profileData.categories && profileData.categories.length > 0 && (
+                  <div className="bg-white rounded shadow p-3">
+                    <h3 className="text-xs font-bold text-errandify-brown mb-2">🎯 Your Skills</h3>
+                    <div className="grid grid-cols-2 gap-1">
+                      {profileData.categories.slice(0, 4).map((cat, idx) => (
+                        <div key={idx} className="bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded p-1.5 text-center">
+                          <p className="text-xs font-bold text-errandify-brown">{cat}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* PRIVATE INFO */}
+            {profileTab === 'private' && (
+              <div className="space-y-2">
+                <div className="bg-green-50 border-l-4 border-green-500 rounded p-2 mb-2">
+                  <p className="text-xs font-bold text-green-900">🔒 PRIVATE</p>
+                  <p className="text-xs text-green-800 mt-0.5">Only you see this</p>
+                </div>
+
+                {/* Edit Form */}
+                <div className="bg-white rounded shadow p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-bold text-errandify-brown">📝 Edit Profile</h3>
                     {!isEditing && (
                       <button
                         onClick={() => setIsEditing(true)}
@@ -369,88 +467,90 @@ export default function MyAccountPage() {
                     )}
                   </div>
 
-                  {!isEditing ? (
+                  {isEditing ? (
                     <div className="space-y-2">
-                      <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span className="text-xs text-gray-600 font-semibold">Name</span>
-                        <span className="text-sm text-gray-800">{profileData.name || '—'}</span>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Name</label>
+                        <input
+                          type="text"
+                          value={editForm.display_name}
+                          onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                        />
                       </div>
-                      <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span className="text-xs text-gray-600 font-semibold">Email</span>
-                        <span className="text-sm text-gray-800">{profileData.email || '—'}</span>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={editForm.email}
+                          onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                        />
                       </div>
-                      <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span className="text-xs text-gray-600 font-semibold">Mobile</span>
-                        <span className="text-sm text-gray-800">{profileData.mobile || '—'}</span>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Mobile</label>
+                        <input
+                          type="text"
+                          value={editForm.mobile}
+                          onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                        />
                       </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-xs text-gray-600 font-semibold">Monthly Income</span>
-                        <span className="text-sm text-gray-800">${profileData.monthlyHouseholdIncome || '—'}</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={editForm.display_name}
-                        onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
-                        placeholder="Name"
-                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                      />
-                      <input
-                        type="email"
-                        value={editForm.email}
-                        onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                        placeholder="Email"
-                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                      />
-                      <input
-                        type="text"
-                        value={editForm.mobile}
-                        onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })}
-                        placeholder="Mobile"
-                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                      />
                       <div className="flex gap-2">
                         <button
                           onClick={handleSaveProfile}
                           disabled={saving}
-                          className="flex-1 bg-errandify-orange text-white py-1.5 rounded font-semibold text-xs"
+                          className="flex-1 bg-errandify-orange text-white py-1 rounded font-semibold text-xs"
                         >
                           {saving ? 'Saving...' : 'Save'}
                         </button>
                         <button
                           onClick={() => setIsEditing(false)}
-                          className="flex-1 border border-gray-300 text-gray-700 py-1.5 rounded font-semibold text-xs"
+                          className="flex-1 border border-gray-300 text-gray-700 py-1 rounded font-semibold text-xs"
                         >
                           Cancel
                         </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 text-xs">
+                      <div>
+                        <p className="text-gray-600 font-semibold">Name</p>
+                        <p className="text-gray-800">{profileData.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600 font-semibold">Email</p>
+                        <p className="text-gray-800">{profileData.email || 'Not set'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600 font-semibold">Mobile</p>
+                        <p className="text-gray-800">{profileData.mobile || 'Not set'}</p>
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* Certificates */}
-                <div className="bg-white rounded shadow p-4">
-                  <h3 className="text-sm font-bold text-errandify-brown mb-2">📜 Certificates ({certificates.length}/10)</h3>
+                <div className="bg-white rounded shadow p-3">
+                  <h3 className="text-xs font-bold text-errandify-brown mb-1.5">📜 Certificates ({certificates.length}/10)</h3>
                   {certificates.length > 0 && (
-                    <div className="mb-3 space-y-1">
+                    <div className="mb-2 space-y-1">
                       {certificates.map((cert, idx) => (
-                        <div key={cert.id} className="flex justify-between items-center bg-gray-50 p-2 rounded text-xs">
+                        <div key={cert.id} className="flex justify-between items-center bg-gray-50 p-1.5 rounded text-xs">
                           <span>{idx + 1}. {cert.name}</span>
-                          <button onClick={() => setCertificates(certificates.filter((_, i) => i !== idx))} className="text-red-600">✕</button>
+                          <button onClick={() => setCertificates(certificates.filter((_, i) => i !== idx))} className="text-red-600 text-xs">✕</button>
                         </div>
                       ))}
                     </div>
                   )}
                   {certificates.length < 10 && (
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <input
                         type="text"
                         value={certificateTitle}
                         onChange={(e) => setCertificateTitle(e.target.value)}
                         placeholder="Certificate title"
-                        className="w-full px-3 py-2 border border-gray-300 rounded text-xs"
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                       />
                       <input type="file" onChange={(e) => setCertificateFile(e.files?.[0] || null)} className="w-full text-xs" />
                       <button
@@ -461,7 +561,7 @@ export default function MyAccountPage() {
                             setCertificateFile(null);
                           }
                         }}
-                        className="w-full bg-errandify-orange text-white py-1.5 rounded font-semibold text-xs"
+                        className="w-full bg-errandify-orange text-white py-1 rounded font-semibold text-xs"
                       >
                         Add
                       </button>
@@ -469,6 +569,8 @@ export default function MyAccountPage() {
                   )}
                 </div>
               </div>
+            )}
+          </div>
         )}
 
         {/* TRANSACTIONS SECTION */}
