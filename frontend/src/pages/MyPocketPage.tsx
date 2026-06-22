@@ -169,7 +169,7 @@ export default function MyPocketPage() {
           <h2 className="text-3xl font-bold mb-2">{formatCurrency(wallet.balance)}</h2>
           <div className="flex gap-2 text-xs">
             <button
-              onClick={() => setActiveTab('payout')}
+              onClick={() => alert('Withdraw to bank account. Amount: $' + wallet.balance.toFixed(2))}
               className="flex-1 bg-white text-errandify-orange font-semibold py-1.5 rounded transition"
             >
               Withdraw
@@ -220,7 +220,7 @@ export default function MyPocketPage() {
               onClick={() => setActiveTab('payout')}
               className={`flex-1 p-2 text-center transition border-l border-gray-100 whitespace-nowrap ${activeTab === 'payout' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
-              💳 Withdraw
+              💳 Payout/Drawout
             </button>
           </div>
 
@@ -272,13 +272,15 @@ export default function MyPocketPage() {
               </div>
             )}
 
-            {/* Payout Tab */}
+            {/* Payout/Drawout Tab - Transactions + Withdraw Button */}
             {activeTab === 'payout' && (
               <div className="p-2 space-y-2">
-                <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                  <p className="text-xs text-blue-900 font-semibold">💡 How Withdraw Works</p>
-                  <p className="text-xs text-blue-800 mt-1">Withdraw part or full balance to your bank account. After 48 hours of errand completion (if no dispute is raised), earnings will be available to withdraw.</p>
-                </div>
+                <button
+                  onClick={() => alert('Withdraw to bank account. Amount: $' + wallet.balance.toFixed(2))}
+                  className="w-full bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600 transition"
+                >
+                  💸 Withdraw
+                </button>
 
                 {/* Payout & Drawout Transactions */}
                 <div className="bg-white border border-gray-200 rounded overflow-hidden">
@@ -309,46 +311,6 @@ export default function MyPocketPage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Bank Account Management - Collapsible */}
-                <button
-                  onClick={() => setShowBankDetails(!showBankDetails)}
-                  className="w-full bg-white border border-gray-200 rounded p-2 flex items-center justify-between hover:bg-gray-50 transition"
-                >
-                  <span className="text-xs font-bold text-gray-800">💳 Bank Account</span>
-                  <span className="text-lg">{showBankDetails ? '▼' : '▶'}</span>
-                </button>
-
-                {/* Bank Details - Expanded */}
-                {showBankDetails && (
-                  <div className="bg-white border border-gray-200 rounded p-2 space-y-2">
-                    <div className="space-y-1.5 text-xs">
-                      <div className="flex justify-between items-center pb-1 border-b border-gray-100">
-                        <span className="text-gray-600 font-semibold">Bank</span>
-                        <span className="font-bold text-gray-900">STRIPE TEST BANK</span>
-                      </div>
-
-                      <div className="flex justify-between items-center pb-1 border-b border-gray-100">
-                        <span className="text-gray-600 font-semibold">Account</span>
-                        <span className="font-bold text-gray-900">•••• •••• •••• 3456</span>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 font-semibold">Status</span>
-                        <span className="font-bold text-green-600">✓ Approved</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <button className="w-full bg-errandify-orange text-white py-1.5 rounded font-bold text-xs hover:bg-orange-600 transition">
-                        💸 Withdraw Now
-                      </button>
-                      <button className="w-full border border-errandify-orange text-errandify-orange py-1.5 rounded font-bold text-xs hover:bg-orange-50 transition">
-                        ✏️ Edit Account
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
