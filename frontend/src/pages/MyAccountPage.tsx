@@ -1166,13 +1166,37 @@ export default function MyAccountPage() {
                     </div>
 
                     {/* Bank Details Section */}
-                    <button
-                      onClick={() => setIsEditingBankDetails(!isEditingBankDetails)}
-                      className="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition border border-gray-200 rounded"
-                    >
-                      <h3 className="text-xs font-bold text-gray-800">🏦 Bank Account Details</h3>
-                      <span className="text-lg">{isEditingBankDetails ? '▼' : '▶'}</span>
-                    </button>
+                    <div className="border border-gray-200 rounded overflow-hidden">
+                      <button
+                        onClick={() => setIsEditingBankDetails(!isEditingBankDetails)}
+                        className="w-full flex items-center justify-between p-2 hover:bg-gray-50 transition"
+                      >
+                        <h3 className="text-xs font-bold text-gray-800">🏦 Bank Account Details</h3>
+                        <span className="text-lg">{isEditingBankDetails ? '▼' : '▶'}</span>
+                      </button>
+
+                      {!isEditingBankDetails && (
+                        <div className="border-t border-gray-200 p-2 space-y-1 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Bank</span>
+                            <span className="font-bold">{bankDetails.bankName}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Holder</span>
+                            <span className="font-bold">{bankDetails.accountHolder}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Account</span>
+                            <span className="font-bold">{bankDetails.accountNumber}</span>
+                          </div>
+                          <button
+                            onClick={() => setIsEditingBankDetails(true)}
+                            className="w-full mt-1 text-errandify-orange font-bold text-xs hover:underline"
+                          >
+                            ✏️ Edit Details
+                          </button>
+                        </div>
+                      )}
 
                     {isEditingBankDetails && (
                       <div className="border border-gray-200 p-2 space-y-1.5 rounded">
@@ -1218,7 +1242,8 @@ export default function MyAccountPage() {
                           </button>
                         </div>
                       </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
