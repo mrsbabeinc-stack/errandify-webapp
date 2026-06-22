@@ -31,8 +31,7 @@ interface Rating {
 
 export default function MyAccountPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile-shared' | 'profile-private'>('dashboard');
-  const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'certificates' | null>(null);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -214,8 +213,9 @@ export default function MyAccountPage() {
         </div>
       </div>
 
-      {/* CONTENT */}
+      {/* CONTENT - SIMPLE DASHBOARD ONLY */}
       <div className="max-w-6xl mx-auto px-4 py-6 w-full">
+        {!activeSection && (
         {/* AD CAROUSEL + EVENT BANNER */}
         <div className="mb-4">
           <AdCarousel />
@@ -330,15 +330,15 @@ export default function MyAccountPage() {
           </div>
         )}
 
-        {/* BOTTOM NAVIGATION - QUICK ACCESS TABS */}
-        {activeTab === 'dashboard' && (
-          <div className="mt-6 pt-4 border-t-2 border-gray-200">
-            <div className="flex gap-1 overflow-x-auto pb-2">
+        {/* QUICK LINKS BELOW DASHBOARD */}
+        {!activeSection && (
+          <div className="mt-4 pt-4 border-t-2 border-gray-200">
+            <div className="flex gap-1.5 overflow-x-auto pb-2 flex-wrap">
               <button
-                onClick={() => setActiveTab('profile-shared')}
+                onClick={() => setActiveSection('profile')}
                 className="px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
               >
-                🌐 My Profile
+                👤 My Profile
               </button>
               <button
                 onClick={() => navigate('/notification-preferences')}
@@ -350,73 +350,66 @@ export default function MyAccountPage() {
                 onClick={() => navigate('/my-kampung')}
                 className="px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap bg-green-100 text-green-700 hover:bg-green-200 transition"
               >
-                🏘️ My Kampung
+                🏘️ Kampung
               </button>
               <button
                 onClick={() => navigate('/my-pocket')}
                 className="px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap bg-amber-100 text-amber-700 hover:bg-amber-200 transition"
               >
-                💰 My Pocket
+                💰 Wallet
               </button>
               <button
                 onClick={() => navigate('/block-list')}
                 className="px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap bg-red-100 text-red-700 hover:bg-red-200 transition"
               >
-                🚫 Block List
-              </button>
-              <button
-                onClick={() => setActiveTab('profile-private')}
-                className="px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap bg-orange-100 text-orange-700 hover:bg-orange-200 transition"
-              >
-                🔒 Account Settings
+                🚫 Blocked
               </button>
             </div>
           </div>
         )}
 
-        {/* ===== PROFILE TAB ===== */}
-        {(activeTab === 'profile-shared' || activeTab === 'profile-private') && (
-          <div>
-            {/* BACK BUTTON */}
+        {/* PROFILE SECTION - SHOWS BELOW DASHBOARD */}
+        {activeSection === 'profile' && (
+          <div className="mt-6">
             <button
-              onClick={() => setActiveTab('dashboard')}
+              onClick={() => setActiveSection(null)}
               className="mb-3 px-3 py-1 bg-gray-200 text-gray-700 rounded text-xs font-semibold hover:bg-gray-300 transition"
             >
-              ← Back to Dashboard
+              ← Back
             </button>
 
             {/* PROFILE SUBTABS */}
             <div className="flex gap-2 mb-3 border-b-2 border-gray-200">
               <button
-                onClick={() => {
-                  setActiveTab('profile-shared');
-                  setProfileTab('shared');
-                }}
-                className={`pb-2 font-bold text-xs transition ${
-                  profileTab === 'shared'
-                    ? 'border-b-4 border-errandify-orange text-errandify-orange'
-                    : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
-                }`}
+                onClick={() => setActiveSection('profile')}
+                className={`pb-2 font-bold text-xs transition border-b-4 border-errandify-orange text-errandify-orange`}
               >
-                🌐 MyShared
+                🌐 Public Profile
               </button>
               <button
-                onClick={() => {
-                  setActiveTab('profile-private');
-                  setProfileTab('private');
-                }}
+                onClick={() => setActiveSection('certificates')}
                 className={`pb-2 font-bold text-xs transition ${
-                  profileTab === 'private'
+                  activeSection === 'certificates'
                     ? 'border-b-4 border-errandify-orange text-errandify-orange'
                     : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
                 }`}
               >
-                🔒 MyPrivate
+                📄 Certificates
+              </button>
+              <button
+                onClick={() => setActiveSection('settings')}
+                className={`pb-2 font-bold text-xs transition ${
+                  activeSection === 'settings'
+                    ? 'border-b-4 border-errandify-orange text-errandify-orange'
+                    : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+                }`}
+              >
+                ⚙️ Settings
               </button>
             </div>
 
-            {/* SHARED INFO */}
-            {profileTab === 'shared' && (
+            {/* PUBLIC PROFILE VIEW */}
+            {activeSection === 'profile' && (
               <div className="space-y-3">
                 <div className="bg-blue-50 border-l-4 border-blue-500 rounded p-2 mb-2">
                   <p className="text-xs font-bold text-blue-900">👁️ PUBLIC PROFILE</p>
@@ -479,8 +472,60 @@ export default function MyAccountPage() {
               </div>
             )}
 
-            {/* PRIVATE INFO */}
-            {profileTab === 'private' && (
+            {/* CERTIFICATES */}
+            {activeSection === 'certificates' && (
+              <div className="bg-white rounded shadow p-4">
+                <h3 className="text-sm font-bold text-errandify-brown mb-2">📜 Certificates ({certificates.length}/10)</h3>
+                {certificates.length > 0 && (
+                  <div className="mb-3 space-y-1.5">
+                    {certificates.map((cert, idx) => (
+                      <div key={cert.id} className="flex justify-between items-center bg-gray-50 p-2 rounded text-xs">
+                        <span className="text-gray-700">{idx + 1}. {cert.name}</span>
+                        <button
+                          onClick={() => setCertificates(certificates.filter((_, i) => i !== idx))}
+                          className="text-red-600 hover:text-red-700 font-semibold"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {certificates.length < 10 && (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={certificateTitle}
+                      onChange={(e) => setCertificateTitle(e.target.value)}
+                      placeholder="Certificate title"
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-xs focus:outline-none focus:border-errandify-orange"
+                    />
+                    <input
+                      type="file"
+                      accept=".pdf,.png,.jpg,.jpeg"
+                      onChange={(e) => setCertificateFile(e.files?.[0] || null)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-xs focus:outline-none focus:border-errandify-orange"
+                    />
+                    <button
+                      onClick={() => {
+                        if (certificateTitle && certificateFile) {
+                          setCertificates([...certificates, { id: Date.now().toString(), name: certificateTitle }]);
+                          setCertificateTitle('');
+                          setCertificateFile(null);
+                        }
+                      }}
+                      disabled={!certificateTitle || !certificateFile}
+                      className="w-full bg-errandify-orange text-white py-1.5 rounded font-semibold text-xs hover:bg-opacity-90 transition disabled:opacity-50"
+                    >
+                      Add
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ACCOUNT SETTINGS */}
+            {activeSection === 'settings' && (
               <div className="space-y-3">
                 <div className="bg-green-50 border-l-4 border-green-500 rounded p-2 mb-2">
                   <p className="text-xs font-bold text-green-900">🔒 PRIVATE</p>
@@ -585,98 +630,19 @@ export default function MyAccountPage() {
                   )}
                 </div>
 
-                {/* Private Info */}
-                <div className="bg-white rounded-lg shadow p-6 space-y-4">
-                  {profileData.userId && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-gray-600 font-semibold">Your User ID</p>
-                        <code className="text-sm font-mono font-bold text-errandify-brown">{profileData.userId}</code>
-                      </div>
-                      <button
-                        onClick={() => navigator.clipboard.writeText(profileData.userId || '')}
-                        className="text-xs text-errandify-orange hover:text-orange-600 font-semibold transition px-2 py-1 hover:bg-orange-50 rounded"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                  )}
-
-                  {profileData.chasCardColor && profileData.chasCardColor !== 'none' && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold text-white ${
-                        profileData.chasCardColor === 'blue' ? 'bg-blue-600' : 'bg-green-600'
-                      }`}>
-                        CHAS {profileData.chasCardColor.toUpperCase()} ({profileData.chasSubsidyPercentage}% subsidy)
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Certificates */}
-                <div className="bg-white rounded shadow p-4">
-                  <h3 className="text-sm font-bold text-errandify-brown mb-2">📜 Certificates ({certificates.length}/10)</h3>
-
-                  {/* Existing Certificates List */}
-                  {certificates.length > 0 && (
-                    <div className="mb-3 space-y-1.5">
-                      {certificates.map((cert, idx) => (
-                        <div key={cert.id} className="flex justify-between items-center bg-gray-50 p-2 rounded text-xs">
-                          <span className="text-gray-700">{idx + 1}. {cert.name}</span>
-                          <button
-                            onClick={() => setCertificates(certificates.filter((_, i) => i !== idx))}
-                            className="text-red-600 hover:text-red-700 font-semibold"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {certificates.length < 10 && (
-                    <div className="space-y-2">
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">Certificate Title</label>
-                        <input
-                          type="text"
-                          value={certificateTitle}
-                          onChange={(e) => setCertificateTitle(e.target.value)}
-                          placeholder="e.g., AWS Certified Solutions Architect"
-                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">Upload File (Max 5MB)</label>
-                        <input
-                          type="file"
-                          accept=".pdf,.png,.jpg,.jpeg"
-                          onChange={(e) => setCertificateFile(e.files?.[0] || null)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
-                        />
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          if (certificateTitle && certificateFile) {
-                            setCertificates([...certificates, { id: Date.now().toString(), name: certificateTitle }]);
-                            setCertificateTitle('');
-                            setCertificateFile(null);
-                          }
-                        }}
-                        disabled={!certificateTitle || !certificateFile}
-                        className="w-full bg-errandify-orange text-white py-1.5 rounded font-semibold text-xs hover:bg-opacity-90 transition disabled:opacity-50"
-                      >
-                        Add Certificate
-                      </button>
-                    </div>
-                  )}
-
-                  {certificates.length === 10 && (
-                    <p className="text-xs text-gray-600 text-center py-2">Maximum 10 certificates reached</p>
-                  )}
-                </div>
+                {/* User ID & CHAS Card */}
+                {profileData.userId && (
+                  <div className="bg-amber-50 border border-amber-200 rounded p-2">
+                    <p className="text-xs text-gray-600 font-semibold">User ID</p>
+                    <code className="text-xs font-mono text-errandify-brown">{profileData.userId}</code>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(profileData.userId || '')}
+                      className="text-xs text-errandify-orange hover:text-orange-600 font-semibold ml-2"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
