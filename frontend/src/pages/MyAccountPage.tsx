@@ -712,6 +712,9 @@ export default function MyAccountPage() {
                 {/* CHAS Card (Top Priority) */}
                 {(() => {
                   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                  console.log('Stored user data:', storedUser);
+                  console.log('CHAS Color:', storedUser?.chasCardColor);
+
                   if (storedUser?.chasCardColor && storedUser.chasCardColor !== 'none') {
                     const bgColor = storedUser.chasCardColor === 'blue' ? 'bg-blue-100' : 'bg-green-100';
                     const textColor = storedUser.chasCardColor === 'blue' ? 'text-blue-700' : 'text-green-700';
@@ -724,7 +727,14 @@ export default function MyAccountPage() {
                       </div>
                     );
                   }
-                  return null;
+
+                  // Fallback - show that CHAS data is missing
+                  return (
+                    <div className="rounded shadow p-3 bg-gray-100">
+                      <p className="text-xs font-bold text-gray-600">CHAS Card</p>
+                      <p className="text-sm text-gray-500">No CHAS data available</p>
+                    </div>
+                  );
                 })()}
 
                 {/* Edit Form */}
