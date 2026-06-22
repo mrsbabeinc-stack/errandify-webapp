@@ -129,11 +129,29 @@ export default function MyAccountPage() {
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
+      // Moderate alias and bio before saving
+      const aliasApproved = await moderateText(editForm.alias || '');
+      const bioApproved = await moderateText(editForm.bio || '');
+
+      if (!aliasApproved) {
+        alert('❌ Alias contains inappropriate content. Please revise.');
+        setSaving(false);
+        return;
+      }
+
+      if (!bioApproved) {
+        alert('❌ Bio contains inappropriate content. Please revise.');
+        setSaving(false);
+        return;
+      }
+
       const token = localStorage.getItem('token');
       await axios.put(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
         {
           display_name: editForm.display_name,
+          alias: editForm.alias,
+          bio: editForm.bio,
           email: editForm.email,
           mobile: editForm.mobile,
           monthly_household_income: editForm.monthly_household_income,
@@ -145,12 +163,16 @@ export default function MyAccountPage() {
         setProfileData({
           ...profileData,
           name: editForm.display_name,
+          alias: editForm.alias,
+          bio: editForm.bio,
           email: editForm.email,
           mobile: editForm.mobile,
         });
       }
+      alert('✅ Profile saved successfully!');
     } catch (error) {
       console.error('Error saving profile:', error);
+      alert('Failed to save profile');
     } finally {
       setSaving(false);
     }
@@ -175,6 +197,42 @@ export default function MyAccountPage() {
     } catch (error) {
       console.error('Error deleting account:', error);
       alert('Failed to delete account');
+    }
+  };
+
+  const moderateText = async (text: string): Promise<boolean> => {
+    if (!text || text.length === 0) return true;
+
+    try {
+      const qwenApiKey = import.meta.env.VITE_QWEN_API_KEY;
+      if (!qwenApiKey) return true; // Skip if API not configured
+
+      const response = await axios.post(
+        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+        {
+          model: 'qwen-plus',
+          input: {
+            messages: [
+              {
+                role: 'user',
+                content: `Review this user-generated text for appropriateness on a marketplace. Check for: hate speech, violence, explicit content, spam, scams, or offensive language. Text: "${text}". Reply with only "APPROVED" if appropriate, or "REJECTED: [reason]" if not.`,
+              },
+            ],
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${qwenApiKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const result = response.data.output?.choices?.[0]?.message?.content;
+      return result && result.includes('APPROVED');
+    } catch (error) {
+      console.error('Text moderation error:', error);
+      return true; // Fallback: allow if API fails
     }
   };
 
@@ -760,8 +818,21 @@ export default function MyAccountPage() {
                       />
                       <input type="file" onChange={(e) => setCertificateFile(e.files?.[0] || null)} className="w-full text-xs" />
                       <button
-                        onClick={() => {
+                        onClick={async () => {
                           if (certificateTitle && certificateFile) {
+                            // Moderate certificate title
+                            const titleApproved = await moderateText(certificateTitle);
+                            if (!titleApproved) {
+                              alert('❌ Certificate title contains inappropriate content. Please revise.');
+                              return;
+                            }
+
+                            // File size check (10MB max for certificates)
+                            if (certificateFile.size > 10 * 1024 * 1024) {
+                              alert('Certificate file exceeds 10MB limit');
+                              return;
+                            }
+
                             setCertificates([...certificates, { id: Date.now().toString(), name: certificateTitle }]);
                             setCertificateTitle('');
                             setCertificateFile(null);
