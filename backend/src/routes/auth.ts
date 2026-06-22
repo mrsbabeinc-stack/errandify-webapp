@@ -288,10 +288,10 @@ router.post('/demo-login', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Account required' });
     }
 
-    // Demo account mapping
-    const demoAccounts: Record<string, { mobile: string; name: string; nric: string; defaultRole: string }> = {
-      sarah: { mobile: '98765432', name: 'Sarah Tan', nric: 'S1234567A', defaultRole: 'doer' },
-      john: { mobile: '87654321', name: 'John Lee', nric: 'S7654321B', defaultRole: 'doer' },
+    // Demo account mapping with CHAS info
+    const demoAccounts: Record<string, { mobile: string; name: string; nric: string; defaultRole: string; monthlyIncome?: number; chasColor?: string; chasPercent?: number }> = {
+      sarah: { mobile: '98765432', name: 'Sarah Tan', nric: 'S1234567A', defaultRole: 'doer', monthlyIncome: 1800, chasColor: 'blue', chasPercent: 25 },
+      john: { mobile: '87654321', name: 'John Lee', nric: 'S7654321B', defaultRole: 'doer', monthlyIncome: 3500, chasColor: 'green', chasPercent: 15 },
     };
 
     const demoUser = demoAccounts[account.toLowerCase()];
@@ -309,14 +309,15 @@ router.post('/demo-login', async (req: Request, res: Response) => {
 
     let user;
     if (result.rows.length === 0) {
-      // Create demo user
+      // Create demo user with CHAS data
       const referralCode = generateReferralCode();
       const createResult = await db.query(
         `INSERT INTO users (
           nric_hash, display_name, mobile, address,
-          font_size_pref, language_pref, role, kyc_status, referral_code
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING id, display_name, mobile, role`,
+          font_size_pref, language_pref, role, kyc_status, referral_code,
+          monthly_household_income, chas_card_color, chas_subsidy_percentage, chas_verified
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        RETURNING id, display_name, mobile, role, monthly_household_income, chas_card_color, chas_subsidy_percentage`,
         [
           hashNric(demoUser.nric),
           demoUser.name,
@@ -327,6 +328,10 @@ router.post('/demo-login', async (req: Request, res: Response) => {
           demoUser.defaultRole,
           'verified',
           referralCode,
+          demoUser.monthlyIncome || null,
+          demoUser.chasColor || 'none',
+          demoUser.chasPercent || 0,
+          demoUser.monthlyIncome ? true : false,
         ]
       );
       user = createResult.rows[0];
@@ -355,6 +360,9 @@ router.post('/demo-login', async (req: Request, res: Response) => {
           name: user.display_name,
           mobile: user.mobile,
           role: user.role,
+          monthlyHouseholdIncome: user.monthly_household_income,
+          chasCardColor: user.chas_card_color,
+          chasSubsidyPercentage: user.chas_subsidy_percentage,
         },
       },
     });
