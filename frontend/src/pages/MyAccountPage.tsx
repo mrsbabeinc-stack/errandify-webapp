@@ -528,7 +528,14 @@ export default function MyAccountPage() {
               )}
               <div className="mt-1">
                 <div className="flex justify-between items-center mb-0.5">
-                  <span className="text-xs font-semibold text-gray-600">Completeness</span>
+                  <span className="text-xs font-semibold text-gray-600 cursor-help group relative">
+                    Completeness
+                    <span className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-6 left-0 whitespace-nowrap z-10">
+                      Complete your profile:<br/>
+                      ✓ Photo, ✓ Bio<br/>
+                      Need: Alias, Certificates, Reviews
+                    </span>
+                  </span>
                   <span className="text-xs font-bold">{completeness}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1">
