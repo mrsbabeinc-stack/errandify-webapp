@@ -194,6 +194,22 @@ export default function MyProfilePage() {
         {/* ===== SHARED INFO TAB (Public) ===== */}
         {activeTab === 'shared' && (
           <div>
+            {/* PREVIEW BANNER - Clear messaging */}
+            <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-bold text-blue-900">👁️ THIS IS YOUR PUBLIC PROFILE</p>
+                  <p className="text-xs text-blue-800 mt-1">This is exactly what other users see when they view your profile. Review it to make sure everything looks good!</p>
+                </div>
+                <button
+                  onClick={() => setActiveTab('private')}
+                  className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded font-semibold hover:bg-blue-700 transition whitespace-nowrap"
+                >
+                  ✏️ Edit Profile
+                </button>
+              </div>
+            </div>
+
             {/* Profile Header Card - What Public Sees */}
             <div className="bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg shadow-lg p-6 mb-6 text-white">
           <div className="flex gap-4 mb-4">
@@ -521,6 +537,22 @@ export default function MyProfilePage() {
         {/* ===== PRIVATE INFO TAB (Only You) ===== */}
         {activeTab === 'private' && (
           <div>
+            {/* PRIVATE BANNER - Clear messaging */}
+            <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 mb-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-bold text-green-900">🔒 YOUR PRIVATE INFORMATION</p>
+                  <p className="text-xs text-green-800 mt-1">Only you can see this. Edit your profile details, manage certificates, and view sensitive information here.</p>
+                </div>
+                <button
+                  onClick={() => setActiveTab('shared')}
+                  className="text-xs bg-green-600 text-white px-3 py-1.5 rounded font-semibold hover:bg-green-700 transition whitespace-nowrap"
+                >
+                  👁️ Preview Public
+                </button>
+              </div>
+            </div>
+
             <div className="space-y-6">
               {/* Private: Edit Profile Form */}
               <div className="bg-white rounded-lg shadow p-6">
