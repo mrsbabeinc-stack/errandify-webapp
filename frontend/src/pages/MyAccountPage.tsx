@@ -222,103 +222,103 @@ export default function MyAccountPage() {
         {/* ===== DASHBOARD TAB ===== */}
         {activeTab === 'dashboard' && (
           <div className="space-y-8">
-            {/* PROFILE HERO CARD - COMPACT */}
-            <div className="relative bg-white rounded-lg shadow p-4 border-l-4 border-errandify-orange overflow-hidden mb-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-errandify-brown">{profileData.name}</h2>
+            {/* PROFILE HERO CARD - ULTRA COMPACT */}
+            <div className="relative bg-white rounded-lg shadow p-3 border-l-4 border-errandify-orange overflow-hidden mb-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-bold text-errandify-brown truncate">{profileData.name}</h2>
                   <p className="text-gray-600 text-xs">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
                   <p className="text-xs text-gray-600">⭐</p>
                 </div>
               </div>
               {badges.length > 0 && (
-                <div className="flex gap-1 flex-wrap mt-2">
+                <div className="flex gap-0.5 flex-wrap mt-1">
                   {badges.map((badge, idx) => (
-                    <span key={idx} className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs font-bold">
+                    <span key={idx} className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-xs font-bold">
                       {badge.icon}
                     </span>
                   ))}
                 </div>
               )}
-              <div className="mt-2">
-                <div className="flex justify-between items-center mb-1">
+              <div className="mt-1">
+                <div className="flex justify-between items-center mb-0.5">
                   <span className="text-xs font-semibold text-gray-600">Completeness</span>
                   <span className="text-xs font-bold">{completeness}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                <div className="w-full bg-gray-200 rounded-full h-1">
                   <div
-                    className="bg-errandify-orange rounded-full h-1.5 transition-all duration-300"
+                    className="bg-errandify-orange rounded-full h-1 transition-all duration-300"
                     style={{ width: `${completeness}%` }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* STATS GRID - COMPACT */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-              <div className="bg-white rounded-lg shadow p-3 border-l-4 border-amber-500 text-center">
-                <p className="text-xl font-bold text-errandify-orange">{ratings.reviewCount}</p>
-                <p className="text-xs text-gray-600 font-semibold">👥 Reviews</p>
+            {/* STATS GRID - ULTRA COMPACT */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 mb-2">
+              <div className="bg-white rounded-lg shadow p-2 border-l-4 border-amber-500 text-center">
+                <p className="text-lg font-bold text-errandify-orange">{ratings.reviewCount}</p>
+                <p className="text-xs text-gray-600 font-semibold">👥</p>
               </div>
-              <div className="bg-white rounded-lg shadow p-3 border-l-4 border-green-500 text-center">
-                <p className="text-xl font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold">✅ Errands</p>
+              <div className="bg-white rounded-lg shadow p-2 border-l-4 border-green-500 text-center">
+                <p className="text-lg font-bold text-errandify-orange">{profileData.completedTasks || 0}</p>
+                <p className="text-xs text-gray-600 font-semibold">✅</p>
               </div>
-              <div className="bg-white rounded-lg shadow p-3 border-l-4 border-blue-500 text-center">
-                <p className="text-xl font-bold text-errandify-orange">${profileData.totalEarnings || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold">💰 Earnings</p>
+              <div className="bg-white rounded-lg shadow p-2 border-l-4 border-blue-500 text-center">
+                <p className="text-lg font-bold text-errandify-orange">${profileData.totalEarnings || 0}</p>
+                <p className="text-xs text-gray-600 font-semibold">💰</p>
               </div>
-              <div className="bg-white rounded-lg shadow p-3 border-l-4 border-purple-500 text-center">
-                <p className="text-xl font-bold text-errandify-orange">{profileData.errandifyPoints || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold">⭐ EP (Points)</p>
+              <div className="bg-white rounded-lg shadow p-2 border-l-4 border-purple-500 text-center">
+                <p className="text-lg font-bold text-errandify-orange">{profileData.errandifyPoints || 0}</p>
+                <p className="text-xs text-gray-600 font-semibold">⭐</p>
               </div>
             </div>
 
-            {/* QUICK ACTIONS - COMPACT */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {/* QUICK ACTIONS - ULTRA COMPACT */}
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-1">
               <button
                 onClick={() => navigate('/category-preferences')}
-                className="bg-white rounded-lg shadow p-2 border-l-2 border-orange-400 hover:shadow-md transition text-center"
+                className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
-                <p className="text-xl mb-0.5">🎯</p>
+                <p className="text-lg mb-0">🎯</p>
                 <p className="font-bold text-xs text-gray-800">Categories</p>
               </button>
               <button
                 onClick={() => navigate('/payout-settings')}
-                className="bg-white rounded-lg shadow p-2 border-l-2 border-orange-400 hover:shadow-md transition text-center"
+                className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
-                <p className="text-xl mb-0.5">💳</p>
+                <p className="text-lg mb-0">💳</p>
                 <p className="font-bold text-xs text-gray-800">Payout</p>
               </button>
               <button
                 onClick={() => navigate('/errandify-points')}
-                className="bg-white rounded-lg shadow p-2 border-l-2 border-orange-400 hover:shadow-md transition text-center"
+                className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
-                <p className="text-xl mb-0.5">💎</p>
+                <p className="text-lg mb-0">💎</p>
                 <p className="font-bold text-xs text-gray-800">Rewards</p>
               </button>
               <button
                 onClick={() => navigate('/referral')}
-                className="bg-white rounded-lg shadow p-2 border-l-2 border-orange-400 hover:shadow-md transition text-center"
+                className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
-                <p className="text-xl mb-0.5">🎁</p>
+                <p className="text-lg mb-0">🎁</p>
                 <p className="font-bold text-xs text-gray-800">Referral</p>
               </button>
               <button
                 onClick={() => navigate('/trusted-users')}
-                className="bg-white rounded-lg shadow p-2 border-l-2 border-orange-400 hover:shadow-md transition text-center"
+                className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
-                <p className="text-xl mb-0.5">❤️</p>
+                <p className="text-lg mb-0">❤️</p>
                 <p className="font-bold text-xs text-gray-800">Trusted</p>
               </button>
               <button
                 onClick={() => navigate('/faq')}
-                className="bg-white rounded-lg shadow p-2 border-l-2 border-orange-400 hover:shadow-md transition text-center"
+                className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
-                <p className="text-xl mb-0.5">❓</p>
+                <p className="text-lg mb-0">❓</p>
                 <p className="font-bold text-xs text-gray-800">Help</p>
               </button>
             </div>
