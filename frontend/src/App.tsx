@@ -33,6 +33,7 @@ import MyKampungPage from './pages/MyKampungPage';
 import MyPocketPage from './pages/MyPocketPage';
 import TrustedUsersPage from './pages/TrustedUsersPage';
 import BlockListPage from './pages/BlockListPage';
+import AdminPanel from './pages/AdminPanel';
 import FAQPage from './pages/FAQPage';
 import MyAccountPage from './pages/MyAccountPage';
 import HowItWorksPage from './pages/HowItWorksPage';
@@ -216,6 +217,7 @@ export default function App() {
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/about" element={<AboutErrandifyPage />} />
         <Route path="/my-account" element={isAuthenticated ? <MyAccountPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin" element={isAuthenticated ? <AdminPanel /> : <Navigate to="/login" replace />} />
         <Route path="/notification-preferences" element={isAuthenticated ? <NotificationPreferencesPage /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout */}
