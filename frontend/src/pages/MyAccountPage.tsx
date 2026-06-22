@@ -212,7 +212,7 @@ export default function MyAccountPage() {
       {/* CONTENT */}
       <div className="max-w-6xl mx-auto px-4 py-4">
         {/* AD CAROUSEL + EVENT BANNER */}
-        <div className="mb-3">
+        <div className="mb-4">
           <AdCarousel />
           <div className="mt-2">
             <EventBanner />
