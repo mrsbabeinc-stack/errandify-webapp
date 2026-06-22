@@ -43,10 +43,14 @@ export default function MyAccountPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
     display_name: '',
+    email: '',
     mobile: '',
     monthly_household_income: '',
   });
   const [saving, setSaving] = useState(false);
+  const [certificates, setCertificates] = useState<Array<{ id: string; name: string; url?: string }>>([]);
+  const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [certificateTitle, setCertificateTitle] = useState('');
 
   useEffect(() => {
     fetchProfileData();
@@ -71,6 +75,7 @@ export default function MyAccountPage() {
       setProfileData(profileRes.data.data);
       setEditForm({
         display_name: profileRes.data.data.name || '',
+        email: profileRes.data.data.email || '',
         mobile: profileRes.data.data.mobile || '',
         monthly_household_income: profileRes.data.data.monthlyHouseholdIncome ? String(profileRes.data.data.monthlyHouseholdIncome) : '',
       });
@@ -459,6 +464,10 @@ export default function MyAccountPage() {
                         <span className="text-sm text-gray-800">{profileData.name || '—'}</span>
                       </div>
                       <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span className="text-xs text-gray-600 font-semibold">Email</span>
+                        <span className="text-sm text-gray-800">{profileData.email || '—'}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-gray-100">
                         <span className="text-xs text-gray-600 font-semibold">Mobile</span>
                         <span className="text-sm text-gray-800">{profileData.mobile || '—'}</span>
                       </div>
@@ -475,6 +484,15 @@ export default function MyAccountPage() {
                           type="text"
                           value={editForm.display_name}
                           onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={editForm.email}
+                          onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
                         />
                       </div>
@@ -544,14 +562,68 @@ export default function MyAccountPage() {
                 </div>
 
                 {/* Certificates */}
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-bold text-errandify-brown mb-4">📜 Qualifications & Certificates</h3>
-                  <p className="text-sm text-gray-600 mb-4">Upload certificates to display on your public profile (titles only)</p>
-                  <button className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-errandify-orange hover:bg-orange-50 transition text-center">
-                    <p className="text-2xl mb-2">📄</p>
-                    <p className="text-sm font-semibold text-gray-700">Click to upload certificate</p>
-                    <p className="text-xs text-gray-500">Max 5MB, PNG/JPG/PDF</p>
-                  </button>
+                <div className="bg-white rounded shadow p-4">
+                  <h3 className="text-sm font-bold text-errandify-brown mb-2">📜 Certificates ({certificates.length}/10)</h3>
+
+                  {/* Existing Certificates List */}
+                  {certificates.length > 0 && (
+                    <div className="mb-3 space-y-1.5">
+                      {certificates.map((cert, idx) => (
+                        <div key={cert.id} className="flex justify-between items-center bg-gray-50 p-2 rounded text-xs">
+                          <span className="text-gray-700">{idx + 1}. {cert.name}</span>
+                          <button
+                            onClick={() => setCertificates(certificates.filter((_, i) => i !== idx))}
+                            className="text-red-600 hover:text-red-700 font-semibold"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {certificates.length < 10 && (
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Certificate Title</label>
+                        <input
+                          type="text"
+                          value={certificateTitle}
+                          onChange={(e) => setCertificateTitle(e.target.value)}
+                          placeholder="e.g., AWS Certified Solutions Architect"
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Upload File (Max 5MB)</label>
+                        <input
+                          type="file"
+                          accept=".pdf,.png,.jpg,.jpeg"
+                          onChange={(e) => setCertificateFile(e.files?.[0] || null)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
+                        />
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          if (certificateTitle && certificateFile) {
+                            setCertificates([...certificates, { id: Date.now().toString(), name: certificateTitle }]);
+                            setCertificateTitle('');
+                            setCertificateFile(null);
+                          }
+                        }}
+                        disabled={!certificateTitle || !certificateFile}
+                        className="w-full bg-errandify-orange text-white py-1.5 rounded font-semibold text-xs hover:bg-opacity-90 transition disabled:opacity-50"
+                      >
+                        Add Certificate
+                      </button>
+                    </div>
+                  )}
+
+                  {certificates.length === 10 && (
+                    <p className="text-xs text-gray-600 text-center py-2">Maximum 10 certificates reached</p>
+                  )}
                 </div>
               </div>
             )}
