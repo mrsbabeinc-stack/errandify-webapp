@@ -339,34 +339,18 @@ export default function MyPocketPage() {
                 <p className="text-2xl font-bold text-orange-600">{formatCurrency(wallet.balance)}</p>
               </div>
 
-              {/* Quick Options */}
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-gray-800">Select amount or enter custom:</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setWithdrawAmount(wallet.balance.toString())}
-                    className={`p-2 rounded border-2 font-bold text-xs transition ${
-                      withdrawAmount === wallet.balance.toString()
-                        ? 'border-errandify-orange bg-orange-50'
-                        : 'border-gray-200 hover:border-errandify-orange'
-                    }`}
-                  >
-                    Full Amount
-                    <p className="text-xs text-gray-600">{formatCurrency(wallet.balance)}</p>
-                  </button>
-                  <button
-                    onClick={() => setWithdrawAmount((wallet.balance / 2).toFixed(2))}
-                    className={`p-2 rounded border-2 font-bold text-xs transition ${
-                      withdrawAmount === (wallet.balance / 2).toFixed(2)
-                        ? 'border-errandify-orange bg-orange-50'
-                        : 'border-gray-200 hover:border-errandify-orange'
-                    }`}
-                  >
-                    Half Amount
-                    <p className="text-xs text-gray-600">{formatCurrency(wallet.balance / 2)}</p>
-                  </button>
-                </div>
-              </div>
+              {/* Full Amount Button */}
+              <button
+                onClick={() => setWithdrawAmount(wallet.balance.toString())}
+                className={`w-full p-3 rounded border-2 font-bold text-sm transition ${
+                  withdrawAmount === wallet.balance.toString()
+                    ? 'border-errandify-orange bg-orange-50 text-errandify-orange'
+                    : 'border-gray-200 hover:border-errandify-orange text-gray-800'
+                }`}
+              >
+                Full Amount
+                <p className="text-xs font-normal">{formatCurrency(wallet.balance)}</p>
+              </button>
 
               {/* Custom Amount */}
               <div>
@@ -379,13 +363,6 @@ export default function MyPocketPage() {
                   max={wallet.balance}
                   className="w-full border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-errandify-orange"
                 />
-              </div>
-
-              {/* Withdraw Info */}
-              <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                <p className="text-xs text-blue-900">
-                  ℹ️ After 48 hours of errand completion (if no dispute is raised), earnings will be transferred to your bank account.
-                </p>
               </div>
 
               {/* Action Buttons */}
