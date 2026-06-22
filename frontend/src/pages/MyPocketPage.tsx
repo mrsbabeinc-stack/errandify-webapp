@@ -26,6 +26,8 @@ export default function MyPocketPage() {
   const [userRole, setUserRole] = useState<'asker' | 'doer' | null>(null);
   const [activeTab, setActiveTab] = useState<'txns' | 'history' | 'payout'>('txns');
   const [showBankDetails, setShowBankDetails] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -169,7 +171,7 @@ export default function MyPocketPage() {
           <h2 className="text-3xl font-bold mb-2">{formatCurrency(wallet.balance)}</h2>
           <div className="flex gap-2 text-xs">
             <button
-              onClick={() => alert('Withdraw to bank account. Amount: $' + wallet.balance.toFixed(2))}
+              onClick={() => setShowWithdrawModal(true)}
               className="flex-1 bg-white text-errandify-orange font-semibold py-1.5 rounded transition"
             >
               Withdraw
@@ -276,7 +278,7 @@ export default function MyPocketPage() {
             {activeTab === 'payout' && (
               <div className="p-2 space-y-2">
                 <button
-                  onClick={() => alert('Withdraw to bank account. Amount: $' + wallet.balance.toFixed(2))}
+                  onClick={() => setShowWithdrawModal(true)}
                   className="w-full bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600 transition"
                 >
                   💸 Withdraw
@@ -315,6 +317,104 @@ export default function MyPocketPage() {
             )}
           </div>
         </div>
+
+        {/* Withdraw Modal */}
+        {showWithdrawModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end z-50">
+            <div className="w-full bg-white rounded-t-2xl p-4 space-y-3">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-lg font-bold text-errandify-brown">💸 Withdraw Funds</h2>
+                <button
+                  onClick={() => setShowWithdrawModal(false)}
+                  className="text-2xl text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Available Balance */}
+              <div className="bg-orange-50 border border-orange-200 rounded p-2">
+                <p className="text-xs text-orange-600 mb-1">Available Balance</p>
+                <p className="text-2xl font-bold text-orange-600">{formatCurrency(wallet.balance)}</p>
+              </div>
+
+              {/* Quick Options */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-gray-800">Select amount or enter custom:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setWithdrawAmount(wallet.balance.toString())}
+                    className={`p-2 rounded border-2 font-bold text-xs transition ${
+                      withdrawAmount === wallet.balance.toString()
+                        ? 'border-errandify-orange bg-orange-50'
+                        : 'border-gray-200 hover:border-errandify-orange'
+                    }`}
+                  >
+                    Full Amount
+                    <p className="text-xs text-gray-600">{formatCurrency(wallet.balance)}</p>
+                  </button>
+                  <button
+                    onClick={() => setWithdrawAmount((wallet.balance / 2).toFixed(2))}
+                    className={`p-2 rounded border-2 font-bold text-xs transition ${
+                      withdrawAmount === (wallet.balance / 2).toFixed(2)
+                        ? 'border-errandify-orange bg-orange-50'
+                        : 'border-gray-200 hover:border-errandify-orange'
+                    }`}
+                  >
+                    Half Amount
+                    <p className="text-xs text-gray-600">{formatCurrency(wallet.balance / 2)}</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Custom Amount */}
+              <div>
+                <label className="text-xs font-semibold text-gray-800 block mb-1">Custom Amount (SGD)</label>
+                <input
+                  type="number"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  max={wallet.balance}
+                  className="w-full border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-errandify-orange"
+                />
+              </div>
+
+              {/* Withdraw Info */}
+              <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                <p className="text-xs text-blue-900">
+                  ℹ️ After 48 hours of errand completion (if no dispute is raised), earnings will be transferred to your bank account.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowWithdrawModal(false)}
+                  className="flex-1 border border-gray-300 text-gray-700 py-2 rounded font-bold text-sm hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (withdrawAmount && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= wallet.balance) {
+                      alert(`Successfully initiated withdrawal of ${formatCurrency(parseFloat(withdrawAmount))} to your bank account!`);
+                      setShowWithdrawModal(false);
+                      setWithdrawAmount('');
+                    } else {
+                      alert('Please enter a valid amount');
+                    }
+                  }}
+                  disabled={!withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > wallet.balance}
+                  className="flex-1 bg-errandify-orange text-white py-2 rounded font-bold text-sm hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  💸 Withdraw
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
