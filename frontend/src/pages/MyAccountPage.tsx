@@ -785,8 +785,17 @@ export default function MyAccountPage() {
                     className="w-full px-2 py-1 border border-gray-300 rounded text-xs resize-none"
                     rows={3}
                   />
-                  <p className="text-xs text-gray-600 mt-1">{editForm.bio?.length || 0}/200</p>
+                  <p className="text-xs text-gray-600 mt-1 mb-2">{editForm.bio?.length || 0}/200</p>
                 </div>
+
+                {/* Save All Changes Button */}
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                  className="w-full bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600 disabled:opacity-50 transition"
+                >
+                  {saving ? '⏳ Saving All Changes...' : '💾 Save All Changes'}
+                </button>
 
                 {/* Delete Account Confirmation Modal */}
                 {showDeleteConfirm && (
