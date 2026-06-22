@@ -35,15 +35,19 @@ export default function MyAccountPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
+
         const profileRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}`
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setProfileData(profileRes.data.data);
 
         try {
           const ratingsRes = await axios.get(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/ratings`
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/ratings`,
+            { headers: { Authorization: `Bearer ${token}` } }
           );
           setRatings(ratingsRes.data.data);
         } catch {
