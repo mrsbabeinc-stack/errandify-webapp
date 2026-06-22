@@ -155,11 +155,28 @@ export default function MyAccountPage() {
 
       const token = localStorage.getItem('token');
 
+      if (!token) {
+        alert('❌ No authentication token found. Please log in again.');
+        return;
+      }
+
       // Only send fields that backend accepts
-      const updateData: any = {
-        mobile: editForm.mobile,
-        monthly_household_income: editForm.monthly_household_income,
-      };
+      const updateData: any = {};
+
+      if (editForm.mobile) {
+        updateData.mobile = editForm.mobile;
+      }
+      if (editForm.monthly_household_income) {
+        // Convert to number if it's a string
+        const income = typeof editForm.monthly_household_income === 'string'
+          ? parseInt(editForm.monthly_household_income, 10)
+          : editForm.monthly_household_income;
+        if (!isNaN(income)) {
+          updateData.monthly_household_income = income;
+        }
+      }
+
+      console.log('Saving profile with data:', updateData);
 
       // Alias and bio need separate endpoints or future backend support
       // For now, store in localStorage if needed
@@ -170,11 +187,13 @@ export default function MyAccountPage() {
         localStorage.setItem('userBio', editForm.bio);
       }
 
-      await axios.put(
+      const response = await axios.put(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
         updateData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      console.log('Profile save response:', response.data);
       setIsEditing(false);
       setHasUnsavedChanges(false);
       if (profileData) {
