@@ -73,11 +73,15 @@ export default function MyAccountPage() {
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-        // Load stored alias and bio from localStorage
+        // Load stored alias, bio, and profile photo from localStorage
         const savedAlias = localStorage.getItem('userAlias') || '';
         const savedBio = localStorage.getItem('userBio') || '';
+        const savedProfileImage = localStorage.getItem('userProfileImage');
         setStoredAlias(savedAlias);
         setStoredBio(savedBio);
+        if (savedProfileImage) {
+          setProfileImage(savedProfileImage);
+        }
 
         try {
           const profileRes = await axios.get(
@@ -313,6 +317,7 @@ export default function MyAccountPage() {
           if (!qwenApiKey) {
             console.warn('Qwen API key not configured - accepting image without moderation');
             setProfileImage(base64Image);
+            localStorage.setItem('userProfileImage', base64Image);
             return;
           }
 
@@ -352,6 +357,7 @@ export default function MyAccountPage() {
 
           if (result && result.includes('APPROVED')) {
             setProfileImage(base64Image);
+            localStorage.setItem('userProfileImage', base64Image);
           } else {
             const reason = result?.replace('REJECTED: ', '') || 'Image does not meet community standards';
             alert(`❌ Photo rejected: ${reason}`);
@@ -540,25 +546,6 @@ export default function MyAccountPage() {
                   ))}
                 </div>
               )}
-              <div className="mt-1">
-                <div className="flex justify-between items-center mb-0.5">
-                  <span className="text-xs font-semibold text-gray-600 cursor-help group relative">
-                    Completeness
-                    <span className="invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 absolute bottom-6 left-0 whitespace-nowrap z-10">
-                      Complete your profile:<br/>
-                      ✓ Photo, ✓ Bio<br/>
-                      Need: Alias, Certificates, Reviews
-                    </span>
-                  </span>
-                  <span className="text-xs font-bold">{completeness}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-1">
-                  <div
-                    className="bg-errandify-orange rounded-full h-1 transition-all duration-300"
-                    style={{ width: `${completeness}%` }}
-                  />
-                </div>
-              </div>
             </div>
 
             {/* STATS GRID */}
