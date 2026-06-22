@@ -27,6 +27,7 @@ interface Rating {
 
 export default function MyProfilePage() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'shared' | 'private'>('shared');
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -165,6 +166,30 @@ export default function MyProfilePage() {
         </button>
 
         <h1 className="text-3xl font-bold text-errandify-brown mb-6">My Profile</h1>
+
+        {/* TAB NAVIGATION */}
+        <div className="flex gap-6 mb-6 border-b-2 border-gray-200">
+          <button
+            onClick={() => setActiveTab('shared')}
+            className={`pb-3 font-bold text-sm transition ${
+              activeTab === 'shared'
+                ? 'border-b-4 border-errandify-orange text-errandify-orange'
+                : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+            }`}
+          >
+            🌐 MyShared Info
+          </button>
+          <button
+            onClick={() => setActiveTab('private')}
+            className={`pb-3 font-bold text-sm transition ${
+              activeTab === 'private'
+                ? 'border-b-4 border-errandify-orange text-errandify-orange'
+                : 'text-gray-600 hover:text-gray-800 border-b-4 border-transparent'
+            }`}
+          >
+            🔒 MyPrivate Info
+          </button>
+        </div>
 
         {/* Profile Header Card - Enhanced */}
         <div className="bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg shadow-lg p-6 mb-6 text-white">
