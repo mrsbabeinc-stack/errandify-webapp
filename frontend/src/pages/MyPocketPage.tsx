@@ -67,6 +67,14 @@ export default function MyPocketPage() {
           },
           {
             id: 2,
+            type: 'earn',
+            amount: 50,
+            description: 'Referral: @SunnyLove joined',
+            taskId: undefined,
+            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            id: 3,
             type: 'spend',
             amount: 120,
             description: 'Posted: Home repairs',
@@ -74,7 +82,7 @@ export default function MyPocketPage() {
             createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
           },
           {
-            id: 3,
+            id: 4,
             type: 'earn',
             amount: 150,
             description: 'Completed: Moving help',
@@ -82,7 +90,7 @@ export default function MyPocketPage() {
             createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
           },
           {
-            id: 4,
+            id: 5,
             type: 'refund',
             amount: 50,
             description: 'Refund: Cancelled task',
@@ -239,16 +247,16 @@ export default function MyPocketPage() {
             {activeTab === 'history' && (
               <div className="divide-y divide-gray-100">
                 {[
-                  { activity: 'Completed Errand', points: '+10 EP', date: '2026-06-15' },
-                  { activity: 'Referred Friend', points: '+50 EP', date: '2026-06-12' },
-                  { activity: 'Redeemed Discount', points: '-50 EP', date: '2026-06-10' },
-                  { activity: 'Review Submitted', points: '+5 EP', date: '2026-06-08' },
-                  { activity: 'Bonus Achievement', points: '+25 EP', date: '2026-06-05' },
+                  { activity: 'Completed Errand', description: '', points: '+10 EP', date: '2026-06-15' },
+                  { activity: 'Referred Friend', description: '@SunnyLove', points: '+50 EP', date: '2026-06-12' },
+                  { activity: 'Redeemed Discount', description: '', points: '-50 EP', date: '2026-06-10' },
+                  { activity: 'Review Submitted', description: '', points: '+5 EP', date: '2026-06-08' },
+                  { activity: 'Bonus Achievement', description: '', points: '+25 EP', date: '2026-06-05' },
                 ].map((item, idx) => (
                   <div key={idx} className="p-2 flex justify-between hover:bg-gray-50">
                     <div>
-                      <p className="font-bold text-gray-900">{item.activity}</p>
-                      <p className="text-gray-500">{item.date}</p>
+                      <p className="font-bold text-gray-900">{item.activity} {item.description && <span className="text-gray-600">{item.description}</span>}</p>
+                      <p className="text-xs text-gray-500">{item.date}</p>
                     </div>
                     <p className={`font-bold ${item.points.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>{item.points}</p>
                   </div>
