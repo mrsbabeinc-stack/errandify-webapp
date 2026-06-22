@@ -723,21 +723,6 @@ export default function MyAccountPage() {
                           className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                         />
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleSaveProfile}
-                          disabled={saving}
-                          className="flex-1 bg-errandify-orange text-white py-1 rounded font-semibold text-xs"
-                        >
-                          {saving ? 'Saving...' : 'Save'}
-                        </button>
-                        <button
-                          onClick={() => setIsEditing(false)}
-                          className="flex-1 border border-gray-300 text-gray-700 py-1 rounded font-semibold text-xs"
-                        >
-                          Cancel
-                        </button>
-                      </div>
                     </div>
                   ) : (
                     <div className="space-y-1.5 text-xs">
