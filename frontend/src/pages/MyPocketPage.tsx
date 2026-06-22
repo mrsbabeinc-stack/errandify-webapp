@@ -24,7 +24,7 @@ export default function MyPocketPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [userRole, setUserRole] = useState<'asker' | 'doer' | null>(null);
-  const [activeTab, setActiveTab] = useState<'txns' | 'history' | 'rewards'>('txns');
+  const [activeTab, setActiveTab] = useState<'txns' | 'history' | 'rewards' | 'payout'>('txns');
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -152,7 +152,7 @@ export default function MyPocketPage() {
           <h2 className="text-3xl font-bold mb-2">{formatCurrency(wallet.balance)}</h2>
           <div className="flex gap-2 text-xs">
             <button
-              onClick={() => navigate('/payout-settings')}
+              onClick={() => setActiveTab('payout')}
               className="flex-1 bg-white text-errandify-orange font-semibold py-1.5 rounded transition"
             >
               Payout
@@ -186,24 +186,30 @@ export default function MyPocketPage() {
 
         {/* Tabs */}
         <div className="bg-white rounded-lg border border-gray-200 mb-3">
-          <div className="flex text-xs font-semibold border-b border-gray-100">
+          <div className="flex text-xs font-semibold border-b border-gray-100 overflow-x-auto">
             <button
               onClick={() => setActiveTab('txns')}
-              className={`flex-1 p-2 text-center transition ${activeTab === 'txns' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
+              className={`flex-1 p-2 text-center transition whitespace-nowrap ${activeTab === 'txns' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
               📋 Transactions
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex-1 p-2 text-center transition border-l border-gray-100 ${activeTab === 'history' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
+              className={`flex-1 p-2 text-center transition border-l border-gray-100 whitespace-nowrap ${activeTab === 'history' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
               ⭐ EP Points
             </button>
             <button
               onClick={() => setActiveTab('rewards')}
-              className={`flex-1 p-2 text-center transition border-l border-gray-100 ${activeTab === 'rewards' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
+              className={`flex-1 p-2 text-center transition border-l border-gray-100 whitespace-nowrap ${activeTab === 'rewards' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
               💎 Rewards
+            </button>
+            <button
+              onClick={() => setActiveTab('payout')}
+              className={`flex-1 p-2 text-center transition border-l border-gray-100 whitespace-nowrap ${activeTab === 'payout' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
+            >
+              💳 Payout
             </button>
           </div>
 
@@ -273,6 +279,38 @@ export default function MyPocketPage() {
                     </button>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Payout Tab */}
+            {activeTab === 'payout' && (
+              <div className="p-3 space-y-3">
+                <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                  <p className="text-xs text-blue-900 font-semibold">💡 How It Works</p>
+                  <p className="text-xs text-blue-800 mt-1">When an errand is completed, earnings will be transferred to your account automatically.</p>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded p-3">
+                  <h3 className="text-xs font-bold text-errandify-brown mb-2">Payout Details</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600">Bank</span>
+                      <span className="text-xs font-bold text-gray-900">STRIPE TEST BANK</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600">Account</span>
+                      <span className="text-xs font-bold text-gray-900">•••• •••• •••• 3456</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600">Status</span>
+                      <span className="text-xs font-bold text-green-600">✓ Approved</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button className="w-full bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600 transition">
+                  ✏️ Change Bank Account
+                </button>
               </div>
             )}
           </div>
