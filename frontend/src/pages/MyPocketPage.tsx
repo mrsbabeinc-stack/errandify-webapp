@@ -25,7 +25,7 @@ export default function MyPocketPage() {
   const [error, setError] = useState('');
   const [userRole, setUserRole] = useState<'asker' | 'doer' | null>(null);
   const [activeTab, setActiveTab] = useState<'txns' | 'history' | 'payout'>('txns');
-  const [showBankDetails, setShowBankDetails] = useState(false);
+  const [showBankDetails, setShowBankDetails] = useState(true);
   const [isEditingPayout, setIsEditingPayout] = useState(false);
   const [bankDetails, setBankDetails] = useState({
     bankName: 'STRIPE TEST BANK',
