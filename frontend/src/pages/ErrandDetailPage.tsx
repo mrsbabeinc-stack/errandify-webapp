@@ -556,17 +556,80 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 <p className="text-xs text-red-600">Dispute is being reviewed. Payment is held.</p>
               </div>
             ) : errand.status === 'completed' ? (
-              <div className="w-full bg-green-50 border border-green-200 rounded-lg p-3 mt-2 space-y-2">
-                <div className="text-center">
-                  <p className="text-green-800 font-semibold">✓ Completed</p>
-                  <p className="text-xs text-green-600">Awaiting asker rating</p>
+              <div className="w-full bg-green-50 border border-green-200 rounded-lg p-4 mt-2 space-y-3">
+                {/* Status Header */}
+                <div className="text-center pb-3 border-b border-green-200">
+                  <p className="text-green-800 font-bold text-lg">✓ Job Completed</p>
+                  <p className="text-xs text-green-600 mt-1">Waiting for asker to review and rate your work</p>
                 </div>
-                <button
-                  onClick={() => setShowChat(true)}
-                  className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-sm transition-all"
-                >
-                  💬 Chat
-                </button>
+
+                {/* Process Flow */}
+                <div className="space-y-2 text-xs">
+                  <p className="font-semibold text-gray-700">📋 What Happens Next:</p>
+                  <div className="space-y-1 text-gray-600">
+                    <p>✓ You submitted completion evidence</p>
+                    <p>⏳ Asker has 48 hours to review</p>
+                    <p>⭐ Asker rates your work</p>
+                    <p>💰 Payment releases automatically</p>
+                  </div>
+                </div>
+
+                {/* Doer Actions - Only show if current user is the doer */}
+                {currentUser && currentUser.id !== errand.askerId && (
+                  <div className="space-y-2 pt-2 border-t border-green-200">
+                    <p className="font-semibold text-gray-700 text-xs">📌 Your Options:</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowChat(true)}
+                        className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-xs transition-all"
+                      >
+                        💬 Chat with Asker
+                      </button>
+                      <button
+                        onClick={() => navigate(`/task/${id}/complete`)}
+                        className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 text-xs transition-all"
+                      >
+                        📁 Add More Files
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Asker Actions - Only show if current user is the asker */}
+                {currentUser && currentUser.id === errand.askerId && (
+                  <div className="space-y-2 pt-2 border-t border-green-200">
+                    <p className="font-semibold text-gray-700 text-xs">📌 Your Options:</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowChat(true)}
+                        className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-xs transition-all"
+                      >
+                        💬 Chat with Doer
+                      </button>
+                      <button
+                        onClick={() => {
+                          const reason = window.prompt('Why do you need to reopen this job? (Explain to doer)');
+                          if (reason === null) return;
+                          const token = localStorage.getItem('token');
+                          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/reopen`, {
+                            method: 'POST',
+                            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reason: reason || 'Please revise your work' }),
+                          })
+                            .then(r => r.json())
+                            .then(() => {
+                              alert('✓ Job reopened. Doer notified to make changes.');
+                              fetchErrandDetail();
+                            })
+                            .catch(e => alert('Error: ' + e.message));
+                        }}
+                        className="flex-1 bg-amber-500 text-white py-2 rounded-lg font-semibold hover:bg-amber-600 text-xs transition-all"
+                      >
+                        🔄 Request Changes
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : null}
           </div>
