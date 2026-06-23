@@ -7,6 +7,7 @@ import EventBanner from '../components/EventBanner';
 interface UserProfile {
   id?: number;
   userId?: string;
+  formattedUserId?: string;
   name: string;
   alias?: string;
   email: string;
@@ -489,6 +490,27 @@ export default function MyAccountPage() {
                 </div>
               </div>
             </div>
+
+            {/* USER ID CARD */}
+            {profileData?.formattedUserId && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-2 border border-blue-200 mb-1">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-600 font-semibold">Your User ID</p>
+                    <p className="text-sm font-bold text-blue-700 font-mono">{profileData.formattedUserId}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(profileData.formattedUserId || '');
+                      alert('✅ User ID copied!');
+                    }}
+                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                  >
+                    📋 Copy
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* STATS GRID */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-1 mb-1">
