@@ -131,7 +131,7 @@ export default function TaskCompleteEvidencePage() {
       // Create a toast notification instead of alert
       const toastDiv = document.createElement('div');
       toastDiv.className = 'fixed top-4 left-4 right-4 bg-gradient-to-r from-green-400 to-emerald-500 text-white p-4 rounded-lg shadow-lg animate-bounce z-50 font-bold text-center';
-      toastDiv.textContent = '✨ Work submitted! Waiting for asker review...';
+      toastDiv.innerHTML = '<p>✨ Work submitted! 🎉</p><p style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.5rem;">Payment releases after 48 hours if approved</p>';
       document.body.appendChild(toastDiv);
 
       // Redirect after 2 seconds
@@ -288,14 +288,28 @@ export default function TaskCompleteEvidencePage() {
               {submitting ? '⏳ Submitting your work...' : '🎉 Submit Completion Evidence'}
             </button>
 
-            {/* Info - Warm and Encouraging */}
-            <div className="p-4 bg-gradient-to-r from-blue-100 to-cyan-100 border-2 border-blue-300 rounded-lg">
-              <p className="text-sm font-semibold text-blue-900 mb-1">
-                💡 What happens next?
-              </p>
-              <p className="text-xs text-blue-800 leading-relaxed">
-                Your work is submitted! The asker will review your completion evidence within 24-48 hours. If they approve, you'll get paid. If they need anything else, they'll let you know! 🎯
-              </p>
+            {/* Info - Payment Timeline */}
+            <div className="space-y-3">
+              <div className="p-4 bg-gradient-to-r from-blue-100 to-cyan-100 border-2 border-blue-300 rounded-lg">
+                <p className="text-sm font-semibold text-blue-900 mb-2">
+                  💡 What happens next?
+                </p>
+                <div className="text-xs text-blue-800 leading-relaxed space-y-2">
+                  <p>✓ <strong>Now:</strong> Submit your completion evidence (photos & notes)</p>
+                  <p>📋 <strong>Asker reviews:</strong> They have 48 hours to check your work</p>
+                  <p>✅ <strong>If approved:</strong> Payment releases automatically after 48 hours</p>
+                  <p>💰 <strong>Payment goes to:</strong> Your bank account in MyPocket</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-300 rounded-lg">
+                <p className="text-sm font-semibold text-amber-900 mb-1">
+                  ⏱️ Payment Timeline
+                </p>
+                <p className="text-xs text-amber-800">
+                  <strong>48 hours</strong> after asker confirms = automatic payment release. No waiting after that! 🚀
+                </p>
+              </div>
             </div>
           </div>
         </div>
