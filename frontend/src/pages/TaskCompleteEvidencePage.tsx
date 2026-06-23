@@ -130,14 +130,21 @@ export default function TaskCompleteEvidencePage() {
 
       // Create a toast notification instead of alert
       const toastDiv = document.createElement('div');
-      toastDiv.className = 'fixed top-4 left-4 right-4 bg-gradient-to-r from-green-400 to-emerald-500 text-white p-4 rounded-lg shadow-lg animate-bounce z-50 font-bold text-center';
+      toastDiv.className = 'fixed top-4 left-4 right-4 bg-gradient-to-r from-green-400 to-emerald-500 text-white p-4 rounded-lg shadow-lg z-50 font-bold text-center animate-bounce';
       toastDiv.innerHTML = '<p>✨ Work submitted! 🎉</p><p style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.5rem;">Payment releases after 48 hours if approved</p>';
       document.body.appendChild(toastDiv);
 
-      // Redirect after 2 seconds
+      // Auto-close toast after 5 seconds with fade-out
+      setTimeout(() => {
+        toastDiv.style.transition = 'opacity 0.5s ease-out';
+        toastDiv.style.opacity = '0';
+        setTimeout(() => toastDiv.remove(), 500);
+      }, 5000);
+
+      // Redirect after 5 seconds
       setTimeout(() => {
         navigate('/my-offer');
-      }, 2000);
+      }, 5000);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to submit completion');
     } finally {
