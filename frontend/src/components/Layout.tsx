@@ -2,7 +2,6 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import BottomNav from './BottomNav';
 import RoleToggle from './RoleToggle';
-import NotificationIcon from './NotificationIcon';
 import HanaCustomerService from './HanaCustomerService';
 
 interface LayoutProps {
@@ -47,7 +46,6 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
       <div className="bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center sticky top-0 z-50">
         <RoleToggle currentRole={userRole} onRoleChange={onRoleChange} />
         <div className="flex items-center gap-3">
-          <NotificationIcon unreadCount={0} />
           {/* Profile Photo & Alias */}
           {userProfile && (
             <button
