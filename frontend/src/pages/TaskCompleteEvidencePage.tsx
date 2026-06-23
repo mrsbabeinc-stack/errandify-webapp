@@ -191,7 +191,7 @@ export default function TaskCompleteEvidencePage() {
                 <p><span className="text-gray-600">Title:</span> <span className="font-medium">{task.title}</span></p>
                 <p><span className="text-gray-600">Category:</span> <span className="font-medium">{task.category}</span></p>
                 <p><span className="text-gray-600">Asker:</span> <span className="font-medium">{task.asker?.display_name || 'Anonymous'}</span></p>
-                <p><span className="text-gray-600">Budget:</span> <span className="font-bold text-errandify-orange">SGD ${task.budget.toFixed(2)}</span></p>
+                <p><span className="text-gray-600">Budget:</span> <span className="font-bold text-errandify-orange">SGD ${typeof task.budget === 'number' ? task.budget.toFixed(2) : (task.budget || 0)}</span></p>
               </div>
             </div>
 
