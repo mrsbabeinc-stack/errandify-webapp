@@ -107,20 +107,14 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
       return res.status(400).json({ error: 'Maximum 5 photos allowed' });
     }
 
-    // Calculate payment release time (48 hours from now)
-    const paymentReleaseAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
-
-    // Update task status
+    // Update task status to completed_unconfirmed
     const updateResult = await db.query(
       `UPDATE errands
        SET status = $1,
-           completed_at = NOW(),
-           payment_release_at = $2,
-           completion_notes = $3,
            updated_at = NOW()
-       WHERE id = $4
-       RETURNING id, status, completed_at, payment_release_at`,
-      ['completed_unconfirmed', paymentReleaseAt, completionNotes || null, taskId]
+       WHERE id = $2
+       RETURNING id, status, updated_at`,
+      ['completed_unconfirmed', taskId]
     );
 
     // Store photos if provided
@@ -139,10 +133,8 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
       data: {
         taskId: updateResult.rows[0].id,
         status: updateResult.rows[0].status,
-        completedAt: updateResult.rows[0].completed_at,
-        paymentReleaseAt: updateResult.rows[0].payment_release_at,
         photosUploaded: photoUrls ? photoUrls.length : 0,
-        message: `Job completed! Payment will be released automatically in 48 hours unless asker raises a dispute.`,
+        message: `Job completed! Waiting for asker to confirm.`,
       },
     });
   } catch (error) {
