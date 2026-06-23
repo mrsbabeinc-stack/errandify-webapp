@@ -511,38 +511,6 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   ✓ Mark as Completed
                 </button>
               </div>
-            ) : errand.status === 'job_completed' && currentUser && (currentUser.id === errand.askerId || userRole === 'doer') ? (
-              <div className="flex gap-2 mt-2">
-                <button
-                  onClick={() => {
-                    const reason = window.prompt('Why reopen this job?');
-                    if (reason === null) return;
-                    const token = localStorage.getItem('token');
-                    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/reopen`, {
-                      method: 'POST',
-                      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ reason: reason || null }),
-                    })
-                      .then(r => r.json())
-                      .then(() => {
-                        alert('✓ Job reopened. Work can continue.');
-                        fetchErrandDetail();
-                      })
-                      .catch(e => alert('Error: ' + e.message));
-                  }}
-                  className="flex-1 bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
-                >
-                  Reopen Job
-                </button>
-                {currentUser.id === errand.askerId && (
-                  <button
-                    onClick={() => setShowChat(true)}
-                    className="flex-1 bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
-                  >
-                    💬 Talk to Hana
-                  </button>
-                )}
-              </div>
             ) : errand.status === 'completed_unconfirmed' && currentUser && currentUser.id === errand.askerId ? (
               <button
                 onClick={() => navigate(`/task/${id}/review-completion`)}
