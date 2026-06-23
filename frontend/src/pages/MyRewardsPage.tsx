@@ -31,11 +31,15 @@ export default function MyRewardSpacePage() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg border border-gray-200 mb-3">
-          <div className="flex text-xs font-semibold border-b border-gray-100 overflow-x-auto">
+        <div className="bg-white rounded-xl border border-gray-200 mb-3 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+          <div className="flex text-xs font-bold border-b-2 border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100 overflow-x-auto">
             <button
               onClick={() => setActiveTab('errandify')}
-              className={`flex-1 p-2 text-center transition whitespace-nowrap ${activeTab === 'errandify' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
+              className={`flex-1 p-3 text-center transition duration-300 whitespace-nowrap ${
+                activeTab === 'errandify'
+                  ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg'
+                  : 'hover:bg-gray-200 text-gray-700'
+              }`}
             >
               ⭐ Errandify Points
             </button>
@@ -63,20 +67,28 @@ export default function MyRewardSpacePage() {
           <div className="text-xs">
             {/* Errandify Points Tab */}
             {activeTab === 'errandify' && (
-              <div className="p-3 space-y-3">
-                <div className="bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-lg p-3">
-                  <p className="text-xs opacity-90 mb-1">Available Points</p>
-                  <p className="text-3xl font-bold mb-2">25 EP</p>
-                  <p className="text-xs opacity-80 bg-orange-700 bg-opacity-50 rounded p-1.5">
-                    ⚠️ Expiring Soon: 25 pts will expire on 30/06/2027
-                  </p>
+              <div className="p-4 space-y-4">
+                <div className="bg-gradient-to-br from-yellow-300 via-yellow-400 to-orange-400 text-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <p className="text-xs opacity-95 font-bold mb-1">✨ Available Errandify Points</p>
+                      <h2 className="text-5xl font-bold">⭐ 25 EP ⭐</h2>
+                    </div>
+                    <p className="text-5xl">💎</p>
+                  </div>
+                  <p className="text-xs opacity-90 font-semibold">Ready to redeem amazing rewards!</p>
+                </div>
+
+                <div className="bg-gradient-to-r from-orange-200 to-red-200 border-2 border-orange-400 rounded-xl p-3">
+                  <p className="text-xs font-bold text-orange-900">⏰ Expiring Soon</p>
+                  <p className="text-xs text-orange-800 mt-1">25 pts will expire on 30/06/2027 - Use them now!</p>
                 </div>
 
                 <div className="space-y-2">
-                  <button className="w-full bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600">
+                  <button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all duration-200 active:scale-95">
                     🎁 Redeem Now
                   </button>
-                  <button className="w-full border-2 border-errandify-orange text-errandify-orange py-2 rounded font-bold text-xs hover:bg-orange-50">
+                  <button className="w-full bg-gradient-to-r from-pink-500 to-rose-600 text-white py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all duration-200 active:scale-95">
                     🎀 Send A Gift
                   </button>
                 </div>
