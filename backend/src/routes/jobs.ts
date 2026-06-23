@@ -108,6 +108,13 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
       return res.status(400).json({ error: 'Maximum 5 photos allowed' });
     }
 
+    // Get current submission number (for tracking resubmissions)
+    const submissionResult = await db.query(
+      `SELECT MAX(submission_number) as max_submission FROM completion_submissions WHERE errand_id = $1`,
+      [taskId]
+    );
+    const currentSubmissionNumber = (submissionResult.rows[0]?.max_submission || 0) + 1;
+
     // Update task status to completed
     const updateResult = await db.query(
       `UPDATE errands
@@ -118,16 +125,32 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
       ['completed', taskId]
     );
 
-    // TODO: Store photos once task_photos table is created
-    // For now, photos are stored as data URLs in completion_notes or separate service
+    // Create completion submission record
+    await db.query(
+      `INSERT INTO completion_submissions (errand_id, submission_number, completion_notes, submitted_by, status)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [taskId, currentSubmissionNumber, completionNotes || '', doerId, 'pending']
+    );
+
+    // Store files organized by submission
+    if (photoUrls && photoUrls.length > 0) {
+      for (const photoUrl of photoUrls) {
+        await db.query(
+          `INSERT INTO task_files (errand_id, submission_number, file_url, file_name, uploaded_by)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [taskId, currentSubmissionNumber, photoUrl, `submission_${currentSubmissionNumber}_file`, doerId]
+        );
+      }
+    }
 
     res.status(201).json({
       success: true,
       data: {
         taskId: updateResult.rows[0].id,
         status: updateResult.rows[0].status,
+        submissionNumber: currentSubmissionNumber,
         photosUploaded: photoUrls ? photoUrls.length : 0,
-        message: `Job completed! Waiting for asker to confirm.`,
+        message: `Job completed! Submission #${currentSubmissionNumber} uploaded. Waiting for asker to review.`,
       },
     });
   } catch (error) {
@@ -356,5 +379,75 @@ async function releasePayment(taskId: string, task: any, reason: 'early_confirm'
     throw error;
   }
 }
+
+// GET /api/jobs/:taskId/submissions - Get all submissions and files for a task
+router.get('/:taskId/submissions', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { taskId } = req.params;
+
+    // Get all submissions for this task
+    const submissionsResult = await db.query(
+      `SELECT
+        cs.id,
+        cs.errand_id,
+        cs.submission_number,
+        cs.completion_notes,
+        cs.submitted_by,
+        cs.submitted_at,
+        cs.status,
+        cs.asker_feedback,
+        u.display_name as submitted_by_name
+       FROM completion_submissions cs
+       LEFT JOIN users u ON cs.submitted_by = u.id
+       WHERE cs.errand_id = $1
+       ORDER BY cs.submission_number ASC`,
+      [taskId]
+    );
+
+    // Get all files organized by submission
+    const filesResult = await db.query(
+      `SELECT
+        id,
+        errand_id,
+        submission_number,
+        file_url,
+        file_name,
+        file_type,
+        uploaded_by,
+        uploaded_at
+       FROM task_files
+       WHERE errand_id = $1
+       ORDER BY submission_number DESC, uploaded_at ASC`,
+      [taskId]
+    );
+
+    // Organize files by submission number
+    const filesBySubmission: Record<number, any[]> = {};
+    filesResult.rows.forEach(file => {
+      if (!filesBySubmission[file.submission_number]) {
+        filesBySubmission[file.submission_number] = [];
+      }
+      filesBySubmission[file.submission_number].push(file);
+    });
+
+    // Add files to submissions
+    const submissions = submissionsResult.rows.map(sub => ({
+      ...sub,
+      files: filesBySubmission[sub.submission_number] || []
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        taskId,
+        totalSubmissions: submissions.length,
+        submissions,
+      },
+    });
+  } catch (error) {
+    console.error('Get submissions error:', error);
+    res.status(500).json({ error: 'Failed to fetch submissions' });
+  }
+});
 
 export default router;
