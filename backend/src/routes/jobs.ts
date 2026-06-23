@@ -117,16 +117,8 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
       ['completed', taskId]
     );
 
-    // Store photos if provided
-    if (photoUrls && photoUrls.length > 0) {
-      for (const photoUrl of photoUrls) {
-        await db.query(
-          `INSERT INTO task_photos (task_id, photo_url, uploaded_by, uploaded_at)
-           VALUES ($1, $2, $3, NOW())`,
-          [taskId, photoUrl, doerId]
-        );
-      }
-    }
+    // TODO: Store photos once task_photos table is created
+    // For now, photos are stored as data URLs in completion_notes or separate service
 
     res.status(201).json({
       success: true,
