@@ -81,7 +81,9 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
 
     // Get task and verify doer is assigned
     const taskResult = await db.query(
-      `SELECT e.*, b.doer_id, b.amount FROM errands e
+      `SELECT e.id, e.title, e.status, e.accepted_bid_id, e.description,
+              b.id as bid_id, b.doer_id, b.bid_amount as amount
+       FROM errands e
        LEFT JOIN bids b ON e.accepted_bid_id = b.id
        WHERE e.id = $1`,
       [taskId]
