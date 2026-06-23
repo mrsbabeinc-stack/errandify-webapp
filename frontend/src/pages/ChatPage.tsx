@@ -24,6 +24,7 @@ interface Conversation {
 export default function ChatPage({ userRole }: ChatPageProps) {
   const navigate = useNavigate();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [allConversations, setAllConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedErrandId, setSelectedErrandId] = useState<number | null>(null);
@@ -32,47 +33,64 @@ export default function ChatPage({ userRole }: ChatPageProps) {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [unreadCounts, setUnreadCounts] = useState<Map<number, number>>(new Map());
   const [notification, setNotification] = useState<{ message: string; type: 'info' | 'warning' } | null>(null);
+  const [viewFilter, setViewFilter] = useState<'all' | 'asker' | 'doer'>('all');
 
   useEffect(() => {
-    fetchConversations();
+    fetchAllConversations();
     // Poll for new messages every 3 seconds
-    const interval = setInterval(fetchConversations, 3000);
+    const interval = setInterval(fetchAllConversations, 3000);
     return () => clearInterval(interval);
   }, [userRole]);
 
-  const fetchConversations = async () => {
+  const fetchAllConversations = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const endpoint = userRole === 'asker' ? 'myOnly=true' : 'accepted=true';
 
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands?${endpoint}`,
+      // Fetch both asker and doer conversations
+      const askerResponse = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands?myOnly=true`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      if (response.data.success && Array.isArray(response.data.data)) {
-        const activeChats = response.data.data.filter((errand: any) =>
-          ['confirmed', 'in_progress', 'completed_unconfirmed', 'completed_confirmed'].includes(errand.status)
-        );
+      const doerResponse = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands?accepted=true`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-        const conversations = activeChats.map((errand: any) => ({
-          id: errand.id,
-          title: errand.title,
-          otherPartyName: errand.askerName || errand.doerName || 'Unknown',
-          status: errand.status,
-          lastMessageAt: errand.updatedAt,
-          deadline: errand.deadline,
-          location: errand.location,
-          postal: errand.postal_code,
-          budget: errand.budget,
-          description: errand.description,
-        }));
+      // Combine and deduplicate
+      const allData = [
+        ...(askerResponse.data.success && Array.isArray(askerResponse.data.data) ? askerResponse.data.data : []),
+        ...(doerResponse.data.success && Array.isArray(doerResponse.data.data) ? doerResponse.data.data : []),
+      ];
 
-        setConversations(conversations);
-      }
+      // Remove duplicates based on ID
+      const uniqueData = Array.from(new Map(allData.map(item => [item.id, item])).values());
+
+      const activeChats = uniqueData.filter((errand: any) =>
+        ['confirmed', 'in_progress', 'completed_unconfirmed', 'completed_confirmed', 'completed'].includes(errand.status)
+      );
+
+      const allConversations = activeChats.map((errand: any) => ({
+        id: errand.id,
+        title: errand.title,
+        otherPartyName: errand.askerName || errand.doerName || 'Unknown',
+        status: errand.status,
+        lastMessageAt: errand.updatedAt,
+        deadline: errand.deadline,
+        location: errand.location,
+        postal: errand.postal_code,
+        budget: errand.budget,
+        description: errand.description,
+        role: errand.askerName ? 'asker' : 'doer', // Mark which role this conversation is from
+      }));
+
+      setAllConversations(allConversations);
+      filterConversations(allConversations);
     } catch (err: any) {
       console.error('Failed to fetch conversations:', err);
       setError('Failed to load messages');
@@ -80,6 +98,22 @@ export default function ChatPage({ userRole }: ChatPageProps) {
       setLoading(false);
     }
   };
+
+  const filterConversations = (convos: any[]) => {
+    let filtered = convos;
+
+    if (viewFilter === 'asker') {
+      filtered = convos.filter(c => c.role === 'asker');
+    } else if (viewFilter === 'doer') {
+      filtered = convos.filter(c => c.role === 'doer');
+    }
+
+    setConversations(filtered);
+  };
+
+  useEffect(() => {
+    filterConversations(allConversations);
+  }, [viewFilter, allConversations]);
 
   const handleOpenChat = (errandId: number) => {
     setSelectedErrandId(errandId);
@@ -160,6 +194,40 @@ export default function ChatPage({ userRole }: ChatPageProps) {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-errandify-orange"
         />
+      </div>
+
+      {/* View Filter - All/Asker/Doer */}
+      <div className="flex gap-2 mb-3 pb-2">
+        <button
+          onClick={() => setViewFilter('all')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            viewFilter === 'all'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          📬 All Messages
+        </button>
+        <button
+          onClick={() => setViewFilter('asker')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            viewFilter === 'asker'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          📝 My Tasks (Asker)
+        </button>
+        <button
+          onClick={() => setViewFilter('doer')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            viewFilter === 'doer'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          ✓ My Jobs (Doer)
+        </button>
       </div>
 
       {/* Status Filter Buttons */}
