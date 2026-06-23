@@ -137,8 +137,8 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
       const errandIdFormatted = task.errand_id_formatted;
       for (let i = 0; i < photoUrls.length; i++) {
         const photoUrl = photoUrls[i];
-        // File naming: ERR2026-XX-8ac45e_submission_1_photo_1.jpg
-        const fileName = `${errandIdFormatted}_submission_${currentSubmissionNumber}_photo_${i + 1}`;
+        // File naming: ERR2026-XX-8ac45e_s1_f1.jpg (errandId_s{submission}_f{file})
+        const fileName = `${errandIdFormatted}_s${currentSubmissionNumber}_f${i + 1}`;
 
         await db.query(
           `INSERT INTO task_files (errand_id, errand_id_formatted, submission_number, file_url, file_name, uploaded_by)
