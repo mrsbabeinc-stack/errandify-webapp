@@ -79,13 +79,9 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
     const doerId = parseInt(req.userId || '0', 10);
     const { photoUrls, completionNotes } = req.body; // Array of photo URLs (pre-uploaded to cloud) + completion notes
 
-    // Get task and verify doer is assigned
+    // Get task - no need for bid join
     const taskResult = await db.query(
-      `SELECT e.id, e.title, e.status, e.accepted_bid_id, e.description,
-              b.id as bid_id, b.doer_id, b.bid_amount as amount
-       FROM errands e
-       LEFT JOIN bids b ON e.accepted_bid_id = b.id
-       WHERE e.id = $1`,
+      `SELECT id, title, status, description FROM errands WHERE id = $1`,
       [taskId]
     );
 
