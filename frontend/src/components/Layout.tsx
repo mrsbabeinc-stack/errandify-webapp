@@ -58,16 +58,16 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
               {userProfile.profile_image_url ? (
                 <img
                   src={userProfile.profile_image_url}
-                  alt={userProfile.display_name}
+                  alt={userProfile.display_name || 'User'}
                   className="w-8 h-8 rounded-full object-cover border border-gray-300"
                 />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-errandify-orange flex items-center justify-center text-white text-xs font-bold">
-                  {userProfile.display_name.charAt(0).toUpperCase()}
+                  {(userProfile.display_name || 'U').charAt(0).toUpperCase()}
                 </div>
               )}
               <span className="text-sm font-semibold text-gray-700 hidden sm:inline max-w-[100px] truncate">
-                {userProfile.display_name}
+                {userProfile.display_name || 'User'}
               </span>
             </button>
           )}
