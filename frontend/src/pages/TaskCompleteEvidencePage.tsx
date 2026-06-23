@@ -176,26 +176,25 @@ export default function TaskCompleteEvidencePage() {
 
   return (
     <div className="min-h-screen bg-errandify-bg pb-32">
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="max-w-xl mx-auto px-3 py-4">
         {/* Header */}
         <button
           onClick={() => navigate('/my-offer')}
-          className="text-errandify-orange font-semibold mb-6 text-sm"
+          className="text-errandify-orange font-semibold mb-3 text-sm"
         >
           ← Back
         </button>
 
         {/* Card */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          {/* Header Section - Happy & Warm */}
-          <div className="bg-gradient-to-r from-green-400 via-emerald-500 to-teal-600 text-white p-6">
-            <h1 className="text-2xl font-bold mb-2">✨ Show Your Work! ✨</h1>
-            <p className="text-sm opacity-95 font-semibold">{task.title}</p>
-            <p className="text-xs opacity-80 mt-2">Help the asker see that you did a great job by uploading photos and notes!</p>
+          {/* Header Section - Compact */}
+          <div className="bg-gradient-to-r from-green-400 via-emerald-500 to-teal-600 text-white p-3">
+            <h1 className="text-lg font-bold mb-1">✨ Show Your Work!</h1>
+            <p className="text-xs opacity-95">{task.title}</p>
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-6">
+          <div className="p-4 space-y-4">
             {/* Error Alert */}
             {error && (
               <div className="p-4 bg-gradient-to-r from-red-100 to-rose-100 border-2 border-red-300 text-red-700 rounded-lg text-sm font-semibold shadow-sm">
@@ -204,28 +203,22 @@ export default function TaskCompleteEvidencePage() {
               </div>
             )}
 
-            {/* Task Info */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h2 className="font-semibold text-errandify-brown mb-2">Task Information</h2>
-              <div className="space-y-1 text-sm">
-                <p><span className="text-gray-600">Title:</span> <span className="font-medium">{task.title}</span></p>
-                <p><span className="text-gray-600">Category:</span> <span className="font-medium">{task.category}</span></p>
-                <p><span className="text-gray-600">Asker:</span> <span className="font-medium">{task.asker?.display_name || 'Anonymous'}</span></p>
+            {/* Task Info - Compact */}
+            <div className="bg-gray-50 rounded-lg p-3">
+              <div className="text-xs space-y-0.5">
                 <p><span className="text-gray-600">Budget:</span> <span className="font-bold text-errandify-orange">SGD ${typeof task.budget === 'number' ? task.budget.toFixed(2) : (task.budget || 0)}</span></p>
               </div>
             </div>
 
             {/* Photo Upload */}
             <div>
-              <h3 className="font-semibold text-errandify-brown mb-3">📸 Upload Completion Photos</h3>
-              <p className="text-xs text-gray-600 mb-3">Upload up to 5 photos showing the completed work</p>
+              <h3 className="font-semibold text-errandify-brown mb-2 text-sm">📸 Upload Photos</h3>
 
-              <div className="mb-4">
-                <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-errandify-orange hover:bg-orange-50 transition-colors">
-                  <span className="text-3xl mb-2">📷</span>
-                  <span className="font-semibold text-gray-700 text-center">Click to upload photos</span>
-                  <span className="text-xs text-gray-500 mt-1">or drag and drop</span>
-                  <span className="text-xs text-gray-400 mt-1">Max 5 photos • JPG, PNG</span>
+              <div className="mb-3">
+                <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 cursor-pointer hover:border-errandify-orange hover:bg-orange-50 transition-colors">
+                  <span className="text-2xl mb-1">📷</span>
+                  <span className="font-semibold text-gray-700 text-center text-xs">Click to upload</span>
+                  <span className="text-xs text-gray-500 mt-0.5">Max 5 • JPG, PNG</span>
                   <input
                     type="file"
                     multiple
@@ -263,53 +256,35 @@ export default function TaskCompleteEvidencePage() {
 
             {/* Completion Notes */}
             <div>
-              <h3 className="font-semibold text-errandify-brown mb-3">📝 Completion Notes</h3>
-              <p className="text-xs text-gray-600 mb-3">Describe what you did and any important details</p>
+              <h3 className="font-semibold text-errandify-brown mb-1 text-sm">📝 Notes</h3>
               <textarea
                 value={completionNotes}
                 onChange={(e) => setCompletionNotes(e.target.value)}
-                placeholder="E.g., 'Cleaned the living room thoroughly, organized shelves, took out all trash...'"
-                rows={5}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange focus:border-transparent text-sm"
+                placeholder="What did you complete?"
+                rows={3}
+                className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange focus:border-transparent text-xs"
               />
-              <p className="text-xs text-gray-500 mt-2">{completionNotes.length} characters</p>
             </div>
 
             {/* Submit Button */}
             <button
               onClick={handleSubmitCompletion}
               disabled={submitting}
-              className={`w-full py-4 rounded-lg font-bold text-white transition-all shadow-lg active:scale-95 ${
+              className={`w-full py-3 rounded-lg font-bold text-white transition-all shadow-lg active:scale-95 ${
                 submitting
                   ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed'
                   : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-xl'
               }`}
             >
-              {submitting ? '⏳ Submitting your work...' : '🎉 Submit Completion Evidence'}
+              {submitting ? '⏳ Submitting...' : '🎉 Submit'}
             </button>
 
-            {/* Info - Payment Timeline */}
-            <div className="space-y-3">
-              <div className="p-4 bg-gradient-to-r from-blue-100 to-cyan-100 border-2 border-blue-300 rounded-lg">
-                <p className="text-sm font-semibold text-blue-900 mb-2">
-                  💡 What happens next?
-                </p>
-                <div className="text-xs text-blue-800 leading-relaxed space-y-2">
-                  <p>✓ <strong>Now:</strong> Submit your completion evidence (photos & notes)</p>
-                  <p>📋 <strong>Asker reviews:</strong> They have 48 hours to check your work</p>
-                  <p>✅ <strong>If approved:</strong> Payment releases automatically after 48 hours</p>
-                  <p>💰 <strong>Payment goes to:</strong> Your bank account in MyPocket</p>
-                </div>
-              </div>
-
-              <div className="p-4 bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-300 rounded-lg">
-                <p className="text-sm font-semibold text-amber-900 mb-1">
-                  ⏱️ Payment Timeline
-                </p>
-                <p className="text-xs text-amber-800">
-                  <strong>48 hours</strong> after asker confirms = automatic payment release. No waiting after that! 🚀
-                </p>
-              </div>
+            {/* Info - Compact Timeline */}
+            <div className="bg-gradient-to-r from-blue-100 to-cyan-100 border-2 border-blue-300 rounded-lg p-3">
+              <p className="text-xs font-semibold text-blue-900 mb-1">💡 Payment Timeline</p>
+              <p className="text-xs text-blue-800 leading-relaxed">
+                ✓ Submit now → 📋 Asker reviews (48h) → 💰 Auto payment → 🏦 Your account
+              </p>
             </div>
           </div>
         </div>
