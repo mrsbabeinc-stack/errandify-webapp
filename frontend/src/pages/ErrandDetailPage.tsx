@@ -551,7 +551,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                         onClick={() => setShowChat(true)}
                         className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-xs transition-all"
                       >
-                        💬 Chat with Asker
+                        💬 Chat
                       </button>
                       <button
                         onClick={() => navigate(`/task/${id}/complete`)}
@@ -574,7 +574,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                         onClick={() => setShowChat(true)}
                         className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-xs transition-all"
                       >
-                        💬 Chat with Doer
+                        💬 Chat
                       </button>
                       <button
                         onClick={() => {
