@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware, AuthRequest } from '../middleware/auth.js';
 import db from '../db.js';
+import { generateFormattedUserId } from '../utils/idFormatter.js';
 
 const router = Router();
 
@@ -16,7 +17,18 @@ router.get('/profile', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const user = result.rows[0];
+    let user = result.rows[0];
+
+    // Auto-generate formatted_user_id if missing (for existing users)
+    if (!user.formatted_user_id) {
+      const formattedUserId = generateFormattedUserId(user.id);
+      await db.query(
+        'UPDATE users SET formatted_user_id = $1 WHERE id = $2',
+        [formattedUserId, user.id]
+      );
+      user.formatted_user_id = formattedUserId;
+    }
+
     res.json({
       success: true,
       data: {
