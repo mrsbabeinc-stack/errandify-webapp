@@ -396,7 +396,9 @@ Your message doesn't meet our community standards. Please keep messages:
                     className={`text-xs py-1.5 px-2.5 rounded-lg inline-block max-w-xs ${
                       msg.flagged
                         ? 'bg-yellow-100 text-yellow-900 border border-yellow-200'
-                        : 'bg-white border border-gray-200'
+                        : msg.senderId === askerId
+                        ? 'bg-blue-50 border border-blue-200'
+                        : 'bg-green-50 border border-green-200'
                     }`}
                   >
                     {msg.flagged ? (
