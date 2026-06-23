@@ -2,9 +2,10 @@
 CREATE TABLE IF NOT EXISTS task_files (
   id SERIAL PRIMARY KEY,
   errand_id INT NOT NULL REFERENCES errands(id) ON DELETE CASCADE,
+  errand_id_formatted VARCHAR(50), -- e.g., ERR2026-XX-8ac45e for display/organization
   submission_number INT NOT NULL DEFAULT 1,
   file_url TEXT NOT NULL,
-  file_name VARCHAR(255),
+  file_name VARCHAR(255), -- e.g., ERR2026-XX-8ac45e_submission_1_photo_1.jpg
   file_size INT,
   file_type VARCHAR(50),
   uploaded_by INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -18,6 +19,7 @@ CREATE TABLE IF NOT EXISTS task_files (
 
 -- Create index for faster lookups
 CREATE INDEX idx_task_files_errand_id ON task_files(errand_id);
+CREATE INDEX idx_task_files_errand_id_formatted ON task_files(errand_id_formatted);
 CREATE INDEX idx_task_files_uploaded_by ON task_files(uploaded_by);
 CREATE INDEX idx_task_files_submission ON task_files(errand_id, submission_number);
 
