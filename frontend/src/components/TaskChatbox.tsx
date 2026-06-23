@@ -201,7 +201,6 @@ Your message doesn't meet our community standards. Please keep messages:
       setValidationSuggestions([]);
       setBlockReason('');
       setError('');
-      fetchMessages();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to send message');
     } finally {
