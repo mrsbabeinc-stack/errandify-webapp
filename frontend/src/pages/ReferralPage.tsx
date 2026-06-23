@@ -213,26 +213,38 @@ export default function ReferralPage() {
           </div>
         </div>
 
-        {/* How It Works - Warm & Simple */}
+        {/* How It Works - Detailed & Complete */}
         <div className="bg-white rounded-lg p-2.5 shadow-sm border border-amber-200">
-          <p className="font-semibold text-errandify-brown mb-1.5 text-sm">How It Works</p>
-          <div className="space-y-1 text-xs text-errandify-brown">
-            <p className="flex items-center gap-2">
-              <span className="bg-amber-100 text-errandify-brown rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">1</span>
-              <span>Share your code</span>
-            </p>
-            <p className="flex items-center gap-2">
-              <span className="bg-amber-100 text-errandify-brown rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">2</span>
-              <span>Friend signs up</span>
-            </p>
-            <p className="flex items-center gap-2">
-              <span className="bg-amber-100 text-errandify-brown rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">3</span>
-              <span>They do their first job</span>
-            </p>
-            <p className="flex items-center gap-2 font-semibold">
-              <span className="bg-errandify-brown text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">✓</span>
-              <span>You both get 50 EP! 🎉</span>
-            </p>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">?</span>
+            <p className="font-semibold text-errandify-brown text-sm">How It Works</p>
+          </div>
+          <div className="space-y-2 text-xs text-errandify-brown">
+            {/* Individual Signup */}
+            <div className="flex gap-2 items-start">
+              <span className="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">✓</span>
+              <span><strong>Your friend creates an Individual account</strong> using your referral code.</span>
+            </div>
+
+            {/* Company Signup Option */}
+            <div className="flex gap-2 items-start">
+              <span className="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">✓</span>
+              <span><strong>After the individual account is created,</strong> they can proceed with a <strong>Company sign-up</strong> (if needed).</span>
+            </div>
+
+            {/* Verification & Rewards */}
+            <div className="flex gap-2 items-start">
+              <span className="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">✓</span>
+              <span><strong>Once verification is complete,</strong> rewards are applied to both accounts.</span>
+            </div>
+
+            {/* Bonus Info */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
+              <p className="text-xs font-semibold text-errandify-brown mb-1">💰 Reward Breakdown:</p>
+              <p className="text-xs text-errandify-brown opacity-80">• Friend joins: +50 EP</p>
+              <p className="text-xs text-errandify-brown opacity-80">• Completes first job: +150 EP bonus</p>
+              <p className="text-xs text-errandify-brown opacity-80">• Reaches 10 jobs: +100 EP loyalty bonus</p>
+            </div>
           </div>
         </div>
 

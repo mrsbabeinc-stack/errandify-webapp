@@ -340,7 +340,6 @@ export default function SearchBrowsePage() {
                             {errand.category}
                           </span>
                           <span>📍 Posted {formatDate(errand.createdAt)}</span>
-                          <span>💬 {errand.bidCount} offers</span>
                         </div>
                       </div>
                       <div className="text-right">

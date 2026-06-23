@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import TaskChatbox from '../components/TaskChatbox';
 
 interface Bid {
   id: number;
@@ -16,6 +17,10 @@ interface Bid {
     category: string;
     asker_name: string;
     asker_display_name?: string;
+    location?: string;
+    postal_code?: string;
+    deadline?: string;
+    description?: string;
   };
 }
 
@@ -25,9 +30,14 @@ export default function MyOfferPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [selectedErrandId, setSelectedErrandId] = useState<number | null>(null);
+  const [showChatbox, setShowChatbox] = useState(false);
 
   useEffect(() => {
     fetchMyBids();
+    // Poll for updates every 3 seconds
+    const interval = setInterval(fetchMyBids, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchMyBids = async () => {
@@ -45,6 +55,26 @@ export default function MyOfferPage() {
       setError(err.response?.data?.error || 'Failed to load offers');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConfirmBid = async (bidId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${bidId}/confirm`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      // Update local state immediately
+      setBids(bids.map(b =>
+        b.id === bidId ? { ...b, status: 'confirmed' as const } : b
+      ));
+      setError('');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to confirm offer');
     }
   };
 
@@ -115,8 +145,8 @@ export default function MyOfferPage() {
           <p className="text-gray-600 text-sm">Track all your offers and active jobs</p>
         </div>
 
-        {/* Active Job Sticky Header */}
-        {activeBid && (
+        {/* Active Job Sticky Header - Only show if in_progress */}
+        {activeBid && activeBid.status === 'in_progress' && (
           <div className={`mb-6 p-4 rounded-lg border-2 ${
             activeBid.status === 'in_progress'
               ? 'bg-blue-50 border-blue-300'
@@ -131,7 +161,7 @@ export default function MyOfferPage() {
                   {activeBid.errand?.title}
                 </h3>
                 <p className="text-sm text-gray-700 mt-1">
-                  {activeBid.errand?.asker_display_name || activeBid.errand?.asker_name || 'Anonymous'} • SGD ${activeBid.amount.toFixed(2)}
+                  {activeBid.errand?.asker_display_name || activeBid.errand?.asker_name || 'Anonymous'} • SGD ${Math.round(activeBid.amount)}
                 </p>
               </div>
               <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(activeBid.status)}`}>
@@ -197,61 +227,74 @@ export default function MyOfferPage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {filteredBids.map((bid) => (
               <div
                 key={bid.id}
-                className={`bg-white rounded-lg p-4 border transition-all ${
+                className={`bg-white rounded-lg p-2 border transition-all text-sm ${
                   bid === activeBid
                     ? 'border-green-300 shadow-md'
                     : 'border-gray-200 hover:shadow-md'
                 }`}
               >
                 {/* Header */}
-                <div className="flex items-start justify-between mb-2">
+                <div className="flex items-start justify-between mb-1">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-errandify-brown">
+                    <h3 className="font-semibold text-errandify-brown text-sm">
                       {bid.errand?.title || 'Errand #' + bid.errand_id}
                     </h3>
-                    <p className="text-xs text-gray-600">by {bid.errand?.asker_display_name || bid.errand?.asker_name || 'Unknown'}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="text-xs text-gray-600">by {bid.errand?.asker_display_name || bid.errand?.asker_name || 'Unknown'}</p>
+                      {bid.errand?.category && (
+                        <span className="px-2 py-0.5 bg-orange-100 text-errandify-orange rounded text-xs font-semibold">
+                          {bid.errand.category}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(bid.status)}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getStatusColor(bid.status)}`}>
                     {getStatusLabel(bid.status)}
                   </span>
                 </div>
 
-                {/* Bid Amount & Details */}
-                <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
-                  <div>
-                    <p className="text-gray-600">Your Offer</p>
-                    <p className="font-bold text-errandify-orange text-lg">SGD ${Math.round(bid.amount)}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Budget</p>
-                    <p className="font-semibold text-gray-800">SGD ${bid.errand?.budget ? Math.round(bid.errand.budget) : 'N/A'}</p>
-                  </div>
+                {/* Deadline, Location */}
+                <div className="flex items-center gap-2 mb-2 text-xs text-gray-600 flex-wrap">
+                  {bid.errand?.deadline && (
+                    <span>📅 {new Date(bid.errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}</span>
+                  )}
+                  {bid.errand?.location && (
+                    <span>
+                      📍 {bid.errand.location.split(',')[0]}
+                      {bid.errand?.postal_code && ` ${bid.errand.postal_code}`}
+                    </span>
+                  )}
                 </div>
 
-                {/* Note */}
-                {bid.note && (
-                  <div className="mb-3 p-2 bg-gray-50 rounded text-xs text-gray-700">
-                    💬 {bid.note}
-                  </div>
-                )}
-
                 {/* Actions */}
-                <div className="flex gap-2">
+                <div className="flex gap-1 flex-wrap">
                   <button
                     onClick={() => navigate(`/errand/${bid.errand_id}`)}
-                    className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded font-semibold text-xs hover:bg-gray-50"
+                    className="flex-1 px-2 py-1 border border-gray-300 text-gray-700 rounded font-semibold text-xs hover:bg-gray-50 min-w-20"
                   >
                     View Details
                   </button>
 
+                  {(bid.status === 'confirmed' || bid.status === 'confirmed_awaiting_start' || bid.status === 'in_progress') && (
+                    <button
+                      onClick={() => {
+                        setSelectedErrandId(bid.errand_id);
+                        setShowChatbox(true);
+                      }}
+                      className="flex-1 px-2 py-1 border-2 border-blue-400 text-blue-600 rounded font-semibold text-xs hover:bg-blue-50 min-w-16"
+                    >
+                      💬 Chat
+                    </button>
+                  )}
+
                   {bid.status === 'pending' && (
                     <button
                       onClick={() => navigate(`/errand/${bid.errand_id}`)}
-                      className="flex-1 px-3 py-2 bg-errandify-orange text-white rounded font-semibold text-xs hover:bg-opacity-90"
+                      className="flex-1 px-2 py-1 bg-errandify-orange text-white rounded font-semibold text-xs hover:bg-opacity-90"
                     >
                       Edit Offer
                     </button>
@@ -259,26 +302,17 @@ export default function MyOfferPage() {
 
                   {bid.status === 'accepted' && (
                     <button
-                      onClick={() => navigate(`/errand/${bid.errand_id}`)}
-                      className="flex-1 px-3 py-2 bg-green-600 text-white rounded font-semibold text-xs hover:bg-green-700"
+                      onClick={() => handleConfirmBid(bid.id)}
+                      className="flex-1 px-2 py-1 bg-green-600 text-white rounded font-semibold text-xs hover:bg-green-700"
                     >
                       ✅ Confirm
-                    </button>
-                  )}
-
-                  {(bid.status === 'confirmed' || bid.status === 'confirmed_awaiting_start') && (
-                    <button
-                      onClick={() => navigate(`/errand/${bid.errand_id}`)}
-                      className="flex-1 px-3 py-2 bg-blue-600 text-white rounded font-semibold text-xs hover:bg-blue-700"
-                    >
-                      ▶️ Start
                     </button>
                   )}
 
                   {bid.status === 'in_progress' && (
                     <button
                       onClick={() => navigate(`/task/${bid.errand_id}/complete`)}
-                      className="flex-1 px-3 py-2 bg-blue-600 text-white rounded font-semibold text-xs hover:bg-blue-700"
+                      className="flex-1 px-2 py-1 bg-blue-600 text-white rounded font-semibold text-xs hover:bg-blue-700"
                     >
                       ✓ Mark Complete
                     </button>
@@ -287,7 +321,7 @@ export default function MyOfferPage() {
                   {bid.status === 'completed_unconfirmed' && (
                     <button
                       disabled
-                      className="flex-1 px-3 py-2 bg-gray-300 text-white rounded font-semibold text-xs cursor-not-allowed"
+                      className="flex-1 px-2 py-1 bg-gray-300 text-white rounded font-semibold text-xs cursor-not-allowed"
                     >
                       ⏳ Awaiting Review
                     </button>
@@ -295,7 +329,7 @@ export default function MyOfferPage() {
                 </div>
 
                 {/* Timestamp */}
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 mt-1">
                   Offer placed {new Date(bid.created_at).toLocaleDateString()}
                 </p>
               </div>
@@ -312,6 +346,29 @@ export default function MyOfferPage() {
             </p>
           </div>
         )}
+
+        {/* TaskChatbox Modal - Handles its own modal wrapper */}
+        {showChatbox && selectedErrandId && (() => {
+          const selectedBid = bids.find(b => b.errand_id === selectedErrandId);
+          return (
+            <TaskChatbox
+              taskId={selectedErrandId}
+              taskTitle={selectedBid?.errand?.title || 'Errand'}
+              isOpen={showChatbox}
+              onClose={() => {
+                setShowChatbox(false);
+                setSelectedErrandId(null);
+              }}
+              errandDetails={{
+                budget: selectedBid?.errand?.budget,
+                description: selectedBid?.errand?.description,
+                location: selectedBid?.errand?.location,
+                postal: selectedBid?.errand?.postal_code,
+                deadline: selectedBid?.errand?.deadline,
+              }}
+            />
+          );
+        })()}
       </div>
     </div>
   );
