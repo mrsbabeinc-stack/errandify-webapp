@@ -296,12 +296,12 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
     // Check if job was completed more than 48 hours ago
     if (!chatDisabled) {
       const completionResult = await db.query(
-        `SELECT completed_at FROM errands WHERE id = $1 AND status = 'completed'`,
+        `SELECT updated_at FROM errands WHERE id = $1 AND status = 'completed'`,
         [taskId]
       );
 
-      if (completionResult.rows.length > 0 && completionResult.rows[0].completed_at) {
-        const completedAt = new Date(completionResult.rows[0].completed_at).getTime();
+      if (completionResult.rows.length > 0 && completionResult.rows[0].updated_at) {
+        const completedAt = new Date(completionResult.rows[0].updated_at).getTime();
         const now = new Date().getTime();
         const hoursElapsed = (now - completedAt) / (1000 * 60 * 60);
 
