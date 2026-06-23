@@ -497,12 +497,20 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 </button>
               </div>
             ) : errand.status === 'in_progress' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
-              <button
-                onClick={() => navigate(`/task/${id}/complete`)}
-                className="w-full bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
-              >
-                ✓ Mark as Completed
-              </button>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setShowChat(true)}
+                  className="flex-1 bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition-colors text-base"
+                >
+                  💬 Chat
+                </button>
+                <button
+                  onClick={() => navigate(`/task/${id}/complete`)}
+                  className="flex-1 bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
+                >
+                  ✓ Mark as Completed
+                </button>
+              </div>
             ) : errand.status === 'job_completed' && currentUser && (currentUser.id === errand.askerId || userRole === 'doer') ? (
               <div className="flex gap-2 mt-2">
                 <button
@@ -548,9 +556,17 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 <p className="text-xs text-red-600">Dispute is being reviewed. Payment is held.</p>
               </div>
             ) : errand.status === 'completed' ? (
-              <div className="w-full bg-green-50 border border-green-200 rounded-lg p-3 mt-2 text-center">
-                <p className="text-green-800 font-semibold">✓ Completed</p>
-                <p className="text-xs text-green-600">Awaiting asker rating</p>
+              <div className="w-full bg-green-50 border border-green-200 rounded-lg p-3 mt-2 space-y-2">
+                <div className="text-center">
+                  <p className="text-green-800 font-semibold">✓ Completed</p>
+                  <p className="text-xs text-green-600">Awaiting asker rating</p>
+                </div>
+                <button
+                  onClick={() => setShowChat(true)}
+                  className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-sm transition-all"
+                >
+                  💬 Chat
+                </button>
               </div>
             ) : null}
           </div>
