@@ -71,6 +71,11 @@ export default function MyAccountPage() {
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setProfileData(profileRes.data.data);
+          // Update localStorage with latest profile data including formatted user ID
+          if (profileRes.data.data.formattedUserId) {
+            const updatedUser = { ...user, formattedUserId: profileRes.data.data.formattedUserId };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
           setEditForm({
             display_name: profileRes.data.data.name || '',
             email: profileRes.data.data.email || '',
@@ -83,6 +88,7 @@ export default function MyAccountPage() {
           const fallbackProfile: UserProfile = {
             id: user.id || 0,
             userId: user.userId || '',
+            formattedUserId: user.formattedUserId || '',
             name: user.name || 'User',
             email: user.email || '',
             mobile: user.mobile || '',
