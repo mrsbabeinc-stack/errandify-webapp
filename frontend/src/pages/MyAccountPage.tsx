@@ -492,7 +492,6 @@ export default function MyAccountPage() {
               <div className="flex items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <h2 className="text-base font-bold text-errandify-brown truncate">{profileData.name}</h2>
-                  <p className="text-gray-600 text-xs">{profileData.role === 'asker' ? '📍 Asker' : '💪 Doer'}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="text-xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
@@ -508,18 +507,6 @@ export default function MyAccountPage() {
                   ))}
                 </div>
               )}
-              <div className="mt-1">
-                <div className="flex justify-between items-center mb-0.5">
-                  <span className="text-xs font-semibold text-gray-600">Completeness</span>
-                  <span className="text-xs font-bold">{completeness}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-1">
-                  <div
-                    className="bg-errandify-orange rounded-full h-1 transition-all duration-300"
-                    style={{ width: `${completeness}%` }}
-                  />
-                </div>
-              </div>
             </div>
 
             {/* STATS GRID */}
