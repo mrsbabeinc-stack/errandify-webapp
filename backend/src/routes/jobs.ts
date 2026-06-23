@@ -79,9 +79,12 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
     const doerId = parseInt(req.userId || '0', 10);
     const { photoUrls, completionNotes } = req.body; // Array of photo URLs (pre-uploaded to cloud) + completion notes
 
-    // Get task with doer info
+    // Get task with doer info from bids table
     const taskResult = await db.query(
-      `SELECT id, title, status, description, doer_id FROM errands WHERE id = $1`,
+      `SELECT e.id, e.title, e.status, e.description, b.doer_id
+       FROM errands e
+       LEFT JOIN bids b ON e.id = b.errand_id AND b.status = 'confirmed'
+       WHERE e.id = $1`,
       [taskId]
     );
 
@@ -95,7 +98,7 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
       return res.status(400).json({ error: 'Task must be in progress to complete' });
     }
 
-    if (task.doer_id !== doerId) {
+    if (!task.doer_id || task.doer_id !== doerId) {
       return res.status(403).json({ error: 'Only the assigned doer can complete this task' });
     }
 
