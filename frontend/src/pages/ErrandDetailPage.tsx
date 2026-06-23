@@ -587,7 +587,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                       </button>
                       <button
                         onClick={() => navigate(`/task/${id}/complete`)}
-                        className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 text-xs transition-all"
+                        className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 text-xs transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        disabled={errand.status === 'disputed'}
+                        title={errand.status === 'disputed' ? 'Cannot add files during dispute' : 'Submit additional files before 48 hours pass'}
                       >
                         📁 Add More Files
                       </button>
@@ -623,7 +625,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                             })
                             .catch(e => alert('Error: ' + e.message));
                         }}
-                        className="flex-1 bg-amber-500 text-white py-2 rounded-lg font-semibold hover:bg-amber-600 text-xs transition-all"
+                        className="flex-1 bg-amber-500 text-white py-2 rounded-lg font-semibold hover:bg-amber-600 text-xs transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        disabled={errand.status === 'disputed'}
+                        title={errand.status === 'disputed' ? 'Cannot reopen during dispute' : 'Request doer to make changes'}
                       >
                         🔄 Request Changes
                       </button>
