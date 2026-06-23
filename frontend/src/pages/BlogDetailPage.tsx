@@ -6,13 +6,114 @@ export default function BlogDetailPage() {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
 
+  // Find post by slug
+  const post = blogPostsData.find(p => p.slug === slug);
+
   // Scroll to top when slug changes
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [slug]);
 
-  // Find post by slug
-  const post = blogPostsData.find(p => p.slug === slug);
+  // Update meta tags and JSON-LD schema for SEO
+  useEffect(() => {
+    if (!post) return;
+
+    // Update document title
+    document.title = `${post.title} - Errandify Blog`;
+
+    // Update/create meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', post.excerpt || post.title);
+    } else {
+      const newMeta = document.createElement('meta');
+      newMeta.name = 'description';
+      newMeta.content = post.excerpt || post.title;
+      document.head.appendChild(newMeta);
+    }
+
+    // Open Graph tags
+    updateMetaTag('og:title', post.title);
+    updateMetaTag('og:description', post.excerpt || post.title);
+    updateMetaTag('og:image', post.featured_image_url || 'https://errandify.sg/og-image.jpg');
+    updateMetaTag('og:url', window.location.href);
+    updateMetaTag('og:type', 'article');
+
+    // Twitter Card tags
+    updateMetaTag('twitter:card', 'summary_large_image');
+    updateMetaTag('twitter:title', post.title);
+    updateMetaTag('twitter:description', post.excerpt || post.title);
+    updateMetaTag('twitter:image', post.featured_image_url || 'https://errandify.sg/og-image.jpg');
+
+    // Canonical URL
+    updateCanonical(`https://errandify.sg/blog/${slug}`);
+
+    // JSON-LD Article Schema
+    const articleSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: post.title,
+      description: post.excerpt || post.title,
+      image: post.featured_image_url || 'https://errandify.sg/og-image.jpg',
+      datePublished: post.published_at,
+      dateModified: post.updated_at || post.published_at,
+      author: {
+        '@type': 'Organization',
+        name: post.author || 'Errandify Team',
+        url: 'https://errandify.sg'
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Errandify',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://errandify.sg/logo.png'
+        }
+      },
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id': `https://errandify.sg/blog/${slug}`
+      }
+    };
+
+    updateJsonLdSchema('article-schema', articleSchema);
+  }, [slug]);
+
+  // Helper functions for meta tag management
+  const updateMetaTag = (name: string, content: string) => {
+    let element = document.querySelector(`meta[property="${name}"], meta[name="${name}"]`);
+    if (!element) {
+      element = document.createElement('meta');
+      if (name.startsWith('og:') || name.startsWith('twitter:')) {
+        element.setAttribute('property', name);
+      } else {
+        element.setAttribute('name', name);
+      }
+      document.head.appendChild(element);
+    }
+    element.setAttribute('content', content);
+  };
+
+  const updateCanonical = (url: string) => {
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', url);
+  };
+
+  const updateJsonLdSchema = (id: string, schema: any) => {
+    let script = document.getElementById(id);
+    if (!script) {
+      script = document.createElement('script');
+      script.id = id;
+      script.type = 'application/ld+json';
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(schema);
+  };
 
   // Get related articles (same category, different post)
   const relatedArticles = post

@@ -166,4 +166,36 @@ router.get('/search', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/blog/sitemap.xml - XML Sitemap for search engines
+router.get('/sitemap.xml', async (req: Request, res: Response) => {
+  try {
+    const result = await db.query(
+      `SELECT slug, published_at, updated_at FROM blog_posts
+       WHERE is_published = true
+       ORDER BY published_at DESC`
+    );
+
+    const baseUrl = 'https://errandify.sg';
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
+
+    result.rows.forEach((post: any) => {
+      const lastmod = new Date(post.updated_at || post.published_at).toISOString().split('T')[0];
+      xml += '  <url>\n';
+      xml += `    <loc>${baseUrl}/blog/${post.slug}</loc>\n`;
+      xml += `    <lastmod>${lastmod}</lastmod>\n`;
+      xml += '    <changefreq>monthly</changefreq>\n';
+      xml += '    <priority>0.8</priority>\n';
+      xml += '  </url>\n';
+    });
+
+    xml += '</urlset>';
+
+    res.type('application/xml').send(xml);
+  } catch (error) {
+    console.error('Sitemap generation error:', error);
+    res.status(500).json({ error: 'Failed to generate sitemap' });
+  }
+});
+
 export default router;
