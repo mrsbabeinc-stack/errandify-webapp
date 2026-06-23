@@ -8,7 +8,7 @@ const router = Router();
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, user_id, display_name, mobile, role FROM users WHERE id = $1',
+      'SELECT id, user_id, display_name, mobile, role, formatted_user_id FROM users WHERE id = $1',
       [req.userId]
     );
 
@@ -22,6 +22,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
       data: {
         id: user.id,
         userId: user.user_id,
+        formattedUserId: user.formatted_user_id,
         name: user.display_name,
         mobile: user.mobile,
         role: user.role,
