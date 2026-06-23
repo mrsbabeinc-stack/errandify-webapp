@@ -15,6 +15,7 @@ interface Bid {
     title: string;
     budget: number;
     category: string;
+    status: string;
     asker_name: string;
     asker_display_name?: string;
     location?: string;
@@ -165,8 +166,8 @@ export default function MyOfferPage() {
                   {activeBid.errand?.asker_display_name || activeBid.errand?.asker_name || 'Anonymous'} • SGD ${Math.round(activeBid.amount)}
                 </p>
               </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(activeBid.status)}`}>
-                {getStatusLabel(activeBid.status)}
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(activeBid.errand?.status || activeBid.status)}`}>
+                {getStatusLabel(activeBid.errand?.status || activeBid.status)}
               </span>
             </div>
 
@@ -253,8 +254,8 @@ export default function MyOfferPage() {
                       )}
                     </div>
                   </div>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getStatusColor(bid.status)}`}>
-                    {getStatusLabel(bid.status)}
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getStatusColor(bid.errand?.status || bid.status)}`}>
+                    {getStatusLabel(bid.errand?.status || bid.status)}
                   </span>
                 </div>
 
