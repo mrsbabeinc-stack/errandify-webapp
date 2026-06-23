@@ -122,9 +122,22 @@ export default function TaskCompleteEvidencePage() {
         }
       );
 
-      // Redirect to success page or my offers
-      alert('✓ Work submitted! Waiting for asker to review.');
-      navigate('/my-offer');
+      // Show success message and redirect
+      setError(''); // Clear any errors
+
+      // Display success toast and redirect
+      const successMsg = '🎉 Great job! Your work has been submitted.\n\nThe asker will review your completion and confirm soon.';
+
+      // Create a toast notification instead of alert
+      const toastDiv = document.createElement('div');
+      toastDiv.className = 'fixed top-4 left-4 right-4 bg-gradient-to-r from-green-400 to-emerald-500 text-white p-4 rounded-lg shadow-lg animate-bounce z-50 font-bold text-center';
+      toastDiv.textContent = '✨ Work submitted! Waiting for asker review...';
+      document.body.appendChild(toastDiv);
+
+      // Redirect after 2 seconds
+      setTimeout(() => {
+        navigate('/my-offer');
+      }, 2000);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to submit completion');
     } finally {
@@ -135,7 +148,10 @@ export default function TaskCompleteEvidencePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-errandify-bg flex items-center justify-center">
-        <p className="text-gray-600">Loading task details...</p>
+        <div className="text-center">
+          <p className="text-2xl mb-4">⏳</p>
+          <p className="text-lg font-semibold text-gray-700">Loading task details...</p>
+        </div>
       </div>
     );
   }
@@ -143,11 +159,13 @@ export default function TaskCompleteEvidencePage() {
   if (!task) {
     return (
       <div className="min-h-screen bg-errandify-bg flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-700 font-semibold mb-4">Task not found</p>
+        <div className="bg-white rounded-lg p-8 shadow-lg max-w-sm text-center">
+          <p className="text-4xl mb-4">😕</p>
+          <p className="text-lg font-bold text-gray-800 mb-2">Oops! Task not found</p>
+          <p className="text-gray-600 mb-6">This task seems to have disappeared. Let's get you back to your offers!</p>
           <button
             onClick={() => navigate('/my-offer')}
-            className="text-errandify-orange font-semibold"
+            className="bg-gradient-to-r from-errandify-orange to-orange-600 text-white py-3 px-6 rounded-lg font-bold hover:shadow-lg transition-all"
           >
             ← Back to My Offers
           </button>
@@ -168,19 +186,21 @@ export default function TaskCompleteEvidencePage() {
         </button>
 
         {/* Card */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Header Section */}
-          <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-4">
-            <h1 className="text-xl font-bold mb-2">Submit Completion Evidence</h1>
-            <p className="text-sm opacity-90">{task.title}</p>
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          {/* Header Section - Happy & Warm */}
+          <div className="bg-gradient-to-r from-green-400 via-emerald-500 to-teal-600 text-white p-6">
+            <h1 className="text-2xl font-bold mb-2">✨ Show Your Work! ✨</h1>
+            <p className="text-sm opacity-95 font-semibold">{task.title}</p>
+            <p className="text-xs opacity-80 mt-2">Help the asker see that you did a great job by uploading photos and notes!</p>
           </div>
 
           {/* Content */}
           <div className="p-6 space-y-6">
             {/* Error Alert */}
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-                {error}
+              <div className="p-4 bg-gradient-to-r from-red-100 to-rose-100 border-2 border-red-300 text-red-700 rounded-lg text-sm font-semibold shadow-sm">
+                <p className="mb-1">⚠️ {error}</p>
+                <p className="text-xs opacity-80">Please fix this and try again!</p>
               </div>
             )}
 
@@ -259,19 +279,22 @@ export default function TaskCompleteEvidencePage() {
             <button
               onClick={handleSubmitCompletion}
               disabled={submitting}
-              className={`w-full py-3 rounded-lg font-bold text-white transition-all ${
+              className={`w-full py-4 rounded-lg font-bold text-white transition-all shadow-lg active:scale-95 ${
                 submitting
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-errandify-orange hover:bg-opacity-90'
+                  ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-xl'
               }`}
             >
-              {submitting ? '⏳ Submitting...' : '✓ Submit Completion Evidence'}
+              {submitting ? '⏳ Submitting your work...' : '🎉 Submit Completion Evidence'}
             </button>
 
-            {/* Info */}
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-800">
-                ℹ️ Once submitted, the asker will review your completion evidence and either approve the work or request more changes.
+            {/* Info - Warm and Encouraging */}
+            <div className="p-4 bg-gradient-to-r from-blue-100 to-cyan-100 border-2 border-blue-300 rounded-lg">
+              <p className="text-sm font-semibold text-blue-900 mb-1">
+                💡 What happens next?
+              </p>
+              <p className="text-xs text-blue-800 leading-relaxed">
+                Your work is submitted! The asker will review your completion evidence within 24-48 hours. If they approve, you'll get paid. If they need anything else, they'll let you know! 🎯
               </p>
             </div>
           </div>
