@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { config } from '../config.js';
 import db from '../db.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.js';
+import { generateFormattedUserId } from '../utils/idFormatter.js';
 
 const router = Router();
 
@@ -90,7 +91,8 @@ router.post('/signup', async (req: Request, res: Response) => {
     const userId = generateUserId(nric);
     const referredBy = ref || null; // Track who referred this user
 
-    const result = await db.query(
+    // Insert temporarily to get the database-assigned ID, then update with formatted ID
+    const tempResult = await db.query(
       `INSERT INTO users (
         user_id, nric_hash, display_name, email, mobile,
         font_size_pref, language_pref, role, kyc_status, referral_code, referred_by,
@@ -111,6 +113,16 @@ router.post('/signup', async (req: Request, res: Response) => {
         referredBy,
         true, // screening_completed
       ]
+    );
+
+    const newUserId = tempResult.rows[0].id;
+    const formattedUserId = generateFormattedUserId(newUserId);
+
+    // Update with formatted user ID
+    const result = await db.query(
+      `UPDATE users SET formatted_user_id = $1 WHERE id = $2
+       RETURNING id, user_id, display_name, email, mobile, role, criminal_conviction, formatted_user_id`,
+      [formattedUserId, newUserId]
     );
 
     const user = result.rows[0];
