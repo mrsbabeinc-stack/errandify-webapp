@@ -418,10 +418,9 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
   try {
     const doerId = parseInt(req.userId || '0', 10);
 
-    const result = await db.query(
-      `SELECT b.*,
-              e.title, e.budget, e.category,
-              u.display_name as asker_name
+    // Get all bids for this doer with errand details
+    const bidsResult = await db.query(
+      `SELECT b.*, e.title, e.budget, e.category, e.location, e.postal_code, e.deadline, e.description, u.display_name as asker_display_name
        FROM bids b
        JOIN errands e ON b.errand_id = e.id
        JOIN users u ON e.asker_id = u.id
@@ -432,49 +431,9 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
 
     res.json({
       success: true,
-      data: result.rows.map(row => ({
-        id: row.id,
-        errand_id: row.errand_id,
-        doer_id: row.doer_id,
-        amount: row.amount,
-        note: row.note,
-        status: row.status,
-        created_at: row.created_at,
-        errand: {
-          title: row.title,
-          budget: row.budget,
-          category: row.category,
-          asker_name: row.asker_name,
-        },
-      })),
-    });
-  } catch (error) {
-    console.error('Error fetching my bids:', error);
-    res.status(500).json({ error: 'Failed to fetch bids' });
-  }
-});
-
-// GET /api/bids/my-bids - Get all bids placed by current doer
-router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const doerId = parseInt(req.userId || '0', 10);
-
-    // Get all bids for this doer with errand details
-    const bidsResult = await db.query(
-      `SELECT b.*, e.title, e.budget, e.category, u.display_name as asker_display_name, u.name as asker_name
-       FROM bids b
-       JOIN errands e ON b.task_id = e.id
-       JOIN users u ON e.asker_id = u.id
-       WHERE b.doer_id = $1
-       ORDER BY b.created_at DESC`,
-      [doerId]
-    );
-
-    res.json({
-      success: true,
       data: bidsResult.rows.map(bid => ({
         id: bid.id,
-        errand_id: bid.task_id,
+        errand_id: bid.errand_id,
         doer_id: bid.doer_id,
         amount: bid.amount,
         note: bid.note,
@@ -484,14 +443,68 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
           title: bid.title,
           budget: bid.budget,
           category: bid.category,
-          asker_name: bid.asker_name,
           asker_display_name: bid.asker_display_name,
+          location: bid.location,
+          postal_code: bid.postal_code,
+          deadline: bid.deadline,
+          description: bid.description,
         },
       })),
     });
   } catch (error) {
     console.error('Get my bids error:', error);
     res.status(500).json({ error: 'Failed to fetch bids' });
+  }
+});
+
+// PUT /api/bids/:id/confirm - Doer confirms they accept the accepted bid
+router.put('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const bidId = parseInt(req.params.id, 10);
+    const doerId = parseInt(req.userId || '0', 10);
+
+    // Get the bid
+    const bidResult = await db.query(
+      'SELECT id, doer_id, errand_id, status FROM bids WHERE id = $1',
+      [bidId]
+    );
+
+    if (bidResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Bid not found' });
+    }
+
+    const bid = bidResult.rows[0];
+
+    // Verify the bid belongs to the current doer
+    if (bid.doer_id !== doerId) {
+      return res.status(403).json({ error: 'Not authorized to confirm this bid' });
+    }
+
+    // Check if bid is in accepted status
+    if (bid.status !== 'accepted') {
+      return res.status(400).json({ error: 'Bid must be in accepted status to confirm' });
+    }
+
+    // Update bid status to confirmed
+    await db.query(
+      'UPDATE bids SET status = $1 WHERE id = $2',
+      ['confirmed', bidId]
+    );
+
+    // Get updated bid
+    const updatedBid = await db.query('SELECT * FROM bids WHERE id = $1', [bidId]);
+
+    res.json({
+      success: true,
+      data: {
+        id: updatedBid.rows[0].id,
+        status: updatedBid.rows[0].status,
+        message: 'Bid confirmed successfully'
+      }
+    });
+  } catch (error) {
+    console.error('Bid confirm error:', error);
+    res.status(500).json({ error: 'Failed to confirm bid' });
   }
 });
 

@@ -62,67 +62,9 @@ export const validateMessage = (content: string): ValidationResult => {
     return result;
   }
 
-  // SPECIAL CHECK: "massage" + sexual service terms = block (sex work detection)
-  const hasMassage = /massage/i.test(content);
-  const hasHappyEnding = /happy ending|ending service|special service|extra service|vip service|sexual|penetrat|orgasm|release/i.test(content);
-  if (hasMassage && hasHappyEnding) {
-    result.errors.push('❌ Sexual services not allowed. Keep messages task-focused.');
-    result.isValid = false;
-    return result;
-  }
-
-  // SPECIAL CHECK: "sex" + "party/gathering/event/meet/group/farm" = block
-  const hasSex = /sex|s3x|sx|s\*x|s#x|s@x|f\*ck|fxxx|f\*\*\*|fk|fcuk/i.test(content);
-  const hasIllicitContext = /party|gathering|event|meet|group|farm|trade|business|operation|house|den|ring/i.test(content);
-  if (hasSex && hasIllicitContext) {
-    result.errors.push('❌ Sexual content not allowed. Keep messages task-focused.');
-    result.isValid = false;
-    return result;
-  }
-
-  // SPECIAL CHECK: Advanced obfuscation detection
-  // Strategy: Check for letters with ANY characters between them
+  // For task chat - let Qwen AI handle content moderation
+  // Only do basic validation for contact sharing
   const lowerContent = content.toLowerCase();
-
-  // Create flexible patterns that allow ANY chars between key letters
-  // f[any]ck, s[any]x, c[any]ck, fxx, sxx, etc.
-  const obfuscationPatterns = [
-    /f[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*c[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*k/i, // fuck variants (fck, f*ck, fcgk)
-    /f[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]{2,}[kx]/i, // fxx, fxxx, fyyk, fxxk, fxxxk variants
-    /s[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*x/i, // sex variants
-    /c[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*ck/i, // cock variants
-    /p[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*rn/i, // porn variants
-    /s[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*xt/i, // sext variants
-    /d[a-z0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]*g/i, // drug variants
-  ];
-
-  const hasObfuscation = obfuscationPatterns.some(pattern => pattern.test(lowerContent));
-
-  if (hasObfuscation) {
-    result.errors.push('❌ Message contains inappropriate content. Keep messages professional and task-focused.');
-    result.isValid = false;
-    return result;
-  }
-
-  // SPECIAL CHECK: Code words and hidden meanings - remove numbers from phrase checking
-  // Remove numbers from content to catch obfuscated phrases like "over9" = "over"
-  const cleanedPhrase = lowerContent.replace(/[0-9@!#$%^&*()_+\-=\[\]{};:'",.<>?/\\|`~]+/g, ' ');
-
-  // Remove LOL, SUP, WYD - too many false positives for casual greetings
-  const codeWords = /\bzzz\b|\bz+\b(?=.*together)|lets.*together(?!.*work|.*help|.*study)|lets.*sleep|lets.*lay(?!.*floor|.*down for task)|together.*tonight|come.*my.*place|your.*place|come.*over|after.*time|one night stand|casual sex|hookup|booty call|fwb|friends with benefits|no strings attached|nsa|quick fix|quick meet|weekend getaway|getaway|fun time|good time|party time|lets party|lets have fun|dtf|bwc|bbc|gwm|ddf|pd|pw|bb|blow.*someone|blow me|blow job|eat.*me|eat.*someone|suck.*me|suck.*someone|swallow.*sperm|swallow.*cum|facial|creampie|lgpt/i.test(cleanedPhrase);
-
-  // Special check: LOL only in context with other suspicious phrases
-  const hasLOL = /\blol\b/i.test(cleanedPhrase);
-  const hasSuspiciousContext = /tonight|tonight|horny|hookup|come over|your place|my place|dtf|fwb|nsa|casual|quick|getaway|party/i.test(cleanedPhrase);
-  const lolInSuspiciousContext = hasLOL && hasSuspiciousContext;
-
-  const suggestiveContext = /\bzzz\b.*\btogether\b|\bcome\b.*\bover\b|\byour\b.*\bplace\b|\bmy\b.*\bplace\b|\bone\b.*\bnight\b.*\bstand\b|\bdtf\b|\bblow\b.*\bsomeone\b|\bblow\b.*\bme\b|\beat\b.*\bme\b|\beat\b.*\bsomeone\b|\bsuck\b.*\bme\b|\bsuck\b.*\bsomeone\b/i.test(cleanedPhrase);
-
-  if (codeWords || suggestiveContext || lolInSuspiciousContext) {
-    result.errors.push('❌ Message contains inappropriate content. Keep messages task-focused and professional.');
-    result.isValid = false;
-    return result;
-  }
 
   // Check for contact information
   if (CONTACT_PATTERNS.email.test(content)) {
@@ -154,61 +96,8 @@ export const validateMessage = (content: string): ValidationResult => {
     result.warnings.push('⚠️ Links should only point to relevant resources. Suspicious links may be flagged.');
   }
 
-  // Check for inappropriate content using match (avoids .test() g flag state issue)
-  if (content.match(INAPPROPRIATE_PATTERNS.profanity)) {
-    result.errors.push('❌ Profanity not allowed. Keep messages professional.');
-    result.isValid = false;
-  }
-
-  if (content.match(INAPPROPRIATE_PATTERNS.threats)) {
-    result.errors.push('❌ Threatening language not allowed.');
-    result.isValid = false;
-  }
-
-  if (content.match(INAPPROPRIATE_PATTERNS.harassment)) {
-    result.errors.push('❌ Disrespectful/harassing language not allowed.');
-    result.isValid = false;
-  }
-
-  if (content.match(INAPPROPRIATE_PATTERNS.sexualContent)) {
-    result.errors.push('❌ Sexual content not allowed. Keep messages task-focused.');
-    result.isValid = false;
-  }
-
-  if (content.match(INAPPROPRIATE_PATTERNS.drugs)) {
-    result.errors.push('❌ References to illegal drugs not allowed.');
-    result.isValid = false;
-  }
-
-  if (content.match(INAPPROPRIATE_PATTERNS.violence)) {
-    result.errors.push('❌ Violent/abusive content not allowed.');
-    result.isValid = false;
-  }
-
-  if (content.match(INAPPROPRIATE_PATTERNS.gambling)) {
-    result.errors.push('❌ Gambling and betting references not allowed.');
-    result.isValid = false;
-  }
-
-  if (content.match(INAPPROPRIATE_PATTERNS.scam)) {
-    result.errors.push('❌ Scam/fraudulent content not allowed.');
-    result.isValid = false;
-  }
-
-  // Check message length
-  if (content.length > 5000) {
-    result.warnings.push('⚠️ Message is very long (5000+ characters). Consider breaking it up.');
-  }
-
-  // Check for excessive repetition
-  if (/(.)\1{10,}/.test(content)) {
-    result.suggestions.push('💡 Excessive character repetition detected. Did you mean something else?');
-  }
-
-  // Basic spell check patterns
-  if (/teh |woudl|coulkd|shoudl/.test(content)) {
-    result.suggestions.push('💡 Possible spelling error detected. Review your message.');
-  }
+  // For task chat - let Qwen AI handle all content moderation
+  // Pattern validation is too strict for normal conversation
 
   return result;
 };
@@ -326,41 +215,27 @@ export const moderateWithAI = async (content: string): Promise<{
         messages: [
           {
             role: 'system',
-            content: `You are a content moderation expert for a task/errand marketplace. Your job is to determine if messages are appropriate.
+            content: `You are a content moderation expert for a task/errand marketplace chat. Be LENIENT - allow normal conversation between doer and asker.
 
-IMPORTANT: Block ANY mention of:
-1. DRUGS - Any illegal drug reference (weed, cocaine, heroin, etc.) = AUTO BLOCK
-2. SEX/PROSTITUTION - Sexual services or adult content = AUTO BLOCK
-3. GAMBLING - Betting, casinos, poker, lotteries = AUTO BLOCK
-4. SCAMS - Crypto, forex, MLM, wire transfers, pyramid schemes = AUTO BLOCK
-5. VIOLENCE/THREATS - Any violence, threats, or harmful intent = AUTO BLOCK
-
-These categories should NEVER be allowed - even in casual context.
+HARD BLOCKS ONLY (zero tolerance):
+1. DRUGS - Illegal drug references (cocaine, heroin, weed, meth, etc.)
+2. SEX WORK - Sexual services or prostitution offers
+3. VIOLENCE - Threats, violence, or harm
+4. SCAMS - Crypto investment, forex, MLM, wire transfers, pyramid schemes
 
 ✅ ALLOW:
-- Task-related questions and discussions
-- Professional help requests
-- Location mentions (hotel for cleaning, restaurant for delivery, etc.)
-- Normal business communication
-- Legitimate service questions
+- Task coordination ("when?", "what time?", "where?")
+- Greetings ("hello", "hi", "hey")
+- Questions about the job
+- Price discussion
+- Status updates
+- Casual chat and emoji
+- Location/address mentions for work
 
-Context-sensitive blocks:
-- 'Can you help clean my hotel?' = ALLOW (work request)
-- 'Want to meet at a hotel?' = BLOCK (romantic intent)
-- 'How do I set up a business?' = ALLOW (legitimate)
-- 'Want to join my investment opportunity?' = BLOCK (MLM/scam)
-
-HARD BLOCKS (automatic, zero tolerance):
-- Any drug mention = BLOCK
-- Any gambling mention = BLOCK
-- Any sexual services mention = BLOCK
-- Any obvious scam language = BLOCK
-- Any violence/threats = BLOCK
-
-Respond with ONLY JSON:
+Respond with JSON:
 {
   "isAppropriate": boolean,
-  "reason": "brief reason if blocking",
+  "reason": "reason only if blocking",
   "confidence": number 0-1
 }`,
           },

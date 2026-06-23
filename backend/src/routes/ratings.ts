@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { createNotification } from './notifications.js';
+import { awardEp, getRatingBonus } from '../services/gamificationService.js';
 
 const router = Router();
 
@@ -69,20 +70,55 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       [taskId, raterId, ratedUserId, rating, comment || null]
     );
 
-    // Get task title for notification
+    // Get rater info for notification
+    const raterResult = await db.query(
+      'SELECT display_name FROM users WHERE id = $1',
+      [raterId]
+    );
+    const raterName = raterResult.rows[0]?.display_name || 'Community Member';
+
+    // Get rated user info
     const ratedUserResult = await db.query(
       'SELECT email FROM users WHERE id = $1',
       [ratedUserId]
     );
 
-    // Notify rated user
-    await createNotification(
-      ratedUserId,
-      'rating_received',
-      '⭐ New Rating',
-      `You received a ${rating}-star rating for "${task.title}"`,
-      null
-    ).catch(console.error);
+    // Award EP to rated user IMMEDIATELY
+    const ratingBonus = getRatingBonus(rating);
+    let totalEpAwarded = 15 + ratingBonus; // 15 base + rating bonus
+
+    try {
+      const newTotalEp = await awardEp({
+        userId: ratedUserId,
+        amount: totalEpAwarded,
+        reason: `Rating received: ${rating}⭐ from ${raterName}`,
+        errandId: taskId,
+      });
+
+      // Create celebrating notification with EP earned
+      const ratingEmoji = rating >= 4 ? '⭐⭐' : '⭐';
+      const epEmoji = rating === 5 ? '🎉' : '✨';
+
+      const notificationTitle = rating >= 4
+        ? `${ratingEmoji} New Review from ${raterName}`
+        : `${ratingEmoji} New Review from ${raterName}`;
+
+      const notificationBody = rating === 5
+        ? `${raterName} loved your work on "${task.title}"! You earned ${totalEpAwarded} EP 🎉\n\nPayment releases in 24-48 hours if no dispute.`
+        : `${raterName} left you a ${Math.round(rating)}-star rating on "${task.title}". You earned ${totalEpAwarded} EP!`;
+
+      // Notify rated user with EP celebration
+      await createNotification(
+        ratedUserId,
+        'rating_received',
+        notificationTitle,
+        notificationBody,
+        null
+      ).catch(console.error);
+    } catch (epError) {
+      console.error('Error awarding EP:', epError);
+      // Don't fail the rating submission if EP awarding fails
+    }
 
     // Update user's average rating
     await updateUserRating(ratedUserId);

@@ -20,7 +20,7 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
     // Verify user is involved in task
     const taskResult = await db.query(
       `SELECT e.*, b.doer_id, u.display_name as asker_name FROM errands e
-       LEFT JOIN bids b ON e.id = b.errand_id AND b.status = 'accepted'
+       LEFT JOIN bids b ON e.id = b.errand_id AND b.status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress')
        LEFT JOIN users u ON e.asker_id = u.id
        WHERE e.id = $1`,
       [taskId]
@@ -51,6 +51,27 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
     );
 
     const message = messageResult.rows[0];
+
+    // Create in-app notification for recipient
+    try {
+      const recipientId = isAsker ? task.doer_id : task.asker_id;
+      const senderName = task.asker_id === senderId ? task.asker_name || 'Asker' : 'Doer';
+
+      await db.query(
+        `INSERT INTO notifications (user_id, type, title, body, action_url, created_at, read)
+         VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
+        [
+          recipientId,
+          'new_message',
+          `💬 New message from ${senderName}`,
+          `${senderName} sent: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
+          `/errand/${taskId}`,
+        ]
+      );
+    } catch (notifErr) {
+      console.warn('[Notification] Failed to create in-app notification:', notifErr);
+      // Don't fail the message if notification creation fails
+    }
 
     // Send email notification to the other user
     try {
@@ -210,7 +231,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
               asker.display_name as asker_name,
               doer.display_name as doer_name
        FROM errands e
-       LEFT JOIN bids b ON e.id = b.errand_id AND b.status = 'accepted'
+       LEFT JOIN bids b ON e.id = b.errand_id AND b.status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress')
        LEFT JOIN users asker ON e.asker_id = asker.id
        LEFT JOIN users doer ON b.doer_id = doer.id
        WHERE e.id = $1`,
@@ -257,6 +278,51 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
       }
     }
 
+    // Check if chat should be disabled (dispute raised or 48h after completion)
+    let chatDisabled = false;
+    let chatDisabledReason = '';
+
+    // Check for active disputes
+    const disputeResult = await db.query(
+      `SELECT id FROM disputes WHERE errand_id = $1 AND status IN ('open', 'in_progress')`,
+      [taskId]
+    );
+
+    if (disputeResult.rows.length > 0) {
+      chatDisabled = true;
+      chatDisabledReason = 'A dispute has been raised. Chat is disabled.';
+    }
+
+    // Check if job was completed more than 48 hours ago
+    if (!chatDisabled) {
+      const completionResult = await db.query(
+        `SELECT completed_at FROM errands WHERE id = $1 AND status = 'completed'`,
+        [taskId]
+      );
+
+      if (completionResult.rows.length > 0 && completionResult.rows[0].completed_at) {
+        const completedAt = new Date(completionResult.rows[0].completed_at).getTime();
+        const now = new Date().getTime();
+        const hoursElapsed = (now - completedAt) / (1000 * 60 * 60);
+
+        if (hoursElapsed > 48) {
+          chatDisabled = true;
+          chatDisabledReason = 'Chat was closed 48 hours after job completion.';
+        }
+      }
+    }
+
+    // Check if current user has favorited the other user
+    let isFavorited = false;
+    const otherUserId = isAsker ? task.doer_id : task.asker_id;
+    if (otherUserId) {
+      const favoriteResult = await db.query(
+        `SELECT id FROM user_favorites WHERE user_id = $1 AND favorite_user_id = $2`,
+        [userId, otherUserId]
+      );
+      isFavorited = favoriteResult.rows.length > 0;
+    }
+
     res.json({
       success: true,
       data: {
@@ -277,6 +343,11 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
           doerId: task.doer_id,
           doerName: task.doer_name || 'Unknown',
           doerOnline: task.doer_id ? userStatusMap[task.doer_id] || false : false,
+        },
+        chatStatus: {
+          isDisabled: chatDisabled,
+          reason: chatDisabledReason,
+          isFavorited: isFavorited,
         },
       },
     });
@@ -344,7 +415,7 @@ async function moderateMessage(content: string): Promise<{ status: 'SAFE' | 'FLA
       return { status: 'FLAG' };
     }
 
-    // Basic content checks (no Qwen call for now - just structural checks)
+    // Basic content checks
     const lowerContent = content.toLowerCase();
 
     // Check for obvious spam patterns
@@ -359,6 +430,175 @@ async function moderateMessage(content: string): Promise<{ status: 'SAFE' | 'FLA
       }
     }
 
+    // Use aggressive pattern-based moderation for explicit content
+    // Block obvious sexual/drug/violence terms - HIGH PRIORITY
+    const blockedPatterns = [
+      // Sexual content (30+ keywords)
+      /\bporn\b|\bpornograph/i,
+      /\bxxx\b/i,
+      /\bsex worker\b/i,
+      /\berotic\b/i,
+      /\borgasm\b/i,
+      /\bgenital\b/i,
+      /\bmasturbat/i,
+      /\bblowjob\b|\bblow job\b/i,
+      /\bhandjob\b/i,
+      /\bthreesome\b/i,
+      /\bfetish\b/i,
+      /\bstripper\b|\bstrip club\b/i,
+      /\bbooty call\b/i,
+      /\bone night stand\b/i,
+      /\bnudes\b/i,
+      /\bonlyfans\b/i,
+      /\bintercourse\b/i,
+      /\boral sex\b/i,
+      /\bescort service\b/i,
+      /\bhappy ending massage\b|\bhappy ending\b/i,
+      /\bspecial service\b/i,
+      /\bsex\b/i,
+      /\bsexual.*service\b|\bservice.*sexual\b/i,
+      /\bprostitut/i,
+      /\bsex work\b|\bsex.*work\b/i,
+      /\bescort\b/i,
+      /\bbdsm\b|\bbondage\b/i,
+      /\bkink\b/i,
+      /\bboobs\b|\bboobies\b/i,
+      /\bbreasts\b/i,
+
+      // Violence/threats/abuse (25+ keywords)
+      /\bmurder\b/i,
+      /\bstrangle\b/i,
+      /\bkidnap\b/i,
+      /\btorture\b/i,
+      /\bterrorist\b/i,
+      /\bsuicide bomb\b/i,
+      /\bmass shooting\b/i,
+      /\bbloodbath\b/i,
+      /\bdecapitate\b/i,
+      /\bdismember\b/i,
+      /\bi will kill\b|\bkill you\b|\bstab that\b|\bshoot him\b|\bshoot her\b|\bbomb your\b|\bgo die\b|\bkill all\b/i,
+      /\bi hate (you|u)\b/i,
+      /\byou suck\b/i,
+      /\byou're stupid\b/i,
+      /\byou're useless\b/i,
+      /\byou're trash\b/i,
+      /\byou're pathetic\b/i,
+      /\byou're a loser\b/i,
+      /\bgo kill yourself\b/i,
+      /\bkill yourself\b/i,
+      /\bdie\b.*\byou\b|\byou\b.*\bdie\b/i,
+
+      // Hate speech (16 keywords)
+      /\bnigger\b|\bnigga\b/i,
+      /\bchink\b/i,
+      /\bgook\b/i,
+      /\bspic\b/i,
+      /\bkike\b/i,
+      /\bwetback\b/i,
+      /\btowelhead\b/i,
+      /\braghead\b/i,
+      /\bwhite supremacy\b/i,
+      /\bethnic cleansing\b/i,
+      /\bgas chamber\b/i,
+      /\bgenocide\b/i,
+      /\bracial purity\b/i,
+      /\bkill all chinks\b|\bkill all niggers\b/i,
+
+      // Drug references
+      /\bheroin\b|\bcocaine\b|\bmeth\b|\bweed\b|\bcoke\b|\bcrack\b/i,
+      /\bdrug\b/i,
+      /\bmarijuana\b/i,
+
+      // Scams
+      /\bcrypto\b|\bbitcoin\b|\bforex\b/i,
+      /\bmlm\b|\bpyramid\b.*\bscheme\b/i,
+      /\bwire.*money\b|\bbank.*transfer\b.*\bupfront\b/i,
+    ];
+
+    for (const pattern of blockedPatterns) {
+      if (pattern.test(lowerContent)) {
+        console.log(`[Moderation] BLOCKED by pattern: "${content}"`);
+        return { status: 'FLAG' };
+      }
+    }
+
+    // Try Qwen API as secondary check (belt and suspenders)
+    const qwenApiKey = process.env.QWEN_API_KEY;
+    if (qwenApiKey) {
+      try {
+        const moderationResponse = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${qwenApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'qwen-turbo',
+            messages: [
+              {
+                role: 'system',
+                content: `You are a STRICT content moderation expert for task marketplace chat. Your job is to CATCH EVERYTHING inappropriate.
+
+BLOCK IMMEDIATELY for:
+1. SEXUAL CONTENT: Any sexual references, innuendo, flirting, sexual propositions, "special services", suggestive language
+2. VIOLENCE/THREATS: Kill, hurt, stab, shoot, bomb, torture, or any harm intent
+3. VERBAL ABUSE: Insults, curse words, name-calling, harassment, disrespect, rudeness
+4. HATE SPEECH: Racist/sexist/homophobic/transphobic slurs or dehumanizing language
+5. DRUGS: Heroin, cocaine, weed, meth, or any illegal substance references
+6. SCAMS: Crypto, MLM, wire money upfront, investment schemes
+
+ALSO BLOCK:
+- "I hate you" / "I hate u" = VERBAL ABUSE
+- "Do die" / "die" = THREATS
+- Suggestive emojis combined with sexual context 😏💦
+- Indirect sexual proposals ("netflix and chill", "come over", "let's hangout" + suggestive context)
+- Passive-aggressive insults ("you're not smart enough", "nobody likes you")
+- Threats disguised as jokes ("I'll find you", "I know where you live")
+- Sarcastic mocking or belittling language
+- Any expression of hate or wishing harm on someone
+
+CONTEXT MATTERS:
+- "Let's meet at the hotel to discuss the job" = OK
+- "Want to meet at a hotel?" (no job context) = BLOCK
+
+ALLOW ONLY:
+- Task coordination ("when?", "where?", "budget?", "details?")
+- Professional discussion
+- Friendly, respectful conversation
+
+Be VERY STRICT. When in doubt, BLOCK.
+Respond with ONLY: {"appropriate": true} or {"appropriate": false}`,
+              },
+              {
+                role: 'user',
+                content: `Message: "${content}"\n\nAnalyze for: explicit content, violence, verbal abuse, hate speech, aggressive tone.\nRespond with JSON only.`,
+              },
+            ],
+            temperature: 0.1, // Very low temp = strict
+          }),
+        });
+
+        if (moderationResponse.ok) {
+          const result = await moderationResponse.json();
+          const text = result.output?.text || '{"appropriate": true}';
+          try {
+            const parsed = JSON.parse(text);
+            if (parsed.appropriate === false) {
+              console.log(`[Moderation] Qwen FLAGGED (${parsed.reason}): "${content}"`);
+              return { status: 'FLAG' };
+            }
+          } catch (e) {
+            console.warn('[Moderation] Qwen JSON parse error, treating as SAFE');
+          }
+        } else {
+          console.warn(`[Moderation] Qwen API returned ${moderationResponse.status}`);
+        }
+      } catch (err) {
+        console.error('[Moderation] Qwen API error:', err);
+      }
+    }
+
+    // If we got here, message passed all checks
     return { status: 'SAFE' };
   } catch (error) {
     console.error('Moderation error:', error);

@@ -46,7 +46,7 @@ const DEFAULT_ADS: Ad[] = [
 
 export default function AdCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlay, setIsAutoPlay] = useState(true);
+  const [isAutoPlay, setIsAutoPlay] = useState(false);
 
   useEffect(() => {
     if (!isAutoPlay) return;

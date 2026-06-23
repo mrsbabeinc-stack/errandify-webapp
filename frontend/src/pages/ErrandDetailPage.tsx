@@ -12,11 +12,13 @@ interface ErrandDetail {
   errandId?: string;
   title: string;
   description?: string;
+  notes?: string;
   category: string;
   status: string;
   budget?: number;
   deadline?: string;
   location?: string;
+  postal_code?: string;
   askerId?: number;
   asker?: { name: string; mobile: string };
   doerName?: string;
@@ -192,6 +194,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   };
 
   const handleStartJob = async () => {
+    const confirmMessage = `🌟 Ready to Make a Difference?\n\n"${errand.title}"\n\nYou're about to help someone in your community. Your efforts will brighten their day and create positive impact.\n\nLet's get started! 💪`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       await axios.post(
@@ -201,7 +209,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      alert('✓ Job started! Get to work.');
+      alert('🚀 Amazing! You\'ve started the errand.\n\nYou\'re making a real difference in someone\'s life. Thank you for being an awesome community helper! 🌟');
       fetchErrandDetail();
     } catch (error: any) {
       console.error('Failed to start job:', error);
@@ -309,13 +317,18 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           )}
           {/* Header Section */}
           <div className="relative bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-1.5">
-            <div className="flex items-center justify-between gap-2 mb-0.5">
+            <div className="flex items-start justify-between gap-2 mb-0.5">
               <div className="flex-1">
                 <h1 className="text-base font-bold">
                   {errand.title}
                   {errand.doerName && <span className="text-xs font-normal text-orange-100"> • Posted by {errand.doerName}</span>}
                 </h1>
               </div>
+              {errand.budget && (
+                <div className="text-right flex-shrink-0">
+                  <p className="text-lg font-bold text-white">SGD ${parseFloat(String(errand.budget)).toFixed(0)}</p>
+                </div>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-1">
               <span
@@ -361,17 +374,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
           {/* Content Section */}
           <div className="p-1 space-y-1">
-            {/* Budget + Deadline + Location */}
+            {/* Deadline + Location */}
             <div className="grid grid-cols-1 gap-0.5">
-              {errand.budget && (
-                <div className="bg-orange-50 border-l-4 border-errandify-orange p-1 rounded">
-                  <p className="text-xs text-gray-600">Budget</p>
-                  <p className="text-sm font-bold text-errandify-orange">
-                    SGD ${parseFloat(String(errand.budget)).toFixed(0)}
-                  </p>
-                </div>
-              )}
-
               {errand.deadline && (
                 <div className="bg-orange-50 p-1 rounded-lg">
                   <p className="text-xs text-gray-600">Deadline</p>
@@ -389,32 +393,47 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               )}
 
               {errand.location && (
-                <div className="bg-orange-50 p-1 rounded-lg">
-                  <p className="text-xs text-gray-600">Location</p>
-                  <p className="text-xs text-gray-700">📍 {getMaskedLocation(errand.location)}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Exact address shown to confirmed doer only</p>
+                <div className="bg-orange-50 p-1 rounded-lg border-l-4 border-errandify-orange">
+                  <p className="text-xs text-gray-600">Full Address</p>
+                  {errand.status === 'confirmed' ? (
+                    <p className="text-xs text-gray-700 font-semibold">
+                      📍 {errand.location}{errand.postal_code && ` ${errand.postal_code}`}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-gray-700">📍 {getMaskedLocation(errand.location)}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Full address shown once job is confirmed</p>
+                    </>
+                  )}
                 </div>
               )}
             </div>
 
             {/* Description */}
-            {errand.description && (
-              <div>
-                <h2 className="font-semibold text-errandify-brown mb-1 text-sm">
-                  About This Errand
-                </h2>
-                <p className="text-xs text-gray-700 leading-relaxed">
-                  {errand.description}
-                </p>
-              </div>
-            )}
+            <div className="border-t border-gray-200 pt-2">
+              <h2 className="font-semibold text-errandify-brown mb-1 text-xs">
+                About This Errand
+              </h2>
+              <p className="text-xs text-gray-700 leading-relaxed">
+                {errand.description || 'No description provided'}
+              </p>
+            </div>
 
-            {/* Asker Info - Only show alias (contact hidden until accepted) */}
+            {/* Notes */}
+            <div className="border-t border-gray-200 pt-2">
+              <h2 className="font-semibold text-errandify-brown mb-1 text-xs">
+                📝 Additional Notes
+              </h2>
+              <p className="text-xs text-gray-700 leading-relaxed">
+                {errand.notes || 'No additional notes'}
+              </p>
+            </div>
+
+            {/* Asker Info - Only show alias */}
             {errand.asker && (
               <div className="border-t border-gray-200 pt-1 pb-1">
                 <p className="text-xs text-gray-600 font-semibold mb-0.5">Posted By</p>
                 <p className="text-xs text-gray-700 mb-0.5">{errand.asker.display_name || 'Anonymous'}</p>
-                <p className="text-xs text-gray-500 italic">Contact info shown only after offer confirmed</p>
               </div>
             )}
 
@@ -463,12 +482,20 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 </button>
               </div>
             ) : errand.status === 'confirmed' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
-              <button
-                onClick={handleStartJob}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors text-base mt-2"
-              >
-                ▶️ Start Job
-              </button>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setShowChat(true)}
+                  className="flex-1 bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition-colors text-base"
+                >
+                  💬 Chat
+                </button>
+                <button
+                  onClick={handleStartJob}
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors text-base"
+                >
+                  ▶️ Start Errand
+                </button>
+              </div>
             ) : errand.status === 'in_progress' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
               <button
                 onClick={() => navigate(`/task/${id}/complete`)}
@@ -551,23 +578,6 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           </div>
         )}
 
-
-        {/* Bid Count Section - Only for Doers */}
-        {currentUser && currentUser.id !== errand?.askerId && errand?.status === 'open' && (
-          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-800">📊 Offers Received</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {errand.bidCount === 0
-                    ? 'No offers yet. Be the first!'
-                    : `${errand.bidCount} offer${errand.bidCount !== 1 ? 's' : ''} from other doers`}
-                </p>
-              </div>
-              <div className="text-3xl font-bold text-blue-600">{errand.bidCount || 0}</div>
-            </div>
-          </div>
-        )}
 
       </div>
 

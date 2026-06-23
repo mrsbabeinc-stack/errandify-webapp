@@ -53,6 +53,9 @@ export default function TaskChatbox({
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [validationSuggestions, setValidationSuggestions] = useState<string[]>([]);
   const [blockReason, setBlockReason] = useState<string>('');
+  const [chatDisabled, setChatDisabled] = useState(false);
+  const [chatDisabledReason, setChatDisabledReason] = useState('');
+  const [isFavorited, setIsFavorited] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -82,6 +85,15 @@ export default function TaskChatbox({
         }
       );
       setMessages(response.data.data.messages || response.data.data);
+
+      // Check chat status (dispute, completion time, etc.)
+      if (response.data.data.chatStatus) {
+        const { isDisabled, reason, isFavorited: favStatus } = response.data.data.chatStatus;
+        setChatDisabled(isDisabled);
+        setChatDisabledReason(reason || '');
+        setIsFavorited(favStatus || false);
+      }
+
       // Update online status and user IDs if available
       if (response.data.data.participantStatus) {
         const currentUser = localStorage.getItem('user');
@@ -108,6 +120,13 @@ export default function TaskChatbox({
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
+
+    // Check if chat is disabled
+    if (chatDisabled) {
+      setError(`❌ Chat is closed. ${chatDisabledReason}`);
+      setValidationErrors([`Chat is no longer available. ${chatDisabledReason}`]);
+      return;
+    }
 
     // First: Quick pattern validation (contact info + drugs/violence/scams)
     const validation = validateMessage(newMessage);
@@ -270,6 +289,42 @@ Your message doesn't meet our community standards. Please keep messages:
     }
   };
 
+  const handleFavorite = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const otherUserId = currentUserId === askerId ? doerId : askerId;
+
+      if (!otherUserId) {
+        setError('Could not determine the other participant');
+        return;
+      }
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/favorite/${otherUserId}`,
+        { taskId },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      console.log('Favorite response:', response.data);
+
+      // Toggle the favorite state
+      setIsFavorited(response.data.favorited);
+
+      // Show success message
+      const message = response.data.favorited ? '❤️ Added to favorites!' : '🤍 Removed from favorites';
+      addNotification({
+        type: 'success',
+        title: 'Favorite Updated',
+        message: message,
+      });
+    } catch (err: any) {
+      console.error('Failed to update favorite:', err);
+      setError(err.response?.data?.error || 'Failed to update favorite');
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -278,10 +333,7 @@ Your message doesn't meet our community standards. Please keep messages:
         {/* Header - Full Width */}
         <div className="bg-errandify-brown text-white p-3 flex items-start justify-between gap-2">
           <div className="flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-bold text-sm">Chat with {currentUserId === askerId ? doerName : askerName}</h3>
-              <span className={`inline-block w-2 h-2 rounded-full ${otherUserOnline ? 'bg-green-400' : 'bg-red-400'}`} title={otherUserOnline ? 'Online' : 'Offline'} />
-            </div>
+            <h3 className="font-bold text-sm">💬 {taskTitle} (#{taskId})</h3>
           </div>
           <button
             onClick={onClose}
@@ -311,12 +363,16 @@ Your message doesn't meet our community standards. Please keep messages:
                   msg.flagged ? 'opacity-60' : ''
                 }`}
               >
-                {msg.senderAvatar && (
+                {msg.senderAvatar ? (
                   <img
                     src={msg.senderAvatar}
                     alt={msg.senderName}
-                    className="w-6 h-6 rounded-full flex-shrink-0"
+                    className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
                   />
+                ) : (
+                  <div className="w-8 h-8 rounded-full flex-shrink-0 bg-gradient-to-br from-blue-300 to-purple-400 flex items-center justify-center text-sm font-bold text-white">
+                    🎨
+                  </div>
                 )}
                 <div className="flex-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
@@ -331,7 +387,7 @@ Your message doesn't meet our community standards. Please keep messages:
                       {msg.senderId === askerId ? 'Asker' : 'Doer'}
                     </span>
                     <p className="text-xs text-gray-500">
-                      {new Date(msg.createdAt).toLocaleTimeString('en-SG', {
+                      {new Date(msg.createdAt).toLocaleDateString('en-SG')} {new Date(msg.createdAt).toLocaleTimeString('en-SG', {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
@@ -516,37 +572,104 @@ Your message doesn't meet our community standards. Please keep messages:
           {/* Right Sidebar - Errand Details */}
           {errandDetails && (
             <div className="w-80 flex flex-col border-l border-gray-200 bg-gray-50 p-4 overflow-y-auto">
-              <h4 className="font-bold text-sm text-gray-800 mb-3">📋 Errand Details</h4>
+              {/* Participants */}
+              <div className="mb-4 pb-4 border-b border-gray-200">
+                <h4 className="font-bold text-sm text-gray-800 mb-3">👥 Participants</h4>
 
-              {errandDetails.budget && (
-                <div className="mb-3">
-                  <p className="text-xs text-gray-500">Budget</p>
-                  <p className="text-sm font-bold text-gray-800">SGD ${errandDetails.budget}</p>
+                {/* Asker - Always show */}
+                <div className="flex items-center gap-2 justify-between mb-3">
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                      A
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-gray-900">Asker</p>
+                      <p className="text-xs text-gray-600">{askerName}</p>
+                    </div>
+                  </div>
+                  {/* Heart only if current user is DOER (not asker) */}
+                  {currentUserId === doerId && (
+                    <button
+                      onClick={handleFavorite}
+                      className={`text-lg transition ${isFavorited ? 'text-red-500' : 'text-gray-300 hover:text-red-400'}`}
+                      title={isFavorited ? 'Remove favorite' : 'Add favorite'}
+                    >
+                      {isFavorited ? '❤️' : '🤍'}
+                    </button>
+                  )}
                 </div>
-              )}
 
-              {errandDetails.deadline && (
-                <div className="mb-3">
-                  <p className="text-xs text-gray-500">Deadline</p>
-                  <p className="text-sm text-gray-700">
-                    {new Date(errandDetails.deadline).toLocaleDateString('en-SG')} {new Date(errandDetails.deadline).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}
+                {/* Doer - Always show */}
+                <div className="flex items-center gap-2 justify-between">
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="w-8 h-8 rounded-full bg-green-200 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                      D
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-gray-900">Doer</p>
+                      <p className="text-xs text-gray-600">{doerName}</p>
+                    </div>
+                  </div>
+                  {/* Heart only if current user is ASKER (not doer) */}
+                  {currentUserId === askerId && (
+                    <button
+                      onClick={handleFavorite}
+                      className={`text-lg transition ${isFavorited ? 'text-red-500' : 'text-gray-300 hover:text-red-400'}`}
+                      title={isFavorited ? 'Remove favorite' : 'Add favorite'}
+                    >
+                      {isFavorited ? '❤️' : '🤍'}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <h4 className="font-bold text-sm text-gray-800 mb-4">📋 Errand Details</h4>
+
+              <div className="space-y-3 text-xs">
+                {/* Budget */}
+                <div>
+                  <p className="text-gray-500 font-semibold">💰 Budget</p>
+                  <p className="text-sm font-bold text-errandify-orange">
+                    {errandDetails.budget ? `SGD $${errandDetails.budget}` : 'Not specified'}
                   </p>
                 </div>
-              )}
 
-              {errandDetails.location && (
-                <div className="mb-3">
-                  <p className="text-xs text-gray-500">Location</p>
-                  <p className="text-sm text-gray-700">📍 {errandDetails.location}</p>
-                </div>
-              )}
-
-              {errandDetails.description && (
+                {/* Location */}
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Description</p>
-                  <p className="text-xs text-gray-700 leading-relaxed line-clamp-4">{errandDetails.description}</p>
+                  <p className="text-gray-500 font-semibold">📍 Location</p>
+                  <p className="text-sm text-gray-700">
+                    {errandDetails.location || 'Not specified'}
+                  </p>
+                  {errandDetails.postal && (
+                    <p className="text-sm text-gray-600">Postal: {errandDetails.postal}</p>
+                  )}
                 </div>
-              )}
+
+                {/* Date & Time */}
+                <div>
+                  <p className="text-gray-500 font-semibold">🕐 Date & Time</p>
+                  {errandDetails.deadline ? (
+                    <>
+                      <p className="text-sm text-gray-700">
+                        {new Date(errandDetails.deadline).toLocaleDateString('en-SG')}
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        {new Date(errandDetails.deadline).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-600">Not specified</p>
+                  )}
+                </div>
+
+                {/* Description */}
+                <div className="border-t pt-3">
+                  <p className="text-gray-500 font-semibold">📝 Description</p>
+                  <p className="text-xs text-gray-700 leading-relaxed line-clamp-6">
+                    {errandDetails.description || 'No description provided'}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>
