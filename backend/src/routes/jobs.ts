@@ -107,66 +107,44 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
       return res.status(400).json({ error: 'Maximum 5 photos allowed' });
     }
 
-    const client = await db.query('BEGIN TRANSACTION');
+    // Calculate payment release time (48 hours from now)
+    const paymentReleaseAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
 
-    try {
-      // Calculate payment release time (48 hours from now)
-      const paymentReleaseAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    // Update task status
+    const updateResult = await db.query(
+      `UPDATE errands
+       SET status = $1,
+           completed_at = NOW(),
+           payment_release_at = $2,
+           completion_notes = $3,
+           updated_at = NOW()
+       WHERE id = $4
+       RETURNING id, status, completed_at, payment_release_at`,
+      ['completed_unconfirmed', paymentReleaseAt, completionNotes || null, taskId]
+    );
 
-      // Update task status
-      const updateResult = await db.query(
-        `UPDATE errands
-         SET status = $1,
-             completed_at = NOW(),
-             payment_release_at = $2,
-             completion_notes = $3,
-             updated_at = NOW()
-         WHERE id = $4
-         RETURNING id, status, completed_at, payment_release_at`,
-        ['completed_unconfirmed', paymentReleaseAt, completionNotes || null, taskId]
-      );
-
-      // Store photos if provided
-      if (photoUrls && photoUrls.length > 0) {
-        for (const photoUrl of photoUrls) {
-          await db.query(
-            `INSERT INTO task_photos (task_id, photo_url, uploaded_by, uploaded_at)
-             VALUES ($1, $2, $3, NOW())`,
-            [taskId, photoUrl, doerId]
-          );
-        }
+    // Store photos if provided
+    if (photoUrls && photoUrls.length > 0) {
+      for (const photoUrl of photoUrls) {
+        await db.query(
+          `INSERT INTO task_photos (task_id, photo_url, uploaded_by, uploaded_at)
+           VALUES ($1, $2, $3, NOW())`,
+          [taskId, photoUrl, doerId]
+        );
       }
-
-      await db.query('COMMIT');
-
-      // Get asker info for notification
-      const askerResult = await db.query(
-        'SELECT id, display_name FROM users WHERE id = $1',
-        [task.asker_id]
-      );
-
-      // Format payment release time for user display
-      const releaseDate = new Date(paymentReleaseAt);
-      const releaseTimeStr = releaseDate.toLocaleString('en-SG');
-
-      // TODO: Send push notification to asker
-      // Message: "Hi [Name] 🌸 [Doer] has completed '[task title]'. Please confirm or raise a dispute before [payment_release_at time]. Otherwise payment releases automatically."
-
-      res.status(201).json({
-        success: true,
-        data: {
-          taskId: updateResult.rows[0].id,
-          status: updateResult.rows[0].status,
-          completedAt: updateResult.rows[0].completed_at,
-          paymentReleaseAt: updateResult.rows[0].payment_release_at,
-          photosUploaded: photoUrls ? photoUrls.length : 0,
-          message: `Job completed! Payment will be released automatically in 48 hours unless asker raises a dispute.`,
-        },
-      });
-    } catch (err) {
-      await db.query('ROLLBACK');
-      throw err;
     }
+
+    res.status(201).json({
+      success: true,
+      data: {
+        taskId: updateResult.rows[0].id,
+        status: updateResult.rows[0].status,
+        completedAt: updateResult.rows[0].completed_at,
+        paymentReleaseAt: updateResult.rows[0].payment_release_at,
+        photosUploaded: photoUrls ? photoUrls.length : 0,
+        message: `Job completed! Payment will be released automatically in 48 hours unless asker raises a dispute.`,
+      },
+    });
   } catch (error) {
     console.error('Complete job error:', error);
     res.status(500).json({ error: 'Failed to complete job' });
