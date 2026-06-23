@@ -94,9 +94,9 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
 
     const task = taskResult.rows[0];
 
-    // Allow completion from both 'in_progress' and 'confirmed' status
-    if (!['in_progress', 'confirmed'].includes(task.status)) {
-      return res.status(400).json({ error: `Task must be in progress to complete. Current status: ${task.status}` });
+    // Allow completion from 'in_progress', 'confirmed', or 'completed' (for resubmission)
+    if (!['in_progress', 'confirmed', 'completed'].includes(task.status)) {
+      return res.status(400).json({ error: `Task must be in progress or completed to resubmit. Current status: ${task.status}` });
     }
 
     if (!task.doer_id || task.doer_id !== doerId) {
