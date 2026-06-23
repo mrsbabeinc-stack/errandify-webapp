@@ -79,9 +79,9 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
     const doerId = parseInt(req.userId || '0', 10);
     const { photoUrls, completionNotes } = req.body; // Array of photo URLs (pre-uploaded to cloud) + completion notes
 
-    // Get task - no need for bid join
+    // Get task with doer info
     const taskResult = await db.query(
-      `SELECT id, title, status, description FROM errands WHERE id = $1`,
+      `SELECT id, title, status, description, doer_id FROM errands WHERE id = $1`,
       [taskId]
     );
 
