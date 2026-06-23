@@ -574,7 +574,6 @@ Your message doesn't meet our community standards. Please keep messages:
             <div className="w-80 flex flex-col border-l border-gray-200 bg-gray-50 p-4 overflow-y-auto">
               {/* Participants */}
               <div className="mb-4 pb-4 border-b border-gray-200">
-                <h4 className="font-bold text-sm text-gray-800 mb-3">👥 Participants</h4>
 
                 {/* Asker - Always show */}
                 <div className="flex items-center gap-2 justify-between mb-3">
