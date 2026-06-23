@@ -81,7 +81,7 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
 
     // Get task with doer info from bids table
     const taskResult = await db.query(
-      `SELECT e.id, e.title, e.status, e.description, b.doer_id
+      `SELECT e.id, e.title, e.status, e.description, e.errand_id as errand_id_formatted, b.doer_id
        FROM errands e
        LEFT JOIN bids b ON e.id = b.errand_id AND b.status = 'confirmed'
        WHERE e.id = $1`,
@@ -132,13 +132,18 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
       [taskId, currentSubmissionNumber, completionNotes || '', doerId, 'pending']
     );
 
-    // Store files organized by submission
+    // Store files organized by submission with Errand ID format naming
     if (photoUrls && photoUrls.length > 0) {
-      for (const photoUrl of photoUrls) {
+      const errandIdFormatted = task.errand_id_formatted;
+      for (let i = 0; i < photoUrls.length; i++) {
+        const photoUrl = photoUrls[i];
+        // File naming: ERR2026-XX-8ac45e_submission_1_photo_1.jpg
+        const fileName = `${errandIdFormatted}_submission_${currentSubmissionNumber}_photo_${i + 1}`;
+
         await db.query(
-          `INSERT INTO task_files (errand_id, submission_number, file_url, file_name, uploaded_by)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [taskId, currentSubmissionNumber, photoUrl, `submission_${currentSubmissionNumber}_file`, doerId]
+          `INSERT INTO task_files (errand_id, errand_id_formatted, submission_number, file_url, file_name, uploaded_by)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [taskId, errandIdFormatted, currentSubmissionNumber, photoUrl, fileName, doerId]
         );
       }
     }
@@ -404,11 +409,12 @@ router.get('/:taskId/submissions', authMiddleware, async (req: AuthRequest, res:
       [taskId]
     );
 
-    // Get all files organized by submission
+    // Get all files organized by submission with Errand ID format
     const filesResult = await db.query(
       `SELECT
         id,
         errand_id,
+        errand_id_formatted,
         submission_number,
         file_url,
         file_name,
