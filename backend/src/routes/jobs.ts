@@ -107,14 +107,14 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
       return res.status(400).json({ error: 'Maximum 5 photos allowed' });
     }
 
-    // Update task status to completed_unconfirmed
+    // Update task status to completed
     const updateResult = await db.query(
       `UPDATE errands
        SET status = $1,
            updated_at = NOW()
        WHERE id = $2
        RETURNING id, status, updated_at`,
-      ['completed_unconfirmed', taskId]
+      ['completed', taskId]
     );
 
     // Store photos if provided
