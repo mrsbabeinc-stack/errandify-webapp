@@ -23,6 +23,8 @@ export default function NotificationsPage() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<(Notification | BackendNotification)[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -139,10 +141,15 @@ export default function NotificationsPage() {
     }
   };
 
-  const filteredNotifications =
-    filter === 'unread'
-      ? notifications.filter((n) => !n.read)
-      : notifications;
+  const filteredNotifications = notifications
+    .filter((n) => (filter === 'unread' ? !n.read : true))
+    .filter((n) => (typeFilter === 'all' ? true : n.type === typeFilter))
+    .filter((n) =>
+      searchText === ''
+        ? true
+        : n.title.toLowerCase().includes(searchText.toLowerCase()) ||
+          (n.message && n.message.toLowerCase().includes(searchText.toLowerCase()))
+    );
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -202,6 +209,32 @@ export default function NotificationsPage() {
           >
             Unread ({notifications.filter((n) => !n.read).length})
           </button>
+        </div>
+
+        {/* SEARCH AND FILTERS */}
+        <div className="max-w-4xl mx-auto px-3 py-2 border-t border-white border-opacity-20 space-y-1.5">
+          <input
+            type="text"
+            placeholder="🔍 Search notifications..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="w-full px-2 py-1 text-xs text-gray-800 rounded border-0 outline-none"
+          />
+          <div className="flex gap-1 flex-wrap">
+            {['all', 'offer', 'message', 'status'].map((type) => (
+              <button
+                key={type}
+                onClick={() => setTypeFilter(type)}
+                className={`text-xs px-2 py-0.5 rounded transition ${
+                  typeFilter === type
+                    ? 'bg-white text-errandify-orange font-bold'
+                    : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
+                }`}
+              >
+                {type === 'all' ? '📋 All' : type === 'offer' ? '💰 Offers' : type === 'message' ? '💬 Messages' : '📊 Status'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
