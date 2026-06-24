@@ -589,12 +589,22 @@ Your message doesn't meet our community standards. Please keep messages:
                   <>
                     <div className="flex items-center gap-2 justify-between mb-3 p-2 bg-green-50 rounded-lg border border-green-200">
                       <div className="flex items-center gap-2 flex-1">
-                        <div className="w-8 h-8 rounded-full bg-green-300 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                        <div className="relative w-8 h-8 rounded-full bg-green-300 flex items-center justify-center flex-shrink-0 text-xs font-bold">
                           D
+                          {otherUserOnline !== null && (
+                            <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${otherUserOnline ? 'bg-green-500' : 'bg-gray-400'}`} title={otherUserOnline ? 'Online' : 'Offline'} />
+                          )}
                         </div>
                         <div className="flex-1">
                           <p className="text-xs text-green-700 font-semibold">Your Doer</p>
-                          <p className="text-sm text-gray-900 font-bold">{doerName || 'Doer'}</p>
+                          <div className="flex items-center gap-1">
+                            <p className="text-sm text-gray-900 font-bold">{doerName || 'Doer'}</p>
+                            {otherUserOnline !== null && (
+                              <span className="text-xs text-gray-500">
+                                {otherUserOnline ? '🟢 Online' : '⚪ Offline'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <button
@@ -615,12 +625,22 @@ Your message doesn't meet our community standards. Please keep messages:
                   <>
                     <div className="flex items-center gap-2 justify-between mb-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
                       <div className="flex items-center gap-2 flex-1">
-                        <div className="w-8 h-8 rounded-full bg-blue-300 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                        <div className="relative w-8 h-8 rounded-full bg-blue-300 flex items-center justify-center flex-shrink-0 text-xs font-bold">
                           A
+                          {otherUserOnline !== null && (
+                            <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${otherUserOnline ? 'bg-green-500' : 'bg-gray-400'}`} title={otherUserOnline ? 'Online' : 'Offline'} />
+                          )}
                         </div>
                         <div className="flex-1">
                           <p className="text-xs text-blue-700 font-semibold">Your Asker</p>
-                          <p className="text-sm text-gray-900 font-bold">{askerName || 'Asker'}</p>
+                          <div className="flex items-center gap-1">
+                            <p className="text-sm text-gray-900 font-bold">{askerName || 'Asker'}</p>
+                            {otherUserOnline !== null && (
+                              <span className="text-xs text-gray-500">
+                                {otherUserOnline ? '🟢 Online' : '⚪ Offline'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <button
