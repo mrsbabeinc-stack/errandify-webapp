@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { notificationService } from '../services/notifications';
+import { getNotifications } from '../utils/notificationStore';
 
 interface BottomNavProps {
   onLogout: () => void;
@@ -27,14 +27,14 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   useEffect(() => {
     fetchProfileImage();
 
-    // Subscribe to notification changes
-    const unsubscribe = notificationService.subscribe((notifications) => {
+    // Check for notifications and unread chats
+    const checkNotifications = () => {
+      // Get unread notification count from store
+      const notifications = getNotifications();
       const unread = notifications.filter(n => !n.read).length;
       setUnreadNotifications(unread);
-    });
 
-    // Check for unread chats
-    const checkUnread = () => {
+      // Check for unread chats
       const stored = localStorage.getItem('unreadChats');
       if (stored) {
         const unreadMap = JSON.parse(stored);
@@ -42,11 +42,11 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
         setUnreadCount(total);
       }
     };
-    checkUnread();
-    const interval = setInterval(checkUnread, 2000);
+
+    checkNotifications();
+    const interval = setInterval(checkNotifications, 1000);
 
     return () => {
-      unsubscribe();
       clearInterval(interval);
     };
   }, []);
