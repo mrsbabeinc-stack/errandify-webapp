@@ -28,6 +28,7 @@ import adminRoutes from './routes/admin.js';
 import questionsRoutes from './routes/questions.js';
 import emailRoutes from './routes/email.js';
 import newsRoutes from './routes/news.js';
+import referralRoutes from './routes/referrals.js';
 import { startCrons } from './cron.js';
 
 const app = express();
@@ -70,6 +71,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/questions', questionsRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/news', newsRoutes);
+app.use('/api/referrals', referralRoutes);
 app.use('/api', hanaRoutes);
 
 // Error handling
