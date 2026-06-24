@@ -132,12 +132,10 @@ But there was something else: pride.
 
 **📊 EILEEN'S SALARY PROGRESSION**
 
-```
-Year 1:  Part-time    → $1,800/month  📈
-Year 3:  More hours   → $2,600/month  📈
-Year 5:  Full-time    → $3,500/month  📈
-Year 7:  GM (Today)   → $5,200/month  ✅
-```
+Year 1:  Part-time    → $1,800/month
+Year 3:  More hours   → $2,600/month
+Year 5:  Full-time    → $3,500/month
+Year 7:  GM (Today)   → $5,200/month
 
 150% salary increase while being present for her family.
 
@@ -384,13 +382,11 @@ The flexibility gave her runway. She could build something without the pressure 
 
 **📊 CARMEN'S 12-MONTH JOURNEY**
 
-```
 Month 1-3:   Grab only           → $1,200-1,500/month (Desperate)
 Month 4-6:   Grab + Mini Chef    → $1,500 + emerging revenue (Hope)
 Month 7-9:   Grab + Mini Chef    → $1,500 + $800-1,200 (Growing)
 Month 10-12: Grab + Mini Chef    → $1,500 + $2,000-2,500 (Thriving)
 Today (Y3):  Mini Chef primary   → $4,200-5,000/month combined ✅
-```
 
 From survival to thriving in 12 months.
 
@@ -591,12 +587,10 @@ THE SALARY REALITY (What Care Workers Actually Earn in 2026)
 
 **💰 SALARY COMPARISON: Why Care Work Stands Out**
 
-```
 Retail Worker:      $15-16/hr  →  ~$1,800/month
 F&B Service Staff:  $14-15/hr  →  ~$1,700/month
 🌟 CARE WORKER:     $18-19/hr  →  ~$2,400/month
 Cleaning Staff:     $16-18/hr  →  ~$2,000/month
-```
 
 Care work pays 25-40% MORE than other service jobs.
 
@@ -878,11 +872,9 @@ That selectivity changed everything.
 
 **📊 TANESHA'S CAREER CHANGE PROGRESSION**
 
-```
 Before:      Corporate      → $3,500/month, 45 hrs/week  (Unhappy)
 Transition:  Flexible       → $2,100/month, 25-30 hrs/week (Hopeful)
 After Y2:    Freelance      → $3,800-4,200/month, 30-35 hrs/week ✅ (Thriving)
-```
 
 Higher income. Fewer hours. Complete control.
 
@@ -1226,24 +1218,20 @@ THE REAL COST (IN NUMBERS)
 **Example: Two professionals starting same role, same salary**
 
 **Male trajectory:**
-```
 Year 1:     $4,000/month
 Year 2:     $4,200/month
 Parenthood: $4,500/month (salary increases)
 Year 5:     $5,200/month
 Year 10:    $6,500/month
 20-year total: $1,320,000
-```
 
 **Female trajectory:**
-```
 Year 1:     $4,000/month
 Year 2:     $4,200/month
 Parenthood: Takes 6 months off → Returns at $4,200
 Year 5:     $4,800/month (slower advancement)
 Year 10:    $5,600/month
 20-year total: $1,188,000
-```
 
 **The difference: $132,000** (or $6,600/year average)
 
@@ -1253,13 +1241,11 @@ Over a lifetime, the gap becomes retirement underfunding, reduced wealth, less f
 
 **💔 THE GAP VISUALIZED**
 
-```
 Over 20 years:
 Man:    ████████████ $1,320,000
 Woman:  ███████████  $1,188,000
         ─────────────────────────
 Gap:              $132,000
-```
 
 That's a car. A house down payment. A child's education.
 
@@ -1480,13 +1466,11 @@ After January 1, 2025, gig workers in Singapore now have:
 
 **✅ WHAT YOU NOW HAVE**
 
-```
 BEFORE (2024)          AFTER (2025-2026)
 ❌ No status           ✅ Legal recognition
 ❌ No protection       ✅ Injury compensation
 ❌ No recourse         ✅ Dispute resolution
 ❌ Arbitrary rules     ✅ Transparent terms
-```
 
 You went from unprotected to protected.
 
