@@ -31,6 +31,8 @@ import newsRoutes from './routes/news.js';
 import referralRoutes from './routes/referrals.js';
 import speechRoutes from './routes/speech.js';
 import activityLogRoutes from './routes/activityLog.js';
+import mockAuthRoutes from './routes/mockAuth.js';
+import mockPaymentRoutes from './routes/mockPayment.js';
 import { startCrons } from './cron.js';
 
 const app = express();
@@ -45,6 +47,11 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
+// MOCK TESTING ROUTES (for development/testing only)
+app.use('/api/mock-auth', mockAuthRoutes);
+app.use('/api/mock-payment', mockPaymentRoutes);
+
+// REAL ROUTES
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/users', userRoutes);
