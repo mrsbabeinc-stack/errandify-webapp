@@ -1411,6 +1411,18 @@ export default function MyKampungPage() {
             onMouseEnter={() => handleBlogPostRead(selectedBlogPost.id)}
           >
             <div className="bg-white rounded-t-2xl sm:rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Featured Image */}
+              {selectedBlogPost.featuredImage && (
+                <img
+                  src={selectedBlogPost.featuredImage}
+                  alt={selectedBlogPost.title}
+                  className="w-full h-64 object-cover"
+                  onError={(e) => {
+                    console.error('Featured image failed to load:', selectedBlogPost.featuredImage);
+                  }}
+                />
+              )}
+
               {/* Header */}
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
                 <div className="flex-1">
@@ -1444,44 +1456,53 @@ export default function MyKampungPage() {
                 </div>
 
                 {/* Article Content */}
-                <div className="text-gray-700 leading-relaxed text-sm">
-                  {selectedBlogPost.content.split('\n').map((paragraph: string, idx: number) => {
-                    // Check if line contains image markdown ![alt](url)
-                    const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/;
-                    const match = paragraph.match(imageRegex);
+                <div className="text-gray-700 leading-relaxed text-sm space-y-4">
+                  {selectedBlogPost.content.split('\n\n').map((block: string, idx: number) => {
+                    // Check if block contains image markdown ![alt](url)
+                    const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+                    const imageMatches = [...block.matchAll(imageRegex)];
 
-                    if (match) {
+                    if (imageMatches.length > 0) {
                       return (
-                        <img
-                          key={idx}
-                          src={match[2]}
-                          alt={match[1]}
-                          className="w-full h-auto rounded-lg my-4 object-cover"
-                          onError={(e) => {
-                            console.error('Image failed to load:', match[2]);
-                          }}
-                        />
+                        <div key={idx}>
+                          {imageMatches.map((match, imgIdx) => (
+                            <div key={`${idx}-${imgIdx}`} className="my-4">
+                              <img
+                                src={match[2]}
+                                alt={match[1]}
+                                className="w-full h-auto rounded-lg object-cover"
+                                onError={(e) => {
+                                  console.error('Image failed to load:', match[2]);
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                              {match[1] && (
+                                <p className="text-xs text-gray-500 mt-2 italic">{match[1]}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       );
                     }
 
-                    // Check if line is empty or just whitespace
-                    if (!paragraph.trim()) {
-                      return <div key={idx} className="h-2" />;
+                    // Check if block is empty
+                    if (!block.trim()) {
+                      return null;
                     }
 
-                    // Check if line is a heading (starts with #, ##, etc.)
-                    if (paragraph.trim().startsWith('**') && paragraph.trim().endsWith('**')) {
+                    // Check if line is a heading (wrapped in **)
+                    if (block.trim().startsWith('**') && block.trim().endsWith('**')) {
                       return (
-                        <h3 key={idx} className="text-sm font-bold mt-4 mb-2 text-gray-900">
-                          {paragraph.replace(/\*\*/g, '')}
+                        <h3 key={idx} className="text-base font-bold mt-6 mb-3 text-gray-900">
+                          {block.trim().replace(/\*\*/g, '')}
                         </h3>
                       );
                     }
 
                     // Regular paragraph
                     return (
-                      <p key={idx} className="mb-3 text-gray-700">
-                        {paragraph.replace(/\*\*/g, '')}
+                      <p key={idx} className="mb-3 text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        {block.trim().replace(/\*\*/g, '')}
                       </p>
                     );
                   })}
