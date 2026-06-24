@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint src --ext ts",
-    "seed:blog": "tsx src/db/seed-blog-production.ts"
+    "seed:blog": "tsx src/db/seed-blog-production.ts",
+    "seed:errands": "tsx src/scripts/seed-sample-errands.ts"
   },
   "dependencies": {
     "axios": "^1.6.0",
