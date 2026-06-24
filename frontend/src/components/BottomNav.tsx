@@ -174,7 +174,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
           {userRole === 'asker' && (
             <button
               onClick={onCreateTask}
-              className="absolute left-1/2 -translate-x-1/2 -top-5 w-14 h-14 bg-gradient-to-br from-errandify-orange via-orange-500 to-orange-600 text-white rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all transform flex items-center justify-center font-bold text-2xl border-4 border-errandify-bg active:scale-95 z-50"
+              className="absolute left-1/3 -translate-x-1/2 -top-5 w-14 h-14 bg-gradient-to-br from-errandify-orange via-orange-500 to-orange-600 text-white rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all transform flex items-center justify-center font-bold text-2xl border-4 border-errandify-bg active:scale-95 z-50"
               title="Create new errand"
             >
               +
