@@ -10,27 +10,23 @@ async function backfillActivityLog() {
         e.id,
         e.title,
         e.asker_id,
-        u_asker.full_name as asker_name,
+        u_asker.display_name as asker_name,
         e.created_at as errand_created_at,
         e.status,
         e.updated_at as errand_updated_at,
         b.id as bid_id,
         b.doer_id,
-        u_doer.full_name as doer_name,
+        u_doer.display_name as doer_name,
         b.amount,
         b.status as bid_status,
         b.created_at as bid_created_at,
         b.updated_at as bid_updated_at,
-        j.id as job_id,
-        j.started_at,
-        j.completed_at,
         r.id as rating_id,
         r.created_at as rating_created_at
       FROM errands e
       LEFT JOIN users u_asker ON e.asker_id = u_asker.id
       LEFT JOIN bids b ON e.id = b.errand_id AND b.status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress', 'completed')
       LEFT JOIN users u_doer ON b.doer_id = u_doer.id
-      LEFT JOIN jobs j ON e.id = j.errand_id
       LEFT JOIN ratings r ON e.id = r.errand_id
       WHERE e.status IN ('completed', 'completed_unconfirmed')
       ORDER BY e.id DESC
@@ -106,8 +102,10 @@ async function backfillActivityLog() {
           console.log('  ✓ Confirmed');
         }
 
-        // 5. Started (if job exists)
-        if (errand.job_id && errand.started_at) {
+        // 5. Started and Completed (based on errand status)
+        if (errand.status === 'completed' || errand.status === 'completed_unconfirmed') {
+          // Estimate started time as 1 hour after confirmation
+          const estimatedStartTime = new Date(new Date(errand.bid_created_at).getTime() + 60 * 60000);
           activities.push({
             errand_id: errand.id,
             activity_type: 'started',
@@ -115,13 +113,12 @@ async function backfillActivityLog() {
             actor_name: errand.doer_name || 'Unknown User',
             actor_role: 'doer',
             details: null,
-            created_at: errand.started_at,
+            created_at: estimatedStartTime,
           });
           console.log('  ✓ Started');
-        }
 
-        // 6. Completed (if job is completed)
-        if (errand.job_id && errand.completed_at) {
+          // Estimate completed time as 2.5 hours after start
+          const estimatedCompletedTime = new Date(estimatedStartTime.getTime() + 90 * 60000);
           activities.push({
             errand_id: errand.id,
             activity_type: 'completed',
@@ -129,7 +126,7 @@ async function backfillActivityLog() {
             actor_name: errand.doer_name || 'Unknown User',
             actor_role: 'doer',
             details: JSON.stringify({ evidence: 'Completion evidence submitted' }),
-            created_at: errand.completed_at,
+            created_at: estimatedCompletedTime,
           });
           console.log('  ✓ Completed');
         }
