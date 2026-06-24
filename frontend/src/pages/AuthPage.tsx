@@ -133,8 +133,11 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
           alt="Errandify"
           className="h-20 w-auto mx-auto mb-4"
         />
-        <p className="text-gray-600 text-lg">
-          Get things done. Earn rewards. Build community.
+        <p className="text-errandify-orange font-semibold text-sm italic mb-2">
+          Simplifying Life. Amplifying Humanity.
+        </p>
+        <p className="text-gray-600 font-bold text-lg">
+          Get Help. Give Help. Get Paid
         </p>
       </div>
 
