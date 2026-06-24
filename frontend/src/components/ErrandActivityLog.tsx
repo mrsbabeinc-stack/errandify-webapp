@@ -48,15 +48,19 @@ export default function ErrandActivityLog({ errandId }: ErrandActivityLogProps) 
   };
 
   if (loading) {
-    return <div className="text-xs text-gray-500">Loading timeline...</div>;
+    return <div className="text-xs text-gray-500 italic">Loading timeline...</div>;
   }
 
   if (error) {
-    return <div className="text-xs text-red-600">{error}</div>;
+    return <div className="text-xs text-amber-600 italic">Activity log temporarily unavailable</div>;
   }
 
   if (activities.length === 0) {
-    return <div className="text-xs text-gray-500">No activities yet</div>;
+    return (
+      <div className="text-xs text-gray-500 italic">
+        No activities recorded yet. Activities will appear as the errand progresses.
+      </div>
+    );
   }
 
   return (
