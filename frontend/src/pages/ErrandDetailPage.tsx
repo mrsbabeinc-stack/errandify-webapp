@@ -431,15 +431,19 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     </p>
                   </div>
 
-                  {/* Full Address (shown only when confirmed) */}
-                  {errand.status === 'confirmed' && (
-                    <div className="bg-orange-50 p-1 rounded-lg border-l-4 border-errandify-orange">
-                      <p className="text-xs text-gray-600">Full Address</p>
+                  {/* Full Address Field */}
+                  <div className="bg-orange-50 p-1 rounded-lg border-l-4 border-errandify-orange">
+                    <p className="text-xs text-gray-600">Full Address</p>
+                    {errand.status === 'confirmed' ? (
                       <p className="text-xs text-gray-700 font-semibold">
                         📍 {errand.location}{errand.postal_code && ` ${errand.postal_code}`}
                       </p>
-                    </div>
-                  )}
+                    ) : (
+                      <p className="text-xs text-gray-500 italic">
+                        Full address shown once errand confirmed
+                      </p>
+                    )}
+                  </div>
                 </>
               )}
             </div>
