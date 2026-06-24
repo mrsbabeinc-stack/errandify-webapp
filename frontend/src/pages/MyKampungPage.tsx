@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { moderatePost, getModerationStatus, getModerationMessage } from '../services/moderationService';
-import blogPostsData from '../data/blogPosts';
+import { blogPosts as blogPostsData } from '../data/blogPosts';
 
 interface CommunityPost {
   id: number;
