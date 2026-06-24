@@ -120,21 +120,22 @@ export default function SingPassSimulator() {
       nationality: user.nationality,
     };
 
-    // Store in session storage temporarily for callback
+    // Store in session storage temporarily for callback handler
     sessionStorage.setItem('singpass_auth_data', JSON.stringify(singpassData));
 
-    // Get the redirect URI from query params
+    // Get the redirect URI and state from query params
     const redirectUri = searchParams.get('redirect_uri');
+    const state = searchParams.get('state');
 
-    // In real app, this would be the callback endpoint
-    // For testing, we'll just navigate back with the data
+    // Simulate OAuth callback by redirecting to the callback endpoint
     if (redirectUri) {
-      // Simulate OAuth callback
-      window.location.href = `${redirectUri}?code=singpass_auth_code_${Date.now()}&state=${searchParams.get('state') || 'state'}`;
+      // Redirect to callback handler with authorization code
+      const callbackUrl = `${redirectUri}?code=singpass_auth_code_${Date.now()}_${Math.random().toString(36).substr(2, 9)}&state=${state || 'state'}`;
+      window.location.href = callbackUrl;
     } else {
-      // Fallback: navigate to home with auth data
-      sessionStorage.setItem('singpass_verified', 'true');
-      navigate('/');
+      // Fallback: use default callback URL
+      const callbackUrl = `/auth/singpass-callback?code=singpass_auth_code_${Date.now()}_${Math.random().toString(36).substr(2, 9)}&state=${state || 'state'}`;
+      window.location.href = callbackUrl;
     }
   };
 
