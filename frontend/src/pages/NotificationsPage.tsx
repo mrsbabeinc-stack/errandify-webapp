@@ -123,24 +123,24 @@ export default function NotificationsPage() {
   return (
     <div className="min-h-screen bg-errandify-bg pb-20">
       {/* HEADER */}
-      <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white sticky top-0 z-50 shadow-md">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-lg font-bold">🔔 Notifications</h1>
+      <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white sticky top-0 z-50 shadow-sm">
+        <div className="max-w-4xl mx-auto px-3 py-2 flex items-center justify-between">
+          <h1 className="text-sm font-bold">🔔 Notifications</h1>
           {notifications.some((n) => !n.read) && (
             <button
               onClick={handleMarkAllRead}
-              className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-2 py-1 rounded transition"
+              className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-2 py-0.5 rounded transition"
             >
-              Mark all read
+              Mark read
             </button>
           )}
         </div>
 
         {/* TABS */}
-        <div className="max-w-4xl mx-auto px-4 flex gap-2 py-2 border-t border-white border-opacity-20">
+        <div className="max-w-4xl mx-auto px-3 flex gap-1.5 py-1.5 border-t border-white border-opacity-20">
           <button
             onClick={() => setFilter('all')}
-            className={`text-xs font-bold px-3 py-1 rounded transition ${
+            className={`text-xs font-bold px-2 py-0.5 rounded transition ${
               filter === 'all'
                 ? 'bg-white text-errandify-orange'
                 : 'text-white hover:bg-white hover:bg-opacity-10'
@@ -150,7 +150,7 @@ export default function NotificationsPage() {
           </button>
           <button
             onClick={() => setFilter('unread')}
-            className={`text-xs font-bold px-3 py-1 rounded transition ${
+            className={`text-xs font-bold px-2 py-0.5 rounded transition ${
               filter === 'unread'
                 ? 'bg-white text-errandify-orange'
                 : 'text-white hover:bg-white hover:bg-opacity-10'
@@ -162,45 +162,46 @@ export default function NotificationsPage() {
       </div>
 
       {/* CONTENT */}
-      <div className="max-w-4xl mx-auto px-4 py-3">
+      <div className="max-w-4xl mx-auto px-3 py-2">
         {filteredNotifications.length === 0 ? (
-          <div className="text-center py-8 bg-white rounded-lg border border-gray-200 mt-2">
-            <p className="text-gray-500 text-sm">📭 {filter === 'unread' ? 'All caught up!' : 'No notifications'}</p>
+          <div className="text-center py-6 bg-white rounded border border-gray-200 mt-2">
+            <p className="text-gray-500 text-xs">📭 {filter === 'unread' ? 'All caught up!' : 'No notifications'}</p>
           </div>
         ) : (
-          <div className="space-y-1 mt-2">
+          <div className="space-y-0.5 mt-1">
             {filteredNotifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-3 rounded-lg border text-sm transition ${
+                className={`p-2 rounded border text-xs transition ${
                   notification.read
                     ? 'bg-white border-gray-200'
                     : 'bg-blue-50 border-blue-300 font-semibold'
                 }`}
               >
-                <div className="flex gap-2 items-start">
+                <div className="flex gap-1.5 items-start">
                   {/* Icon Badge */}
-                  <div className={`${getTypeColor(notification.type)} text-white w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs`}>
+                  <div className={`${getTypeColor(notification.type)} text-white w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs`}>
                     {getTypeIcon(notification.type)}
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-gray-900 font-semibold">{notification.title}</h3>
-                    <p className="text-gray-600 text-xs mt-0.5 line-clamp-2">{notification.message}</p>
+                    <div className="flex items-baseline justify-between gap-1">
+                      <h3 className="text-gray-900 font-semibold line-clamp-1">{notification.title}</h3>
+                      <span className="text-xs text-gray-400 flex-shrink-0">
+                        {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 text-xs mt-0 line-clamp-1">{notification.message}</p>
 
                     {/* Actions */}
-                    <div className="flex gap-2 mt-2 items-center flex-wrap">
-                      <span className="text-xs text-gray-500">
-                        {new Date(notification.timestamp).toLocaleDateString()} {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-
+                    <div className="flex gap-1.5 mt-1 items-center flex-wrap">
                       {notification.action && (
                         <button
                           onClick={() => navigate(notification.action!.url)}
                           className="text-xs text-errandify-orange hover:underline font-bold"
                         >
-                          {notification.action.label} →
+                          {notification.action.label}
                         </button>
                       )}
 
@@ -209,7 +210,7 @@ export default function NotificationsPage() {
                           onClick={() => handleRead(notification.id)}
                           className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
                         >
-                          Mark read
+                          ✓
                         </button>
                       )}
                     </div>
