@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 interface AuthPageProps {
@@ -11,34 +12,14 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
   const [error, setError] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-  // Handle Mock SingPass Login
-  const handleSingPassLogin = async () => {
-    setError('');
-    setLoading(true);
-
-    try {
-      // Use mock SingPass endpoint for testing
-      const response = await axios.post(
-        `${API_URL}/api/mock-auth/mock-singpass-login`,
-        {
-          email: email || 'test@singpass.com',
-          password: password || 'test123',
-        }
-      );
-
-      // Save token and user
-      localStorage.setItem('token', response.data.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.data.user));
-
-      const userData = response.data.data.user;
-      onLogin(userData.role || 'asker');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'SingPass authentication failed');
-      setLoading(false);
-    }
+  // Handle SingPass Login - Redirect to simulator
+  const handleSingPassLogin = () => {
+    // Redirect to SingPass simulator
+    navigate('/singpass-simulator?redirect_uri=' + encodeURIComponent(window.location.href));
   };
 
   // Handle Signup via SingPass

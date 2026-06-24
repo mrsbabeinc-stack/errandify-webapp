@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import FloatingHana from './components/FloatingHana';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
+import SingPassSimulator from './pages/SingPassSimulator';
 import HomePage from './pages/HomePage';
 import CategorySelectionPage from './pages/CategorySelectionPage';
 import CategoryPreferencePage from './pages/CategoryPreferencePage';
@@ -129,6 +130,12 @@ export default function App() {
         <Route
           path="/login"
           element={<Navigate to="/auth" replace />}
+        />
+
+        {/* SingPass Simulator - Realistic SingPass authentication experience */}
+        <Route
+          path="/singpass-simulator"
+          element={<SingPassSimulator />}
         />
 
         {/* Hana task creation - AI-powered errand posting */}
