@@ -42,14 +42,8 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
 
   const handleRoleChange = (role: 'asker' | 'doer') => {
     onRoleChange(role);
-    // Navigate based on role change
-    if (role === 'doer') {
-      // Switching to Doer → Go to Browse/Help page
-      navigate('/browse');
-    } else if (role === 'asker') {
-      // Switching to Asker → Go to Home page
-      navigate('/home');
-    }
+    // Both roles navigate to home page
+    navigate('/home');
   };
 
   return (
