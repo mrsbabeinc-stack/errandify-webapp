@@ -11,8 +11,6 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
   const [error, setError] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [phone, setPhone] = useState('');
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -46,12 +44,6 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
   // Handle Signup via SingPass
   const handleSignupSingPass = async () => {
     setError('');
-
-    if (!displayName || !phone) {
-      setError('Please enter your name and phone number');
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -73,14 +65,14 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
         if (mockResponse.data.success) {
           const singpassData = mockResponse.data.data.userData;
 
-          // Step 2: Create account with SingPass data
+          // Step 2: Create account with SingPass data (name and phone from SingPass)
           const signupResponse = await axios.post(
             `${API_URL}/api/auth/signup`,
             {
               nric: singpassData.sub,
-              displayName,
+              displayName: singpassData.name, // Get from SingPass
               email: singpassData.email,
-              phone,
+              phone: singpassData.phone_number, // Get from SingPass
               role: 'asker',
               singpassVerified: true,
             }
@@ -252,34 +244,11 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
         {/* Sign Up Mode */}
         {mode === 'signup' && (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600 mb-4">
-              Create your account using SingPass - Singapore's national digital identity platform
-            </p>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Your Name
-              </label>
-              <input
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="John Doe"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+65 9234 5678"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
-              />
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+              <p className="font-semibold mb-2">🔐 Quick Sign Up with SingPass</p>
+              <p className="text-xs leading-relaxed">
+                Your name, phone, and personal details come directly from your SingPass account. No need to enter them again. We'll verify your identity instantly.
+              </p>
             </div>
 
             {/* SingPass Signup */}
