@@ -26,7 +26,12 @@ export default function LandingPage() {
               alt="Errandify"
               className="h-12 w-auto mx-auto mb-2"
             />
-            <p className="text-sm font-semibold text-errandify-orange italic">Simplifying Life, Amplifying Humanity</p>
+            <p className="text-xs font-semibold text-errandify-orange italic mb-2">
+              Simplifying Life. Amplifying Humanity.
+            </p>
+            <p className="text-sm font-bold text-errandify-brown">
+              Get Help. Give Help. Get Paid
+            </p>
           </div>
 
           {/* Value Proposition - Compact */}
