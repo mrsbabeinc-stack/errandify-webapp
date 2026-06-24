@@ -109,7 +109,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
       <div className="flex justify-between items-center h-16 px-2 relative">
         {/* Navigation Items - Evenly distributed for doers, left/right split for askers */}
         {/* All items evenly distributed with center plus button for askers */}
-        <div className="flex justify-around items-center w-full gap-1 relative">
+        <div className={`flex justify-around items-center w-full ${userRole === 'asker' ? 'gap-4' : 'gap-1'} relative`}>
           {navItems.map((item, index) => {
             const disabled = 'disabled' in item && item.disabled;
             const itemClasses = disabled
