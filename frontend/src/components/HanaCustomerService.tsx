@@ -45,28 +45,19 @@ const LANGUAGE_PROMPTS: Record<Language, string> = {
 // Quick reply suggestions (context-aware) with navigation
 const QUICK_REPLIES: Record<Language, Array<{ label: string; action: string }>> = {
   en: [
-    { label: 'View my errands', action: '/errands' },
     { label: 'Create new errand', action: '/create-errand-hana' },
     { label: 'My wallet', action: '/wallet' },
     { label: 'My ratings', action: '/my-profile' },
-    { label: 'Browse available', action: '/browse' },
-    { label: 'My offers', action: '/my-offer' },
   ],
   zh: [
-    { label: '查看我的任务', action: '/errands' },
     { label: '创建新任务', action: '/create-errand-hana' },
     { label: '我的钱包', action: '/wallet' },
     { label: '我的评分', action: '/my-profile' },
-    { label: '浏览可用任务', action: '/browse' },
-    { label: '我的报价', action: '/my-offer' },
   ],
   yue: [
-    { label: '查看我的任務', action: '/errands' },
     { label: '創建新任務', action: '/create-errand-hana' },
     { label: '我的錢包', action: '/wallet' },
     { label: '我的評分', action: '/my-profile' },
-    { label: '瀏覽可用任務', action: '/browse' },
-    { label: '我的報價', action: '/my-offer' },
   ],
 };
 
@@ -593,7 +584,7 @@ export default function HanaCustomerService() {
             {/* Quick Replies */}
             {showQuickReplies && messages.length > 1 && (
               <div className="px-3 py-2 bg-orange-50 border-t border-orange-200 flex flex-wrap gap-2">
-                {QUICK_REPLIES[language].slice(0, 4).map((reply, idx) => (
+                {QUICK_REPLIES[language].map((reply, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleQuickReply(reply.action)}
