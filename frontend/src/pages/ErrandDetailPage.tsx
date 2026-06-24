@@ -6,6 +6,7 @@ import BidsViewer from '../components/BidsViewer';
 import TaskChatbox from '../components/TaskChatbox';
 import RecurringErrandSessionSelector from '../components/RecurringErrandSessionSelector';
 import TaskQA from '../components/TaskQA';
+import ErrandActivityLog from '../components/ErrandActivityLog';
 
 interface ErrandDetail {
   id: number;
@@ -552,6 +553,14 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 <p className="text-xs text-gray-700 mb-0.5">{errand.asker.display_name || 'Anonymous'}</p>
               </div>
             )}
+
+            {/* Activity Timeline */}
+            <div className="border-t border-gray-200 pt-2 mt-2">
+              <h2 className="font-semibold text-errandify-brown mb-2 text-xs">
+                📅 Activity Timeline
+              </h2>
+              {errand.id && <ErrandActivityLog errandId={errand.id} />}
+            </div>
 
             {/* Action Button */}
             {errand.status === 'open' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
