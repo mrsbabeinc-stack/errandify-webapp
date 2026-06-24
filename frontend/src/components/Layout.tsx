@@ -40,11 +40,23 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
     navigate('/account');
   };
 
+  const handleRoleChange = (role: 'asker' | 'doer') => {
+    onRoleChange(role);
+    // Navigate based on role change
+    if (role === 'doer') {
+      // Switching to Doer → Go to Browse/Help page
+      navigate('/browse');
+    } else if (role === 'asker') {
+      // Switching to Asker → Go to Home page
+      navigate('/home');
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-errandify-bg">
       {/* Top Bar with Role Toggle & Notifications */}
       <div className="bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center sticky top-0 z-50">
-        <RoleToggle currentRole={userRole} onRoleChange={onRoleChange} />
+        <RoleToggle currentRole={userRole} onRoleChange={handleRoleChange} />
         <div className="flex items-center gap-2">
           {userProfile ? (
             <>
