@@ -9,22 +9,35 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.userId || '0', 10);
 
-    // TODO: notifications table doesn't exist in schema yet
-    // Return empty list for now to prevent app from crashing
-    res.json({
-      success: true,
-      data: {
-        notifications: [],
-        unread_count: 0,
-      },
-    });
-    return;
+    // Get user's notifications (most recent first)
+    const notificationsResult = await db.query(
+      `SELECT id, user_id, type, title, body, action_url, created_at, read
+       FROM notifications
+       WHERE user_id = $1
+       ORDER BY created_at DESC
+       LIMIT 50`,
+      [userId]
+    );
+
+    // Get unread count
+    const countResult = await db.query(
+      'SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND read = false',
+      [userId]
+    );
 
     res.json({
       success: true,
       data: {
-        notifications: notificationsResult.rows,
-        unreadCount: parseInt(countResult.rows[0]?.count || '0'),
+        notifications: notificationsResult.rows.map(n => ({
+          id: n.id,
+          type: n.type,
+          title: n.title,
+          body: n.body,
+          actionUrl: n.action_url,
+          createdAt: n.created_at,
+          read: n.read,
+        })),
+        unread_count: parseInt(countResult.rows[0]?.count || '0'),
         total: notificationsResult.rows.length,
       },
     });
@@ -90,6 +103,59 @@ router.post('/read-all', authMiddleware, async (req: AuthRequest, res: Response)
   } catch (error) {
     console.error('Mark all read error:', error);
     res.status(500).json({ error: 'Failed to mark all as read' });
+  }
+});
+
+// DELETE /api/notifications/:id - Delete a notification
+router.delete('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Verify ownership
+    const notifResult = await db.query(
+      'SELECT user_id FROM notifications WHERE id = $1',
+      [id]
+    );
+
+    if (notifResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+
+    if (notifResult.rows[0].user_id !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Delete notification
+    await db.query('DELETE FROM notifications WHERE id = $1', [id]);
+
+    res.json({
+      success: true,
+      data: { message: 'Notification deleted' },
+    });
+  } catch (error) {
+    console.error('Delete notification error:', error);
+    res.status(500).json({ error: 'Failed to delete notification' });
+  }
+});
+
+// POST /api/notifications/clear-all - Clear all notifications
+router.post('/clear-all', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    await db.query(
+      'DELETE FROM notifications WHERE user_id = $1',
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      data: { message: 'All notifications cleared' },
+    });
+  } catch (error) {
+    console.error('Clear all error:', error);
+    res.status(500).json({ error: 'Failed to clear notifications' });
   }
 });
 

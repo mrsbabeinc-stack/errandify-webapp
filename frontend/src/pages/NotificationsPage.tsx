@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import {
-  getNotifications,
   markNotificationAsRead,
   markAllAsRead,
   deleteNotification,
@@ -9,89 +9,125 @@ import {
   type Notification
 } from '../utils/notificationStore';
 
+interface BackendNotification {
+  id: number;
+  type: string;
+  title: string;
+  body: string;
+  actionUrl: string;
+  createdAt: string;
+  read: boolean;
+}
+
 export default function NotificationsPage() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<(Notification | BackendNotification)[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize with sample notifications if empty
-    let notifs = getNotifications();
-    if (notifs.length === 0) {
-      const sampleNotifications = [
-        {
-          type: 'offer' as const,
-          title: 'New bid received!',
-          message: 'Sarah bid $35 on your office cleaning task',
-          action: { label: 'View', url: '/errands' }
-        },
-        {
-          type: 'message' as const,
-          title: 'New message from John',
-          message: 'Hi! Can you do this task on Saturday?',
-          action: { label: 'Reply', url: '/chat' }
-        },
-        {
-          type: 'status' as const,
-          title: 'Task completed!',
-          message: 'Your grocery delivery has been completed',
-          action: { label: 'Review', url: '/review/1' }
-        },
-        {
-          type: 'system' as const,
-          title: 'Welcome to Errandify!',
-          message: 'Complete your profile to start receiving tasks',
-          action: { label: 'Go', url: '/my-profile' }
-        },
-        {
-          type: 'offer' as const,
-          title: 'Task accepted!',
-          message: 'You accepted the tutoring task from Maria',
-          action: { label: 'Chat', url: '/chat' }
-        }
-      ];
-
-      sampleNotifications.forEach(notif => {
-        const stored = getNotifications();
-        const newNotif = {
-          ...notif,
-          id: `notif-${Date.now()}-${Math.random()}`,
-          timestamp: new Date(Date.now() - Math.random() * 86400000).toISOString(),
-          read: Math.random() > 0.6
-        };
-        stored.unshift(newNotif);
-        localStorage.setItem('appNotifications', JSON.stringify(stored));
-      });
-    }
-
     loadNotifications();
-    const interval = setInterval(loadNotifications, 2000);
+    const interval = setInterval(loadNotifications, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  const loadNotifications = () => {
-    setNotifications(getNotifications());
+  const loadNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data.success && response.data.data.notifications) {
+        // Convert backend notifications to display format
+        const formattedNotifications = response.data.data.notifications.map((n: BackendNotification) => ({
+          id: n.id.toString(),
+          type: n.type === 'bid_received' ? 'offer' : n.type === 'new_message' ? 'message' : 'status',
+          title: n.title,
+          message: n.body,
+          timestamp: n.createdAt,
+          read: n.read,
+          action: n.actionUrl ? { label: 'View', url: n.actionUrl } : undefined,
+        }));
+        setNotifications(formattedNotifications);
+      }
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRead = (id: string) => {
-    markNotificationAsRead(id);
-    loadNotifications();
-  };
-
-  const handleDelete = (id: string) => {
-    deleteNotification(id);
-    loadNotifications();
-  };
-
-  const handleMarkAllRead = () => {
-    markAllAsRead();
-    loadNotifications();
-  };
-
-  const handleClearAll = () => {
-    if (window.confirm('Clear all notifications?')) {
-      clearAllNotifications();
+  const handleRead = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/${id}/read`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       loadNotifications();
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      loadNotifications();
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/read-all`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      loadNotifications();
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (window.confirm('Clear all notifications?')) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/clear-all`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        loadNotifications();
+      } catch (error) {
+        console.error('Failed to clear notifications:', error);
+      }
     }
   };
 
