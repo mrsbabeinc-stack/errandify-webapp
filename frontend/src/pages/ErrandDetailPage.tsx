@@ -19,6 +19,7 @@ interface ErrandDetail {
   deadline?: string;
   location?: string;
   postal_code?: string;
+  postalCode?: string;
   askerId?: number;
   asker?: { name: string; mobile: string };
   doerName?: string;
@@ -774,7 +775,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             budget: errand.budget,
             deadline: errand.deadline,
             location: errand.location,
-            postal_code: errand.postal_code,
+            postal_code: errand.postal_code || (errand as any).postalCode,
             description: errand.description,
           }}
         />
