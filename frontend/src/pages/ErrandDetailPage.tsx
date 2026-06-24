@@ -152,12 +152,26 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     if (!location) return null;
     if (location.toLowerCase() === 'remote') return 'Remote';
 
-    // Extract just the area name (everything before postal code)
-    const areaMatch = location.match(/^([^,\d]+)/);
-    if (areaMatch) {
-      return areaMatch[1].trim();
+    // Extract just the district/area name (the part before postal code)
+    // Format: "111 Duchess Avenue, Bedok, Singapore 239211"
+    // We want: "Bedok"
+
+    // Remove postal code first (6 digits)
+    let cleaned = location.replace(/\s*\d{6}\s*/g, '');
+
+    // Split by comma and get the last meaningful part (area name)
+    const parts = cleaned.split(',').map(p => p.trim());
+
+    // Filter out 'Singapore' and 'Singapore' entries, get area
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const part = parts[i].toLowerCase();
+      if (part && part !== 'singapore' && !part.includes('avenue') && !part.includes('street') && !part.includes('road')) {
+        return parts[i];
+      }
     }
-    return location.split(',')[0]?.trim() || location;
+
+    // Fallback: return last part
+    return parts[parts.length - 1] || location;
   };
 
   const getMaskedLocation = (location?: string) => {
