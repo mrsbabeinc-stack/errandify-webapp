@@ -518,9 +518,9 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { title, description, status, budget, deadline, location } = req.body;
 
-    // Check ownership
+    // Check ownership and status
     const checkResult = await db.query(
-      'SELECT asker_id FROM errands WHERE id = $1',
+      'SELECT asker_id, status FROM errands WHERE id = $1',
       [id]
     );
 
@@ -528,8 +528,17 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Errand not found' });
     }
 
-    if (checkResult.rows[0].asker_id !== parseInt(req.userId || '0', 10)) {
+    const errand = checkResult.rows[0];
+    if (errand.asker_id !== parseInt(req.userId || '0', 10)) {
       return res.status(403).json({ error: 'Not authorized to update this errand' });
+    }
+
+    // Prevent editing once offer is confirmed
+    if (errand.status !== 'open') {
+      return res.status(403).json({
+        error: 'Cannot edit errand once an offer is confirmed',
+        message: 'This errand has been accepted and is no longer editable. You can only update the status.'
+      });
     }
 
     // Update fields
