@@ -376,9 +376,9 @@ Your message doesn't meet our community standards. Please keep messages:
                 <div className="flex-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <p className="text-xs font-semibold text-gray-900">
-                      {msg.senderName}
+                      {msg.senderId === askerId ? askerName : doerName}
                     </p>
-                    <span className={`text-xs font-semibold px-1 py-0.5 rounded text-[11px] ${
+                    <span className={`text-xs px-1 py-0.5 rounded text-[11px] ${
                       msg.senderId === askerId
                         ? 'bg-blue-100 text-blue-700'
                         : 'bg-green-100 text-green-700'
@@ -623,20 +623,20 @@ Your message doesn't meet our community standards. Please keep messages:
                 </div>
               </div>
 
-              <h4 className="font-bold text-sm text-gray-800 mb-4">📋 Errand Details</h4>
+              <h4 className="text-sm text-gray-800 mb-4">📋 Errand Details</h4>
 
               <div className="space-y-3 text-xs">
                 {/* Budget */}
                 <div>
-                  <p className="text-gray-500 font-semibold">💰 Budget</p>
-                  <p className="text-sm font-bold text-errandify-orange">
+                  <p className="text-gray-500">💰 Budget</p>
+                  <p className="text-sm text-errandify-orange">
                     {errandDetails.budget ? `SGD $${errandDetails.budget}` : 'Not specified'}
                   </p>
                 </div>
 
                 {/* Location */}
                 <div>
-                  <p className="text-gray-500 font-semibold">📍 Location</p>
+                  <p className="text-gray-500">📍 Location</p>
                   <p className="text-sm text-gray-700">
                     {errandDetails.location || 'Not specified'}
                   </p>
@@ -647,7 +647,7 @@ Your message doesn't meet our community standards. Please keep messages:
 
                 {/* Date & Time */}
                 <div>
-                  <p className="text-gray-500 font-semibold">🕐 Date & Time</p>
+                  <p className="text-gray-500">🕐 Date & Time</p>
                   {errandDetails.deadline ? (
                     <>
                       <p className="text-sm text-gray-700">
@@ -664,7 +664,7 @@ Your message doesn't meet our community standards. Please keep messages:
 
                 {/* Description */}
                 <div className="border-t pt-3">
-                  <p className="text-gray-500 font-semibold">📝 Description</p>
+                  <p className="text-gray-500">📝 Description</p>
                   <p className="text-xs text-gray-700 leading-relaxed line-clamp-6">
                     {errandDetails.description || 'No description provided'}
                   </p>
