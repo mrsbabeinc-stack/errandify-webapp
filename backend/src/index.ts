@@ -30,6 +30,7 @@ import emailRoutes from './routes/email.js';
 import newsRoutes from './routes/news.js';
 import referralRoutes from './routes/referrals.js';
 import speechRoutes from './routes/speech.js';
+import activityLogRoutes from './routes/activityLog.js';
 import { startCrons } from './cron.js';
 
 const app = express();
@@ -60,6 +61,7 @@ app.use('/api/tasks', taskExecutionRoutes);
 // Mount specific errand routes BEFORE the catch-all
 app.use('/api/errands', sessionsRoutes);
 app.use('/api/errands', errandSearchRoutes);
+app.use('/api/errands', activityLogRoutes);
 // Mount main errand routes LAST so specific routes take precedence
 app.use('/api/errands', errandRoutes);
 app.use('/api/screening', screeningRoutes);
