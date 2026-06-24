@@ -178,8 +178,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
     // Street keywords and patterns to filter out
     const isStreetOrUnit = (part: string) => {
-      return /avenue|street|road|lane|drive|boulevard|crescent|terrace|place|court|building|blk|block|^\d+\s|^#\d+|\d+[-\/]\d+/i.test(part) ||
+      return /avenue|street|road|lane|drive|boulevard|crescent|terrace|place|court|building|blk|block|^#\d+|\d+[-\/]\d+/i.test(part) ||
              /^\d{6}$/.test(part) || // postal code
+             /^\d+$/.test(part) || // just numbers
              part.toLowerCase() === 'singapore';
     };
 
@@ -212,13 +213,18 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     if (firstPart) {
       // Try to extract area name from street address
       // "8 Eunos Road" → extract "Eunos"
-      const areaMatch = firstPart.match(/\b([A-Za-z\s]+)\s+(Road|Street|Avenue|Lane|Drive|Boulevard|Crescent|Terrace|Place|Court|Building|Blk|Block)\b/i);
+      const areaMatch = firstPart.match(/\b([A-Za-z\s]+?)\s+(Road|Street|Avenue|Lane|Drive|Boulevard|Crescent|Terrace|Place|Court|Building|Blk|Block)\b/i);
       if (areaMatch && areaMatch[1]) {
         const extracted = areaMatch[1].trim();
         if (extracted.length > 0 && !/^\d+$/.test(extracted)) {
           return extracted;
         }
       }
+    }
+
+    // Strategy 4: Just return the first meaningful part
+    if (parts.length > 0 && !isStreetOrUnit(parts[0])) {
+      return parts[0];
     }
 
     return location;
@@ -477,7 +483,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   <div className="bg-orange-50 p-1 rounded-lg border-l-4 border-errandify-orange">
                     <p className="text-xs text-gray-600">Area</p>
                     <p className="text-xs text-gray-700 font-semibold">
-                      📍 {getAreaOnly(errand.location)}
+                      📍 {getAreaOnly(errand.location) || errand.location}
                     </p>
                   </div>
 
