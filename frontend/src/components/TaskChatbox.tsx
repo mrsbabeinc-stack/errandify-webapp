@@ -581,54 +581,62 @@ Your message doesn't meet our community standards. Please keep messages:
           {/* Right Sidebar - Errand Details */}
           {errandDetails && (
             <div className="w-80 flex flex-col border-l border-gray-200 bg-gray-50 p-4 overflow-y-auto">
-              {/* Participants */}
+              {/* Participants - Show other person first based on current user role */}
               <div className="mb-4 pb-4 border-b border-gray-200">
-
-                {/* Asker - Always show */}
-                <div className="flex items-center gap-2 justify-between mb-3">
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center flex-shrink-0 text-xs font-bold">
-                      A
+                {/* Show the OTHER person prominently */}
+                {currentUserId === askerId ? (
+                  // Current user is ASKER - show Doer first
+                  <>
+                    <div className="flex items-center gap-2 justify-between mb-3 p-2 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className="w-8 h-8 rounded-full bg-green-300 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                          D
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-green-700 font-semibold">Your Doer</p>
+                          <p className="text-sm text-gray-900 font-bold">{doerName || 'Doer'}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleFavorite}
+                        className={`text-lg transition ${isFavorited ? 'text-red-500' : 'text-gray-300 hover:text-red-400'}`}
+                        title={isFavorited ? 'Remove favorite' : 'Add favorite'}
+                      >
+                        {isFavorited ? '❤️' : '🤍'}
+                      </button>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-500">Asker</p>
-                      <p className="text-xs text-gray-900">{askerName || 'Asker'}</p>
+                    <div className="flex items-center gap-2 justify-between text-xs text-gray-600">
+                      <span>📌 You (Asker)</span>
+                      <span>{askerName || 'Asker'}</span>
                     </div>
-                  </div>
-                  {/* Heart only if current user is DOER (not asker) */}
-                  {currentUserId === doerId && (
-                    <button
-                      onClick={handleFavorite}
-                      className={`text-lg transition ${isFavorited ? 'text-red-500' : 'text-gray-300 hover:text-red-400'}`}
-                      title={isFavorited ? 'Remove favorite' : 'Add favorite'}
-                    >
-                      {isFavorited ? '❤️' : '🤍'}
-                    </button>
-                  )}
-                </div>
-
-                {/* Doer - Always show */}
-                <div className="flex items-center gap-2 justify-between">
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="w-8 h-8 rounded-full bg-green-200 flex items-center justify-center flex-shrink-0 text-xs font-bold">
-                      D
+                  </>
+                ) : (
+                  // Current user is DOER - show Asker first
+                  <>
+                    <div className="flex items-center gap-2 justify-between mb-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className="w-8 h-8 rounded-full bg-blue-300 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                          A
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-blue-700 font-semibold">Your Asker</p>
+                          <p className="text-sm text-gray-900 font-bold">{askerName || 'Asker'}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleFavorite}
+                        className={`text-lg transition ${isFavorited ? 'text-red-500' : 'text-gray-300 hover:text-red-400'}`}
+                        title={isFavorited ? 'Remove favorite' : 'Add favorite'}
+                      >
+                        {isFavorited ? '❤️' : '🤍'}
+                      </button>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-500">Doer</p>
-                      <p className="text-xs text-gray-900">{doerName || 'Doer'}</p>
+                    <div className="flex items-center gap-2 justify-between text-xs text-gray-600">
+                      <span>📌 You (Doer)</span>
+                      <span>{doerName || 'Doer'}</span>
                     </div>
-                  </div>
-                  {/* Heart only if current user is ASKER (not doer) */}
-                  {currentUserId === askerId && (
-                    <button
-                      onClick={handleFavorite}
-                      className={`text-lg transition ${isFavorited ? 'text-red-500' : 'text-gray-300 hover:text-red-400'}`}
-                      title={isFavorited ? 'Remove favorite' : 'Add favorite'}
-                    >
-                      {isFavorited ? '❤️' : '🤍'}
-                    </button>
-                  )}
-                </div>
+                  </>
+                )}
               </div>
 
               <h4 className="text-sm text-gray-800 mb-4">📋 Errand Details</h4>
@@ -647,8 +655,12 @@ Your message doesn't meet our community standards. Please keep messages:
                   <p className="text-xs text-gray-500">📍 Location</p>
                   <p className="text-xs text-gray-700">
                     {errandDetails.location || 'Not specified'}
-                    {errandDetails.postal_code && ` ${errandDetails.postal_code}`}
                   </p>
+                  {errandDetails.postal_code && (
+                    <p className="text-xs text-gray-600">
+                      📮 {errandDetails.postal_code}
+                    </p>
+                  )}
                 </div>
 
                 {/* Date & Time */}
