@@ -47,10 +47,10 @@ export const blogPosts: BlogPost[] = [
     ogDescription: 'Real Singapore mother proves you don\'t have to choose between kids and career. Her flexible work strategy.',
     twitterTitle: 'Mom of 2 → Restaurant Manager (Here\'s How)',
     twitterDescription: 'Eileen\'s 7-year journey: part-time 7-11am shift → general manager. No sacrifice needed.',
-    featuredImage: 'https://images.unsplash.com/photo-1573496359142-b8d93c34b4a5?w=1200&h=600&fit=crop',
+    featuredImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1200&h=600&fit=crop',
     imageAlt: 'Smiling Asian woman in restaurant manager uniform, warm and confident',
     sources: ['Source: MyCareersFuture (Singapore government careers portal)', 'Interview profile documented in government career database'],
-    content: `![Smiling manager in her restaurant](https://images.unsplash.com/photo-1573496359142-b8d93c34b4a5?w=1200&h=600&fit=crop)
+    content: `![Smiling manager in her restaurant](https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1200&h=600&fit=crop)
 
 THE MOMENT THAT CHANGED EVERYTHING
 
@@ -84,7 +84,7 @@ Not perfect. Not glamorous. But possible.
 
 "The first day I walked into that KFC, I cried," she said. "Not sad tears. Relief tears. I finally had something that let me be both—a mom and someone building a career."
 
-![Mother and children smiling together](https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=400&fit=crop)
+![Mother and children smiling together](https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=600&h=400&fit=crop)
 
 ---
 
@@ -779,10 +779,10 @@ A: Not for personal care. AI can help with monitoring, but human touch is irrepl
     ogDescription: 'Real Singapore woman changed careers from graphic design using flexible work. Here\'s how.',
     twitterTitle: 'Changed Careers at 26 (No Regrets)',
     twitterDescription: 'Tanesha left graphic design for flexible work at 26. Now thriving. Here\'s why timing mattered.',
-    featuredImage: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&h=600&fit=crop',
+    featuredImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1200&h=600&fit=crop',
     imageAlt: 'Young professional woman smiling confidently, creative workspace',
     sources: ['Source: MyCareersFuture (Singapore government careers portal)'],
-    content: `![Tanesha - confident career changer](https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&h=600&fit=crop)
+    content: `![Tanesha - confident career changer](https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1200&h=600&fit=crop)
 
 THE MOMENT EVERYTHING FELT WRONG
 
