@@ -403,10 +403,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                       📍 {errand.location}{errand.postal_code && ` ${errand.postal_code}`}
                     </p>
                   ) : (
-                    <>
-                      <p className="text-xs text-gray-700">📍 {getMaskedLocation(errand.location)}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Full address shown once job is confirmed</p>
-                    </>
+                    <p className="text-xs text-gray-700">📍 {getMaskedLocation(errand.location)}</p>
                   )}
                 </div>
               )}
