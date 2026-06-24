@@ -365,7 +365,10 @@ export default function HanaCustomerService() {
             setIsOpen(true);
             setIsMinimized(false);
           }}
-          className="fixed bottom-20 right-6 w-14 h-14 bg-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange"
+          className="fixed bottom-20 right-6 w-12 h-12 bg-white rounded-full hover:shadow-lg transition-all hover:scale-105 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange active:scale-95"
+          style={{
+            boxShadow: '0 3px 0 rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.1)',
+          }}
           title="Chat with Hana"
         >
           <img
@@ -537,7 +540,10 @@ export default function HanaCustomerService() {
       {isOpen && isMinimized && (
         <button
           onClick={() => setIsMinimized(false)}
-          className="fixed bottom-20 right-6 w-14 h-14 bg-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange ring-2 ring-orange-300"
+          className="fixed bottom-20 right-6 w-12 h-12 bg-white rounded-full transition-all hover:scale-105 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange ring-2 ring-orange-300 active:scale-95"
+          style={{
+            boxShadow: '0 3px 0 rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.1)',
+          }}
           title="Chat with Hana"
         >
           <img
