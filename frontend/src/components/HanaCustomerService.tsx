@@ -67,6 +67,55 @@ const QUICK_REPLIES: Record<Language, Array<{ label: string; action: string }>> 
 // Context memory limit (keep last N messages for context)
 const CONTEXT_MEMORY_LIMIT = 5;
 
+// Intent detection for common questions - provide instant answers
+const INTENT_RESPONSES: Record<Language, Record<string, string>> = {
+  en: {
+    'post_errand': 'To post an errand:\n1. Tap the + button at the bottom\n2. Describe what you need\n3. Set your budget and deadline\n4. Submit\n\nThat\'s it! You\'ll see bids from helpers.',
+    'browse_errands': 'To find errands:\n1. Tap the magnifying glass icon (Browse)\n2. Browse available errands by category\n3. Tap one to see details\n4. Tap Accept to place your bid',
+    'payment': 'Your payment is secure with us until the work is done and confirmed. You get paid once the errand poster approves your work.',
+    'bidding': 'You can place a bid on any errand by tapping Accept. The person who posted will choose their favourite helper. You can bid any amount you think is fair.',
+  },
+  zh: {
+    'post_errand': '发布帮帮很简单：\n1. 点击底部的 + 按钮\n2. 描述你需要的帮助\n3. 设定预算和截止日期\n4. 提交\n\n就这样！你会收到帮手的出价。',
+    'browse_errands': '查找帮帮：\n1. 点击放大镜图标（浏览）\n2. 按类别浏览可用的帮帮\n3. 点击查看详情\n4. 点击接受来出价',
+    'payment': '您的款项在工作完成并确认前由我们安全保管。一旦发布者批准您的工作，您就能获得报酬。',
+    'bidding': '您可以通过点击接受来对任何帮帮出价。发布者会选择他们最喜欢的帮手。您可以出价任何您认为公平的金额。',
+  },
+  yue: {
+    'post_errand': '發佈幫幫好簡單：\n1. 點擊底部嘅 + 按鈕\n2. 描述你需要嘅幫助\n3. 設定預算同截止日期\n4. 提交\n\n就噉！你會收到幫手嘅出價。',
+    'browse_errands': '搵幫幫：\n1. 點擊放大鏡圖標（瀏覽）\n2. 按類別瀏覽可用嘅幫幫\n3. 點擊查睇詳情\n4. 點擊接受嚟出價',
+    'payment': '你嘅款項喺工作完成同確認前由我哋安全保管。一旦發佈者批准你嘅工作，你就能獲得報酬。',
+    'bidding': '你可以通過點擊接受嚟對任何幫幫出價。發佈者會選擇佢哋最鍾意嘅幫手。你可以出價任何你認為公平嘅金額。',
+  },
+};
+
+// Detect user intent from message
+const detectIntent = (message: string): string | null => {
+  const lower = message.toLowerCase();
+
+  // Post/create intent
+  if (/post|create|publish|submit|how.*post|how.*create|how.*submit/.test(lower)) {
+    return 'post_errand';
+  }
+
+  // Browse intent
+  if (/browse|find|search|look for|how.*find|how.*search/.test(lower)) {
+    return 'browse_errands';
+  }
+
+  // Payment intent
+  if (/payment|money|price|pay|cost|how.*payment|how.*much/.test(lower)) {
+    return 'payment';
+  }
+
+  // Bidding intent
+  if (/bid|accept|offer|how.*bid|how.*accept|how.*offer/.test(lower)) {
+    return 'bidding';
+  }
+
+  return null;
+};
+
 export default function HanaCustomerService() {
   console.log('[Hana] Component mounted');
   const [isOpen, setIsOpen] = useState(false);
@@ -361,32 +410,43 @@ export default function HanaCustomerService() {
     lastUserMessageRef.current = input; // Store for retry
 
     try {
-      const token = localStorage.getItem('token');
-      const headers: any = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
+      // Check for intent first - give instant answers for common questions
+      const intent = detectIntent(input);
+      let reply = '';
+
+      if (intent && INTENT_RESPONSES[detectedLang] && INTENT_RESPONSES[detectedLang][intent]) {
+        // Use intent-based response (instant, no API call needed)
+        console.log('[Hana] Intent detected:', intent, '- using instant response');
+        reply = INTENT_RESPONSES[detectedLang][intent];
+      } else {
+        // Fall back to API for conversational responses
+        const token = localStorage.getItem('token');
+        const headers: any = { 'Content-Type': 'application/json' };
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+
+        // Build context from recent messages (memory)
+        const recentMessages = messages.slice(-CONTEXT_MEMORY_LIMIT).map(m => ({
+          role: m.sender === 'user' ? 'user' : 'assistant',
+          content: m.text
+        }));
+
+        console.log('[Hana] Making API call with detected language:', detectedLang);
+        const response = await axios.post(
+          '/api/chat/hana/customer-service',
+          {
+            message: input,
+            language: detectedLang,
+            context: recentMessages // Send context for better responses
+          },
+          { headers }
+        );
+
+        console.log('[Hana] Got response:', response.data);
+        reply = response.data?.data?.reply || response.data?.reply || 'How else can I help?';
+        console.log('[Hana] Reply text:', reply);
       }
-
-      // Build context from recent messages (memory)
-      const recentMessages = messages.slice(-CONTEXT_MEMORY_LIMIT).map(m => ({
-        role: m.sender === 'user' ? 'user' : 'assistant',
-        content: m.text
-      }));
-
-      console.log('[Hana] Making API call with detected language:', detectedLang);
-      const response = await axios.post(
-        '/api/chat/hana/customer-service',
-        {
-          message: input,
-          language: detectedLang,
-          context: recentMessages // Send context for better responses
-        },
-        { headers }
-      );
-
-      console.log('[Hana] Got response:', response.data);
-      const reply = response.data?.data?.reply || response.data?.reply || 'How else can I help?';
-      console.log('[Hana] Reply text:', reply);
 
       const hanaMessage: Message = {
         id: (Date.now() + 1).toString(),
