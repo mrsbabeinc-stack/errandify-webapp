@@ -29,6 +29,7 @@ import questionsRoutes from './routes/questions.js';
 import emailRoutes from './routes/email.js';
 import newsRoutes from './routes/news.js';
 import referralRoutes from './routes/referrals.js';
+import speechRoutes from './routes/speech.js';
 import { startCrons } from './cron.js';
 
 const app = express();
@@ -68,6 +69,7 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/user-profile', userProfileRoutes);
 app.use('/api/user-data', userDataExportRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/speech', speechRoutes);
 app.use('/api/questions', questionsRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/news', newsRoutes);
