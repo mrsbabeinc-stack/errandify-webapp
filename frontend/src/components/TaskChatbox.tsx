@@ -62,8 +62,6 @@ export default function TaskChatbox({
   const [isFavorited, setIsFavorited] = useState(false);
   const [playingMessageId, setPlayingMessageId] = useState<number | null>(null);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
-  const [displayPostalCode, setDisplayPostalCode] = useState<string>('');
-  const [showPostalInput, setShowPostalInput] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -729,71 +727,30 @@ Your message doesn't meet our community standards. Please keep messages:
 
                 {/* Location */}
                 <div>
-                  <div className="flex items-center justify-between gap-1">
-                    <p className="text-xs text-gray-500">📍 Location</p>
-                    {!showPostalInput && displayPostalCode && (
-                      <button
-                        onClick={() => setShowPostalInput(true)}
-                        className="text-xs text-blue-600 hover:text-blue-700"
-                        title="Edit postal code"
-                      >
-                        ✏️
-                      </button>
-                    )}
-                  </div>
+                  <p className="text-xs text-gray-500">📍 Location</p>
+                  <p className="text-xs text-gray-700 font-semibold break-words">
+                    {(() => {
+                      const location = errandDetails.location || 'Not specified';
+                      const postalCode = errandDetails.postal_code;
 
-                  {showPostalInput ? (
-                    <div className="flex gap-1 mt-1">
-                      <input
-                        type="text"
-                        value={displayPostalCode}
-                        onChange={(e) => setDisplayPostalCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        placeholder="680433"
-                        maxLength={6}
-                        className="flex-1 px-2 py-1 text-xs border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                      <button
-                        onClick={() => setShowPostalInput(false)}
-                        className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                      >
-                        ✓
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <p className="text-xs text-gray-700 font-semibold break-words">
-                        {(() => {
-                          const location = errandDetails.location || 'Not specified';
-                          let postalCode = displayPostalCode || errandDetails.postal_code;
+                      // If we have postal code, format with S prefix
+                      if (postalCode) {
+                        // Remove any existing postal code from location to avoid duplication
+                        const cleanLocation = location.replace(/\s*S?\d{6}\s*$/, '').trim();
+                        return `${cleanLocation} S${postalCode}`;
+                      }
 
-                          // If no explicit postal code, try to extract from location
-                          if (!postalCode) {
-                            const postalMatch = location.match(/(\d{6})/);
-                            if (postalMatch) {
-                              postalCode = postalMatch[1];
-                            }
-                          }
+                      // Try to extract postal code from location string
+                      const postalMatch = location.match(/(\d{6})/);
+                      if (postalMatch) {
+                        const postal = postalMatch[1];
+                        const cleanLocation = location.replace(postal, '').trim();
+                        return `${cleanLocation} S${postal}`;
+                      }
 
-                          // If we found a postal code, format the address
-                          if (postalCode) {
-                            // Remove any existing postal code from location to avoid duplication
-                            const cleanLocation = location.replace(/\s*S?\d{6}\s*$/, '').trim();
-                            return `${cleanLocation} S${postalCode}`;
-                          }
-
-                          return location;
-                        })()}
-                      </p>
-                      {!displayPostalCode && !errandDetails.postal_code && (
-                        <button
-                          onClick={() => setShowPostalInput(true)}
-                          className="text-xs text-blue-600 hover:text-blue-700 mt-1"
-                        >
-                          + Add postal code
-                        </button>
-                      )}
-                    </>
-                  )}
+                      return location;
+                    })()}
+                  </p>
                 </div>
 
                 {/* Date & Time */}
