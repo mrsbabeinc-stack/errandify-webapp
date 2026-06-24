@@ -124,7 +124,11 @@ export default function TaskChatbox({
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+
+    // Message is required (image is optional)
+    if (!newMessage.trim()) {
+      return;
+    }
 
     // Check if chat is disabled
     if (chatDisabled) {
@@ -133,21 +137,23 @@ export default function TaskChatbox({
       return;
     }
 
-    // First: Quick pattern validation (contact info + drugs/violence/scams)
-    const validation = validateMessage(newMessage);
+    // Validate message only if there is text
+    if (newMessage.trim()) {
+      // First: Quick pattern validation (contact info + drugs/violence/scams)
+      const validation = validateMessage(newMessage);
 
-    // Log for debugging
-    console.log('Message:', newMessage);
-    console.log('Validation result:', validation);
+      // Log for debugging
+      console.log('Message:', newMessage);
+      console.log('Validation result:', validation);
 
-    setValidationErrors(validation.errors);
-    setValidationWarnings(validation.warnings);
-    setValidationSuggestions(validation.suggestions);
+      setValidationErrors(validation.errors);
+      setValidationWarnings(validation.warnings);
+      setValidationSuggestions(validation.suggestions);
 
-    // If pattern check found ERRORS, block immediately
-    if (!validation.isValid) {
-      console.log('Message BLOCKED by pattern validation');
-      const friendlyMessage = `⚠️ Message Not Appropriate
+      // If pattern check found ERRORS, block immediately
+      if (!validation.isValid) {
+        console.log('Message BLOCKED by pattern validation');
+        const friendlyMessage = `⚠️ Message Not Appropriate
 
 Your message doesn't meet our community standards. Please keep messages:
 • Task-focused and professional
@@ -156,10 +162,11 @@ Your message doesn't meet our community standards. Please keep messages:
 
 📝 Try rephrasing to discuss the task instead.`;
 
-      setValidationErrors([friendlyMessage]);
-      setError('Message contains prohibited content');
-      setBlockReason('Detected inappropriate content');
-      return;
+        setValidationErrors([friendlyMessage]);
+        setError('Message contains prohibited content');
+        setBlockReason('Detected inappropriate content');
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -167,13 +174,15 @@ Your message doesn't meet our community standards. Please keep messages:
     setBlockReason('');
 
     try {
-      // Second: AI-based content moderation (for context-dependent issues)
-      const aiModeration = await moderateWithAI(newMessage);
-      console.log('AI moderation result:', aiModeration);
+      // AI moderation only for text messages
+      if (newMessage.trim()) {
+        // Second: AI-based content moderation (for context-dependent issues)
+        const aiModeration = await moderateWithAI(newMessage);
+        console.log('AI moderation result:', aiModeration);
 
-      if (!aiModeration.isAppropriate) {
-        console.log('Message BLOCKED by AI moderation');
-        const friendlyMessage = `⚠️ Message Not Appropriate
+        if (!aiModeration.isAppropriate) {
+          console.log('Message BLOCKED by AI moderation');
+          const friendlyMessage = `⚠️ Message Not Appropriate
 
 Your message doesn't meet our community standards. Please keep messages:
 • Task-focused and professional
@@ -182,24 +191,34 @@ Your message doesn't meet our community standards. Please keep messages:
 
 📝 Try rephrasing to discuss the task instead.`;
 
-        setBlockReason(aiModeration.reason || 'Message content not appropriate for this platform');
-        setValidationErrors([friendlyMessage]);
-        setError('Message blocked');
-        setIsLoading(false);
-        return;
+          setBlockReason(aiModeration.reason || 'Message content not appropriate for this platform');
+          setValidationErrors([friendlyMessage]);
+          setError('Message blocked');
+          setIsLoading(false);
+          return;
+        }
       }
 
       // Third: Send message if all checks pass
       console.log('Message APPROVED - sending...');
       const token = localStorage.getItem('token');
+
+      let messageContent = newMessage;
+      if (selectedImage) {
+        // Append image info to message
+        messageContent = `${newMessage}\n📎 [Image attached: ${selectedImage.name}]`;
+      }
+
       await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/tasks/${taskId}/send`,
-        { content: newMessage },
+        { content: messageContent },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       console.log('Message sent successfully');
+      clearImageSelection();
+
       setNewMessage('');
       setValidationErrors([]);
       setValidationWarnings([]);
@@ -551,10 +570,11 @@ Your message doesn't meet our community standards. Please keep messages:
             )}
             <button
               type="submit"
-              disabled={isLoading || (!newMessage.trim() && !selectedImage)}
+              disabled={isLoading || !newMessage.trim()}
               className="px-3 py-2 bg-errandify-orange text-white rounded-lg text-sm font-semibold hover:bg-opacity-90 disabled:opacity-50"
+              title={selectedImage ? '📎 File attached' : 'Send message'}
             >
-              {isLoading ? '⏳' : '→'}
+              {isLoading ? '⏳' : (selectedImage ? '📎 →' : '→')}
             </button>
           </div>
 
