@@ -317,25 +317,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           )}
           {/* Header Section */}
           <div className="relative bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-1.5">
-            <div className="flex items-start justify-between gap-2 mb-0.5">
-              <div className="flex-1">
-                <h1 className="text-base font-bold">
-                  {errand.title}
-                  {errand.doerName && <span className="text-xs font-normal text-orange-100"> • Posted by {errand.doerName}</span>}
-                </h1>
-              </div>
-              <div className="text-right flex-shrink-0 flex flex-col items-end">
-                <p className="text-lg font-bold text-white">
-                  SGD ${userBidAmount ? userBidAmount : errand.budget ? parseFloat(String(errand.budget)).toFixed(0) : '0'}
-                </p>
-                {userBidAmount && errand.budget && (
-                  <p className="text-xs text-orange-100 font-normal">
-                    Asker's budget: ${parseFloat(String(errand.budget)).toFixed(0)}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-1">
+            {/* Top Row: Category, Status, Offer Status */}
+            <div className="flex flex-wrap items-center gap-1 mb-1">
               <span
                 className={`${getCategoryColor(
                   errand.category
@@ -352,21 +335,31 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               >
                 {errand.status}
               </span>
-              {!userBidAmount && (
-                <span className="text-xs text-orange-100">
-                  Asker's budget shown above
-                </span>
-              )}
               {userBidAmount && (
                 <span className="text-xs bg-white text-errandify-orange px-1.5 py-0.5 rounded font-bold">
                   ✓ Your offer submitted
                 </span>
               )}
-              {userBidAmount && errand.status !== 'open' && (
-                <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded">
-                  Waiting for response...
-                </span>
-              )}
+            </div>
+
+            {/* Second Row: Title + Price */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <h1 className="text-base font-bold">
+                  {errand.title}
+                  {errand.doerName && <span className="text-xs font-normal text-orange-100"> • Posted by {errand.doerName}</span>}
+                </h1>
+              </div>
+              <div className="text-right flex-shrink-0 flex flex-col items-end">
+                <p className="text-lg font-bold text-white">
+                  SGD ${userBidAmount ? userBidAmount : errand.budget ? parseFloat(String(errand.budget)).toFixed(0) : '0'}
+                </p>
+                {userBidAmount && errand.budget && (
+                  <p className="text-xs text-orange-100 font-normal">
+                    Asker's budget: ${parseFloat(String(errand.budget)).toFixed(0)}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
