@@ -35,6 +35,7 @@ export default function NotificationsPage() {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
+        console.warn('No token found');
         setLoading(false);
         return;
       }
@@ -46,21 +47,28 @@ export default function NotificationsPage() {
         }
       );
 
+      console.log('[Notifications] API Response:', response.data);
+
       if (response.data.success && response.data.data.notifications) {
         // Convert backend notifications to display format
         const formattedNotifications = response.data.data.notifications.map((n: BackendNotification) => ({
           id: n.id.toString(),
-          type: n.type === 'bid_received' ? 'offer' : n.type === 'new_message' ? 'message' : 'status',
+          type: n.type === 'bid_placed' ? 'offer' : n.type === 'message_received' ? 'message' : 'status',
           title: n.title,
-          message: n.body,
+          message: n.body || n.message,
           timestamp: n.createdAt,
           read: n.read,
           action: n.actionUrl ? { label: 'View', url: n.actionUrl } : undefined,
         }));
+        console.log('[Notifications] Formatted:', formattedNotifications);
         setNotifications(formattedNotifications);
+      } else {
+        console.warn('[Notifications] No notifications in response:', response.data);
+        setNotifications([]);
       }
     } catch (error) {
       console.error('Failed to load notifications:', error);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
@@ -134,7 +142,7 @@ export default function NotificationsPage() {
   const filteredNotifications =
     filter === 'unread'
       ? notifications.filter((n) => !n.read)
-      : notifications.filter((n) => !n.read || filter === 'all');
+      : notifications;
 
   const getTypeIcon = (type: string) => {
     switch (type) {
