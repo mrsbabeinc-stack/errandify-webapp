@@ -203,8 +203,8 @@ Your message doesn't meet our community standards. Please keep messages:
       setValidationSuggestions([]);
       setBlockReason('');
       setError('');
-      // Fetch messages immediately after sending
-      await fetchMessages();
+      // Wait a moment for DB to write, then fetch messages
+      setTimeout(fetchMessages, 300);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to send message');
     } finally {
