@@ -193,7 +193,6 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const currentUserId = req.userId ? parseInt(req.userId, 10) : null;
 
     // Only handle numeric IDs
     if (!/^\d+$/.test(id)) {
@@ -214,20 +213,6 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
       [errand.asker_id]
     );
 
-    // Get doer's bid status if there's an accepted bid
-    let doerBidStatus = null;
-    let doerId = null;
-    if (errand.accepted_bid_id) {
-      const bidResult = await db.query(
-        'SELECT status, doer_id FROM bids WHERE id = $1',
-        [errand.accepted_bid_id]
-      );
-      if (bidResult.rows.length > 0) {
-        doerBidStatus = bidResult.rows[0].status;
-        doerId = bidResult.rows[0].doer_id;
-      }
-    }
-
     res.json({
       success: true,
       data: {
@@ -245,9 +230,6 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         deadline: errand.deadline,
         isRecurring: errand.is_recurring,
         askerId: errand.asker_id,
-        doerId: doerId,
-        doerBidStatus: doerBidStatus,
-        acceptedBidId: errand.accepted_bid_id,
         asker: askerResult.rows[0],
         createdAt: errand.created_at,
       },
