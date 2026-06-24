@@ -5,6 +5,7 @@ import FloatingHana from './components/FloatingHana';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import SingPassSimulator from './pages/SingPassSimulator';
+import SingPassCallbackPage from './pages/SingPassCallbackPage';
 import HomePage from './pages/HomePage';
 import CategorySelectionPage from './pages/CategorySelectionPage';
 import CategoryPreferencePage from './pages/CategoryPreferencePage';
@@ -136,6 +137,12 @@ export default function App() {
         <Route
           path="/singpass-simulator"
           element={<SingPassSimulator />}
+        />
+
+        {/* SingPass OAuth Callback Handler */}
+        <Route
+          path="/auth/singpass-callback"
+          element={<SingPassCallbackPage onLogin={handleLogin} />}
         />
 
         {/* Hana task creation - AI-powered errand posting */}

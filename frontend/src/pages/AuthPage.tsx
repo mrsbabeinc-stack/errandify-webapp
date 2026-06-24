@@ -16,62 +16,63 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-  // Handle SingPass Login - Redirect to simulator
+  // Handle SingPass Login - Standard OAuth2 Flow
   const handleSingPassLogin = () => {
-    // Redirect to SingPass simulator
-    navigate('/singpass-simulator?redirect_uri=' + encodeURIComponent(window.location.href));
+    try {
+      // Generate PKCE parameters for security
+      const state = Math.random().toString(36).substring(2, 15);
+      const nonce = Math.random().toString(36).substring(2, 15);
+
+      // Store state and nonce for verification after redirect
+      sessionStorage.setItem('singpass_state', state);
+      sessionStorage.setItem('singpass_nonce', nonce);
+      sessionStorage.setItem('singpass_mode', 'signin'); // Track if this is signin
+
+      // Redirect to SingPass login (for testing: redirect to simulator)
+      const singpassUrl = `/singpass-simulator?` + new URLSearchParams({
+        client_id: 'errandify-app',
+        redirect_uri: `${window.location.origin}/auth/singpass-callback`,
+        response_type: 'code',
+        scope: 'openid profile email mobile',
+        state,
+        nonce,
+        acr_values: 'urn:singpass:loa2', // Level of Assurance 2 (highest security)
+      }).toString();
+
+      window.location.href = singpassUrl;
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'SingPass login failed');
+    }
   };
 
-  // Handle Signup via SingPass
+  // Handle Signup via SingPass - Standard OAuth2 Flow
   const handleSignupSingPass = async () => {
     setError('');
-    setLoading(true);
 
     try {
-      // Step 1: Get SingPass authorization URL
-      const authResponse = await axios.get(
-        `${API_URL}/api/auth/singpass-authorize`
-      );
+      // Generate PKCE parameters for security
+      const state = Math.random().toString(36).substring(2, 15);
+      const nonce = Math.random().toString(36).substring(2, 15);
 
-      if (authResponse.data.success && authResponse.data.redirectUrl) {
-        // In a real scenario, redirect to SingPass
-        // For testing, we'll use the mock endpoint
-        console.log('SingPass Authorization URL:', authResponse.data.redirectUrl);
+      // Store state and nonce for verification after redirect
+      sessionStorage.setItem('singpass_state', state);
+      sessionStorage.setItem('singpass_nonce', nonce);
+      sessionStorage.setItem('singpass_mode', 'signup'); // Track if this is signup
 
-        // For testing: use mock SingPass callback
-        const mockResponse = await axios.get(
-          `${API_URL}/api/mock-auth/mock-singpass-callback`
-        );
+      // Redirect to SingPass login (for testing: redirect to simulator)
+      const singpassUrl = `/singpass-simulator?` + new URLSearchParams({
+        client_id: 'errandify-app',
+        redirect_uri: `${window.location.origin}/auth/singpass-callback`,
+        response_type: 'code',
+        scope: 'openid profile email mobile',
+        state,
+        nonce,
+        acr_values: 'urn:singpass:loa2', // Level of Assurance 2 (highest security)
+      }).toString();
 
-        if (mockResponse.data.success) {
-          const singpassData = mockResponse.data.data.userData;
-
-          // Step 2: Create account with SingPass data (name and phone from SingPass)
-          const signupResponse = await axios.post(
-            `${API_URL}/api/auth/signup`,
-            {
-              nric: singpassData.sub,
-              displayName: singpassData.name, // Get from SingPass
-              email: singpassData.email,
-              phone: singpassData.phone_number, // Get from SingPass
-              role: 'asker',
-              singpassVerified: true,
-            }
-          );
-
-          if (signupResponse.data.success) {
-            // Save token and user
-            localStorage.setItem('token', signupResponse.data.data.token);
-            localStorage.setItem('user', JSON.stringify(signupResponse.data.data.user));
-
-            const userData = signupResponse.data.data.user;
-            onLogin(userData.role || 'asker');
-          }
-        }
-      }
+      window.location.href = singpassUrl;
     } catch (err: any) {
       setError(err.response?.data?.error || 'Signup failed. Please try again.');
-      setLoading(false);
     }
   };
 
