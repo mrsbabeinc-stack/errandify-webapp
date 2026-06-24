@@ -1,6 +1,25 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
+// Floating animation
+const floatingStyle = `
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+  .floating-button {
+    animation: float 3s ease-in-out infinite;
+  }
+`;
+
+// Inject styles once
+if (typeof document !== 'undefined' && !document.getElementById('floating-animation')) {
+  const style = document.createElement('style');
+  style.id = 'floating-animation';
+  style.textContent = floatingStyle;
+  document.head.appendChild(style);
+}
+
 interface Message {
   id: string;
   sender: 'user' | 'hana';
@@ -365,7 +384,7 @@ export default function HanaCustomerService() {
             setIsOpen(true);
             setIsMinimized(false);
           }}
-          className="fixed bottom-20 right-6 w-12 h-12 bg-white rounded-full hover:shadow-lg transition-all hover:scale-105 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange active:scale-95"
+          className="floating-button fixed bottom-20 right-6 w-12 h-12 bg-white rounded-full hover:shadow-lg transition-all hover:scale-105 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange active:scale-95"
           style={{
             boxShadow: '0 3px 0 rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.1)',
           }}
@@ -540,7 +559,7 @@ export default function HanaCustomerService() {
       {isOpen && isMinimized && (
         <button
           onClick={() => setIsMinimized(false)}
-          className="fixed bottom-20 right-6 w-12 h-12 bg-white rounded-full transition-all hover:scale-105 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange ring-2 ring-orange-300 active:scale-95"
+          className="floating-button fixed bottom-20 right-6 w-12 h-12 bg-white rounded-full transition-all hover:scale-105 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange ring-2 ring-orange-300 active:scale-95"
           style={{
             boxShadow: '0 3px 0 rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.1)',
           }}
