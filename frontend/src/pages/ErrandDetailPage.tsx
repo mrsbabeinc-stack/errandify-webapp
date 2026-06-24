@@ -26,6 +26,8 @@ interface ErrandDetail {
   isRecurring?: boolean;
   bidCount?: number;
   acceptedBidId?: number;
+  doerBidStatus?: string;
+  doerId?: number;
 }
 
 interface UserProfile {
@@ -439,8 +441,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             </div>
           </div>
 
-          {/* Chat Button - Top Right (when not open) */}
-          {errand.status !== 'open' && (
+          {/* Chat Button - Top Right (when not open and doer bid is confirmed) */}
+          {errand.status !== 'open' && errand.doerBidStatus === 'confirmed' && currentUser?.id !== errand.askerId && (
             <div className="absolute top-3 right-3">
               <button
                 onClick={() => setShowChat(true)}
@@ -574,13 +576,25 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => setShowChat(true)}
-                  className="flex-1 bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition-colors text-base"
+                  disabled={errand.doerBidStatus !== 'confirmed'}
+                  className={`flex-1 py-3 rounded-lg font-bold text-base transition-colors ${
+                    errand.doerBidStatus === 'confirmed'
+                      ? 'bg-orange-500 text-white hover:bg-orange-600'
+                      : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+                  }`}
+                  title={errand.doerBidStatus !== 'confirmed' ? 'Please confirm your offer first' : 'Open chat'}
                 >
                   💬 Chat
                 </button>
                 <button
                   onClick={handleStartJob}
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors text-base"
+                  disabled={errand.doerBidStatus !== 'confirmed'}
+                  className={`flex-1 py-3 rounded-lg font-bold text-base transition-colors ${
+                    errand.doerBidStatus === 'confirmed'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+                  }`}
+                  title={errand.doerBidStatus !== 'confirmed' ? 'Please confirm your offer first' : 'Start errand'}
                 >
                   ▶️ Start Errand
                 </button>
