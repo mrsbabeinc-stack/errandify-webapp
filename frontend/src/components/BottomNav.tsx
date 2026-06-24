@@ -3,24 +3,6 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getNotifications } from '../utils/notificationStore';
 
-// Floating animation
-const floatingStyle = `
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
-  }
-  .floating-button {
-    animation: float 3s ease-in-out infinite;
-  }
-`;
-
-// Inject styles
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.textContent = floatingStyle;
-  document.head.appendChild(style);
-}
-
 interface BottomNavProps {
   onLogout: () => void;
   userRole: 'asker' | 'doer';
@@ -192,7 +174,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
           {userRole === 'asker' && (
             <button
               onClick={onCreateTask}
-              className="floating-button absolute left-1/2 -translate-x-1/2 -top-3 w-11 h-11 bg-gradient-to-b from-errandify-orange via-orange-500 to-orange-700 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all transform flex items-center justify-center font-bold text-lg border-3 border-orange-800 active:scale-95 z-50"
+              className="absolute left-1/2 -translate-x-1/2 -top-3 w-11 h-11 bg-gradient-to-b from-errandify-orange via-orange-500 to-orange-700 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all transform flex items-center justify-center font-bold text-lg border-3 border-orange-800 active:scale-95 z-50"
               style={{
                 boxShadow: '0 4px 0 rgba(0,0,0,0.2), 0 6px 12px rgba(0,0,0,0.15)',
               }}
