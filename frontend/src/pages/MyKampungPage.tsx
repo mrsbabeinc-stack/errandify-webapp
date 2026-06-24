@@ -1533,9 +1533,8 @@ export default function MyKampungPage() {
                       <p key={idx} className="mb-3 text-gray-700 leading-relaxed whitespace-pre-wrap">
                         {parts.map((part, partIdx) => {
                           if (part.type === 'link') {
-                            // Check if it's an internal blog link or external link
-                            const isBlogLink = part.url?.startsWith('/blog/') || part.url?.includes('blog');
-                            const isInternalArticle = blogPosts.some(p => p.slug === part.url);
+                            // Check if it's an internal blog article link
+                            const isInternalArticle = blogPostsData.some(p => p.slug === part.url);
 
                             if (isInternalArticle) {
                               // Internal blog article link
@@ -1543,7 +1542,7 @@ export default function MyKampungPage() {
                                 <button
                                   key={partIdx}
                                   onClick={() => {
-                                    const article = blogPosts.find(p => p.slug === part.url);
+                                    const article = blogPostsData.find(p => p.slug === part.url);
                                     if (article) {
                                       setSelectedBlogPost(article);
                                     }
