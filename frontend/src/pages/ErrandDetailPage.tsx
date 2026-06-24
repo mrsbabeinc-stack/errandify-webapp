@@ -154,24 +154,42 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
     // Extract just the district/area name (the part before postal code)
     // Format: "111 Duchess Avenue, Bedok, Singapore 239211"
-    // We want: "Bedok"
+    // We want: "Bedok" (only the area/district)
 
-    // Remove postal code first (6 digits)
+    // Remove postal code (6 digits)
     let cleaned = location.replace(/\s*\d{6}\s*/g, '');
 
-    // Split by comma and get the last meaningful part (area name)
+    // Split by comma
     const parts = cleaned.split(',').map(p => p.trim());
 
-    // Filter out 'Singapore' and 'Singapore' entries, get area
+    // The area is typically the second-to-last part (before 'Singapore')
+    // Or the part that is NOT a street address and NOT 'Singapore'
+    const streetKeywords = /^\d+|avenue|street|road|lane|drive|boulevard|crescent|terrace|place|court|building|blk|block|#/i;
+
+    // Work backwards to find the area name
     for (let i = parts.length - 1; i >= 0; i--) {
-      const part = parts[i].toLowerCase();
-      if (part && part !== 'singapore' && !part.includes('avenue') && !part.includes('street') && !part.includes('road')) {
+      const part = parts[i];
+      const partLower = part.toLowerCase();
+
+      // Skip 'Singapore' and postal/street addresses
+      if (partLower === 'singapore' || streetKeywords.test(part)) {
+        continue;
+      }
+
+      // Found the area name
+      if (part) {
+        return part;
+      }
+    }
+
+    // Fallback: return first part after removing street address
+    for (let i = 0; i < parts.length; i++) {
+      if (!streetKeywords.test(parts[i]) && parts[i].toLowerCase() !== 'singapore') {
         return parts[i];
       }
     }
 
-    // Fallback: return last part
-    return parts[parts.length - 1] || location;
+    return location;
   };
 
   const getMaskedLocation = (location?: string) => {
