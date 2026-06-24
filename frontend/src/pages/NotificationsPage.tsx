@@ -92,21 +92,6 @@ export default function NotificationsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      loadNotifications();
-    } catch (error) {
-      console.error('Failed to delete notification:', error);
-    }
-  };
-
   const handleMarkAllRead = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -120,24 +105,6 @@ export default function NotificationsPage() {
       loadNotifications();
     } catch (error) {
       console.error('Failed to mark all as read:', error);
-    }
-  };
-
-  const handleClearAll = async () => {
-    if (window.confirm('Clear all notifications?')) {
-      try {
-        const token = localStorage.getItem('token');
-        await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/clear-all`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        loadNotifications();
-      } catch (error) {
-        console.error('Failed to clear notifications:', error);
-      }
     }
   };
 
@@ -177,26 +144,15 @@ export default function NotificationsPage() {
       <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white sticky top-0 z-50 shadow-sm">
         <div className="max-w-4xl mx-auto px-3 py-2 flex items-center justify-between gap-2">
           <h1 className="text-sm font-bold">🔔 Notifications</h1>
-          <div className="flex gap-1">
-            {notifications.some((n) => !n.read) && (
-              <button
-                onClick={handleMarkAllRead}
-                className="text-xs bg-white bg-opacity-30 hover:bg-opacity-40 text-white px-2 py-0.5 rounded transition font-semibold"
-                title="Mark all notifications as read"
-              >
-                ✓ Mark All Read
-              </button>
-            )}
-            {notifications.length > 0 && (
-              <button
-                onClick={handleClearAll}
-                className="text-xs bg-red-500 bg-opacity-30 hover:bg-opacity-40 text-white px-2 py-0.5 rounded transition"
-                title="Delete all notifications"
-              >
-                🗑️ Clear All
-              </button>
-            )}
-          </div>
+          {notifications.some((n) => !n.read) && (
+            <button
+              onClick={handleMarkAllRead}
+              className="text-xs bg-white bg-opacity-30 hover:bg-opacity-40 text-white px-2 py-0.5 rounded transition font-semibold"
+              title="Mark all notifications as read"
+            >
+              ✓ Mark All Read
+            </button>
+          )}
         </div>
 
         {/* TABS */}
@@ -303,14 +259,6 @@ export default function NotificationsPage() {
                           ✓ Read
                         </button>
                       )}
-
-                      <button
-                        onClick={() => handleDelete(notification.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-100 px-1.5 py-0.5 rounded transition ml-auto"
-                        title="Delete notification"
-                      >
-                        🗑️
-                      </button>
                     </div>
                   </div>
                 </div>
