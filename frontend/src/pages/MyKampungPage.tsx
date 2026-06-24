@@ -1500,8 +1500,28 @@ export default function MyKampungPage() {
                   })}
                 </div>
 
+                {/* Related Articles */}
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <h4 className="font-semibold text-sm text-gray-900 mb-3">📖 Read Next</h4>
+                  <div className="space-y-2">
+                    {blogPostsData
+                      .filter(post => post.id !== selectedBlogPost.id)
+                      .slice(0, 3)
+                      .map(post => (
+                        <button
+                          key={post.id}
+                          onClick={() => setSelectedBlogPost(post)}
+                          className="w-full text-left p-2 rounded bg-orange-50 hover:bg-orange-100 transition border border-orange-200"
+                        >
+                          <p className="text-sm font-semibold text-errandify-orange line-clamp-1">{post.title}</p>
+                          <p className="text-xs text-gray-600 line-clamp-1 mt-0.5">{post.excerpt}</p>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
                 {/* Footer Actions */}
-                <div className="mt-6 pt-4 border-t border-gray-200 flex gap-2">
+                <div className="mt-4 pt-4 border-t border-gray-200 flex gap-2">
                   <button
                     onClick={() => {
                       setSelectedBlogPost(null);
