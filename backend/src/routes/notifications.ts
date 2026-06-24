@@ -11,7 +11,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // Get user's notifications (most recent first)
     const notificationsResult = await db.query(
-      `SELECT id, user_id, type, title, body, action_url, created_at, read
+      `SELECT id, user_id, type, title, message as body, related_errand_id, created_at, is_read
        FROM notifications
        WHERE user_id = $1
        ORDER BY created_at DESC
@@ -21,7 +21,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // Get unread count
     const countResult = await db.query(
-      'SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND read = false',
+      'SELECT COUNT(*) as count FROM notifications WHERE user_id = $1 AND is_read = false',
       [userId]
     );
 
@@ -32,10 +32,11 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           id: n.id,
           type: n.type,
           title: n.title,
+          message: n.body,
           body: n.body,
-          actionUrl: n.action_url,
+          relatedErrandId: n.related_errand_id,
           createdAt: n.created_at,
-          read: n.read,
+          read: n.is_read,
         })),
         unread_count: parseInt(countResult.rows[0]?.count || '0'),
         total: notificationsResult.rows.length,
@@ -69,7 +70,7 @@ router.post('/:id/read', authMiddleware, async (req: AuthRequest, res: Response)
 
     // Mark as read
     const updateResult = await db.query(
-      'UPDATE notifications SET read = true WHERE id = $1 RETURNING id, read',
+      'UPDATE notifications SET is_read = true, read_at = NOW() WHERE id = $1 RETURNING id, is_read',
       [id]
     );
 
@@ -77,7 +78,7 @@ router.post('/:id/read', authMiddleware, async (req: AuthRequest, res: Response)
       success: true,
       data: {
         id: updateResult.rows[0].id,
-        read: updateResult.rows[0].read,
+        read: updateResult.rows[0].is_read,
       },
     });
   } catch (error) {
@@ -92,7 +93,7 @@ router.post('/read-all', authMiddleware, async (req: AuthRequest, res: Response)
     const userId = parseInt(req.userId || '0', 10);
 
     await db.query(
-      'UPDATE notifications SET read = true WHERE user_id = $1 AND read = false',
+      'UPDATE notifications SET is_read = true, read_at = NOW() WHERE user_id = $1 AND is_read = false',
       [userId]
     );
 
