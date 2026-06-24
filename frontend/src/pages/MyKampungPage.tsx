@@ -1416,7 +1416,8 @@ export default function MyKampungPage() {
                 <img
                   src={selectedBlogPost.featuredImage}
                   alt={selectedBlogPost.title}
-                  className="w-full h-64 object-cover"
+                  className="w-full h-auto max-h-96 object-contain"
+                  style={{ maxWidth: '100%' }}
                   onError={(e) => {
                     console.error('Featured image failed to load:', selectedBlogPost.featuredImage);
                   }}
