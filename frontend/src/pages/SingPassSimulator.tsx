@@ -140,39 +140,39 @@ export default function SingPassSimulator() {
 
   return (
     <div className="min-h-screen bg-blue-50 flex flex-col items-center justify-center p-4">
-      {/* SingPass Header - Official Design */}
-      <div className="mb-12 text-center">
+      {/* SingPass Header - Compact */}
+      <div className="mb-6 text-center">
         {/* Lock & Key Icon */}
-        <div className="text-6xl mb-4">🔐</div>
+        <div className="text-5xl mb-2">🔐</div>
         {/* SingPass Title */}
-        <h1 className="text-4xl font-bold text-blue-900 mb-2">SingPass</h1>
+        <h1 className="text-3xl font-bold text-blue-900">SingPass</h1>
         {/* Subtitle */}
-        <p className="text-lg text-blue-600">Singapore's National Digital Identity</p>
+        <p className="text-sm text-blue-600">Singapore's National Digital Identity</p>
       </div>
 
-      {/* Main Card - Official SingPass Design */}
-      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-12">
+      {/* Main Card - Compact Design */}
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
         {/* Step 1: Login */}
         {step === 'login' && (
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-4">
             {/* Header */}
-            <div className="text-center mb-8">
-              <h2 className="text-4xl font-bold text-gray-900 mb-3">Sign In</h2>
-              <p className="text-lg text-gray-700">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Sign In</h2>
+              <p className="text-sm text-gray-600">
                 Enter your NRIC and password
               </p>
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="p-4 bg-red-50 border border-red-300 text-red-700 rounded-xl text-center font-semibold">
+              <div className="p-3 bg-red-50 border border-red-300 text-red-700 rounded-lg text-sm text-center font-semibold">
                 {error}
               </div>
             )}
 
             {/* NRIC Input */}
             <div>
-              <label className="block text-sm font-bold text-gray-900 mb-3">
+              <label className="block text-xs font-bold text-gray-900 mb-1">
                 NRIC / FIN
               </label>
               <input
@@ -181,16 +181,16 @@ export default function SingPassSimulator() {
                 onChange={(e) => setNric(e.target.value.toUpperCase())}
                 placeholder="S1234567A"
                 disabled={loading}
-                className="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-mono text-center text-xl disabled:bg-gray-100 transition-all"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-200 font-mono text-center text-base disabled:bg-gray-100 transition-all"
               />
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-xs text-gray-500 mt-1">
                 Demo: S1234567A, S9876543B, S5555555C
               </p>
             </div>
 
             {/* Password Input */}
             <div>
-              <label className="block text-sm font-bold text-gray-900 mb-3">
+              <label className="block text-xs font-bold text-gray-900 mb-1">
                 Password
               </label>
               <input
@@ -199,9 +199,9 @@ export default function SingPassSimulator() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 disabled={loading}
-                className="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100 transition-all"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-200 disabled:bg-gray-100 transition-all"
               />
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-xs text-gray-500 mt-1">
                 Demo: Use any password
               </p>
             </div>
@@ -210,14 +210,14 @@ export default function SingPassSimulator() {
             <button
               type="submit"
               disabled={loading || !nric || !password}
-              className="w-full py-4 px-6 bg-blue-500 text-white rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              className="w-full py-2.5 px-4 bg-blue-500 text-white rounded-lg font-bold text-base hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
 
             {/* Forgot Password Link */}
             <div className="text-center">
-              <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold text-lg">
+              <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold text-sm">
                 Forgot password?
               </a>
             </div>
@@ -226,29 +226,29 @@ export default function SingPassSimulator() {
 
         {/* Step 2: 2FA Verification */}
         {step === 'verify' && (
-          <form onSubmit={handleVerify} className="space-y-6">
+          <form onSubmit={handleVerify} className="space-y-4">
             {/* Header */}
-            <div className="text-center mb-8">
-              <div className="text-6xl mb-4">📱</div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-3">
+            <div className="text-center mb-5">
+              <div className="text-4xl mb-2">📱</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">
                 Verify Your Identity
               </h2>
-              <p className="text-lg text-gray-700">
+              <p className="text-sm text-gray-600">
                 We've sent a code to your registered phone
               </p>
             </div>
 
             {/* Info Box */}
-            <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 text-center">
-              <p className="font-bold text-blue-900 mb-2 text-lg">2-Factor Authentication</p>
-              <p className="text-blue-700">For demo, just click "Verify" - no code needed</p>
+            <div className="bg-blue-50 border border-blue-300 rounded-lg p-3 text-center">
+              <p className="font-bold text-blue-900 mb-1 text-sm">2-Factor Authentication</p>
+              <p className="text-blue-700 text-xs">For demo, just click "Verify" - no code needed</p>
             </div>
 
             {/* Verify Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 px-6 bg-blue-500 text-white rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              className="w-full py-2.5 px-4 bg-blue-500 text-white rounded-lg font-bold text-base hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Verifying...' : 'Verify'}
             </button>
@@ -258,7 +258,7 @@ export default function SingPassSimulator() {
               type="button"
               onClick={() => setStep('login')}
               disabled={loading}
-              className="w-full py-4 px-6 bg-gray-300 text-gray-900 rounded-xl font-bold text-lg hover:bg-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 px-4 bg-gray-300 text-gray-900 rounded-lg font-bold text-base hover:bg-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Back
             </button>
@@ -267,89 +267,60 @@ export default function SingPassSimulator() {
 
         {/* Step 3: Confirmation */}
         {step === 'confirm' && (
-          <form onSubmit={handleConfirm} className="space-y-6">
+          <form onSubmit={handleConfirm} className="space-y-4">
             {/* Header */}
-            <div className="text-center mb-8">
-              <div className="text-6xl mb-4">✅</div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-3">
+            <div className="text-center mb-4">
+              <div className="text-4xl mb-2">✅</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">
                 Confirm Login
               </h2>
-              <p className="text-lg text-gray-700">
+              <p className="text-sm text-gray-600">
                 Review your information before proceeding
               </p>
             </div>
 
-            {/* User Information */}
-            <div className="bg-gray-100 rounded-xl p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs font-bold text-gray-600 uppercase mb-1">
-                    Name
-                  </p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {singpassUsers[nric]?.name || '—'}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-bold text-gray-600 uppercase mb-1">
-                    NRIC
-                  </p>
-                  <p className="text-lg font-mono font-semibold text-gray-900">{nric}</p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-bold text-gray-600 uppercase mb-1">
-                    Email
-                  </p>
-                  <p className="text-lg text-gray-900">
-                    {singpassUsers[nric]?.email || '—'}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-bold text-gray-600 uppercase mb-1">
-                    Phone
-                  </p>
-                  <p className="text-lg text-gray-900">
-                    {singpassUsers[nric]?.phone || '—'}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-bold text-gray-600 uppercase mb-1">
-                    Date of Birth
-                  </p>
-                  <p className="text-lg text-gray-900">
-                    {singpassUsers[nric]?.dateOfBirth || '—'}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-bold text-gray-600 uppercase mb-1">
-                    Nationality
-                  </p>
-                  <p className="text-lg text-gray-900">
-                    {singpassUsers[nric]?.nationality || '—'}
-                  </p>
-                </div>
+            {/* User Information - Compact */}
+            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="flex justify-between items-center py-1">
+                <p className="text-xs font-bold text-gray-600 uppercase">
+                  Name
+                </p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {singpassUsers[nric]?.name || '—'}
+                </p>
               </div>
 
-              <div className="border-t border-gray-300 pt-4">
-                <p className="text-xs font-bold text-gray-600 uppercase mb-1">
-                  Address
+              <div className="flex justify-between items-center py-1">
+                <p className="text-xs font-bold text-gray-600 uppercase">
+                  NRIC
                 </p>
-                <p className="text-base text-gray-900">
-                  {singpassUsers[nric]?.address || '—'}
+                <p className="text-sm font-mono font-semibold text-gray-900">{nric}</p>
+              </div>
+
+              <div className="flex justify-between items-center py-1">
+                <p className="text-xs font-bold text-gray-600 uppercase">
+                  Email
+                </p>
+                <p className="text-sm text-gray-900">
+                  {singpassUsers[nric]?.email || '—'}
+                </p>
+              </div>
+
+              <div className="flex justify-between items-center py-1">
+                <p className="text-xs font-bold text-gray-600 uppercase">
+                  Phone
+                </p>
+                <p className="text-sm text-gray-900">
+                  {singpassUsers[nric]?.phone || '—'}
                 </p>
               </div>
             </div>
 
             {/* Verification Badge */}
-            <div className="bg-green-50 border-2 border-green-300 rounded-xl p-6 text-center">
-              <p className="font-bold text-green-900 mb-2 text-lg">✅ Identity Verified</p>
-              <p className="text-green-700">
-                Your information has been securely verified and will be shared with Errandify.
+            <div className="bg-green-50 border border-green-300 rounded-lg p-3 text-center">
+              <p className="font-bold text-green-900 text-sm mb-1">✅ Identity Verified</p>
+              <p className="text-green-700 text-xs">
+                Your information has been verified and will be shared with Errandify.
               </p>
             </div>
 
@@ -357,9 +328,9 @@ export default function SingPassSimulator() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 px-6 bg-green-600 text-white rounded-xl font-bold text-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              className="w-full py-2.5 px-4 bg-green-600 text-white rounded-lg font-bold text-base hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Confirming...' : 'Confirm & Continue to Errandify'}
+              {loading ? 'Confirming...' : 'Confirm & Continue'}
             </button>
 
             {/* Back Button */}
@@ -367,7 +338,7 @@ export default function SingPassSimulator() {
               type="button"
               onClick={() => setStep('login')}
               disabled={loading}
-              className="w-full py-4 px-6 bg-gray-300 text-gray-900 rounded-xl font-bold text-lg hover:bg-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 px-4 bg-gray-300 text-gray-900 rounded-lg font-bold text-base hover:bg-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Back
             </button>
@@ -376,13 +347,11 @@ export default function SingPassSimulator() {
       </div>
 
       {/* Footer */}
-      <div className="mt-12 text-center text-sm text-gray-600">
-        <p className="font-semibold">🔒 This is a secure government authentication system</p>
-        <p className="mt-3">
-          <a href="https://www.singpass.gov.sg" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 font-semibold">
-            Learn more about SingPass
-          </a>
-        </p>
+      <div className="mt-6 text-center text-xs text-gray-600">
+        <p className="font-semibold mb-1">🔒 Secure government authentication</p>
+        <a href="https://www.singpass.gov.sg" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 font-semibold">
+          Learn more about SingPass
+        </a>
       </div>
     </div>
   );
