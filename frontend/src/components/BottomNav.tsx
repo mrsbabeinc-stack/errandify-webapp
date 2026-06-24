@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getNotifications } from '../utils/notificationStore';
+import { useNotificationCount } from '../hooks/useNotificationCount';
 
 interface BottomNavProps {
   onLogout: () => void;
@@ -22,19 +23,13 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   const navigate = useNavigate();
   const [userImage, setUserImage] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const { unreadCount: unreadNotifications } = useNotificationCount(3000);
 
   useEffect(() => {
     fetchProfileImage();
 
-    // Check for notifications and unread chats
-    const checkNotifications = () => {
-      // Get unread notification count from store
-      const notifications = getNotifications();
-      const unread = notifications.filter(n => !n.read).length;
-      setUnreadNotifications(unread);
-
-      // Check for unread chats
+    // Check for unread chats
+    const checkChats = () => {
       const stored = localStorage.getItem('unreadChats');
       if (stored) {
         const unreadMap = JSON.parse(stored);
@@ -43,8 +38,9 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
       }
     };
 
-    checkNotifications();
-    const interval = setInterval(checkNotifications, 1000);
+    checkChats();
+    // Refresh chat count every 3 seconds
+    const interval = setInterval(checkChats, 3000);
 
     return () => {
       clearInterval(interval);
