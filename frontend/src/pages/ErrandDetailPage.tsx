@@ -408,19 +408,25 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               )}
 
               {errand.location && (
-                <div className="bg-orange-50 p-1 rounded-lg border-l-4 border-errandify-orange">
-                  <p className="text-xs text-gray-600">Full Address</p>
-                  {errand.status === 'confirmed' ? (
+                <>
+                  {/* Area (shown always) */}
+                  <div className="bg-orange-50 p-1 rounded-lg border-l-4 border-errandify-orange">
+                    <p className="text-xs text-gray-600">Area</p>
                     <p className="text-xs text-gray-700 font-semibold">
-                      📍 {errand.location}{errand.postal_code && ` ${errand.postal_code}`}
+                      📍 {getAreaOnly(errand.location)}
                     </p>
-                  ) : (
-                    <>
-                      <p className="text-xs text-gray-700">📍 {getAreaOnly(errand.location)}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Full address shown once job is confirmed</p>
-                    </>
+                  </div>
+
+                  {/* Full Address (shown only when confirmed) */}
+                  {errand.status === 'confirmed' && (
+                    <div className="bg-orange-50 p-1 rounded-lg border-l-4 border-errandify-orange">
+                      <p className="text-xs text-gray-600">Full Address</p>
+                      <p className="text-xs text-gray-700 font-semibold">
+                        📍 {errand.location}{errand.postal_code && ` ${errand.postal_code}`}
+                      </p>
+                    </div>
                   )}
-                </div>
+                </>
               )}
             </div>
 
