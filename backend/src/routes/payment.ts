@@ -1,22 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
+import { stripeService } from '../services/stripe.js';
 
 const router = Router();
-
-// Dummy Stripe payment method store (in production, this would be in Stripe)
-interface DummyPaymentMethod {
-  id: string;
-  userId: number;
-  type: 'card';
-  last4: string;
-  brand: string;
-  expiryMonth: number;
-  expiryYear: number;
-  default: boolean;
-}
-
-const paymentMethods: Map<number, DummyPaymentMethod[]> = new Map();
 
 // GET /api/payment/methods - Get user's payment methods
 router.get('/methods', authMiddleware, async (req: AuthRequest, res: Response) => {
@@ -156,6 +143,127 @@ router.post('/confirm', authMiddleware, async (req: AuthRequest, res: Response) 
   } catch (error) {
     console.error('Confirm payment error:', error);
     res.status(500).json({ error: 'Failed to confirm payment' });
+  }
+});
+
+// POST /api/payment/create-intent - Create Stripe payment intent
+router.post('/create-intent', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const { amount, taskId, doerId } = req.body;
+
+    if (!amount || !taskId || !doerId) {
+      return res.status(400).json({ error: 'amount, taskId, and doerId required' });
+    }
+
+    console.log(`[Payment] Creating payment intent: $${amount} for task ${taskId}`);
+
+    const { clientSecret, intentId } = await stripeService.createPaymentIntent(amount, taskId, doerId);
+
+    res.json({
+      success: true,
+      data: {
+        clientSecret,
+        intentId,
+        amount,
+      },
+    });
+  } catch (error) {
+    console.error('[Payment] Create intent error:', error);
+    res.status(500).json({
+      error: 'Failed to create payment intent',
+      details: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+// POST /api/payment/confirm - Confirm Stripe payment
+router.post('/confirm', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { intentId } = req.body;
+
+    if (!intentId) {
+      return res.status(400).json({ error: 'intentId required' });
+    }
+
+    console.log(`[Payment] Confirming payment: ${intentId}`);
+
+    const result = await stripeService.confirmPayment(intentId);
+
+    // Update database: mark payment as confirmed
+    if (result.taskId && result.doerId) {
+      try {
+        await db.query(
+          `UPDATE task_payments SET stripe_intent_id = $1, status = 'completed', confirmed_at = NOW()
+           WHERE errand_id = $2`,
+          [intentId, result.taskId]
+        );
+      } catch (dbError) {
+        console.warn('[Payment] Failed to update database:', dbError);
+        // Don't fail - payment was successful even if DB update fails
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        intentId,
+        amount: result.amount,
+        taskId: result.taskId,
+      },
+    });
+  } catch (error) {
+    console.error('[Payment] Confirm error:', error);
+    res.status(500).json({
+      error: 'Failed to confirm payment',
+      details: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+// POST /api/payment/refund - Refund a payment
+router.post('/refund', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { intentId, reason } = req.body;
+
+    if (!intentId) {
+      return res.status(400).json({ error: 'intentId required' });
+    }
+
+    console.log(`[Payment] Refunding payment: ${intentId}`);
+
+    const result = await stripeService.refundPayment(intentId, reason || 'requested_by_customer');
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error('[Payment] Refund error:', error);
+    res.status(500).json({ error: 'Failed to refund payment' });
+  }
+});
+
+// POST /api/payment/payout - Create payout to doer
+router.post('/payout', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { stripeAccountId, amount, taskId } = req.body;
+
+    if (!stripeAccountId || !amount || !taskId) {
+      return res.status(400).json({ error: 'stripeAccountId, amount, and taskId required' });
+    }
+
+    console.log(`[Payment] Creating payout: $${amount} to account ${stripeAccountId}`);
+
+    const result = await stripeService.createPayout(stripeAccountId, amount, taskId);
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error('[Payment] Payout error:', error);
+    res.status(500).json({ error: 'Failed to create payout' });
   }
 });
 

@@ -5,6 +5,7 @@ import { config } from '../config.js';
 import db from '../db.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.js';
 import { generateFormattedUserId } from '../utils/idFormatter.js';
+import { singpassService } from '../services/singpass.js';
 
 const router = Router();
 
@@ -35,6 +36,20 @@ function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+// GET /api/auth/singpass-authorize - Redirect to SingPass login
+router.get('/singpass-authorize', (req: Request, res: Response) => {
+  try {
+    const authorizationUrl = singpassService.getAuthorizationUrl();
+    res.json({
+      success: true,
+      redirectUrl: authorizationUrl,
+    });
+  } catch (error) {
+    console.error('[Auth] SingPass authorization error:', error);
+    res.status(500).json({ error: 'Failed to generate authorization URL' });
+  }
+});
+
 // POST /api/auth/singpass-callback - Handle SingPass OAuth callback
 router.post('/singpass-callback', async (req: Request, res: Response) => {
   try {
@@ -44,23 +59,28 @@ router.post('/singpass-callback', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Authorization code required' });
     }
 
-    // In production, exchange code for access token with SingPass
-    // For now, mock the response
-    const mockSingPassData = {
-      nric: '1234567890ABC',
-      name: 'John Doe',
-      phone: '+6581234567',
-      dateOfBirth: '1990-01-01',
-      email: 'john@example.com',
-    };
+    console.log('[Auth] Processing SingPass callback...');
 
+    // Get user data from SingPass
+    const singpassData = await singpassService.handleOAuthCallback(code);
+
+    console.log('[Auth] SingPass data received:', {
+      nric: singpassData.nric.substring(0, 5) + '...',
+      name: singpassData.name,
+      email: singpassData.email,
+    });
+
+    // Return data to frontend for signup/login
     res.json({
       success: true,
-      data: mockSingPassData,
+      data: singpassData,
     });
   } catch (error) {
-    console.error('SingPass callback error:', error);
-    res.status(500).json({ error: 'SingPass verification failed' });
+    console.error('[Auth] SingPass callback error:', error);
+    res.status(500).json({
+      error: 'SingPass verification failed',
+      details: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
