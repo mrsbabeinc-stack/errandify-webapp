@@ -42,6 +42,16 @@ const LANGUAGE_PROMPTS: Record<Language, string> = {
   yue: '用粵語回復。',
 };
 
+// Quick reply suggestions (context-aware)
+const QUICK_REPLIES: Record<Language, string[]> = {
+  en: ['View my tasks', 'Create new task', 'Check my profile', 'Browse available tasks', 'Help me negotiate price'],
+  zh: ['查看我的任务', '创建新任务', '查看我的资料', '浏览可用任务', '帮我谈价格'],
+  yue: ['查看我的任務', '創建新任務', '查看我的資料', '瀏覽可用任務', '幫我講價'],
+};
+
+// Context memory limit (keep last N messages for context)
+const CONTEXT_MEMORY_LIMIT = 5;
+
 export default function HanaCustomerService() {
   console.log('[Hana] Component mounted');
   const [isOpen, setIsOpen] = useState(false);
@@ -64,12 +74,31 @@ export default function HanaCustomerService() {
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
+  const [showQuickReplies, setShowQuickReplies] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const lastUserMessageRef = useRef<string>('');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Quick reply handler
+  const handleQuickReply = (reply: string) => {
+    setInput(reply);
+    setShowQuickReplies(false);
+    // Auto-send after a brief delay
+    setTimeout(() => {
+      setInput(reply);
+      // Manually trigger send
+      const event = new Event('change', { bubbles: true });
+      // We'll use a flag instead
+      setMessages((prev) => [...prev, { id: Date.now().toString(), sender: 'user', text: reply, timestamp: new Date() }]);
+      setInput('');
+      setIsLoading(true);
+    }, 100);
   };
 
   useEffect(() => {
@@ -322,6 +351,8 @@ export default function HanaCustomerService() {
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setShowQuickReplies(false);
+    lastUserMessageRef.current = input; // Store for retry
 
     try {
       const token = localStorage.getItem('token');
@@ -330,10 +361,20 @@ export default function HanaCustomerService() {
         headers.Authorization = `Bearer ${token}`;
       }
 
+      // Build context from recent messages (memory)
+      const recentMessages = messages.slice(-CONTEXT_MEMORY_LIMIT).map(m => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        content: m.text
+      }));
+
       console.log('[Hana] Making API call with detected language:', detectedLang);
       const response = await axios.post(
         '/api/chat/hana/customer-service',
-        { message: input, language: detectedLang },
+        {
+          message: input,
+          language: detectedLang,
+          context: recentMessages // Send context for better responses
+        },
         { headers }
       );
 
@@ -349,6 +390,8 @@ export default function HanaCustomerService() {
       };
 
       setMessages((prev) => [...prev, hanaMessage]);
+      setRetryCount(0); // Reset retry count on success
+      setShowQuickReplies(true); // Show quick replies after response
 
       // Auto-play Hana's response if enabled
       if (autoSpeak) {
@@ -358,10 +401,26 @@ export default function HanaCustomerService() {
       }
     } catch (error: any) {
       console.error('Failed to get Hana response:', error.response?.data || error.message);
+
+      // Improved error recovery with retry logic
+      let errorText = "Sorry, I'm having trouble responding right now.";
+      if (retryCount < 2) {
+        errorText += ` Let me try again...`;
+        setRetryCount(prev => prev + 1);
+        // Auto-retry after 2 seconds
+        setTimeout(() => {
+          setInput(lastUserMessageRef.current);
+          handleSendMessage();
+        }, 2000);
+      } else {
+        errorText += " Please try again or contact togather@errandify.ai.";
+        setRetryCount(0);
+      }
+
       const errorMessage: Message = {
         id: (Date.now() + 2).toString(),
         sender: 'hana',
-        text: "Sorry, I'm having trouble responding right now. Please try again or contact togather@errandify.ai.",
+        text: errorText,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -477,7 +536,7 @@ export default function HanaCustomerService() {
                   )}
                   <div>
                     <div
-                      className={`max-w-xs px-4 py-2 rounded-lg text-sm ${
+                      className={`max-w-xs px-3 py-1.5 rounded-lg text-xs ${
                         msg.sender === 'user'
                           ? 'bg-errandify-orange text-white'
                           : 'bg-white text-gray-800 border border-gray-200'
@@ -519,6 +578,24 @@ export default function HanaCustomerService() {
               <div ref={messagesEndRef} />
             </div>
 
+            {/* Quick Replies */}
+            {showQuickReplies && messages.length > 1 && (
+              <div className="px-3 py-2 bg-orange-50 border-t border-orange-200 flex flex-wrap gap-2">
+                {QUICK_REPLIES[language].slice(0, 3).map((reply, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setInput(reply);
+                      setShowQuickReplies(false);
+                    }}
+                    className="text-xs px-2 py-1 bg-white border border-errandify-orange text-errandify-orange rounded-full hover:bg-orange-50 transition-colors font-semibold"
+                  >
+                    {reply}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Input */}
             <div className="border-t p-3 bg-white flex gap-2">
               <input
@@ -527,13 +604,13 @@ export default function HanaCustomerService() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                 placeholder="Ask Hana..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-errandify-orange"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-errandify-orange"
                 disabled={isLoading || isRecording}
               />
               {/* Audio Input Button */}
               <button
                 onClick={isRecording ? handleStopRecording : handleStartRecording}
-                className={`px-3 py-2 rounded-lg text-white font-semibold transition-all ${
+                className={`px-3 py-2 rounded-lg text-white font-semibold transition-all text-xs ${
                   isRecording
                     ? 'bg-red-500 hover:bg-red-600 animate-pulse'
                     : 'bg-orange-500 hover:bg-orange-600'
@@ -546,7 +623,7 @@ export default function HanaCustomerService() {
               <button
                 onClick={handleSendMessage}
                 disabled={isLoading || !input.trim()}
-                className="px-3 py-2 bg-errandify-orange text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-semibold"
+                className="px-3 py-2 bg-errandify-orange text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-semibold"
               >
                 →
               </button>
