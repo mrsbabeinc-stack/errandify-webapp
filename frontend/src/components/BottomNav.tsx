@@ -85,7 +85,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   const isActive = (path: string) => location.pathname === path;
 
   const doerItems: NavItem[] = [
-    { label: 'Browse ToHelp', path: '/', icon: '🔍' },
+    { label: 'Browse ToHelp', path: '/browse', icon: '🔍' },
     { label: 'MyOffer', path: '/my-offer', icon: '💼' },
     { label: 'MyChat', path: '/chat', icon: '💬' },
     { label: 'MyKampung', path: '/my-kampung', icon: '📰' },
