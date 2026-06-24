@@ -713,6 +713,7 @@ export default function CreateErrandPage() {
         description: formData.description,
         category: formData.category,
         location: formData.location || null,
+        postal_code: postalCode || null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
         deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
         certifications:
