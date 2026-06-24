@@ -88,7 +88,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
     { label: 'Browse ToHelp', path: '/', icon: '🔍' },
     { label: 'MyOffer', path: '/my-offer', icon: '💼' },
     { label: 'MyChat', path: '/chat', icon: '💬' },
-    { label: 'MyKampung', path: '/my-kampung', icon: '🏘️' },
+    { label: 'MyKampung', path: '/my-kampung', icon: '📰' },
     { label: 'MyAccount', path: '/my-account', icon: '👤', image: userImage || undefined },
     { label: 'Notifications', path: '/notifications', icon: '🔔' },
   ];
@@ -97,7 +97,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
     { label: 'Home', path: '/', icon: '🏠' },
     { label: 'MyErrands', path: '/errands', icon: '📋' },
     { label: 'MyChat', path: '/chat', icon: '💬' },
-    { label: 'MyKampung', path: '/my-kampung', icon: '🏘️' },
+    { label: 'MyKampung', path: '/my-kampung', icon: '📰' },
     { label: 'MyAccount', path: '/my-account', icon: '👤', image: userImage || undefined },
     { label: 'Notifications', path: '/notifications', icon: '🔔' },
   ];
