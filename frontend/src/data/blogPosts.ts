@@ -47,7 +47,7 @@ export const blogPosts: BlogPost[] = [
     ogDescription: 'Real Singapore mother proves you don\'t have to choose between kids and career. Her flexible work strategy.',
     twitterTitle: 'Mom of 2 → Restaurant Manager (Here\'s How)',
     twitterDescription: 'Eileen\'s 7-year journey: part-time 7-11am shift → general manager. No sacrifice needed.',
-    featuredImage: \'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop\',
+    featuredImage: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop',
     imageAlt: 'Smiling Asian woman in restaurant manager uniform, warm and confident',
     sources: ['Source: MyCareersFuture (Singapore government careers portal)', 'Interview profile documented in government career database'],
     content: `THE MOMENT THAT CHANGED EVERYTHING
@@ -270,7 +270,7 @@ A: The Workplace Fairness Act gives you legal grounds to push back. And there ar
     ogDescription: 'Real Singapore woman paid her parents\' medical bills through Grab driving, then built a thriving business. Her story.',
     twitterTitle: 'Desperate for Income → Now Runs Her Own Business',
     twitterDescription: 'Carmen drove for Grab to pay medical bills. The flexibility let her do more. Now she runs Mini Chef SG.',
-    featuredImage: \'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1200&h=600&fit=crop\',
+    featuredImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1200&h=600&fit=crop',
     imageAlt: 'Warm portrait of confident young woman, hopeful expression',
     sources: ['Source: Rice Media - "From Side Hustles to Economic Waves" (2024)', 'Publication: https://www.ricemedia.co/2024-through-the-eyes-of-gig-workers/'],
     content: `THE PHONE CALL THAT CHANGED EVERYTHING
@@ -516,7 +516,7 @@ A: Some people are full-time gig workers successfully. Carmen uses it strategica
     ogDescription: 'Ministry of Health data: 8K+ jobs, $2,300-3,000/month salaries, free training. Here\'s the complete guide.',
     twitterTitle: 'Care Crisis Means Job Security + Better Pay',
     twitterDescription: 'Singapore needs 8,000 care workers. Salaries: $2,300-3,000/month. Ministry funding training.',
-    featuredImage: \'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1200&h=600&fit=crop\',
+    featuredImage: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1200&h=600&fit=crop',
     imageAlt: 'Caring healthcare worker with elderly patient, warm and compassionate',
     sources: ['Source: Ministry of Health 2025-2026 Health Manpower Plan', 'Source: JobStreet, PayScale, ERI SalaryExpert (June 2026)'],
     content: `THE OFFICIAL DATA THAT CHANGES THINGS
@@ -763,7 +763,7 @@ A: Not for personal care. AI can help with monitoring, but human touch is irrepl
     ogDescription: 'Real Singapore woman changed careers from graphic design using flexible work. Here\'s how.',
     twitterTitle: 'Changed Careers at 26 (No Regrets)',
     twitterDescription: 'Tanesha left graphic design for flexible work at 26. Now thriving. Here\'s why timing mattered.',
-    featuredImage: \'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&h=600&fit=crop\',
+    featuredImage: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&h=600&fit=crop',
     imageAlt: 'Young professional woman smiling confidently, creative workspace',
     sources: ['Source: MyCareersFuture (Singapore government careers portal)'],
     content: `THE MOMENT EVERYTHING FELT WRONG
@@ -1004,7 +1004,7 @@ A: It's variable at first. But with good clients and selective work (like Tanesh
     ogDescription: 'Real Singapore woman found balance. Here\'s what she did differently.',
     twitterTitle: 'This Woman Found Work-Life Balance',
     twitterDescription: 'Devi proved it\'s possible. Not complicated. Just honest about what she needed.',
-    featuredImage: \'https://images.unsplash.com/photo-1493514789a9-c615dbe587fe?w=1200&h=600&fit=crop\',
+    featuredImage: 'https://images.unsplash.com/photo-1493514789a9-c615dbe587fe?w=1200&h=600&fit=crop',
     imageAlt: 'Happy woman relaxing, peaceful and content',
     sources: ['Source: MyCareersFuture (Singapore government careers portal)'],
     content: `THE TRUTH DEVI DISCOVERED
@@ -1167,7 +1167,7 @@ A: Good work speaks louder than visible exhaustion. Show up, do excellent work, 
     ogDescription: 'Government data shows the gap. Why it exists. And what 2026 policy changes mean for women.',
     twitterTitle: 'Gender Pay Gap Is Real In Singapore',
     twitterDescription: 'MOM data: women earn less. Parenthood hits harder. But 2026 laws are changing things.',
-    featuredImage: \'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=1200&h=600&fit=crop\',
+    featuredImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=1200&h=600&fit=crop',
     imageAlt: 'Confident woman professional, empowered',
     sources: ['Source: Ministry of Manpower - Singapore\'s Adjusted Gender Pay Gap report'],
     content: `THE DATA NOBODY WANTS TO TALK ABOUT
@@ -1392,7 +1392,7 @@ A: Singapore's laws are models for others. But yes, context matters. You'll like
     ogDescription: 'First SE Asia law protecting gig workers. Here\'s what changed on Jan 1, 2025.',
     twitterTitle: 'Gig Workers Now Have Legal Rights',
     twitterDescription: 'Singapore led SE Asia with Platform Workers Bill (Jan 1, 2025). Here\'s what you gained.',
-    featuredImage: \'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&h=600&fit=crop\',
+    featuredImage: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&h=600&fit=crop',
     imageAlt: 'Empowered worker, confident and protected',
     sources: ['Source: Singapore Platform Workers Bill (Effective January 1, 2025)', 'Source: Rest of World reporting on SE Asia policy'],
     content: `THE HISTORIC MOMENT NOBODY NOTICED
