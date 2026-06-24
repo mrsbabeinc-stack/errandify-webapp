@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { validateMessage, validateImage, validateAudio, validateFileUpload, moderateWithAI } from '../utils/messageValidator';
 import { addNotification } from '../utils/notificationStore';
@@ -35,6 +36,7 @@ export default function TaskChatbox({
   onClose,
   errandDetails,
 }: TaskChatboxProps) {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -674,6 +676,14 @@ Your message doesn't meet our community standards. Please keep messages:
                   </p>
                 </div>
               </div>
+
+              {/* Action Button */}
+              <button
+                onClick={() => navigate(`/errand/${taskId}`)}
+                className="mt-6 w-full py-2 bg-errandify-orange text-white rounded-lg text-sm font-semibold hover:bg-opacity-90 transition-colors"
+              >
+                📌 View & Update Status
+              </button>
             </div>
           )}
         </div>
