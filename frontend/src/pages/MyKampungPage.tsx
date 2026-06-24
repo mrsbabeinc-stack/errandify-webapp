@@ -1510,7 +1510,12 @@ export default function MyKampungPage() {
                       .map(post => (
                         <button
                           key={post.id}
-                          onClick={() => setSelectedBlogPost(post)}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedBlogPost(post);
+                          }}
                           className="w-full text-left p-2 rounded bg-orange-50 hover:bg-orange-100 transition border border-orange-200"
                         >
                           <p className="text-sm font-semibold text-errandify-orange line-clamp-1">{post.title}</p>
