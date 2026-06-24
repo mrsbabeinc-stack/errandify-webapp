@@ -15,6 +15,12 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'task_id and amount required' });
     }
 
+    // Validate minimum bid amount
+    const bidAmount = parseFloat(amount);
+    if (bidAmount < 8) {
+      return res.status(400).json({ error: 'Offer amount must be at least $8' });
+    }
+
     // Check if errand exists and is open
     const errandResult = await db.query(
       'SELECT id, status, asker_id FROM errands WHERE id = $1',

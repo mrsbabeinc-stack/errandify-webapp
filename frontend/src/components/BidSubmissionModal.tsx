@@ -104,7 +104,7 @@ export default function BidSubmissionModal({
                 type="button"
                 onClick={() => {
                   const current = parseInt(bidAmount) || taskBudget;
-                  const newVal = Math.max(5, current - 5);
+                  const newVal = Math.max(8, current - 5);
                   setBidAmount(newVal.toString());
                 }}
                 className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded font-bold text-lg transition-colors"
@@ -113,7 +113,7 @@ export default function BidSubmissionModal({
               </button>
               <input
                 type="number"
-                min="5"
+                min="8"
                 step="1"
                 value={bidAmount}
                 onChange={(e) => {
@@ -121,7 +121,7 @@ export default function BidSubmissionModal({
                   if (val === '') {
                     setBidAmount('');
                   } else {
-                    const num = Math.max(5, parseInt(val));
+                    const num = Math.max(8, parseInt(val));
                     setBidAmount(num.toString());
                   }
                 }}
