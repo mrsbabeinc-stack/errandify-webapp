@@ -66,6 +66,7 @@ router.post('/singpass-callback', async (req: Request, res: Response) => {
 
 // Signup: New SingPass-verified flow with criminal screening
 router.post('/signup', async (req: Request, res: Response) => {
+  const client = await db.getClient();
   try {
     const { nric, displayName, email, phone, role, singpassVerified, ref } = req.body;
 
@@ -86,13 +87,15 @@ router.post('/signup', async (req: Request, res: Response) => {
       return res.status(409).json({ error: 'User already exists with this NRIC' });
     }
 
+    await client.query('BEGIN');
+
     // Insert new user with SingPass verification
     const referralCode = generateReferralCode();
     const userId = generateUserId(nric);
     const referredBy = ref || null; // Track who referred this user
 
     // Insert temporarily to get the database-assigned ID, then update with formatted ID
-    const tempResult = await db.query(
+    const tempResult = await client.query(
       `INSERT INTO users (
         user_id, nric_hash, display_name, email, mobile,
         font_size_pref, language_pref, role, kyc_status, referral_code, referred_by,
@@ -119,13 +122,77 @@ router.post('/signup', async (req: Request, res: Response) => {
     const formattedUserId = generateFormattedUserId(newUserId);
 
     // Update with formatted user ID
-    const result = await db.query(
+    const result = await client.query(
       `UPDATE users SET formatted_user_id = $1 WHERE id = $2
        RETURNING id, user_id, display_name, email, mobile, role, criminal_conviction, formatted_user_id`,
       [formattedUserId, newUserId]
     );
 
     const user = result.rows[0];
+
+    // AUTO-TRACK REFERRAL: If user signed up via referral code
+    if (ref) {
+      try {
+        // Find referrer by referral code
+        const referrerResult = await client.query(
+          'SELECT id FROM users WHERE referral_code = $1',
+          [ref]
+        );
+
+        if (referrerResult.rows.length > 0) {
+          const referrerId = referrerResult.rows[0].id;
+
+          // Insert referral tracking
+          await client.query(
+            `INSERT INTO referral_tracking
+             (referrer_id, referred_user_id, referral_code, status)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT DO NOTHING`,
+            [referrerId, newUserId, ref, 'joined']
+          );
+
+          // Award join bonus (50 points) - configurable
+          const joinBonus = 50;
+          await client.query(
+            `INSERT INTO referral_rewards (referrer_id, reward_type, points_amount)
+             VALUES ($1, $2, $3)`,
+            [referrerId, 'join', joinBonus]
+          );
+
+          // Update referrer's errandify_points
+          await client.query(
+            `UPDATE users
+             SET errandify_points = errandify_points + $1,
+                 updated_at = NOW()
+             WHERE id = $2`,
+            [joinBonus, referrerId]
+          );
+
+          // Log EP transaction for referrer
+          await client.query(
+            `INSERT INTO ep_transactions
+             (user_id, transaction_type, points_change, description, created_at)
+             SELECT
+               $1,
+               'referral_join',
+               $2,
+               'Referral join bonus - ' || $3 || ' signed up',
+               NOW()
+             FROM users
+             WHERE id = $1`,
+            [referrerId, joinBonus, displayName]
+          );
+
+          console.log(`[Referral] User ${newUserId} signed up via code ${ref}. Referrer ${referrerId} awarded ${joinBonus} EP`);
+        }
+      } catch (refError) {
+        // Don't fail signup if referral tracking fails - log and continue
+        console.error('Referral tracking error during signup:', refError);
+      }
+    }
+
+    await client.query('COMMIT');
+
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       config.jwtSecret,
@@ -151,8 +218,15 @@ router.post('/signup', async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Rollback error:', rollbackError);
+    }
     console.error('Signup error:', error);
     res.status(500).json({ error: 'Signup failed' });
+  } finally {
+    client.release();
   }
 });
 
