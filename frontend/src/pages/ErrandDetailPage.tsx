@@ -324,15 +324,16 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   {errand.doerName && <span className="text-xs font-normal text-orange-100"> • Posted by {errand.doerName}</span>}
                 </h1>
               </div>
-              {userBidAmount ? (
-                <div className="text-right flex-shrink-0">
-                  <p className="text-lg font-bold text-white">SGD ${userBidAmount}</p>
-                </div>
-              ) : errand.budget ? (
-                <div className="text-right flex-shrink-0">
-                  <p className="text-lg font-bold text-white">SGD ${parseFloat(String(errand.budget)).toFixed(0)}</p>
-                </div>
-              ) : null}
+              <div className="text-right flex-shrink-0 flex flex-col items-end">
+                <p className="text-lg font-bold text-white">
+                  SGD ${userBidAmount ? userBidAmount : errand.budget ? parseFloat(String(errand.budget)).toFixed(0) : '0'}
+                </p>
+                {userBidAmount && errand.budget && (
+                  <p className="text-xs text-orange-100 font-normal">
+                    Asker's budget: ${parseFloat(String(errand.budget)).toFixed(0)}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-1">
               <span
@@ -351,19 +352,19 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               >
                 {errand.status}
               </span>
-              {errand.budget && !userBidAmount && (
-                <span className="text-xs bg-white text-errandify-orange px-1.5 py-0.5 rounded font-bold">
-                  Budget: ${parseFloat(String(errand.budget)).toFixed(0)}
+              {!userBidAmount && (
+                <span className="text-xs text-orange-100">
+                  Asker's budget shown above
                 </span>
               )}
               {userBidAmount && (
                 <span className="text-xs bg-white text-errandify-orange px-1.5 py-0.5 rounded font-bold">
-                  Your Offer: ${userBidAmount}
+                  ✓ Your offer submitted
                 </span>
               )}
               {userBidAmount && errand.status !== 'open' && (
                 <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded">
-                  ✓ Bid submitted.
+                  Waiting for response...
                 </span>
               )}
             </div>
