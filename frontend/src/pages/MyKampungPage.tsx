@@ -1444,8 +1444,47 @@ export default function MyKampungPage() {
                 </div>
 
                 {/* Article Content */}
-                <div className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm">
-                  {selectedBlogPost.content}
+                <div className="text-gray-700 leading-relaxed text-sm">
+                  {selectedBlogPost.content.split('\n').map((paragraph: string, idx: number) => {
+                    // Check if line contains image markdown ![alt](url)
+                    const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/;
+                    const match = paragraph.match(imageRegex);
+
+                    if (match) {
+                      return (
+                        <img
+                          key={idx}
+                          src={match[2]}
+                          alt={match[1]}
+                          className="w-full h-auto rounded-lg my-4 object-cover"
+                          onError={(e) => {
+                            console.error('Image failed to load:', match[2]);
+                          }}
+                        />
+                      );
+                    }
+
+                    // Check if line is empty or just whitespace
+                    if (!paragraph.trim()) {
+                      return <div key={idx} className="h-2" />;
+                    }
+
+                    // Check if line is a heading (starts with #, ##, etc.)
+                    if (paragraph.trim().startsWith('**') && paragraph.trim().endsWith('**')) {
+                      return (
+                        <h3 key={idx} className="text-sm font-bold mt-4 mb-2 text-gray-900">
+                          {paragraph.replace(/\*\*/g, '')}
+                        </h3>
+                      );
+                    }
+
+                    // Regular paragraph
+                    return (
+                      <p key={idx} className="mb-3 text-gray-700">
+                        {paragraph.replace(/\*\*/g, '')}
+                      </p>
+                    );
+                  })}
                 </div>
 
                 {/* Footer Actions */}
