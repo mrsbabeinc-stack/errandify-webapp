@@ -493,7 +493,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     <p className="text-xs text-gray-600">Full Address</p>
                     {errand.status === 'confirmed' ? (
                       <p className="text-xs text-gray-700 font-semibold">
-                        📍 {errand.location}{errand.postal_code && ` ${errand.postal_code}`}
+                        📍 {(() => {
+                          const postal = errand.postal_code || errand.location?.match(/\d{6}/)?.[0];
+                          if (postal) {
+                            return `${errand.location} S${postal}`;
+                          }
+                          return errand.location;
+                        })()}
                       </p>
                     ) : (
                       <p className="text-xs text-gray-500 italic">

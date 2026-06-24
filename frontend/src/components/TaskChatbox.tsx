@@ -728,29 +728,19 @@ Your message doesn't meet our community standards. Please keep messages:
                 {/* Location */}
                 <div>
                   <p className="text-xs text-gray-500">📍 Location</p>
-                  <p className="text-xs text-gray-700">
-                    {errandDetails.location || 'Not specified'}
+                  <p className="text-xs text-gray-700 font-semibold">
+                    {(() => {
+                      const location = errandDetails.location || 'Not specified';
+                      const postalCode = errandDetails.postal_code ||
+                        location.match(/\d{6}/)?.[0];
+
+                      if (postalCode) {
+                        // Format: "Location S123456"
+                        return `${location} S${postalCode}`;
+                      }
+                      return location;
+                    })()}
                   </p>
-                  {(() => {
-                    // Show postal code if explicitly set
-                    if (errandDetails.postal_code) {
-                      return (
-                        <p className="text-xs text-gray-600">
-                          📮 {errandDetails.postal_code}
-                        </p>
-                      );
-                    }
-                    // Otherwise try to extract from location string (6 digits)
-                    const postalMatch = errandDetails.location?.match(/\d{6}/);
-                    if (postalMatch) {
-                      return (
-                        <p className="text-xs text-gray-600">
-                          📮 {postalMatch[0]}
-                        </p>
-                      );
-                    }
-                    return null;
-                  })()}
                 </div>
 
                 {/* Date & Time */}
