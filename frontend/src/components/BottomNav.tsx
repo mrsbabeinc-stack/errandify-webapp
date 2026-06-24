@@ -97,9 +97,11 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
     { label: 'Home', path: '/', icon: '🏠' },
     { label: 'MyErrands', path: '/errands', icon: '📋' },
     { label: 'MyChat', path: '/chat', icon: '💬' },
-    { label: 'Notifications', path: '/notifications', icon: '🔔' },
+    // Empty space for + button
+    { label: '', path: '', icon: '', disabled: true },
     { label: 'MyKampung', path: '/my-kampung', icon: '🏘️' },
     { label: 'MyAccount', path: '/my-account', icon: '👤', image: userImage || undefined },
+    { label: 'Notifications', path: '/notifications', icon: '🔔' },
   ];
 
   const navItems = userRole === 'doer' ? doerItems : askerItems;
@@ -109,7 +111,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
       <div className="flex justify-between items-center h-16 px-2 relative">
         {/* Navigation Items - Evenly distributed for doers, left/right split for askers */}
         {/* All items evenly distributed with center plus button for askers */}
-        <div className={`flex justify-around items-center w-full ${userRole === 'asker' ? 'gap-4' : 'gap-1'} relative`}>
+        <div className="flex justify-around items-center w-full gap-1 relative">
           {navItems.map((item, index) => {
             const disabled = 'disabled' in item && item.disabled;
             const itemClasses = disabled
@@ -120,6 +122,13 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
 
             // For askers, add spacing around the center plus button (at index 3)
             const isCenterSpace = userRole === 'asker' && index === 3;
+
+            // Skip rendering empty spacer items
+            if (disabled && !item.label) {
+              return (
+                <div key={index} className="flex-1" />
+              );
+            }
 
             if (disabled) {
               return (
