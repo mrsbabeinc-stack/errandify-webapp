@@ -201,6 +201,8 @@ Your message doesn't meet our community standards. Please keep messages:
       setValidationSuggestions([]);
       setBlockReason('');
       setError('');
+      // Fetch messages immediately after sending
+      await fetchMessages();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to send message');
     } finally {
@@ -332,7 +334,8 @@ Your message doesn't meet our community standards. Please keep messages:
         {/* Header - Full Width */}
         <div className="bg-errandify-brown text-white p-3 flex items-start justify-between gap-2">
           <div className="flex-1">
-            <h3 className="font-bold text-sm">💬 {taskTitle} (#{taskId})</h3>
+            <h3 className="font-bold text-sm">💬 {taskTitle}</h3>
+            <p className="text-xs text-orange-100">ID: {taskId}</p>
           </div>
           <button
             onClick={onClose}
@@ -583,8 +586,8 @@ Your message doesn't meet our community standards. Please keep messages:
                       A
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs font-semibold text-gray-900">Asker</p>
-                      <p className="text-xs text-gray-600">{askerName}</p>
+                      <p className="text-xs text-gray-500">Asker</p>
+                      <p className="text-sm text-gray-900">{askerName || 'Asker'}</p>
                     </div>
                   </div>
                   {/* Heart only if current user is DOER (not asker) */}
@@ -606,8 +609,8 @@ Your message doesn't meet our community standards. Please keep messages:
                       D
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs font-semibold text-gray-900">Doer</p>
-                      <p className="text-xs text-gray-600">{doerName}</p>
+                      <p className="text-xs text-gray-500">Doer</p>
+                      <p className="text-sm text-gray-900">{doerName || 'Doer'}</p>
                     </div>
                   </div>
                   {/* Heart only if current user is ASKER (not doer) */}
@@ -625,19 +628,19 @@ Your message doesn't meet our community standards. Please keep messages:
 
               <h4 className="text-sm text-gray-800 mb-4">📋 Errand Details</h4>
 
-              <div className="space-y-3 text-xs">
+              <div className="space-y-3">
                 {/* Budget */}
                 <div>
-                  <p className="text-gray-500">💰 Budget</p>
-                  <p className="text-sm text-errandify-orange">
+                  <p className="text-sm text-gray-500">💰 Budget</p>
+                  <p className="text-base text-errandify-orange">
                     {errandDetails.budget ? `SGD $${errandDetails.budget}` : 'Not specified'}
                   </p>
                 </div>
 
                 {/* Location */}
                 <div>
-                  <p className="text-gray-500">📍 Location</p>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-gray-500">📍 Location</p>
+                  <p className="text-base text-gray-700">
                     {errandDetails.location || 'Not specified'}
                   </p>
                   {errandDetails.postal && (
@@ -647,25 +650,25 @@ Your message doesn't meet our community standards. Please keep messages:
 
                 {/* Date & Time */}
                 <div>
-                  <p className="text-gray-500">🕐 Date & Time</p>
+                  <p className="text-sm text-gray-500">🕐 Date & Time</p>
                   {errandDetails.deadline ? (
                     <>
-                      <p className="text-sm text-gray-700">
+                      <p className="text-base text-gray-700">
                         {new Date(errandDetails.deadline).toLocaleDateString('en-SG')}
                       </p>
-                      <p className="text-sm text-gray-700">
+                      <p className="text-base text-gray-700">
                         {new Date(errandDetails.deadline).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </>
                   ) : (
-                    <p className="text-sm text-gray-600">Not specified</p>
+                    <p className="text-base text-gray-600">Not specified</p>
                   )}
                 </div>
 
                 {/* Description */}
                 <div className="border-t pt-3">
-                  <p className="text-gray-500">📝 Description</p>
-                  <p className="text-xs text-gray-700 leading-relaxed line-clamp-6">
+                  <p className="text-sm text-gray-500">📝 Description</p>
+                  <p className="text-sm text-gray-700 leading-relaxed line-clamp-6">
                     {errandDetails.description || 'No description provided'}
                   </p>
                 </div>
