@@ -61,11 +61,31 @@ router.post('/singpass-callback', async (req: Request, res: Response) => {
 
     console.log('[Auth] Processing SingPass callback...');
 
-    // Get user data from SingPass
-    const singpassData = await singpassService.handleOAuthCallback(code);
+    let singpassData;
+
+    // Check if this is a mock code from the simulator (for testing)
+    if (code.includes('singpass_auth_code')) {
+      // For simulator: return mock data based on code
+      // In real app, this would validate the code and exchange it for user data
+      console.log('[Auth] Mock SingPass code detected - using simulator data');
+
+      singpassData = {
+        sub: 'S1234567A', // NRIC
+        nric: 'S1234567A',
+        name: 'John Lee',
+        email: 'john.lee@example.com',
+        phone_number: '+6581234567',
+        birthdate: '1990-01-15',
+        address: '123 Clementi Ave 3, Singapore 129957',
+        nationality: 'Singapore',
+      };
+    } else {
+      // Real SingPass code - exchange with real API
+      singpassData = await singpassService.handleOAuthCallback(code);
+    }
 
     console.log('[Auth] SingPass data received:', {
-      nric: singpassData.nric.substring(0, 5) + '...',
+      nric: singpassData.nric ? singpassData.nric.substring(0, 5) + '...' : 'N/A',
       name: singpassData.name,
       email: singpassData.email,
     });
