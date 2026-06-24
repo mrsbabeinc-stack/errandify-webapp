@@ -774,6 +774,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             budget: errand.budget,
             deadline: errand.deadline,
             location: errand.location,
+            postal_code: errand.postal_code,
             description: errand.description,
           }}
         />
