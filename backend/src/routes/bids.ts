@@ -51,14 +51,24 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // Check if bid already exists (update or insert)
     const existingBidResult = await db.query(
-      'SELECT id FROM bids WHERE errand_id = $1 AND doer_id = $2',
+      'SELECT id, status FROM bids WHERE errand_id = $1 AND doer_id = $2',
       [task_id, doerId]
     );
 
     let bid;
     if (existingBidResult.rows.length > 0) {
-      // Update existing bid
-      const bidId = existingBidResult.rows[0].id;
+      const existingBid = existingBidResult.rows[0];
+
+      // Prevent updating a rejected bid
+      if (existingBid.status === 'rejected') {
+        return res.status(403).json({
+          error: 'Cannot modify rejected offer',
+          message: 'Your offer was not selected for this task. You cannot submit another offer for this errand.'
+        });
+      }
+
+      // Update existing bid (only if still pending or accepted)
+      const bidId = existingBid.id;
       await db.query(
         'UPDATE bids SET amount = $1, note = $2, updated_at = NOW() WHERE id = $3',
         [parseFloat(amount), note || null, bidId]
@@ -66,6 +76,19 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       const updated = await db.query('SELECT * FROM bids WHERE id = $1', [bidId]);
       bid = updated.rows[0];
     } else {
+      // Check if doer has a rejected bid for this errand
+      const rejectedBidResult = await db.query(
+        'SELECT id FROM bids WHERE errand_id = $1 AND doer_id = $2 AND status = $3',
+        [task_id, doerId, 'rejected']
+      );
+
+      if (rejectedBidResult.rows.length > 0) {
+        return res.status(403).json({
+          error: 'Cannot submit another offer',
+          message: 'Your previous offer was not selected. You cannot submit another offer for this errand.'
+        });
+      }
+
       // Create new bid
       const result = await db.query(
         'INSERT INTO bids (errand_id, doer_id, amount, note, status) VALUES ($1, $2, $3, $4, $5) RETURNING *',
