@@ -42,11 +42,29 @@ const LANGUAGE_PROMPTS: Record<Language, string> = {
   yue: '用粵語回復。',
 };
 
-// Quick reply suggestions (context-aware)
-const QUICK_REPLIES: Record<Language, string[]> = {
-  en: ['View my tasks', 'Create new task', 'Check my profile', 'Browse available tasks', 'Help me negotiate price'],
-  zh: ['查看我的任务', '创建新任务', '查看我的资料', '浏览可用任务', '帮我谈价格'],
-  yue: ['查看我的任務', '創建新任務', '查看我的資料', '瀏覽可用任務', '幫我講價'],
+// Quick reply suggestions (context-aware) with navigation
+const QUICK_REPLIES: Record<Language, Array<{ label: string; action: string }>> = {
+  en: [
+    { label: 'View my errands', action: '/errands' },
+    { label: 'Create new errand', action: '/create-errand-hana' },
+    { label: 'Check my profile', action: '/my-profile' },
+    { label: 'Browse available', action: '/browse' },
+    { label: 'My offers', action: '/my-offer' },
+  ],
+  zh: [
+    { label: '查看我的任务', action: '/errands' },
+    { label: '创建新任务', action: '/create-errand-hana' },
+    { label: '查看我的资料', action: '/my-profile' },
+    { label: '浏览可用任务', action: '/browse' },
+    { label: '我的报价', action: '/my-offer' },
+  ],
+  yue: [
+    { label: '查看我的任務', action: '/errands' },
+    { label: '創建新任務', action: '/create-errand-hana' },
+    { label: '查看我的資料', action: '/my-profile' },
+    { label: '瀏覽可用任務', action: '/browse' },
+    { label: '我的報價', action: '/my-offer' },
+  ],
 };
 
 // Context memory limit (keep last N messages for context)
@@ -85,20 +103,11 @@ export default function HanaCustomerService() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Quick reply handler
-  const handleQuickReply = (reply: string) => {
-    setInput(reply);
+  // Quick reply handler - navigate directly (Option A)
+  const handleQuickReply = (action: string) => {
     setShowQuickReplies(false);
-    // Auto-send after a brief delay
-    setTimeout(() => {
-      setInput(reply);
-      // Manually trigger send
-      const event = new Event('change', { bubbles: true });
-      // We'll use a flag instead
-      setMessages((prev) => [...prev, { id: Date.now().toString(), sender: 'user', text: reply, timestamp: new Date() }]);
-      setInput('');
-      setIsLoading(true);
-    }, 100);
+    // Direct navigation - no chat message
+    window.location.href = action;
   };
 
   useEffect(() => {
@@ -584,13 +593,10 @@ export default function HanaCustomerService() {
                 {QUICK_REPLIES[language].slice(0, 3).map((reply, idx) => (
                   <button
                     key={idx}
-                    onClick={() => {
-                      setInput(reply);
-                      setShowQuickReplies(false);
-                    }}
-                    className="text-xs px-2 py-1 bg-white border border-errandify-orange text-errandify-orange rounded-full hover:bg-orange-50 transition-colors font-semibold"
+                    onClick={() => handleQuickReply(reply.action)}
+                    className="text-xs px-3 py-1 bg-white border border-errandify-orange text-errandify-orange rounded-full hover:bg-errandify-orange hover:text-white transition-colors font-semibold"
                   >
-                    {reply}
+                    {reply.label}
                   </button>
                 ))}
               </div>
