@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 interface SingPassUser {
   nric: string;
@@ -12,7 +12,6 @@ interface SingPassUser {
 }
 
 export default function SingPassSimulator() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState<'login' | 'verify' | 'confirm'>('login');
   const [nric, setNric] = useState('');
@@ -140,34 +139,40 @@ export default function SingPassSimulator() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col items-center justify-center p-4">
-      {/* SingPass Header */}
-      <div className="mb-8 text-center">
-        <div className="text-5xl font-bold text-blue-600 mb-2">🔐</div>
-        <h1 className="text-3xl font-bold text-blue-900 mb-1">SingPass</h1>
-        <p className="text-blue-700">Singapore's National Digital Identity</p>
+    <div className="min-h-screen bg-blue-50 flex flex-col items-center justify-center p-4">
+      {/* SingPass Header - Official Design */}
+      <div className="mb-12 text-center">
+        {/* Lock & Key Icon */}
+        <div className="text-6xl mb-4">🔐</div>
+        {/* SingPass Title */}
+        <h1 className="text-4xl font-bold text-blue-900 mb-2">SingPass</h1>
+        {/* Subtitle */}
+        <p className="text-lg text-blue-600">Singapore's National Digital Identity</p>
       </div>
 
-      {/* Main Card */}
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+      {/* Main Card - Official SingPass Design */}
+      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-12">
         {/* Step 1: Login */}
         {step === 'login' && (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Sign In</h2>
-              <p className="text-sm text-gray-600">
+          <form onSubmit={handleLogin} className="space-y-6">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h2 className="text-4xl font-bold text-gray-900 mb-3">Sign In</h2>
+              <p className="text-lg text-gray-700">
                 Enter your NRIC and password
               </p>
             </div>
 
+            {/* Error Message */}
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              <div className="p-4 bg-red-50 border border-red-300 text-red-700 rounded-xl text-center font-semibold">
                 {error}
               </div>
             )}
 
+            {/* NRIC Input */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-gray-900 mb-3">
                 NRIC / FIN
               </label>
               <input
@@ -176,15 +181,16 @@ export default function SingPassSimulator() {
                 onChange={(e) => setNric(e.target.value.toUpperCase())}
                 placeholder="S1234567A"
                 disabled={loading}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600 font-mono text-center text-lg disabled:bg-gray-100"
+                className="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 font-mono text-center text-xl disabled:bg-gray-100 transition-all"
               />
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-sm text-gray-600 mt-2">
                 Demo: S1234567A, S9876543B, S5555555C
               </p>
             </div>
 
+            {/* Password Input */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-gray-900 mb-3">
                 Password
               </label>
               <input
@@ -193,23 +199,25 @@ export default function SingPassSimulator() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 disabled={loading}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-600 disabled:bg-gray-100"
+                className="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100 transition-all"
               />
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-sm text-gray-600 mt-2">
                 Demo: Use any password
               </p>
             </div>
 
+            {/* Sign In Button */}
             <button
               type="submit"
               disabled={loading || !nric || !password}
-              className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 px-6 bg-blue-500 text-white rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
-              {loading ? 'Verifying...' : 'Sign In'}
+              {loading ? 'Signing In...' : 'Sign In'}
             </button>
 
-            <div className="text-center text-sm text-gray-600">
-              <a href="#" className="text-blue-600 hover:underline">
+            {/* Forgot Password Link */}
+            <div className="text-center">
+              <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold text-lg">
                 Forgot password?
               </a>
             </div>
@@ -218,35 +226,39 @@ export default function SingPassSimulator() {
 
         {/* Step 2: 2FA Verification */}
         {step === 'verify' && (
-          <form onSubmit={handleVerify} className="space-y-4">
-            <div className="text-center mb-6">
-              <div className="text-4xl mb-3">📱</div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          <form onSubmit={handleVerify} className="space-y-6">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="text-6xl mb-4">📱</div>
+              <h2 className="text-4xl font-bold text-gray-900 mb-3">
                 Verify Your Identity
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-lg text-gray-700">
                 We've sent a code to your registered phone
               </p>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-              <p className="font-semibold mb-1">2-Factor Authentication</p>
-              <p>For demo, just click "Verify" - no code needed</p>
+            {/* Info Box */}
+            <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 text-center">
+              <p className="font-bold text-blue-900 mb-2 text-lg">2-Factor Authentication</p>
+              <p className="text-blue-700">For demo, just click "Verify" - no code needed</p>
             </div>
 
+            {/* Verify Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 px-6 bg-blue-500 text-white rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
               {loading ? 'Verifying...' : 'Verify'}
             </button>
 
+            {/* Back Button */}
             <button
               type="button"
               onClick={() => setStep('login')}
               disabled={loading}
-              className="w-full py-3 px-4 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 px-6 bg-gray-300 text-gray-900 rounded-xl font-bold text-lg hover:bg-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Back
             </button>
@@ -255,93 +267,107 @@ export default function SingPassSimulator() {
 
         {/* Step 3: Confirmation */}
         {step === 'confirm' && (
-          <form onSubmit={handleConfirm} className="space-y-4">
-            <div className="text-center mb-6">
-              <div className="text-4xl mb-3">✅</div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          <form onSubmit={handleConfirm} className="space-y-6">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="text-6xl mb-4">✅</div>
+              <h2 className="text-4xl font-bold text-gray-900 mb-3">
                 Confirm Login
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-lg text-gray-700">
                 Review your information before proceeding
               </p>
             </div>
 
-            {/* User Info Display */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase">
-                  Name
-                </p>
-                <p className="text-lg font-semibold text-gray-800">
-                  {singpassUsers[nric]?.name || '—'}
-                </p>
+            {/* User Information */}
+            <div className="bg-gray-100 rounded-xl p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-bold text-gray-600 uppercase mb-1">
+                    Name
+                  </p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {singpassUsers[nric]?.name || '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-gray-600 uppercase mb-1">
+                    NRIC
+                  </p>
+                  <p className="text-lg font-mono font-semibold text-gray-900">{nric}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-gray-600 uppercase mb-1">
+                    Email
+                  </p>
+                  <p className="text-lg text-gray-900">
+                    {singpassUsers[nric]?.email || '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-gray-600 uppercase mb-1">
+                    Phone
+                  </p>
+                  <p className="text-lg text-gray-900">
+                    {singpassUsers[nric]?.phone || '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-gray-600 uppercase mb-1">
+                    Date of Birth
+                  </p>
+                  <p className="text-lg text-gray-900">
+                    {singpassUsers[nric]?.dateOfBirth || '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-gray-600 uppercase mb-1">
+                    Nationality
+                  </p>
+                  <p className="text-lg text-gray-900">
+                    {singpassUsers[nric]?.nationality || '—'}
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase">
-                  NRIC
-                </p>
-                <p className="text-lg font-mono text-gray-800">{nric}</p>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase">
-                  Email
-                </p>
-                <p className="text-lg text-gray-800">
-                  {singpassUsers[nric]?.email || '—'}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase">
-                  Phone
-                </p>
-                <p className="text-lg text-gray-800">
-                  {singpassUsers[nric]?.phone || '—'}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase">
-                  Date of Birth
-                </p>
-                <p className="text-lg text-gray-800">
-                  {singpassUsers[nric]?.dateOfBirth || '—'}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase">
+              <div className="border-t border-gray-300 pt-4">
+                <p className="text-xs font-bold text-gray-600 uppercase mb-1">
                   Address
                 </p>
-                <p className="text-sm text-gray-800">
+                <p className="text-base text-gray-900">
                   {singpassUsers[nric]?.address || '—'}
                 </p>
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-              <p className="font-semibold mb-1">✅ Identity Verified</p>
-              <p>
-                Your information has been securely verified and will be shared
-                with Errandify.
+            {/* Verification Badge */}
+            <div className="bg-green-50 border-2 border-green-300 rounded-xl p-6 text-center">
+              <p className="font-bold text-green-900 mb-2 text-lg">✅ Identity Verified</p>
+              <p className="text-green-700">
+                Your information has been securely verified and will be shared with Errandify.
               </p>
             </div>
 
+            {/* Confirm Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 px-6 bg-green-600 text-white rounded-xl font-bold text-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
               {loading ? 'Confirming...' : 'Confirm & Continue to Errandify'}
             </button>
 
+            {/* Back Button */}
             <button
               type="button"
               onClick={() => setStep('login')}
               disabled={loading}
-              className="w-full py-3 px-4 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 px-6 bg-gray-300 text-gray-900 rounded-xl font-bold text-lg hover:bg-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Back
             </button>
@@ -350,10 +376,10 @@ export default function SingPassSimulator() {
       </div>
 
       {/* Footer */}
-      <div className="mt-8 text-center text-sm text-gray-600">
-        <p>🔒 This is a secure government authentication system</p>
-        <p className="mt-2">
-          <a href="https://www.singpass.gov.sg" className="text-blue-600 hover:underline">
+      <div className="mt-12 text-center text-sm text-gray-600">
+        <p className="font-semibold">🔒 This is a secure government authentication system</p>
+        <p className="mt-3">
+          <a href="https://www.singpass.gov.sg" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 font-semibold">
             Learn more about SingPass
           </a>
         </p>
