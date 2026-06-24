@@ -23,6 +23,7 @@ interface TaskChatboxProps {
     budget?: number;
     deadline?: string;
     location?: string;
+    postal_code?: string;
     description?: string;
   };
 }
@@ -644,10 +645,8 @@ Your message doesn't meet our community standards. Please keep messages:
                   <p className="text-xs text-gray-500">📍 Location</p>
                   <p className="text-xs text-gray-700">
                     {errandDetails.location || 'Not specified'}
+                    {errandDetails.postal_code && ` ${errandDetails.postal_code}`}
                   </p>
-                  {errandDetails.postal && (
-                    <p className="text-xs text-gray-600">Postal: {errandDetails.postal}</p>
-                  )}
                 </div>
 
                 {/* Date & Time */}
