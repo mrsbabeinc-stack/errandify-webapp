@@ -148,6 +148,18 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     return colors[category] || 'bg-gray-100 text-gray-700';
   };
 
+  const getAreaOnly = (location?: string) => {
+    if (!location) return null;
+    if (location.toLowerCase() === 'remote') return 'Remote';
+
+    // Extract just the area name (everything before postal code)
+    const areaMatch = location.match(/^([^,\d]+)/);
+    if (areaMatch) {
+      return areaMatch[1].trim();
+    }
+    return location.split(',')[0]?.trim() || location;
+  };
+
   const getMaskedLocation = (location?: string) => {
     if (!location) return null;
 
@@ -403,7 +415,10 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                       📍 {errand.location}{errand.postal_code && ` ${errand.postal_code}`}
                     </p>
                   ) : (
-                    <p className="text-xs text-gray-700">📍 {getMaskedLocation(errand.location)}</p>
+                    <>
+                      <p className="text-xs text-gray-700">📍 {getAreaOnly(errand.location)}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Full address shown once job is confirmed</p>
+                    </>
                   )}
                 </div>
               )}
