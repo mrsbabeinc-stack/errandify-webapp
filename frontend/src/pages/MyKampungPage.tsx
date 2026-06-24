@@ -1487,10 +1487,89 @@ export default function MyKampungPage() {
                       );
                     }
 
-                    // Regular paragraph
+                    // Regular paragraph with link parsing
+                    const cleanBlock = block.trim().replace(/\*\*/g, '');
+                    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+                    const parts: Array<{type: string; text: string; url?: string}> = [];
+                    let lastIndex = 0;
+
+                    let match;
+                    while ((match = linkRegex.exec(cleanBlock)) !== null) {
+                      // Add text before link
+                      if (match.index > lastIndex) {
+                        parts.push({
+                          type: 'text',
+                          text: cleanBlock.substring(lastIndex, match.index),
+                        });
+                      }
+                      // Add link
+                      parts.push({
+                        type: 'link',
+                        text: match[1],
+                        url: match[2],
+                      });
+                      lastIndex = linkRegex.lastIndex;
+                    }
+
+                    // Add remaining text
+                    if (lastIndex < cleanBlock.length) {
+                      parts.push({
+                        type: 'text',
+                        text: cleanBlock.substring(lastIndex),
+                      });
+                    }
+
+                    // If no links found, just return plain text
+                    if (parts.length === 0) {
+                      return (
+                        <p key={idx} className="mb-3 text-gray-700 leading-relaxed whitespace-pre-wrap">
+                          {cleanBlock}
+                        </p>
+                      );
+                    }
+
+                    // Render with links
                     return (
                       <p key={idx} className="mb-3 text-gray-700 leading-relaxed whitespace-pre-wrap">
-                        {block.trim().replace(/\*\*/g, '')}
+                        {parts.map((part, partIdx) => {
+                          if (part.type === 'link') {
+                            // Check if it's an internal blog link or external link
+                            const isBlogLink = part.url?.startsWith('/blog/') || part.url?.includes('blog');
+                            const isInternalArticle = blogPosts.some(p => p.slug === part.url);
+
+                            if (isInternalArticle) {
+                              // Internal blog article link
+                              return (
+                                <button
+                                  key={partIdx}
+                                  onClick={() => {
+                                    const article = blogPosts.find(p => p.slug === part.url);
+                                    if (article) {
+                                      setSelectedBlogPost(article);
+                                    }
+                                  }}
+                                  className="text-errandify-orange font-semibold hover:underline cursor-pointer inline"
+                                >
+                                  {part.text}
+                                </button>
+                              );
+                            } else {
+                              // External link
+                              return (
+                                <a
+                                  key={partIdx}
+                                  href={part.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-errandify-orange font-semibold hover:underline"
+                                >
+                                  {part.text}
+                                </a>
+                              );
+                            }
+                          }
+                          return <span key={partIdx}>{part.text}</span>;
+                        })}
                       </p>
                     );
                   })}

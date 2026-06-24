@@ -248,7 +248,15 @@ A: The Workplace Fairness Act gives you legal grounds to push back. And there ar
 - Reference: https://content.mycareersfuture.gov.sg/career-children-3-singaporean-mums-reentering-workforce/
 - Singapore Workplace Fairness Act - Official government announcement (2025, effective 2026-2027)
 - Career progression data from government careers portal
-- Interview conducted and verified through Singapore government employment database`,
+- Interview conducted and verified through Singapore government employment database
+
+---
+
+**📖 Read Next:**
+
+[Carmen's Story: From Desperation to $4,000/Month Business](carmen-grab-driver-entrepreneur) - A real woman who leveraged flexibility to build a business while caring for her family.
+
+[Devi's Journey: Work-Life Balance That Actually Works](devi-work-life-balance) - How one woman stopped burning out and started thriving.`,
   },
 
   {
@@ -493,7 +501,15 @@ A: Some people are full-time gig workers successfully. Carmen uses it strategica
 - Carmen's story documented in Rice Media: "From Side Hustles to Economic Waves: 2024 Through the Eyes of Singapore's Gig Workers" (2024)
 - Reference: https://www.ricemedia.co/2024-through-the-eyes-of-gig-workers/
 - Platform Workers Bill information - Singapore government (Effective January 1, 2025)
-- Interview conducted by Rice Media journalists and verified`,
+- Interview conducted by Rice Media journalists and verified
+
+---
+
+**📖 Read Next:**
+
+[Eileen's Story: Manager at 28](eileen-kfc-manager-career) - Another real woman who proved flexible work is career strategy, not career suicide.
+
+[Tanesha's Change: Quit Your $3,500 Job to Earn More](tanesha-career-change) - Career change at 26 inspired by stories like Carmen's.`,
   },
 
   {
@@ -739,7 +755,13 @@ A: Not for personal care. AI can help with monitoring, but human touch is irrepl
 - PayScale: Elder Care Salary in Singapore - https://www.payscale.com/research/SG/Skill=Elder_Care/Salary
 - ERI SalaryExpert: Caregiver Salary in Singapore (2026)
 - Singapore Employment Agency: Healthcare Sector Hiring 2026
-- Indeed: 100+ Elderly Care Jobs (June 2026) - https://sg.indeed.com/q-elderly-care-jobs.html`,
+- Indeed: 100+ Elderly Care Jobs (June 2026) - https://sg.indeed.com/q-elderly-care-jobs.html
+
+---
+
+**📖 Read Next:**
+
+[The Invisible Penalty: Gender Pay Gap Explained](gender-pay-gap) - Why care workers and women earn less, and how legislation is changing this.`,
   },
 
   {
@@ -979,7 +1001,15 @@ A: It's variable at first. But with good clients and selective work (like Tanesh
 - Reference: https://content.mycareersfuture.gov.sg/career-children-3-singaporean-mums-reentering-workforce/
 - Singapore Workplace Fairness Act - Official government announcement (2025, effective 2026-2027)
 - SkillsFuture credits information (government training funding)
-- Career transition research and government employment support data`,
+- Career transition research and government employment support data
+
+---
+
+**📖 Read Next:**
+
+[Carmen's Story: From Desperation to $4,000/Month Business](carmen-grab-driver-entrepreneur) - Another woman who chose a different path to success.
+
+[Eileen's Journey: How Flexibility Leads to Management](eileen-kfc-manager-career) - Why working differently doesn't mean working less.`,
   },
 
   {
@@ -1141,7 +1171,13 @@ A: Good work speaks louder than visible exhaustion. Show up, do excellent work, 
 - Devi's story documented on MyCareersFuture (Singapore government careers portal)
 - Reference: https://content.mycareersfuture.gov.sg/career-children-3-singaporean-mums-reentering-workforce/
 - Singapore Workplace Fairness Act - Official government announcement (2025, effective 2026-2027)
-- Workplace wellbeing research and work-life balance studies`,
+- Workplace wellbeing research and work-life balance studies
+
+---
+
+**📖 Read Next:**
+
+[Eileen's Story: Manager at 28](eileen-kfc-manager-career) - How flexibility and work-life balance led to a successful career.`,
   },
 
   {
@@ -1365,7 +1401,13 @@ A: Singapore's laws are models for others. But yes, context matters. You'll like
 - PDF: https://stats.mom.gov.sg/iMAS_PdfLibrary/mrsd-Singapores-Adjusted-Gender-Pay-Gap.pdf
 - Singapore Workplace Fairness Act (2025, effective 2026-2027)
 - Government research on motherhood penalty and parenthood effects on earnings
-- Childcare subsidy expansion details (ECDA/MSF announcements)`,
+- Childcare subsidy expansion details (ECDA/MSF announcements)
+
+---
+
+**📖 Read Next:**
+
+[The Care Crisis: $3,000/Month Jobs Sitting Empty](care-worker-shortage) - One example of how gender pay gaps affect critical professions.`,
   },
 
   {
@@ -1602,6 +1644,12 @@ A: Maybe slightly. But standards prevent race-to-the-bottom. Better for everyone
 - Rest of World: "Singapore's gig workers worry new benefits could mean..." - 2024 reporting on SE Asia policy
 - Reference: https://restofworld.org/2024/singapore-gig-worker-protection-law/
 - Ministry of Manpower information on Platform Workers Bill
-- Government press releases and policy documents`,
+- Government press releases and policy documents
+
+---
+
+**📖 Read Next:**
+
+[Carmen's Story: From Desperation to $4,000/Month Business](carmen-grab-driver-entrepreneur) - A real woman whose work as a Grab driver was protected by this very legislation.`,
   },
 ];
