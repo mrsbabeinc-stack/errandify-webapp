@@ -146,14 +146,21 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
         }
 
         const params = showRecommended ? '?recommended=true' : '';
+        const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands${params}`;
+        console.log('[DoerBrowse] Fetching errands from:', apiUrl);
+        console.log('[DoerBrowse] Token exists:', !!token);
+
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands${params}`,
+          apiUrl,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
+
+        console.log('[DoerBrowse] Response received:', response.data);
+        console.log('[DoerBrowse] Errands count:', response.data.data?.length || 0);
         setErrands(response.data.data || []);
       } catch (err: any) {
         setError(err.response?.data?.error || 'Failed to load errands');
