@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS user_favorites (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   favorite_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at TIMESTAMP DEFAULT NOW(),
+  added_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(user_id, favorite_user_id)
 );
 
