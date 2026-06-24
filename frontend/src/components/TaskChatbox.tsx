@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { validateMessage, validateImage, validateAudio, validateFileUpload, moderateWithAI } from '../utils/messageValidator';
 import { addNotification } from '../utils/notificationStore';
+import { speechService } from '../services/speechService';
 
 interface Message {
   id: number;
@@ -59,6 +60,8 @@ export default function TaskChatbox({
   const [chatDisabled, setChatDisabled] = useState(false);
   const [chatDisabledReason, setChatDisabledReason] = useState('');
   const [isFavorited, setIsFavorited] = useState(false);
+  const [playingMessageId, setPlayingMessageId] = useState<number | null>(null);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -350,6 +353,28 @@ Your message doesn't meet our community standards. Please keep messages:
     }
   };
 
+  const handlePlayAudio = async (message: Message) => {
+    try {
+      setIsGeneratingAudio(true);
+      setPlayingMessageId(message.id);
+      console.log('[Audio] Generating speech for message:', message.content.substring(0, 50));
+
+      // Generate audio from message text
+      const audioUrl = await speechService.synthesize(message.content);
+
+      // Play the audio
+      await speechService.playAudio(audioUrl);
+
+      console.log('[Audio] Playback completed');
+    } catch (err: any) {
+      console.error('[Audio] Playback error:', err);
+      setError('Failed to generate audio');
+    } finally {
+      setIsGeneratingAudio(false);
+      setPlayingMessageId(null);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -439,6 +464,16 @@ Your message doesn't meet our community standards. Please keep messages:
                       msg.content
                     )}
                   </div>
+                  {!msg.flagged && (
+                    <button
+                      onClick={() => handlePlayAudio(msg)}
+                      disabled={isGeneratingAudio || playingMessageId === msg.id}
+                      className="text-xs mt-1.5 text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Play message as audio"
+                    >
+                      {playingMessageId === msg.id ? '🔊 Playing...' : '🔊 Listen'}
+                    </button>
+                  )}
                 </div>
               </div>
             ))
