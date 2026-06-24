@@ -46,16 +46,19 @@ const LANGUAGE_PROMPTS: Record<Language, string> = {
 const QUICK_REPLIES: Record<Language, Array<{ label: string; action: string }>> = {
   en: [
     { label: 'Create new errand', action: '/create-errand-hana' },
+    { label: 'My errands', action: '/errands' },
     { label: 'My wallet', action: '/wallet' },
     { label: 'My ratings', action: '/my-profile' },
   ],
   zh: [
     { label: '创建新任务', action: '/create-errand-hana' },
+    { label: '我的任务', action: '/errands' },
     { label: '我的钱包', action: '/wallet' },
     { label: '我的评分', action: '/my-profile' },
   ],
   yue: [
     { label: '創建新任務', action: '/create-errand-hana' },
+    { label: '我的任務', action: '/errands' },
     { label: '我的錢包', action: '/wallet' },
     { label: '我的評分', action: '/my-profile' },
   ],
@@ -584,7 +587,7 @@ export default function HanaCustomerService() {
             {/* Quick Replies */}
             {showQuickReplies && messages.length > 1 && (
               <div className="px-3 py-2 bg-orange-50 border-t border-orange-200 flex flex-wrap gap-2">
-                {QUICK_REPLIES[language].map((reply, idx) => (
+                {QUICK_REPLIES[language].slice(0, 4).map((reply, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleQuickReply(reply.action)}
