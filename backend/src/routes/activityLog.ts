@@ -12,7 +12,8 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
 
     // Verify user is asker or doer of this errand
     const errandResult = await db.query(
-      `SELECT asker_id, id FROM errands e
+      `SELECT e.asker_id, e.id, b.doer_id
+       FROM errands e
        LEFT JOIN bids b ON e.id = b.errand_id AND b.status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress')
        WHERE e.id = $1`,
       [errandId]
@@ -23,7 +24,10 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
     }
 
     const errand = errandResult.rows[0];
-    if (errand.asker_id !== userId) {
+    const isAsker = errand.asker_id === userId;
+    const isDoer = errand.doer_id === userId;
+
+    if (!isAsker && !isDoer) {
       return res.status(403).json({ error: 'Not authorized to view this errand' });
     }
 
