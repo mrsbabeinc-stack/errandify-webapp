@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import FloatingHana from './components/FloatingHana';
@@ -41,7 +41,6 @@ import AboutErrandifyPage from './pages/AboutErrandifyPage';
 import NotificationPreferencesPage from './pages/NotificationPreferencesPage';
 
 export default function App() {
-  const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<'asker' | 'doer'>('asker');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -84,15 +83,6 @@ export default function App() {
       const userData = JSON.parse(user);
       userData.role = role;
       localStorage.setItem('user', JSON.stringify(userData));
-    }
-
-    // Navigate based on role change
-    if (role === 'doer') {
-      // Switching to Doer → Go to Browse/Help page
-      navigate('/browse');
-    } else if (role === 'asker') {
-      // Switching to Asker → Go to Home page
-      navigate('/home');
     }
   };
 
