@@ -105,14 +105,14 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         const errandTitle = errandData.rows[0]?.title || 'Your task';
 
         await db.query(
-          `INSERT INTO notifications (user_id, type, title, body, action_url, created_at, read)
+          `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
            VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
           [
             errand.asker_id,
-            'bid_received',
-            '🙌 Great! Someone wants to help!',
-            `${doerName} has offered to help with "${errandTitle}" for $${parseFloat(amount)}. Check it out!`,
-            `/errand/${task_id}`,
+            'bid_placed',
+            '💰 New Bid Placed',
+            `${doerName} has offered to help with "${errandTitle}" for $${parseFloat(amount)}`,
+            task_id,
           ]
         );
       } catch (notifErr) {
@@ -229,14 +229,14 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
 
       for (const otherBid of otherBids.rows) {
         await db.query(
-          `INSERT INTO notifications (user_id, type, title, body, action_url, created_at, read)
+          `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
            VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
           [
             otherBid.doer_id,
-            'job_closed',
-            '👋 Someone was faster!',
-            `The neighbour chose another helper for "${errandTitle}". No worries — plenty of other tasks coming your way! Check out our latest jobs.`,
-            `/errand/${bid.errand_id}`,
+            'bid_rejected',
+            '❌ Offer Not Selected',
+            `Your offer for "${errandTitle}" was not selected. Don't worry, more tasks are coming!`,
+            bid.errand_id,
           ]
         );
       }
@@ -275,14 +275,14 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
       const errandTitle = errandData.rows[0]?.title || 'Your task';
 
       await db.query(
-        `INSERT INTO notifications (user_id, type, title, body, action_url, created_at, read)
+        `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
          VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
         [
           bid.doer_id,
           'bid_accepted',
-          '🎉 You\'re in! Bid accepted!',
-          `Wonderful news! Your offer of $${bid.amount} for "${errandTitle}" was chosen. The neighbour is excited to work with you. Please confirm you're ready to help!`,
-          `/errand/${bid.errand_id}`,
+          '✅ Offer Accepted!',
+          `Your offer of $${bid.amount} for "${errandTitle}" was accepted! Please confirm you're ready to help.`,
+          bid.errand_id,
         ]
       );
     } catch (notifErr) {
@@ -353,14 +353,14 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Respons
       const errandTitle = errandData.rows[0]?.title || 'Your task';
 
       await db.query(
-        `INSERT INTO notifications (user_id, type, title, body, action_url, created_at, read)
+        `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
          VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
         [
           bid.doer_id,
           'bid_rejected',
-          '👍 Thanks for bidding!',
-          `The neighbour went with another helper for "${errandTitle}". Your offer was great — keep helping out! More tasks are popping up every day.${reasonText ? ` Feedback: ${reasonText}` : ''}`,
-          `/errand/${bid.errand_id}`,
+          '❌ Offer Not Selected',
+          `Your offer for "${errandTitle}" was not selected.${reasonText ? ` Feedback: ${reasonText}` : ''}`,
+          bid.errand_id,
         ]
       );
     } catch (notifErr) {

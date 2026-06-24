@@ -58,14 +58,14 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
       const senderName = task.asker_id === senderId ? task.asker_name || 'Asker' : 'Doer';
 
       await db.query(
-        `INSERT INTO notifications (user_id, type, title, body, action_url, created_at, read)
+        `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
          VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
         [
           recipientId,
-          'new_message',
-          `💬 New message from ${senderName}`,
-          `${senderName} sent: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
-          `/errand/${taskId}`,
+          'message_received',
+          `💬 New Message from ${senderName}`,
+          `${content.substring(0, 50)}${content.length > 50 ? '...' : ''}`,
+          taskId,
         ]
       );
     } catch (notifErr) {
