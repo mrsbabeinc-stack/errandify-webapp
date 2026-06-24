@@ -338,7 +338,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             </div>
 
             {/* Bottom Row: Category, Status, Offer Status */}
-            <div className="flex flex-wrap items-center gap-0.5 mt-0.5">
+            <div className="flex flex-wrap items-center gap-0.5 mt-0">
               <span
                 className={`${getCategoryColor(
                   errand.category
