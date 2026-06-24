@@ -1413,15 +1413,16 @@ export default function MyKampungPage() {
             <div className="bg-white rounded-t-2xl sm:rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               {/* Featured Image */}
               {selectedBlogPost.featuredImage && (
-                <img
-                  src={selectedBlogPost.featuredImage}
-                  alt={selectedBlogPost.title}
-                  className="w-full h-auto max-h-96 object-contain"
-                  style={{ maxWidth: '100%' }}
-                  onError={(e) => {
-                    console.error('Featured image failed to load:', selectedBlogPost.featuredImage);
-                  }}
-                />
+                <div className="px-4 pt-4">
+                  <img
+                    src={selectedBlogPost.featuredImage}
+                    alt={selectedBlogPost.title}
+                    className="w-full h-48 object-cover rounded-lg shadow-md"
+                    onError={(e) => {
+                      console.error('Featured image failed to load:', selectedBlogPost.featuredImage);
+                    }}
+                  />
+                </div>
               )}
 
               {/* Header */}
