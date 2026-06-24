@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import FloatingHana from './components/FloatingHana';
 import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
+import AuthPage from './pages/AuthPage';
 import HomePage from './pages/HomePage';
 import CategorySelectionPage from './pages/CategorySelectionPage';
 import CategoryPreferencePage from './pages/CategoryPreferencePage';
@@ -102,27 +102,33 @@ export default function App() {
     <Router>
       {isAuthenticated && <FloatingHana />}
       <Routes>
-        {/* Landing page - shown first to unauthenticated users */}
+        {/* Home/Auth page - shown first to unauthenticated users */}
         <Route
           path="/"
           element={
             isAuthenticated ? (
               <Navigate to="/home" replace />
             ) : (
-              <LandingPage />
+              <AuthPage onLogin={handleLogin} />
             )
           }
         />
 
         <Route
-          path="/login"
+          path="/auth"
           element={
             isAuthenticated ? (
               <Navigate to="/home" replace />
             ) : (
-              <LoginPage onLogin={handleLogin} />
+              <AuthPage onLogin={handleLogin} />
             )
           }
+        />
+
+        {/* Legacy login route - redirect to auth */}
+        <Route
+          path="/login"
+          element={<Navigate to="/auth" replace />}
         />
 
         {/* Hana task creation - AI-powered errand posting */}
