@@ -159,30 +159,28 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     // Split by comma
     const parts = location.split(',').map(p => p.trim());
 
-    // The area is the part that:
-    // 1. Is NOT a street address (doesn't start with # or digits or contain Avenue/Street/Road etc)
-    // 2. Is NOT "Singapore"
-    // 3. Is NOT a postal code (6 digits)
+    // The area is typically near the end, before 'Singapore' and postal code
+    // Work backwards to find the first part that looks like an area name
 
-    const streetPatterns = /^#|^\d+\s|avenue|street|road|lane|drive|boulevard|crescent|terrace|place|court|building|blk|block/i;
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const part = parts[i];
+      const lower = part.toLowerCase();
 
-    for (const part of parts) {
-      const trimmed = part.trim();
-      const lower = trimmed.toLowerCase();
+      // Skip known non-area parts
+      if (lower === 'singapore') continue;
+      if (/^\d{6}$/.test(part)) continue; // Skip postal code (6 digits)
+      if (/^#\d+/.test(part)) continue; // Skip unit numbers (#20-50)
+      if (/^\d+\s/.test(part)) continue; // Skip building numbers (111 Duchess...)
+      if (/avenue|street|road|lane|drive|boulevard|crescent|terrace|place|court|building|blk|block/i.test(part)) continue; // Skip street names
 
-      // Skip if it's Singapore or a street address or postal code
-      if (lower === 'singapore' || streetPatterns.test(trimmed) || /^\d{6}$/.test(trimmed)) {
-        continue;
-      }
-
-      // If we find a non-empty part that's not a street/postal, it's the area
-      if (trimmed && trimmed.length > 0) {
-        return trimmed;
+      // Found a valid area name
+      if (part && part.length > 0) {
+        return part;
       }
     }
 
-    // Fallback
-    return location;
+    // Fallback - return empty string instead of full location
+    return '';
   };
 
   const getMaskedLocation = (location?: string) => {
