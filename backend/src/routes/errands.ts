@@ -243,7 +243,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
 // Create errand (asker only)
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, category, location, budget, deadline, certifications, isRecurring, repeatEvery, repeatUnit, occurrences } = req.body;
+    const { title, description, category, location, postal_code, budget, deadline, certifications, isRecurring, repeatEvery, repeatUnit, occurrences } = req.body;
     const askerId = parseInt(req.userId || '0', 10);
 
     console.log('[DEBUG] POST /api/errands called:', {
@@ -252,6 +252,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       category,
       budget,
       deadline,
+      postal_code,
     });
 
     if (!title || !category) {
@@ -301,9 +302,9 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     //   // Don't fail the request if duplicate check fails, just log it
     // }
 
-    // Extract postal code from location for matching/filtering
-    let postalCode: string | null = null;
-    if (location) {
+    // Use postal_code from request if provided, otherwise try to extract from location
+    let postalCode: string | null = postal_code || null;
+    if (!postalCode && location) {
       const postalMatch = location.match(/\d{6}/);
       postalCode = postalMatch ? postalMatch[0] : null;
     }
