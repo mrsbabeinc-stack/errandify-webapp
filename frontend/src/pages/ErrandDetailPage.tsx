@@ -179,8 +179,21 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       }
     }
 
-    // Fallback - return empty string instead of full location
-    return '';
+    // Fallback - if nothing found, extract area before postal code
+    // Try to get the part right before the postal code
+    const postalMatch = location.match(/,\s*([^,]+),\s*Singapore\s+\d{6}/);
+    if (postalMatch) {
+      return postalMatch[1].trim();
+    }
+
+    // Last resort - return the last part before postal/Singapore
+    const lastPart = parts[parts.length - 2];
+    if (lastPart && lastPart.toLowerCase() !== 'singapore') {
+      return lastPart;
+    }
+
+    // If all else fails, return location as-is
+    return location;
   };
 
   const getMaskedLocation = (location?: string) => {
