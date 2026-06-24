@@ -176,53 +176,48 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     // Split by comma
     const parts = location.split(',').map(p => p.trim());
 
-    // Strategy: Look for area name in the location string
-    // Format is usually: [street address], [area], [Singapore postal]
-    // So we want the part right before "Singapore"
+    // Street keywords and patterns to filter out
+    const isStreetOrUnit = (part: string) => {
+      return /avenue|street|road|lane|drive|boulevard|crescent|terrace|place|court|building|blk|block|^\d+\s|^#\d+|\d+[-\/]\d+/i.test(part) ||
+             /^\d{6}$/.test(part) || // postal code
+             part.toLowerCase() === 'singapore';
+    };
 
-    // Find the index of 'Singapore'
+    // Strategy 1: Find part right before "Singapore" (if exists)
     const singaporeIdx = parts.findIndex(p => p.toLowerCase() === 'singapore');
-
     if (singaporeIdx > 0) {
-      // Get the part right before Singapore
       let areaCandidate = parts[singaporeIdx - 1];
-
-      // If it's a postal code, get the part before that
-      if (/^\d{6}$/.test(areaCandidate)) {
-        areaCandidate = parts[singaporeIdx - 2];
-      }
-
-      // Check if this is a valid area (not a street address, not empty)
-      if (areaCandidate &&
-          areaCandidate.length > 0 &&
-          !/ avenue| street| road| lane| drive| boulevard| crescent| terrace| place| court| building| blk| block|^\d+\s|^#/i.test(areaCandidate) &&
-          !/^\d{6}$/.test(areaCandidate)) {
+      if (areaCandidate && !isStreetOrUnit(areaCandidate)) {
         return areaCandidate;
       }
-    }
-
-    // Fallback: Find any part that is NOT a street and NOT Singapore and NOT postal
-    for (let i = parts.length - 1; i >= 0; i--) {
-      const part = parts[i];
-      const lower = part.toLowerCase();
-
-      if (lower === 'singapore') continue;
-      if (/^\d{6}$/.test(part)) continue; // Skip postal
-      if (/avenue|street|road|lane|drive|boulevard|crescent|terrace|place|court|building|blk|block/i.test(part)) continue; // Skip street
-      if (/^\d+\s|^#\d+/.test(part)) continue; // Skip building/unit numbers
-
-      if (part && part.length > 0) {
-        return part;
+      // If prev part is postal, try the one before
+      if (/^\d{6}$/.test(areaCandidate) && singaporeIdx >= 2) {
+        areaCandidate = parts[singaporeIdx - 2];
+        if (areaCandidate && !isStreetOrUnit(areaCandidate)) {
+          return areaCandidate;
+        }
       }
     }
 
-    // Last resort - return first non-street part
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i];
-      if (!/avenue|street|road|lane|drive|boulevard|crescent|terrace|place|court|building|blk|block|^\d+\s|^#\d+|^\d{6}$/i.test(part) &&
-          part.toLowerCase() !== 'singapore' &&
-          part.length > 0) {
-        return part;
+    // Strategy 2: Find the LAST part that is NOT a street/unit/postal/Singapore
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (!isStreetOrUnit(parts[i]) && parts[i].length > 0) {
+        return parts[i];
+      }
+    }
+
+    // Strategy 3: If we only have street parts, extract area from the first street address
+    // E.g., "8 Eunos Road" → "Eunos"
+    const firstPart = parts[0];
+    if (firstPart) {
+      // Try to extract area name from street address
+      // "8 Eunos Road" → extract "Eunos"
+      const areaMatch = firstPart.match(/\b([A-Za-z\s]+)\s+(Road|Street|Avenue|Lane|Drive|Boulevard|Crescent|Terrace|Place|Court|Building|Blk|Block)\b/i);
+      if (areaMatch && areaMatch[1]) {
+        const extracted = areaMatch[1].trim();
+        if (extracted.length > 0 && !/^\d+$/.test(extracted)) {
+          return extracted;
+        }
       }
     }
 
