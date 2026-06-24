@@ -29,9 +29,19 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
   {
     id: 8,
-    title: 'From Part-Time to Manager: How Eileen Built Her Career While Raising Two Kids (And Why She Didn\'t Have to Choose)',
+    title: 'Manager at 28: The 7-Year Career Path Nobody Talks About',
     subtitle: 'A real Singapore mother\'s 7-year journey proving that flexible work isn\'t career suicide—it\'s career strategy.',
     excerpt: 'After her second child, Eileen faced an impossible choice: career or family. She found a third option. Today she\'s a restaurant general manager proving that mothers don\'t have to choose.',
+    featuredImage: 'https://images.unsplash.com/photo-1573496359142-b8d93c34b4a5?w=1200&h=600&fit=crop',
+    inlineImages: [
+      { src: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop', caption: 'Eileen at work: Flexible schedules enabled her to be both present and ambitious' },
+      { src: 'https://images.unsplash.com/photo-1516321318423-f06f70d504f0?w=600&h=400&fit=crop', caption: 'Her family: The people who kept her motivated through the 7-year journey' }
+    ],
+    dataViz: {
+      title: 'Eileen\'s Salary Progression',
+      description: 'Part-time service staff ($1,800) → Assistant manager ($3,500) → General Manager ($5,200)',
+      chart: 'https://via.placeholder.com/600x300?text=Salary+Progression:+1800→3500→5200'
+    }
     author: 'Eileen (Singapore)',
     category: 'stories',
     readTime: 13,
