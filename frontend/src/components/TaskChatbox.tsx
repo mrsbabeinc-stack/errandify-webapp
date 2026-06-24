@@ -731,24 +731,21 @@ Your message doesn't meet our community standards. Please keep messages:
                   <p className="text-xs text-gray-700 font-semibold break-words">
                     {(() => {
                       const location = errandDetails.location || 'Not specified';
-                      const postalCode = errandDetails.postal_code;
+                      let postalCode = errandDetails.postal_code;
 
-                      // If we have explicit postal code, append it with S prefix
+                      // If no explicit postal code, try to extract from location
+                      if (!postalCode) {
+                        const postalMatch = location.match(/(\d{6})/);
+                        if (postalMatch) {
+                          postalCode = postalMatch[1];
+                        }
+                      }
+
+                      // If we found a postal code, format the address
                       if (postalCode) {
                         // Remove any existing postal code from location to avoid duplication
                         const cleanLocation = location.replace(/\s*S?\d{6}\s*$/, '').trim();
                         return `${cleanLocation} S${postalCode}`;
-                      }
-
-                      // Try to extract postal code from location
-                      const postalMatch = location.match(/(\d{6})/);
-                      if (postalMatch) {
-                        const postal = postalMatch[1];
-                        // If location already has postal code, format it properly
-                        if (location.includes(postal)) {
-                          const cleanLocation = location.replace(postal, '').trim();
-                          return `${cleanLocation} S${postal}`;
-                        }
                       }
 
                       return location;
