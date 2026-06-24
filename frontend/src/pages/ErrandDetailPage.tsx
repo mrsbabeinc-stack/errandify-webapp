@@ -153,47 +153,60 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     if (location.toLowerCase() === 'remote') return 'Remote';
 
     // Extract just the area/district name
-    // Format: "111 Duchess Avenue, #20-50, Bedok, Singapore 239211"
-    // We want: "Bedok" (ONLY the area, nothing else)
+    // Common formats in Singapore:
+    // "8 Eunos Road, Eunos, Singapore 400008" → "Eunos"
+    // "111 Duchess Avenue, Bedok, Singapore 239211" → "Bedok"
+    // "Blk 123 Toa Payoh Lane, Toa Payoh, Singapore 310123" → "Toa Payoh"
 
     // Split by comma
     const parts = location.split(',').map(p => p.trim());
 
-    // The area is typically near the end, before 'Singapore' and postal code
-    // Work backwards to find the first part that looks like an area name
+    // Strategy: Find the part that appears BEFORE "Singapore" and after street address
+    // Usually format is: [street address], [area], [Singapore postal]
+    // So area is typically the 2nd-to-last or 3rd-to-last part
 
+    // First, find the index of 'Singapore'
+    const singaporeIdx = parts.findIndex(p => p.toLowerCase() === 'singapore');
+
+    if (singaporeIdx > 0) {
+      // The area is right before Singapore (or before that)
+      // Get the part immediately before Singapore
+      let areaCandidate = parts[singaporeIdx - 1];
+
+      // Skip if it's a postal code
+      if (!/^\d{6}$/.test(areaCandidate)) {
+        // Check if this looks like a street address, if so get the part before it
+        if (/avenue|street|road|lane|drive|boulevard|crescent|terrace|place|court|building|blk|block|^\d+\s|^#/i.test(areaCandidate)) {
+          // This is a street, get the part before it
+          if (singaporeIdx >= 2) {
+            areaCandidate = parts[singaporeIdx - 2];
+          }
+        }
+
+        // Return the area candidate if it's valid
+        if (areaCandidate && areaCandidate.length > 0 && !/^\d{6}$/.test(areaCandidate)) {
+          return areaCandidate;
+        }
+      }
+    }
+
+    // Fallback: Find any part that is NOT a street and NOT Singapore and NOT postal
     for (let i = parts.length - 1; i >= 0; i--) {
       const part = parts[i];
       const lower = part.toLowerCase();
 
-      // Skip known non-area parts
       if (lower === 'singapore') continue;
-      if (/^\d{6}$/.test(part)) continue; // Skip postal code (6 digits)
-      if (/^#\d+/.test(part)) continue; // Skip unit numbers (#20-50)
-      if (/^\d+\s/.test(part)) continue; // Skip building numbers (111 Duchess...)
-      if (/avenue|street|road|lane|drive|boulevard|crescent|terrace|place|court|building|blk|block/i.test(part)) continue; // Skip street names
+      if (/^\d{6}$/.test(part)) continue; // Skip postal
+      if (/avenue|street|road|lane|drive|boulevard|crescent|terrace|place|court|building|blk|block/i.test(part)) continue; // Skip street
+      if (/^\d+\s|^#\d+/.test(part)) continue; // Skip building/unit numbers
 
-      // Found a valid area name
       if (part && part.length > 0) {
         return part;
       }
     }
 
-    // Fallback - if nothing found, extract area before postal code
-    // Try to get the part right before the postal code
-    const postalMatch = location.match(/,\s*([^,]+),\s*Singapore\s+\d{6}/);
-    if (postalMatch) {
-      return postalMatch[1].trim();
-    }
-
-    // Last resort - return the last part before postal/Singapore
-    const lastPart = parts[parts.length - 2];
-    if (lastPart && lastPart.toLowerCase() !== 'singapore') {
-      return lastPart;
-    }
-
-    // If all else fails, return location as-is
-    return location;
+    // If still nothing, return first part (better than empty)
+    return parts[0] || location;
   };
 
   const getMaskedLocation = (location?: string) => {
