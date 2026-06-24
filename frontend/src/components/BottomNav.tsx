@@ -97,8 +97,6 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
     { label: 'Home', path: '/', icon: '🏠' },
     { label: 'MyErrands', path: '/errands', icon: '📋' },
     { label: 'MyChat', path: '/chat', icon: '💬' },
-    // Empty space for + button
-    { label: '', path: '', icon: '', disabled: true },
     { label: 'MyKampung', path: '/my-kampung', icon: '🏘️' },
     { label: 'MyAccount', path: '/my-account', icon: '👤', image: userImage || undefined },
     { label: 'Notifications', path: '/notifications', icon: '🔔' },
@@ -119,16 +117,6 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
               : isActive(item.path)
               ? 'bg-errandify-orange text-white'
               : 'text-gray-600 hover:text-errandify-orange';
-
-            // For askers, add spacing around the center plus button (at index 3)
-            const isCenterSpace = userRole === 'asker' && index === 3;
-
-            // Skip rendering empty spacer items
-            if (disabled && !item.label) {
-              return (
-                <div key={index} className="flex-1" />
-              );
-            }
 
             if (disabled) {
               return (
