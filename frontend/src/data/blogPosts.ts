@@ -50,9 +50,7 @@ export const blogPosts: BlogPost[] = [
     featuredImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1200&h=600&fit=crop',
     imageAlt: 'Smiling Asian woman in restaurant manager uniform, warm and confident',
     sources: ['Source: MyCareersFuture (Singapore government careers portal)', 'Interview profile documented in government career database'],
-    content: `![Smiling manager in her restaurant](https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1200&h=600&fit=crop)
-
-THE MOMENT THAT CHANGED EVERYTHING
+    content: `THE MOMENT THAT CHANGED EVERYTHING
 
 After having her second child, Eileen faced a decision that makes most mothers' hearts break.
 
@@ -83,8 +81,6 @@ Four hours a day. Enough time to earn income. Enough time to drop off her kids a
 Not perfect. Not glamorous. But possible.
 
 "The first day I walked into that KFC, I cried," she said. "Not sad tears. Relief tears. I finally had something that let me be both—a mom and someone building a career."
-
-![Mother and children smiling together](https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=600&h=400&fit=crop)
 
 ---
 
@@ -154,8 +150,6 @@ THE NUMBERS (What Really Happened)
 That's a 150% salary increase from part-time service staff.
 
 All because she negotiated flexibility instead of accepting the either/or choice.
-
-![Leadership moment - woman speaking to team](https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop)
 
 ---
 
@@ -279,9 +273,7 @@ A: The Workplace Fairness Act gives you legal grounds to push back. And there ar
     featuredImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=600&fit=crop',
     imageAlt: 'Warm portrait of confident young woman, hopeful expression',
     sources: ['Source: Rice Media - "From Side Hustles to Economic Waves" (2024)', 'Publication: https://www.ricemedia.co/2024-through-the-eyes-of-gig-workers/'],
-    content: `![Carmen - hopeful and determined](https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=600&fit=crop)
-
-THE PHONE CALL THAT CHANGED EVERYTHING
+    content: `THE PHONE CALL THAT CHANGED EVERYTHING
 
 Carmen's mother called on a Tuesday afternoon in 2023.
 
@@ -319,8 +311,6 @@ She started driving in the evenings after her day job.
 Eight to nine hours of driving a day, split between her job and Grab.
 
 The money wasn't glamorous. It was survival.
-
-![Person working hard - meaningful labor](https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop)
 
 ---
 
@@ -375,8 +365,6 @@ Here's the key: **she never had to quit Grab to start it.**
 The flexibility gave her runway. She could build something without the pressure of it immediately replacing her income.
 
 "If I'd tried to start a business with a traditional job, I would have needed investor capital or savings," Carmen said. "I had neither. But Grab gave me the flexibility to build slowly and organically."
-
-![Happy families cooking together - warm kitchen scene](https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=600&fit=crop)
 
 ---
 
@@ -531,9 +519,7 @@ A: Some people are full-time gig workers successfully. Carmen uses it strategica
     featuredImage: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1200&h=600&fit=crop',
     imageAlt: 'Caring healthcare worker with elderly patient, warm and compassionate',
     sources: ['Source: Ministry of Health 2025-2026 Health Manpower Plan', 'Source: JobStreet, PayScale, ERI SalaryExpert (June 2026)'],
-    content: `![Care worker helping elderly patient warmly](https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1200&h=600&fit=crop)
-
-THE OFFICIAL DATA THAT CHANGES THINGS
+    content: `THE OFFICIAL DATA THAT CHANGES THINGS
 
 In 2025, Singapore's **Ministry of Health** released its Health Manpower Plan for 2025-2026.
 
@@ -562,8 +548,6 @@ They mean:
 These aren't abstract statistics. They're grandparents, parents, aunties, uncles.
 
 Real people who need care.
-
-![Elderly woman smiling warmly - she deserves good care](https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1200&h=600&fit=crop)
 
 ---
 
@@ -782,9 +766,7 @@ A: Not for personal care. AI can help with monitoring, but human touch is irrepl
     featuredImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1200&h=600&fit=crop',
     imageAlt: 'Young professional woman smiling confidently, creative workspace',
     sources: ['Source: MyCareersFuture (Singapore government careers portal)'],
-    content: `![Tanesha - confident career changer](https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1200&h=600&fit=crop)
-
-THE MOMENT EVERYTHING FELT WRONG
+    content: `THE MOMENT EVERYTHING FELT WRONG
 
 Ms. Tanesha was 26 when she realized her career was killing her.
 
@@ -865,8 +847,6 @@ This wasn't a dramatic cliff-jump. It was a carefully planned bridge.
 That selectivity changed everything.
 
 "Because I chose projects carefully, my quality went up," she explained. "Because quality went up, word-of-mouth brought better clients. Because I had better clients, my income stabilized."
-
-![Woman confidently working on creative project](https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop)
 
 ---
 
@@ -1027,9 +1007,7 @@ A: It's variable at first. But with good clients and selective work (like Tanesh
     featuredImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=600&fit=crop',
     imageAlt: 'Happy woman relaxing, peaceful and content',
     sources: ['Source: MyCareersFuture (Singapore government careers portal)'],
-    content: `![Devi - peaceful and content](https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=600&fit=crop)
-
-THE TRUTH DEVI DISCOVERED
+    content: `THE TRUTH DEVI DISCOVERED
 
 "Work-life balance isn't something that happens to you," Devi said, in an interview documented on Singapore's MyCareersFuture government careers portal. "It's something you create."
 
@@ -1074,8 +1052,6 @@ Once she had permission to prioritize her wellbeing, everything shifted.
 She worked. She worked well. But work didn't own her.
 
 "I finally had headspace for myself," Devi said. "That sounds small, but it was everything."
-
-![Woman relaxing with loved ones, happy and present](https://images.unsplash.com/photo-1516321318423-f06f70d504f0?w=600&h=400&fit=crop)
 
 ---
 
@@ -1194,9 +1170,7 @@ A: Good work speaks louder than visible exhaustion. Show up, do excellent work, 
     featuredImage: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop',
     imageAlt: 'Confident woman professional, empowered',
     sources: ['Source: Ministry of Manpower - Singapore\'s Adjusted Gender Pay Gap report'],
-    content: `![Confident professional woman - empowered](https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop)
-
-THE DATA NOBODY WANTS TO TALK ABOUT
+    content: `THE DATA NOBODY WANTS TO TALK ABOUT
 
 Singapore's **Ministry of Manpower** published official data on the gender pay gap.
 
@@ -1421,9 +1395,7 @@ A: Singapore's laws are models for others. But yes, context matters. You'll like
     featuredImage: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop',
     imageAlt: 'Empowered worker, confident and protected',
     sources: ['Source: Singapore Platform Workers Bill (Effective January 1, 2025)', 'Source: Rest of World reporting on SE Asia policy'],
-    content: `![Protected and empowered worker](https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop)
-
-THE HISTORIC MOMENT NOBODY NOTICED
+    content: `THE HISTORIC MOMENT NOBODY NOTICED
 
 On **January 1, 2025**, Singapore did something unprecedented in Southeast Asia: **it passed comprehensive legal protections for gig workers.**
 
