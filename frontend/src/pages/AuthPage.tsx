@@ -128,10 +128,12 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
     <div className="min-h-screen bg-gradient-to-br from-errandify-orange-50 to-orange-50 flex flex-col items-center justify-center p-4">
       {/* Logo/Header */}
       <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold text-errandify-orange mb-2">
-          Errandify
-        </h1>
-        <p className="text-gray-600">
+        <img
+          src="/images/Errandify Logo.png"
+          alt="Errandify"
+          className="h-20 w-auto mx-auto mb-4"
+        />
+        <p className="text-gray-600 text-lg">
           Get things done. Earn rewards. Build community.
         </p>
       </div>
