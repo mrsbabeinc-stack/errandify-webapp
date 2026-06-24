@@ -175,16 +175,28 @@ export default function NotificationsPage() {
     <div className="min-h-screen bg-errandify-bg pb-20">
       {/* HEADER */}
       <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white sticky top-0 z-50 shadow-sm">
-        <div className="max-w-4xl mx-auto px-3 py-2 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-3 py-2 flex items-center justify-between gap-2">
           <h1 className="text-sm font-bold">🔔 Notifications</h1>
-          {notifications.some((n) => !n.read) && (
-            <button
-              onClick={handleMarkAllRead}
-              className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-2 py-0.5 rounded transition"
-            >
-              Mark read
-            </button>
-          )}
+          <div className="flex gap-1">
+            {notifications.some((n) => !n.read) && (
+              <button
+                onClick={handleMarkAllRead}
+                className="text-xs bg-white bg-opacity-30 hover:bg-opacity-40 text-white px-2 py-0.5 rounded transition font-semibold"
+                title="Mark all notifications as read"
+              >
+                ✓ Mark All Read
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button
+                onClick={handleClearAll}
+                className="text-xs bg-red-500 bg-opacity-30 hover:bg-opacity-40 text-white px-2 py-0.5 rounded transition"
+                title="Delete all notifications"
+              >
+                🗑️ Clear All
+              </button>
+            )}
+          </div>
         </div>
 
         {/* TABS */}
@@ -272,24 +284,33 @@ export default function NotificationsPage() {
                     <p className="text-gray-600 text-xs mt-0 line-clamp-1">{notification.message}</p>
 
                     {/* Actions */}
-                    <div className="flex gap-1.5 mt-1 items-center flex-wrap">
+                    <div className="flex gap-1 mt-1 items-center flex-wrap text-xs">
                       {notification.action && (
                         <button
                           onClick={() => navigate(notification.action!.url)}
-                          className="text-xs text-errandify-orange hover:underline font-bold"
+                          className="text-errandify-orange hover:underline font-bold"
                         >
-                          {notification.action.label}
+                          → View
                         </button>
                       )}
 
                       {!notification.read && (
                         <button
                           onClick={() => handleRead(notification.id)}
-                          className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
+                          className="text-blue-600 hover:text-blue-700 font-semibold hover:bg-blue-100 px-1.5 py-0.5 rounded transition"
+                          title="Mark as read"
                         >
-                          ✓
+                          ✓ Read
                         </button>
                       )}
+
+                      <button
+                        onClick={() => handleDelete(notification.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-100 px-1.5 py-0.5 rounded transition ml-auto"
+                        title="Delete notification"
+                      >
+                        🗑️
+                      </button>
                     </div>
                   </div>
                 </div>
