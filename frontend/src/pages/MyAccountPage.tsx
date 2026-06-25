@@ -1079,32 +1079,34 @@ export default function MyAccountPage() {
         {/* MYPOCKET SECTION */}
         {activeSection === 'pocket' && (
           <div className="space-y-3">
-            {/* Happy Balance Card with Celebration */}
-            <div className="bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 text-white rounded-xl p-4 shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 right-0 text-6xl opacity-20">💚</div>
-              <div className="absolute bottom-0 left-0 text-6xl opacity-20">🎉</div>
+            {/* Happy Balance Card - Compact */}
+            <div className="bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 text-white rounded-xl p-3 shadow-lg relative overflow-hidden">
+              <div className="absolute top-0 right-0 text-4xl opacity-20">💚</div>
+              <div className="absolute bottom-0 left-0 text-4xl opacity-20">🎉</div>
               <div className="relative z-10">
-                <p className="text-xs opacity-90 font-semibold">💰 Your MyPocket Balance</p>
-                <h2 className="text-4xl font-bold mb-3">SGD $450.50</h2>
-                <p className="text-xs mb-3 font-semibold">🎊 You're doing amazing! Keep earning! ✨</p>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-white bg-opacity-20 rounded-lg px-3 py-2 backdrop-blur group relative cursor-help hover:bg-opacity-30 transition">
+                <div className="flex items-baseline justify-between mb-2">
+                  <h2 className="text-3xl font-bold">SGD $450.50</h2>
+                  <p className="text-xs opacity-90">💰 MyPocket</p>
+                </div>
+                <p className="text-xs mb-2 font-semibold">🎊 You're doing amazing! ✨</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  <div className="bg-white bg-opacity-20 rounded px-2 py-1.5 backdrop-blur group relative cursor-help hover:bg-opacity-30 transition">
                     <p className="text-xs opacity-90">💵 Earned</p>
-                    <p className="font-bold text-sm">$1,250</p>
+                    <p className="font-bold text-xs">$1,250</p>
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs px-3 py-2 rounded w-32 text-center z-50">
                       Total earnings from completed errands
                     </div>
                   </div>
-                  <div className="bg-white bg-opacity-20 rounded-lg px-3 py-2 backdrop-blur group relative cursor-help hover:bg-opacity-30 transition">
+                  <div className="bg-white bg-opacity-20 rounded px-2 py-1.5 backdrop-blur group relative cursor-help hover:bg-opacity-30 transition">
                     <p className="text-xs opacity-90">🛍️ Spent</p>
-                    <p className="font-bold text-sm">$320</p>
+                    <p className="font-bold text-xs">$320</p>
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs px-3 py-2 rounded w-32 text-center z-50">
                       Total spent on posted errands
                     </div>
                   </div>
-                  <div className="bg-white bg-opacity-20 rounded-lg px-3 py-2 backdrop-blur group relative cursor-help hover:bg-opacity-30 transition">
+                  <div className="bg-white bg-opacity-20 rounded px-2 py-1.5 backdrop-blur group relative cursor-help hover:bg-opacity-30 transition">
                     <p className="text-xs opacity-90">⏳ Pending</p>
-                    <p className="font-bold text-sm">$150</p>
+                    <p className="font-bold text-xs">$150</p>
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs px-3 py-2 rounded w-36 text-center z-50">
                       Paid after 48 hours
                     </div>
