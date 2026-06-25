@@ -1960,6 +1960,55 @@ export default function MyAccountPage() {
               />
             </div>
 
+            {/* Quick Load Saved Groups - Top Priority */}
+            {savedGroups.length > 0 && (
+              <div className="p-3 bg-gradient-to-r from-purple-100 to-purple-50 border-2 border-purple-300 rounded-lg">
+                <label className="text-xs font-bold text-purple-700 block mb-2">⚡ Quick Load Saved Group</label>
+                <input
+                  type="text"
+                  value={groupSearch}
+                  onChange={(e) => setGroupSearch(e.target.value)}
+                  placeholder="Search group name..."
+                  className="w-full px-3 py-2 border-2 border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
+                />
+                <div className="max-h-28 overflow-y-auto space-y-1">
+                  {savedGroups
+                    .filter((group) =>
+                      groupSearch === '' ||
+                      group.name.toLowerCase().includes(groupSearch.toLowerCase())
+                    )
+                    .map((group) => (
+                      <button
+                        key={group.id}
+                        onClick={() => {
+                          setGiftForm({
+                            ...giftForm,
+                            recipients: group.members,
+                          });
+                          setGiftSearch('');
+                          setGroupSearch('');
+                          setModalMessage(`✅ Loaded group "${group.name}" with ${group.members.length} members!`);
+                          setShowSuccessModal(true);
+                        }}
+                        className="w-full text-left flex items-center justify-between p-2 hover:bg-purple-200 rounded transition bg-white text-xs border border-purple-200"
+                      >
+                        <div className="flex-1">
+                          <p className="font-bold text-gray-900">{group.name}</p>
+                          <p className="text-gray-600">{group.members.length} members</p>
+                        </div>
+                        <span className="text-purple-600 font-bold">→</span>
+                      </button>
+                    ))}
+                  {savedGroups.filter((group) =>
+                    groupSearch === '' ||
+                    group.name.toLowerCase().includes(groupSearch.toLowerCase())
+                  ).length === 0 && (
+                    <p className="text-xs text-gray-500 text-center p-2">No groups matching "{groupSearch}"</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Search & Select Recipients with Group Integration */}
             <div className="space-y-2">
               {/* Header with selection count */}
@@ -2145,54 +2194,6 @@ export default function MyAccountPage() {
               />
             </div>
 
-            {/* Saved Groups - Load Existing Groups with Search */}
-            {savedGroups.length > 0 && (
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700">💾 Load Saved Group</label>
-                <input
-                  type="text"
-                  value={groupSearch}
-                  onChange={(e) => setGroupSearch(e.target.value)}
-                  placeholder="Search groups by name..."
-                  className="w-full px-3 py-2 border-2 border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-                />
-                <div className="max-h-32 overflow-y-auto space-y-1 border border-purple-100 rounded-lg p-2 bg-purple-50">
-                  {savedGroups
-                    .filter((group) =>
-                      groupSearch === '' ||
-                      group.name.toLowerCase().includes(groupSearch.toLowerCase())
-                    )
-                    .map((group) => (
-                      <button
-                        key={group.id}
-                        onClick={() => {
-                          setGiftForm({
-                            ...giftForm,
-                            recipients: group.members,
-                          });
-                          setGiftSearch('');
-                          setGroupSearch('');
-                          setModalMessage(`✅ Loaded group "${group.name}" with ${group.members.length} members!`);
-                          setShowSuccessModal(true);
-                        }}
-                        className="w-full text-left flex items-center justify-between p-2 hover:bg-purple-100 rounded transition bg-white border border-purple-100"
-                      >
-                        <div className="flex-1">
-                          <p className="text-xs font-bold text-gray-900">{group.name}</p>
-                          <p className="text-xs text-gray-600">{group.members.length} members</p>
-                        </div>
-                        <span className="text-xs text-purple-600 font-bold">→</span>
-                      </button>
-                    ))}
-                  {savedGroups.filter((group) =>
-                    groupSearch === '' ||
-                    group.name.toLowerCase().includes(groupSearch.toLowerCase())
-                  ).length === 0 && (
-                    <p className="text-xs text-gray-500 text-center p-2">No groups matching "{groupSearch}"</p>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Points Left */}
             <div className="bg-yellow-50 rounded-lg p-2 flex justify-between items-center border border-yellow-200">
