@@ -67,6 +67,12 @@ export default function MyAccountPage() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [aiAlerts, setAiAlerts] = useState<Array<{ type: string; emoji: string; title: string; message: string }>>([]);
+  const [editingPayout, setEditingPayout] = useState(false);
+  const [payoutForm, setPayoutForm] = useState({
+    bankName: 'DBS Bank Singapore',
+    accountHolder: 'Sarah Tan',
+    accountNumber: '****5678',
+  });
 
   useEffect(() => {
     // Fetch AI-generated alerts
@@ -1167,47 +1173,84 @@ export default function MyAccountPage() {
               <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold">💳 Payout Details</h3>
-                  <button className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 rounded transition">
-                    ✏️ Edit
+                  <button
+                    onClick={() => setEditingPayout(!editingPayout)}
+                    className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 rounded transition"
+                  >
+                    {editingPayout ? '✅ Done' : '✏️ Edit'}
                   </button>
                 </div>
               </div>
               <div className="p-3 space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Bank Name:</span>
-                  <span className="font-semibold text-gray-800">DBS Bank Singapore</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Account Holder:</span>
-                  <span className="font-semibold text-gray-800">Sarah Tan</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Account Number:</span>
-                  <span className="font-semibold text-gray-800">****5678</span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-gray-200">
-                  <span className="text-gray-600">Status:</span>
-                  <span className="font-semibold text-green-600">✅ Verified</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Payout Status */}
-            <div className="bg-white rounded-lg border border-gray-200 p-3">
-              <h3 className="text-xs font-bold text-errandify-brown mb-2">💳 Payout Status</h3>
-              <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Bank</span>
-                  <span className="font-bold">STRIPE TEST BANK</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Account</span>
-                  <span className="font-bold">•••• •••• •••• 3456</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Status</span>
-                  <span className="font-bold text-green-600">✓ Approved</span>
-                </div>
+                {editingPayout ? (
+                  <>
+                    <div>
+                      <label className="text-gray-600 block mb-1">Bank Name:</label>
+                      <input
+                        type="text"
+                        value={payoutForm.bankName}
+                        onChange={(e) => setPayoutForm({ ...payoutForm, bankName: e.target.value })}
+                        className="w-full border border-gray-300 rounded px-2 py-1 text-gray-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-gray-600 block mb-1">Account Holder:</label>
+                      <input
+                        type="text"
+                        value={payoutForm.accountHolder}
+                        onChange={(e) => setPayoutForm({ ...payoutForm, accountHolder: e.target.value })}
+                        className="w-full border border-gray-300 rounded px-2 py-1 text-gray-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-gray-600 block mb-1">Account Number:</label>
+                      <input
+                        type="password"
+                        value={payoutForm.accountNumber}
+                        onChange={(e) => setPayoutForm({ ...payoutForm, accountNumber: e.target.value })}
+                        className="w-full border border-gray-300 rounded px-2 py-1 text-gray-800"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <div className="flex gap-2 mt-3 pt-2 border-t border-gray-200">
+                      <button
+                        onClick={() => setEditingPayout(false)}
+                        className="flex-1 bg-gray-200 text-gray-800 py-1 rounded text-xs font-semibold hover:bg-gray-300"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingPayout(false);
+                          setModalMessage('Payout details updated! 💰');
+                          setShowSuccessModal(true);
+                        }}
+                        className="flex-1 bg-green-500 text-white py-1 rounded text-xs font-semibold hover:bg-green-600"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Bank Name:</span>
+                      <span className="font-semibold text-gray-800">{payoutForm.bankName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Account Holder:</span>
+                      <span className="font-semibold text-gray-800">{payoutForm.accountHolder}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Account Number:</span>
+                      <span className="font-semibold text-gray-800">{payoutForm.accountNumber}</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-gray-200">
+                      <span className="text-gray-600">Status:</span>
+                      <span className="font-semibold text-green-600">✅ Verified</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
