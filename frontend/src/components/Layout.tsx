@@ -37,7 +37,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
   };
 
   const handleProfileClick = () => {
-    navigate('/account');
+    navigate('/my-account');
   };
 
   const handleRoleChange = (role: 'asker' | 'doer') => {
