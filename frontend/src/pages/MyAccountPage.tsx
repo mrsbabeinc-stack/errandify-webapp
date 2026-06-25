@@ -2009,6 +2009,54 @@ export default function MyAccountPage() {
               />
             </div>
 
+            {/* Live EP Calculation - Shows when recipients selected + points entered */}
+            {(giftForm.recipients?.length ?? 0) > 0 && giftForm.points && (
+              <div className="space-y-2 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-3 border-2 border-orange-200">
+                <p className="text-xs font-bold text-gray-700 mb-2">📊 EP Breakdown</p>
+
+                {/* Three Column Grid */}
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-white rounded p-2 border border-orange-100">
+                    <p className="text-xs text-gray-600">Recipients</p>
+                    <p className="text-lg font-bold text-orange-600">{giftForm.recipients?.length ?? 0}</p>
+                  </div>
+                  <div className="bg-white rounded p-2 border border-blue-100">
+                    <p className="text-xs text-gray-600">Per Person</p>
+                    <p className="text-lg font-bold text-blue-600">{giftForm.points} EP</p>
+                  </div>
+                  <div className="bg-white rounded p-2 border border-pink-100">
+                    <p className="text-xs text-gray-600">Total Cost</p>
+                    <p className="text-lg font-bold text-pink-600">{Math.max(0, (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0))} EP</p>
+                  </div>
+                </div>
+
+                {/* Balance Display */}
+                <div className={`rounded p-2 border-2 ${
+                  (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0) > userBalance
+                    ? 'bg-red-50 border-red-300'
+                    : 'bg-green-50 border-green-300'
+                }`}>
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-gray-600">Current Balance:</p>
+                    <p className="text-sm font-bold text-gray-800">{userBalance} EP</p>
+                  </div>
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-gray-600">After Gift:</p>
+                    <p className={`text-sm font-bold ${
+                      (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0) > userBalance
+                        ? 'text-red-600'
+                        : 'text-green-600'
+                    }`}>
+                      {Math.max(0, userBalance - ((parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0)))} EP
+                    </p>
+                  </div>
+                  {(parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0) > userBalance && (
+                    <p className="text-xs text-red-600 font-bold mt-2">❌ Not enough points!</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Quick Load Saved Groups - Top Priority */}
             {savedGroups.length > 0 && (
               <div className="p-3 bg-gradient-to-r from-purple-100 to-purple-50 border-2 border-purple-300 rounded-lg">
