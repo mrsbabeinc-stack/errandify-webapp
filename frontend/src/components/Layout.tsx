@@ -47,7 +47,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
 
   return (
     <div className="flex flex-col h-screen bg-errandify-bg">
-      {/* Top Bar with Logo, MyAccount & Profile */}
+      {/* Top Bar with Logo, Role Toggle & Profile */}
       <div className="bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center sticky top-0 z-50">
         {/* Logo */}
         <div className="flex items-center gap-2">
@@ -58,8 +58,8 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
           />
         </div>
 
-        {/* Role Toggle - now showing MyAccount */}
-        <RoleToggle currentRole={userRole} onRoleChange={handleRoleChange} onMyAccountClick={handleProfileClick} />
+        {/* Role Toggle */}
+        <RoleToggle currentRole={userRole} onRoleChange={handleRoleChange} />
 
         {/* Profile & Logout */}
         <div className="flex items-center gap-2">
