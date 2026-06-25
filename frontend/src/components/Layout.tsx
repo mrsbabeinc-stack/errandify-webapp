@@ -52,10 +52,10 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
           />
         </div>
 
-        {/* MyAccount Button (replaces Role Toggle) */}
+        {/* MyAccount Button (compact tab style) */}
         <button
           onClick={handleProfileClick}
-          className="px-4 py-1.5 text-sm font-semibold text-white bg-errandify-orange hover:bg-orange-600 rounded-lg transition-colors"
+          className="px-3 py-1 text-xs font-semibold text-errandify-brown bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-300"
         >
           MyAccount
         </button>
