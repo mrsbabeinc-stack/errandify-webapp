@@ -50,6 +50,24 @@ export async function up() {
       console.log('✅ Added bank_verified column');
     }
 
+    // Add stripe_account_id column if it doesn't exist
+    if (!existingColumns.includes('stripe_account_id')) {
+      await db.query(`
+        ALTER TABLE users
+        ADD COLUMN stripe_account_id VARCHAR(255) UNIQUE
+      `);
+      console.log('✅ Added stripe_account_id column');
+    }
+
+    // Add stripe_external_account_id column if it doesn't exist
+    if (!existingColumns.includes('stripe_external_account_id')) {
+      await db.query(`
+        ALTER TABLE users
+        ADD COLUMN stripe_external_account_id VARCHAR(255)
+      `);
+      console.log('✅ Added stripe_external_account_id column');
+    }
+
     console.log('✅ Bank details migration completed');
   } catch (error) {
     console.error('❌ Migration error:', error);
@@ -66,7 +84,9 @@ export async function down() {
       DROP COLUMN IF EXISTS bank_name,
       DROP COLUMN IF EXISTS account_holder,
       DROP COLUMN IF EXISTS account_number,
-      DROP COLUMN IF EXISTS bank_verified
+      DROP COLUMN IF EXISTS bank_verified,
+      DROP COLUMN IF EXISTS stripe_account_id,
+      DROP COLUMN IF EXISTS stripe_external_account_id
     `);
 
     console.log('✅ Rollback completed');

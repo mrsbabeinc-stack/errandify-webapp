@@ -405,4 +405,103 @@ router.post('/verify-bank', authMiddleware, async (req: AuthRequest, res: Respon
   }
 });
 
+// POST /api/payment/link-bank - Link bank account to Stripe Connect
+router.post('/link-bank', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const { accountNumber } = req.body;
+
+    if (!accountNumber) {
+      return res.status(400).json({ error: 'Account number required' });
+    }
+
+    // Get user info
+    const userResult = await db.query(
+      `SELECT id, stripe_account_id, account_holder, bank_name
+       FROM users
+       WHERE id = $1`,
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = userResult.rows[0];
+    let stripeAccountId = user.stripe_account_id;
+
+    // Create Stripe Connect account if doesn't exist
+    if (!stripeAccountId) {
+      console.log(`[Payment] Creating Stripe Connect account for user ${userId}`);
+      const account = await stripeService.createConnectedAccount(userId, user.email, user.display_name);
+      stripeAccountId = account.stripeAccountId;
+
+      // Save stripe account ID
+      await db.query(
+        'UPDATE users SET stripe_account_id = $1 WHERE id = $2',
+        [stripeAccountId, userId]
+      );
+    }
+
+    // Link bank account to Stripe
+    console.log(`[Payment] Linking bank account to Stripe for user ${userId}`);
+    const result = await stripeService.linkBankAccount(
+      stripeAccountId,
+      user.account_holder,
+      accountNumber
+    );
+
+    // Set as default payout account
+    await stripeService.setDefaultPayoutAccount(stripeAccountId, result.externalAccountId);
+
+    res.json({
+      success: true,
+      data: {
+        stripeAccountId,
+        externalAccountId: result.externalAccountId,
+        lastFour: result.accountNumber,
+        message: 'Bank account linked successfully! 🎉 Verification in progress...',
+      },
+    });
+  } catch (error: any) {
+    console.error('[Payment] Link bank error:', error);
+    res.status(500).json({
+      error: error.message || 'Failed to link bank account',
+      details: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+// GET /api/payment/stripe-account - Get user's Stripe Connect account status
+router.get('/stripe-account', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    const result = await db.query(
+      `SELECT stripe_account_id, bank_verified
+       FROM users
+       WHERE id = $1`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+
+    res.json({
+      success: true,
+      data: {
+        stripeAccountId: user.stripe_account_id || null,
+        bankVerified: user.bank_verified || false,
+        ready: !!user.stripe_account_id && user.bank_verified,
+      },
+    });
+  } catch (error) {
+    console.error('[Payment] Get Stripe account error:', error);
+    res.status(500).json({ error: 'Failed to get account status' });
+  }
+});
+
 export default router;
