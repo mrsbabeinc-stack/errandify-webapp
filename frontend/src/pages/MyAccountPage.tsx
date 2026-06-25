@@ -988,13 +988,6 @@ export default function MyAccountPage() {
             {/* QUICK ACTIONS */}
             <div className="grid grid-cols-3 md:grid-cols-6 gap-1">
               <button
-                onClick={() => navigate('/errandify-points')}
-                className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
-              >
-                <p className="text-lg mb-0">💎</p>
-                <p className="font-bold text-xs text-gray-800">Rewards</p>
-              </button>
-              <button
                 onClick={() => navigate('/referral')}
                 className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
