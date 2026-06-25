@@ -40,7 +40,7 @@ export default function MyAccountPage() {
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | 'categories' | 'faq'>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [blockedTab, setBlockedTab] = useState<'blocked' | 'trusted'>('blocked');
-  const [rewardsTab, setRewardsTab] = useState<'overview' | 'shop' | 'history'>('overview');
+  const [rewardsTab, setRewardsTab] = useState<'overview' | 'shop' | 'gift' | 'vouchers' | 'history'>('overview');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -1546,6 +1546,16 @@ export default function MyAccountPage() {
                 💝 Send A Gift
               </button>
               <button
+                onClick={() => setRewardsTab('vouchers')}
+                className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
+                  rewardsTab === 'vouchers'
+                    ? 'bg-purple-500 text-white'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                🎟️ My Vouchers
+              </button>
+              <button
                 onClick={() => setRewardsTab('history')}
                 className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
                   rewardsTab === 'history'
@@ -2085,6 +2095,63 @@ export default function MyAccountPage() {
                 >
                   💝 Send Gift
                 </button>
+              </div>
+            )}
+
+            {/* VOUCHERS TAB - My Redeemed Vouchers */}
+            {rewardsTab === 'vouchers' && (
+              <div className="space-y-2">
+                <div className="text-center py-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg border-2 border-purple-300">
+                  <p className="text-sm font-bold text-purple-600">🎟️ My Vouchers 🎟️</p>
+                  <p className="text-xs text-gray-600 mt-1">All your redeemed discount codes</p>
+                </div>
+
+                {/* Vouchers List */}
+                {redemptionHistory.length > 0 ? (
+                  <div className="bg-white rounded-xl border-2 border-purple-200 overflow-hidden shadow-md">
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3">
+                      <h3 className="text-sm font-bold">🎁 Your Vouchers ({redemptionHistory.length}) 🎁</h3>
+                      <p className="text-xs mt-1 opacity-90">Click to copy code</p>
+                    </div>
+                    <div className="divide-y divide-purple-100">
+                      {redemptionHistory.map((record) => (
+                        <div
+                          key={`redemption-${record.id}`}
+                          className="p-4 hover:bg-purple-50 transition bg-gradient-to-r from-transparent to-purple-50"
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <p className="font-bold text-gray-900 text-sm">{record.emoji} {record.item}</p>
+                              <p className="text-xs text-gray-600 mt-1">{record.date}</p>
+                            </div>
+                            <span className="text-orange-600 font-bold text-sm">{record.amount} EP</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(record.code);
+                              setModalMessage(`✅ Code copied: ${record.code}`);
+                              setShowSuccessModal(true);
+                            }}
+                            className="w-full bg-gradient-to-r from-purple-400 to-pink-400 text-white py-2 rounded-lg font-bold text-xs hover:shadow-lg transition mt-2"
+                          >
+                            📋 Copy Code: {record.code}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-purple-50 rounded-xl border-2 border-purple-200 p-6 text-center">
+                    <p className="text-sm font-bold text-purple-600 mb-2">🎟️ No Vouchers Yet</p>
+                    <p className="text-xs text-gray-600 mb-4">Redeem discounts in the Shop to collect vouchers</p>
+                    <button
+                      onClick={() => setRewardsTab('shop')}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg font-bold text-xs hover:shadow-lg transition"
+                    >
+                      🛍️ Go to Shop
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
