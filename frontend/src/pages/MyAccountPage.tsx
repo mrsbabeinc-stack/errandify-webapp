@@ -2027,7 +2027,7 @@ export default function MyAccountPage() {
                 onClick={() => {
                   setShowGiftSuccessModal(false);
                   setShowGiftModal(false);
-                  setActiveSection('myRewardSpace');
+                  setActiveSection('rewards');
                 }}
                 className="w-full bg-green-500 text-white font-bold py-2 text-sm rounded-lg hover:bg-green-600 transition"
               >
