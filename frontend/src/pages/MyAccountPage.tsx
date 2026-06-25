@@ -112,6 +112,8 @@ export default function MyAccountPage() {
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [savedGroups, setSavedGroups] = useState<Array<{ id: string; name: string; members: string[] }>>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyFilter, setHistoryFilter] = useState<'all' | 'gifts' | 'redemptions'>('all');
   const [giftCardTemplates] = useState([
     '🎂 Happy Birthday! Wishing you an amazing day!',
     '💍 Happy Anniversary! Celebrating your special love!',
@@ -2172,6 +2174,51 @@ export default function MyAccountPage() {
                   <p className="text-xs text-gray-600 mt-1">Your EP transactions (rewards & gifts)</p>
                 </div>
 
+                {/* Search Bar */}
+                <div>
+                  <input
+                    type="text"
+                    value={historySearch}
+                    onChange={(e) => setHistorySearch(e.target.value)}
+                    placeholder="🔍 Search transactions..."
+                    className="w-full px-3 py-2 border-2 border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                {/* Filter Buttons */}
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => setHistoryFilter('all')}
+                    className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
+                      historyFilter === 'all'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                    }`}
+                  >
+                    📋 All
+                  </button>
+                  <button
+                    onClick={() => setHistoryFilter('gifts')}
+                    className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
+                      historyFilter === 'gifts'
+                        ? 'bg-pink-500 text-white'
+                        : 'bg-pink-100 text-pink-700 hover:bg-pink-200'
+                    }`}
+                  >
+                    💝 Gifts ({allActivities.filter(a => a.type === 'gift').length})
+                  </button>
+                  <button
+                    onClick={() => setHistoryFilter('redemptions')}
+                    className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
+                      historyFilter === 'redemptions'
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                    }`}
+                  >
+                    🎟️ Redemptions ({redemptionHistory.length})
+                  </button>
+                </div>
+
                 {/* Combined History List */}
                 <div className="bg-white rounded-xl border-2 border-purple-200 overflow-hidden shadow-md">
                   <div className="bg-gradient-to-r from-blue-400 to-purple-500 text-white p-3">
@@ -2182,24 +2229,32 @@ export default function MyAccountPage() {
                     {redemptionHistory.length > 0 || allActivities.filter(a => a.type === 'gift').length > 0 ? (
                       <>
                         {/* Redemptions */}
-                        {redemptionHistory.map((record) => (
-                          <div key={`redemption-${record.id}`} className="p-3 flex justify-between hover:bg-purple-50 transition bg-gradient-to-r from-transparent to-purple-50">
-                            <div>
-                              <p className="font-bold text-gray-900">{record.emoji} {record.item}</p>
-                              <p className="text-gray-500 text-xs">{record.date}{record.time && ` at ${record.time}`} • Code: {record.code}</p>
+                        {(historyFilter === 'all' || historyFilter === 'redemptions') && redemptionHistory
+                          .filter(record =>
+                            record.item.toLowerCase().includes(historySearch.toLowerCase()) ||
+                            record.code.toLowerCase().includes(historySearch.toLowerCase())
+                          )
+                          .map((record) => (
+                            <div key={`redemption-${record.id}`} className="p-3 flex justify-between hover:bg-purple-50 transition bg-gradient-to-r from-transparent to-purple-50">
+                              <div>
+                                <p className="font-bold text-gray-900">{record.emoji} {record.item}</p>
+                                <p className="text-gray-500 text-xs">{record.date}{record.time && ` at ${record.time}`} • Code: {record.code}</p>
+                              </div>
+                              <p className="font-bold text-orange-600 text-sm">{record.amount} EP</p>
                             </div>
-                            <p className="font-bold text-orange-600 text-sm">{record.amount} EP</p>
-                          </div>
-                        ))}
+                          ))}
 
                         {/* Gifts */}
-                        {allActivities
-                          .filter(a => a.type === 'gift')
+                        {(historyFilter === 'all' || historyFilter === 'gifts') && allActivities
+                          .filter(a => a.type === 'gift' && (
+                            a.title.toLowerCase().includes(historySearch.toLowerCase()) ||
+                            a.emoji.includes(historySearch)
+                          ))
                           .map((gift) => (
                             <div key={`gift-${gift.id}`} className="p-3 flex justify-between hover:bg-pink-50 transition bg-gradient-to-r from-transparent to-pink-50">
                               <div>
                                 <p className="font-bold text-gray-900">{gift.emoji} {gift.title}</p>
-                                <p className="text-gray-500 text-xs">{gift.date}</p>
+                                <p className="text-gray-500 text-xs">{gift.date}{gift.time && ` at ${gift.time}`}</p>
                               </div>
                               <p className="font-bold text-pink-600 text-sm">{gift.amount}</p>
                             </div>
