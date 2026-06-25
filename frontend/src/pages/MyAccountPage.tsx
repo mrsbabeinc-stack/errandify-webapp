@@ -92,6 +92,7 @@ export default function MyAccountPage() {
     useCustomMessage: false,
   });
   const [giftSearch, setGiftSearch] = useState('');
+  const [groupSearch, setGroupSearch] = useState('');
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [savedGroups, setSavedGroups] = useState<Array<{ id: string; name: string; members: string[] }>>([]);
   const [giftCardTemplates] = useState([
@@ -2118,32 +2119,52 @@ export default function MyAccountPage() {
               />
             </div>
 
-            {/* Saved Groups Dropdown - Load Existing Groups */}
+            {/* Saved Groups - Load Existing Groups with Search */}
             {savedGroups.length > 0 && (
-              <div>
+              <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700">💾 Load Saved Group</label>
-                <select
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      const group = savedGroups.find((g) => g.id === e.target.value);
-                      if (group) {
-                        setGiftForm({
-                          ...giftForm,
-                          recipients: group.members,
-                        });
-                        setGiftSearch('');
-                      }
-                    }
-                  }}
+                <input
+                  type="text"
+                  value={groupSearch}
+                  onChange={(e) => setGroupSearch(e.target.value)}
+                  placeholder="Search groups by name..."
                   className="w-full px-3 py-2 border-2 border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-                >
-                  <option value="">Select a group...</option>
-                  {savedGroups.map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.name} ({group.members.length} members)
-                    </option>
-                  ))}
-                </select>
+                />
+                <div className="max-h-32 overflow-y-auto space-y-1 border border-purple-100 rounded-lg p-2 bg-purple-50">
+                  {savedGroups
+                    .filter((group) =>
+                      groupSearch === '' ||
+                      group.name.toLowerCase().includes(groupSearch.toLowerCase())
+                    )
+                    .map((group) => (
+                      <button
+                        key={group.id}
+                        onClick={() => {
+                          setGiftForm({
+                            ...giftForm,
+                            recipients: group.members,
+                          });
+                          setGiftSearch('');
+                          setGroupSearch('');
+                          setModalMessage(`✅ Loaded group "${group.name}" with ${group.members.length} members!`);
+                          setShowSuccessModal(true);
+                        }}
+                        className="w-full text-left flex items-center justify-between p-2 hover:bg-purple-100 rounded transition bg-white border border-purple-100"
+                      >
+                        <div className="flex-1">
+                          <p className="text-xs font-bold text-gray-900">{group.name}</p>
+                          <p className="text-xs text-gray-600">{group.members.length} members</p>
+                        </div>
+                        <span className="text-xs text-purple-600 font-bold">→</span>
+                      </button>
+                    ))}
+                  {savedGroups.filter((group) =>
+                    groupSearch === '' ||
+                    group.name.toLowerCase().includes(groupSearch.toLowerCase())
+                  ).length === 0 && (
+                    <p className="text-xs text-gray-500 text-center p-2">No groups matching "{groupSearch}"</p>
+                  )}
+                </div>
               </div>
             )}
 
