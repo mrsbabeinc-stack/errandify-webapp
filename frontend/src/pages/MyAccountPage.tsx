@@ -1413,10 +1413,22 @@ export default function MyAccountPage() {
 
             {/* Redeem & Gift Buttons */}
             <div className="flex gap-2">
-              <button className="flex-1 bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600">
+              <button
+                onClick={() => {
+                  setModalMessage('🎁 Redeem your Errandify Points now!');
+                  setShowSuccessModal(true);
+                }}
+                className="flex-1 bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600 transition"
+              >
                 🎁 Redeem Now
               </button>
-              <button className="flex-1 border-2 border-errandify-orange text-errandify-orange py-2 rounded font-bold text-xs hover:bg-orange-50">
+              <button
+                onClick={() => {
+                  setModalMessage('🎀 Send a gift to someone special!');
+                  setShowSuccessModal(true);
+                }}
+                className="flex-1 border-2 border-errandify-orange text-errandify-orange py-2 rounded font-bold text-xs hover:bg-orange-50 transition"
+              >
                 🎀 Send A Gift
               </button>
             </div>
@@ -1432,21 +1444,42 @@ export default function MyAccountPage() {
                     <p className="font-bold text-gray-900">$5 Discount</p>
                     <p className="text-errandify-orange font-bold">50 EP</p>
                   </div>
-                  <button className="bg-errandify-orange text-white px-2 py-1 rounded text-xs font-bold">Redeem</button>
+                  <button
+                    onClick={() => {
+                      setModalMessage('🎉 Congratulations! You redeemed $5 Discount! Code: ERRAND5');
+                      setShowSuccessModal(true);
+                    }}
+                    className="bg-errandify-orange text-white px-2 py-1 rounded text-xs font-bold hover:bg-orange-600 transition"
+                  >
+                    Redeem
+                  </button>
                 </div>
                 <div className="p-2 flex justify-between items-center hover:bg-gray-50">
                   <div>
                     <p className="font-bold text-gray-900">$10 Discount</p>
                     <p className="text-errandify-orange font-bold">100 EP</p>
                   </div>
-                  <button className="bg-errandify-orange text-white px-2 py-1 rounded text-xs font-bold">Redeem</button>
+                  <button
+                    onClick={() => {
+                      setModalMessage('🎉 Congratulations! You redeemed $10 Discount! Code: ERRAND10');
+                      setShowSuccessModal(true);
+                    }}
+                    className="bg-errandify-orange text-white px-2 py-1 rounded text-xs font-bold hover:bg-orange-600 transition"
+                  >
+                    Redeem
+                  </button>
                 </div>
                 <div className="p-2 flex justify-between items-center hover:bg-gray-50">
                   <div>
                     <p className="font-bold text-gray-900">$20 Discount</p>
                     <p className="text-errandify-orange font-bold">200 EP</p>
                   </div>
-                  <button className="bg-gray-300 text-gray-500 px-2 py-1 rounded text-xs font-bold">Need</button>
+                  <button
+                    disabled
+                    className="bg-gray-300 text-gray-500 px-2 py-1 rounded text-xs font-bold cursor-not-allowed"
+                  >
+                    Need
+                  </button>
                 </div>
               </div>
             </div>
