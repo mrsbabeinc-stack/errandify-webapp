@@ -9,7 +9,7 @@ const router = Router();
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, user_id, display_name, email, mobile, role, formatted_user_id, chas_card_color, profile_image_url, alias, bio FROM users WHERE id = $1',
+      'SELECT id, user_id, display_name, email, mobile, role, formatted_user_id, chas_card_color, profile_image_url, alias, bio, certificates FROM users WHERE id = $1',
       [req.userId]
     );
 
@@ -43,6 +43,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
         profileImageUrl: user.profile_image_url,
         alias: user.alias,
         bio: user.bio,
+        certificates: user.certificates || [],
         categories: [],
       },
     });
@@ -55,7 +56,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
 // Update user profile
 router.put('/profile', authMiddleware, async (req, res) => {
   try {
-    const { display_name, mobile, monthly_household_income, chas_card_color, email, alias, bio, profile_image } = req.body;
+    const { display_name, mobile, monthly_household_income, chas_card_color, email, alias, bio, profile_image, certificates } = req.body;
     const userId = req.userId;
 
     let updateFields = [];
@@ -129,11 +130,17 @@ router.put('/profile', authMiddleware, async (req, res) => {
       }
     }
 
+    // Handle certificates
+    if (certificates !== undefined && Array.isArray(certificates)) {
+      updateFields.push(`certificates = $${++paramCount}`);
+      updateValues.push(JSON.stringify(certificates));
+    }
+
     if (updateFields.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
     }
 
-    const query = `UPDATE users SET ${updateFields.join(', ')}, updated_at = NOW() WHERE id = $1 RETURNING id, display_name, mobile, monthly_household_income, chas_card_color, chas_subsidy_percentage, profile_image_url, alias, bio`;
+    const query = `UPDATE users SET ${updateFields.join(', ')}, updated_at = NOW() WHERE id = $1 RETURNING id, display_name, mobile, monthly_household_income, chas_card_color, chas_subsidy_percentage, profile_image_url, alias, bio, certificates`;
 
     const result = await db.query(query, updateValues);
 
@@ -146,6 +153,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
       data: {
         ...result.rows[0],
         profileImageUrl: result.rows[0].profile_image_url,
+        certificates: result.rows[0].certificates || [],
       },
     });
   } catch (error) {

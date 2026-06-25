@@ -97,6 +97,11 @@ export default function MyAccountPage() {
             alias: profileRes.data.data.alias || '',
             bio: profileRes.data.data.bio || '',
           });
+
+          // Load certificates from backend
+          if (profileRes.data.data.certificates && Array.isArray(profileRes.data.data.certificates)) {
+            setCertificates(profileRes.data.data.certificates);
+          }
         } catch (error) {
           console.error('Profile API error:', error);
           // Use localStorage data as fallback
@@ -195,6 +200,11 @@ export default function MyAccountPage() {
       // Add profile image if it was uploaded
       if (profileImage && profileImage.startsWith('data:')) {
         profilePayload.profile_image = profileImage;
+      }
+
+      // Add certificates
+      if (certificates.length > 0) {
+        profilePayload.certificates = certificates;
       }
 
       await axios.put(
