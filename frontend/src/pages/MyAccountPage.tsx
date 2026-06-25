@@ -828,45 +828,47 @@ export default function MyAccountPage() {
   const badges = ratings.averageRating >= 4.8 ? [{ icon: '⭐' }] : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-errandify-bg to-white pb-24">
-      {/* HERO HEADER */}
-      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white sticky top-0 z-50 shadow-lg">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-white font-bold text-xl hover:opacity-80 transition"
-          >
-            ←
+    <div className="min-h-screen bg-errandify-bg pb-24">
+      {/* HEADER - Matches Layout Style */}
+      <div className="bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center sticky top-0 z-50">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="text-lg text-errandify-brown font-bold hover:opacity-80 transition"
+        >
+          ←
+        </button>
+
+        {/* MyAccount Button */}
+        <div className="flex gap-1 bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+          <button className="px-3 py-1 rounded-md font-semibold text-sm bg-errandify-orange text-white hover:bg-orange-600 transition-colors">
+            MyAccount
           </button>
-          <h1 className="text-2xl font-bold">✨ MyAccount</h1>
-          <div className="flex gap-2 items-center">
-            {/* MyAccount Button */}
-            <div className="flex gap-1 bg-white rounded-lg shadow-sm border border-gray-200 p-1">
-              <button className="px-3 py-1 rounded-md font-semibold text-sm bg-errandify-orange text-white hover:bg-orange-600 transition-colors">
-                MyAccount
+        </div>
+
+        {/* Logout & Settings */}
+        <div className="flex items-center gap-2">
+          {/* Settings Dropdown */}
+          <div className="relative group">
+            <button className="p-2 hover:bg-gray-100 rounded-lg transition">
+              ⚙️
+            </button>
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 border border-gray-200">
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-semibold first:rounded-t-lg last:rounded-b-lg flex items-center gap-2"
+              >
+                🗑️ Delete Account
               </button>
-            </div>
-            {/* Settings Dropdown */}
-            <div className="relative group">
-              <button className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1.5 rounded-lg font-semibold text-sm transition">
-                ⚙️
-              </button>
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-100 font-semibold first:rounded-t-lg flex items-center gap-2"
-                >
-                  🚪 Logout
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-semibold last:rounded-b-lg flex items-center gap-2"
-                >
-                  🗑️ Delete Account
-                </button>
-              </div>
             </div>
           </div>
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="px-3 py-1 text-sm font-semibold text-white bg-errandify-orange hover:bg-orange-600 rounded-lg transition-colors"
+          >
+            Logout
+          </button>
         </div>
       </div>
 
