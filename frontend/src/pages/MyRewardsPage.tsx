@@ -266,44 +266,56 @@ export default function MyRewardSpacePage() {
         {/* Confirmation Modal */}
         {confirmRedeemData && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-              <div className="text-center mb-6">
-                <p className="text-4xl mb-3">🎁</p>
-                <h2 className="text-2xl font-bold text-errandify-brown mb-2">Confirm Redemption</h2>
-                <p className="text-gray-600">Are you sure you want to redeem this reward?</p>
+            <div className="bg-gradient-to-br from-yellow-50 via-white to-orange-50 rounded-3xl p-8 max-w-sm w-full shadow-2xl border-4 border-yellow-300">
+              {/* Decorative sparkles */}
+              <div className="absolute top-4 left-4 text-3xl animate-bounce">✨</div>
+              <div className="absolute top-4 right-4 text-3xl animate-bounce" style={{ animationDelay: '0.2s' }}>🎉</div>
+              <div className="absolute bottom-4 left-4 text-3xl animate-bounce" style={{ animationDelay: '0.4s' }}>🎁</div>
+              <div className="absolute bottom-4 right-4 text-3xl animate-bounce" style={{ animationDelay: '0.6s' }}>💝</div>
+
+              <div className="text-center mb-8 relative z-10">
+                <p className="text-6xl mb-4">🎊</p>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-errandify-orange to-yellow-500 bg-clip-text text-transparent mb-3">
+                  Yay! Claim Your Prize! 🎉
+                </h2>
+                <p className="text-lg text-errandify-brown font-semibold">You're about to unlock amazing rewards!</p>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <div className="mb-3">
-                  <p className="text-xs text-gray-600 font-semibold">Reward</p>
-                  <p className="text-lg font-bold text-errandify-brown">{confirmRedeemData.name}</p>
+              <div className="bg-gradient-to-r from-yellow-100 to-orange-100 border-3 border-yellow-400 rounded-2xl p-6 mb-8 shadow-md">
+                <div className="mb-5">
+                  <p className="text-xs text-errandify-brown font-bold uppercase tracking-wide">🏆 Your Reward</p>
+                  <p className="text-2xl font-bold text-errandify-brown mt-1">{confirmRedeemData.name}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 font-semibold">Cost</p>
-                  <p className="text-2xl font-bold text-errandify-orange">{confirmRedeemData.points} EP</p>
+                  <p className="text-xs text-errandify-brown font-bold uppercase tracking-wide">⭐ Points to Spend</p>
+                  <p className="text-3xl font-bold text-errandify-orange mt-1">{confirmRedeemData.points} EP</p>
                 </div>
               </div>
 
-              <p className="text-sm text-gray-700 mb-6 text-center">
-                These points will be deducted from your account and cannot be recovered.
+              <p className="text-sm text-errandify-brown font-semibold mb-8 text-center">
+                ✨ Ready to redeem your {confirmRedeemData.points} EP for {confirmRedeemData.name}?
               </p>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 relative z-10">
                 <button
                   onClick={handleRedeemCancel}
                   disabled={redeeming}
-                  className="flex-1 bg-gray-300 text-gray-900 py-3 rounded-lg font-bold text-base hover:bg-gray-400 transition disabled:opacity-50 border-2 border-gray-400"
+                  className="flex-1 bg-white text-errandify-brown py-3 px-4 rounded-xl font-bold text-base hover:bg-gray-100 transition border-2 border-gray-400 hover:border-gray-500 disabled:opacity-50"
                 >
-                  ❌ Cancel
+                  ❌ Not Now
                 </button>
                 <button
                   onClick={handleRedeemConfirm}
                   disabled={redeeming}
-                  className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold text-base hover:bg-orange-600 transition disabled:opacity-50 border-2 border-orange-600"
+                  className="flex-1 bg-gradient-to-r from-errandify-orange to-yellow-500 text-white py-3 px-4 rounded-xl font-bold text-base hover:shadow-lg transition border-2 border-orange-600 hover:from-orange-600 hover:to-yellow-600 active:scale-95 disabled:opacity-50"
                 >
-                  {redeeming ? '⏳ Redeeming...' : '✅ Confirm'}
+                  {redeeming ? '⏳ Redeeming...' : '✅ Yes, Redeem!'}
                 </button>
               </div>
+
+              <p className="text-xs text-gray-600 text-center mt-4">
+                💡 Tip: Your reward will be saved to your account!
+              </p>
             </div>
           </div>
         )}
