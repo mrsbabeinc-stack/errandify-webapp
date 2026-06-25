@@ -75,6 +75,7 @@ export default function MyAccountPage() {
     message: string;
     scheduledDate: string;
   } | null>(null);
+  const [confirmRedeemData, setConfirmRedeemData] = useState<{ points: number; code: string; amount: number; name: string } | null>(null);
   const [aiAlerts, setAiAlerts] = useState<Array<{ type: string; emoji: string; title: string; message: string }>>([]);
   const [editingPayout, setEditingPayout] = useState(false);
   const [expandPayout, setExpandPayout] = useState(false);
@@ -548,6 +549,34 @@ export default function MyAccountPage() {
       console.error('Error deleting account:', error);
       alert('Failed to delete account');
     }
+  };
+
+  const handleRedeemConfirm = () => {
+    if (!confirmRedeemData) return;
+
+    setUserBalance(userBalance - confirmRedeemData.points);
+    const now = new Date();
+    const dateStr = 'Today';
+    const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setRedemptionHistory([
+      ...redemptionHistory,
+      {
+        id: Date.now().toString(),
+        date: dateStr,
+        time: timeStr,
+        item: confirmRedeemData.name,
+        code: confirmRedeemData.code,
+        amount: -confirmRedeemData.points,
+        emoji: '💳',
+      },
+    ]);
+    setModalMessage(`✅ Redeemed ${confirmRedeemData.name}!\n\nCode: ${confirmRedeemData.code}`);
+    setShowSuccessModal(true);
+    setConfirmRedeemData(null);
+  };
+
+  const handleRedeemCancel = () => {
+    setConfirmRedeemData(null);
   };
 
   const moderateText = async (text: string): Promise<{ approved: boolean; message?: string }> => {
@@ -1689,13 +1718,7 @@ export default function MyAccountPage() {
                       <button
                         onClick={() => {
                           if (userBalance >= 50) {
-                            setUserBalance(userBalance - 50);
-                            const now = new Date();
-                            const dateStr = 'Today';
-                            const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: dateStr, time: timeStr, item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' }]);
-                            setModalMessage('✅ Redeemed $5 Discount!\n\nCode: ERRAND5');
-                            setShowSuccessModal(true);
+                            setConfirmRedeemData({ points: 50, code: 'ERRAND5', amount: 5, name: '$5 Discount' });
                           } else {
                             setModalMessage('❌ Not enough points! You need 50 EP');
                             setShowErrorModal(true);
@@ -1714,13 +1737,7 @@ export default function MyAccountPage() {
                       <button
                         onClick={() => {
                           if (userBalance >= 100) {
-                            setUserBalance(userBalance - 100);
-                            const now = new Date();
-                            const dateStr = 'Today';
-                            const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: dateStr, time: timeStr, item: '$10 Discount', code: 'ERRAND10', amount: -100, emoji: '💳' }]);
-                            setModalMessage('✅ Redeemed $10 Discount!\n\nCode: ERRAND10');
-                            setShowSuccessModal(true);
+                            setConfirmRedeemData({ points: 100, code: 'ERRAND10', amount: 10, name: '$10 Discount' });
                           } else {
                             setModalMessage('❌ Not enough points! You need 100 EP');
                             setShowErrorModal(true);
@@ -1739,13 +1756,7 @@ export default function MyAccountPage() {
                       <button
                         onClick={() => {
                           if (userBalance >= 200) {
-                            setUserBalance(userBalance - 200);
-                            const now = new Date();
-                            const dateStr = 'Today';
-                            const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: dateStr, time: timeStr, item: '$20 Discount', code: 'ERRAND20', amount: -200, emoji: '💎' }]);
-                            setModalMessage('✅ Redeemed $20 Discount!\n\nCode: ERRAND20');
-                            setShowSuccessModal(true);
+                            setConfirmRedeemData({ points: 200, code: 'ERRAND20', amount: 20, name: '$20 Discount' });
                           } else {
                             setModalMessage('❌ Not enough points! You need 200 EP');
                             setShowErrorModal(true);
@@ -3346,6 +3357,53 @@ export default function MyAccountPage() {
                 className="w-full border-2 border-gray-300 text-gray-600 py-2.5 rounded-lg font-bold text-sm hover:bg-gray-50 transition"
               >
                 ❌ Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Redemption Confirmation Modal */}
+      {confirmRedeemData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="text-center mb-6">
+              <p className="text-4xl mb-3">💳</p>
+              <h2 className="text-2xl font-bold text-errandify-brown mb-2">Confirm Redemption</h2>
+              <p className="text-gray-600">Are you sure you want to redeem this reward?</p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="mb-3">
+                <p className="text-xs text-gray-600 font-semibold">Reward</p>
+                <p className="text-lg font-bold text-errandify-brown">{confirmRedeemData.name}</p>
+              </div>
+              <div className="mb-3">
+                <p className="text-xs text-gray-600 font-semibold">Discount Code</p>
+                <p className="text-lg font-mono font-bold text-errandify-orange">{confirmRedeemData.code}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600 font-semibold">Cost</p>
+                <p className="text-2xl font-bold text-errandify-orange">{confirmRedeemData.points} EP</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-700 mb-6 text-center">
+              These points will be deducted from your account and cannot be recovered.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleRedeemCancel}
+                className="flex-1 bg-gray-300 text-gray-900 py-3 rounded-lg font-bold text-base hover:bg-gray-400 transition border-2 border-gray-400"
+              >
+                ❌ Cancel
+              </button>
+              <button
+                onClick={handleRedeemConfirm}
+                className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold text-base hover:bg-orange-600 transition border-2 border-orange-600"
+              >
+                ✅ Confirm
               </button>
             </div>
           </div>
