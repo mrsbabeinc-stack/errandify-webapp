@@ -79,12 +79,12 @@ export default function MyAccountPage() {
 
   // Sample activity data
   const allActivities = [
-    { id: 1, type: 'completed', emoji: '✅', title: 'Completed: Clean apartment', date: 'Today 10:28 AM', amount: '+$80', color: 'green' },
-    { id: 2, type: 'posted', emoji: '📝', title: 'Posted: Home repairs', date: 'Yesterday 10:25 PM', amount: '-$120', color: 'orange' },
-    { id: 3, type: 'referral', emoji: '🎁', title: 'Referral: @SunnyLove', date: '2 days ago', amount: '+$50', color: 'purple' },
-    { id: 4, type: 'rating', emoji: '⭐', title: 'Rating given: Clean apartment', date: '3 days ago', amount: '5 stars', color: 'blue' },
-    { id: 5, type: 'accepted', emoji: '✅', title: 'Accepted bid: Tutoring', date: '4 days ago', amount: 'SGD $60', color: 'green' },
-    { id: 6, type: 'posted', emoji: '📋', title: 'Posted: Office admin', date: '5 days ago', amount: '-$75', color: 'orange' },
+    { id: 1, type: 'completed', emoji: '✅', title: 'Completed: Clean apartment', errandId: 'ERR-2847', date: 'Today 10:28 AM', amount: '+$80', color: 'green' },
+    { id: 2, type: 'posted', emoji: '📝', title: 'Posted: Home repairs', errandId: 'ERR-2846', date: 'Yesterday 10:25 PM', amount: '-$120', color: 'orange' },
+    { id: 3, type: 'referral', emoji: '🎁', title: 'Referral: @SunnyLove', errandId: 'N/A', date: '2 days ago', amount: '+$50', color: 'purple' },
+    { id: 4, type: 'rating', emoji: '⭐', title: 'Rating given: Clean apartment', errandId: 'ERR-2847', date: '3 days ago', amount: '5 stars', color: 'blue' },
+    { id: 5, type: 'accepted', emoji: '✅', title: 'Accepted bid: Tutoring', errandId: 'ERR-2845', date: '4 days ago', amount: 'SGD $60', color: 'green' },
+    { id: 6, type: 'posted', emoji: '📋', title: 'Posted: Office admin', errandId: 'ERR-2844', date: '5 days ago', amount: '-$75', color: 'orange' },
   ];
 
   const filteredActivities = allActivities.filter(activity => {
@@ -1197,9 +1197,14 @@ export default function MyAccountPage() {
               <div className="divide-y divide-gray-100 text-xs max-h-64 overflow-y-auto">
                 {filteredActivities.length > 0 ? (
                   filteredActivities.map((activity) => (
-                    <div key={activity.id} className={`p-2 flex justify-between items-center hover:bg-${activity.color}-50 transition`}>
+                    <div key={activity.id} className={`p-2 flex justify-between items-start hover:bg-${activity.color}-50 transition`}>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-gray-900 truncate">{activity.emoji} {activity.title}</p>
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <p className="font-bold text-gray-900 truncate">{activity.emoji} {activity.title}</p>
+                          <span className="text-gray-400 text-xs px-1.5 py-0.5 bg-gray-100 rounded whitespace-nowrap flex-shrink-0">
+                            #{activity.errandId}
+                          </span>
+                        </div>
                         <p className="text-gray-500 text-xs">{activity.date}</p>
                       </div>
                       <p className={`font-bold text-${activity.color}-600 text-xs ml-2 flex-shrink-0`}>{activity.amount}</p>
