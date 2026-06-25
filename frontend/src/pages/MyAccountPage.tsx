@@ -918,17 +918,17 @@ export default function MyAccountPage() {
           <div className="space-y-1.5 px-2">
             {/* TWO COLUMN LAYOUT - LEFT: ID/Name, RIGHT: Reviews */}
             <div className="grid grid-cols-2 gap-2">
-              {/* LEFT COLUMN - USER ID & ALIAS */}
+              {/* LEFT COLUMN - USER ID & ALIAS - CELEBRATORY */}
               {profileData && (
-                <div className="bg-gradient-to-r from-blue-300 to-cyan-300 rounded-xl p-3 border-2 border-blue-500 shadow-md">
-                  <div className="space-y-2">
-                    <div className="bg-white rounded-lg p-2">
+                <div className="bg-gradient-to-br from-blue-300 to-cyan-300 rounded-xl p-3 border-2 border-blue-500 shadow-md hover:shadow-lg transition">
+                  <div className="space-y-1.5">
+                    <div className="bg-white rounded-lg p-2 border border-blue-300 shadow-sm">
                       <p className="text-xs text-blue-700 font-bold">🎫 Your ID</p>
-                      <p className="text-sm font-mono font-bold text-blue-800 mt-0.5 break-all">{profileData.formattedUserId || 'N/A'}</p>
+                      <p className="text-sm font-mono font-bold text-blue-800 break-all">{profileData.formattedUserId || 'N/A'}</p>
                     </div>
-                    <div className="bg-white rounded-lg p-2">
-                      <p className="text-xs text-blue-700 font-bold">👤 Your Name</p>
-                      <p className="text-sm font-bold text-blue-800 mt-0.5">@{profileData.alias || 'N/A'}</p>
+                    <div className="bg-white rounded-lg p-2 border border-blue-300 shadow-sm">
+                      <p className="text-xs text-blue-700 font-bold">👤 Name</p>
+                      <p className="text-sm font-bold text-blue-800">@{profileData.alias || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -978,41 +978,38 @@ export default function MyAccountPage() {
             {/* COMPACT FUN DASHBOARD - HAPPY DESIGN */}
             <div className="space-y-1">
 
-              {/* MINI STATS - HORIZONTAL */}
-              <div className="grid grid-cols-4 gap-2">
-                <div className="bg-gradient-to-b from-amber-100 to-amber-50 rounded-lg p-2 text-center border border-amber-200 hover:shadow-md transition">
-                  <p className="text-xl">👥</p>
-                  <p className="text-lg font-bold text-amber-700">{ratings.reviewCount}</p>
-                  <p className="text-xs text-gray-600">Reviews</p>
+              {/* STATS GRID - CELEBRATORY */}
+              <div className="grid grid-cols-4 gap-1.5">
+                <div className="bg-gradient-to-b from-amber-300 to-amber-100 rounded-lg p-2 text-center border-2 border-amber-400 hover:shadow-md transition transform hover:scale-105">
+                  <p className="text-lg">👥</p>
+                  <p className="text-base font-bold text-amber-800">{ratings.reviewCount}</p>
+                  <p className="text-xs text-amber-700 font-semibold">Reviews</p>
                 </div>
-                <div className="bg-gradient-to-b from-green-100 to-green-50 rounded-lg p-2 text-center border border-green-200 hover:shadow-md transition">
-                  <p className="text-xl">✅</p>
-                  <p className="text-lg font-bold text-green-700">{profileData.completedTasks || 0}</p>
-                  <p className="text-xs text-gray-600">Errands</p>
+                <div className="bg-gradient-to-b from-green-300 to-green-100 rounded-lg p-2 text-center border-2 border-green-400 hover:shadow-md transition transform hover:scale-105">
+                  <p className="text-lg">✅</p>
+                  <p className="text-base font-bold text-green-800">{profileData.completedTasks || 0}</p>
+                  <p className="text-xs text-green-700 font-semibold">Errands</p>
                 </div>
-                <div className="bg-gradient-to-b from-blue-100 to-blue-50 rounded-lg p-2 text-center border border-blue-200 hover:shadow-md transition">
-                  <p className="text-xl">💰</p>
-                  <p className="text-lg font-bold text-blue-700">${profileData.totalEarnings || 0}</p>
-                  <p className="text-xs text-gray-600">Earnings</p>
+                <div className="bg-gradient-to-b from-blue-300 to-blue-100 rounded-lg p-2 text-center border-2 border-blue-400 hover:shadow-md transition transform hover:scale-105">
+                  <p className="text-lg">💰</p>
+                  <p className="text-base font-bold text-blue-800">${profileData.totalEarnings || 0}</p>
+                  <p className="text-xs text-blue-700 font-semibold">Earnings</p>
                 </div>
-                <div className="bg-gradient-to-b from-purple-100 to-purple-50 rounded-lg p-2 text-center border border-purple-200 hover:shadow-md transition">
-                  <p className="text-xl">⭐</p>
-                  <p className="text-lg font-bold text-purple-700">{profileData.errandifyPoints || 0}</p>
-                  <p className="text-xs text-gray-600">EP</p>
+                <div className="bg-gradient-to-b from-purple-300 to-purple-100 rounded-lg p-2 text-center border-2 border-purple-400 hover:shadow-md transition transform hover:scale-105">
+                  <p className="text-lg">⭐</p>
+                  <p className="text-base font-bold text-purple-800">{profileData.errandifyPoints || 0}</p>
+                  <p className="text-xs text-purple-700 font-semibold">EP</p>
                 </div>
               </div>
 
-              {/* FEATURED REFERRAL CARD */}
+              {/* REFERRAL BUTTON - CELEBRATORY */}
               <button
                 onClick={() => navigate('/referral')}
-                className="w-full bg-gradient-to-r from-orange-400 via-pink-400 to-red-400 hover:from-orange-500 hover:via-pink-500 hover:to-red-500 rounded-xl p-3 shadow-md hover:shadow-lg transition transform active:scale-95 text-white text-center"
+                className="w-full bg-gradient-to-r from-orange-400 via-pink-400 to-red-400 hover:from-orange-500 hover:via-pink-500 hover:to-red-500 rounded-lg p-2.5 shadow-md hover:shadow-lg transition transform active:scale-95 text-white text-center border-2 border-orange-600"
               >
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <p className="text-3xl">🎁</p>
-                  <div>
-                    <p className="text-sm font-bold">Refer & Earn More! 🚀</p>
-                    <p className="text-xs opacity-90">Tap to unlock your referral code</p>
-                  </div>
+                <div className="flex items-center justify-center gap-2">
+                  <p className="text-2xl">🎁</p>
+                  <p className="text-sm font-bold">Refer & Earn! 🚀</p>
                 </div>
               </button>
             </div>
