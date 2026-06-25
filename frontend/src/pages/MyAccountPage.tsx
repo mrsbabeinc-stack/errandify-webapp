@@ -936,35 +936,35 @@ export default function MyAccountPage() {
               )}
 
               {/* RATING & REVIEWS CARD - Happy Yellow */}
-              <div className="bg-gradient-to-r from-yellow-300 via-orange-300 to-yellow-300 rounded-2xl p-4 border-3 border-yellow-500 shadow-lg hover:shadow-xl transition">
-                <div className="text-center mb-3">
-                  <p className="text-sm text-yellow-900 font-bold mb-2">🌟 Your Awesome Reviews 🌟</p>
-                  <div className="flex items-center justify-center gap-4">
-                    <div className="bg-white rounded-xl p-2">
-                      <p className="text-3xl font-bold text-yellow-700">{ratings.averageRating.toFixed(1)}</p>
-                      <p className="text-xs text-yellow-800 font-bold">⭐ Rating</p>
+              <div className="bg-gradient-to-r from-yellow-300 via-orange-300 to-yellow-300 rounded-lg p-3 border-2 border-yellow-500">
+                <div className="text-center mb-2">
+                  <p className="text-sm text-yellow-900 font-bold mb-1">🌟 Your Awesome Reviews 🌟</p>
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="bg-white rounded-lg p-1.5">
+                      <p className="text-2xl font-bold text-yellow-700">{ratings.averageRating.toFixed(1)}</p>
+                      <p className="text-xs text-yellow-800 font-bold">⭐</p>
                     </div>
-                    <div className="bg-white rounded-xl p-2">
-                      <p className="text-3xl font-bold text-yellow-700">{ratings.reviewCount}</p>
-                      <p className="text-xs text-yellow-800 font-bold">👥 Reviews</p>
+                    <div className="bg-white rounded-lg p-1.5">
+                      <p className="text-2xl font-bold text-yellow-700">{ratings.reviewCount}</p>
+                      <p className="text-xs text-yellow-800 font-bold">👥</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Latest 2 Reviews */}
                 {ratings.reviews && ratings.reviews.length > 0 && (
-                  <div className="border-t-2 border-yellow-400 pt-2 space-y-1.5">
+                  <div className="border-t border-yellow-400 pt-1.5 space-y-1">
                     {ratings.reviews
                       .filter((r: any) => r.rating >= 4)
                       .slice(0, 2)
                       .map((review: any, idx: number) => (
-                        <div key={idx} className="bg-white rounded p-1.5 border border-yellow-300 text-xs">
+                        <div key={idx} className="bg-white rounded px-2 py-1 border border-yellow-200 text-xs">
                           <div className="flex gap-0.5 mb-0.5 justify-center">
                             {[...Array(5)].map((_, i) => (
-                              <span key={i}>{i < review.rating ? '⭐' : '☆'}</span>
+                              <span key={i} className="text-xs">{i < review.rating ? '⭐' : '☆'}</span>
                             ))}
                           </div>
-                          <p className="text-gray-800 leading-tight">"{review.comment || 'Great!'}"</p>
+                          <p className="text-gray-700 leading-tight text-xs">"{review.comment || 'Great!'}"</p>
                           <p className="text-gray-600 text-xs">— {review.author || 'Customer'}</p>
                         </div>
                       ))}
