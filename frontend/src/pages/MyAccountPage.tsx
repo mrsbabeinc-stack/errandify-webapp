@@ -1565,7 +1565,7 @@ export default function MyAccountPage() {
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                 }`}
               >
-                📜 History
+                📊 Reward History
               </button>
             </div>
             {/* OVERVIEW TAB */}
@@ -2170,7 +2170,7 @@ export default function MyAccountPage() {
             {rewardsTab === 'history' && (
               <div className="space-y-2">
                 <div className="text-center py-2 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg border-2 border-blue-300">
-                  <p className="text-sm font-bold text-blue-600">📜 Transaction History 📜</p>
+                  <p className="text-sm font-bold text-blue-600">📊 Reward History 📊</p>
                   <p className="text-xs text-gray-600 mt-1">Your EP transactions (rewards & gifts)</p>
                 </div>
 
