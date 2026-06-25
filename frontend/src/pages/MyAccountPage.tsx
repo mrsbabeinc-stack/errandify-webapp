@@ -82,6 +82,8 @@ export default function MyAccountPage() {
     { id: '1', date: '10-06-2026', item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' },
   ]);
   const [showGiftModal, setShowGiftModal] = useState(false);
+  const [showGiftConfirmation, setShowGiftConfirmation] = useState(false);
+  const [giftConfirmationData, setGiftConfirmationData] = useState<any>(null);
   const [giftForm, setGiftForm] = useState({
     points: '',
     recipients: [] as string[],
@@ -2253,43 +2255,21 @@ export default function MyAccountPage() {
                     setModalMessage('❌ Not enough points for all recipients');
                     setShowErrorModal(true);
                   } else {
-                    if (showGroupForm && giftForm.groupName) {
-                      setSavedGroups([
-                        ...savedGroups,
-                        {
-                          id: Date.now().toString(),
-                          name: giftForm.groupName,
-                          members: giftForm.recipients,
-                        },
-                      ]);
-                    }
-                    const totalPointsDeducted = pointsToSend * giftForm.recipients.length;
-                    const newBalance = userBalance - totalPointsDeducted;
-                    setUserBalance(newBalance);
-
-                    // Record in activity history
+                    // Show confirmation modal
                     const recipientNames = giftForm.recipients
                       .map((id) => availableUsers.find((u) => u.id === id)?.name)
                       .join(', ');
-                    const newActivity = {
-                      id: Date.now(),
-                      type: 'gift',
-                      emoji: '🎁',
-                      title: `Gift sent to ${giftForm.recipients.length > 1 ? recipientNames : recipientNames}`,
-                      errandId: 'N/A',
-                      date: 'Today',
-                      amount: `-${totalPointsDeducted} EP`,
-                      color: 'pink',
-                    };
-                    setAllActivities([newActivity, ...allActivities]);
+                    const totalPointsDeducted = pointsToSend * giftForm.recipients.length;
 
-                    setShowGiftModal(false);
-                    setModalMessage(
-                      `🎁 Gift sent! You sent ${pointsToSend} EP to ${giftForm.recipients.length} friend(s)!\n\n🎀 Message: "${
-                        giftForm.useCustomMessage ? giftForm.customMessage : giftForm.giftCardMessage
-                      }"\n\n📅 Scheduled for: ${new Date(giftForm.giftDate).toLocaleDateString()}\n\n💾 Recorded in your transaction history!\n\nThey're so lucky! 🌟`
-                    );
-                    setShowSuccessModal(true);
+                    setGiftConfirmationData({
+                      pointsToSend,
+                      totalPointsDeducted,
+                      recipientCount: giftForm.recipients.length,
+                      recipientNames,
+                      message: giftForm.useCustomMessage ? giftForm.customMessage : giftForm.giftCardMessage,
+                      giftDate: giftForm.giftDate,
+                    });
+                    setShowGiftConfirmation(true);
                   }
                 }}
                 className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white py-2.5 rounded-lg font-bold text-sm hover:shadow-lg transition"
@@ -2305,6 +2285,122 @@ export default function MyAccountPage() {
                 className="w-full border-2 border-orange-300 text-orange-600 py-2.5 rounded-lg font-bold text-sm hover:bg-orange-50 transition"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Gift Confirmation Modal */}
+      {showGiftConfirmation && giftConfirmationData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-4 space-y-4">
+            {/* Header */}
+            <div className="text-center pb-3 border-b-2 border-pink-200">
+              <p className="text-lg font-bold text-pink-600">🎁 Confirm Gift</p>
+            </div>
+
+            {/* Details */}
+            <div className="space-y-3">
+              <div className="bg-pink-50 rounded-lg p-3">
+                <p className="text-xs text-gray-600">Recipients:</p>
+                <p className="text-sm font-bold text-gray-900">{giftConfirmationData.recipientNames}</p>
+                <p className="text-xs text-gray-600 mt-1">({giftConfirmationData.recipientCount} friend{giftConfirmationData.recipientCount > 1 ? 's' : ''})</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-orange-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-600">Per person:</p>
+                  <p className="text-sm font-bold text-orange-600">{giftConfirmationData.pointsToSend} EP</p>
+                </div>
+                <div className="bg-pink-100 rounded-lg p-3">
+                  <p className="text-xs text-gray-600">Total:</p>
+                  <p className="text-sm font-bold text-pink-600">{giftConfirmationData.totalPointsDeducted} EP</p>
+                </div>
+              </div>
+
+              <div className="bg-purple-50 rounded-lg p-3">
+                <p className="text-xs text-gray-600">Message:</p>
+                <p className="text-xs font-semibold text-gray-900 mt-1">"{giftConfirmationData.message}"</p>
+              </div>
+
+              <div className="bg-blue-50 rounded-lg p-3">
+                <p className="text-xs text-gray-600">Scheduled for:</p>
+                <p className="text-sm font-bold text-blue-600">{new Date(giftConfirmationData.giftDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                onClick={() => {
+                  // Proceed with sending
+                  if (showGroupForm && giftForm.groupName) {
+                    setSavedGroups([
+                      ...savedGroups,
+                      {
+                        id: Date.now().toString(),
+                        name: giftForm.groupName,
+                        members: giftForm.recipients,
+                      },
+                    ]);
+                  }
+
+                  const newBalance = userBalance - giftConfirmationData.totalPointsDeducted;
+                  setUserBalance(newBalance);
+
+                  // Record in activity history
+                  const newActivity = {
+                    id: Date.now(),
+                    type: 'gift',
+                    emoji: '🎁',
+                    title: `Gift sent to ${giftConfirmationData.recipientNames}`,
+                    errandId: 'N/A',
+                    date: 'Today',
+                    amount: `-${giftConfirmationData.totalPointsDeducted} EP`,
+                    color: 'pink',
+                  };
+                  setAllActivities([newActivity, ...allActivities]);
+
+                  // Send points to each recipient (API call)
+                  giftForm.recipients.forEach((recipientId) => {
+                    // TODO: Call backend API to add points to recipient
+                    // axios.post(`/api/gifts/send`, { recipientId, points: giftConfirmationData.pointsToSend })
+                    console.log(`Sending ${giftConfirmationData.pointsToSend} EP to user ${recipientId}`);
+                  });
+
+                  // Reset form and close
+                  setGiftForm({
+                    points: '',
+                    recipients: [],
+                    giftCardMessage: 'Thank you for being a friend',
+                    customMessage: '',
+                    giftDate: new Date().toISOString().split('T')[0],
+                    groupName: '',
+                    useCustomMessage: false,
+                  });
+                  setShowGiftModal(false);
+                  setShowGiftConfirmation(false);
+                  setShowGroupForm(false);
+                  setGiftSearch('');
+
+                  setModalMessage(
+                    `🎁 Gift sent! You sent ${giftConfirmationData.pointsToSend} EP to ${giftConfirmationData.recipientCount} friend(s)!\n\n🎀 Message: "${giftConfirmationData.message}"\n\n📅 Scheduled for: ${new Date(giftConfirmationData.giftDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}\n\n💾 Recorded in your transaction history!\n\nThey're so lucky! 🌟`
+                  );
+                  setShowSuccessModal(true);
+                }}
+                className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white py-2.5 rounded-lg font-bold text-sm hover:shadow-lg transition"
+              >
+                ✅ Confirm & Send
+              </button>
+              <button
+                onClick={() => {
+                  setShowGiftConfirmation(false);
+                  setGiftConfirmationData(null);
+                }}
+                className="w-full border-2 border-gray-300 text-gray-600 py-2.5 rounded-lg font-bold text-sm hover:bg-gray-50 transition"
+              >
+                ❌ Cancel
               </button>
             </div>
           </div>
