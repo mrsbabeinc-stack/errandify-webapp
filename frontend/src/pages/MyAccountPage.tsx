@@ -1650,7 +1650,10 @@ export default function MyAccountPage() {
                         onClick={() => {
                           if (userBalance >= 50) {
                             setUserBalance(userBalance - 50);
-                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: 'Today', item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' }]);
+                            const now = new Date();
+                            const dateStr = 'Today';
+                            const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: dateStr, time: timeStr, item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' }]);
                             setModalMessage('✅ Redeemed $5 Discount!\n\nCode: ERRAND5');
                             setShowSuccessModal(true);
                           } else {
@@ -1672,7 +1675,10 @@ export default function MyAccountPage() {
                         onClick={() => {
                           if (userBalance >= 100) {
                             setUserBalance(userBalance - 100);
-                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: 'Today', item: '$10 Discount', code: 'ERRAND10', amount: -100, emoji: '💳' }]);
+                            const now = new Date();
+                            const dateStr = 'Today';
+                            const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: dateStr, time: timeStr, item: '$10 Discount', code: 'ERRAND10', amount: -100, emoji: '💳' }]);
                             setModalMessage('✅ Redeemed $10 Discount!\n\nCode: ERRAND10');
                             setShowSuccessModal(true);
                           } else {
@@ -1694,7 +1700,10 @@ export default function MyAccountPage() {
                         onClick={() => {
                           if (userBalance >= 200) {
                             setUserBalance(userBalance - 200);
-                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: 'Today', item: '$20 Discount', code: 'ERRAND20', amount: -200, emoji: '💎' }]);
+                            const now = new Date();
+                            const dateStr = 'Today';
+                            const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: dateStr, time: timeStr, item: '$20 Discount', code: 'ERRAND20', amount: -200, emoji: '💎' }]);
                             setModalMessage('✅ Redeemed $20 Discount!\n\nCode: ERRAND20');
                             setShowSuccessModal(true);
                           } else {
@@ -2122,7 +2131,7 @@ export default function MyAccountPage() {
                           <div className="flex justify-between items-start mb-2">
                             <div>
                               <p className="font-bold text-gray-900 text-sm">{record.emoji} {record.item}</p>
-                              <p className="text-xs text-gray-600 mt-1">{record.date}</p>
+                              <p className="text-xs text-gray-600 mt-1">{record.date}{record.time && ` at ${record.time}`}</p>
                             </div>
                             <span className="text-orange-600 font-bold text-sm">{record.amount} EP</span>
                           </div>
@@ -2177,7 +2186,7 @@ export default function MyAccountPage() {
                           <div key={`redemption-${record.id}`} className="p-3 flex justify-between hover:bg-purple-50 transition bg-gradient-to-r from-transparent to-purple-50">
                             <div>
                               <p className="font-bold text-gray-900">{record.emoji} {record.item}</p>
-                              <p className="text-gray-500 text-xs">{record.date} • Code: {record.code}</p>
+                              <p className="text-gray-500 text-xs">{record.date}{record.time && ` at ${record.time}`} • Code: {record.code}</p>
                             </div>
                             <p className="font-bold text-orange-600 text-sm">{record.amount} EP</p>
                           </div>
