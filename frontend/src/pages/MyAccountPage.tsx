@@ -563,6 +563,26 @@ export default function MyAccountPage() {
             >
               🔔 Notify
             </button>
+            <button
+              onClick={() => setActiveSection('categories')}
+              className={`px-2 py-1 text-xs font-bold transition rounded ${
+                activeSection === 'categories'
+                  ? 'bg-errandify-orange text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
+            >
+              🎯 Categories
+            </button>
+            <button
+              onClick={() => setActiveSection('faq')}
+              className={`px-2 py-1 text-xs font-bold transition rounded ${
+                activeSection === 'faq'
+                  ? 'bg-errandify-orange text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
+            >
+              ❓ FAQ
+            </button>
           </div>
         </div>
 
@@ -641,20 +661,6 @@ export default function MyAccountPage() {
             {/* QUICK ACTIONS */}
             <div className="grid grid-cols-3 md:grid-cols-6 gap-1">
               <button
-                onClick={() => navigate('/category-preferences')}
-                className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
-              >
-                <p className="text-lg mb-0">🎯</p>
-                <p className="font-bold text-xs text-gray-800">Categories</p>
-              </button>
-              <button
-                onClick={() => navigate('/payout-settings')}
-                className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
-              >
-                <p className="text-lg mb-0">💳</p>
-                <p className="font-bold text-xs text-gray-800">Payout</p>
-              </button>
-              <button
                 onClick={() => navigate('/errandify-points')}
                 className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
               >
@@ -667,20 +673,6 @@ export default function MyAccountPage() {
               >
                 <p className="text-lg mb-0">🎁</p>
                 <p className="font-bold text-xs text-gray-800">Referral</p>
-              </button>
-              <button
-                onClick={() => navigate('/trusted-users')}
-                className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
-              >
-                <p className="text-lg mb-0">❤️</p>
-                <p className="font-bold text-xs text-gray-800">Trusted</p>
-              </button>
-              <button
-                onClick={() => navigate('/faq')}
-                className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
-              >
-                <p className="text-lg mb-0">❓</p>
-                <p className="font-bold text-xs text-gray-800">FAQ</p>
               </button>
             </div>
           </div>
@@ -1295,6 +1287,38 @@ export default function MyAccountPage() {
                     <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs">Toggle</span>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CATEGORIES SECTION */}
+        {activeSection === 'categories' && (
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <h2 className="text-lg font-bold text-errandify-brown mb-4">🎯 My Categories</h2>
+            <p className="text-sm text-gray-600">Select categories you're interested in as an asker or specialized in as a doer.</p>
+            <div className="mt-4 text-center text-gray-500">
+              <p>📂 Category preferences coming soon!</p>
+            </div>
+          </div>
+        )}
+
+        {/* FAQ SECTION */}
+        {activeSection === 'faq' && (
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <h2 className="text-lg font-bold text-errandify-brown mb-4">❓ Frequently Asked Questions</h2>
+            <div className="space-y-3">
+              <div className="border border-gray-200 rounded p-3">
+                <p className="font-semibold text-sm mb-2">How do I post an errand?</p>
+                <p className="text-xs text-gray-600">Click MyHome → Create Errand to post a new task. Use Hana for AI-powered suggestions!</p>
+              </div>
+              <div className="border border-gray-200 rounded p-3">
+                <p className="font-semibold text-sm mb-2">How do I get paid?</p>
+                <p className="text-xs text-gray-600">Complete errands and get rated. Earnings are converted to Errandify Points and can be withdrawn in 24-48 hours.</p>
+              </div>
+              <div className="border border-gray-200 rounded p-3">
+                <p className="font-semibold text-sm mb-2">What's a "Trusted User"?</p>
+                <p className="text-xs text-gray-600">Users who've completed multiple errands with good ratings and no disputes are marked as trusted.</p>
               </div>
             </div>
           </div>
