@@ -511,7 +511,7 @@ export default function MyAccountPage() {
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >
-              📊 Dashboard
+              📊 MyHub
             </button>
             <button
               onClick={() => setActiveSection('profile')}
