@@ -52,7 +52,11 @@ export default function MyPocketPage() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
       );
-      setWallet(response.data.data);
+      const walletData = response.data.data;
+      if (walletData && walletData.transactions) {
+        walletData.transactions = walletData.transactions.reverse();
+      }
+      setWallet(walletData);
       setError('');
     } catch (err: any) {
       console.error('Failed to fetch wallet:', err);
@@ -66,36 +70,12 @@ export default function MyPocketPage() {
         errandifyPoints: 325,
         transactions: [
           {
-            id: 1,
-            type: 'earn',
-            amount: 80,
-            description: 'Completed Errand (#5): Clean apartment',
-            taskId: 5,
-            createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: 2,
-            type: 'earn',
+            id: 6,
+            type: 'refund',
             amount: 50,
-            description: 'Referral: @SunnyLove joined',
-            taskId: undefined,
-            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: 3,
-            type: 'spend',
-            amount: 120,
-            description: 'Posted Errand (#8): Home repairs',
-            taskId: 8,
-            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: 4,
-            type: 'earn',
-            amount: 150,
-            description: 'Completed Errand (#3): Moving help',
-            taskId: 3,
-            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+            description: 'Refund: Cancelled Errand (#7)',
+            taskId: 7,
+            createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
           },
           {
             id: 5,
@@ -106,12 +86,36 @@ export default function MyPocketPage() {
             createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
           },
           {
-            id: 6,
-            type: 'refund',
+            id: 4,
+            type: 'earn',
+            amount: 150,
+            description: 'Completed Errand (#3): Moving help',
+            taskId: 3,
+            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            id: 3,
+            type: 'spend',
+            amount: 120,
+            description: 'Posted Errand (#8): Home repairs',
+            taskId: 8,
+            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            id: 2,
+            type: 'earn',
             amount: 50,
-            description: 'Refund: Cancelled Errand (#7)',
-            taskId: 7,
-            createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            description: 'Referral: @SunnyLove joined',
+            taskId: undefined,
+            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            id: 1,
+            type: 'earn',
+            amount: 80,
+            description: 'Completed Errand (#5): Clean apartment',
+            taskId: 5,
+            createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
           },
         ],
       });
