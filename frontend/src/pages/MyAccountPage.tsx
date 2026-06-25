@@ -1126,7 +1126,10 @@ export default function MyAccountPage() {
                     {saving ? '💾 Saving...' : '💾 Save Profile'}
                   </button>
                   <button
-                    onClick={() => setIsEditing(false)}
+                    onClick={() => {
+                      setIsEditing(false);
+                      setActiveSection('dashboard');
+                    }}
                     className="flex-1 border-2 border-gray-300 text-gray-700 py-2 rounded font-semibold text-sm hover:bg-gray-50"
                   >
                     ❌ Cancel
