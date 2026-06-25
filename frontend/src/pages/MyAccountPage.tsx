@@ -67,6 +67,13 @@ export default function MyAccountPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [showGiftSuccessModal, setShowGiftSuccessModal] = useState(false);
+  const [giftSuccessData, setGiftSuccessData] = useState<{
+    pointsToSend: number;
+    recipientCount: number;
+    message: string;
+    scheduledDate: string;
+  } | null>(null);
   const [aiAlerts, setAiAlerts] = useState<Array<{ type: string; emoji: string; title: string; message: string }>>([]);
   const [editingPayout, setEditingPayout] = useState(false);
   const [expandPayout, setExpandPayout] = useState(false);
@@ -1977,6 +1984,56 @@ export default function MyAccountPage() {
       </div>
 
       {/* Success Modal */}
+      {/* Gift Success Modal - Structured Layout */}
+      {showGiftSuccessModal && giftSuccessData && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+            {/* Success Header */}
+            <div className="bg-gradient-to-r from-green-400 to-emerald-500 p-6 text-white text-center">
+              <div className="text-5xl mb-2">🎁</div>
+              <h2 className="text-2xl font-bold">Gift Sent!</h2>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              {/* Amount & Recipients */}
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                <p className="text-xs text-blue-600 font-semibold mb-1">AMOUNT SENT</p>
+                <p className="text-2xl font-bold text-blue-700">{giftSuccessData.pointsToSend} EP</p>
+                <p className="text-xs text-blue-600 mt-2">to {giftSuccessData.recipientCount} friend{giftSuccessData.recipientCount !== 1 ? 's' : ''}</p>
+              </div>
+
+              {/* Message */}
+              <div className="bg-pink-50 rounded-xl p-4 border border-pink-200">
+                <p className="text-xs text-pink-600 font-semibold mb-2">MESSAGE</p>
+                <p className="text-sm text-pink-900 italic">"{giftSuccessData.message}"</p>
+              </div>
+
+              {/* Schedule */}
+              <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                <p className="text-xs text-purple-600 font-semibold mb-1">SCHEDULED</p>
+                <p className="text-sm text-purple-900 font-medium">{giftSuccessData.scheduledDate}</p>
+              </div>
+
+              {/* Recorded */}
+              <div className="bg-green-50 rounded-xl p-3 border border-green-200 text-center">
+                <p className="text-xs text-green-700 font-semibold">✅ Recorded in transaction history</p>
+              </div>
+            </div>
+
+            {/* Button */}
+            <div className="p-4 border-t">
+              <button
+                onClick={() => setShowGiftSuccessModal(false)}
+                className="w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white font-bold py-3 rounded-xl hover:shadow-lg transition"
+              >
+                Perfect! Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <SuccessModal
         isOpen={showSuccessModal}
         title={modalMessage}
@@ -2650,10 +2707,13 @@ export default function MyAccountPage() {
                       ? '🚀 Now'
                       : new Date(giftConfirmationData.giftDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
 
-                  setModalMessage(
-                    `🎁 Gift Sent Successfully!\n\n✅ ${giftConfirmationData.pointsToSend} EP → ${giftConfirmationData.recipientCount} friend(s)\n\n📝 Message:\n"${giftConfirmationData.message}"\n\n📅 Scheduled: ${scheduledDateText}\n\n💾 Recorded in transaction history`
-                  );
-                  setShowSuccessModal(true);
+                  setGiftSuccessData({
+                    pointsToSend: giftConfirmationData.pointsToSend,
+                    recipientCount: giftConfirmationData.recipientCount,
+                    message: giftConfirmationData.message,
+                    scheduledDate: scheduledDateText,
+                  });
+                  setShowGiftSuccessModal(true);
                 }}
                 className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white py-2.5 rounded-lg font-bold text-sm hover:shadow-lg transition"
               >
