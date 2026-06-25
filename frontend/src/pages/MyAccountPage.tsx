@@ -94,9 +94,7 @@ export default function MyAccountPage() {
       return 10000;
     }
   });
-  const [redemptionHistory, setRedemptionHistory] = useState<Array<{ id: string; date: string; item: string; code: string; amount: number; emoji: string }>>([
-    { id: '1', date: 'Today', item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' },
-  ]);
+  const [redemptionHistory, setRedemptionHistory] = useState<Array<{ id: string; date: string; item: string; code: string; amount: number; emoji: string }>>([]);
   const [showGiftModal, setShowGiftModal] = useState(false);
   const [showGiftConfirmation, setShowGiftConfirmation] = useState(false);
   const [giftConfirmationData, setGiftConfirmationData] = useState<any>(null);
@@ -216,6 +214,52 @@ export default function MyAccountPage() {
 
     fetchAiAlerts();
     fetchBankDetails();
+
+    // Fetch redemption history from database
+    const fetchRedemptionHistory = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/my-vouchers`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (response.data.data && Array.isArray(response.data.data)) {
+          const history = response.data.data.map((voucher: any) => {
+            // Extract code from description like "Redeemed reward #ERRAND5"
+            let code = 'VOUCHER';
+            let itemName = 'Redeemed Voucher';
+
+            if (voucher.description && typeof voucher.description === 'string') {
+              const match = voucher.description.match(/ERRAND\d+/);
+              if (match) {
+                code = match[0];
+                // Map codes to names
+                if (code === 'ERRAND5') itemName = '$5 Discount';
+                else if (code === 'ERRAND10') itemName = '$10 Discount';
+                else if (code === 'ERRAND20') itemName = '$20 Discount';
+                else itemName = voucher.description;
+              } else {
+                itemName = voucher.description;
+              }
+            }
+
+            return {
+              id: voucher.id.toString(),
+              date: new Date(voucher.created_at).toLocaleDateString('en-GB'),
+              item: itemName,
+              code: code,
+              amount: -voucher.points,
+              emoji: '💳',
+            };
+          });
+          setRedemptionHistory(history);
+        }
+      } catch (error) {
+        console.warn('Failed to fetch redemption history:', error);
+      }
+    };
+
+    fetchRedemptionHistory();
   }, []);
 
   useEffect(() => {
