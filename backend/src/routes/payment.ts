@@ -448,7 +448,8 @@ router.post('/link-bank', authMiddleware, async (req: AuthRequest, res: Response
     const result = await stripeService.linkBankAccount(
       stripeAccountId,
       user.account_holder,
-      accountNumber
+      accountNumber,
+      user.bank_name // Pass bank name so Stripe can use correct FAST code
     );
 
     // Set as default payout account
