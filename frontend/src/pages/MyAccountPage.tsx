@@ -2601,9 +2601,14 @@ export default function MyAccountPage() {
               <div className="bg-blue-50 rounded-lg p-3">
                 <p className="text-xs text-gray-600">Scheduled for:</p>
                 <p className="text-sm font-bold text-blue-600">
-                  {giftConfirmationData.giftDate === new Date().toISOString().split('T')[0]
-                    ? new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })
-                    : new Date(giftConfirmationData.giftDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  {(() => {
+                    const today = new Date().toISOString().split('T')[0];
+                    if (giftConfirmationData.giftDate === today) {
+                      return new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+                    }
+                    const dateObj = new Date(giftConfirmationData.giftDate + 'T00:00:00');
+                    return dateObj.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+                  })()}
                 </p>
               </div>
             </div>
@@ -2663,10 +2668,15 @@ export default function MyAccountPage() {
                   setGiftSearch('');
 
                   const today = new Date();
-                  const scheduledDateText =
-                    giftConfirmationData.giftDate === new Date().toISOString().split('T')[0]
-                      ? today.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })
-                      : new Date(giftConfirmationData.giftDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+                  const todayStr = new Date().toISOString().split('T')[0];
+                  let scheduledDateText = '';
+
+                  if (giftConfirmationData.giftDate === todayStr) {
+                    scheduledDateText = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+                  } else {
+                    const dateObj = new Date(giftConfirmationData.giftDate + 'T00:00:00');
+                    scheduledDateText = dateObj.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+                  }
 
                   setGiftSuccessData({
                     pointsToSend: giftConfirmationData.pointsToSend,
