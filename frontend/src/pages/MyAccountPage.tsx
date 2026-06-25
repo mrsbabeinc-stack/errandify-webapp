@@ -3366,59 +3366,43 @@ export default function MyAccountPage() {
       {/* Redemption Confirmation Modal */}
       {confirmRedeemData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-yellow-50 via-white to-orange-50 rounded-3xl p-8 max-w-sm w-full shadow-2xl border-4 border-yellow-300">
+          <div className="bg-gradient-to-br from-yellow-50 via-white to-orange-50 rounded-2xl p-5 max-w-xs w-full shadow-2xl border-3 border-yellow-300">
             {/* Decorative sparkles */}
-            <div className="absolute top-4 left-4 text-3xl animate-bounce">✨</div>
-            <div className="absolute top-4 right-4 text-3xl animate-bounce" style={{ animationDelay: '0.2s' }}>🎉</div>
-            <div className="absolute bottom-4 left-4 text-3xl animate-bounce" style={{ animationDelay: '0.4s' }}>🎁</div>
-            <div className="absolute bottom-4 right-4 text-3xl animate-bounce" style={{ animationDelay: '0.6s' }}>💝</div>
+            <div className="absolute top-2 left-3 text-xl animate-bounce">✨</div>
+            <div className="absolute top-2 right-3 text-xl animate-bounce" style={{ animationDelay: '0.2s' }}>🎉</div>
 
-            <div className="text-center mb-8 relative z-10">
-              <p className="text-6xl mb-4">🎊</p>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-errandify-orange to-yellow-500 bg-clip-text text-transparent mb-3">
+            <div className="text-center mb-4 relative z-10">
+              <p className="text-4xl mb-2">🎊</p>
+              <h2 className="text-xl font-bold bg-gradient-to-r from-errandify-orange to-yellow-500 bg-clip-text text-transparent">
                 Yay! Claim Your Prize! 🎉
               </h2>
-              <p className="text-lg text-errandify-brown font-semibold">You're about to unlock amazing savings!</p>
             </div>
 
-            <div className="bg-gradient-to-r from-yellow-100 to-orange-100 border-3 border-yellow-400 rounded-2xl p-6 mb-8 shadow-md">
-              <div className="mb-5">
-                <p className="text-xs text-errandify-brown font-bold uppercase tracking-wide">🏆 Your Reward</p>
-                <p className="text-2xl font-bold text-errandify-brown mt-1">{confirmRedeemData.name}</p>
+            <div className="bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-400 rounded-lg p-4 mb-4 shadow-md">
+              <div className="mb-3">
+                <p className="text-xs text-errandify-brown font-bold">{confirmRedeemData.name}</p>
+                <p className="text-2xl font-bold text-errandify-orange">{confirmRedeemData.points} EP</p>
               </div>
-              <div className="mb-5 bg-white rounded-lg p-3">
-                <p className="text-xs text-errandify-brown font-bold uppercase tracking-wide">💳 Your Code</p>
-                <p className="text-2xl font-mono font-bold text-errandify-orange mt-1 text-center bg-yellow-50 py-2 rounded">{confirmRedeemData.code}</p>
-                <p className="text-xs text-errandify-brown text-center mt-1">Ready to use!</p>
-              </div>
-              <div>
-                <p className="text-xs text-errandify-brown font-bold uppercase tracking-wide">⭐ Points to Spend</p>
-                <p className="text-3xl font-bold text-errandify-orange mt-1">{confirmRedeemData.points} EP</p>
+              <div className="bg-white rounded py-2 px-2 text-center">
+                <p className="text-xs text-gray-600 mb-1">Code:</p>
+                <p className="text-sm font-mono font-bold text-errandify-orange">{confirmRedeemData.code}</p>
               </div>
             </div>
 
-            <p className="text-sm text-errandify-brown font-semibold mb-8 text-center">
-              ✨ Ready to redeem your {confirmRedeemData.points} EP for {confirmRedeemData.name}?
-            </p>
-
-            <div className="flex gap-3 relative z-10">
+            <div className="flex gap-2 relative z-10">
               <button
                 onClick={handleRedeemCancel}
-                className="flex-1 bg-white text-errandify-brown py-3 px-4 rounded-xl font-bold text-base hover:bg-gray-100 transition border-2 border-gray-400 hover:border-gray-500"
+                className="flex-1 bg-white text-errandify-brown py-2 px-3 rounded-lg font-bold text-sm hover:bg-gray-100 transition border-2 border-gray-400"
               >
                 ❌ Not Now
               </button>
               <button
                 onClick={handleRedeemConfirm}
-                className="flex-1 bg-gradient-to-r from-errandify-orange to-yellow-500 text-white py-3 px-4 rounded-xl font-bold text-base hover:shadow-lg transition border-2 border-orange-600 hover:from-orange-600 hover:to-yellow-600 active:scale-95"
+                className="flex-1 bg-gradient-to-r from-errandify-orange to-yellow-500 text-white py-2 px-3 rounded-lg font-bold text-sm hover:shadow-lg transition border-2 border-orange-600 active:scale-95"
               >
-                ✅ Yes, Redeem!
+                ✅ Redeem!
               </button>
             </div>
-
-            <p className="text-xs text-gray-600 text-center mt-4">
-              💡 Tip: Copy your code and use it in the next 30 days!
-            </p>
           </div>
         </div>
       )}
