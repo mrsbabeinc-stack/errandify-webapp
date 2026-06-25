@@ -400,6 +400,14 @@ export default function MyPocketPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Important Note Section */}
+                <div className="bg-blue-50 border-l-4 border-blue-500 rounded p-3">
+                  <div className="flex gap-2">
+                    <p className="text-sm font-bold text-blue-900">ℹ️ Important</p>
+                  </div>
+                  <p className="text-xs text-blue-800 mt-1">Bank account changes take effect within 24 hours. Earnings in transit will be sent to the previously added account.</p>
+                </div>
               </div>
             )}
           </div>
