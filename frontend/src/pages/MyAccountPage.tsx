@@ -1650,34 +1650,50 @@ export default function MyAccountPage() {
               </div>
             )}
 
-            {/* HISTORY TAB - Redemption History */}
+            {/* HISTORY TAB - Transaction History (Redemptions + Gifts) */}
             {rewardsTab === 'history' && (
               <div className="space-y-2">
                 <div className="text-center py-2 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg border-2 border-blue-300">
-                  <p className="text-sm font-bold text-blue-600">📜 Redemption History 📜</p>
-                  <p className="text-xs text-gray-600 mt-1">Your reward transactions</p>
+                  <p className="text-sm font-bold text-blue-600">📜 Transaction History 📜</p>
+                  <p className="text-xs text-gray-600 mt-1">Your EP transactions (rewards & gifts)</p>
                 </div>
 
-                {/* Redemption History List */}
+                {/* Combined History List */}
                 <div className="bg-white rounded-xl border-2 border-purple-200 overflow-hidden shadow-md">
                   <div className="bg-gradient-to-r from-blue-400 to-purple-500 text-white p-3">
-                    <h3 className="text-sm font-bold">🎟️ Your Redemptions 🎟️</h3>
-                    <p className="text-xs mt-1 opacity-90">Track all your redeemed rewards</p>
+                    <h3 className="text-sm font-bold">📋 All Transactions 📋</h3>
+                    <p className="text-xs mt-1 opacity-90">Track all your EP activity</p>
                   </div>
-                  <div className="divide-y divide-purple-100 text-xs">
-                    {redemptionHistory.length > 0 ? (
-                      redemptionHistory.map((record) => (
-                        <div key={record.id} className="p-3 flex justify-between hover:bg-purple-50 transition bg-gradient-to-r from-transparent to-purple-50">
-                          <div>
-                            <p className="font-bold text-gray-900">{record.emoji} {record.item}</p>
-                            <p className="text-gray-500 text-xs">{record.date} • Code: {record.code}</p>
+                  <div className="divide-y divide-purple-100 text-xs max-h-48 overflow-y-auto">
+                    {redemptionHistory.length > 0 || allActivities.filter(a => a.type === 'gift').length > 0 ? (
+                      <>
+                        {/* Redemptions */}
+                        {redemptionHistory.map((record) => (
+                          <div key={`redemption-${record.id}`} className="p-3 flex justify-between hover:bg-purple-50 transition bg-gradient-to-r from-transparent to-purple-50">
+                            <div>
+                              <p className="font-bold text-gray-900">{record.emoji} {record.item}</p>
+                              <p className="text-gray-500 text-xs">{record.date} • Code: {record.code}</p>
+                            </div>
+                            <p className="font-bold text-orange-600 text-sm">{record.amount} EP</p>
                           </div>
-                          <p className="font-bold text-orange-600 text-sm">{record.amount} EP</p>
-                        </div>
-                      ))
+                        ))}
+
+                        {/* Gifts */}
+                        {allActivities
+                          .filter(a => a.type === 'gift')
+                          .map((gift) => (
+                            <div key={`gift-${gift.id}`} className="p-3 flex justify-between hover:bg-pink-50 transition bg-gradient-to-r from-transparent to-pink-50">
+                              <div>
+                                <p className="font-bold text-gray-900">{gift.emoji} {gift.title}</p>
+                                <p className="text-gray-500 text-xs">{gift.date}</p>
+                              </div>
+                              <p className="font-bold text-pink-600 text-sm">{gift.amount}</p>
+                            </div>
+                          ))}
+                      </>
                     ) : (
                       <div className="p-4 text-center text-gray-500">
-                        <p>No redemptions yet! Start shopping! 🛍️</p>
+                        <p>No transactions yet! 💝</p>
                       </div>
                     )}
                   </div>
