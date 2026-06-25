@@ -551,28 +551,45 @@ export default function MyAccountPage() {
     }
   };
 
-  const handleRedeemConfirm = () => {
+  const handleRedeemConfirm = async () => {
     if (!confirmRedeemData) return;
 
-    setUserBalance(userBalance - confirmRedeemData.points);
-    const now = new Date();
-    const dateStr = 'Today';
-    const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    setRedemptionHistory([
-      ...redemptionHistory,
-      {
-        id: Date.now().toString(),
-        date: dateStr,
-        time: timeStr,
-        item: confirmRedeemData.name,
-        code: confirmRedeemData.code,
-        amount: -confirmRedeemData.points,
-        emoji: '💳',
-      },
-    ]);
-    setModalMessage(`✅ Redeemed ${confirmRedeemData.name}!\n\nCode: ${confirmRedeemData.code}`);
-    setShowSuccessModal(true);
-    setConfirmRedeemData(null);
+    try {
+      const token = localStorage.getItem('token');
+
+      // Call backend to redeem and deduct points from database
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/redeem`,
+        { rewardId: confirmRedeemData.code, points: confirmRedeemData.points },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Update local state after successful backend call
+      setUserBalance(userBalance - confirmRedeemData.points);
+      const now = new Date();
+      const dateStr = 'Today';
+      const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setRedemptionHistory([
+        ...redemptionHistory,
+        {
+          id: Date.now().toString(),
+          date: dateStr,
+          time: timeStr,
+          item: confirmRedeemData.name,
+          code: confirmRedeemData.code,
+          amount: -confirmRedeemData.points,
+          emoji: '💳',
+        },
+      ]);
+      setModalMessage(`✅ Redeemed ${confirmRedeemData.name}!\n\nCode: ${confirmRedeemData.code}`);
+      setShowSuccessModal(true);
+      setConfirmRedeemData(null);
+    } catch (error: any) {
+      console.error('Redemption error:', error);
+      setModalMessage(`❌ ${error.response?.data?.error || 'Failed to redeem'}`);
+      setShowErrorModal(true);
+      setConfirmRedeemData(null);
+    }
   };
 
   const handleRedeemCancel = () => {
