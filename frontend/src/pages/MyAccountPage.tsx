@@ -1359,7 +1359,10 @@ export default function MyAccountPage() {
                             #{activity.errandId}
                           </span>
                         </div>
-                        <p className="text-gray-500 text-xs">{activity.date}</p>
+                        <p className="text-gray-500 text-xs">
+                          {activity.date}
+                          {activity.time && ` at ${activity.time}`}
+                        </p>
                       </div>
                       <p className={`font-bold text-${activity.color}-600 text-xs ml-2 flex-shrink-0`}>{activity.amount}</p>
                     </div>
@@ -2659,13 +2662,22 @@ export default function MyAccountPage() {
                   setUserBalance(newBalance);
 
                   // Record in activity history
+                  const now = new Date();
+                  const dateString = 'Today';
+                  const timeString = now.toLocaleTimeString('en-GB', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                  });
+
                   const newActivity = {
                     id: Date.now(),
                     type: 'gift',
                     emoji: '🎁',
                     title: `Gift sent to ${giftConfirmationData.recipientNames}`,
                     errandId: 'N/A',
-                    date: 'Today',
+                    date: dateString,
+                    time: timeString,
                     amount: `-${giftConfirmationData.totalPointsDeducted} EP`,
                     color: 'pink',
                   };
