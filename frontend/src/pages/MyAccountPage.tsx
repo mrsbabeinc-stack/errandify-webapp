@@ -934,7 +934,7 @@ export default function MyAccountPage() {
 
             {/* DASHBOARD CONTENT */}
             {/* COMPACT FUN DASHBOARD - HAPPY DESIGN */}
-            <div className="space-y-2 p-2">
+            <div className="space-y-1 p-2">
               {/* RATING & REVIEWS CARD - Happy Yellow */}
               <div className="bg-gradient-to-r from-yellow-300 via-orange-300 to-yellow-300 rounded-lg p-3 border-2 border-yellow-500">
                 <div className="text-center mb-2">
