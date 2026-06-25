@@ -991,6 +991,23 @@ export default function MyAccountPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Final Save/Cancel Buttons at Bottom */}
+                <div className="bg-white rounded shadow p-3 flex gap-2 sticky bottom-0 z-40">
+                  <button
+                    onClick={handleSaveProfile}
+                    disabled={saving}
+                    className="flex-1 bg-errandify-orange text-white py-2 rounded font-semibold text-sm hover:bg-orange-600 disabled:opacity-50"
+                  >
+                    {saving ? '💾 Saving...' : '💾 Save Profile'}
+                  </button>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="flex-1 border-2 border-gray-300 text-gray-700 py-2 rounded font-semibold text-sm hover:bg-gray-50"
+                  >
+                    ❌ Cancel
+                  </button>
+                </div>
               </div>
             )}
           </div>
