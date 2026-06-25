@@ -2163,8 +2163,10 @@ export default function MyAccountPage() {
                             useCustomMessage: false,
                           });
                           setGiftSearch('');
-                          setModalMessage(`✅ Group "${groupNameToSave}" saved! You can reuse it next time.`);
-                          setShowSuccessModal(true);
+                          setTimeout(() => {
+                            setModalMessage(`✅ Group "${groupNameToSave}" saved with ${newGroup.members.length} members!\n\nScroll up to find it in "⚡ Quick Load Saved Group" or search for it below.`);
+                            setShowSuccessModal(true);
+                          }, 100);
                         }
                       }}
                       className="px-3 py-2 bg-purple-500 text-white rounded-lg text-xs font-bold hover:bg-purple-600 transition whitespace-nowrap"
