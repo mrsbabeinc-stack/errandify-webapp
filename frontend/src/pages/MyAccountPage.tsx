@@ -2612,7 +2612,7 @@ export default function MyAccountPage() {
                   {(() => {
                     const today = new Date().toISOString().split('T')[0];
                     if (giftConfirmationData.giftDate === today) {
-                      return new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+                      return '🚀 Sent Immediately';
                     }
                     const dateObj = new Date(giftConfirmationData.giftDate + 'T00:00:00');
                     return dateObj.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -2680,7 +2680,7 @@ export default function MyAccountPage() {
                   let scheduledDateText = '';
 
                   if (giftConfirmationData.giftDate === todayStr) {
-                    scheduledDateText = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+                    scheduledDateText = '🚀 Sent Immediately';
                   } else {
                     const dateObj = new Date(giftConfirmationData.giftDate + 'T00:00:00');
                     scheduledDateText = dateObj.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
