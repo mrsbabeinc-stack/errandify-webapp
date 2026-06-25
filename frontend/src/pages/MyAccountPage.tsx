@@ -1996,7 +1996,16 @@ export default function MyAccountPage() {
                               members: giftForm.recipients,
                             },
                           ]);
-                          setGiftForm({ ...giftForm, groupName: '' });
+                          setGiftForm({
+                            points: '',
+                            recipients: [],
+                            giftCardMessage: 'Thank you for being a friend',
+                            customMessage: '',
+                            giftDate: new Date().toISOString().split('T')[0],
+                            groupName: '',
+                            useCustomMessage: false,
+                          });
+                          setGiftSearch('');
                           setModalMessage(`✅ Group "${groupNameToSave}" saved! You can reuse it next time.`);
                           setShowSuccessModal(true);
                         }
