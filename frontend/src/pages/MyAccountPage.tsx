@@ -308,6 +308,23 @@ export default function MyAccountPage() {
     fetchData();
   }, []);
 
+  // Load saved groups from localStorage on mount
+  useEffect(() => {
+    const loadedGroups = localStorage.getItem('errandify_saved_groups');
+    if (loadedGroups) {
+      try {
+        setSavedGroups(JSON.parse(loadedGroups));
+      } catch (error) {
+        console.error('Failed to load saved groups:', error);
+      }
+    }
+  }, []);
+
+  // Save groups to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('errandify_saved_groups', JSON.stringify(savedGroups));
+  }, [savedGroups]);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
