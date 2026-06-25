@@ -928,7 +928,15 @@ export default function MyAccountPage() {
                         placeholder="Certificate title"
                         className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                       />
-                      <input type="file" onChange={(e) => setCertificateFile(e.files?.[0] || null)} className="w-full text-xs" />
+                      <input
+                        type="file"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          console.log('File selected:', file);
+                          setCertificateFile(file || null);
+                        }}
+                        className="w-full text-xs"
+                      />
                       <button
                         onClick={async () => {
                           console.log('Certificate Title:', certificateTitle);
