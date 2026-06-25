@@ -953,20 +953,19 @@ export default function MyAccountPage() {
 
                 {/* Latest 2 Reviews */}
                 {ratings.reviews && ratings.reviews.length > 0 && (
-                  <div className="border-t-3 border-yellow-500 pt-3 space-y-2">
-                    <p className="text-xs text-yellow-900 font-bold text-center">💬 People love you!</p>
+                  <div className="border-t-2 border-yellow-400 pt-2 space-y-1.5">
                     {ratings.reviews
                       .filter((r: any) => r.rating >= 4)
                       .slice(0, 2)
                       .map((review: any, idx: number) => (
-                        <div key={idx} className="bg-white rounded-lg p-2 border-2 border-yellow-300 shadow-sm hover:shadow-md transition">
-                          <div className="flex gap-0.5 mb-1 justify-center">
+                        <div key={idx} className="bg-white rounded p-1.5 border border-yellow-300 text-xs">
+                          <div className="flex gap-0.5 mb-0.5 justify-center">
                             {[...Array(5)].map((_, i) => (
-                              <span key={i} className="text-sm">{i < review.rating ? '⭐' : '☆'}</span>
+                              <span key={i}>{i < review.rating ? '⭐' : '☆'}</span>
                             ))}
                           </div>
-                          <p className="text-xs text-gray-800 leading-snug font-medium">"{review.comment || 'Absolutely great!'}"</p>
-                          <p className="text-xs text-gray-600 mt-0.5 font-semibold">— {review.author || 'Happy Customer'} 💝</p>
+                          <p className="text-gray-800 leading-tight">"{review.comment || 'Great!'}"</p>
+                          <p className="text-gray-600 text-xs">— {review.author || 'Customer'}</p>
                         </div>
                       ))}
                   </div>
