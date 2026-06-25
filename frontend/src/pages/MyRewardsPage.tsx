@@ -293,16 +293,16 @@ export default function MyRewardSpacePage() {
                 <button
                   onClick={handleRedeemCancel}
                   disabled={redeeming}
-                  className="flex-1 bg-gray-200 text-gray-800 py-2.5 rounded-lg font-bold hover:bg-gray-300 transition disabled:opacity-50"
+                  className="flex-1 bg-gray-300 text-gray-900 py-3 rounded-lg font-bold text-base hover:bg-gray-400 transition disabled:opacity-50 border-2 border-gray-400"
                 >
-                  Cancel
+                  ❌ Cancel
                 </button>
                 <button
                   onClick={handleRedeemConfirm}
                   disabled={redeeming}
-                  className="flex-1 bg-errandify-orange text-white py-2.5 rounded-lg font-bold hover:bg-orange-600 transition disabled:opacity-50"
+                  className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold text-base hover:bg-orange-600 transition disabled:opacity-50 border-2 border-orange-600"
                 >
-                  {redeeming ? 'Redeeming...' : 'Confirm'}
+                  {redeeming ? '⏳ Redeeming...' : '✅ Confirm'}
                 </button>
               </div>
             </div>
