@@ -2114,17 +2114,55 @@ export default function MyAccountPage() {
 
             {/* Search & Select Recipients with Group Integration */}
             <div className="space-y-2">
-              {/* Header with selection count */}
-              <div className="flex justify-between items-center">
+              {/* Header with selection count and quick actions */}
+              <div className="flex justify-between items-center gap-2">
                 <label className="text-sm font-bold text-gray-700">🔍 Select Recipients/Groups</label>
                 <div className="flex gap-2 items-center">
                   {giftForm.recipients && giftForm.recipients.length > 0 && (
-                    <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">
-                      {giftForm.recipients.length} selected
-                    </span>
+                    <>
+                      <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">
+                        {giftForm.recipients.length} selected
+                      </span>
+                      {giftForm.recipients.length < availableUsers.length && (
+                        <button
+                          onClick={() => {
+                            setGiftForm({
+                              ...giftForm,
+                              recipients: availableUsers.map(u => u.id),
+                            });
+                          }}
+                          className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                        >
+                          Select All
+                        </button>
+                      )}
+                      {giftForm.recipients.length === availableUsers.length && (
+                        <button
+                          onClick={() => {
+                            setGiftForm({
+                              ...giftForm,
+                              recipients: [],
+                            });
+                          }}
+                          className="text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                        >
+                          Clear All
+                        </button>
+                      )}
+                    </>
                   )}
                   {(!giftForm.recipients || giftForm.recipients.length === 0) && (
-                    <span className="text-xs text-gray-500">No limit - check boxes below</span>
+                    <button
+                      onClick={() => {
+                        setGiftForm({
+                          ...giftForm,
+                          recipients: availableUsers.map(u => u.id),
+                        });
+                      }}
+                      className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                    >
+                      Select All
+                    </button>
                   )}
                 </div>
               </div>
