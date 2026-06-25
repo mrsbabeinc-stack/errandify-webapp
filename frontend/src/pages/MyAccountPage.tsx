@@ -2642,7 +2642,7 @@ export default function MyAccountPage() {
                 <p className="text-xs text-gray-600">Scheduled for:</p>
                 <p className="text-sm font-bold text-blue-600">
                   {giftConfirmationData.giftDate === new Date().toISOString().split('T')[0]
-                    ? '🚀 Now'
+                    ? new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })
                     : new Date(giftConfirmationData.giftDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
               </div>
@@ -2702,9 +2702,10 @@ export default function MyAccountPage() {
                   setShowGroupForm(false);
                   setGiftSearch('');
 
+                  const today = new Date();
                   const scheduledDateText =
                     giftConfirmationData.giftDate === new Date().toISOString().split('T')[0]
-                      ? '🚀 Now'
+                      ? today.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })
                       : new Date(giftConfirmationData.giftDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
 
                   setGiftSuccessData({
