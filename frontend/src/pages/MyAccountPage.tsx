@@ -131,14 +131,14 @@ export default function MyAccountPage() {
   ];
 
   // Sample activity data
-  const allActivities = [
+  const [allActivities, setAllActivities] = useState([
     { id: 1, type: 'completed', emoji: '✅', title: 'Completed: Clean apartment', errandId: 'ERR-2847', date: 'Today 10:28 AM', amount: '+$80', color: 'green' },
     { id: 2, type: 'posted', emoji: '📝', title: 'Posted: Home repairs', errandId: 'ERR-2846', date: 'Yesterday 10:25 PM', amount: '-$120', color: 'orange' },
     { id: 3, type: 'referral', emoji: '🎁', title: 'Referral: @SunnyLove', errandId: 'N/A', date: '2 days ago', amount: '+$50', color: 'purple' },
     { id: 4, type: 'rating', emoji: '⭐', title: 'Rating given: Clean apartment', errandId: 'ERR-2847', date: '3 days ago', amount: '5 stars', color: 'blue' },
     { id: 5, type: 'accepted', emoji: '✅', title: 'Accepted bid: Tutoring', errandId: 'ERR-2845', date: '4 days ago', amount: 'SGD $60', color: 'green' },
     { id: 6, type: 'posted', emoji: '📋', title: 'Posted: Office admin', errandId: 'ERR-2844', date: '5 days ago', amount: '-$75', color: 'orange' },
-  ];
+  ]);
 
   const filteredActivities = allActivities.filter(activity => {
     const matchesSearch = activity.title.toLowerCase().includes(activitySearch.toLowerCase());
@@ -2263,16 +2263,31 @@ export default function MyAccountPage() {
                         },
                       ]);
                     }
-                    const newBalance = userBalance - pointsToSend * giftForm.recipients.length;
+                    const totalPointsDeducted = pointsToSend * giftForm.recipients.length;
+                    const newBalance = userBalance - totalPointsDeducted;
                     setUserBalance(newBalance);
-                    setShowGiftModal(false);
+
+                    // Record in activity history
                     const recipientNames = giftForm.recipients
                       .map((id) => availableUsers.find((u) => u.id === id)?.name)
                       .join(', ');
+                    const newActivity = {
+                      id: Date.now(),
+                      type: 'gift',
+                      emoji: '🎁',
+                      title: `Gift sent to ${giftForm.recipients.length > 1 ? recipientNames : recipientNames}`,
+                      errandId: 'N/A',
+                      date: 'Today',
+                      amount: `-${totalPointsDeducted} EP`,
+                      color: 'pink',
+                    };
+                    setAllActivities([newActivity, ...allActivities]);
+
+                    setShowGiftModal(false);
                     setModalMessage(
                       `🎁 Gift sent! You sent ${pointsToSend} EP to ${giftForm.recipients.length} friend(s)!\n\n🎀 Message: "${
                         giftForm.useCustomMessage ? giftForm.customMessage : giftForm.giftCardMessage
-                      }"\n\n📅 Scheduled for: ${new Date(giftForm.giftDate).toLocaleDateString()}\n\nThey're so lucky! 🌟`
+                      }"\n\n📅 Scheduled for: ${new Date(giftForm.giftDate).toLocaleDateString()}\n\n💾 Recorded in your transaction history!\n\nThey're so lucky! 🌟`
                     );
                     setShowSuccessModal(true);
                   }
