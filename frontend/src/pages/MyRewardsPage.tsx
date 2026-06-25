@@ -9,6 +9,8 @@ export default function MyRewardSpacePage() {
   const [message, setMessage] = useState('');
   const [redeemed, setRedeemed] = useState<number[]>([]);
   const [confirmRedeemData, setConfirmRedeemData] = useState<{ rewardId: number; points: number; name: string } | null>(null);
+  const [currentPoints, setCurrentPoints] = useState(0);
+  const [pointHistory, setPointHistory] = useState<any[]>([]);
 
   const rewards = [
     { id: 1, name: '$5 Discount', cost: '50 EP', available: true },
@@ -20,10 +22,32 @@ export default function MyRewardSpacePage() {
     { id: 1, name: 'Starbucks', category: 'Food', cost: '500 EP', expiry: 'No Expiry' },
   ];
 
-  const pointHistory = [
-    { activity: 'Errand Completion', points: '+5 EP', date: '17-06-2026 10:28 PM' },
-    { activity: 'Point Granted', points: '+20 EP', date: '15-06-2026 02:54 PM' },
-  ];
+  useEffect(() => {
+    fetchPointsAndHistory();
+  }, []);
+
+  const fetchPointsAndHistory = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      // Fetch current points
+      const balanceRes = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/balance`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setCurrentPoints(balanceRes.data.data.errandifyPoints || 0);
+
+      // Fetch transaction history
+      const historyRes = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/point-history`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const transactions = historyRes.data.data || [];
+      setPointHistory(transactions);
+    } catch (error) {
+      console.error('Failed to fetch points:', error);
+    }
+  };
 
   const confirmRedeem = (rewardId: number, points: number, name: string) => {
     setConfirmRedeemData({ rewardId, points, name });
@@ -44,6 +68,10 @@ export default function MyRewardSpacePage() {
       setMessage('✅ Reward redeemed successfully! Points deducted from your account.');
       setRedeemed([...redeemed, confirmRedeemData.rewardId]);
       setConfirmRedeemData(null);
+
+      // Refresh points and history
+      await fetchPointsAndHistory();
+
       // Auto-clear message after 5 seconds but keep the redeemed state
       setTimeout(() => setMessage(''), 5000);
     } catch (error: any) {
@@ -117,11 +145,11 @@ export default function MyRewardSpacePage() {
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <p className="text-xs opacity-95 font-bold mb-1">✨ Available Errandify Points</p>
-                      <h2 className="text-5xl font-bold">⭐ 25 EP ⭐</h2>
+                      <h2 className="text-5xl font-bold">⭐ {currentPoints} EP ⭐</h2>
                     </div>
                     <p className="text-5xl">💎</p>
                   </div>
-                  <p className="text-xs opacity-90 font-semibold">Ready to redeem amazing rewards!</p>
+                  <p className="text-xs opacity-90 font-semibold">{currentPoints > 0 ? 'Ready to redeem amazing rewards!' : 'Start earning to redeem rewards!'}</p>
                 </div>
 
                 <div className="bg-gradient-to-r from-orange-200 to-red-200 border-2 border-orange-400 rounded-xl p-3">
@@ -176,15 +204,23 @@ export default function MyRewardSpacePage() {
             {/* Point History Tab */}
             {activeTab === 'history' && (
               <div className="divide-y divide-gray-100 p-2">
-                {pointHistory.map((item, idx) => (
-                  <div key={idx} className="p-2 flex justify-between hover:bg-gray-50">
-                    <div>
-                      <p className="font-bold text-gray-900">{item.activity}</p>
-                      <p className="text-gray-500 text-xs">{item.date}</p>
-                    </div>
-                    <p className={`font-bold ${item.points.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>{item.points}</p>
+                {pointHistory.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500">
+                    <p>📋 No transaction history yet</p>
                   </div>
-                ))}
+                ) : (
+                  pointHistory.map((item, idx) => (
+                    <div key={idx} className="p-2 flex justify-between hover:bg-gray-50">
+                      <div>
+                        <p className="font-bold text-gray-900">{item.description || item.type}</p>
+                        <p className="text-gray-500 text-xs">{new Date(item.created_at).toLocaleString()}</p>
+                      </div>
+                      <p className={`font-bold ${item.points > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {item.points > 0 ? '+' : ''}{item.points} EP
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
             )}
 
