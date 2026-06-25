@@ -52,6 +52,10 @@ export default function MyProfilePage() {
   const [photoError, setPhotoError] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [certificateTitle, setCertificateTitle] = useState('');
+  const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [addingCertificate, setAddingCertificate] = useState(false);
+  const [certificateError, setCertificateError] = useState('');
 
   const validatePhoto = (file: File): boolean => {
     setPhotoError('');
@@ -126,6 +130,72 @@ export default function MyProfilePage() {
     } catch (err) {
       console.error('Failed to upload photo:', err);
       setPhotoError('Failed to upload photo. Please try again.');
+    }
+  };
+
+  const handleAddCertificate = async () => {
+    setCertificateError('');
+    if (!certificateTitle.trim()) {
+      setCertificateError('Please enter a certificate title');
+      return;
+    }
+    if (!certificateFile) {
+      setCertificateError('Please select a file');
+      return;
+    }
+    if (certificateFile.size > 10 * 1024 * 1024) {
+      setCertificateError('File size must be less than 10MB');
+      return;
+    }
+    setAddingCertificate(true);
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('title', certificateTitle);
+      formData.append('certificate', certificateFile);
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/certificates`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      setProfile(prev => prev ? {
+        ...prev,
+        certificates: response.data.data.certificates
+      } : null);
+      setCertificateTitle('');
+      setCertificateFile(null);
+      setSuccessMessage('Certificate added successfully! 🎓');
+      setShowSuccessModal(true);
+    } catch (err: any) {
+      setCertificateError(err.response?.data?.error || 'Failed to add certificate');
+    } finally {
+      setAddingCertificate(false);
+    }
+  };
+
+  const handleDeleteCertificate = async (idx: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const certTitle = profile?.certificates?.[idx]?.title;
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/certificates/${encodeURIComponent(certTitle || '')}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      setProfile(prev => prev ? {
+        ...prev,
+        certificates: prev.certificates?.filter((_, i) => i !== idx) || []
+      } : null);
+      setSuccessMessage('Certificate removed! 🗑️');
+      setShowSuccessModal(true);
+    } catch (err: any) {
+      setCertificateError(err.response?.data?.error || 'Failed to delete certificate');
     }
   };
 
@@ -932,7 +1002,12 @@ export default function MyProfilePage() {
                     {profile.certificates.map((cert, idx) => (
                       <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex justify-between items-center">
                         <span className="text-sm font-semibold text-gray-700">{cert.title || `Certificate ${idx + 1}`}</span>
-                        <button className="text-xs text-red-600 hover:text-red-800 font-semibold">Delete</button>
+                        <button
+                          onClick={() => handleDeleteCertificate(idx)}
+                          className="text-xs text-red-600 hover:text-red-800 font-semibold"
+                        >
+                          Delete
+                        </button>
                       </div>
                     ))}
                     {profile.certificates.length < 10 && (
@@ -942,11 +1017,35 @@ export default function MyProfilePage() {
                 )}
 
                 {(!profile.certificates || profile.certificates.length < 10) && (
-                  <button className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-errandify-orange hover:bg-orange-50 transition text-center">
-                    <p className="text-2xl mb-2">📄</p>
-                    <p className="text-sm font-semibold text-gray-700">Add Certificate</p>
-                    <p className="text-xs text-gray-500">PNG, JPG, or PDF</p>
-                  </button>
+                  <div className="space-y-4">
+                    <input
+                      type="text"
+                      placeholder="Certificate title (e.g., First Aid CPR, Cleaning License)"
+                      value={certificateTitle}
+                      onChange={(e) => setCertificateTitle(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
+                    />
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => setCertificateFile(e.target.files?.[0] || null)}
+                      className="w-full"
+                    />
+                    {certificateError && (
+                      <p className="text-xs text-red-600">{certificateError}</p>
+                    )}
+                    <button
+                      onClick={handleAddCertificate}
+                      disabled={addingCertificate || !certificateTitle || !certificateFile}
+                      className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-errandify-orange hover:bg-orange-50 transition text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <p className="text-2xl mb-2">📄</p>
+                      <p className="text-sm font-semibold text-gray-700">
+                        {addingCertificate ? 'Adding...' : 'Add Certificate'}
+                      </p>
+                      <p className="text-xs text-gray-500">PNG, JPG, or PDF</p>
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
