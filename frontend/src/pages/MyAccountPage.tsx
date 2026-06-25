@@ -1052,53 +1052,74 @@ export default function MyAccountPage() {
 
         {/* MYPOCKET SECTION */}
         {activeSection === 'pocket' && (
-          <div className="space-y-2">
-            {/* Balance Card */}
-            <div className="bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-lg p-3 shadow-md">
-              <p className="text-xs opacity-90">Balance</p>
-              <h2 className="text-3xl font-bold mb-1">$450.50</h2>
-              <div className="flex gap-2 text-xs">
-                <div className="bg-white bg-opacity-20 rounded px-2 py-1">
-                  <p className="font-bold">Earned</p>
-                  <p>$1,250.00</p>
-                </div>
-                <div className="bg-white bg-opacity-20 rounded px-2 py-1">
-                  <p className="font-bold">Spent</p>
-                  <p>$320.50</p>
-                </div>
-                <div className="bg-white bg-opacity-20 rounded px-2 py-1">
-                  <p className="font-bold">Pending</p>
-                  <p>$150.00</p>
+          <div className="space-y-3">
+            {/* Happy Balance Card with Celebration */}
+            <div className="bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 text-white rounded-xl p-4 shadow-lg relative overflow-hidden">
+              <div className="absolute top-0 right-0 text-6xl opacity-20">💚</div>
+              <div className="absolute bottom-0 left-0 text-6xl opacity-20">🎉</div>
+              <div className="relative z-10">
+                <p className="text-xs opacity-90 font-semibold">💰 Your MyPocket Balance</p>
+                <h2 className="text-4xl font-bold mb-3">SGD $450.50</h2>
+                <p className="text-xs mb-3 font-semibold">🎊 You're doing amazing! Keep earning! ✨</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-white bg-opacity-20 rounded-lg px-3 py-2 backdrop-blur">
+                    <p className="text-xs opacity-90">💵 Earned</p>
+                    <p className="font-bold text-sm">$1,250</p>
+                  </div>
+                  <div className="bg-white bg-opacity-20 rounded-lg px-3 py-2 backdrop-blur">
+                    <p className="text-xs opacity-90">🛍️ Spent</p>
+                    <p className="font-bold text-sm">$320</p>
+                  </div>
+                  <div className="bg-white bg-opacity-20 rounded-lg px-3 py-2 backdrop-blur">
+                    <p className="text-xs opacity-90">⏳ Pending</p>
+                    <p className="font-bold text-sm">$150</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Transactions */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="bg-errandify-orange text-white p-2">
-                <h3 className="text-xs font-bold">📋 Recent Transactions</h3>
+            {/* Happy Notifications */}
+            <div className="space-y-2">
+              <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-3">
+                <p className="text-xs font-bold text-green-900 mb-1">✅ Great News!</p>
+                <p className="text-xs text-green-800">Your last errand earned you SGD $80! 🎉</p>
               </div>
-              <div className="divide-y divide-gray-100 text-xs">
-                <div className="p-2 flex justify-between hover:bg-gray-50">
+              <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-3">
+                <p className="text-xs font-bold text-blue-900 mb-1">🚀 On Fire!</p>
+                <p className="text-xs text-blue-800">You've completed 5 errands this month. You're a superstar! ⭐</p>
+              </div>
+              <div className="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-3">
+                <p className="text-xs font-bold text-purple-900 mb-1">🎁 Bonus Alert!</p>
+                <p className="text-xs text-purple-800">Earn SGD $50 more to unlock the "Speed Demon" badge! 🏃‍♂️</p>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+              <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-3">
+                <h3 className="text-sm font-bold">📊 Recent Activity</h3>
+              </div>
+              <div className="divide-y divide-gray-100 text-xs max-h-48 overflow-y-auto">
+                <div className="p-3 flex justify-between items-center hover:bg-green-50 transition">
                   <div>
-                    <p className="font-bold text-gray-900">Completed Errand (#5): Clean apartment</p>
-                    <p className="text-gray-500">Today 10:28 AM</p>
+                    <p className="font-bold text-gray-900">✅ Completed: Clean apartment</p>
+                    <p className="text-gray-500 text-xs">Today 10:28 AM</p>
                   </div>
-                  <p className="font-bold text-green-600">+$80</p>
+                  <p className="font-bold text-green-600 text-sm">+$80</p>
                 </div>
-                <div className="p-2 flex justify-between hover:bg-gray-50">
+                <div className="p-3 flex justify-between items-center hover:bg-orange-50 transition">
                   <div>
-                    <p className="font-bold text-gray-900">Posted Errand (#8): Home repairs</p>
-                    <p className="text-gray-500">Yesterday 10:25 PM</p>
+                    <p className="font-bold text-gray-900">📝 Posted: Home repairs</p>
+                    <p className="text-gray-500 text-xs">Yesterday 10:25 PM</p>
                   </div>
-                  <p className="font-bold text-red-600">-$120</p>
+                  <p className="font-bold text-orange-600 text-sm">-$120</p>
                 </div>
-                <div className="p-2 flex justify-between hover:bg-gray-50">
+                <div className="p-3 flex justify-between items-center hover:bg-purple-50 transition">
                   <div>
-                    <p className="font-bold text-gray-900">Referral: @SunnyLove joined</p>
-                    <p className="text-gray-500">2 days ago</p>
+                    <p className="font-bold text-gray-900">🎁 Referral bonus: @SunnyLove</p>
+                    <p className="text-gray-500 text-xs">2 days ago</p>
                   </div>
-                  <p className="font-bold text-green-600">+$50</p>
+                  <p className="font-bold text-purple-600 text-sm">+$50</p>
                 </div>
               </div>
             </div>
