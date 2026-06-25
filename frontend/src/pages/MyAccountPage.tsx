@@ -2651,7 +2651,7 @@ export default function MyAccountPage() {
                       : new Date(giftConfirmationData.giftDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
 
                   setModalMessage(
-                    `🎁 Gift sent! You sent ${giftConfirmationData.pointsToSend} EP to ${giftConfirmationData.recipientCount} friend(s)!\n\n🎀 Message: "${giftConfirmationData.message}"\n\n📅 Scheduled for: ${scheduledDateText}\n\n💾 Recorded in your transaction history!\n\nThey're so lucky! 🌟`
+                    `🎁 Gift Sent Successfully!\n\n✅ ${giftConfirmationData.pointsToSend} EP → ${giftConfirmationData.recipientCount} friend(s)\n\n📝 Message:\n"${giftConfirmationData.message}"\n\n📅 Scheduled: ${scheduledDateText}\n\n💾 Recorded in transaction history`
                   );
                   setShowSuccessModal(true);
                 }}
