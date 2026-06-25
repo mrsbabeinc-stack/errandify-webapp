@@ -965,52 +965,56 @@ export default function MyAccountPage() {
               )}
             </div>
 
-            {/* COMPACT FUN DASHBOARD */}
+            {/* COMPACT FUN DASHBOARD - HAPPY DESIGN */}
             <div className="space-y-2 p-2">
-              {/* USER ID & ALIAS CARD */}
+              {/* USER ID & ALIAS CARD - Happy Blue */}
               {profileData && (
-                <div className="bg-gradient-to-r from-blue-100 to-cyan-100 rounded-lg p-3 border-2 border-blue-300 shadow-sm">
-                  <div className="grid grid-cols-2 gap-2 text-center">
-                    <div>
-                      <p className="text-xs text-blue-700 font-bold">🎫 Your ID</p>
-                      <p className="text-sm font-mono font-bold text-blue-800">{profileData.formattedUserId || 'N/A'}</p>
+                <div className="bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-300 rounded-2xl p-4 border-3 border-blue-500 shadow-lg hover:shadow-xl transition">
+                  <div className="grid grid-cols-2 gap-3 text-center">
+                    <div className="bg-white rounded-xl p-2">
+                      <p className="text-sm text-blue-700 font-bold">🎫 Your ID</p>
+                      <p className="text-base font-mono font-bold text-blue-800 mt-1">{profileData.formattedUserId || 'N/A'}</p>
                     </div>
-                    <div>
-                      <p className="text-xs text-blue-700 font-bold">👤 Name</p>
-                      <p className="text-sm font-bold text-blue-800">@{profileData.alias || 'N/A'}</p>
+                    <div className="bg-white rounded-xl p-2">
+                      <p className="text-sm text-blue-700 font-bold">👤 Your Name</p>
+                      <p className="text-base font-bold text-blue-800 mt-1">@{profileData.alias || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* RATING & REVIEWS CARD */}
-              <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg p-3 border-2 border-yellow-300 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <p className="text-xs text-yellow-800 font-bold">⭐ Rating</p>
-                    <p className="text-2xl font-bold text-yellow-700">{ratings.averageRating.toFixed(1)}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs text-yellow-800 font-bold">👥 Reviews</p>
-                    <p className="text-2xl font-bold text-yellow-700">{ratings.reviewCount}</p>
+              {/* RATING & REVIEWS CARD - Happy Yellow */}
+              <div className="bg-gradient-to-r from-yellow-300 via-orange-300 to-yellow-300 rounded-2xl p-4 border-3 border-yellow-500 shadow-lg hover:shadow-xl transition">
+                <div className="text-center mb-3">
+                  <p className="text-sm text-yellow-900 font-bold mb-2">🌟 Your Awesome Reviews 🌟</p>
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="bg-white rounded-xl p-2">
+                      <p className="text-3xl font-bold text-yellow-700">{ratings.averageRating.toFixed(1)}</p>
+                      <p className="text-xs text-yellow-800 font-bold">⭐ Rating</p>
+                    </div>
+                    <div className="bg-white rounded-xl p-2">
+                      <p className="text-3xl font-bold text-yellow-700">{ratings.reviewCount}</p>
+                      <p className="text-xs text-yellow-800 font-bold">👥 Reviews</p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Latest 2 Reviews */}
                 {ratings.reviews && ratings.reviews.length > 0 && (
-                  <div className="border-t border-yellow-300 pt-2 mt-2 space-y-1 text-xs">
+                  <div className="border-t-3 border-yellow-500 pt-3 space-y-2">
+                    <p className="text-xs text-yellow-900 font-bold text-center">💬 People love you!</p>
                     {ratings.reviews
                       .filter((r: any) => r.rating >= 4)
                       .slice(0, 2)
                       .map((review: any, idx: number) => (
-                        <div key={idx} className="bg-white rounded p-1.5 border border-yellow-200">
-                          <div className="flex gap-1 mb-0.5">
+                        <div key={idx} className="bg-white rounded-lg p-2 border-2 border-yellow-300 shadow-sm hover:shadow-md transition">
+                          <div className="flex gap-0.5 mb-1 justify-center">
                             {[...Array(5)].map((_, i) => (
-                              <span key={i} className="text-xs">{i < review.rating ? '⭐' : '☆'}</span>
+                              <span key={i} className="text-sm">{i < review.rating ? '⭐' : '☆'}</span>
                             ))}
                           </div>
-                          <p className="text-gray-700 leading-tight italic">"{review.comment || 'Great!'}"</p>
-                          <p className="text-gray-500 text-xs">— {review.author || 'Customer'}</p>
+                          <p className="text-xs text-gray-800 leading-snug font-medium">"{review.comment || 'Absolutely great!'}"</p>
+                          <p className="text-xs text-gray-600 mt-0.5 font-semibold">— {review.author || 'Happy Customer'} 💝</p>
                         </div>
                       ))}
                   </div>
