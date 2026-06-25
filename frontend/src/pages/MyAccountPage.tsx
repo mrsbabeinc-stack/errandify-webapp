@@ -916,25 +916,25 @@ export default function MyAccountPage() {
         {/* DASHBOARD - Always show first */}
         {activeSection === 'dashboard' && (
           <div className="space-y-1.5">
+            {/* USER ID & ALIAS CARD - TOP */}
+            {profileData && (
+              <div className="bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-300 rounded-2xl p-4 border-3 border-blue-500 shadow-lg hover:shadow-xl transition mx-2">
+                <div className="grid grid-cols-2 gap-3 text-center">
+                  <div className="bg-white rounded-xl p-2">
+                    <p className="text-sm text-blue-700 font-bold">🎫 Your ID</p>
+                    <p className="text-base font-mono font-bold text-blue-800 mt-1">{profileData.formattedUserId || 'N/A'}</p>
+                  </div>
+                  <div className="bg-white rounded-xl p-2">
+                    <p className="text-sm text-blue-700 font-bold">👤 Your Name</p>
+                    <p className="text-base font-bold text-blue-800 mt-1">@{profileData.alias || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* DASHBOARD CONTENT */}
             {/* COMPACT FUN DASHBOARD - HAPPY DESIGN */}
             <div className="space-y-2 p-2">
-              {/* USER ID & ALIAS CARD - Happy Blue */}
-              {profileData && (
-                <div className="bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-300 rounded-2xl p-4 border-3 border-blue-500 shadow-lg hover:shadow-xl transition">
-                  <div className="grid grid-cols-2 gap-3 text-center">
-                    <div className="bg-white rounded-xl p-2">
-                      <p className="text-sm text-blue-700 font-bold">🎫 Your ID</p>
-                      <p className="text-base font-mono font-bold text-blue-800 mt-1">{profileData.formattedUserId || 'N/A'}</p>
-                    </div>
-                    <div className="bg-white rounded-xl p-2">
-                      <p className="text-sm text-blue-700 font-bold">👤 Your Name</p>
-                      <p className="text-base font-bold text-blue-800 mt-1">@{profileData.alias || 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* RATING & REVIEWS CARD - Happy Yellow */}
               <div className="bg-gradient-to-r from-yellow-300 via-orange-300 to-yellow-300 rounded-lg p-3 border-2 border-yellow-500">
                 <div className="text-center mb-2">
