@@ -9,7 +9,7 @@ const router = Router();
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, user_id, display_name, email, mobile, role, formatted_user_id, chas_card_color, profile_image_url, alias, bio, certificates, average_rating, total_ratings, criminal_conviction, singpass_id, gender FROM users WHERE id = $1',
+      'SELECT id, user_id, display_name, email, mobile, role, formatted_user_id, profile_image_url, alias, bio, certificates, average_rating, total_ratings, criminal_conviction, singpass_id, gender FROM users WHERE id = $1',
       [req.userId]
     );
 
@@ -40,7 +40,6 @@ router.get('/profile', authMiddleware, async (req, res) => {
         mobile: user.mobile,
         role: user.role,
         gender: user.gender,
-        chasCardColor: user.chas_card_color,
         profileImageUrl: user.profile_image_url,
         alias: user.alias,
         bio: user.bio,
@@ -60,7 +59,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
 // Update user profile
 router.put('/profile', authMiddleware, async (req, res) => {
   try {
-    const { display_name, mobile, chas_card_color, email, alias, bio, profile_image, certificates } = req.body;
+    const { display_name, mobile, email, alias, bio, profile_image, certificates } = req.body;
     const userId = req.userId;
 
     let updateFields = [];
@@ -91,10 +90,6 @@ router.put('/profile', authMiddleware, async (req, res) => {
       updateFields.push(`profile_image_url = $${++paramCount}`);
       updateValues.push(profile_image);
     }
-    if (chas_card_color !== undefined) {
-      updateFields.push(`chas_card_color = $${++paramCount}`);
-      updateValues.push(chas_card_color || 'none');
-    }
 
     // Handle certificates (max 10)
     if (certificates !== undefined && Array.isArray(certificates)) {
@@ -107,7 +102,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'No fields to update' });
     }
 
-    const query = `UPDATE users SET ${updateFields.join(', ')}, updated_at = NOW() WHERE id = $1 RETURNING id, user_id, formatted_user_id, display_name, mobile, email, role, gender, chas_card_color, profile_image_url, alias, bio, certificates, average_rating, total_ratings, criminal_conviction`;
+    const query = `UPDATE users SET ${updateFields.join(', ')}, updated_at = NOW() WHERE id = $1 RETURNING id, user_id, formatted_user_id, display_name, mobile, email, role, gender, profile_image_url, alias, bio, certificates, average_rating, total_ratings, criminal_conviction`;
 
     const result = await db.query(query, updateValues);
 
@@ -127,7 +122,6 @@ router.put('/profile', authMiddleware, async (req, res) => {
         mobile: user.mobile,
         role: user.role,
         gender: user.gender,
-        chasCardColor: user.chas_card_color,
         profileImageUrl: user.profile_image_url,
         alias: user.alias,
         bio: user.bio,
