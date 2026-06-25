@@ -1692,68 +1692,385 @@ export default function MyAccountPage() {
               </div>
             )}
 
-            {/* GIFT TAB - Send A Gift */}
+            {/* GIFT TAB - Send A Gift (Direct Form, No Modal) */}
             {rewardsTab === 'gift' && (
-              <div className="space-y-2">
-                <div className="text-center py-2 bg-gradient-to-r from-pink-100 to-rose-100 rounded-lg border-2 border-pink-300">
-                  <p className="text-sm font-bold text-pink-600">💝 Send A Gift 💝</p>
-                  <p className="text-xs text-gray-600 mt-1">Share your points with friends!</p>
+              <div className="space-y-3">
+                {/* Header */}
+                <div className="text-center pb-2 border-b border-orange-200">
+                  <p className="text-lg font-bold text-errandify-brown">💝 Send A Gift 🎁</p>
+                  <p className="text-xs text-gray-600 mt-1">Share love and rewards with your friends!</p>
                 </div>
 
-                {/* Quick Stats */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg p-3 border border-pink-200">
-                    <p className="text-xs text-gray-600">Your Balance</p>
-                    <p className="text-xl font-black text-pink-600">{userBalance} EP</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg p-3 border border-purple-200">
-                    <p className="text-xs text-gray-600">Gifts Sent</p>
-                    <p className="text-xl font-black text-purple-600">{allActivities.filter(a => a.type === 'gift').length}</p>
-                  </div>
+                {/* Points Card */}
+                <div className="bg-gradient-to-br from-orange-100 to-orange-50 rounded-lg p-3 border-2 border-orange-300">
+                  <p className="text-xs text-gray-600 mb-1">💰 Available Points</p>
+                  <p className="text-3xl font-bold text-orange-600">{userBalance} EP</p>
                 </div>
 
-                {/* Send Gift Form */}
-                <div className="bg-white rounded-xl border-2 border-pink-200 overflow-hidden shadow-md">
-                  <div className="bg-gradient-to-r from-pink-400 to-rose-500 text-white p-3">
-                    <h3 className="text-sm font-bold">✨ Create Your Gift ✨</h3>
-                  </div>
-                  <div className="p-4 space-y-3">
-                    <button
-                      onClick={() => setShowGiftModal(true)}
-                      className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg transition"
-                    >
-                      💝 Open Gift Form
-                    </button>
-                    <p className="text-xs text-gray-600 text-center">
-                      👥 Select recipients • 💰 Choose amount • 💌 Pick message • 🚀 Send!
-                    </p>
-                  </div>
+                {/* Points to Send */}
+                <div>
+                  <label className="text-sm font-bold text-gray-700">💰 Points to Send</label>
+                  <p className="text-xs text-gray-600 mb-2">Up to {userBalance} EP</p>
+                  <input
+                    type="number"
+                    min="1"
+                    max={userBalance}
+                    value={giftForm.points}
+                    onChange={(e) => setGiftForm({ ...giftForm, points: e.target.value })}
+                    className="w-full px-3 py-2 border-2 border-orange-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+                    placeholder="Enter amount"
+                  />
                 </div>
 
-                {/* Recent Gifts */}
-                {allActivities.filter(a => a.type === 'gift').length > 0 && (
-                  <div className="bg-white rounded-xl border-2 border-pink-200 overflow-hidden shadow-md">
-                    <div className="bg-gradient-to-r from-pink-400 to-rose-500 text-white p-3">
-                      <h3 className="text-sm font-bold">🎁 Your Recent Gifts 🎁</h3>
-                    </div>
-                    <div className="divide-y divide-pink-100 text-xs max-h-48 overflow-y-auto">
-                      {allActivities
-                        .filter(a => a.type === 'gift')
-                        .map((gift) => (
-                          <div key={`gift-${gift.id}`} className="p-3 flex justify-between hover:bg-pink-50 transition bg-gradient-to-r from-transparent to-pink-50">
-                            <div>
-                              <p className="font-bold text-gray-900">{gift.emoji} {gift.title}</p>
-                              <p className="text-gray-500 text-xs">
-                                {gift.date}
-                                {gift.time && ` at ${gift.time}`}
-                              </p>
-                            </div>
-                            <p className="font-bold text-pink-600 text-sm">{gift.amount}</p>
-                          </div>
-                        ))}
+                {/* Show saved groups count */}
+                {savedGroups.length > 0 && (
+                  <div className="bg-gradient-to-r from-green-100 to-green-50 border-2 border-green-400 rounded-lg p-3">
+                    <p className="text-xs font-bold text-green-700">✅ You have {savedGroups.length} saved group{savedGroups.length !== 1 ? 's' : ''}:</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {savedGroups.map((group) => (
+                        <button
+                          key={group.id}
+                          onClick={() => {
+                            setGiftForm({
+                              ...giftForm,
+                              recipients: group.members,
+                            });
+                          }}
+                          className="bg-white text-xs px-3 py-1 rounded-full border border-green-400 text-green-700 font-bold hover:bg-green-50 transition"
+                        >
+                          {group.name} ({group.members.length}) →
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
+
+                {/* Live EP Calculation */}
+                {(giftForm.recipients?.length ?? 0) > 0 && giftForm.points && (
+                  <div className="space-y-2 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-3 border-2 border-orange-200">
+                    <p className="text-xs font-bold text-gray-700 mb-2">📊 EP Breakdown</p>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="bg-white rounded p-2 border border-orange-100">
+                        <p className="text-xs text-gray-600">Recipients</p>
+                        <p className="text-lg font-bold text-orange-600">{giftForm.recipients?.length ?? 0}</p>
+                      </div>
+                      <div className="bg-white rounded p-2 border border-blue-100">
+                        <p className="text-xs text-gray-600">Per Person</p>
+                        <p className="text-lg font-bold text-blue-600">{giftForm.points} EP</p>
+                      </div>
+                      <div className="bg-white rounded p-2 border border-pink-100">
+                        <p className="text-xs text-gray-600">Total Cost</p>
+                        <p className="text-lg font-bold text-pink-600">{Math.max(0, (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0))} EP</p>
+                      </div>
+                    </div>
+                    <div className={`rounded p-2 border-2 ${
+                      (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0) > userBalance
+                        ? 'bg-red-50 border-red-300'
+                        : 'bg-green-50 border-green-300'
+                    }`}>
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs text-gray-600">Current Balance:</p>
+                        <p className="text-sm font-bold text-gray-800">{userBalance} EP</p>
+                      </div>
+                      <div className="flex justify-between items-center mt-1">
+                        <p className="text-xs text-gray-600">After Gift:</p>
+                        <p className={`text-sm font-bold ${
+                          (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0) > userBalance
+                            ? 'text-red-600'
+                            : 'text-green-600'
+                        }`}>
+                          {Math.max(0, userBalance - ((parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0)))} EP
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Selected Recipients Display */}
+                {(giftForm.recipients?.length ?? 0) > 0 && (
+                  <div className="space-y-2 bg-blue-50 rounded-lg p-3 border-2 border-blue-200">
+                    <p className="text-xs font-bold text-blue-700">👥 Selected Recipients ({giftForm.recipients?.length ?? 0})</p>
+                    <div className="flex flex-wrap gap-2">
+                      {giftForm.recipients?.map((recipientId) => {
+                        const user = availableUsers.find((u) => u.id === recipientId);
+                        return user ? (
+                          <div key={recipientId} className="bg-white px-2 py-1 rounded-full border border-blue-300 text-xs font-bold text-blue-700 flex items-center gap-1">
+                            {user.name}
+                            <button
+                              onClick={() => {
+                                setGiftForm({
+                                  ...giftForm,
+                                  recipients: giftForm.recipients?.filter((id) => id !== recipientId) ?? [],
+                                });
+                              }}
+                              className="text-blue-500 hover:text-red-500 transition"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Select All / Clear All */}
+                {availableUsers.length > 0 && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const canSelectAll = availableUsers.every(
+                          (user) =>
+                            (parseInt(giftForm.points || '0') || 0) * (availableUsers.length) <= userBalance ||
+                            giftForm.recipients?.includes(user.id)
+                        );
+                        if (
+                          giftForm.recipients?.length === availableUsers.length ||
+                          (giftForm.recipients?.length ?? 0) === 0
+                        ) {
+                          setGiftForm({
+                            ...giftForm,
+                            recipients:
+                              (giftForm.recipients?.length ?? 0) > 0
+                                ? []
+                                : availableUsers.filter(
+                                    (user) =>
+                                      (parseInt(giftForm.points || '0') || 0) *
+                                        (availableUsers.length) <=
+                                      userBalance ||
+                                      (giftForm.recipients?.includes(user.id) ?? false)
+                                  ).map((u) => u.id),
+                          });
+                        }
+                      }}
+                      className={`flex-1 py-2 rounded-lg font-bold text-sm transition ${
+                        (giftForm.recipients?.length ?? 0) > 0
+                          ? 'bg-red-100 text-red-700 border border-red-300'
+                          : 'bg-green-100 text-green-700 border border-green-300'
+                      }`}
+                    >
+                      {(giftForm.recipients?.length ?? 0) > 0 ? '❌ Clear All' : '✅ Select All'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Search and Select Recipients/Groups */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700">🔍 Select Recipients/Groups</label>
+                  <input
+                    type="text"
+                    value={giftSearch}
+                    onChange={(e) => setGiftSearch(e.target.value)}
+                    placeholder="Search users or groups..."
+                    className="w-full px-3 py-2 border-2 border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  <div className="bg-white rounded-lg border-2 border-purple-200 overflow-hidden max-h-48 overflow-y-auto">
+                    {/* Users */}
+                    {availableUsers
+                      .filter(
+                        (user) =>
+                          user.name.toLowerCase().includes(giftSearch.toLowerCase()) &&
+                          user.id !== userId
+                      )
+                      .map((user) => {
+                        const isSelected = giftForm.recipients?.includes(user.id) ?? false;
+                        const totalCost =
+                          (parseInt(giftForm.points || '0') || 0) *
+                          ((giftForm.recipients?.length ?? 0) +
+                            (isSelected ? 0 : 1));
+                        const canSelect = totalCost <= userBalance || isSelected;
+                        return (
+                          <label
+                            key={user.id}
+                            className={`flex items-center gap-2 p-2 border-b border-purple-100 cursor-pointer transition ${
+                              canSelect
+                                ? 'hover:bg-purple-50'
+                                : 'opacity-50 cursor-not-allowed'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  const totalCost =
+                                    (parseInt(giftForm.points || '0') || 0) *
+                                    ((giftForm.recipients?.length ?? 0) + 1);
+                                  if (totalCost <= userBalance) {
+                                    setGiftForm({
+                                      ...giftForm,
+                                      recipients: [
+                                        ...(giftForm.recipients ?? []),
+                                        user.id,
+                                      ],
+                                    });
+                                  }
+                                } else {
+                                  setGiftForm({
+                                    ...giftForm,
+                                    recipients:
+                                      giftForm.recipients?.filter(
+                                        (id) => id !== user.id
+                                      ) ?? [],
+                                  });
+                                }
+                              }}
+                              disabled={!canSelect}
+                              className="w-4 h-4"
+                            />
+                            <span className="text-sm font-bold text-gray-900">
+                              {user.name}
+                            </span>
+                          </label>
+                        );
+                      })}
+
+                    {/* Groups */}
+                    {savedGroups
+                      .filter((group) =>
+                        group.name
+                          .toLowerCase()
+                          .includes(giftSearch.toLowerCase())
+                      )
+                      .map((group) => (
+                        <button
+                          key={`group-${group.id}`}
+                          onClick={() => {
+                            setGiftForm({
+                              ...giftForm,
+                              recipients: group.members,
+                            });
+                            setGiftSearch('');
+                          }}
+                          className="w-full text-left flex items-center gap-2 p-2 hover:bg-purple-100 rounded transition bg-gradient-to-r from-purple-50 to-transparent border-b border-purple-100"
+                        >
+                          <span className="text-lg">👥</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-purple-900 truncate">
+                              {group.name}
+                            </p>
+                            <p className="text-xs text-purple-600">
+                              {group.members.length} members
+                            </p>
+                          </div>
+                          <span className="text-purple-600 font-bold">→</span>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Gift Message Section */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-sm font-bold text-gray-700">🎀 Gift Card Message</label>
+                    <span className="text-xs text-gray-500">(Optional)</span>
+                  </div>
+                  <div className="max-h-32 overflow-y-auto border border-orange-100 rounded-lg p-2 bg-orange-50 space-y-1">
+                    {giftCardTemplates.map((template, idx) => (
+                      <label
+                        key={idx}
+                        className="flex items-start gap-2 p-1.5 hover:bg-orange-100 rounded cursor-pointer transition"
+                      >
+                        <input
+                          type="radio"
+                          name="giftMessage"
+                          checked={
+                            giftForm.giftCardMessage === template &&
+                            !giftForm.useCustomMessage
+                          }
+                          onChange={() =>
+                            setGiftForm({
+                              ...giftForm,
+                              giftCardMessage: template,
+                              useCustomMessage: false,
+                            })
+                          }
+                          className="mt-0.5"
+                        />
+                        <span className="text-xs text-gray-700">{template}</span>
+                      </label>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      setGiftForm({
+                        ...giftForm,
+                        useCustomMessage: !giftForm.useCustomMessage,
+                      })
+                    }
+                    className="w-full mt-2 px-3 py-2 border-2 border-dashed border-orange-300 text-orange-600 rounded-lg text-xs font-bold hover:bg-orange-50"
+                  >
+                    ✏️ {giftForm.useCustomMessage ? 'Use Template' : 'Write Custom Message'}
+                  </button>
+
+                  {giftForm.useCustomMessage && (
+                    <textarea
+                      value={giftForm.customMessage}
+                      onChange={(e) =>
+                        setGiftForm({ ...giftForm, customMessage: e.target.value })
+                      }
+                      placeholder="Write your custom message..."
+                      className="w-full mt-2 px-3 py-2 border-2 border-orange-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      rows={3}
+                    />
+                  )}
+                </div>
+
+                {/* Date Section */}
+                <div>
+                  <label className="text-sm font-bold text-gray-700">📅 Gift Date</label>
+                  <p className="text-xs text-gray-600 mb-2">
+                    Choose when to send (defaults to today)
+                  </p>
+                  <input
+                    type="date"
+                    value={giftForm.giftDate}
+                    onChange={(e) => setGiftForm({ ...giftForm, giftDate: e.target.value })}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-3 py-2 border-2 border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                {/* Send Button */}
+                <button
+                  onClick={() => {
+                    const pointsToSend = parseInt(giftForm.points || '0') || 0;
+                    const sendingToSelf = giftForm.recipients?.some(
+                      (id) => id === userId
+                    );
+                    if (!giftForm.points || pointsToSend <= 0) {
+                      setModalMessage('❌ Please enter a valid amount of EP to send\n\nHint: How many points do you want to give each friend?');
+                      setShowErrorModal(true);
+                    } else if (giftForm.recipients.length === 0) {
+                      setModalMessage('❌ Please select at least one recipient');
+                      setShowErrorModal(true);
+                    } else if (sendingToSelf) {
+                      setModalMessage('❌ You cannot send points to yourself!');
+                      setShowErrorModal(true);
+                    } else if (pointsToSend * giftForm.recipients.length > userBalance) {
+                      setModalMessage('❌ Not enough points for all recipients');
+                      setShowErrorModal(true);
+                    } else {
+                      const recipientNames = giftForm.recipients
+                        .map((id) => availableUsers.find((u) => u.id === id)?.name)
+                        .join(', ');
+                      const totalPointsDeducted = pointsToSend * giftForm.recipients.length;
+                      setGiftConfirmationData({
+                        pointsToSend,
+                        totalPointsDeducted,
+                        recipientCount: giftForm.recipients.length,
+                        recipientNames,
+                        message: giftForm.useCustomMessage ? giftForm.customMessage : giftForm.giftCardMessage,
+                        giftDate: giftForm.giftDate,
+                      });
+                      setShowGiftConfirmation(true);
+                    }
+                  }}
+                  className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white py-2.5 rounded-lg font-bold text-sm hover:shadow-lg transition"
+                >
+                  💝 Send Gift
+                </button>
               </div>
             )}
 
