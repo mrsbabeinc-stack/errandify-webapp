@@ -2321,12 +2321,16 @@ export default function MyAccountPage() {
 
               <div className="bg-purple-50 rounded-lg p-3">
                 <p className="text-xs text-gray-600">Message:</p>
-                <p className="text-xs font-semibold text-gray-900 mt-1">"{giftConfirmationData.message}"</p>
+                <p className="text-xs font-semibold text-gray-900 mt-1 break-words">"{giftConfirmationData.message}"</p>
               </div>
 
               <div className="bg-blue-50 rounded-lg p-3">
                 <p className="text-xs text-gray-600">Scheduled for:</p>
-                <p className="text-sm font-bold text-blue-600">{new Date(giftConfirmationData.giftDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <p className="text-sm font-bold text-blue-600">
+                  {giftConfirmationData.giftDate === new Date().toISOString().split('T')[0]
+                    ? '🚀 Now'
+                    : new Date(giftConfirmationData.giftDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
               </div>
             </div>
 
@@ -2384,8 +2388,13 @@ export default function MyAccountPage() {
                   setShowGroupForm(false);
                   setGiftSearch('');
 
+                  const scheduledDateText =
+                    giftConfirmationData.giftDate === new Date().toISOString().split('T')[0]
+                      ? '🚀 Now'
+                      : new Date(giftConfirmationData.giftDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+
                   setModalMessage(
-                    `🎁 Gift sent! You sent ${giftConfirmationData.pointsToSend} EP to ${giftConfirmationData.recipientCount} friend(s)!\n\n🎀 Message: "${giftConfirmationData.message}"\n\n📅 Scheduled for: ${new Date(giftConfirmationData.giftDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}\n\n💾 Recorded in your transaction history!\n\nThey're so lucky! 🌟`
+                    `🎁 Gift sent! You sent ${giftConfirmationData.pointsToSend} EP to ${giftConfirmationData.recipientCount} friend(s)!\n\n🎀 Message: "${giftConfirmationData.message}"\n\n📅 Scheduled for: ${scheduledDateText}\n\n💾 Recorded in your transaction history!\n\nThey're so lucky! 🌟`
                   );
                   setShowSuccessModal(true);
                 }}
