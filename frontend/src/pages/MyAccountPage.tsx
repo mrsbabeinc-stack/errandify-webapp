@@ -917,54 +917,6 @@ export default function MyAccountPage() {
         {activeSection === 'dashboard' && (
           <div className="space-y-1.5">
             {/* DASHBOARD CONTENT */}
-            {/* USER ID CARD - TOP */}
-            {profileData && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-2.5 border-2 border-blue-300 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600 font-semibold">Your Unique User ID</p>
-                    <p className="text-base font-bold text-blue-700 font-mono">
-                      {profileData.formattedUserId || '⏳ Loading...'}
-                    </p>
-                  </div>
-                  {profileData.formattedUserId && (
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(profileData.formattedUserId || '');
-                        setModalMessage('Your special code is copied! Ready to share? 🎁');
-                        setShowSuccessModal(true);
-                      }}
-                      className="px-2.5 py-1.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition font-semibold"
-                    >
-                      📋 Copy
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* PROFILE HERO CARD */}
-            <div className="relative bg-white rounded-lg shadow p-3 border-l-4 border-errandify-orange overflow-hidden mb-1.5">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-base font-bold text-errandify-brown truncate">{profileData.name}</h2>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-xl font-bold text-errandify-orange">{ratings.averageRating.toFixed(1)}</p>
-                  <p className="text-xs text-gray-600">⭐</p>
-                </div>
-              </div>
-              {badges.length > 0 && (
-                <div className="flex gap-0.5 flex-wrap mt-1">
-                  {badges.map((badge, idx) => (
-                    <span key={idx} className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-xs font-bold">
-                      {badge.icon}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
             {/* COMPACT FUN DASHBOARD - HAPPY DESIGN */}
             <div className="space-y-2 p-2">
               {/* USER ID & ALIAS CARD - Happy Blue */}
