@@ -81,7 +81,7 @@ export default function EventBanner() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-1">
-      <div className={`${styles.bg} ${styles.border} rounded p-2 flex items-center justify-between gap-2 transition-all duration-300`}>
+      <div className={`${styles.bg} ${styles.border} rounded p-2 flex items-center justify-between gap-2 transition-all duration-300 min-h-[50px]`}>
         {/* LEFT: Icon + Message */}
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
           <span className="text-base flex-shrink-0">{currentEvent.icon}</span>
