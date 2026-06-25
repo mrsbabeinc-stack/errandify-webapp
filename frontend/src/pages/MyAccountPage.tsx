@@ -977,7 +977,7 @@ export default function MyAccountPage() {
                 </div>
 
                 {/* Final Save/Cancel Buttons at Bottom */}
-                <div className="bg-white rounded shadow p-3 flex gap-2 sticky bottom-0 z-40">
+                <div className="bg-white rounded shadow p-3 flex gap-2">
                   <button
                     onClick={handleSaveProfile}
                     disabled={saving}
