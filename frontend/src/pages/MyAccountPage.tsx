@@ -2130,8 +2130,6 @@ export default function MyAccountPage() {
                           ...giftForm,
                           recipients: group.members,
                         });
-                        setModalMessage(`✅ Loaded group "${group.name}" with ${group.members.length} members!`);
-                        setShowSuccessModal(true);
                       }}
                       className="bg-white text-xs px-3 py-1 rounded-full border border-green-400 text-green-700 font-bold hover:bg-green-50 transition"
                     >
@@ -2376,8 +2374,6 @@ export default function MyAccountPage() {
                               recipients: group.members,
                             });
                             setGiftSearch('');
-                            setModalMessage(`✅ Loaded group "${group.name}" with ${group.members.length} members!`);
-                            setShowSuccessModal(true);
                           }}
                           className="w-full text-left flex items-center gap-2 p-2 hover:bg-purple-100 rounded transition bg-gradient-to-r from-purple-50 to-transparent border border-purple-200"
                         >
