@@ -965,59 +965,45 @@ export default function MyAccountPage() {
               )}
             </div>
 
-            {/* DASHBOARD GRID - 2 COLUMNS */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 p-3">
-              {/* LEFT COLUMN - STATS */}
-              <div className="lg:col-span-2 space-y-3">
-                {/* TOP STATS ROW */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-2xl">👥</p>
-                      <p className="text-3xl font-bold text-amber-600">{ratings.reviewCount}</p>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-700">Reviews</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-2xl">✅</p>
-                      <p className="text-3xl font-bold text-green-600">{profileData.completedTasks || 0}</p>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-700">Errands Completed</p>
-                  </div>
+            {/* COMPACT FUN DASHBOARD */}
+            <div className="space-y-2 p-2">
+              {/* MINI STATS - HORIZONTAL */}
+              <div className="grid grid-cols-4 gap-2">
+                <div className="bg-gradient-to-b from-amber-100 to-amber-50 rounded-lg p-2 text-center border border-amber-200 hover:shadow-md transition">
+                  <p className="text-xl">👥</p>
+                  <p className="text-lg font-bold text-amber-700">{ratings.reviewCount}</p>
+                  <p className="text-xs text-gray-600">Reviews</p>
                 </div>
-
-                {/* BOTTOM STATS ROW */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border-2 border-blue-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-2xl">💰</p>
-                      <p className="text-3xl font-bold text-blue-600">${profileData.totalEarnings || 0}</p>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-700">Earnings</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-2xl">⭐</p>
-                      <p className="text-3xl font-bold text-purple-600">{profileData.errandifyPoints || 0}</p>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-700">Errandify Points</p>
-                  </div>
+                <div className="bg-gradient-to-b from-green-100 to-green-50 rounded-lg p-2 text-center border border-green-200 hover:shadow-md transition">
+                  <p className="text-xl">✅</p>
+                  <p className="text-lg font-bold text-green-700">{profileData.completedTasks || 0}</p>
+                  <p className="text-xs text-gray-600">Errands</p>
+                </div>
+                <div className="bg-gradient-to-b from-blue-100 to-blue-50 rounded-lg p-2 text-center border border-blue-200 hover:shadow-md transition">
+                  <p className="text-xl">💰</p>
+                  <p className="text-lg font-bold text-blue-700">${profileData.totalEarnings || 0}</p>
+                  <p className="text-xs text-gray-600">Earnings</p>
+                </div>
+                <div className="bg-gradient-to-b from-purple-100 to-purple-50 rounded-lg p-2 text-center border border-purple-200 hover:shadow-md transition">
+                  <p className="text-xl">⭐</p>
+                  <p className="text-lg font-bold text-purple-700">{profileData.errandifyPoints || 0}</p>
+                  <p className="text-xs text-gray-600">Points</p>
                 </div>
               </div>
 
-              {/* RIGHT COLUMN - FEATURED REFERRAL CTA */}
-              <div className="lg:col-span-1">
-                <button
-                  onClick={() => navigate('/referral')}
-                  className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-400 to-red-400 rounded-xl p-6 shadow-lg hover:shadow-xl transition transform hover:scale-105 text-white text-center flex flex-col items-center justify-center min-h-[280px]"
-                >
-                  <p className="text-6xl mb-3">🎁</p>
-                  <p className="text-2xl font-bold mb-2">Earn More!</p>
-                  <p className="text-sm font-semibold opacity-95">Refer Friends & Get Rewards</p>
-                  <p className="text-xs opacity-75 mt-3">Tap to see your referral code & earnings</p>
-                </button>
-              </div>
+              {/* FEATURED REFERRAL CARD */}
+              <button
+                onClick={() => navigate('/referral')}
+                className="w-full bg-gradient-to-r from-orange-400 via-pink-400 to-red-400 hover:from-orange-500 hover:via-pink-500 hover:to-red-500 rounded-xl p-3 shadow-md hover:shadow-lg transition transform active:scale-95 text-white text-center"
+              >
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <p className="text-3xl">🎁</p>
+                  <div>
+                    <p className="text-sm font-bold">Refer & Earn More! 🚀</p>
+                    <p className="text-xs opacity-90">Tap to unlock your referral code</p>
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
         )}
