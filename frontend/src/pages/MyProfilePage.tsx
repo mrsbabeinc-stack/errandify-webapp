@@ -640,6 +640,67 @@ export default function MyProfilePage() {
                 📧 Support
               </a>
             </div>
+
+            {/* CATEGORIES SECTION */}
+            <div className="mt-8 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border-2 border-purple-300 p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-purple-900">🏷️ Categories I Work In</h3>
+                <button
+                  onClick={() => setActiveTab('private')}
+                  className="text-xs bg-purple-500 text-white px-3 py-1 rounded-lg font-bold hover:bg-purple-600 transition"
+                >
+                  ✏️ Edit
+                </button>
+              </div>
+              {profile.categories && profile.categories.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {profile.categories.map((category) => (
+                    <span
+                      key={category}
+                      className="bg-white border-2 border-purple-300 text-purple-700 px-3 py-2 rounded-full text-sm font-bold"
+                    >
+                      {category}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600">No categories added yet. Edit your profile to add them!</p>
+              )}
+            </div>
+
+            {/* RELATIONSHIPS SECTION */}
+            <div className="mt-8 space-y-4">
+              {/* Blocked Users */}
+              <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl border-2 border-red-300 p-6">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-bold text-red-900">🚫 Blocked Users</h3>
+                  <span className="bg-red-200 text-red-800 px-3 py-1 rounded-full text-xs font-bold">0</span>
+                </div>
+                <p className="text-sm text-gray-700">People you've blocked won't be able to contact you or see your profile.</p>
+                <button
+                  onClick={() => alert('Go to My Account → Blocked section')}
+                  className="mt-3 text-xs bg-red-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-600 transition"
+                >
+                  Manage Blocked Users
+                </button>
+              </div>
+
+              {/* Trusted Users */}
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl border-2 border-blue-300 p-6">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-bold text-blue-900">❤️ Trusted Users</h3>
+                  <span className="bg-blue-200 text-blue-800 px-3 py-1 rounded-full text-xs font-bold">0</span>
+                </div>
+                <p className="text-sm text-gray-700">Users you've marked as trusted appear in your trusted network for quick access.</p>
+                <button
+                  onClick={() => alert('Go to My Account → Blocked section → Trusted Users tab')}
+                  className="mt-3 text-xs bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-600 transition"
+                >
+                  Manage Trusted Users
+                </button>
+              </div>
+            </div>
+
           </div>
             </div>
           </div>
