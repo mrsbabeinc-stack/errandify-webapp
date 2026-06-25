@@ -839,23 +839,32 @@ export default function MyAccountPage() {
             ←
           </button>
           <h1 className="text-2xl font-bold">✨ MyAccount</h1>
-          <div className="relative group">
-            <button className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1.5 rounded-lg font-semibold text-sm transition">
-              ⚙️
-            </button>
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-100 font-semibold first:rounded-t-lg flex items-center gap-2"
-              >
-                🚪 Logout
+          <div className="flex gap-2 items-center">
+            {/* MyAccount Button */}
+            <div className="flex gap-1 bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+              <button className="px-3 py-1 rounded-md font-semibold text-sm bg-errandify-orange text-white hover:bg-orange-600 transition-colors">
+                MyAccount
               </button>
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-semibold last:rounded-b-lg flex items-center gap-2"
-              >
-                🗑️ Delete Account
+            </div>
+            {/* Settings Dropdown */}
+            <div className="relative group">
+              <button className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1.5 rounded-lg font-semibold text-sm transition">
+                ⚙️
               </button>
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-100 font-semibold first:rounded-t-lg flex items-center gap-2"
+                >
+                  🚪 Logout
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-semibold last:rounded-b-lg flex items-center gap-2"
+                >
+                  🗑️ Delete Account
+                </button>
+              </div>
             </div>
           </div>
         </div>
