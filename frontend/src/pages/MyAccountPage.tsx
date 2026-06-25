@@ -2013,7 +2013,7 @@ export default function MyAccountPage() {
             <div className="space-y-2">
               {/* Header with selection count */}
               <div className="flex justify-between items-center">
-                <label className="text-sm font-bold text-gray-700">🔍 Select Recipients</label>
+                <label className="text-sm font-bold text-gray-700">🔍 Select Recipients/Groups</label>
                 {giftForm.recipients && giftForm.recipients.length > 0 && (
                   <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">
                     {giftForm.recipients.length} selected
@@ -2067,17 +2067,47 @@ export default function MyAccountPage() {
                 </div>
               )}
 
-              {/* Search Input */}
+              {/* Search Input - Search Users, Alias, ID, or Group Names */}
               <input
                 type="text"
                 value={giftSearch}
                 onChange={(e) => setGiftSearch(e.target.value)}
-                placeholder="Search by name, alias, or ID (e.g., @SunnyLove or USER0000089)"
+                placeholder="Search users, groups, alias, or ID (e.g., @SunnyLove, Close Friends, USER0000089)"
                 className="w-full px-3 py-2 border-2 border-orange-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange"
               />
 
-              {/* User List with Checkboxes */}
+              {/* User List with Checkboxes + Group Search Results */}
               <div className="max-h-40 overflow-y-auto space-y-1 border border-orange-100 rounded-lg p-2 bg-orange-50">
+                {/* Saved Groups Section - Searchable */}
+                {savedGroups
+                  .filter((group) =>
+                    giftSearch === '' ||
+                    group.name.toLowerCase().includes(giftSearch.toLowerCase())
+                  )
+                  .map((group) => (
+                    <button
+                      key={`group-${group.id}`}
+                      onClick={() => {
+                        setGiftForm({
+                          ...giftForm,
+                          recipients: group.members,
+                        });
+                        setGiftSearch('');
+                        setModalMessage(`✅ Loaded group "${group.name}" with ${group.members.length} members!`);
+                        setShowSuccessModal(true);
+                      }}
+                      className="w-full text-left flex items-center gap-2 p-2 hover:bg-purple-100 rounded transition bg-gradient-to-r from-purple-50 to-transparent border border-purple-200"
+                    >
+                      <span className="text-lg">👥</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-purple-900 truncate">{group.name}</p>
+                        <p className="text-xs text-purple-600 truncate">{group.members.length} members</p>
+                      </div>
+                      <span className="text-xs text-purple-600 font-bold">→</span>
+                    </button>
+                  ))}
+
+                {/* Users Section */}
                 {availableUsers
                   .filter((u) =>
                     giftSearch === '' ||
