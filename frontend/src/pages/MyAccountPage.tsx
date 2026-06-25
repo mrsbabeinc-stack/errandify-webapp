@@ -2128,6 +2128,14 @@ export default function MyAccountPage() {
               {/* User List with Checkboxes + Group Search Results */}
               <div className="max-h-40 overflow-y-auto space-y-1 border border-orange-100 rounded-lg p-2 bg-orange-50">
                 {/* Saved Groups Section - Searchable */}
+                {savedGroups.filter((group) =>
+                  giftSearch === '' ||
+                  group.name.toLowerCase().includes(giftSearch.toLowerCase())
+                ).length > 0 && (
+                  <div className="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded mb-1 sticky top-0">
+                    👥 Saved Groups
+                  </div>
+                )}
                 {savedGroups
                   .filter((group) =>
                     giftSearch === '' ||
@@ -2157,6 +2165,19 @@ export default function MyAccountPage() {
                   ))}
 
                 {/* Users Section */}
+                {availableUsers.filter((u) =>
+                  giftSearch === '' ||
+                  u.alias.toLowerCase().includes(giftSearch.toLowerCase()) ||
+                  u.id.toLowerCase().includes(giftSearch.toLowerCase()) ||
+                  u.name.toLowerCase().includes(giftSearch.toLowerCase())
+                ).length > 0 && savedGroups.filter((group) =>
+                  giftSearch === '' ||
+                  group.name.toLowerCase().includes(giftSearch.toLowerCase())
+                ).length > 0 && (
+                  <div className="text-xs font-bold text-orange-700 bg-orange-100 px-2 py-1 rounded mt-2 mb-1 sticky top-0">
+                    👤 Users
+                  </div>
+                )}
                 {availableUsers
                   .filter((u) =>
                     giftSearch === '' ||
