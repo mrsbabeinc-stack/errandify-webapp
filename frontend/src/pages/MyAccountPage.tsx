@@ -967,6 +967,56 @@ export default function MyAccountPage() {
 
             {/* COMPACT FUN DASHBOARD */}
             <div className="space-y-2 p-2">
+              {/* USER ID & ALIAS CARD */}
+              {profileData && (
+                <div className="bg-gradient-to-r from-blue-100 to-cyan-100 rounded-lg p-3 border-2 border-blue-300 shadow-sm">
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <div>
+                      <p className="text-xs text-blue-700 font-bold">🎫 Your ID</p>
+                      <p className="text-sm font-mono font-bold text-blue-800">{profileData.formattedUserId || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-blue-700 font-bold">👤 Name</p>
+                      <p className="text-sm font-bold text-blue-800">@{profileData.alias || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* RATING & REVIEWS CARD */}
+              <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg p-3 border-2 border-yellow-300 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <p className="text-xs text-yellow-800 font-bold">⭐ Rating</p>
+                    <p className="text-2xl font-bold text-yellow-700">{ratings.averageRating.toFixed(1)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-yellow-800 font-bold">👥 Reviews</p>
+                    <p className="text-2xl font-bold text-yellow-700">{ratings.reviewCount}</p>
+                  </div>
+                </div>
+
+                {/* Latest 2 Reviews */}
+                {ratings.reviews && ratings.reviews.length > 0 && (
+                  <div className="border-t border-yellow-300 pt-2 mt-2 space-y-1 text-xs">
+                    {ratings.reviews
+                      .filter((r: any) => r.rating >= 4)
+                      .slice(0, 2)
+                      .map((review: any, idx: number) => (
+                        <div key={idx} className="bg-white rounded p-1.5 border border-yellow-200">
+                          <div className="flex gap-1 mb-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <span key={i} className="text-xs">{i < review.rating ? '⭐' : '☆'}</span>
+                            ))}
+                          </div>
+                          <p className="text-gray-700 leading-tight italic">"{review.comment || 'Great!'}"</p>
+                          <p className="text-gray-500 text-xs">— {review.author || 'Customer'}</p>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+
               {/* MINI STATS - HORIZONTAL */}
               <div className="grid grid-cols-4 gap-2">
                 <div className="bg-gradient-to-b from-amber-100 to-amber-50 rounded-lg p-2 text-center border border-amber-200 hover:shadow-md transition">
@@ -987,7 +1037,7 @@ export default function MyAccountPage() {
                 <div className="bg-gradient-to-b from-purple-100 to-purple-50 rounded-lg p-2 text-center border border-purple-200 hover:shadow-md transition">
                   <p className="text-xl">⭐</p>
                   <p className="text-lg font-bold text-purple-700">{profileData.errandifyPoints || 0}</p>
-                  <p className="text-xs text-gray-600">Points</p>
+                  <p className="text-xs text-gray-600">EP</p>
                 </div>
               </div>
 
