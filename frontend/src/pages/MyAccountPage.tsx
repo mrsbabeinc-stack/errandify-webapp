@@ -76,7 +76,7 @@ export default function MyAccountPage() {
     accountNumber: '****5678',
   });
   const [activitySearch, setActivitySearch] = useState('');
-  const [activityFilter, setActivityFilter] = useState<'all' | 'completed' | 'posted' | 'referral' | 'rating' | 'accepted'>('all');
+  const [activityFilter, setActivityFilter] = useState<'all' | 'completed' | 'posted' | 'referral' | 'rating' | 'accepted' | 'gift'>('all');
   const [userBalance, setUserBalance] = useState(10000);
   const [redemptionHistory, setRedemptionHistory] = useState<Array<{ id: string; date: string; item: string; code: string; amount: number; emoji: string }>>([
     { id: '1', date: '10-06-2026', item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' },
@@ -1280,7 +1280,7 @@ export default function MyAccountPage() {
 
               {/* Filter Buttons */}
               <div className="p-2 border-b border-gray-100 flex gap-1 flex-wrap">
-                {(['all', 'completed', 'posted', 'referral', 'rating', 'accepted'] as const).map((filter) => (
+                {(['all', 'completed', 'posted', 'referral', 'rating', 'accepted', 'gift'] as const).map((filter) => (
                   <button
                     key={filter}
                     onClick={() => setActivityFilter(filter)}
@@ -1290,7 +1290,7 @@ export default function MyAccountPage() {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {filter === 'all' ? '📋 All' : filter === 'completed' ? '✅ Completed' : filter === 'posted' ? '📝 Posted' : filter === 'referral' ? '🎁 Referral' : filter === 'rating' ? '⭐ Rating' : '✅ Accepted'}
+                    {filter === 'all' ? '📋 All' : filter === 'completed' ? '✅ Completed' : filter === 'posted' ? '📝 Posted' : filter === 'referral' ? '🎁 Referral' : filter === 'rating' ? '⭐ Rating' : filter === 'accepted' ? '✅ Accepted' : '💝 Gift'}
                   </button>
                 ))}
               </div>
