@@ -1913,8 +1913,8 @@ export default function MyAccountPage() {
 
       {/* Advanced Gift Modal */}
       {showGiftModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-4 space-y-3 my-8">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 space-y-3">
             {/* Header */}
             <div className="text-center pb-2 border-b border-orange-200">
               <p className="text-lg font-bold text-errandify-brown">💝 Send A Gift 🎁</p>
