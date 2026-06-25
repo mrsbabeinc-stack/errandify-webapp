@@ -1,7 +1,6 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import BottomNav from './BottomNav';
-import RoleToggle from './RoleToggle';
 import HanaCustomerService from './HanaCustomerService';
 
 interface LayoutProps {
@@ -40,15 +39,9 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
     navigate('/my-account');
   };
 
-  const handleRoleChange = (role: 'asker' | 'doer') => {
-    onRoleChange(role);
-    // Both roles navigate to home page
-    navigate('/home');
-  };
-
   return (
     <div className="flex flex-col h-screen bg-errandify-bg">
-      {/* Top Bar with Logo, Role Toggle & Profile */}
+      {/* Top Bar with Logo, MyAccount & Profile */}
       <div className="bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center sticky top-0 z-50">
         {/* Logo */}
         <div className="flex items-center gap-2">
@@ -59,8 +52,13 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
           />
         </div>
 
-        {/* Role Toggle */}
-        <RoleToggle currentRole={userRole} onRoleChange={handleRoleChange} />
+        {/* MyAccount Button (replaces Role Toggle) */}
+        <button
+          onClick={handleProfileClick}
+          className="px-4 py-1.5 text-sm font-semibold text-white bg-errandify-orange hover:bg-orange-600 rounded-lg transition-colors"
+        >
+          MyAccount
+        </button>
 
         {/* Profile & Logout */}
         <div className="flex items-center gap-2">
