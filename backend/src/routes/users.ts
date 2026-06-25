@@ -29,11 +29,14 @@ router.get('/profile', authMiddleware, async (req, res) => {
       user.formatted_user_id = formattedUserId;
     }
 
-    // Get completed tasks count
+    // Get completed errands count and earnings
     const tasksResult = await db.query(
-      `SELECT COUNT(*) as completed_count, COALESCE(SUM(CASE WHEN asker_id = $1 THEN budget ELSE 0 END), 0) as asker_earnings,
-              COALESCE(SUM(CASE WHEN doer_id = $1 THEN budget ELSE 0 END), 0) as doer_earnings
-       FROM tasks WHERE status = 'completed' AND (asker_id = $1 OR doer_id = $1)`,
+      `SELECT
+        COUNT(DISTINCT e.id) as completed_count,
+        COALESCE(SUM(CASE WHEN e.status = 'completed' AND ea.assigned_to = $1 THEN e.budget ELSE 0 END), 0) as doer_earnings
+       FROM errands e
+       LEFT JOIN errand_assignments ea ON e.id = ea.errand_id
+       WHERE e.status = 'completed' AND (e.asker_id = $1 OR ea.assigned_to = $1)`,
       [req.userId]
     );
 
