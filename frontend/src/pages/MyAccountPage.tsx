@@ -2058,7 +2058,7 @@ export default function MyAccountPage() {
             )}
 
             {/* Quick Load Saved Groups - Top Priority */}
-            {savedGroups.length > 0 && (
+            {savedGroups.length > 0 ? (
               <div className="p-3 bg-gradient-to-r from-purple-100 to-purple-50 border-2 border-purple-300 rounded-lg">
                 <label className="text-xs font-bold text-purple-700 block mb-2">⚡ Quick Load Saved Group</label>
                 <input
@@ -2103,6 +2103,10 @@ export default function MyAccountPage() {
                     <p className="text-xs text-gray-500 text-center p-2">No groups matching "{groupSearch}"</p>
                   )}
                 </div>
+              </div>
+            ) : (
+              <div className="p-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                <p className="text-xs text-gray-600 text-center">📝 No saved groups yet. Select recipients and save a group below!</p>
               </div>
             )}
 
