@@ -1402,116 +1402,135 @@ export default function MyAccountPage() {
         {/* MYREWARDSPACE SECTION */}
         {activeSection === 'rewards' && (
           <div className="space-y-2">
-            {/* Errandify Points Card */}
-            <div className="bg-gradient-to-br from-errandify-orange to-orange-600 text-white rounded-lg p-3">
-              <p className="text-xs opacity-90 mb-1">Available Points</p>
-              <p className="text-3xl font-bold mb-2">25 EP</p>
-              <p className="text-xs opacity-80 bg-orange-700 bg-opacity-50 rounded p-1.5">
-                ⚠️ Expiring Soon: 25 pts will expire on 30/06/2027
-              </p>
+            {/* Happy Header */}
+            <div className="text-center py-2 bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 rounded-lg border-2 border-yellow-300">
+              <p className="text-sm font-bold text-orange-600">🎊 You're doing AMAZING! 🎊</p>
+              <p className="text-xs text-gray-600 mt-1">Keep earning and redeeming rewards with Errandify!</p>
             </div>
 
-            {/* Redeem & Gift Buttons */}
+            {/* Errandify Points Card - Big & Happy */}
+            <div className="bg-gradient-to-br from-yellow-300 via-orange-400 to-pink-400 text-white rounded-xl p-4 shadow-lg relative overflow-hidden">
+              <div className="absolute top-1 right-1 text-2xl opacity-20">✨</div>
+              <div className="absolute bottom-1 left-1 text-2xl opacity-20">🎁</div>
+              <div className="relative z-10">
+                <p className="text-xs opacity-90 mb-1 font-semibold">💰 Your Available Points</p>
+                <p className="text-4xl font-bold mb-2">25 EP</p>
+                <p className="text-xs opacity-80 bg-orange-600 bg-opacity-30 rounded p-2 font-semibold">
+                  🌟 Expiring Soon: 25 pts will expire on 30/06/2027
+                </p>
+                <p className="text-xs mt-2 opacity-90 font-semibold">Earn more by completing errands! 🚀</p>
+              </div>
+            </div>
+
+            {/* Redeem & Gift Buttons - Big & Fun */}
             <div className="flex gap-2">
               <button
                 onClick={() => {
-                  setModalMessage('🎁 Redeem your Errandify Points now!');
+                  setModalMessage('🎉 Let\'s find you the PERFECT reward! Pick your discount! 🎁');
                   setShowSuccessModal(true);
                 }}
-                className="flex-1 bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600 transition"
+                className="flex-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition transform shadow-md"
               >
                 🎁 Redeem Now
               </button>
               <button
                 onClick={() => {
-                  setModalMessage('🎀 Send a gift to someone special!');
+                  setModalMessage('💝 Send love & rewards to your friends! Spread the happiness! 🌟');
                   setShowSuccessModal(true);
                 }}
-                className="flex-1 border-2 border-errandify-orange text-errandify-orange py-2 rounded font-bold text-xs hover:bg-orange-50 transition"
+                className="flex-1 bg-gradient-to-r from-pink-400 to-rose-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition transform shadow-md"
               >
-                🎀 Send A Gift
+                💝 Send A Gift
               </button>
             </div>
 
-            {/* Available Rewards */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="bg-errandify-orange text-white p-2">
-                <h3 className="text-xs font-bold">🎁 MyRewards</h3>
+            {/* Available Rewards - Happy Cards */}
+            <div className="bg-white rounded-xl border-2 border-yellow-200 overflow-hidden shadow-md">
+              <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-3">
+                <h3 className="text-sm font-bold">🎁 MyRewards - Pick Your Prize! 🎁</h3>
+                <p className="text-xs mt-1 opacity-90">Use your points to unlock amazing discounts!</p>
               </div>
-              <div className="divide-y divide-gray-100 text-xs">
-                <div className="p-2 flex justify-between items-center hover:bg-gray-50">
+              <div className="divide-y divide-yellow-100 text-xs">
+                <div className="p-3 flex justify-between items-center hover:bg-yellow-50 transition bg-gradient-to-r from-transparent to-yellow-50">
                   <div>
-                    <p className="font-bold text-gray-900">$5 Discount</p>
-                    <p className="text-errandify-orange font-bold">50 EP</p>
+                    <p className="font-bold text-gray-900 text-sm">💳 $5 Discount</p>
+                    <p className="text-orange-600 font-bold">50 EP • Get SGD $5 off!</p>
                   </div>
                   <button
                     onClick={() => {
-                      setModalMessage('🎉 Congratulations! You redeemed $5 Discount! Code: ERRAND5');
+                      setModalMessage('🎉 YES! You just unlocked SGD $5 Discount!\n\n🎟️ Code: ERRAND5\n\nHappy saving! 💰');
                       setShowSuccessModal(true);
                     }}
-                    className="bg-errandify-orange text-white px-2 py-1 rounded text-xs font-bold hover:bg-orange-600 transition"
+                    className="bg-gradient-to-r from-green-400 to-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:shadow-lg transition"
                   >
-                    Redeem
+                    ✨ Redeem
                   </button>
                 </div>
-                <div className="p-2 flex justify-between items-center hover:bg-gray-50">
+                <div className="p-3 flex justify-between items-center hover:bg-blue-50 transition bg-gradient-to-r from-transparent to-blue-50">
                   <div>
-                    <p className="font-bold text-gray-900">$10 Discount</p>
-                    <p className="text-errandify-orange font-bold">100 EP</p>
+                    <p className="font-bold text-gray-900 text-sm">💳 $10 Discount</p>
+                    <p className="text-blue-600 font-bold">100 EP • Get SGD $10 off!</p>
                   </div>
                   <button
                     onClick={() => {
-                      setModalMessage('🎉 Congratulations! You redeemed $10 Discount! Code: ERRAND10');
+                      setModalMessage('🎉 AWESOME! You just unlocked SGD $10 Discount!\n\n🎟️ Code: ERRAND10\n\nWow, great saving! 💰');
                       setShowSuccessModal(true);
                     }}
-                    className="bg-errandify-orange text-white px-2 py-1 rounded text-xs font-bold hover:bg-orange-600 transition"
+                    className="bg-gradient-to-r from-blue-400 to-cyan-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:shadow-lg transition"
                   >
-                    Redeem
+                    ✨ Redeem
                   </button>
                 </div>
-                <div className="p-2 flex justify-between items-center hover:bg-gray-50">
+                <div className="p-3 flex justify-between items-center hover:bg-gray-50 transition bg-gradient-to-r from-transparent to-gray-50">
                   <div>
-                    <p className="font-bold text-gray-900">$20 Discount</p>
-                    <p className="text-errandify-orange font-bold">200 EP</p>
+                    <p className="font-bold text-gray-900 text-sm">💎 $20 Discount</p>
+                    <p className="text-gray-500 font-bold">200 EP • Get SGD $20 off! (Coming soon...)</p>
                   </div>
                   <button
                     disabled
-                    className="bg-gray-300 text-gray-500 px-2 py-1 rounded text-xs font-bold cursor-not-allowed"
+                    className="bg-gray-400 text-white px-3 py-2 rounded-lg text-xs font-bold cursor-not-allowed opacity-50"
                   >
-                    Need
+                    🎯 Need 200 EP
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Point History */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="bg-errandify-orange text-white p-2">
-                <h3 className="text-xs font-bold">📜 Point History</h3>
+            {/* Point History - Happy & Celebratory */}
+            <div className="bg-white rounded-xl border-2 border-green-200 overflow-hidden shadow-md">
+              <div className="bg-gradient-to-r from-green-400 to-emerald-500 text-white p-3">
+                <h3 className="text-sm font-bold">📈 Your Earning Journey 🚀</h3>
+                <p className="text-xs mt-1 opacity-90">Every action brings you closer to rewards!</p>
               </div>
-              <div className="divide-y divide-gray-100 text-xs">
-                <div className="p-2 flex justify-between hover:bg-gray-50">
+              <div className="divide-y divide-green-100 text-xs">
+                <div className="p-3 flex justify-between hover:bg-green-50 transition bg-gradient-to-r from-transparent to-green-50">
                   <div>
-                    <p className="font-bold text-gray-900">Completed Errand</p>
-                    <p className="text-gray-500">17-06-2026</p>
+                    <p className="font-bold text-gray-900">✅ Completed Errand</p>
+                    <p className="text-gray-500 text-xs">17-06-2026 • Great job!</p>
                   </div>
-                  <p className="font-bold text-green-600">+10 EP</p>
+                  <p className="font-bold text-green-600 text-sm">+10 EP 🎉</p>
                 </div>
-                <div className="p-2 flex justify-between hover:bg-gray-50">
+                <div className="p-3 flex justify-between hover:bg-purple-50 transition bg-gradient-to-r from-transparent to-purple-50">
                   <div>
-                    <p className="font-bold text-gray-900">Referred Friend @SunnyLove</p>
-                    <p className="text-gray-500">12-06-2026</p>
+                    <p className="font-bold text-gray-900">🎁 Referred @SunnyLove</p>
+                    <p className="text-gray-500 text-xs">12-06-2026 • Nice sharing!</p>
                   </div>
-                  <p className="font-bold text-green-600">+50 EP</p>
+                  <p className="font-bold text-purple-600 text-sm">+50 EP 🌟</p>
                 </div>
-                <div className="p-2 flex justify-between hover:bg-gray-50">
+                <div className="p-3 flex justify-between hover:bg-orange-50 transition bg-gradient-to-r from-transparent to-orange-50">
                   <div>
-                    <p className="font-bold text-gray-900">Redeemed Discount</p>
-                    <p className="text-gray-500">10-06-2026</p>
+                    <p className="font-bold text-gray-900">🎟️ Redeemed Discount</p>
+                    <p className="text-gray-500 text-xs">10-06-2026 • Enjoy savings!</p>
                   </div>
-                  <p className="font-bold text-red-600">-50 EP</p>
+                  <p className="font-bold text-orange-600 text-sm">-50 EP ✨</p>
                 </div>
               </div>
+            </div>
+
+            {/* Fun Footer */}
+            <div className="text-center py-3 bg-gradient-to-r from-purple-100 via-pink-100 to-orange-100 rounded-lg border-2 border-purple-200">
+              <p className="text-xs font-bold text-purple-600">🌈 Keep earning rewards & spread happiness! 🌈</p>
+              <p className="text-xs text-gray-600 mt-1">Every errand completed = More points earned = More rewards unlocked! 🚀</p>
             </div>
           </div>
         )}
