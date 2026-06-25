@@ -2035,17 +2035,36 @@ export default function MyAccountPage() {
               </div>
             </div>
 
-            {/* Button */}
-            <div className="p-4 border-t-2 border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
+            {/* Buttons - Two Options */}
+            <div className="p-4 border-t-2 border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50 space-y-2">
               <button
                 onClick={() => {
                   setShowGiftSuccessModal(false);
                   setShowGiftModal(false);
                   setActiveSection('myRewardSpace');
                 }}
-                className="w-full bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 text-white font-black py-4 rounded-xl hover:shadow-lg hover:scale-105 transition transform text-lg"
+                className="w-full bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 text-white font-black py-3 rounded-xl hover:shadow-lg hover:scale-105 transition transform"
               >
-                🎉 AWESOME! CLOSE 🎉
+                📊 View My Rewards
+              </button>
+              <button
+                onClick={() => {
+                  setShowGiftSuccessModal(false);
+                  setShowGiftModal(false);
+                  setGiftForm({
+                    points: '',
+                    recipients: [],
+                    giftCardMessage: 'Thank you for being a friend',
+                    customMessage: '',
+                    giftDate: new Date().toISOString().split('T')[0],
+                    groupName: '',
+                    useCustomMessage: false,
+                  });
+                  setShowGiftModal(true);
+                }}
+                className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white font-black py-3 rounded-xl hover:shadow-lg hover:scale-105 transition transform"
+              >
+                💝 Send Another Gift
               </button>
             </div>
           </div>
