@@ -1995,57 +1995,43 @@ export default function MyAccountPage() {
       {/* Gift Success Modal - Happy Celebration */}
       {showGiftSuccessModal && giftSuccessData && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
-            {/* Success Header - Rainbow Gradient */}
-            <div className="bg-gradient-to-r from-pink-400 via-purple-400 to-green-400 p-8 text-white text-center relative">
-              <div className="absolute top-2 left-4 text-2xl">✨</div>
-              <div className="absolute top-2 right-4 text-2xl">🎉</div>
-              <div className="text-6xl mb-3 animate-pulse">🎁</div>
-              <h2 className="text-3xl font-black mb-1">WOOHOO! 🥳</h2>
-              <p className="text-sm font-semibold">Gift Sent Successfully!</p>
-              <div className="absolute bottom-2 left-4 text-2xl">💝</div>
-              <div className="absolute bottom-2 right-4 text-2xl">⭐</div>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
+            {/* Success Header - Rainbow Gradient - Compact */}
+            <div className="bg-gradient-to-r from-pink-400 via-purple-400 to-green-400 p-4 text-white text-center">
+              <div className="text-4xl mb-1 animate-pulse">🎁</div>
+              <h2 className="text-2xl font-black">WOOHOO! 🥳</h2>
             </div>
 
-            {/* Content */}
-            <div className="p-6 space-y-4">
+            {/* Content - Compact */}
+            <div className="p-4 space-y-3">
               {/* Amount & Recipients */}
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border-2 border-blue-300">
-                <p className="text-xs text-blue-700 font-black mb-2">🎯 AMOUNT SENT</p>
-                <p className="text-3xl font-black text-blue-700">{giftSuccessData.pointsToSend} EP 💰</p>
-                <p className="text-sm text-blue-600 font-bold mt-2">➜ {giftSuccessData.recipientCount} lucky friend{giftSuccessData.recipientCount !== 1 ? 's' : ''}! 🌟</p>
+              <div className="bg-blue-50 rounded-lg p-3 border border-blue-300">
+                <p className="text-xl font-black text-blue-700">{giftSuccessData.pointsToSend} EP 💰</p>
+                <p className="text-xs text-blue-600 font-bold">to {giftSuccessData.recipientCount} friend{giftSuccessData.recipientCount !== 1 ? 's' : ''}! 🌟</p>
               </div>
 
               {/* Message */}
-              <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl p-4 border-2 border-pink-300">
-                <p className="text-xs text-pink-700 font-black mb-2">💌 YOUR GIFT MESSAGE</p>
-                <p className="text-sm text-pink-900 font-semibold italic">"{giftSuccessData.message}"</p>
+              <div className="bg-pink-50 rounded-lg p-3 border border-pink-300">
+                <p className="text-xs text-pink-900 italic line-clamp-2">"{giftSuccessData.message}"</p>
               </div>
 
-              {/* Schedule */}
-              <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl p-4 border-2 border-purple-300">
-                <p className="text-xs text-purple-700 font-black mb-1">⏱️ TIMING</p>
-                <p className="text-sm text-purple-900 font-bold">{giftSuccessData.scheduledDate}</p>
-              </div>
-
-              {/* Recorded - Celebratory */}
-              <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl p-4 border-2 border-green-400 text-center">
-                <p className="text-sm text-green-700 font-black">✅ RECORDED IN HISTORY!</p>
-                <p className="text-xs text-green-600 mt-1">Your friends are going to love this! 💕</p>
+              {/* Schedule + Recorded */}
+              <div className="bg-green-50 rounded-lg p-3 border border-green-300 text-center">
+                <p className="text-xs text-green-700 font-black">✅ {giftSuccessData.scheduledDate}</p>
               </div>
             </div>
 
             {/* Buttons - Two Options */}
-            <div className="p-4 border-t-2 border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50 space-y-2">
+            <div className="p-3 border-t border-gray-200 bg-gray-50 space-y-2">
               <button
                 onClick={() => {
                   setShowGiftSuccessModal(false);
                   setShowGiftModal(false);
                   setActiveSection('myRewardSpace');
                 }}
-                className="w-full bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 text-white font-black py-3 rounded-xl hover:shadow-lg hover:scale-105 transition transform"
+                className="w-full bg-green-500 text-white font-bold py-2 text-sm rounded-lg hover:bg-green-600 transition"
               >
-                📊 View My Rewards
+                📊 View Rewards
               </button>
               <button
                 onClick={() => {
@@ -2062,9 +2048,9 @@ export default function MyAccountPage() {
                   });
                   setShowGiftModal(true);
                 }}
-                className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white font-black py-3 rounded-xl hover:shadow-lg hover:scale-105 transition transform"
+                className="w-full bg-pink-500 text-white font-bold py-2 text-sm rounded-lg hover:bg-pink-600 transition"
               >
-                💝 Send Another Gift
+                💝 Send Another
               </button>
             </div>
           </div>
