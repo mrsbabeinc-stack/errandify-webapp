@@ -77,7 +77,14 @@ export default function MyAccountPage() {
   });
   const [activitySearch, setActivitySearch] = useState('');
   const [activityFilter, setActivityFilter] = useState<'all' | 'completed' | 'posted' | 'referral' | 'rating' | 'accepted' | 'gift'>('all');
-  const [userBalance, setUserBalance] = useState(10000);
+  const [userBalance, setUserBalance] = useState(() => {
+    try {
+      const saved = localStorage.getItem('errandify_user_balance');
+      return saved ? parseInt(saved, 10) : 10000;
+    } catch (error) {
+      return 10000;
+    }
+  });
   const [redemptionHistory, setRedemptionHistory] = useState<Array<{ id: string; date: string; item: string; code: string; amount: number; emoji: string }>>([
     { id: '1', date: '10-06-2026', item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' },
   ]);
@@ -133,14 +140,24 @@ export default function MyAccountPage() {
   ];
 
   // Sample activity data
-  const [allActivities, setAllActivities] = useState([
-    { id: 1, type: 'completed', emoji: '✅', title: 'Completed: Clean apartment', errandId: 'ERR-2847', date: 'Today 10:28 AM', amount: '+$80', color: 'green' },
-    { id: 2, type: 'posted', emoji: '📝', title: 'Posted: Home repairs', errandId: 'ERR-2846', date: 'Yesterday 10:25 PM', amount: '-$120', color: 'orange' },
-    { id: 3, type: 'referral', emoji: '🎁', title: 'Referral: @SunnyLove', errandId: 'N/A', date: '2 days ago', amount: '+$50', color: 'purple' },
-    { id: 4, type: 'rating', emoji: '⭐', title: 'Rating given: Clean apartment', errandId: 'ERR-2847', date: '3 days ago', amount: '5 stars', color: 'blue' },
-    { id: 5, type: 'accepted', emoji: '✅', title: 'Accepted bid: Tutoring', errandId: 'ERR-2845', date: '4 days ago', amount: 'SGD $60', color: 'green' },
-    { id: 6, type: 'posted', emoji: '📋', title: 'Posted: Office admin', errandId: 'ERR-2844', date: '5 days ago', amount: '-$75', color: 'orange' },
-  ]);
+  const [allActivities, setAllActivities] = useState(() => {
+    try {
+      const saved = localStorage.getItem('errandify_activities');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Failed to load activities:', error);
+    }
+    return [
+      { id: 1, type: 'completed', emoji: '✅', title: 'Completed: Clean apartment', errandId: 'ERR-2847', date: 'Today 10:28 AM', amount: '+$80', color: 'green' },
+      { id: 2, type: 'posted', emoji: '📝', title: 'Posted: Home repairs', errandId: 'ERR-2846', date: 'Yesterday 10:25 PM', amount: '-$120', color: 'orange' },
+      { id: 3, type: 'referral', emoji: '🎁', title: 'Referral: @SunnyLove', errandId: 'N/A', date: '2 days ago', amount: '+$50', color: 'purple' },
+      { id: 4, type: 'rating', emoji: '⭐', title: 'Rating given: Clean apartment', errandId: 'ERR-2847', date: '3 days ago', amount: '5 stars', color: 'blue' },
+      { id: 5, type: 'accepted', emoji: '✅', title: 'Accepted bid: Tutoring', errandId: 'ERR-2845', date: '4 days ago', amount: 'SGD $60', color: 'green' },
+      { id: 6, type: 'posted', emoji: '📋', title: 'Posted: Office admin', errandId: 'ERR-2844', date: '5 days ago', amount: '-$75', color: 'orange' },
+    ];
+  });
 
   const filteredActivities = allActivities.filter(activity => {
     const matchesSearch = activity.title.toLowerCase().includes(activitySearch.toLowerCase());
@@ -326,6 +343,20 @@ export default function MyAccountPage() {
   useEffect(() => {
     localStorage.setItem('errandify_saved_groups', JSON.stringify(savedGroups));
   }, [savedGroups]);
+
+  // Save balance to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('errandify_user_balance', userBalance.toString());
+  }, [userBalance]);
+
+  // Save activities to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('errandify_activities', JSON.stringify(allActivities));
+    } catch (error) {
+      console.error('Failed to save activities:', error);
+    }
+  }, [allActivities]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
