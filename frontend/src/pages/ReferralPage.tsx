@@ -118,132 +118,133 @@ export default function ReferralPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-errandify-bg px-2 py-2 pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-pink-200 via-purple-200 to-blue-200 px-2 py-2 pb-24">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-2 mb-2">
-          <button onClick={() => navigate(-1)} className="text-lg text-errandify-brown font-bold">‹</button>
-          <h1 className="flex-1 text-lg font-bold text-errandify-brown">🎁 Referral Rewards</h1>
+        <div className="flex items-center gap-2 mb-3">
+          <button onClick={() => navigate(-1)} className="text-lg text-white font-bold bg-purple-500 rounded-full w-8 h-8 flex items-center justify-center hover:bg-purple-600">‹</button>
+          <h1 className="flex-1 text-2xl font-bold text-white drop-shadow-lg">🎁 Refer & Earn! 🚀</h1>
         </div>
 
-        {/* Hero Pitch - Warm & Classy */}
-        <div className="bg-gradient-to-r from-amber-100 to-amber-50 text-errandify-brown rounded-lg p-2.5 mb-2 shadow-sm border border-amber-200 text-center">
-          <p className="text-sm font-bold mb-0.5">Earn 50 EP Per Friend</p>
-          <p className="text-xs opacity-80">Share your code. Build your community. 🌟</p>
+        {/* Hero Pitch - CELEBRATORY */}
+        <div className="bg-gradient-to-r from-yellow-300 via-pink-300 to-orange-300 rounded-xl p-3 mb-2 shadow-lg border-2 border-yellow-400 text-center transform hover:scale-105 transition">
+          <p className="text-xl font-bold text-white drop-shadow-lg mb-0.5">🎉 Earn 50 EP Per Friend! 🎉</p>
+          <p className="text-xs font-bold text-white drop-shadow-md">Share → Sign Up → Earn! 💸</p>
         </div>
 
-        {/* QR Code - Elegant */}
-        <div className="bg-white rounded-lg p-2.5 mb-2 shadow-sm border border-amber-200 text-center">
-          <p className="text-xs font-semibold text-errandify-brown mb-1.5">📱 Share This Code</p>
-          <canvas ref={canvasRef} className="border border-amber-300 rounded mx-auto" />
-          <div className="space-y-1 mt-1.5">
+        {/* QR Code - CELEBRATORY */}
+        <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl p-3 mb-2 shadow-lg border-2 border-blue-400 text-center">
+          <p className="text-base font-bold text-blue-900 mb-2">📱 Your Magic Code ✨</p>
+          <div className="bg-white rounded-lg p-2 border-3 border-blue-300 inline-block mb-2">
+            <canvas ref={canvasRef} className="rounded" />
+          </div>
+          <p className="text-xs text-blue-800 font-semibold mb-2">👆 Scan to Invite Friends!</p>
+          <div className="space-y-1.5">
             <button
               onClick={() => setShowShareModal(true)}
-              className="w-full bg-gradient-to-r from-errandify-orange to-orange-500 text-white px-3 py-2.5 rounded-lg font-bold text-sm hover:shadow-lg hover:from-orange-500 hover:to-orange-600 transition-all transform hover:scale-105 animate-pulse"
+              className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-red-500 hover:from-pink-600 hover:via-purple-600 hover:to-red-600 text-white px-3 py-2.5 rounded-lg font-bold text-base hover:shadow-lg transition-all transform hover:scale-105 active:scale-95 animate-bounce"
             >
-              🚀 SHARE & EARN 💸
+              🚀 SHARE & EARN! 💰
             </button>
             <button
               onClick={handleDownloadQR}
-              className="w-full bg-errandify-brown text-white px-2 py-1.5 rounded font-semibold text-xs hover:shadow-md transition"
+              className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs hover:shadow-lg transition-all active:scale-95"
             >
-              Save QR Code
+              💾 Save QR Code
             </button>
           </div>
         </div>
 
-        {/* Code & Link - Action Buttons */}
+        {/* Code & Link - Action Buttons - CELEBRATORY */}
         <div className="space-y-1.5 mb-2">
           {/* Code Button */}
-          <div className="bg-white rounded-lg p-2 border border-amber-200 shadow-sm">
-            <p className="text-xs font-semibold text-errandify-brown mb-1">📋 Your Referral Code</p>
-            <div className="flex gap-1">
+          <div className="bg-gradient-to-r from-red-200 to-pink-200 rounded-lg p-2.5 border-2 border-red-400 shadow-md">
+            <p className="text-xs font-bold text-white drop-shadow-md mb-1.5">📋 Your Referral Code</p>
+            <div className="flex gap-1.5">
               <input
                 type="text"
                 value={referralData?.code || ''}
                 readOnly
-                className="flex-1 bg-amber-50 px-2 py-1.5 rounded font-bold text-errandify-orange border border-amber-300 text-xs text-center"
+                className="flex-1 bg-white px-2 py-1.5 rounded font-bold text-red-600 border border-red-300 text-xs text-center"
               />
               <button
                 onClick={handleCopyCode}
-                className={`px-3 py-1.5 rounded font-bold text-xs whitespace-nowrap transition ${
+                className={`px-3 py-1.5 rounded font-bold text-xs whitespace-nowrap transition transform active:scale-95 ${
                   copied === 'code'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-errandify-brown text-white hover:shadow-md'
+                    ? 'bg-green-500 text-white animate-bounce'
+                    : 'bg-red-500 hover:bg-red-600 text-white hover:shadow-lg'
                 }`}
               >
-                {copied === 'code' ? '✅ Done!' : 'Copy'}
+                {copied === 'code' ? '✅ Copied!' : '📋 Copy'}
               </button>
             </div>
           </div>
 
           {/* Link Button */}
-          <div className="bg-white rounded-lg p-2 border border-amber-200 shadow-sm">
-            <p className="text-xs font-semibold text-errandify-brown mb-1">🔗 Share Link</p>
-            <div className="flex gap-1">
+          <div className="bg-gradient-to-r from-indigo-300 to-purple-300 rounded-lg p-2.5 border-2 border-indigo-400 shadow-md">
+            <p className="text-xs font-bold text-white drop-shadow-md mb-1.5">🔗 Share Link</p>
+            <div className="flex gap-1.5">
               <input
                 type="text"
                 value={referralData?.link || ''}
                 readOnly
-                className="flex-1 bg-amber-50 px-2 py-1.5 rounded text-errandify-orange border border-amber-300 text-xs truncate"
+                className="flex-1 bg-white px-2 py-1.5 rounded text-indigo-600 border border-indigo-300 text-xs truncate font-mono"
               />
               <button
                 onClick={handleCopyLink}
-                className={`px-3 py-1.5 rounded font-bold text-xs whitespace-nowrap transition ${
+                className={`px-3 py-1.5 rounded font-bold text-xs whitespace-nowrap transition transform active:scale-95 ${
                   copied === 'link'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-errandify-brown text-white hover:shadow-md'
+                    ? 'bg-green-500 text-white animate-bounce'
+                    : 'bg-indigo-500 hover:bg-indigo-600 text-white hover:shadow-lg'
                 }`}
               >
-                {copied === 'link' ? '✅ Done!' : 'Copy'}
+                {copied === 'link' ? '✅ Copied!' : '🔗 Copy'}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Stats - Elegant */}
-        <div className="grid grid-cols-2 gap-2 mb-2">
-          <div className="bg-white rounded-lg p-2.5 shadow-sm border border-amber-200 text-center">
-            <p className="text-2xl font-bold text-errandify-brown">{referralData?.referredCount}</p>
-            <p className="text-xs text-errandify-brown opacity-70">Friends</p>
+        {/* Stats - CELEBRATORY */}
+        <div className="grid grid-cols-2 gap-1.5 mb-2">
+          <div className="bg-gradient-to-br from-green-400 to-emerald-300 rounded-lg p-3 shadow-lg border-2 border-green-500 text-center transform hover:scale-105 transition">
+            <p className="text-3xl font-bold text-white drop-shadow-lg">{referralData?.referredCount}</p>
+            <p className="text-xs font-bold text-white drop-shadow-md">👥 Friends</p>
           </div>
-          <div className="bg-white rounded-lg p-2.5 shadow-sm border border-amber-200 text-center">
-            <p className="text-2xl font-bold text-errandify-brown">{referralData?.earnedPoints}</p>
-            <p className="text-xs text-errandify-brown opacity-70">Points</p>
+          <div className="bg-gradient-to-br from-yellow-400 to-orange-300 rounded-lg p-3 shadow-lg border-2 border-yellow-500 text-center transform hover:scale-105 transition">
+            <p className="text-3xl font-bold text-white drop-shadow-lg">{referralData?.earnedPoints}</p>
+            <p className="text-xs font-bold text-white drop-shadow-md">⭐ Points</p>
           </div>
         </div>
 
-        {/* How It Works - Detailed & Complete */}
-        <div className="bg-white rounded-lg p-2.5 shadow-sm border border-amber-200">
+        {/* How It Works - CELEBRATORY & CLEAR */}
+        <div className="bg-gradient-to-br from-white to-cyan-50 rounded-lg p-3 shadow-lg border-2 border-cyan-400">
           <div className="flex items-center gap-2 mb-2">
-            <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">?</span>
-            <p className="font-semibold text-errandify-brown text-sm">How It Works</p>
+            <span className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold">🎯</span>
+            <p className="font-bold text-cyan-900 text-base">How It Works</p>
           </div>
-          <div className="space-y-2 text-xs text-errandify-brown">
-            {/* Individual Signup */}
-            <div className="flex gap-2 items-start">
-              <span className="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">✓</span>
-              <span><strong>Your friend creates an Individual account</strong> using your referral code.</span>
+          <div className="space-y-1 text-xs text-cyan-900">
+            {/* Step 1 */}
+            <div className="flex gap-2 items-start bg-blue-100 rounded p-1.5 border border-blue-300">
+              <span className="text-sm font-bold flex-shrink-0">1️⃣</span>
+              <span className="font-semibold">Friend creates account with your code</span>
             </div>
 
-            {/* Company Signup Option */}
-            <div className="flex gap-2 items-start">
-              <span className="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">✓</span>
-              <span><strong>After the individual account is created,</strong> they can proceed with a <strong>Company sign-up</strong> (if needed).</span>
+            {/* Step 2 */}
+            <div className="flex gap-2 items-start bg-purple-100 rounded p-1.5 border border-purple-300">
+              <span className="text-sm font-bold flex-shrink-0">2️⃣</span>
+              <span className="font-semibold">They verify & complete first job</span>
             </div>
 
-            {/* Verification & Rewards */}
-            <div className="flex gap-2 items-start">
-              <span className="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">✓</span>
-              <span><strong>Once verification is complete,</strong> rewards are applied to both accounts.</span>
+            {/* Step 3 */}
+            <div className="flex gap-2 items-start bg-pink-100 rounded p-1.5 border border-pink-300">
+              <span className="text-sm font-bold flex-shrink-0">3️⃣</span>
+              <span className="font-semibold">Both earn rewards! 🎉</span>
             </div>
 
-            {/* Bonus Info */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
-              <p className="text-xs font-semibold text-errandify-brown mb-1">💰 Reward Breakdown:</p>
-              <p className="text-xs text-errandify-brown opacity-80">• Friend joins: +50 EP</p>
-              <p className="text-xs text-errandify-brown opacity-80">• Completes first job: +150 EP bonus</p>
-              <p className="text-xs text-errandify-brown opacity-80">• Reaches 10 jobs: +100 EP loyalty bonus</p>
+            {/* Reward Breakdown */}
+            <div className="bg-gradient-to-r from-yellow-200 to-orange-200 border-2 border-yellow-400 rounded p-2 mt-1.5">
+              <p className="text-xs font-bold text-white drop-shadow-lg mb-0.5">💰 Rewards:</p>
+              <p className="text-xs font-bold text-white drop-shadow-md">✨ Join: +50 EP | 🎯 Job: +150 EP | ⭐ 10 Jobs: +100 EP</p>
             </div>
           </div>
         </div>
