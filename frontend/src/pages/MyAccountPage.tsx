@@ -915,37 +915,36 @@ export default function MyAccountPage() {
 
         {/* DASHBOARD - Always show first */}
         {activeSection === 'dashboard' && (
-          <div className="space-y-1.5">
-            {/* USER ID & ALIAS CARD - TOP */}
-            {profileData && (
-              <div className="bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-300 rounded-2xl p-4 border-3 border-blue-500 shadow-lg hover:shadow-xl transition mx-2">
-                <div className="grid grid-cols-2 gap-3 text-center">
-                  <div className="bg-white rounded-xl p-2">
-                    <p className="text-sm text-blue-700 font-bold">🎫 Your ID</p>
-                    <p className="text-base font-mono font-bold text-blue-800 mt-1">{profileData.formattedUserId || 'N/A'}</p>
-                  </div>
-                  <div className="bg-white rounded-xl p-2">
-                    <p className="text-sm text-blue-700 font-bold">👤 Your Name</p>
-                    <p className="text-base font-bold text-blue-800 mt-1">@{profileData.alias || 'N/A'}</p>
+          <div className="space-y-1.5 px-2">
+            {/* TWO COLUMN LAYOUT - LEFT: ID/Name, RIGHT: Reviews */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* LEFT COLUMN - USER ID & ALIAS */}
+              {profileData && (
+                <div className="bg-gradient-to-r from-blue-300 to-cyan-300 rounded-xl p-3 border-2 border-blue-500 shadow-md">
+                  <div className="space-y-2">
+                    <div className="bg-white rounded-lg p-2">
+                      <p className="text-xs text-blue-700 font-bold">🎫 Your ID</p>
+                      <p className="text-sm font-mono font-bold text-blue-800 mt-0.5 break-all">{profileData.formattedUserId || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-2">
+                      <p className="text-xs text-blue-700 font-bold">👤 Your Name</p>
+                      <p className="text-sm font-bold text-blue-800 mt-0.5">@{profileData.alias || 'N/A'}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* DASHBOARD CONTENT */}
-            {/* COMPACT FUN DASHBOARD - HAPPY DESIGN */}
-            <div className="space-y-1 p-2">
-              {/* RATING & REVIEWS CARD - Happy Yellow */}
-              <div className="bg-gradient-to-r from-yellow-300 via-orange-300 to-yellow-300 rounded-lg p-3 border-2 border-yellow-500">
+              {/* RIGHT COLUMN - RATING & REVIEWS */}
+              <div className="bg-gradient-to-r from-yellow-300 to-orange-300 rounded-xl p-3 border-2 border-yellow-500 shadow-md">
                 <div className="text-center mb-2">
-                  <p className="text-sm text-yellow-900 font-bold mb-1">🌟 Your Awesome Reviews 🌟</p>
-                  <div className="flex items-center justify-center gap-3">
-                    <div className="bg-white rounded-lg p-1.5">
-                      <p className="text-2xl font-bold text-yellow-700">{ratings.averageRating.toFixed(1)}</p>
+                  <p className="text-xs text-yellow-900 font-bold mb-1">🌟 Reviews 🌟</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="bg-white rounded p-1">
+                      <p className="text-lg font-bold text-yellow-700">{ratings.averageRating.toFixed(1)}</p>
                       <p className="text-xs text-yellow-800 font-bold">⭐</p>
                     </div>
-                    <div className="bg-white rounded-lg p-1.5">
-                      <p className="text-2xl font-bold text-yellow-700">{ratings.reviewCount}</p>
+                    <div className="bg-white rounded p-1">
+                      <p className="text-lg font-bold text-yellow-700">{ratings.reviewCount}</p>
                       <p className="text-xs text-yellow-800 font-bold">👥</p>
                     </div>
                   </div>
@@ -953,24 +952,29 @@ export default function MyAccountPage() {
 
                 {/* Latest 2 Reviews */}
                 {ratings.reviews && ratings.reviews.length > 0 && (
-                  <div className="border-t border-yellow-400 pt-1.5 space-y-1">
+                  <div className="border-t border-yellow-400 pt-1.5 space-y-0.5">
                     {ratings.reviews
                       .filter((r: any) => r.rating >= 4)
                       .slice(0, 2)
                       .map((review: any, idx: number) => (
-                        <div key={idx} className="bg-white rounded px-2 py-1 border border-yellow-200 text-xs">
+                        <div key={idx} className="bg-white rounded px-1.5 py-0.5 border border-yellow-200 text-xs">
                           <div className="flex gap-0.5 mb-0.5 justify-center">
                             {[...Array(5)].map((_, i) => (
                               <span key={i} className="text-xs">{i < review.rating ? '⭐' : '☆'}</span>
                             ))}
                           </div>
-                          <p className="text-gray-700 leading-tight text-xs">"{review.comment || 'Great!'}"</p>
-                          <p className="text-gray-600 text-xs">— {review.author || 'Customer'}</p>
+                          <p className="text-gray-700 leading-tight text-xs line-clamp-2">"{review.comment || 'Great!'}"</p>
+                          <p className="text-gray-600 text-xs truncate">— {review.author || 'Customer'}</p>
                         </div>
                       ))}
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* DASHBOARD CONTENT */}
+            {/* COMPACT FUN DASHBOARD - HAPPY DESIGN */}
+            <div className="space-y-1">
 
               {/* MINI STATS - HORIZONTAL */}
               <div className="grid grid-cols-4 gap-2">
