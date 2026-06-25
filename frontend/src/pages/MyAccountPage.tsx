@@ -1943,8 +1943,9 @@ export default function MyAccountPage() {
             </div>
 
             {/* Search & Select Recipients with Group Integration */}
-            <div>
-              <div className="flex justify-between items-center mb-2">
+            <div className="space-y-2">
+              {/* Header with selection count */}
+              <div className="flex justify-between items-center">
                 <label className="text-sm font-bold text-gray-700">🔍 Select Recipients</label>
                 {giftForm.recipients && giftForm.recipients.length > 0 && (
                   <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">
@@ -1953,12 +1954,50 @@ export default function MyAccountPage() {
                 )}
               </div>
 
+              {/* Group Name - Appears at Top When Selecting */}
+              {giftForm.recipients && giftForm.recipients.length > 0 && (
+                <div className="p-3 bg-purple-50 border-2 border-purple-300 rounded-lg">
+                  <label className="text-xs font-bold text-purple-700 block mb-2">💾 Group Name (Optional)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="e.g., 'Close Friends', 'Family', 'Coworkers'"
+                      value={giftForm.groupName}
+                      onChange={(e) => setGiftForm({ ...giftForm, groupName: e.target.value })}
+                      className="flex-1 px-3 py-2 border-2 border-purple-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    />
+                    <button
+                      onClick={() => {
+                        if (giftForm.groupName.trim()) {
+                          const groupNameToSave = giftForm.groupName;
+                          setSavedGroups([
+                            ...savedGroups,
+                            {
+                              id: Date.now().toString(),
+                              name: groupNameToSave,
+                              members: giftForm.recipients,
+                            },
+                          ]);
+                          setGiftForm({ ...giftForm, groupName: '' });
+                          setModalMessage(`✅ Group "${groupNameToSave}" saved! You can reuse it next time.`);
+                          setShowSuccessModal(true);
+                        }
+                      }}
+                      className="px-3 py-2 bg-purple-500 text-white rounded-lg text-xs font-bold hover:bg-purple-600 transition whitespace-nowrap"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Search Input */}
               <input
                 type="text"
                 value={giftSearch}
                 onChange={(e) => setGiftSearch(e.target.value)}
-                placeholder="e.g., @SunnyLove or USER0000089"
-                className="w-full px-3 py-2 border-2 border-orange-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange mb-2"
+                placeholder="Search by name, alias, or ID (e.g., @SunnyLove or USER0000089)"
+                className="w-full px-3 py-2 border-2 border-orange-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange"
               />
 
               {/* User List with Checkboxes */}
@@ -1967,7 +2006,8 @@ export default function MyAccountPage() {
                   .filter((u) =>
                     giftSearch === '' ||
                     u.alias.toLowerCase().includes(giftSearch.toLowerCase()) ||
-                    u.id.toLowerCase().includes(giftSearch.toLowerCase())
+                    u.id.toLowerCase().includes(giftSearch.toLowerCase()) ||
+                    u.name.toLowerCase().includes(giftSearch.toLowerCase())
                   )
                   .map((user) => (
                     <label
@@ -1993,50 +2033,14 @@ export default function MyAccountPage() {
                         className="w-4 h-4 accent-orange-600"
                       />
                       <span className="text-lg">👤</span>
-                      <div className="flex-1">
-                        <p className="text-xs font-bold text-gray-900">{user.name}</p>
-                        <p className="text-xs text-gray-600">{user.id}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-gray-900 truncate">{user.name}</p>
+                        <p className="text-xs text-gray-600 truncate">{user.id}</p>
                       </div>
-                      <span className="text-xs text-orange-600">{user.alias}</span>
+                      <span className="text-xs text-orange-600 whitespace-nowrap">{user.alias}</span>
                     </label>
                   ))}
               </div>
-
-              {/* Save as Group - Inline */}
-              {giftForm.recipients && giftForm.recipients.length > 0 && (
-                <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                  <label className="text-xs font-bold text-purple-700 block mb-2">💾 Save as Group (Optional)</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Group name (e.g., 'Close Friends')"
-                      value={giftForm.groupName}
-                      onChange={(e) => setGiftForm({ ...giftForm, groupName: e.target.value })}
-                      className="flex-1 px-3 py-2 border-2 border-purple-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-purple-400"
-                    />
-                    <button
-                      onClick={() => {
-                        if (giftForm.groupName.trim()) {
-                          setSavedGroups([
-                            ...savedGroups,
-                            {
-                              id: Date.now().toString(),
-                              name: giftForm.groupName,
-                              members: giftForm.recipients,
-                            },
-                          ]);
-                          setGiftForm({ ...giftForm, groupName: '' });
-                          setModalMessage(`✅ Group "${giftForm.groupName}" saved! You can reuse it next time.`);
-                          setShowSuccessModal(true);
-                        }
-                      }}
-                      className="px-3 py-2 bg-purple-500 text-white rounded-lg text-xs font-bold hover:bg-purple-600 transition whitespace-nowrap"
-                    >
-                      Save Group
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Gift Card Message - Scrollable */}
