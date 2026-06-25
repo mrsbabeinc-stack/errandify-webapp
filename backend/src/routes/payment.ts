@@ -405,21 +405,19 @@ router.post('/verify-bank', authMiddleware, async (req: AuthRequest, res: Respon
   }
 });
 
-// POST /api/payment/link-bank - Link bank account to Stripe Connect
+// POST /api/payment/link-bank - Get Stripe onboarding link for bank setup
 router.post('/link-bank', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.userId || '0', 10);
-    const { accountNumber } = req.body;
+    const { returnUrl } = req.body;
 
-    if (!accountNumber) {
-      return res.status(400).json({ error: 'Account number required' });
+    if (!returnUrl) {
+      return res.status(400).json({ error: 'returnUrl required' });
     }
 
     // Get user info
     const userResult = await db.query(
-      `SELECT id, stripe_account_id, account_holder, bank_name
-       FROM users
-       WHERE id = $1`,
+      `SELECT id, stripe_account_id, email, display_name FROM users WHERE id = $1`,
       [userId]
     );
 
@@ -443,31 +441,23 @@ router.post('/link-bank', authMiddleware, async (req: AuthRequest, res: Response
       );
     }
 
-    // Link bank account to Stripe
-    console.log(`[Payment] Linking bank account to Stripe for user ${userId}`);
-    const result = await stripeService.linkBankAccount(
-      stripeAccountId,
-      user.account_holder,
-      accountNumber,
-      user.bank_name // Pass bank name so Stripe can use correct FAST code
-    );
-
-    // Set as default payout account
-    await stripeService.setDefaultPayoutAccount(stripeAccountId, result.externalAccountId);
+    // Create account link for onboarding
+    console.log(`[Payment] Creating account link for user ${userId}`);
+    const { url, expiresAt } = await stripeService.createAccountLink(stripeAccountId, returnUrl);
 
     res.json({
       success: true,
       data: {
         stripeAccountId,
-        externalAccountId: result.externalAccountId,
-        lastFour: result.accountNumber,
-        message: 'Bank account linked successfully! 🎉 Verification in progress...',
+        onboardingUrl: url,
+        expiresAt,
+        message: '🎉 Click the link to complete bank setup on Stripe. Takes 2-3 minutes!',
       },
     });
   } catch (error: any) {
     console.error('[Payment] Link bank error:', error);
     res.status(500).json({
-      error: error.message || 'Failed to link bank account',
+      error: error.message || 'Failed to create onboarding link',
       details: error instanceof Error ? error.message : String(error),
     });
   }

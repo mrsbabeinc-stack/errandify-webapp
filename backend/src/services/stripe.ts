@@ -174,64 +174,51 @@ export const stripeService = {
   },
 
   /**
-   * Link bank account to Stripe connected account
-   * Called when user saves bank details
+   * Create Account Link for Stripe Express onboarding
+   * User completes bank verification on Stripe's secure pages
+   * This is the easiest & most reliable way for SGD payouts
    */
-  async linkBankAccount(
-    stripeAccountId: string,
-    accountHolderName: string,
-    accountNumber: string,
-    bankName: string = ''
-  ): Promise<any> {
+  async createAccountLink(stripeAccountId: string, returnUrl: string): Promise<any> {
     try {
-      console.log(`[Stripe] Linking bank account to ${stripeAccountId}`);
+      console.log(`[Stripe] Creating account link for ${stripeAccountId}`);
 
-      // Singapore bank FAST codes (6-digit identifier for each bank)
-      const bankFastCodes: Record<string, string> = {
-        'DBS Bank Singapore': '002048',
-        'OCBC Bank': '002702',
-        'UOB Bank': '002290',
-        'Standard Chartered': '002847',
-        'Maybank Singapore': '008600',
-        'CIMB Bank': '008208',
-        'HSBC Singapore': '004015',
-        'Citibank Singapore': '011002',
-        'Bank of Singapore': '009108',
-        'RHB Bank': '008845',
-        'AEON Credit': '009807',
-        'Barclays Singapore': '005048',
-      };
+      const accountLink = await stripe.accountLinks.create({
+        account: stripeAccountId,
+        type: 'account_onboarding',
+        refresh_url: returnUrl,
+        return_url: returnUrl,
+      });
 
-      // Get FAST code for the bank
-      const fastCode = bankFastCodes[bankName] || '002048'; // Default to DBS
-
-      // For Singapore bank accounts, Stripe requires:
-      // routing_number: FAST code (6 digits that identifies the bank)
-      const bankAccount = await stripe.accounts.createExternalAccount(
-        stripeAccountId,
-        {
-          external_account: {
-            object: 'bank_account',
-            country: 'SG',
-            currency: 'sgd',
-            account_holder_name: accountHolderName,
-            account_holder_type: 'individual',
-            account_number: accountNumber,
-            routing_number: fastCode, // FAST code for Singapore banks
-          },
-        }
-      );
-
-      console.log(`[Stripe] Bank account linked: ${bankAccount.id}`);
+      console.log(`[Stripe] Account link created: ${accountLink.url}`);
       return {
-        externalAccountId: bankAccount.id,
-        accountNumber: bankAccount.last4,
-        fingerprint: bankAccount.fingerprint,
-        status: 'verified', // Singapore accounts are typically verified immediately
+        url: accountLink.url,
+        expiresAt: new Date(accountLink.expires_at * 1000),
       };
     } catch (error) {
-      console.error('[Stripe] Failed to link bank account:', error);
-      throw new Error('Failed to link bank account. Please verify your details.');
+      console.error('[Stripe] Failed to create account link:', error);
+      throw new Error('Failed to create account link');
+    }
+  },
+
+  /**
+   * Get account status - check if bank is linked
+   */
+  async getAccountStatus(stripeAccountId: string): Promise<any> {
+    try {
+      const account = await stripe.accounts.retrieve(stripeAccountId);
+
+      return {
+        id: account.id,
+        type: account.type,
+        country: account.country,
+        chargesEnabled: account.charges_enabled,
+        payoutsEnabled: account.payouts_enabled,
+        verified: account.charges_enabled && account.payouts_enabled,
+        requirements: account.requirements?.currently_due || [],
+      };
+    } catch (error) {
+      console.error('[Stripe] Failed to get account status:', error);
+      throw new Error('Failed to get account status');
     }
   },
 

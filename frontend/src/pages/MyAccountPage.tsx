@@ -1328,7 +1328,7 @@ export default function MyAccountPage() {
                           try {
                             const token = localStorage.getItem('token');
 
-                            // Step 1: Save bank details
+                            // Step 1: Save bank details locally
                             await axios.post(
                               `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payment/save-bank-details`,
                               {
@@ -1339,33 +1339,29 @@ export default function MyAccountPage() {
                               { headers: { Authorization: `Bearer ${token}` } }
                             );
 
-                            // Step 2: Link bank account to Stripe Connect
+                            // Step 2: Get Stripe onboarding link
                             const stripeResponse = await axios.post(
                               `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payment/link-bank`,
                               {
-                                accountNumber: payoutForm.accountNumber,
+                                returnUrl: window.location.href, // Return here after Stripe onboarding
                               },
                               { headers: { Authorization: `Bearer ${token}` } }
                             );
 
-                            if (stripeResponse.data.success) {
-                              setEditingPayout(false);
-                              setModalMessage(
-                                '✅ Bank account linked to Stripe! ' +
-                                'Verification in progress (24-48 hours). 🎉'
-                              );
-                              setShowSuccessModal(true);
+                            if (stripeResponse.data.success && stripeResponse.data.data.onboardingUrl) {
+                              // Redirect to Stripe onboarding
+                              window.location.href = stripeResponse.data.data.onboardingUrl;
                             }
                           } catch (error: any) {
                             setModalMessage(
-                              '❌ ' + (error.response?.data?.error || 'Failed to link bank account')
+                              '❌ ' + (error.response?.data?.error || 'Failed to start bank setup')
                             );
                             setShowErrorModal(true);
                           }
                         }}
                         className="flex-1 bg-green-500 text-white py-1 rounded text-xs font-semibold hover:bg-green-600"
                       >
-                        Save & Link
+                        Complete Setup on Stripe
                       </button>
                     </div>
                   </>
