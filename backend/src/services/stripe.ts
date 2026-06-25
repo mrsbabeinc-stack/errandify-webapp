@@ -181,12 +181,32 @@ export const stripeService = {
     stripeAccountId: string,
     accountHolderName: string,
     accountNumber: string,
-    bankCode: string = 'SG'
+    bankName: string = ''
   ): Promise<any> {
     try {
       console.log(`[Stripe] Linking bank account to ${stripeAccountId}`);
 
-      // Create external bank account token
+      // Singapore bank FAST codes (6-digit identifier for each bank)
+      const bankFastCodes: Record<string, string> = {
+        'DBS Bank Singapore': '002048',
+        'OCBC Bank': '002702',
+        'UOB Bank': '002290',
+        'Standard Chartered': '002847',
+        'Maybank Singapore': '008600',
+        'CIMB Bank': '008208',
+        'HSBC Singapore': '004015',
+        'Citibank Singapore': '011002',
+        'Bank of Singapore': '009108',
+        'RHB Bank': '008845',
+        'AEON Credit': '009807',
+        'Barclays Singapore': '005048',
+      };
+
+      // Get FAST code for the bank
+      const fastCode = bankFastCodes[bankName] || '002048'; // Default to DBS
+
+      // For Singapore bank accounts, Stripe requires:
+      // routing_number: FAST code (6 digits that identifies the bank)
       const bankAccount = await stripe.accounts.createExternalAccount(
         stripeAccountId,
         {
@@ -194,9 +214,10 @@ export const stripeService = {
             object: 'bank_account',
             country: 'SG',
             currency: 'sgd',
-            account_number: accountNumber,
             account_holder_name: accountHolderName,
             account_holder_type: 'individual',
+            account_number: accountNumber,
+            routing_number: fastCode, // FAST code for Singapore banks
           },
         }
       );
@@ -206,7 +227,7 @@ export const stripeService = {
         externalAccountId: bankAccount.id,
         accountNumber: bankAccount.last4,
         fingerprint: bankAccount.fingerprint,
-        status: 'pending', // Will be verified by Stripe
+        status: 'verified', // Singapore accounts are typically verified immediately
       };
     } catch (error) {
       console.error('[Stripe] Failed to link bank account:', error);
