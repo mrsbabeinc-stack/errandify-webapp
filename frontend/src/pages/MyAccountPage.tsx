@@ -104,6 +104,7 @@ export default function MyAccountPage() {
   const [groupSearch, setGroupSearch] = useState('');
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [savedGroups, setSavedGroups] = useState<Array<{ id: string; name: string; members: string[] }>>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [giftCardTemplates] = useState([
     '🎂 Happy Birthday! Wishing you an amazing day!',
     '💍 Happy Anniversary! Celebrating your special love!',
@@ -329,22 +330,33 @@ export default function MyAccountPage() {
 
   // Load saved groups from localStorage on mount
   useEffect(() => {
+    console.log('🔄 Loading saved groups from localStorage on mount...');
     const loadedGroups = localStorage.getItem('errandify_saved_groups');
+    console.log('📦 Raw localStorage value:', loadedGroups);
     if (loadedGroups) {
       try {
-        setSavedGroups(JSON.parse(loadedGroups));
+        const parsed = JSON.parse(loadedGroups);
+        console.log('✅ Parsed groups:', parsed);
+        setSavedGroups(parsed);
       } catch (error) {
-        console.error('Failed to load saved groups:', error);
+        console.error('❌ Failed to load saved groups:', error);
       }
+    } else {
+      console.log('⚠️ No saved groups in localStorage');
     }
+    setIsInitialized(true);
   }, []);
 
-  // Save groups to localStorage whenever they change
+  // Save groups to localStorage whenever they change (only after initialization)
   useEffect(() => {
+    if (!isInitialized) {
+      console.log('⏳ Waiting for initialization before saving to localStorage...');
+      return;
+    }
     console.log('📦 Syncing savedGroups to localStorage:', savedGroups);
     localStorage.setItem('errandify_saved_groups', JSON.stringify(savedGroups));
     console.log('✅ Saved to localStorage:', localStorage.getItem('errandify_saved_groups'));
-  }, [savedGroups]);
+  }, [savedGroups, isInitialized]);
 
   // Save balance to localStorage whenever it changes
   useEffect(() => {
