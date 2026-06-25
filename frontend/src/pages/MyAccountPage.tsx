@@ -1681,10 +1681,25 @@ export default function MyAccountPage() {
                         <p className="text-gray-500 font-bold">200 EP • Get SGD $20 off!</p>
                       </div>
                       <button
-                        disabled
-                        className="bg-gray-400 text-white px-3 py-2 rounded-lg text-xs font-bold cursor-not-allowed opacity-50"
+                        onClick={() => {
+                          if (userBalance >= 200) {
+                            setUserBalance(userBalance - 200);
+                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: 'Today', item: '$20 Discount', code: 'ERRAND20', amount: -200, emoji: '💎' }]);
+                            setModalMessage('✅ Redeemed $20 Discount!\n\nCode: ERRAND20');
+                            setShowSuccessModal(true);
+                          } else {
+                            setModalMessage('❌ Not enough points! You need 200 EP');
+                            setShowErrorModal(true);
+                          }
+                        }}
+                        disabled={userBalance < 200}
+                        className={`text-white px-3 py-2 rounded-lg text-xs font-bold transition ${
+                          userBalance >= 200
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg cursor-pointer'
+                            : 'bg-gray-400 cursor-not-allowed opacity-50'
+                        }`}
                       >
-                        🎯 Need 200 EP
+                        {userBalance >= 200 ? '✨ Redeem' : '🎯 Need 200 EP'}
                       </button>
                     </div>
                   </div>
