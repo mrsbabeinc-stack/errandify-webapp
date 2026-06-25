@@ -501,6 +501,11 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
       ['completed', id]
     );
 
+    // Log activity: Job completed
+    const doerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [doerId]);
+    const doerName = doerResult.rows[0]?.display_name || 'Unknown User';
+    await activityLogService.logCompleted(id, doerName, doerId);
+
     // TODO: Release escrowed payment to doer
     // TODO: Prompt asker for rating
 
@@ -775,6 +780,11 @@ router.post('/:id/start', authMiddleware, async (req: AuthRequest, res: Response
       'UPDATE errands SET status = $1, job_started_at = NOW() WHERE id = $2',
       ['in_progress', id]
     );
+
+    // Log activity: Job started
+    const doerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [req.userId]);
+    const doerName = doerResult.rows[0]?.display_name || 'Unknown User';
+    await activityLogService.logStarted(id, doerName, parseInt(req.userId || '0', 10));
 
     res.json({
       success: true,
