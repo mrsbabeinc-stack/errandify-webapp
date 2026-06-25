@@ -160,6 +160,13 @@ export default function MyAccountPage() {
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('❌ You are not logged in. Please log in first.');
+        setSaving(false);
+        return;
+      }
+
       // Moderate alias and bio before saving
       const aliasResult = await moderateText(editForm.alias || '');
       const bioResult = await moderateText(editForm.bio || '');
@@ -175,8 +182,6 @@ export default function MyAccountPage() {
         setSaving(false);
         return;
       }
-
-      const token = localStorage.getItem('token');
       const profilePayload: any = {
         display_name: editForm.display_name,
         alias: editForm.alias,
