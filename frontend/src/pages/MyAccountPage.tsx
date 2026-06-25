@@ -2176,41 +2176,50 @@ export default function MyAccountPage() {
               {/* User List with Checkboxes + Group Search Results */}
               <div className="max-h-40 overflow-y-auto space-y-1 border border-orange-100 rounded-lg p-2 bg-orange-50">
                 {/* Saved Groups Section - Searchable */}
-                {savedGroups.filter((group) =>
-                  giftSearch === '' ||
-                  group.name.toLowerCase().includes(giftSearch.toLowerCase())
-                ).length > 0 && (
-                  <div className="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded mb-1 sticky top-0">
-                    👥 Saved Groups
-                  </div>
-                )}
-                {savedGroups
-                  .filter((group) =>
-                    giftSearch === '' ||
-                    group.name.toLowerCase().includes(giftSearch.toLowerCase())
-                  )
-                  .map((group) => (
-                    <button
-                      key={`group-${group.id}`}
-                      onClick={() => {
-                        setGiftForm({
-                          ...giftForm,
-                          recipients: group.members,
-                        });
-                        setGiftSearch('');
-                        setModalMessage(`✅ Loaded group "${group.name}" with ${group.members.length} members!`);
-                        setShowSuccessModal(true);
-                      }}
-                      className="w-full text-left flex items-center gap-2 p-2 hover:bg-purple-100 rounded transition bg-gradient-to-r from-purple-50 to-transparent border border-purple-200"
-                    >
-                      <span className="text-lg">👥</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-purple-900 truncate">{group.name}</p>
-                        <p className="text-xs text-purple-600 truncate">{group.members.length} members</p>
+                {savedGroups.length > 0 ? (
+                  <>
+                    {savedGroups.filter((group) =>
+                      giftSearch === '' ||
+                      group.name.toLowerCase().includes(giftSearch.toLowerCase())
+                    ).length > 0 && (
+                      <div className="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded mb-1 sticky top-0">
+                        👥 Saved Groups
                       </div>
-                      <span className="text-xs text-purple-600 font-bold">→</span>
-                    </button>
-                  ))}
+                    )}
+                    {savedGroups
+                      .filter((group) =>
+                        giftSearch === '' ||
+                        group.name.toLowerCase().includes(giftSearch.toLowerCase())
+                      )
+                      .map((group) => (
+                        <button
+                          key={`group-${group.id}`}
+                          onClick={() => {
+                            setGiftForm({
+                              ...giftForm,
+                              recipients: group.members,
+                            });
+                            setGiftSearch('');
+                            setModalMessage(`✅ Loaded group "${group.name}" with ${group.members.length} members!`);
+                            setShowSuccessModal(true);
+                          }}
+                          className="w-full text-left flex items-center gap-2 p-2 hover:bg-purple-100 rounded transition bg-gradient-to-r from-purple-50 to-transparent border border-purple-200"
+                        >
+                          <span className="text-lg">👥</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-purple-900 truncate">{group.name}</p>
+                            <p className="text-xs text-purple-600 truncate">{group.members.length} members</p>
+                          </div>
+                          <span className="text-xs text-purple-600 font-bold">→</span>
+                        </button>
+                      ))}
+                    {giftSearch !== '' && savedGroups.filter((group) =>
+                      group.name.toLowerCase().includes(giftSearch.toLowerCase())
+                    ).length === 0 && (
+                      <p className="text-xs text-gray-500 text-center p-2">No groups matching "{giftSearch}"</p>
+                    )}
+                  </>
+                ) : null}
 
                 {/* Users Section */}
                 {availableUsers.filter((u) =>
@@ -2218,10 +2227,7 @@ export default function MyAccountPage() {
                   u.alias.toLowerCase().includes(giftSearch.toLowerCase()) ||
                   u.id.toLowerCase().includes(giftSearch.toLowerCase()) ||
                   u.name.toLowerCase().includes(giftSearch.toLowerCase())
-                ).length > 0 && savedGroups.filter((group) =>
-                  giftSearch === '' ||
-                  group.name.toLowerCase().includes(giftSearch.toLowerCase())
-                ).length > 0 && (
+                ).length > 0 && savedGroups.length > 0 && (
                   <div className="text-xs font-bold text-orange-700 bg-orange-100 px-2 py-1 rounded mt-2 mb-1 sticky top-0">
                     👤 Users
                   </div>
