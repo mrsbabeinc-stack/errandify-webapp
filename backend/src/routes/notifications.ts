@@ -364,4 +364,109 @@ export async function notifyDisputeResolved(
   );
 }
 
+// GET /api/notifications/ai-alerts - Get AI-generated personalized alerts
+router.get('/ai-alerts', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Fetch user stats
+    const statsResult = await db.query(
+      `SELECT
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_this_month,
+        COUNT(CASE WHEN status = 'in_progress' THEN 1 END) as current_tasks,
+        AVG(COALESCE((SELECT AVG(rating) FROM ratings WHERE rated_user_id = u.id), 0)) as avg_rating
+      FROM errands e
+      JOIN users u ON e.doer_id = u.id
+      WHERE u.id = $1 AND DATE_TRUNC('month', e.completed_at) = DATE_TRUNC('month', NOW())`,
+      [userId]
+    );
+
+    const stats = statsResult.rows[0] || { completed_this_month: 0, current_tasks: 0, avg_rating: 0 };
+
+    // Fetch last errand earnings
+    const lastErrandResult = await db.query(
+      `SELECT amount FROM errands WHERE doer_id = $1 AND status = 'completed' ORDER BY completed_at DESC LIMIT 1`,
+      [userId]
+    );
+    const lastErrandAmount = lastErrandResult.rows[0]?.amount || 80;
+
+    // Generate AI alerts using Qwen
+    const qwenApiKey = process.env.QWEN_API_KEY;
+    let alerts = [];
+
+    if (qwenApiKey) {
+      try {
+        const axios = await import('axios');
+        const response = await axios.default.post(
+          'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+          {
+            model: 'qwen-turbo',
+            input: {
+              messages: [
+                {
+                  role: 'user',
+                  content: `Generate 3 short, motivational push notifications for a gig worker on Errandify. User stats: ${stats.completed_this_month} errands completed this month, ${stats.current_tasks} tasks in progress, ${stats.avg_rating.toFixed(1)} star rating, last errand earned SGD $${lastErrandAmount}.
+
+Generate JSON array with format: [{"type":"success/achievement/milestone","emoji":"🎉","title":"Title","message":"Short 1-2 sentence message"}]
+
+Keep messages warm, encouraging, and specific to their activity. Use Singaporean context.`,
+                }
+              ],
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${qwenApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000,
+          }
+        );
+
+        const content = response.data.output?.choices?.[0]?.message?.content || '';
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          alerts = JSON.parse(jsonMatch[0]);
+        }
+      } catch (error) {
+        console.warn('AI alerts generation failed, using fallback:', error);
+      }
+    }
+
+    // Fallback alerts if AI fails or is not configured
+    if (alerts.length === 0) {
+      alerts = [
+        {
+          type: 'success',
+          emoji: '✅',
+          title: 'Great News!',
+          message: `Your last errand earned you SGD $${lastErrandAmount}! 🎉`,
+        },
+        {
+          type: 'achievement',
+          emoji: '🚀',
+          title: 'On Fire!',
+          message: `You've completed ${stats.completed_this_month} errands this month. You're a superstar! ⭐`,
+        },
+        {
+          type: 'milestone',
+          emoji: '🎁',
+          title: 'Bonus Alert!',
+          message: `Earn SGD $${Math.max(0, 150 - lastErrandAmount * 2)} more to unlock the "Speed Demon" badge! 🏃‍♂️`,
+        },
+      ];
+    }
+
+    res.json({
+      success: true,
+      data: {
+        alerts,
+      },
+    });
+  } catch (error) {
+    console.error('AI alerts error:', error);
+    res.status(500).json({ error: 'Failed to generate alerts' });
+  }
+});
+
 export default router;
