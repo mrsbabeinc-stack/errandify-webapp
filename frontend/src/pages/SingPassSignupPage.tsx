@@ -11,12 +11,19 @@ interface SignupData {
   gender?: string;
 }
 
+interface VerificationStatus {
+  status: 'approved' | 'restricted' | 'rejected';
+  message: string;
+  restrictions?: string[];
+}
+
 export default function SingPassSignupPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [step, setStep] = useState<'singpass' | 'profile' | 'complete'>('singpass');
+  const [step, setStep] = useState<'singpass' | 'profile' | 'verification' | 'complete'>('singpass');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus | null>(null);
 
   const [singpassData, setSingpassData] = useState<any>(null);
   const [formData, setFormData] = useState<SignupData>({
@@ -79,9 +86,61 @@ export default function SingPassSignupPage() {
       return;
     }
 
-    // Move to screening
-    setStep('screening');
+    // Move to verification (criminal records check)
+    setStep('verification');
     setError('');
+  };
+
+  const handleVerificationStart = async () => {
+    setLoading(true);
+    try {
+      // First create the account
+      const signupResponse = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/signup`,
+        {
+          nric: formData.nric,
+          displayName: formData.displayName,
+          email: formData.email,
+          phone: formData.phone,
+          role: formData.role,
+          gender: formData.gender,
+          singpassVerified: true,
+        }
+      );
+
+      const userData = signupResponse.data.data;
+      const token = userData.accessToken;
+
+      // Then run criminal records check
+      const verifyResponse = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/verification/check-criminal-records`,
+        {
+          nric: formData.nric,
+          name: formData.displayName,
+          dateOfBirth: singpassData?.dateOfBirth || '',
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const verification = verifyResponse.data;
+      setVerificationStatus({
+        status: verification.status,
+        message: verification.message,
+        restrictions: verification.restrictions,
+      });
+
+      // Store user data
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData.user));
+
+      setError('');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Verification failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleScreeningComplete = async () => {
@@ -299,7 +358,135 @@ export default function SingPassSignupPage() {
     );
   }
 
-  // Step 3: Success
+  // Step 3: Criminal Records Verification
+  if (step === 'verification') {
+    if (!verificationStatus) {
+      // Verification in progress
+      return (
+        <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Account Verification</h2>
+            <p className="text-gray-600 text-sm mb-6">Final step: Safety screening</p>
+
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm mb-6">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* Verification steps */}
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <span className="text-lg">✅</span>
+                <div>
+                  <p className="font-semibold text-sm text-gray-800">SingPass Verified</p>
+                  <p className="text-xs text-gray-600">Identity confirmed</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <span className="text-lg">✅</span>
+                <div>
+                  <p className="font-semibold text-sm text-gray-800">Profile Complete</p>
+                  <p className="text-xs text-gray-600">Contact info verified</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border-2 border-blue-300">
+                <span className="text-lg animate-spin">⏳</span>
+                <div>
+                  <p className="font-semibold text-sm text-blue-800">Safety Screening</p>
+                  <p className="text-xs text-blue-600">Checking criminal records...</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-800">
+                <strong>Why this step?</strong> We screen all users to keep our community safe. This typically takes less than a minute.
+              </p>
+            </div>
+
+            <button
+              onClick={handleVerificationStart}
+              disabled={loading}
+              className="w-full mt-6 py-3 px-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading ? '🔄 Verifying...' : '▶ Start Verification'}
+            </button>
+          </div>
+        </div>
+      );
+    } else {
+      // Verification complete - show result
+      const isApproved = verificationStatus.status === 'approved';
+      const isRestricted = verificationStatus.status === 'restricted';
+      const isRejected = verificationStatus.status === 'rejected';
+
+      const bgColor = isApproved ? 'green-50' : isRejected ? 'red-50' : 'yellow-50';
+      const borderColor = isApproved ? 'green-200' : isRejected ? 'red-200' : 'yellow-200';
+      const textColor = isApproved ? 'green-800' : isRejected ? 'red-800' : 'yellow-800';
+      const icon = isApproved ? '✅' : isRejected ? '❌' : '⚠️';
+
+      return (
+        <div className={`min-h-screen bg-${bgColor} flex items-center justify-center p-4`}>
+          <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
+            <div className="text-center mb-6">
+              <div className="text-6xl mb-4">{icon}</div>
+              <h2 className={`text-2xl font-bold text-${textColor} mb-2`}>
+                {isApproved ? 'Verification Complete' : isRejected ? 'Verification Failed' : 'Restricted Access'}
+              </h2>
+            </div>
+
+            <div className={`p-4 bg-${bgColor} border border-${borderColor} rounded-lg mb-6`}>
+              <p className={`text-sm text-${textColor} font-semibold`}>
+                {verificationStatus.message}
+              </p>
+            </div>
+
+            {isRestricted && verificationStatus.restrictions && verificationStatus.restrictions.length > 0 && (
+              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm font-semibold text-yellow-800 mb-2">Some job categories unavailable:</p>
+                <ul className="text-xs text-yellow-700 space-y-1">
+                  {verificationStatus.restrictions.map((r: string) => (
+                    <li key={r}>• {r.replace(/_/g, ' ')}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {isRejected ? (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600 text-center">
+                  If you believe this is a mistake, please contact our support team.
+                </p>
+                <button
+                  onClick={() => navigate('/')}
+                  className="w-full py-3 px-4 bg-gray-600 text-white rounded-lg font-bold hover:bg-gray-700"
+                >
+                  Return to Home
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setStep('complete');
+                  setTimeout(() => {
+                    navigate('/home');
+                  }, 2000);
+                }}
+                className={`w-full py-3 px-4 bg-${isApproved ? 'green' : 'yellow'}-600 text-white rounded-lg font-bold hover:bg-${isApproved ? 'green' : 'yellow'}-700`}
+              >
+                {isApproved ? '✅ Continue to Dashboard' : '⚠️ Continue with Restrictions'}
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // Step 4: Success
   if (step === 'complete') {
     return (
       <div className="min-h-screen bg-green-50 flex items-center justify-center p-4">
