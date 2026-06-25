@@ -846,22 +846,17 @@ export default function MyAccountPage() {
           </button>
         </div>
 
-        {/* Logout & Settings */}
+        {/* Profile & Logout - Same as Layout */}
         <div className="flex items-center gap-2">
-          {/* Settings Dropdown */}
-          <div className="relative group">
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition">
-              ⚙️
-            </button>
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 border border-gray-200">
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-semibold first:rounded-t-lg last:rounded-b-lg flex items-center gap-2"
-              >
-                🗑️ Delete Account
-              </button>
+          {/* Profile Photo */}
+          <button
+            onClick={() => navigate('/my-account')}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <div className="w-8 h-8 rounded-full bg-errandify-orange flex items-center justify-center text-white text-xs font-bold">
+              S
             </div>
-          </div>
+          </button>
           {/* Logout Button */}
           <button
             onClick={handleLogout}
