@@ -362,7 +362,6 @@ export default function MyAccountPage() {
           bio: editForm.bio,
           email: editForm.email,
           mobile: editForm.mobile,
-          chasCardColor: editForm.chas_card_color,
           certificates: certificates,
           profileImageUrl: profileImage || profileData.profileImageUrl,
         };
@@ -373,6 +372,12 @@ export default function MyAccountPage() {
       }
       setModalMessage('Your profile shines brighter now! ✨');
       setShowSuccessModal(true);
+
+      // Navigate to MyHub after showing success message
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        setActiveSection('dashboard');
+      }, 1500);
     } catch (error) {
       console.error('Error saving profile:', error);
       alert('Failed to save profile');
