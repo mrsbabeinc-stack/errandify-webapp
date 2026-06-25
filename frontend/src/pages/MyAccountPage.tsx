@@ -125,7 +125,29 @@ export default function MyAccountPage() {
         console.warn('Failed to fetch AI alerts:', error);
       }
     };
+
+    // Fetch bank details
+    const fetchBankDetails = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payment/bank-details`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (response.data.data) {
+          setPayoutForm({
+            bankName: response.data.data.bankName || 'DBS Bank Singapore',
+            accountHolder: response.data.data.accountHolder || 'Sarah Tan',
+            accountNumber: response.data.data.accountNumber || '****5678',
+          });
+        }
+      } catch (error) {
+        console.warn('Failed to fetch bank details:', error);
+      }
+    };
+
     fetchAiAlerts();
+    fetchBankDetails();
   }, []);
 
   useEffect(() => {
@@ -1302,10 +1324,28 @@ export default function MyAccountPage() {
                         Cancel
                       </button>
                       <button
-                        onClick={() => {
-                          setEditingPayout(false);
-                          setModalMessage('Payout details updated! 💰');
-                          setShowSuccessModal(true);
+                        onClick={async () => {
+                          try {
+                            const token = localStorage.getItem('token');
+                            const response = await axios.post(
+                              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payment/save-bank-details`,
+                              {
+                                bankName: payoutForm.bankName,
+                                accountHolder: payoutForm.accountHolder,
+                                accountNumber: payoutForm.accountNumber,
+                              },
+                              { headers: { Authorization: `Bearer ${token}` } }
+                            );
+
+                            if (response.data.success) {
+                              setEditingPayout(false);
+                              setModalMessage('✅ Payout details saved! Bank account verified. 🎉');
+                              setShowSuccessModal(true);
+                            }
+                          } catch (error: any) {
+                            setModalMessage('❌ ' + (error.response?.data?.error || 'Failed to save bank details'));
+                            setShowErrorModal(true);
+                          }
                         }}
                         className="flex-1 bg-green-500 text-white py-1 rounded text-xs font-semibold hover:bg-green-600"
                       >
