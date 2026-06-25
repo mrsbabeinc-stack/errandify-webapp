@@ -2038,7 +2038,11 @@ export default function MyAccountPage() {
             {/* Button */}
             <div className="p-4 border-t-2 border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
               <button
-                onClick={() => setShowGiftSuccessModal(false)}
+                onClick={() => {
+                  setShowGiftSuccessModal(false);
+                  setShowGiftModal(false);
+                  setActiveSection('myRewardSpace');
+                }}
                 className="w-full bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 text-white font-black py-4 rounded-xl hover:shadow-lg hover:scale-105 transition transform text-lg"
               >
                 🎉 AWESOME! CLOSE 🎉
