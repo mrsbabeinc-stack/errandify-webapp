@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
+import { activityLogService } from '../services/activityLogService.js';
 
 const router = Router();
 
@@ -418,6 +419,11 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         console.error('[NOTIFICATIONS] Error sending notifications:', notifyErr);
         // Don't fail the errand creation if notifications fail
       }
+
+      // Log activity: Errand posted
+      const askerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [askerId]);
+      const askerName = askerResult.rows[0]?.display_name || 'Unknown User';
+      await activityLogService.logPosted(errand.id, askerName, askerId);
 
       res.status(201).json({
         success: true,

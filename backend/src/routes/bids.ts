@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import axios from 'axios';
+import { activityLogService } from '../services/activityLogService.js';
 
 const router = Router();
 
@@ -120,6 +121,9 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         // Don't fail the entire request if notification fails
       }
     }
+
+    // Log activity: Bid placed
+    await activityLogService.logBidPlaced(task_id, doerName, doerId, parseFloat(amount));
 
     res.status(201).json({
       success: true,
@@ -290,6 +294,11 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
       // Don't fail the entire request if notification fails
     }
 
+    // Log activity: Bid accepted
+    const askerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [bid.asker_id]);
+    const askerName = askerResult.rows[0]?.display_name || 'Unknown User';
+    await activityLogService.logBidAccepted(bid.errand_id, askerName, bid.asker_id);
+
     res.json({
       success: true,
       data: {
@@ -367,6 +376,11 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Respons
       console.warn('[Bids] Failed to send rejection notification:', notifErr);
       // Don't fail the entire request if notification fails
     }
+
+    // Log activity: Bid rejected
+    const doerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [bid.doer_id]);
+    const doerName = doerResult.rows[0]?.display_name || 'Unknown User';
+    await activityLogService.logBidRejected(bid.errand_id, doerName, bid.doer_id);
 
     res.json({ success: true, data: updatedBid });
   } catch (error) {
