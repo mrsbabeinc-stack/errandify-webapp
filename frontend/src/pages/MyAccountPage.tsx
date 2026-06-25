@@ -81,6 +81,17 @@ export default function MyAccountPage() {
   const [redemptionHistory, setRedemptionHistory] = useState<Array<{ id: string; date: string; item: string; code: string; amount: number; emoji: string }>>([
     { id: '1', date: '10-06-2026', item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' },
   ]);
+  const [showGiftModal, setShowGiftModal] = useState(false);
+  const [giftForm, setGiftForm] = useState({
+    points: '',
+    recipient: '',
+  });
+  const [giftRecipients] = useState([
+    { id: '1', name: 'Sarah Tan' },
+    { id: '2', name: 'John Lee' },
+    { id: '3', name: '@SunnyLove' },
+    { id: '4', name: '@HappyHelper' },
+  ]);
 
   // Singapore banks list
   const singaporeBanks = [
@@ -1475,8 +1486,8 @@ export default function MyAccountPage() {
                   </button>
                   <button
                     onClick={() => {
-                      setModalMessage('💝 Send love & rewards to your friends! Spread the happiness! 🌟');
-                      setShowSuccessModal(true);
+                      setShowGiftModal(true);
+                      setGiftForm({ points: '', recipient: '' });
                     }}
                     className="flex-1 bg-gradient-to-r from-pink-400 to-rose-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition transform shadow-md"
                   >
@@ -1879,6 +1890,99 @@ export default function MyAccountPage() {
         icon="⚠️"
         onClose={() => setShowErrorModal(false)}
       />
+
+      {/* Gift Modal */}
+      {showGiftModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-4 space-y-3">
+            {/* Header */}
+            <div className="text-center pb-2 border-b border-orange-200">
+              <p className="text-lg font-bold text-errandify-brown">💝 Send A Gift</p>
+              <p className="text-xs text-gray-600 mt-1">Share your rewards with friends!</p>
+            </div>
+
+            {/* Points Card */}
+            <div className="bg-gradient-to-br from-orange-100 to-orange-50 rounded-lg p-3 border-2 border-orange-300">
+              <p className="text-xs text-gray-600 mb-1">Points</p>
+              <p className="text-3xl font-bold text-orange-600">{userBalance} EP</p>
+              <p className="text-xs text-orange-600 mt-2">
+                ⚠️ Expiring Soon
+              </p>
+              <p className="text-xs text-gray-600">25 pts will expire on 30/06/2027</p>
+            </div>
+
+            {/* Points to Send */}
+            <div>
+              <label className="text-sm font-bold text-gray-700">Points to Send</label>
+              <p className="text-xs text-gray-600 mb-2">Up to {Math.min(userBalance, 25)}</p>
+              <input
+                type="number"
+                min="1"
+                max={Math.min(userBalance, 25)}
+                value={giftForm.points}
+                onChange={(e) => setGiftForm({ ...giftForm, points: e.target.value })}
+                className="w-full px-3 py-2 border-2 border-orange-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+                placeholder="Enter amount (max 25)"
+              />
+            </div>
+
+            {/* Recipient */}
+            <div>
+              <label className="text-sm font-bold text-gray-700">Recipient</label>
+              <select
+                value={giftForm.recipient}
+                onChange={(e) => setGiftForm({ ...giftForm, recipient: e.target.value })}
+                className="w-full px-3 py-2 border-2 border-orange-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+              >
+                <option value="">Select Recipient</option>
+                {giftRecipients.map((r) => (
+                  <option key={r.id} value={r.name}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Points Left */}
+            <div className="bg-yellow-50 rounded-lg p-2 flex justify-between items-center border border-yellow-200">
+              <p className="text-xs font-bold text-gray-700">💰 Errandify Points Left</p>
+              <p className="text-sm font-bold text-orange-600">{userBalance} EP</p>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                onClick={() => {
+                  const pointsToSend = parseInt(giftForm.points || '0', 10);
+                  if (!giftForm.points || pointsToSend <= 0) {
+                    setModalMessage('❌ Please enter a valid amount');
+                    setShowErrorModal(true);
+                  } else if (pointsToSend > 25) {
+                    setModalMessage('❌ You can only send up to 25 EP at a time');
+                    setShowErrorModal(true);
+                  } else if (!giftForm.recipient) {
+                    setModalMessage('❌ Please select a recipient');
+                    setShowErrorModal(true);
+                  } else {
+                    setShowGiftModal(false);
+                    setModalMessage(`🎁 Gift sent! You sent ${pointsToSend} EP to ${giftForm.recipient}!\n\nThey're so lucky! 🌟`);
+                    setShowSuccessModal(true);
+                  }
+                }}
+                className="w-full bg-gradient-to-r from-orange-400 to-orange-500 text-white py-2.5 rounded-lg font-bold text-sm hover:shadow-lg transition"
+              >
+                🎁 Gift
+              </button>
+              <button
+                onClick={() => setShowGiftModal(false)}
+                className="w-full border-2 border-orange-300 text-orange-600 py-2.5 rounded-lg font-bold text-sm hover:bg-orange-50 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
