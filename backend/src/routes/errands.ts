@@ -872,6 +872,12 @@ router.post('/:id/reopen', authMiddleware, async (req: AuthRequest, res: Respons
       ['in_progress', reason || null, userId, id]
     );
 
+    // Log activity: Job reopened
+    const userResult = await db.query('SELECT display_name FROM users WHERE id = $1', [userId]);
+    const userName = userResult.rows[0]?.display_name || 'Unknown User';
+    const userRole = isAsker ? 'asker' : 'doer';
+    await activityLogService.logActivity(id, 'reopened', userId, userName, userRole, { reason });
+
     res.json({
       success: true,
       message: 'Job reopened. Work can continue.',
@@ -919,6 +925,11 @@ router.post('/:id/raise-dispute', authMiddleware, async (req: AuthRequest, res: 
       'UPDATE errands SET status = $1, dispute_reason = $2 WHERE id = $3',
       ['disputed', reason || null, id]
     );
+
+    // Log activity: Dispute raised
+    const userResult = await db.query('SELECT display_name FROM users WHERE id = $1', [userId]);
+    const userName = userResult.rows[0]?.display_name || 'Unknown User';
+    await activityLogService.logDisputeRaised(id, userName, userId, 'asker');
 
     res.json({
       success: true,
@@ -1003,6 +1014,12 @@ router.post('/:id/review', authMiddleware, async (req: AuthRequest, res: Respons
       [rating, comment || null, id]
     );
 
+    // Log activity: Review/rating submitted
+    const userResult = await db.query('SELECT display_name FROM users WHERE id = $1', [userId]);
+    const userName = userResult.rows[0]?.display_name || 'Unknown User';
+    const userRole = isAsker ? 'asker' : 'doer';
+    await activityLogService.logRatingSubmitted(id, userName, userId, userRole, rating);
+
     res.json({
       success: true,
       message: 'Review submitted.',
@@ -1045,6 +1062,12 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
       'UPDATE errands SET status = $1, cancelled_by = $2, cancellation_reason = $3 WHERE id = $4',
       ['cancelled', userId, reason || null, id]
     );
+
+    // Log activity: Errand cancelled
+    const userResult = await db.query('SELECT display_name FROM users WHERE id = $1', [userId]);
+    const userName = userResult.rows[0]?.display_name || 'Unknown User';
+    const userRole = isAsker ? 'asker' : 'doer';
+    await activityLogService.logActivity(id, 'cancelled', userId, userName, userRole, { reason, previousStatus });
 
     // If in_progress, mark as dispute/pending resolution
     if (previousStatus === 'in_progress') {
