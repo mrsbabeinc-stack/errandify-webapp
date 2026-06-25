@@ -40,7 +40,7 @@ export default function MyAccountPage() {
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | 'categories' | 'faq'>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [blockedTab, setBlockedTab] = useState<'blocked' | 'trusted'>('blocked');
-  const [rewardsTab, setRewardsTab] = useState<'overview' | 'shop' | 'gift' | 'vouchers' | 'history'>('overview');
+  const [rewardsTab, setRewardsTab] = useState<'overview' | 'shop' | 'gift' | 'myVoucher' | 'history'>('overview');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -1546,14 +1546,14 @@ export default function MyAccountPage() {
                 💝 Send A Gift
               </button>
               <button
-                onClick={() => setRewardsTab('vouchers')}
+                onClick={() => setRewardsTab('myVoucher')}
                 className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
-                  rewardsTab === 'vouchers'
+                  rewardsTab === 'myVoucher'
                     ? 'bg-purple-500 text-white'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                 }`}
               >
-                🎟️ My Vouchers
+                🎟️ MyVoucher
               </button>
               <button
                 onClick={() => setRewardsTab('history')}
@@ -2098,11 +2098,11 @@ export default function MyAccountPage() {
               </div>
             )}
 
-            {/* VOUCHERS TAB - My Redeemed Vouchers */}
-            {rewardsTab === 'vouchers' && (
+            {/* MYVOUCHER TAB - Redeemed Vouchers */}
+            {rewardsTab === 'myVoucher' && (
               <div className="space-y-2">
                 <div className="text-center py-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg border-2 border-purple-300">
-                  <p className="text-sm font-bold text-purple-600">🎟️ My Vouchers 🎟️</p>
+                  <p className="text-sm font-bold text-purple-600">🎟️ MyVoucher 🎟️</p>
                   <p className="text-xs text-gray-600 mt-1">All your redeemed discount codes</p>
                 </div>
 
@@ -2110,7 +2110,7 @@ export default function MyAccountPage() {
                 {redemptionHistory.length > 0 ? (
                   <div className="bg-white rounded-xl border-2 border-purple-200 overflow-hidden shadow-md">
                     <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3">
-                      <h3 className="text-sm font-bold">🎁 Your Vouchers ({redemptionHistory.length}) 🎁</h3>
+                      <h3 className="text-sm font-bold">🎁 MyVoucher ({redemptionHistory.length}) 🎁</h3>
                       <p className="text-xs mt-1 opacity-90">Click to copy code</p>
                     </div>
                     <div className="divide-y divide-purple-100">
@@ -2142,7 +2142,7 @@ export default function MyAccountPage() {
                   </div>
                 ) : (
                   <div className="bg-purple-50 rounded-xl border-2 border-purple-200 p-6 text-center">
-                    <p className="text-sm font-bold text-purple-600 mb-2">🎟️ No Vouchers Yet</p>
+                    <p className="text-sm font-bold text-purple-600 mb-2">🎟️ No MyVoucher Yet</p>
                     <p className="text-xs text-gray-600 mb-4">Redeem discounts in the Shop to collect vouchers</p>
                     <button
                       onClick={() => setRewardsTab('shop')}
