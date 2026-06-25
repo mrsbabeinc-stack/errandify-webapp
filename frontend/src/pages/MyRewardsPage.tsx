@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -7,6 +7,7 @@ export default function MyRewardSpacePage() {
   const [activeTab, setActiveTab] = useState<'errandify' | 'rewards' | 'history' | 'vouchers'>('errandify');
   const [redeeming, setRedeeming] = useState(false);
   const [message, setMessage] = useState('');
+  const [redeemed, setRedeemed] = useState<number[]>([]);
 
   const rewards = [
     { id: 1, name: '$5 Discount', cost: '50 EP', available: true },
@@ -33,11 +34,13 @@ export default function MyRewardSpacePage() {
         { rewardId, points },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setMessage('✅ Reward redeemed successfully!');
-      // Refresh page or update UI
-      setTimeout(() => navigate(0), 2000);
+      setMessage('✅ Reward redeemed successfully! Points deducted from your account.');
+      setRedeemed([...redeemed, rewardId]);
+      // Auto-clear message after 5 seconds but keep the redeemed state
+      setTimeout(() => setMessage(''), 5000);
     } catch (error: any) {
       setMessage(`❌ ${error.response?.data?.error || 'Failed to redeem'}`);
+      setTimeout(() => setMessage(''), 5000);
     } finally {
       setRedeeming(false);
     }
