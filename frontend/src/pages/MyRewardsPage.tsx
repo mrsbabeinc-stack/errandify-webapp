@@ -51,6 +51,7 @@ export default function MyRewardSpacePage() {
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/my-vouchers`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      console.log('Fetched vouchers:', vouchersRes.data.data);
       const vouchers = vouchersRes.data.data || [];
       setMyVouchers(vouchers);
     } catch (error) {
