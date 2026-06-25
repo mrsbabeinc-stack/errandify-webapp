@@ -90,7 +90,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   ];
 
   const askerItems: NavItem[] = [
-    { label: 'Home', path: '/', icon: '🏠' },
+    { label: 'MyHome', path: '/', icon: '🏠' },
     { label: 'MyErrands', path: '/errands', icon: '📋' },
     { label: 'MyChat', path: '/chat', icon: '💬' },
     { label: 'MyKampung', path: '/my-kampung', icon: '📰' },
