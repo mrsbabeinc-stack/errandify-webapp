@@ -33,10 +33,10 @@ router.get('/profile', authMiddleware, async (req, res) => {
     const tasksResult = await db.query(
       `SELECT
         COUNT(DISTINCT e.id) as completed_count,
-        COALESCE(SUM(CASE WHEN e.status = 'completed' AND ea.assigned_to = $1 THEN e.budget ELSE 0 END), 0) as doer_earnings
+        COALESCE(SUM(CASE WHEN e.status = 'completed' AND ea.doer_id = $1 THEN e.budget ELSE 0 END), 0) as doer_earnings
        FROM errands e
-       LEFT JOIN errand_assignments ea ON e.id = ea.errand_id
-       WHERE e.status = 'completed' AND (e.asker_id = $1 OR ea.assigned_to = $1)`,
+       LEFT JOIN errand_assignments ea ON e.id = ea.errand_id AND ea.status = 'completed'
+       WHERE e.status = 'completed' AND (e.asker_id = $1 OR ea.doer_id = $1)`,
       [req.userId]
     );
 
