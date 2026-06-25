@@ -2016,28 +2016,29 @@ export default function MyAccountPage() {
               </div>
             )}
 
-            {/* Gift Card Message */}
+            {/* Gift Card Message - Scrollable */}
             <div>
               <label className="text-sm font-bold text-gray-700">🎀 Gift Card Message</label>
-              <div className="space-y-2">
+              <div className="max-h-32 overflow-y-auto border border-orange-100 rounded-lg p-2 bg-orange-50 space-y-1">
                 {giftCardTemplates.map((template, idx) => (
-                  <button
+                  <label
                     key={idx}
-                    onClick={() =>
-                      setGiftForm({
-                        ...giftForm,
-                        giftCardMessage: template,
-                        useCustomMessage: false,
-                      })
-                    }
-                    className={`w-full text-left px-3 py-2 rounded-lg text-xs transition ${
-                      giftForm.giftCardMessage === template && !giftForm.useCustomMessage
-                        ? 'bg-orange-200 text-orange-900 border-2 border-orange-400'
-                        : 'border border-orange-200 hover:bg-orange-50'
-                    }`}
+                    className="flex items-start gap-2 p-1.5 hover:bg-orange-100 rounded cursor-pointer transition"
                   >
-                    {template}
-                  </button>
+                    <input
+                      type="checkbox"
+                      checked={giftForm.giftCardMessage === template && !giftForm.useCustomMessage}
+                      onChange={() =>
+                        setGiftForm({
+                          ...giftForm,
+                          giftCardMessage: template,
+                          useCustomMessage: false,
+                        })
+                      }
+                      className="mt-0.5"
+                    />
+                    <span className="text-xs text-gray-700">{template}</span>
+                  </label>
                 ))}
               </div>
 
@@ -2067,16 +2068,56 @@ export default function MyAccountPage() {
               )}
             </div>
 
-            {/* Gift Date */}
+            {/* Gift Date - Current or Future Only */}
             <div>
-              <label className="text-sm font-bold text-gray-700">📅 Send Gift On (Optional)</label>
+              <label className="text-sm font-bold text-gray-700">📅 Send Gift On (Today or Later)</label>
               <input
                 type="date"
                 value={giftForm.giftDate}
-                onChange={(e) => setGiftForm({ ...giftForm, giftDate: e.target.value })}
+                onChange={(e) => {
+                  const selectedDate = new Date(e.target.value);
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+
+                  if (selectedDate >= today) {
+                    setGiftForm({ ...giftForm, giftDate: e.target.value });
+                  } else {
+                    setModalMessage('❌ Please select today or a future date');
+                    setShowErrorModal(true);
+                  }
+                }}
+                min={new Date().toISOString().split('T')[0]}
                 className="w-full px-3 py-2 border-2 border-orange-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange"
               />
             </div>
+
+            {/* Saved Groups */}
+            {savedGroups.length > 0 && (
+              <div>
+                <label className="text-sm font-bold text-gray-700">💾 Use Saved Group</label>
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const group = savedGroups.find((g) => g.id === e.target.value);
+                      if (group) {
+                        setGiftForm({
+                          ...giftForm,
+                          recipients: group.members,
+                        });
+                      }
+                    }
+                  }}
+                  className="w-full px-3 py-2 border-2 border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                >
+                  <option value="">Select a group...</option>
+                  {savedGroups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name} ({group.members.length} members)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Save as Group */}
             <button
@@ -2087,13 +2128,16 @@ export default function MyAccountPage() {
             </button>
 
             {showGroupForm && (
-              <input
-                type="text"
-                placeholder="Group name (e.g., 'Close Friends')"
-                value={giftForm.groupName}
-                onChange={(e) => setGiftForm({ ...giftForm, groupName: e.target.value })}
-                className="w-full px-3 py-2 border-2 border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-              />
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  placeholder="Group name (e.g., 'Close Friends')"
+                  value={giftForm.groupName}
+                  onChange={(e) => setGiftForm({ ...giftForm, groupName: e.target.value })}
+                  className="w-full px-3 py-2 border-2 border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+                <p className="text-xs text-gray-600">💡 Group will save {giftForm.recipients?.length || 0} selected recipients</p>
+              </div>
             )}
 
             {/* Points Left */}
