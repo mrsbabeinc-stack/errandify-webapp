@@ -2236,11 +2236,18 @@ export default function MyAccountPage() {
               <button
                 onClick={() => {
                   const pointsToSend = parseInt(giftForm.points || '0', 10);
+                  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                  const currentUserId = currentUser?.id?.toString();
+                  const sendingToSelf = giftForm.recipients.some((recipientId) => recipientId === currentUserId);
+
                   if (!giftForm.points || pointsToSend <= 0) {
                     setModalMessage('❌ Please enter a valid amount');
                     setShowErrorModal(true);
                   } else if (giftForm.recipients.length === 0) {
                     setModalMessage('❌ Please select at least one recipient');
+                    setShowErrorModal(true);
+                  } else if (sendingToSelf) {
+                    setModalMessage('❌ You cannot send points to yourself!');
                     setShowErrorModal(true);
                   } else if (pointsToSend * giftForm.recipients.length > userBalance) {
                     setModalMessage('❌ Not enough points for all recipients');
