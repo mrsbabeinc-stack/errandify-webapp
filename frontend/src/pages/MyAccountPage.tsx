@@ -2117,11 +2117,16 @@ export default function MyAccountPage() {
               {/* Header with selection count */}
               <div className="flex justify-between items-center">
                 <label className="text-sm font-bold text-gray-700">🔍 Select Recipients/Groups</label>
-                {giftForm.recipients && giftForm.recipients.length > 0 && (
-                  <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">
-                    {giftForm.recipients.length} selected
-                  </span>
-                )}
+                <div className="flex gap-2 items-center">
+                  {giftForm.recipients && giftForm.recipients.length > 0 && (
+                    <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">
+                      {giftForm.recipients.length} selected
+                    </span>
+                  )}
+                  {(!giftForm.recipients || giftForm.recipients.length === 0) && (
+                    <span className="text-xs text-gray-500">Check boxes below to select</span>
+                  )}
+                </div>
               </div>
 
               {/* Group Name - Appears at Top When Selecting */}
