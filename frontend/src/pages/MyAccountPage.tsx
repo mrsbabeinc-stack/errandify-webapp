@@ -40,6 +40,7 @@ export default function MyAccountPage() {
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | 'categories' | 'faq'>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [blockedTab, setBlockedTab] = useState<'blocked' | 'trusted'>('blocked');
+  const [rewardsTab, setRewardsTab] = useState<'overview' | 'shop' | 'history'>('overview');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -76,6 +77,10 @@ export default function MyAccountPage() {
   });
   const [activitySearch, setActivitySearch] = useState('');
   const [activityFilter, setActivityFilter] = useState<'all' | 'completed' | 'posted' | 'referral' | 'rating' | 'accepted'>('all');
+  const [userBalance, setUserBalance] = useState(25);
+  const [redemptionHistory, setRedemptionHistory] = useState<Array<{ id: string; date: string; item: string; code: string; amount: number; emoji: string }>>([
+    { id: '1', date: '10-06-2026', item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' },
+  ]);
 
   // Singapore banks list
   const singaporeBanks = [
@@ -1402,136 +1407,201 @@ export default function MyAccountPage() {
         {/* MYREWARDSPACE SECTION */}
         {activeSection === 'rewards' && (
           <div className="space-y-2">
-            {/* Happy Header */}
-            <div className="text-center py-2 bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 rounded-lg border-2 border-yellow-300">
-              <p className="text-sm font-bold text-orange-600">🎊 You're doing AMAZING! 🎊</p>
-              <p className="text-xs text-gray-600 mt-1">Keep earning and redeeming rewards with Errandify!</p>
-            </div>
-
-            {/* Errandify Points Card - Big & Happy */}
-            <div className="bg-gradient-to-br from-yellow-300 via-orange-400 to-pink-400 text-white rounded-xl p-4 shadow-lg relative overflow-hidden">
-              <div className="absolute top-1 right-1 text-2xl opacity-20">✨</div>
-              <div className="absolute bottom-1 left-1 text-2xl opacity-20">🎁</div>
-              <div className="relative z-10">
-                <p className="text-xs opacity-90 mb-1 font-semibold">💰 Your Available Points</p>
-                <p className="text-4xl font-bold mb-2">25 EP</p>
-                <p className="text-xs opacity-80 bg-orange-600 bg-opacity-30 rounded p-2 font-semibold">
-                  🌟 Expiring Soon: 25 pts will expire on 30/06/2027
-                </p>
-                <p className="text-xs mt-2 opacity-90 font-semibold">Earn more by completing errands! 🚀</p>
-              </div>
-            </div>
-
-            {/* Redeem & Gift Buttons - Big & Fun */}
-            <div className="flex gap-2">
+            {/* Reward Tabs */}
+            <div className="flex gap-1 border-b border-gray-200 overflow-x-auto pb-1">
               <button
-                onClick={() => {
-                  setModalMessage('🎉 Let\'s find you the PERFECT reward! Pick your discount! 🎁');
-                  setShowSuccessModal(true);
-                }}
-                className="flex-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition transform shadow-md"
+                onClick={() => setRewardsTab('overview')}
+                className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
+                  rewardsTab === 'overview'
+                    ? 'bg-errandify-orange text-white'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
               >
-                🎁 Redeem Now
+                📊 Overview
               </button>
               <button
-                onClick={() => {
-                  setModalMessage('💝 Send love & rewards to your friends! Spread the happiness! 🌟');
-                  setShowSuccessModal(true);
-                }}
-                className="flex-1 bg-gradient-to-r from-pink-400 to-rose-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition transform shadow-md"
+                onClick={() => setRewardsTab('shop')}
+                className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
+                  rewardsTab === 'shop'
+                    ? 'bg-errandify-orange text-white'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
               >
-                💝 Send A Gift
+                🛍️ Shop
+              </button>
+              <button
+                onClick={() => setRewardsTab('history')}
+                className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
+                  rewardsTab === 'history'
+                    ? 'bg-errandify-orange text-white'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                📜 History
               </button>
             </div>
+            {/* OVERVIEW TAB */}
+            {rewardsTab === 'overview' && (
+              <div className="space-y-2">
+                {/* Happy Header */}
+                <div className="text-center py-2 bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 rounded-lg border-2 border-yellow-300">
+                  <p className="text-sm font-bold text-orange-600">🎊 You're doing AMAZING! 🎊</p>
+                  <p className="text-xs text-gray-600 mt-1">Keep earning and redeeming rewards with Errandify!</p>
+                </div>
 
-            {/* Available Rewards - Happy Cards */}
-            <div className="bg-white rounded-xl border-2 border-yellow-200 overflow-hidden shadow-md">
-              <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-3">
-                <h3 className="text-sm font-bold">🎁 MyRewards - Pick Your Prize! 🎁</h3>
-                <p className="text-xs mt-1 opacity-90">Use your points to unlock amazing discounts!</p>
-              </div>
-              <div className="divide-y divide-yellow-100 text-xs">
-                <div className="p-3 flex justify-between items-center hover:bg-yellow-50 transition bg-gradient-to-r from-transparent to-yellow-50">
-                  <div>
-                    <p className="font-bold text-gray-900 text-sm">💳 $5 Discount</p>
-                    <p className="text-orange-600 font-bold">50 EP • Get SGD $5 off!</p>
+                {/* Errandify Points Card - Big & Happy */}
+                <div className="bg-gradient-to-br from-yellow-300 via-orange-400 to-pink-400 text-white rounded-xl p-4 shadow-lg relative overflow-hidden">
+                  <div className="absolute top-1 right-1 text-2xl opacity-20">✨</div>
+                  <div className="absolute bottom-1 left-1 text-2xl opacity-20">🎁</div>
+                  <div className="relative z-10">
+                    <p className="text-xs opacity-90 mb-1 font-semibold">💰 Your Available Points</p>
+                    <p className="text-4xl font-bold mb-2">{userBalance} EP</p>
+                    <p className="text-xs opacity-80 bg-orange-600 bg-opacity-30 rounded p-2 font-semibold">
+                      🌟 Expiring Soon: 25 pts will expire on 30/06/2027
+                    </p>
+                    <p className="text-xs mt-2 opacity-90 font-semibold">Earn more by completing errands! 🚀</p>
                   </div>
+                </div>
+
+                {/* Redeem & Gift Buttons - Big & Fun */}
+                <div className="flex gap-2">
                   <button
                     onClick={() => {
-                      setModalMessage('🎉 YES! You just unlocked SGD $5 Discount!\n\n🎟️ Code: ERRAND5\n\nHappy saving! 💰');
-                      setShowSuccessModal(true);
+                      setRewardsTab('shop');
                     }}
-                    className="bg-gradient-to-r from-green-400 to-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:shadow-lg transition"
+                    className="flex-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition transform shadow-md"
                   >
-                    ✨ Redeem
+                    🎁 Redeem Now
                   </button>
-                </div>
-                <div className="p-3 flex justify-between items-center hover:bg-blue-50 transition bg-gradient-to-r from-transparent to-blue-50">
-                  <div>
-                    <p className="font-bold text-gray-900 text-sm">💳 $10 Discount</p>
-                    <p className="text-blue-600 font-bold">100 EP • Get SGD $10 off!</p>
-                  </div>
                   <button
                     onClick={() => {
-                      setModalMessage('🎉 AWESOME! You just unlocked SGD $10 Discount!\n\n🎟️ Code: ERRAND10\n\nWow, great saving! 💰');
+                      setModalMessage('💝 Send love & rewards to your friends! Spread the happiness! 🌟');
                       setShowSuccessModal(true);
                     }}
-                    className="bg-gradient-to-r from-blue-400 to-cyan-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:shadow-lg transition"
+                    className="flex-1 bg-gradient-to-r from-pink-400 to-rose-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition transform shadow-md"
                   >
-                    ✨ Redeem
+                    💝 Send A Gift
                   </button>
                 </div>
-                <div className="p-3 flex justify-between items-center hover:bg-gray-50 transition bg-gradient-to-r from-transparent to-gray-50">
-                  <div>
-                    <p className="font-bold text-gray-900 text-sm">💎 $20 Discount</p>
-                    <p className="text-gray-500 font-bold">200 EP • Get SGD $20 off! (Coming soon...)</p>
-                  </div>
-                  <button
-                    disabled
-                    className="bg-gray-400 text-white px-3 py-2 rounded-lg text-xs font-bold cursor-not-allowed opacity-50"
-                  >
-                    🎯 Need 200 EP
-                  </button>
-                </div>
-              </div>
-            </div>
 
-            {/* Point History - Happy & Celebratory */}
-            <div className="bg-white rounded-xl border-2 border-green-200 overflow-hidden shadow-md">
-              <div className="bg-gradient-to-r from-green-400 to-emerald-500 text-white p-3">
-                <h3 className="text-sm font-bold">📈 Your Earning Journey 🚀</h3>
-                <p className="text-xs mt-1 opacity-90">Every action brings you closer to rewards!</p>
-              </div>
-              <div className="divide-y divide-green-100 text-xs">
-                <div className="p-3 flex justify-between hover:bg-green-50 transition bg-gradient-to-r from-transparent to-green-50">
-                  <div>
-                    <p className="font-bold text-gray-900">✅ Completed Errand</p>
-                    <p className="text-gray-500 text-xs">17-06-2026 • Great job!</p>
-                  </div>
-                  <p className="font-bold text-green-600 text-sm">+10 EP 🎉</p>
-                </div>
-                <div className="p-3 flex justify-between hover:bg-purple-50 transition bg-gradient-to-r from-transparent to-purple-50">
-                  <div>
-                    <p className="font-bold text-gray-900">🎁 Referred @SunnyLove</p>
-                    <p className="text-gray-500 text-xs">12-06-2026 • Nice sharing!</p>
-                  </div>
-                  <p className="font-bold text-purple-600 text-sm">+50 EP 🌟</p>
-                </div>
-                <div className="p-3 flex justify-between hover:bg-orange-50 transition bg-gradient-to-r from-transparent to-orange-50">
-                  <div>
-                    <p className="font-bold text-gray-900">🎟️ Redeemed Discount</p>
-                    <p className="text-gray-500 text-xs">10-06-2026 • Enjoy savings!</p>
-                  </div>
-                  <p className="font-bold text-orange-600 text-sm">-50 EP ✨</p>
+                {/* Fun Footer */}
+                <div className="text-center py-3 bg-gradient-to-r from-purple-100 via-pink-100 to-orange-100 rounded-lg border-2 border-purple-200">
+                  <p className="text-xs font-bold text-purple-600">🌈 Keep earning rewards & spread happiness! 🌈</p>
+                  <p className="text-xs text-gray-600 mt-1">Every errand completed = More points earned = More rewards unlocked! 🚀</p>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Fun Footer */}
-            <div className="text-center py-3 bg-gradient-to-r from-purple-100 via-pink-100 to-orange-100 rounded-lg border-2 border-purple-200">
-              <p className="text-xs font-bold text-purple-600">🌈 Keep earning rewards & spread happiness! 🌈</p>
-              <p className="text-xs text-gray-600 mt-1">Every errand completed = More points earned = More rewards unlocked! 🚀</p>
-            </div>
+            {/* SHOP TAB - Redeem Rewards */}
+            {rewardsTab === 'shop' && (
+              <div className="space-y-2">
+                <div className="text-center py-2 bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg border-2 border-green-300">
+                  <p className="text-sm font-bold text-green-600">🛍️ Shop Rewards 🛍️</p>
+                  <p className="text-xs text-gray-600 mt-1">Current Balance: <span className="font-bold text-green-600">{userBalance} EP</span></p>
+                </div>
+
+                {/* Available Rewards - Happy Cards */}
+                <div className="bg-white rounded-xl border-2 border-yellow-200 overflow-hidden shadow-md">
+                  <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-3">
+                    <h3 className="text-sm font-bold">🎁 Pick Your Prize! 🎁</h3>
+                    <p className="text-xs mt-1 opacity-90">Use your points to unlock amazing discounts!</p>
+                  </div>
+                  <div className="divide-y divide-yellow-100 text-xs">
+                    <div className="p-3 flex justify-between items-center hover:bg-yellow-50 transition bg-gradient-to-r from-transparent to-yellow-50">
+                      <div>
+                        <p className="font-bold text-gray-900 text-sm">💳 $5 Discount</p>
+                        <p className="text-orange-600 font-bold">50 EP • Get SGD $5 off!</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (userBalance >= 50) {
+                            setUserBalance(userBalance - 50);
+                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: new Date().toLocaleDateString('en-GB'), item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' }]);
+                            setModalMessage('🎉 YES! You just redeemed $5 Discount!\n\n🎟️ Code: ERRAND5\n\nHappy saving! 💰');
+                            setShowSuccessModal(true);
+                          } else {
+                            setModalMessage('❌ Not enough points! You need 50 EP');
+                            setShowErrorModal(true);
+                          }
+                        }}
+                        className="bg-gradient-to-r from-green-400 to-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:shadow-lg transition"
+                      >
+                        ✨ Redeem
+                      </button>
+                    </div>
+                    <div className="p-3 flex justify-between items-center hover:bg-blue-50 transition bg-gradient-to-r from-transparent to-blue-50">
+                      <div>
+                        <p className="font-bold text-gray-900 text-sm">💳 $10 Discount</p>
+                        <p className="text-blue-600 font-bold">100 EP • Get SGD $10 off!</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (userBalance >= 100) {
+                            setUserBalance(userBalance - 100);
+                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: new Date().toLocaleDateString('en-GB'), item: '$10 Discount', code: 'ERRAND10', amount: -100, emoji: '💳' }]);
+                            setModalMessage('🎉 AWESOME! You just redeemed $10 Discount!\n\n🎟️ Code: ERRAND10\n\nWow, great saving! 💰');
+                            setShowSuccessModal(true);
+                          } else {
+                            setModalMessage('❌ Not enough points! You need 100 EP');
+                            setShowErrorModal(true);
+                          }
+                        }}
+                        className="bg-gradient-to-r from-blue-400 to-cyan-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:shadow-lg transition"
+                      >
+                        ✨ Redeem
+                      </button>
+                    </div>
+                    <div className="p-3 flex justify-between items-center hover:bg-gray-50 transition bg-gradient-to-r from-transparent to-gray-50">
+                      <div>
+                        <p className="font-bold text-gray-900 text-sm">💎 $20 Discount</p>
+                        <p className="text-gray-500 font-bold">200 EP • Get SGD $20 off!</p>
+                      </div>
+                      <button
+                        disabled
+                        className="bg-gray-400 text-white px-3 py-2 rounded-lg text-xs font-bold cursor-not-allowed opacity-50"
+                      >
+                        🎯 Need 200 EP
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* HISTORY TAB - Redemption History */}
+            {rewardsTab === 'history' && (
+              <div className="space-y-2">
+                <div className="text-center py-2 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg border-2 border-blue-300">
+                  <p className="text-sm font-bold text-blue-600">📜 Redemption History 📜</p>
+                  <p className="text-xs text-gray-600 mt-1">Your reward transactions</p>
+                </div>
+
+                {/* Redemption History List */}
+                <div className="bg-white rounded-xl border-2 border-purple-200 overflow-hidden shadow-md">
+                  <div className="bg-gradient-to-r from-blue-400 to-purple-500 text-white p-3">
+                    <h3 className="text-sm font-bold">🎟️ Your Redemptions 🎟️</h3>
+                    <p className="text-xs mt-1 opacity-90">Track all your redeemed rewards</p>
+                  </div>
+                  <div className="divide-y divide-purple-100 text-xs">
+                    {redemptionHistory.length > 0 ? (
+                      redemptionHistory.map((record) => (
+                        <div key={record.id} className="p-3 flex justify-between hover:bg-purple-50 transition bg-gradient-to-r from-transparent to-purple-50">
+                          <div>
+                            <p className="font-bold text-gray-900">{record.emoji} {record.item}</p>
+                            <p className="text-gray-500 text-xs">{record.date} • Code: {record.code}</p>
+                          </div>
+                          <p className="font-bold text-orange-600 text-sm">{record.amount} EP</p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-gray-500">
+                        <p>No redemptions yet! Start shopping! 🛍️</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
