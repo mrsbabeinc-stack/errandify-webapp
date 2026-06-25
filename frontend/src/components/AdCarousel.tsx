@@ -24,7 +24,7 @@ const DEFAULT_ADS: Ad[] = [
     description: 'Set up your payout method and start earning today',
     image: '💳',
     bgColor: 'bg-gradient-to-r from-blue-400 to-cyan-400',
-    cta: { label: 'Setup Payout', url: '/my-pocket' }
+    cta: { label: 'Setup Payout', url: '/my-pocket?tab=payout' }
   },
   {
     id: 3,

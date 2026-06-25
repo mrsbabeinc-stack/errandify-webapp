@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
 interface WalletData {
@@ -20,11 +20,13 @@ interface WalletData {
 
 export default function MyPocketPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [userRole, setUserRole] = useState<'asker' | 'doer' | null>(null);
-  const [activeTab, setActiveTab] = useState<'txns' | 'history' | 'payout'>('txns');
+  const tabFromUrl = searchParams.get('tab') as 'txns' | 'history' | 'payout' | null;
+  const [activeTab, setActiveTab] = useState<'txns' | 'history' | 'payout'>(tabFromUrl || 'txns');
   const [showBankDetails, setShowBankDetails] = useState(true);
   const [isEditingPayout, setIsEditingPayout] = useState(false);
   const [bankDetails, setBankDetails] = useState({
