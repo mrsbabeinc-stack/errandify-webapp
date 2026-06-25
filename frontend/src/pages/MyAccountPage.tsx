@@ -94,7 +94,15 @@ export default function MyAccountPage() {
   const [giftSearch, setGiftSearch] = useState('');
   const [groupSearch, setGroupSearch] = useState('');
   const [showGroupForm, setShowGroupForm] = useState(false);
-  const [savedGroups, setSavedGroups] = useState<Array<{ id: string; name: string; members: string[] }>>([]);
+  const [savedGroups, setSavedGroups] = useState<Array<{ id: string; name: string; members: string[] }>(() => {
+    try {
+      const saved = localStorage.getItem('errandify_saved_groups');
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error('Failed to load saved groups:', error);
+      return [];
+    }
+  });
   const [giftCardTemplates] = useState([
     '🎂 Happy Birthday! Wishing you an amazing day!',
     '💍 Happy Anniversary! Celebrating your special love!',
@@ -307,6 +315,15 @@ export default function MyAccountPage() {
 
     fetchData();
   }, []);
+
+  // Save groups to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('errandify_saved_groups', JSON.stringify(savedGroups));
+    } catch (error) {
+      console.error('Failed to save groups to localStorage:', error);
+    }
+  }, [savedGroups]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
