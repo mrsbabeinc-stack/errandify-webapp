@@ -99,7 +99,7 @@ export default function AdCarousel() {
             <div className="flex-shrink-0">
               <a
                 href={currentAd.cta.url}
-                className="bg-white text-gray-800 px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-opacity-90 transition whitespace-nowrap shadow-md"
+                className="bg-white text-gray-900 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-100 transition whitespace-nowrap shadow-lg hover:shadow-xl active:scale-95"
               >
                 {currentAd.cta.label} →
               </a>
