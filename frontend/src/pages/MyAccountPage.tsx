@@ -1536,6 +1536,16 @@ export default function MyAccountPage() {
                 🛍️ Shop
               </button>
               <button
+                onClick={() => setRewardsTab('gift')}
+                className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
+                  rewardsTab === 'gift'
+                    ? 'bg-pink-500 text-white'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                💝 Send A Gift
+              </button>
+              <button
                 onClick={() => setRewardsTab('history')}
                 className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
                   rewardsTab === 'history'
@@ -1679,6 +1689,71 @@ export default function MyAccountPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* GIFT TAB - Send A Gift */}
+            {rewardsTab === 'gift' && (
+              <div className="space-y-2">
+                <div className="text-center py-2 bg-gradient-to-r from-pink-100 to-rose-100 rounded-lg border-2 border-pink-300">
+                  <p className="text-sm font-bold text-pink-600">💝 Send A Gift 💝</p>
+                  <p className="text-xs text-gray-600 mt-1">Share your points with friends!</p>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg p-3 border border-pink-200">
+                    <p className="text-xs text-gray-600">Your Balance</p>
+                    <p className="text-xl font-black text-pink-600">{userBalance} EP</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg p-3 border border-purple-200">
+                    <p className="text-xs text-gray-600">Gifts Sent</p>
+                    <p className="text-xl font-black text-purple-600">{allActivities.filter(a => a.type === 'gift').length}</p>
+                  </div>
+                </div>
+
+                {/* Send Gift Form */}
+                <div className="bg-white rounded-xl border-2 border-pink-200 overflow-hidden shadow-md">
+                  <div className="bg-gradient-to-r from-pink-400 to-rose-500 text-white p-3">
+                    <h3 className="text-sm font-bold">✨ Create Your Gift ✨</h3>
+                  </div>
+                  <div className="p-4 space-y-3">
+                    <button
+                      onClick={() => setShowGiftModal(true)}
+                      className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg transition"
+                    >
+                      💝 Open Gift Form
+                    </button>
+                    <p className="text-xs text-gray-600 text-center">
+                      👥 Select recipients • 💰 Choose amount • 💌 Pick message • 🚀 Send!
+                    </p>
+                  </div>
+                </div>
+
+                {/* Recent Gifts */}
+                {allActivities.filter(a => a.type === 'gift').length > 0 && (
+                  <div className="bg-white rounded-xl border-2 border-pink-200 overflow-hidden shadow-md">
+                    <div className="bg-gradient-to-r from-pink-400 to-rose-500 text-white p-3">
+                      <h3 className="text-sm font-bold">🎁 Your Recent Gifts 🎁</h3>
+                    </div>
+                    <div className="divide-y divide-pink-100 text-xs max-h-48 overflow-y-auto">
+                      {allActivities
+                        .filter(a => a.type === 'gift')
+                        .map((gift) => (
+                          <div key={`gift-${gift.id}`} className="p-3 flex justify-between hover:bg-pink-50 transition bg-gradient-to-r from-transparent to-pink-50">
+                            <div>
+                              <p className="font-bold text-gray-900">{gift.emoji} {gift.title}</p>
+                              <p className="text-gray-500 text-xs">
+                                {gift.date}
+                                {gift.time && ` at ${gift.time}`}
+                              </p>
+                            </div>
+                            <p className="font-bold text-pink-600 text-sm">{gift.amount}</p>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -2681,6 +2756,7 @@ export default function MyAccountPage() {
                     amount: `-${giftConfirmationData.totalPointsDeducted} EP`,
                     color: 'pink',
                   };
+                  console.log('🎁 New gift transaction:', newActivity);
                   setAllActivities([newActivity, ...allActivities]);
 
                   // Send points to each recipient (API call)
