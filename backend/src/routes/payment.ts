@@ -267,4 +267,142 @@ router.post('/payout', authMiddleware, async (req: AuthRequest, res: Response) =
   }
 });
 
+// POST /api/payment/save-bank-details - Save user's bank account details
+router.post('/save-bank-details', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const { bankName, accountHolder, accountNumber } = req.body;
+
+    if (!bankName || !accountHolder || !accountNumber) {
+      return res.status(400).json({ error: 'bankName, accountHolder, and accountNumber required' });
+    }
+
+    // Validate bank account format (basic validation)
+    if (accountNumber.length < 8) {
+      return res.status(400).json({ error: 'Invalid account number format' });
+    }
+
+    // Check if user exists
+    const userCheck = await db.query('SELECT id FROM users WHERE id = $1', [userId]);
+    if (userCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Save or update bank details
+    const updateQuery = `
+      UPDATE users
+      SET
+        bank_name = $1,
+        account_holder = $2,
+        account_number = $3,
+        bank_verified = false,
+        updated_at = NOW()
+      WHERE id = $4
+      RETURNING
+        id,
+        bank_name,
+        account_holder,
+        account_number,
+        bank_verified
+    `;
+
+    const result = await db.query(updateQuery, [bankName, accountHolder, accountNumber, userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(500).json({ error: 'Failed to save bank details' });
+    }
+
+    const bankDetails = result.rows[0];
+
+    res.json({
+      success: true,
+      data: {
+        id: bankDetails.id,
+        bankName: bankDetails.bank_name,
+        accountHolder: bankDetails.account_holder,
+        accountNumber: `****${bankDetails.account_number.slice(-4)}`,
+        verified: bankDetails.bank_verified,
+        message: 'Bank details saved. Verification pending.',
+      },
+    });
+  } catch (error) {
+    console.error('[Payment] Save bank details error:', error);
+    res.status(500).json({ error: 'Failed to save bank details' });
+  }
+});
+
+// GET /api/payment/bank-details - Get user's bank account details
+router.get('/bank-details', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    const result = await db.query(
+      `SELECT
+        bank_name,
+        account_holder,
+        account_number,
+        bank_verified
+      FROM users
+      WHERE id = $1`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const details = result.rows[0];
+
+    res.json({
+      success: true,
+      data: {
+        bankName: details.bank_name || null,
+        accountHolder: details.account_holder || null,
+        accountNumber: details.account_number ? `****${details.account_number.slice(-4)}` : null,
+        verified: details.bank_verified || false,
+      },
+    });
+  } catch (error) {
+    console.error('[Payment] Get bank details error:', error);
+    res.status(500).json({ error: 'Failed to fetch bank details' });
+  }
+});
+
+// POST /api/payment/verify-bank - Verify bank account (2-step verification)
+router.post('/verify-bank', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const { verificationCode } = req.body;
+
+    if (!verificationCode) {
+      return res.status(400).json({ error: 'Verification code required' });
+    }
+
+    // In production, this would check with Stripe Connect or your bank API
+    // For now, we'll verify with a simple code (in real world: SMS/email code)
+    // Stripe Connect handles this automatically
+    const isValid = verificationCode === '000000'; // Demo code
+
+    if (!isValid) {
+      return res.status(400).json({ error: 'Invalid verification code' });
+    }
+
+    await db.query(
+      'UPDATE users SET bank_verified = true, updated_at = NOW() WHERE id = $1',
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      data: {
+        verified: true,
+        message: 'Bank account verified successfully! 🎉',
+      },
+    });
+  } catch (error) {
+    console.error('[Payment] Verify bank error:', error);
+    res.status(500).json({ error: 'Failed to verify bank account' });
+  }
+});
+
 export default router;
