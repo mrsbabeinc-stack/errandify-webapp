@@ -9,7 +9,7 @@ const router = Router();
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, user_id, display_name, email, mobile, role, formatted_user_id, profile_image_url, alias, bio, certificates, average_rating, total_ratings, criminal_conviction, singpass_id, gender FROM users WHERE id = $1',
+      'SELECT id, user_id, display_name, email, mobile, role, formatted_user_id, profile_image_url, alias, bio, certificates, average_rating, total_ratings, criminal_conviction, singpass_id, gender, errandify_points FROM users WHERE id = $1',
       [req.userId]
     );
 
@@ -29,6 +29,17 @@ router.get('/profile', authMiddleware, async (req, res) => {
       user.formatted_user_id = formattedUserId;
     }
 
+    // Get completed tasks count
+    const tasksResult = await db.query(
+      `SELECT COUNT(*) as completed_count, COALESCE(SUM(CASE WHEN asker_id = $1 THEN budget ELSE 0 END), 0) as asker_earnings,
+              COALESCE(SUM(CASE WHEN doer_id = $1 THEN budget ELSE 0 END), 0) as doer_earnings
+       FROM tasks WHERE status = 'completed' AND (asker_id = $1 OR doer_id = $1)`,
+      [req.userId]
+    );
+
+    const completedTasks = parseInt(tasksResult.rows[0]?.completed_count || 0);
+    const totalEarnings = parseInt(tasksResult.rows[0]?.doer_earnings || 0);
+
     res.json({
       success: true,
       data: {
@@ -47,6 +58,9 @@ router.get('/profile', authMiddleware, async (req, res) => {
         averageRating: user.average_rating,
         totalRatings: user.total_ratings || 0,
         criminalConviction: user.criminal_conviction || false,
+        errandifyPoints: user.errandify_points || 0,
+        completedTasks: completedTasks,
+        totalEarnings: totalEarnings,
         categories: [],
       },
     });
