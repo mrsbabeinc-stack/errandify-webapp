@@ -839,24 +839,15 @@ export default function MyAccountPage() {
           ←
         </button>
 
-        {/* MyAccount Button */}
-        <div className="flex gap-1 bg-white rounded-lg shadow-sm border border-gray-200 p-1">
-          <button className="px-3 py-1 rounded-md font-semibold text-sm bg-errandify-orange text-white hover:bg-orange-600 transition-colors">
-            MyAccount
-          </button>
-        </div>
+        {/* MyAccount Title */}
+        <h1 className="text-lg font-bold text-errandify-brown">MyAccount</h1>
 
         {/* Profile & Logout - Same as Layout */}
         <div className="flex items-center gap-2">
           {/* Profile Photo */}
-          <button
-            onClick={() => navigate('/my-account')}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-          >
-            <div className="w-8 h-8 rounded-full bg-errandify-orange flex items-center justify-center text-white text-xs font-bold">
-              S
-            </div>
-          </button>
+          <div className="w-8 h-8 rounded-full bg-errandify-orange flex items-center justify-center text-white text-xs font-bold">
+            S
+          </div>
           {/* Logout Button */}
           <button
             onClick={handleLogout}
