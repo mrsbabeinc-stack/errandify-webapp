@@ -72,6 +72,12 @@ export default function MyAccountPage() {
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+        // Restore profileImage from localStorage first
+        const savedProfileImage = localStorage.getItem('profileImage');
+        if (savedProfileImage) {
+          setProfileImage(savedProfileImage);
+        }
+
         try {
           const profileRes = await axios.get(
             `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
@@ -79,7 +85,7 @@ export default function MyAccountPage() {
           );
           setProfileData(profileRes.data.data);
 
-          // Load profile image if available
+          // Load profile image if available from server
           if (profileRes.data.data.profileImageUrl) {
             setProfileImage(profileRes.data.data.profileImageUrl);
           }
@@ -154,6 +160,25 @@ export default function MyAccountPage() {
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
+        // Try to restore from localStorage as fallback
+        const savedProfileData = localStorage.getItem('profileData');
+        if (savedProfileData) {
+          try {
+            const profile = JSON.parse(savedProfileData);
+            setProfileData(profile);
+            setEditForm({
+              display_name: profile.name || '',
+              email: profile.email || '',
+              mobile: profile.mobile || '',
+              monthly_household_income: '',
+              alias: profile.alias || '',
+              bio: profile.bio || '',
+              chas_card_color: profile.chasCardColor || '',
+            });
+          } catch (parseError) {
+            console.error('Error parsing saved profile data:', parseError);
+          }
+        }
       } finally {
         setLoading(false);
       }
@@ -230,14 +255,23 @@ export default function MyAccountPage() {
       const userStr = localStorage.getItem('user');
       if (userStr) {
         const user = JSON.parse(userStr);
+        user.alias = editForm.alias;
+        user.bio = editForm.bio;
+        user.email = editForm.email;
+        user.mobile = editForm.mobile;
         if (profileImage) {
           user.profile_image_url = profileImage;
         }
         localStorage.setItem('user', JSON.stringify(user));
       }
 
+      // Save profile image separately so it persists
+      if (profileImage) {
+        localStorage.setItem('profileImage', profileImage);
+      }
+
       if (profileData) {
-        setProfileData({
+        const updatedProfile = {
           ...profileData,
           name: editForm.display_name,
           alias: editForm.alias,
@@ -247,7 +281,11 @@ export default function MyAccountPage() {
           chasCardColor: editForm.chas_card_color,
           certificates: certificates,
           profileImageUrl: profileImage || profileData.profileImageUrl,
-        });
+        };
+        setProfileData(updatedProfile);
+
+        // Also save to localStorage as backup
+        localStorage.setItem('profileData', JSON.stringify(updatedProfile));
       }
       setModalMessage('Your profile shines brighter now! ✨');
       setShowSuccessModal(true);
@@ -330,6 +368,8 @@ export default function MyAccountPage() {
 
         // Accept image - moderation is optional
         setProfileImage(base64Image);
+        // Save to localStorage so it persists
+        localStorage.setItem('profileImage', base64Image);
         setModalMessage('Your lovely face is all set! 📸');
         setShowSuccessModal(true);
 
@@ -703,39 +743,34 @@ export default function MyAccountPage() {
 
             {/* PRIVATE INFO */}
             {profileTab === 'private' && (
-              <div className="space-y-2">
-                <div className="bg-green-50 border-l-4 border-green-500 rounded p-2 mb-2">
-                  <p className="text-xs font-bold text-green-900">🔒 PRIVATE</p>
-                  <p className="text-xs text-green-800 mt-0.5">Only you see this</p>
-                </div>
-
-                {/* Profile Photo Upload - FIRST */}
-                <div className="bg-white rounded shadow p-3">
-                  <h3 className="text-xs font-bold text-errandify-brown mb-2">📸 Profile Photo</h3>
-                  <div className="flex gap-3 items-start">
+              <div className="space-y-3">
+                {/* Profile Photo Upload - Compact */}
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200 p-3">
+                  <h3 className="text-xs font-bold text-blue-900 mb-2">📸 Your Photo</h3>
+                  <div className="flex gap-2 items-start">
                     {profileImage && (
-                      <img src={profileImage} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-errandify-orange" />
+                      <img src={profileImage} alt="Profile" className="w-14 h-14 rounded-full object-cover border-2 border-blue-500 flex-shrink-0" />
                     )}
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <input
                         type="file"
                         accept="image/*"
                         onChange={handleProfileImageUpload}
                         className="w-full text-xs mb-1"
                       />
-                      <p className="text-xs text-gray-600">JPG, PNG or WebP. Max 5MB. Will auto-adjust.</p>
+                      <p className="text-xs text-blue-700">JPG, PNG, WebP • Max 5MB • Shows in your profile ✨</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Edit Form - Name (Read-only from SingPass) + Alias beside it */}
-                <div className="bg-white rounded shadow p-3">
+                {/* Contact & Personal Info - Compact Grid */}
+                <div className="bg-white rounded-lg shadow p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xs font-bold text-errandify-brown">👤 Edit Profile</h3>
+                    <h3 className="text-xs font-bold text-errandify-brown">👤 Contact Info</h3>
                     {!isEditing && (
                       <button
                         onClick={() => setIsEditing(true)}
-                        className="text-xs bg-errandify-orange text-white px-3 py-1 rounded font-semibold hover:bg-orange-600"
+                        className="text-xs bg-errandify-orange text-white px-2 py-1 rounded font-semibold hover:bg-orange-600"
                       >
                         ✏️ Edit
                       </button>
@@ -744,113 +779,121 @@ export default function MyAccountPage() {
 
                   {isEditing ? (
                     <div className="space-y-2">
-                      {/* Name - Read Only from SingPass */}
+                      {/* Name - Read Only */}
                       <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">
-                          Name (from SingPass - Read Only) 🔐
-                        </label>
-                        <div className="w-full px-2 py-1 border border-gray-300 rounded text-xs bg-gray-100 text-gray-600">
-                          {profileData.name}
-                        </div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Name 🔐</label>
+                        <input
+                          type="text"
+                          value={profileData.name}
+                          disabled
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs bg-gray-100 text-gray-600 cursor-not-allowed"
+                        />
                       </div>
 
                       {/* Alias - Editable */}
                       <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">Alias (How others see you)</label>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Alias</label>
                         <input
                           type="text"
                           value={editForm.alias || ''}
                           onChange={(e) => setEditForm({ ...editForm, alias: e.target.value })}
-                          placeholder="Optional: your display name"
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="e.g., Sarah or SarahC"
+                          className="w-full px-2 py-1 border border-blue-300 rounded text-xs focus:ring-1 focus:ring-blue-400"
                         />
-                        <p className="text-xs text-gray-500 mt-0.5">Leave blank to show your real name</p>
                       </div>
 
                       {/* Email */}
                       <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">Email <span className="text-gray-500">(from SingPass)</span></label>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Email 📧</label>
                         <input
                           type="email"
                           value={editForm.email}
                           onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          className="w-full px-2 py-1 border border-blue-300 rounded text-xs focus:ring-1 focus:ring-blue-400"
                         />
-                        <p className="text-xs text-gray-500 mt-0.5">Can update if your contact info changed</p>
                       </div>
 
                       {/* Mobile */}
                       <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">Mobile <span className="text-gray-500">(from SingPass)</span></label>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Mobile 📱</label>
                         <input
                           type="text"
                           value={editForm.mobile}
                           onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })}
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          className="w-full px-2 py-1 border border-blue-300 rounded text-xs focus:ring-1 focus:ring-blue-400"
                         />
-                        <p className="text-xs text-gray-500 mt-0.5">Can update if your contact info changed</p>
                       </div>
 
-                      {/* Gender - Read-only from SingPass */}
+                      {/* Gender - Read-only */}
                       <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">Gender <span className="text-gray-500">(from SingPass - cannot edit)</span></label>
-                        <div className="w-full px-2 py-1 border border-gray-300 rounded text-xs bg-gray-100 text-gray-600">
-                          {profileData.gender === 'F' ? '👩 Female' : profileData.gender === 'M' ? '👨 Male' : 'Not set'}
-                        </div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Gender 🔐</label>
+                        <input
+                          type="text"
+                          value={profileData.gender === 'F' ? '👩 Female' : profileData.gender === 'M' ? '👨 Male' : 'Not set'}
+                          disabled
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs bg-gray-100 text-gray-600 cursor-not-allowed"
+                        />
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-1.5 text-xs">
-                      <div className="flex justify-between gap-2">
-                        <div>
-                          <p className="text-gray-600 font-semibold">Name (SingPass)</p>
-                          <p className="text-gray-800">{profileData.name}</p>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-gray-600 font-semibold">Alias</p>
-                          <p className="text-gray-800">{editForm.alias || '(not set)'}</p>
-                        </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-blue-50 rounded p-2">
+                        <p className="text-gray-600 font-semibold">Name</p>
+                        <p className="text-blue-900 font-bold">{profileData.name}</p>
                       </div>
-                      <div>
+                      <div className="bg-purple-50 rounded p-2">
+                        <p className="text-gray-600 font-semibold">Alias</p>
+                        <p className="text-purple-900 font-bold">{editForm.alias || '—'}</p>
+                      </div>
+                      <div className="bg-green-50 rounded p-2">
                         <p className="text-gray-600 font-semibold">Email</p>
-                        <p className="text-gray-800">{profileData.email || 'Not set'}</p>
+                        <p className="text-green-900 font-bold break-all">{profileData.email || '—'}</p>
                       </div>
-                      <div>
+                      <div className="bg-orange-50 rounded p-2">
                         <p className="text-gray-600 font-semibold">Mobile</p>
-                        <p className="text-gray-800">{profileData.mobile || 'Not set'}</p>
+                        <p className="text-orange-900 font-bold">{profileData.mobile || '—'}</p>
                       </div>
-                      <div>
-                        <p className="text-gray-600 font-semibold">Gender <span className="text-gray-500">(from SingPass)</span></p>
-                        <p className="text-gray-800">{profileData.gender === 'F' ? '👩 Female' : profileData.gender === 'M' ? '👨 Male' : 'Not set'}</p>
+                      <div className="bg-pink-50 rounded p-2 col-span-2">
+                        <p className="text-gray-600 font-semibold">Gender</p>
+                        <p className="text-pink-900 font-bold">{profileData.gender === 'F' ? '👩 Female' : profileData.gender === 'M' ? '👨 Male' : '—'}</p>
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* Bio */}
-                <div className="bg-white rounded shadow p-3">
-                  <h3 className="text-xs font-bold text-errandify-brown mb-2">✍️ Bio</h3>
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-bold text-purple-900">✍️ Bio</h3>
+                    <span className="text-xs text-purple-700">{editForm.bio?.length || 0}/200</span>
+                  </div>
 
                   {/* Pro Tip for Bio */}
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 mb-2">
+                  <div className="bg-white rounded p-2 mb-2 border border-purple-100">
                     <p className="text-xs font-semibold text-purple-900 mb-1">💡 Pro Tip with AI Examples:</p>
                     <div className="text-xs text-purple-800 space-y-1">
-                      <p>✅ <strong>Good:</strong> "Experienced cleaner with 5 years experience. Quick, reliable, detail-oriented. Specialize in homes and offices."</p>
-                      <p>✅ <strong>Better:</strong> "Professional cleaner (5 yrs) - homes, offices, deep clean. Trustworthy, punctual, eco-friendly products. Perfect 5★ rating."</p>
+                      <p>✅ <strong>Good:</strong> "Experienced cleaner with 5 years experience. Quick, reliable, detail-oriented."</p>
+                      <p>✅ <strong>Better:</strong> "Professional cleaner (5 yrs) - homes, offices, deep clean. Trustworthy, punctual, eco-friendly products."</p>
                       <p>❌ <strong>Avoid:</strong> "I clean things" or generic descriptions</p>
-                      <p className="text-xs italic mt-1">🤖 AI uses your bio to match you with perfect jobs - be specific about skills & experience!</p>
+                      <p className="text-xs italic">🤖 AI uses your bio to match you with perfect jobs!</p>
                     </div>
                   </div>
 
                   <textarea
                     value={editForm.bio || ''}
                     onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                    placeholder="Write a short bio about yourself"
+                    placeholder="Describe yourself..."
                     maxLength={200}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs resize-none"
-                    rows={3}
+                    className="w-full px-2 py-1 border border-purple-300 rounded text-xs resize-none focus:ring-1 focus:ring-purple-400 mb-2"
+                    rows={2}
                   />
-                  <p className="text-xs text-gray-600 mt-1">{editForm.bio?.length || 0}/200</p>
+                  <button
+                    onClick={handleSaveProfile}
+                    disabled={saving}
+                    className="w-full bg-purple-500 text-white py-1.5 rounded font-semibold text-xs hover:bg-purple-600 transition"
+                  >
+                    {saving ? '⏳ Saving...' : '💾 Save Bio'}
+                  </button>
                 </div>
 
                 {/* CHAS Card Status */}
@@ -902,51 +945,38 @@ export default function MyAccountPage() {
                 )}
 
                 {/* Certificates */}
-                <div className="bg-white rounded shadow p-3">
-                  {/* Pro Tip for Certificate Titles */}
-                  {certificates.length < 10 && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
-                      <p className="text-xs font-semibold text-blue-900 mb-1">💡 Pro Tip:</p>
-                      <p className="text-xs text-blue-800">Write clear titles like "CPR Certification - Red Cross 2024" to help AI match you better!</p>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between mb-1.5">
-                    <h3 className="text-xs font-bold text-errandify-brown">📜 Certificates ({certificates.length}/10)</h3>
+                <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-lg border border-teal-200 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-bold text-teal-900">🎓 Your Skills ({certificates.length}/10)</h3>
                     {certificates.length > 0 && (
                       <button
                         onClick={handleSaveProfile}
                         disabled={saving}
-                        className="text-xs bg-errandify-orange text-white px-2 py-0.5 rounded font-semibold"
+                        className="text-xs bg-errandify-orange text-white px-2 py-1 rounded font-semibold hover:bg-orange-600"
                       >
-                        {saving ? 'Saving...' : 'Save'}
+                        {saving ? '⏳ Saving...' : '💾 Save'}
                       </button>
                     )}
                   </div>
                   {certificates.length > 0 && (
                     <div className="mb-2 space-y-1">
                       {certificates.map((cert, idx) => (
-                        <div key={cert.id || idx} className="flex justify-between items-center bg-gray-50 p-1.5 rounded text-xs">
-                          <span>{idx + 1}. {cert.title || cert.name}</span>
-                          <div className="flex gap-1">
-                            {cert.fileUrl && (
-                              <a href={cert.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-xs">
-                                👁️ View
-                              </a>
-                            )}
-                            <button onClick={() => setCertificates(certificates.filter((_, i) => i !== idx))} className="text-red-600 text-xs">✕</button>
-                          </div>
+                        <div key={cert.id || idx} className="flex justify-between items-center bg-white rounded p-1.5 text-xs border border-teal-100">
+                          <span className="font-semibold text-teal-800">🏆 {cert.title || cert.name}</span>
+                          <button onClick={() => setCertificates(certificates.filter((_, i) => i !== idx))} className="text-red-500 hover:text-red-700 text-sm">✕</button>
                         </div>
                       ))}
                     </div>
                   )}
                   {certificates.length < 10 && (
-                    <div className="space-y-1">
+                    <div className="space-y-1.5 bg-white rounded p-2 border border-teal-100">
+                      <p className="text-xs text-teal-700 font-semibold mb-1">➕ Add a credential:</p>
                       <input
                         type="text"
                         value={certificateTitle}
                         onChange={(e) => setCertificateTitle(e.target.value)}
-                        placeholder="Certificate title"
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                        placeholder="e.g., CPR Certified - Red Cross"
+                        className="w-full px-2 py-1 border border-teal-300 rounded text-xs focus:ring-1 focus:ring-teal-400"
                       />
                       <input
                         type="file"
@@ -997,9 +1027,9 @@ export default function MyAccountPage() {
                           setModalMessage('Amazing! Now hit Save to keep it safe! 🎓');
                           setShowSuccessModal(true);
                         }}
-                        className="w-full bg-errandify-orange text-white py-1 rounded font-semibold text-xs hover:bg-orange-600"
+                        className="w-full bg-teal-500 text-white py-1.5 rounded font-semibold text-xs hover:bg-teal-600 transition"
                       >
-                        Add Certificate
+                        🎓 Add Credential
                       </button>
                     </div>
                   )}
