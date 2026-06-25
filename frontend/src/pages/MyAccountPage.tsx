@@ -1336,31 +1336,122 @@ export default function MyAccountPage() {
 
         {/* CATEGORIES SECTION */}
         {activeSection === 'categories' && (
-          <div className="bg-white rounded-lg shadow-md p-4">
-            <h2 className="text-lg font-bold text-errandify-brown mb-4">🎯 My Categories</h2>
-            <p className="text-sm text-gray-600">Select categories you're interested in as an asker or specialized in as a doer.</p>
-            <div className="mt-4 text-center text-gray-500">
-              <p>📂 Category preferences coming soon!</p>
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-errandify-orange text-white p-3">
+              <h2 className="text-lg font-bold">🎯 My Categories</h2>
+            </div>
+            <div className="p-4 space-y-3">
+              <p className="text-sm text-gray-600">Select categories you're interested in as an asker or specialized in as a doer.</p>
+
+              {/* Role Tabs */}
+              <div className="flex gap-2 bg-gray-100 rounded-lg p-1">
+                <button className="flex-1 py-2 px-3 text-xs font-bold rounded bg-errandify-orange text-white">💼 I Can Help</button>
+                <button className="flex-1 py-2 px-3 text-xs font-bold rounded hover:bg-gray-200">🙋 I Need Help</button>
+              </div>
+
+              {/* Category Grid */}
+              <div className="grid grid-cols-4 gap-2">
+                <div className="p-3 rounded border-2 border-errandify-orange bg-orange-50 text-center cursor-pointer">
+                  <p className="text-2xl mb-1">🧹</p>
+                  <p className="text-xs font-bold text-errandify-brown">Cleaning</p>
+                </div>
+                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
+                  <p className="text-2xl mb-1">🏠</p>
+                  <p className="text-xs font-bold text-errandify-brown">Home Maintenance</p>
+                </div>
+                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
+                  <p className="text-2xl mb-1">🛍️</p>
+                  <p className="text-xs font-bold text-errandify-brown">Shopping</p>
+                </div>
+                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
+                  <p className="text-2xl mb-1">📦</p>
+                  <p className="text-xs font-bold text-errandify-brown">Delivery</p>
+                </div>
+                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
+                  <p className="text-2xl mb-1">🧒</p>
+                  <p className="text-xs font-bold text-errandify-brown">Childcare</p>
+                </div>
+                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
+                  <p className="text-2xl mb-1">🐕</p>
+                  <p className="text-xs font-bold text-errandify-brown">Pet Care</p>
+                </div>
+                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
+                  <p className="text-2xl mb-1">💻</p>
+                  <p className="text-xs font-bold text-errandify-brown">Tech Support</p>
+                </div>
+                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
+                  <p className="text-2xl mb-1">⭐</p>
+                  <p className="text-xs font-bold text-errandify-brown">Other</p>
+                </div>
+              </div>
+
+              <div className="text-center text-xs text-gray-600 mt-4">
+                <p>1 selected (1 total)</p>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <button className="flex-1 px-3 py-2 border border-gray-300 rounded text-xs font-bold text-gray-700 hover:bg-gray-50">Skip</button>
+                <button className="flex-1 px-3 py-2 bg-errandify-orange text-white rounded text-xs font-bold hover:bg-orange-600">Save</button>
+              </div>
             </div>
           </div>
         )}
 
         {/* FAQ SECTION */}
         {activeSection === 'faq' && (
-          <div className="bg-white rounded-lg shadow-md p-4">
-            <h2 className="text-lg font-bold text-errandify-brown mb-4">❓ Frequently Asked Questions</h2>
-            <div className="space-y-3">
-              <div className="border border-gray-200 rounded p-3">
-                <p className="font-semibold text-sm mb-2">How do I post an errand?</p>
-                <p className="text-xs text-gray-600">Click MyHome → Create Errand to post a new task. Use Hana for AI-powered suggestions!</p>
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-errandify-orange text-white p-3">
+              <h2 className="text-lg font-bold">❓ Frequently Asked Questions</h2>
+            </div>
+            <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
+              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
+                <p className="font-semibold text-sm mb-1 text-errandify-brown">What is Errandify?</p>
+                <p className="text-xs text-gray-600">Errandify is Singapore's AI-powered neighbourhood marketplace where neighbours help each other with daily tasks. Connect with trusted community members to post or complete errands.</p>
               </div>
-              <div className="border border-gray-200 rounded p-3">
-                <p className="font-semibold text-sm mb-2">How do I get paid?</p>
-                <p className="text-xs text-gray-600">Complete errands and get rated. Earnings are converted to Errandify Points and can be withdrawn in 24-48 hours.</p>
+
+              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
+                <p className="font-semibold text-sm mb-1 text-errandify-brown">How do I post an errand?</p>
+                <p className="text-xs text-gray-600">Click MyHome → Create Errand. Select a category, describe what you need, set your budget, and post. Doers will submit bids within hours. Review and pick the best fit!</p>
               </div>
-              <div className="border border-gray-200 rounded p-3">
-                <p className="font-semibold text-sm mb-2">What's a "Trusted User"?</p>
-                <p className="text-xs text-gray-600">Users who've completed multiple errands with good ratings and no disputes are marked as trusted.</p>
+
+              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
+                <p className="font-semibold text-sm mb-1 text-errandify-brown">How do I earn money as a doer?</p>
+                <p className="text-xs text-gray-600">Browse errands, submit bids at your chosen rate, get accepted, complete the work, and receive payment. Higher ratings build reputation and unlock better opportunities!</p>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
+                <p className="font-semibold text-sm mb-1 text-errandify-brown">How much can I earn?</p>
+                <p className="text-xs text-gray-600">You set your own rates! Earnings depend on category, complexity, time, and location. Most doers earn SGD 20-100+ per errand. Top-rated doers get priority!</p>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
+                <p className="font-semibold text-sm mb-1 text-errandify-brown">Can I cancel an errand?</p>
+                <p className="text-xs text-gray-600">Yes! Before a doer accepts, you can cancel free. After acceptance, a small cancellation fee applies. If the doer cancels, you get fully refunded.</p>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
+                <p className="font-semibold text-sm mb-1 text-errandify-brown">What if I'm not happy with the work?</p>
+                <p className="text-xs text-gray-600">Payment is held until you mark work complete. If there are issues, raise a dispute with evidence. Our team reviews and resolves fairly.</p>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
+                <p className="font-semibold text-sm mb-1 text-errandify-brown">How are fees calculated?</p>
+                <p className="text-xs text-gray-600">Doers pay 20% platform fee from earnings. Askers pay Stripe processing fees (2-3%). Example: SGD 100 errand = Doer earns SGD 80 (after 20%), Asker pays ~SGD 102-103.</p>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
+                <p className="font-semibold text-sm mb-1 text-errandify-brown">What are Errandify Points?</p>
+                <p className="text-xs text-gray-600">EP are earned through task completion and ratings. Convert them to SGD and withdraw in 24-48 hours. Use them for rewards and discounts too!</p>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
+                <p className="font-semibold text-sm mb-1 text-errandify-brown">Who can join Errandify?</p>
+                <p className="text-xs text-gray-600">Anyone 18+ can join! We verify users via SingPass (for Singapore citizens/residents). Some categories may require additional background checks.</p>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
+                <p className="font-semibold text-sm mb-1 text-errandify-brown">What's a Trusted User?</p>
+                <p className="text-xs text-gray-600">Users with 5-star ratings, completed multiple errands, and no disputes get marked as Trusted. It builds confidence in the community!</p>
               </div>
             </div>
           </div>
