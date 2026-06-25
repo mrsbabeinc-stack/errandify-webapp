@@ -40,7 +40,7 @@ const DEFAULT_ADS: Ad[] = [
     description: 'Complete errands and get 5-star reviews',
     image: '✨',
     bgColor: 'bg-gradient-to-r from-purple-400 to-indigo-400',
-    cta: { label: 'Browse Errands', url: '/errands' }
+    cta: { label: 'Browse Errands', url: '/browse' }
   },
 ];
 
