@@ -965,35 +965,59 @@ export default function MyAccountPage() {
               )}
             </div>
 
-            {/* STATS GRID */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-1 mb-1">
-              <div className="bg-white rounded shadow p-1.5 border-l-4 border-amber-500 text-center">
-                <p className="text-lg font-bold text-errandify-orange leading-none">{ratings.reviewCount}</p>
-                <p className="text-xs text-gray-600 font-semibold leading-none">👥 Reviews</p>
-              </div>
-              <div className="bg-white rounded shadow p-1.5 border-l-4 border-green-500 text-center">
-                <p className="text-lg font-bold text-errandify-orange leading-none">{profileData.completedTasks || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold leading-none">✅ Errands Completed</p>
-              </div>
-              <div className="bg-white rounded shadow p-1.5 border-l-4 border-blue-500 text-center">
-                <p className="text-lg font-bold text-errandify-orange leading-none">${profileData.totalEarnings || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold leading-none">💰 Earnings</p>
-              </div>
-              <div className="bg-white rounded shadow p-1.5 border-l-4 border-purple-500 text-center">
-                <p className="text-lg font-bold text-errandify-orange leading-none">{profileData.errandifyPoints || 0}</p>
-                <p className="text-xs text-gray-600 font-semibold leading-none">⭐ EP</p>
-              </div>
-            </div>
+            {/* DASHBOARD GRID - 2 COLUMNS */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 p-3">
+              {/* LEFT COLUMN - STATS */}
+              <div className="lg:col-span-2 space-y-3">
+                {/* TOP STATS ROW */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-200 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-2xl">👥</p>
+                      <p className="text-3xl font-bold text-amber-600">{ratings.reviewCount}</p>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-700">Reviews</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-2xl">✅</p>
+                      <p className="text-3xl font-bold text-green-600">{profileData.completedTasks || 0}</p>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-700">Errands Completed</p>
+                  </div>
+                </div>
 
-            {/* QUICK ACTIONS */}
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-1">
-              <button
-                onClick={() => navigate('/referral')}
-                className="bg-white rounded shadow p-1.5 border-l-2 border-orange-400 hover:shadow-md transition text-center"
-              >
-                <p className="text-lg mb-0">🎁</p>
-                <p className="font-bold text-xs text-gray-800">Referral</p>
-              </button>
+                {/* BOTTOM STATS ROW */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border-2 border-blue-200 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-2xl">💰</p>
+                      <p className="text-3xl font-bold text-blue-600">${profileData.totalEarnings || 0}</p>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-700">Earnings</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-2xl">⭐</p>
+                      <p className="text-3xl font-bold text-purple-600">{profileData.errandifyPoints || 0}</p>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-700">Errandify Points</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN - FEATURED REFERRAL CTA */}
+              <div className="lg:col-span-1">
+                <button
+                  onClick={() => navigate('/referral')}
+                  className="w-full h-full bg-gradient-to-br from-amber-400 via-orange-400 to-red-400 rounded-xl p-6 shadow-lg hover:shadow-xl transition transform hover:scale-105 text-white text-center flex flex-col items-center justify-center min-h-[280px]"
+                >
+                  <p className="text-6xl mb-3">🎁</p>
+                  <p className="text-2xl font-bold mb-2">Earn More!</p>
+                  <p className="text-sm font-semibold opacity-95">Refer Friends & Get Rewards</p>
+                  <p className="text-xs opacity-75 mt-3">Tap to see your referral code & earnings</p>
+                </button>
+              </div>
             </div>
           </div>
         )}
