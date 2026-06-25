@@ -368,6 +368,23 @@ export default function MyAccountPage() {
     console.log('✅ Saved to localStorage:', localStorage.getItem('errandify_saved_groups'));
   }, [savedGroups, isInitialized]);
 
+  // Load trusted users from localStorage on mount
+  useEffect(() => {
+    const loadedTrusted = localStorage.getItem('errandify_trusted_users');
+    if (loadedTrusted) {
+      try {
+        setTrustedUsers(JSON.parse(loadedTrusted));
+      } catch (error) {
+        console.error('Failed to load trusted users:', error);
+      }
+    }
+  }, []);
+
+  // Save trusted users to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('errandify_trusted_users', JSON.stringify(trustedUsers));
+  }, [trustedUsers]);
+
   // Save balance to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('errandify_user_balance', userBalance.toString());
@@ -381,6 +398,26 @@ export default function MyAccountPage() {
       console.error('Failed to save activities:', error);
     }
   }, [allActivities]);
+
+  // Helper function to mark/unmark user as trusted
+  const toggleTrustedUser = (userId: string, userName: string, userAlias?: string) => {
+    const isAlreadyTrusted = trustedUsers.some(u => u.id === userId);
+
+    if (isAlreadyTrusted) {
+      // Remove from trusted
+      setTrustedUsers(trustedUsers.filter(u => u.id !== userId));
+      setModalMessage(`❌ Removed ${userName} from trusted users`);
+    } else {
+      // Add to trusted
+      const today = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+      setTrustedUsers([
+        ...trustedUsers,
+        { id: userId, name: userName, alias: userAlias, markedDate: today }
+      ]);
+      setModalMessage(`❤️ Added ${userName} to trusted users`);
+    }
+    setShowSuccessModal(true);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
