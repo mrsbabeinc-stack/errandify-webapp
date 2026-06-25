@@ -40,6 +40,7 @@ export default function MyAccountPage() {
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | 'categories' | 'faq'>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [blockedTab, setBlockedTab] = useState<'blocked' | 'trusted'>('blocked');
+  const [trustedUsers, setTrustedUsers] = useState<Array<{ id: string; name: string; alias?: string; avatar?: string; markedDate: string }>>([]);
   const [rewardsTab, setRewardsTab] = useState<'overview' | 'shop' | 'gift' | 'myVoucher' | 'history'>('overview');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
@@ -2309,18 +2310,52 @@ export default function MyAccountPage() {
 
             {/* Trusted Users Tab */}
             {blockedTab === 'trusted' && (
-              <div className="text-center text-gray-600 py-6 px-4">
-                <p className="mb-2 text-sm">❤️ Your Trusted Network</p>
-                <p className="text-xs mb-3">Users who've rated you 5 stars appear here</p>
-                <div className="bg-blue-50 rounded p-3 text-left">
-                  <p className="text-xs font-semibold text-blue-900 mb-2">Who gets marked as Trusted?</p>
-                  <ul className="text-xs text-blue-800 space-y-1">
-                    <li>✅ Users who rate you 5 stars</li>
-                    <li>✅ Completed multiple errands with you</li>
-                    <li>✅ No disputes or complaints</li>
-                    <li>✅ Consistent positive feedback</li>
-                  </ul>
+              <div className="space-y-3">
+                <div className="text-center py-2 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg border-2 border-blue-300">
+                  <p className="text-sm font-bold text-blue-600">❤️ Your Trusted Network ❤️</p>
+                  <p className="text-xs text-gray-600 mt-1">Users you've marked as trusted</p>
                 </div>
+
+                {trustedUsers.length > 0 ? (
+                  <div className="bg-white rounded-xl border-2 border-blue-200 overflow-hidden shadow-md">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-3">
+                      <h3 className="text-sm font-bold">❤️ Trusted Users ({trustedUsers.length}) ❤️</h3>
+                      <p className="text-xs mt-1 opacity-90">People you trust</p>
+                    </div>
+                    <div className="divide-y divide-blue-100">
+                      {trustedUsers.map((user) => (
+                        <div key={user.id} className="p-3 flex justify-between items-center hover:bg-blue-50 transition bg-gradient-to-r from-transparent to-blue-50">
+                          <div>
+                            <p className="font-bold text-gray-900 text-sm">⭐ {user.name}</p>
+                            {user.alias && <p className="text-xs text-gray-600">@{user.alias}</p>}
+                            <p className="text-xs text-gray-500 mt-1">Marked: {user.markedDate}</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setTrustedUsers(trustedUsers.filter(u => u.id !== user.id));
+                              setModalMessage(`❌ Removed ${user.name} from trusted users`);
+                              setShowSuccessModal(true);
+                            }}
+                            className="bg-red-100 text-red-600 hover:bg-red-200 px-3 py-1.5 rounded text-xs font-bold transition"
+                          >
+                            💔 Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-blue-50 rounded-xl border-2 border-blue-200 p-6 text-center">
+                    <p className="text-sm font-bold text-blue-600 mb-2">❤️ No Trusted Users Yet</p>
+                    <p className="text-xs text-gray-600 mb-4">Mark users as trusted by clicking the heart icon in chat or after completing tasks</p>
+                    <div className="bg-white rounded p-3 text-left text-xs text-blue-800 space-y-1">
+                      <p className="font-semibold mb-2">How to mark as Trusted:</p>
+                      <li>💬 Click ❤️ in chat messages</li>
+                      <li>✅ Click ❤️ after task completion</li>
+                      <li>👤 Click ❤️ on their profile</li>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
