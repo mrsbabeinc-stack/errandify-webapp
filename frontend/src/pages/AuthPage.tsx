@@ -24,9 +24,10 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
       const nonce = Math.random().toString(36).substring(2, 15);
 
       // Store state and nonce for verification after redirect
-      sessionStorage.setItem('singpass_state', state);
-      sessionStorage.setItem('singpass_nonce', nonce);
-      sessionStorage.setItem('singpass_mode', 'signin'); // Track if this is signin
+      // Use localStorage (survives page reload) instead of sessionStorage
+      localStorage.setItem('singpass_state', state);
+      localStorage.setItem('singpass_nonce', nonce);
+      localStorage.setItem('singpass_mode', 'signin'); // Track if this is signin
 
       // Redirect to SingPass login (for testing: redirect to simulator)
       const singpassUrl = `/singpass-simulator?` + new URLSearchParams({
@@ -55,9 +56,10 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
       const nonce = Math.random().toString(36).substring(2, 15);
 
       // Store state and nonce for verification after redirect
-      sessionStorage.setItem('singpass_state', state);
-      sessionStorage.setItem('singpass_nonce', nonce);
-      sessionStorage.setItem('singpass_mode', 'signup'); // Track if this is signup
+      // Use localStorage (survives page reload) instead of sessionStorage
+      localStorage.setItem('singpass_state', state);
+      localStorage.setItem('singpass_nonce', nonce);
+      localStorage.setItem('singpass_mode', 'signup'); // Track if this is signup
 
       // Redirect to SingPass login (for testing: redirect to simulator)
       const singpassUrl = `/singpass-simulator?` + new URLSearchParams({

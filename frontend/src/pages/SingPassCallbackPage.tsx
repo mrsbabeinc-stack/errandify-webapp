@@ -37,7 +37,7 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
         }
 
         // Verify state parameter (CSRF protection)
-        const storedState = sessionStorage.getItem('singpass_state');
+        const storedState = localStorage.getItem('singpass_state');
         if (state !== storedState) {
           setError('Security verification failed');
           setLoading(false);
@@ -56,7 +56,7 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
           setMessage('Verifying identity...');
 
           const singpassData = response.data.data;
-          const mode = sessionStorage.getItem('singpass_mode') || 'signin';
+          const mode = localStorage.getItem('singpass_mode') || 'signin';
 
           // Check if user exists or create new account
           if (mode === 'signup') {
@@ -132,10 +132,10 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
         setError('SingPass verification failed');
         setLoading(false);
       } finally {
-        // Clean up session storage
-        sessionStorage.removeItem('singpass_state');
-        sessionStorage.removeItem('singpass_nonce');
-        sessionStorage.removeItem('singpass_mode');
+        // Clean up local storage
+        localStorage.removeItem('singpass_state');
+        localStorage.removeItem('singpass_nonce');
+        localStorage.removeItem('singpass_mode');
       }
     };
 
