@@ -1995,7 +1995,7 @@ export default function MyAccountPage() {
       {/* Gift Success Modal - Happy Celebration */}
       {showGiftSuccessModal && giftSuccessData && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-bounce">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
             {/* Success Header - Rainbow Gradient */}
             <div className="bg-gradient-to-r from-pink-400 via-purple-400 to-green-400 p-8 text-white text-center relative">
               <div className="absolute top-2 left-4 text-2xl">✨</div>
