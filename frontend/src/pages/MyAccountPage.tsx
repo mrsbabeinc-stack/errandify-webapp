@@ -934,39 +934,39 @@ export default function MyAccountPage() {
                 </div>
               )}
 
-              {/* RIGHT COLUMN - RATING & REVIEWS */}
-              <div className="bg-gradient-to-br from-yellow-300 via-orange-200 to-yellow-300 rounded-xl p-3 border-2 border-yellow-400 shadow-md">
-                {/* Header with Rating */}
+              {/* RIGHT COLUMN - RATING & REVIEWS - CELEBRATORY */}
+              <div className="bg-gradient-to-br from-yellow-300 via-pink-200 to-orange-300 rounded-2xl p-4 border-3 border-yellow-400 shadow-lg">
+                {/* Celebratory Header */}
                 <div className="text-center mb-3">
-                  <p className="text-xs text-yellow-900 font-bold mb-2">🌟 Your Reviews</p>
-                  <div className="flex items-center justify-center gap-1">
-                    <p className="text-3xl font-bold text-yellow-700">{ratings.averageRating.toFixed(1)}</p>
+                  <p className="text-lg text-yellow-900 font-bold mb-2">🎉 People Love You! 🎉</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <p className="text-4xl font-bold text-yellow-700">{ratings.averageRating.toFixed(1)}</p>
                     <div>
-                      <div className="flex gap-0.5">
+                      <div className="flex gap-1">
                         {[...Array(5)].map((_, i) => (
-                          <span key={i} className="text-sm">{i < Math.floor(ratings.averageRating) ? '⭐' : '☆'}</span>
+                          <span key={i} className="text-lg">{i < Math.floor(ratings.averageRating) ? '⭐' : '✨'}</span>
                         ))}
                       </div>
-                      <p className="text-xs text-yellow-800 font-semibold mt-0.5">({ratings.reviewCount})</p>
+                      <p className="text-xs text-yellow-900 font-bold mt-1">({ratings.reviewCount} reviews) 💝</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Latest Reviews */}
+                {/* Celebratory Reviews */}
                 {ratings.reviews && ratings.reviews.filter((r: any) => r.rating >= 4).length > 0 && (
                   <div className="space-y-2">
                     {ratings.reviews
                       .filter((r: any) => r.rating >= 4)
                       .slice(0, 2)
                       .map((review: any, idx: number) => (
-                        <div key={idx} className="bg-white rounded-lg p-2 border-l-4 border-yellow-400 shadow-sm">
-                          <div className="flex gap-0.5 mb-1">
+                        <div key={idx} className="bg-white rounded-xl p-2.5 border-2 border-yellow-300 shadow-md hover:shadow-lg transition transform hover:scale-105">
+                          <div className="flex gap-1 mb-1 justify-center">
                             {[...Array(5)].map((_, i) => (
-                              <span key={i} className="text-xs">{i < review.rating ? '⭐' : '☆'}</span>
+                              <span key={i} className="text-sm">{i < review.rating ? '⭐' : '✨'}</span>
                             ))}
                           </div>
-                          <p className="text-xs text-gray-800 font-medium line-clamp-2 leading-snug mb-0.5">"{review.comment || 'Great!'}"</p>
-                          <p className="text-xs text-gray-600 font-semibold">— {review.author || 'User'}</p>
+                          <p className="text-xs text-gray-800 font-bold line-clamp-2 leading-snug mb-1 italic">"{review.comment || 'Amazing!'}"</p>
+                          <p className="text-xs text-gray-700 font-bold">— {review.author || 'Happy User'} 😊</p>
                         </div>
                       ))}
                   </div>
