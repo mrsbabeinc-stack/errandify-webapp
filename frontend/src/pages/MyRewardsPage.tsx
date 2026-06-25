@@ -11,6 +11,7 @@ export default function MyRewardSpacePage() {
   const [confirmRedeemData, setConfirmRedeemData] = useState<{ rewardId: number; points: number; name: string } | null>(null);
   const [currentPoints, setCurrentPoints] = useState(0);
   const [pointHistory, setPointHistory] = useState<any[]>([]);
+  const [myVouchers, setMyVouchers] = useState<any[]>([]);
 
   const rewards = [
     { id: 1, name: '$5 Discount', cost: '50 EP', available: true },
@@ -44,8 +45,16 @@ export default function MyRewardSpacePage() {
       );
       const transactions = historyRes.data.data || [];
       setPointHistory(transactions);
+
+      // Fetch user's redeemed vouchers
+      const vouchersRes = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/my-vouchers`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const vouchers = vouchersRes.data.data || [];
+      setMyVouchers(vouchers);
     } catch (error) {
-      console.error('Failed to fetch points:', error);
+      console.error('Failed to fetch wallet data:', error);
     }
   };
 
@@ -227,35 +236,25 @@ export default function MyRewardSpacePage() {
             {/* Vouchers Tab */}
             {activeTab === 'vouchers' && (
               <div className="p-2 space-y-2">
-                {vouchers.length === 0 ? (
+                {myVouchers.length === 0 ? (
                   <div className="text-center py-4 text-gray-500">
-                    <p>📋 No vouchers yet</p>
-                    <p className="text-xs mt-1">Start earning Errandify Points to redeem vouchers!</p>
+                    <p>📋 No vouchers redeemed yet</p>
+                    <p className="text-xs mt-1">Redeem Errandify Points to get vouchers!</p>
                   </div>
                 ) : (
-                  vouchers.map((voucher) => (
-                    <div key={voucher.id} className="bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 rounded p-3">
+                  myVouchers.map((voucher, idx) => (
+                    <div key={idx} className="bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 rounded p-3">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <p className="font-bold text-gray-900">{voucher.name}</p>
-                          <p className="text-xs text-gray-600">{voucher.category}</p>
+                          <p className="font-bold text-gray-900">{voucher.description}</p>
+                          <p className="text-xs text-gray-600">{new Date(voucher.created_at).toLocaleDateString()}</p>
                         </div>
-                        <span className="text-xs font-bold text-errandify-orange">x1</span>
+                        <span className="text-xs font-bold text-errandify-orange">✅ Redeemed</span>
                       </div>
-                      <div className="flex justify-between items-center text-xs mb-2">
-                        <span className="font-bold text-gray-800">Cost: {voucher.cost}</span>
-                        <span className="text-gray-600">{voucher.expiry}</span>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-gray-800">Cost: {Math.abs(voucher.points)} EP</span>
+                        <span className="text-green-600 font-bold">Saved</span>
                       </div>
-                      <button
-                        onClick={() => {
-                          const points = parseInt(voucher.cost);
-                          confirmRedeem(voucher.id, points, voucher.name);
-                        }}
-                        disabled={redeeming}
-                        className="w-full bg-errandify-orange text-white py-1.5 rounded font-bold text-xs hover:bg-orange-600 disabled:opacity-50"
-                      >
-                        🎁 {redeeming ? 'Redeeming...' : 'Redeem'}
-                      </button>
                     </div>
                   ))
                 )}
