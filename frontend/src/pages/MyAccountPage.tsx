@@ -1986,9 +1986,9 @@ export default function MyAccountPage() {
             </div>
 
             {/* Selected Recipients */}
-            {giftForm.recipients.length > 0 && (
+            {giftForm.recipients && giftForm.recipients.length > 0 && (
               <div>
-                <label className="text-sm font-bold text-gray-700">👥 Selected Recipients ({giftForm.recipients.length})</label>
+                <label className="text-sm font-bold text-gray-700">👥 Selected Recipients ({giftForm.recipients?.length || 0})</label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {giftForm.recipients.map((recipientId) => {
                     const user = availableUsers.find((u) => u.id === recipientId);
@@ -2099,7 +2099,7 @@ export default function MyAccountPage() {
             {/* Points Left */}
             <div className="bg-yellow-50 rounded-lg p-2 flex justify-between items-center border border-yellow-200">
               <p className="text-xs font-bold text-gray-700">💰 Points Left</p>
-              <p className="text-sm font-bold text-orange-600">{Math.max(0, userBalance - (parseInt(giftForm.points || '0', 10) * giftForm.recipients.length))} EP</p>
+              <p className="text-sm font-bold text-orange-600">{Math.max(0, userBalance - (parseInt(giftForm.points || '0', 10) * (giftForm.recipients?.length || 0)))} EP</p>
             </div>
 
             {/* Buttons */}
