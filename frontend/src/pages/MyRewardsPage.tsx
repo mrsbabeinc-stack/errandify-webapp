@@ -43,7 +43,7 @@ export default function MyRewardSpacePage() {
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/point-history`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      const transactions = historyRes.data.data || [];
+      const transactions = (historyRes.data.data || []).reverse();
       setPointHistory(transactions);
 
       // Fetch user's redeemed vouchers
