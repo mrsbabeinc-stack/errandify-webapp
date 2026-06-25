@@ -168,6 +168,92 @@ export const stripeService = {
   },
 
   /**
+   * Link bank account to Stripe connected account
+   * Called when user saves bank details
+   */
+  async linkBankAccount(
+    stripeAccountId: string,
+    accountHolderName: string,
+    accountNumber: string,
+    bankCode: string = 'SG'
+  ): Promise<any> {
+    try {
+      console.log(`[Stripe] Linking bank account to ${stripeAccountId}`);
+
+      // Create external bank account token
+      const bankAccount = await stripe.accounts.createExternalAccount(
+        stripeAccountId,
+        {
+          external_account: {
+            object: 'bank_account',
+            country: 'SG',
+            currency: 'sgd',
+            account_number: accountNumber,
+            account_holder_name: accountHolderName,
+            account_holder_type: 'individual',
+          },
+        }
+      );
+
+      console.log(`[Stripe] Bank account linked: ${bankAccount.id}`);
+      return {
+        externalAccountId: bankAccount.id,
+        accountNumber: bankAccount.last4,
+        fingerprint: bankAccount.fingerprint,
+        status: 'pending', // Will be verified by Stripe
+      };
+    } catch (error) {
+      console.error('[Stripe] Failed to link bank account:', error);
+      throw new Error('Failed to link bank account. Please verify your details.');
+    }
+  },
+
+  /**
+   * Update external account as default for payouts
+   */
+  async setDefaultPayoutAccount(stripeAccountId: string, externalAccountId: string): Promise<any> {
+    try {
+      console.log(`[Stripe] Setting default payout account: ${externalAccountId}`);
+
+      await stripe.accounts.update(stripeAccountId, {
+        default_external_account: externalAccountId,
+      });
+
+      console.log(`[Stripe] Default payout account updated`);
+      return {
+        success: true,
+        message: 'Default payout account updated',
+      };
+    } catch (error) {
+      console.error('[Stripe] Failed to set default payout account:', error);
+      throw new Error('Failed to set default payout account');
+    }
+  },
+
+  /**
+   * Get bank account details
+   */
+  async getBankAccountDetails(stripeAccountId: string, externalAccountId: string): Promise<any> {
+    try {
+      const bankAccount = await stripe.accounts.retrieveExternalAccount(
+        stripeAccountId,
+        externalAccountId
+      );
+
+      return {
+        id: bankAccount.id,
+        last4: bankAccount.last4,
+        fingerprint: bankAccount.fingerprint,
+        status: bankAccount.status,
+        verified: bankAccount.verified,
+      };
+    } catch (error) {
+      console.error('[Stripe] Failed to get bank account details:', error);
+      throw new Error('Failed to get bank account details');
+    }
+  },
+
+  /**
    * Handle Stripe webhook events
    * Called by Stripe when payment events occur
    */
@@ -199,6 +285,16 @@ export const stripeService = {
         case 'payout.failed':
           console.log('[Stripe] Payout failed:', event.data.object.id);
           // Update database: mark payout as failed, needs retry
+          break;
+
+        case 'account.external_account.created':
+          console.log('[Stripe] External account created:', event.data.object.id);
+          // Update database: mark bank account as linked
+          break;
+
+        case 'account.external_account.deleted':
+          console.log('[Stripe] External account deleted:', event.data.object.id);
+          // Update database: mark bank account as removed
           break;
 
         default:

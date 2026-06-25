@@ -1327,7 +1327,9 @@ export default function MyAccountPage() {
                         onClick={async () => {
                           try {
                             const token = localStorage.getItem('token');
-                            const response = await axios.post(
+
+                            // Step 1: Save bank details
+                            await axios.post(
                               `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payment/save-bank-details`,
                               {
                                 bankName: payoutForm.bankName,
@@ -1337,19 +1339,33 @@ export default function MyAccountPage() {
                               { headers: { Authorization: `Bearer ${token}` } }
                             );
 
-                            if (response.data.success) {
+                            // Step 2: Link bank account to Stripe Connect
+                            const stripeResponse = await axios.post(
+                              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payment/link-bank`,
+                              {
+                                accountNumber: payoutForm.accountNumber,
+                              },
+                              { headers: { Authorization: `Bearer ${token}` } }
+                            );
+
+                            if (stripeResponse.data.success) {
                               setEditingPayout(false);
-                              setModalMessage('✅ Payout details saved! Bank account verified. 🎉');
+                              setModalMessage(
+                                '✅ Bank account linked to Stripe! ' +
+                                'Verification in progress (24-48 hours). 🎉'
+                              );
                               setShowSuccessModal(true);
                             }
                           } catch (error: any) {
-                            setModalMessage('❌ ' + (error.response?.data?.error || 'Failed to save bank details'));
+                            setModalMessage(
+                              '❌ ' + (error.response?.data?.error || 'Failed to link bank account')
+                            );
                             setShowErrorModal(true);
                           }
                         }}
                         className="flex-1 bg-green-500 text-white py-1 rounded text-xs font-semibold hover:bg-green-600"
                       >
-                        Save
+                        Save & Link
                       </button>
                     </div>
                   </>
