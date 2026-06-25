@@ -524,4 +524,76 @@ router.post('/favorite/:userId', authMiddleware, async (req, res) => {
   }
 });
 
+// Add Certificate
+router.post('/certificates', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { title } = req.body;
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: 'Certificate title is required' });
+    }
+
+    const result = await db.query(
+      'SELECT certificates FROM users WHERE id = $1',
+      [req.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const certificates = result.rows[0].certificates || [];
+    if (certificates.length >= 10) {
+      return res.status(400).json({ error: 'Maximum 10 certificates allowed' });
+    }
+
+    const newCert = { title: title.trim(), url: null };
+    const updatedCerts = [...certificates, newCert];
+
+    await db.query(
+      'UPDATE users SET certificates = $1 WHERE id = $2',
+      [JSON.stringify(updatedCerts), req.userId]
+    );
+
+    res.json({
+      success: true,
+      data: { certificates: updatedCerts }
+    });
+  } catch (error: any) {
+    console.error('Certificate add error:', error);
+    res.status(500).json({ error: 'Failed to add certificate' });
+  }
+});
+
+// Delete Certificate
+router.delete('/certificates/:title', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { title } = req.params;
+
+    const result = await db.query(
+      'SELECT certificates FROM users WHERE id = $1',
+      [req.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const certificates = result.rows[0].certificates || [];
+    const updatedCerts = certificates.filter((cert: any) => cert.title !== decodeURIComponent(title));
+
+    await db.query(
+      'UPDATE users SET certificates = $1 WHERE id = $2',
+      [JSON.stringify(updatedCerts), req.userId]
+    );
+
+    res.json({
+      success: true,
+      data: { certificates: updatedCerts }
+    });
+  } catch (error: any) {
+    console.error('Certificate delete error:', error);
+    res.status(500).json({ error: 'Failed to delete certificate' });
+  }
+});
+
 export default router;
