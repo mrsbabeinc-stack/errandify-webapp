@@ -341,7 +341,9 @@ export default function MyAccountPage() {
 
   // Save groups to localStorage whenever they change
   useEffect(() => {
+    console.log('📦 Syncing savedGroups to localStorage:', savedGroups);
     localStorage.setItem('errandify_saved_groups', JSON.stringify(savedGroups));
+    console.log('✅ Saved to localStorage:', localStorage.getItem('errandify_saved_groups'));
   }, [savedGroups]);
 
   // Save balance to localStorage whenever it changes
@@ -2138,14 +2140,14 @@ export default function MyAccountPage() {
                       onClick={() => {
                         if (giftForm.groupName.trim()) {
                           const groupNameToSave = giftForm.groupName;
-                          setSavedGroups([
-                            ...savedGroups,
-                            {
-                              id: Date.now().toString(),
-                              name: groupNameToSave,
-                              members: giftForm.recipients,
-                            },
-                          ]);
+                          const newGroup = {
+                            id: Date.now().toString(),
+                            name: groupNameToSave,
+                            members: giftForm.recipients,
+                          };
+                          console.log('💾 Saving group:', newGroup);
+                          setSavedGroups([...savedGroups, newGroup]);
+                          console.log('✅ Group saved to state. Will persist to localStorage.');
                           setGiftForm({
                             points: '',
                             recipients: [],
