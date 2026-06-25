@@ -86,7 +86,7 @@ export default function MyAccountPage() {
     }
   });
   const [redemptionHistory, setRedemptionHistory] = useState<Array<{ id: string; date: string; item: string; code: string; amount: number; emoji: string }>>([
-    { id: '1', date: '10-06-2026', item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' },
+    { id: '1', date: 'Today', item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' },
   ]);
   const [showGiftModal, setShowGiftModal] = useState(false);
   const [showGiftConfirmation, setShowGiftConfirmation] = useState(false);
@@ -1598,7 +1598,7 @@ export default function MyAccountPage() {
                         onClick={() => {
                           if (userBalance >= 50) {
                             setUserBalance(userBalance - 50);
-                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: new Date().toLocaleDateString('en-GB'), item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' }]);
+                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: 'Today', item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' }]);
                             setModalMessage('🎉 YES! You just redeemed $5 Discount!\n\n🎟️ Code: ERRAND5\n\nHappy saving! 💰');
                             setShowSuccessModal(true);
                           } else {
@@ -1620,7 +1620,7 @@ export default function MyAccountPage() {
                         onClick={() => {
                           if (userBalance >= 100) {
                             setUserBalance(userBalance - 100);
-                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: new Date().toLocaleDateString('en-GB'), item: '$10 Discount', code: 'ERRAND10', amount: -100, emoji: '💳' }]);
+                            setRedemptionHistory([...redemptionHistory, { id: Date.now().toString(), date: 'Today', item: '$10 Discount', code: 'ERRAND10', amount: -100, emoji: '💳' }]);
                             setModalMessage('🎉 AWESOME! You just redeemed $10 Discount!\n\n🎟️ Code: ERRAND10\n\nWow, great saving! 💰');
                             setShowSuccessModal(true);
                           } else {
