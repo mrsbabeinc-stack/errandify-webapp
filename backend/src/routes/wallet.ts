@@ -393,18 +393,21 @@ router.post('/redeem', authMiddleware, async (req: AuthRequest, res: Response) =
     }
 
     // Deduct points
+    console.log('Redeem API - attempting to deduct', points, 'from user', userId);
     const updateResult = await db.query(
       `UPDATE users SET errandify_points = errandify_points - $1 WHERE id = $2 RETURNING errandify_points`,
       [points, userId]
     );
     console.log('Redeem API - updated points:', updateResult.rows[0]?.errandify_points);
 
-    // Log redemption
+    // Log redemption transaction
+    console.log('Redeem API - logging transaction for user', userId);
     await db.query(
       `INSERT INTO point_transactions (user_id, points, type, description, created_at)
        VALUES ($1, $2, 'redemption', $3, NOW())`,
       [userId, -points, `Redeemed reward #${rewardId}`]
     );
+    console.log('Redeem API - transaction logged successfully');
 
     res.json({
       success: true,
