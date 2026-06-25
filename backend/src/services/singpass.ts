@@ -7,6 +7,7 @@ interface SingPassUserData {
   email: string;
   phone: string;
   dateOfBirth: string;
+  gender?: string; // M or F from SingPass
 }
 
 interface SingPassConfig {
@@ -103,6 +104,7 @@ export class SingPassService {
         email: userData.email || '',
         phone: userData.phone_number || userData.mobile || '',
         dateOfBirth: userData.birthdate || '',
+        gender: userData.gender || userData.sex || '', // SingPass may use 'gender' or 'sex'
       };
 
       console.log('[SingPass] User data retrieved successfully');

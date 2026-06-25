@@ -221,7 +221,7 @@ export default function App() {
         <Route path="/test" element={<TestPage />} />
 
         {/* Profile sub-pages (outside layout for simpler rendering) */}
-        <Route path="/my-profile" element={isAuthenticated ? <Navigate to="/my-account" replace /> : <Navigate to="/login" replace />} />
+        <Route path="/my-profile" element={isAuthenticated ? <MyProfilePage /> : <Navigate to="/login" replace />} />
         <Route path="/referral" element={isAuthenticated ? <ReferralPage /> : <Navigate to="/login" replace />} />
         <Route path="/payout-settings" element={isAuthenticated ? <PayoutSettingsPage /> : <Navigate to="/login" replace />} />
         <Route path="/transaction-history" element={isAuthenticated ? <TransactionHistoryPage /> : <Navigate to="/login" replace />} />

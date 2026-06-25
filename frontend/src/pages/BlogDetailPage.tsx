@@ -141,7 +141,7 @@ export default function BlogDetailPage() {
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(`${text}\n${url}`);
-      alert('Article link copied to clipboard!');
+      alert('Article link ready to share! Go spread the knowledge! 📚');
     }
   };
 

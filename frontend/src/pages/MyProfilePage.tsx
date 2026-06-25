@@ -1,23 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import SuccessModal from '../components/SuccessModal';
+import ProfilePlaque from '../components/ProfilePlaque';
 
 interface UserProfile {
   id: number;
   userId?: string;
+  formattedUserId?: string;
   name: string;
   mobile: string;
+  gender?: string;
   role: 'asker' | 'doer';
   categories: string[];
-  monthlyHouseholdIncome?: number;
   chasCardColor?: string;
-  chasSubsidyPercentage?: number;
   bio?: string;
   completedTasks?: number;
   totalEarnings?: number;
-  responseTime?: number;
-  availableForWork?: boolean;
   profilePhoto?: string;
+  certificates?: Array<{ title: string; url?: string }>;
+  averageRating?: number;
+  totalRatings?: number;
+  criminalConviction?: boolean;
 }
 
 interface Rating {
@@ -41,11 +45,13 @@ export default function MyProfilePage() {
   const [editForm, setEditForm] = useState({
     display_name: '',
     mobile: '',
-    monthly_household_income: '',
+    bio: '',
   });
   const [saving, setSaving] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const validatePhoto = (file: File): boolean => {
     setPhotoError('');
@@ -115,7 +121,8 @@ export default function MyProfilePage() {
       // Update local profile
       setProfile(prev => prev ? { ...prev, profilePhoto: photoPreview } : null);
       setPhotoPreview(null);
-      alert('Profile photo updated successfully!');
+      setSuccessMessage('Your smile is ready to shine! 📸');
+      setShowSuccessModal(true);
     } catch (err) {
       console.error('Failed to upload photo:', err);
       setPhotoError('Failed to upload photo. Please try again.');
@@ -145,7 +152,7 @@ export default function MyProfilePage() {
         setEditForm({
           display_name: profileRes.data.data.name || '',
           mobile: profileRes.data.data.mobile || '',
-          monthly_household_income: profileRes.data.data.monthlyHouseholdIncome ? String(profileRes.data.data.monthlyHouseholdIncome) : '',
+          bio: profileRes.data.data.bio || '',
         });
 
         // Fetch ratings
@@ -176,10 +183,8 @@ export default function MyProfilePage() {
       const updateData: any = {
         display_name: editForm.display_name,
         mobile: editForm.mobile,
+        bio: editForm.bio,
       };
-      if (editForm.monthly_household_income) {
-        updateData.monthly_household_income = parseInt(editForm.monthly_household_income, 10);
-      }
 
       const response = await axios.put(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
@@ -192,6 +197,8 @@ export default function MyProfilePage() {
         ...response.data.data,
       });
       setIsEditing(false);
+      setShowSuccessModal(true);
+      setSuccessMessage('Your profile shines brighter now! ✨');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save profile');
     } finally {
@@ -219,10 +226,9 @@ export default function MyProfilePage() {
     let complete = 0;
     if (profile.name) complete++;
     if (profile.mobile) complete++;
-    if (profile.categories.length > 0) complete++;
     if (profile.bio) complete++;
-    if (profile.monthlyHouseholdIncome) complete++;
-    return Math.round((complete / 5) * 100);
+    if (profile.categories.length > 0) complete++;
+    return Math.round((complete / 4) * 100);
   };
 
   const getBadges = () => {
@@ -277,20 +283,44 @@ export default function MyProfilePage() {
         {activeTab === 'shared' && (
           <div>
             {/* PREVIEW BANNER - Clear messaging */}
-            <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-bold text-blue-900">👁️ THIS IS YOUR PUBLIC PROFILE</p>
-                  <p className="text-xs text-blue-800 mt-1">This is exactly what other users see when they view your profile. Review it to make sure everything looks good!</p>
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-400 rounded-2xl p-4 mb-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3 flex-1">
+                  <span className="text-2xl animate-bounce">👁️</span>
+                  <div>
+                    <p className="text-sm font-bold text-blue-900">This is YOUR PUBLIC PROFILE</p>
+                    <p className="text-xs text-blue-800 mt-1">✨ This is exactly what other users see! Make sure everything looks amazing!</p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setActiveTab('private')}
-                  className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded font-semibold hover:bg-blue-700 transition whitespace-nowrap"
+                  className="text-xs bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition whitespace-nowrap"
                 >
                   ✏️ Edit Profile
                 </button>
               </div>
             </div>
+
+            {/* Beautiful Profile Plaque */}
+            {profile && (
+              <>
+                {/* Debug info */}
+                <div className="bg-blue-100 border border-blue-300 rounded p-3 mb-4 text-xs">
+                  <p>Profile loaded: {profile.name} | Gender: {profile.gender} | Bio: {profile.bio ? 'YES' : 'NO'} | Certs: {profile.certificates?.length || 0}</p>
+                </div>
+
+                <div className="mb-8">
+                  <ProfilePlaque
+                    name={profile.name}
+                    gender={profile.gender}
+                    bio={profile.bio}
+                    certificates={profile.certificates}
+                    profileImage={profile.profilePhoto}
+                    role={profile.role}
+                  />
+                </div>
+              </>
+            )}
 
             {/* Profile Header Card - What Public Sees */}
             <div className="bg-gradient-to-r from-errandify-orange to-orange-400 rounded-lg shadow-lg p-6 mb-6 text-white">
@@ -341,10 +371,12 @@ export default function MyProfilePage() {
             <p className="text-3xl font-bold text-errandify-orange">{ratings.reviewCount}</p>
             <p className="text-xs text-gray-600 font-semibold">👥 Reviews</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4 text-center">
-            <p className="text-3xl font-bold text-errandify-orange">{profile.categories.length}</p>
-            <p className="text-xs text-gray-600 font-semibold">🎯 Skills</p>
-          </div>
+          {profile.gender && (
+            <div className="bg-white rounded-lg shadow p-4 text-center">
+              <p className="text-2xl">{profile.gender === 'M' ? '👨' : '👩'}</p>
+              <p className="text-xs text-gray-600 font-semibold">{profile.gender === 'M' ? 'Male' : 'Female'}</p>
+            </div>
+          )}
           <div className="bg-white rounded-lg shadow p-4 text-center">
             <p className="text-3xl font-bold text-errandify-orange">{profile.completedTasks || 0}</p>
             <p className="text-xs text-gray-600 font-semibold">✅ Tasks</p>
@@ -353,32 +385,23 @@ export default function MyProfilePage() {
 
         {/* Profile Card - Enhanced */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          {/* User ID */}
-          {profile.userId && (
+          {/* Formatted User ID */}
+          {profile.formattedUserId && (
             <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-600 font-semibold">Your User ID</p>
-                <code className="text-sm font-mono font-bold text-errandify-brown">{profile.userId}</code>
+                <code className="text-sm font-mono font-bold text-errandify-brown">{profile.formattedUserId}</code>
               </div>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(profile.userId || '');
+                  navigator.clipboard.writeText(profile.formattedUserId || '');
+                  setSuccessMessage('Your special code is ready to share! 🎁');
+                  setShowSuccessModal(true);
                 }}
                 className="text-xs text-errandify-orange hover:text-orange-600 font-semibold transition px-2 py-1 hover:bg-orange-50 rounded"
               >
                 Copy
               </button>
-            </div>
-          )}
-
-          {/* CHAS Card Info */}
-          {profile.chasCardColor && profile.chasCardColor !== 'none' && (
-            <div className="mb-6">
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold text-white ${
-                profile.chasCardColor === 'blue' ? 'bg-blue-600' : 'bg-green-600'
-              }`}>
-                CHAS {profile.chasCardColor.toUpperCase()} ({profile.chasSubsidyPercentage}% subsidy)
-              </span>
             </div>
           )}
 
@@ -404,17 +427,14 @@ export default function MyProfilePage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-600 block mb-1">Monthly Household Income (SGD)</label>
-                <input
-                  type="number"
-                  value={editForm.monthly_household_income}
-                  onChange={(e) => setEditForm({ ...editForm, monthly_household_income: e.target.value })}
-                  placeholder="Leave empty if not applicable"
+                <label className="text-xs font-semibold text-gray-600 block mb-1">Bio</label>
+                <textarea
+                  value={editForm.bio}
+                  onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                  placeholder="Tell others about yourself"
                   className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
+                  rows={3}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  CHAS card will auto-update: ≤$1,900 = Blue, ≤$3,900 = Green
-                </p>
               </div>
               <div className="flex gap-2">
                 <button
@@ -438,12 +458,6 @@ export default function MyProfilePage() {
                 <label className="text-xs font-semibold text-gray-600 block mb-1">Mobile</label>
                 <p className="text-gray-800">{profile.mobile || 'Not provided'}</p>
               </div>
-              {profile.monthlyHouseholdIncome && (
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 block mb-1">Monthly Household Income</label>
-                  <p className="text-gray-800">SGD ${profile.monthlyHouseholdIncome.toLocaleString()}</p>
-                </div>
-              )}
               {profile.categories.length > 0 && (
                 <div>
                   <label className="text-xs font-semibold text-gray-600 block mb-1">Categories</label>
@@ -535,23 +549,37 @@ export default function MyProfilePage() {
             </div>
           )}
 
+          {/* Certificates Section - PUBLIC */}
+          {profile.certificates && profile.certificates.length > 0 && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-bold text-errandify-brown mb-4">🎓 Qualifications</h3>
+              <div className="space-y-2">
+                {profile.certificates.map((cert, idx) => (
+                  <div key={idx} className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm font-semibold text-blue-900">{cert.title}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Next Steps CTA */}
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6">
-            <div className="flex gap-3">
-              <span className="text-3xl">🚀</span>
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-400 rounded-2xl p-6">
+            <div className="flex gap-4">
+              <span className="text-4xl animate-bounce">🚀</span>
               <div className="flex-1">
-                <h3 className="font-bold text-blue-900 mb-1">
-                  {completeness === 100 ? 'Profile Complete! 🎉' : 'Complete Your Profile'}
+                <h3 className="font-bold text-blue-900 mb-1 text-lg">
+                  {completeness === 100 ? '🎉 Profile Complete!' : '⭐ Complete Your Profile'}
                 </h3>
                 <p className="text-sm text-blue-800 mb-3">
                   {completeness === 100
-                    ? 'Your profile looks great! Keep building your reputation with quality work.'
-                    : `Add more details to attract more ${profile.role === 'asker' ? 'doers' : 'askers'}.`}
+                    ? '✨ Your profile looks amazing! Keep building your reputation with quality work.'
+                    : `✨ Add more details to attract more ${profile.role === 'asker' ? 'doers' : 'askers'}!`}
                 </p>
                 {completeness < 100 && (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-blue-700 transition"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition"
                   >
                     Complete Profile ({completeness}%)
                   </button>
@@ -561,30 +589,31 @@ export default function MyProfilePage() {
           </div>
 
           {/* Share Profile CTA */}
-          <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg p-6">
-            <div className="flex gap-3">
-              <span className="text-3xl">📱</span>
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 rounded-2xl p-6">
+            <div className="flex gap-4">
+              <span className="text-4xl animate-bounce">📱</span>
               <div className="flex-1">
-                <h3 className="font-bold text-green-900 mb-1">Share Your Profile</h3>
+                <h3 className="font-bold text-green-900 mb-1 text-lg">📢 Share Your Profile</h3>
                 <p className="text-sm text-green-800 mb-3">
-                  {profile.role === 'asker'
+                  ✨ {profile.role === 'asker'
                     ? 'Spread the word and earn referral points!'
                     : 'Let friends know you\'re available for work.'}
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => navigate('/referral')}
-                    className="bg-green-600 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-green-700 transition flex-1"
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-700 transition flex-1"
                   >
-                    🎁 Referral Program
+                    🎁 Referral
                   </button>
                   <button
                     onClick={() => {
                       const profileUrl = `${window.location.origin}/profile/${profile.id}`;
                       navigator.clipboard.writeText(profileUrl);
-                      alert('Profile link copied!');
+                      setSuccessMessage('Your profile link is ready to share! 🌟');
+                      setShowSuccessModal(true);
                     }}
-                    className="bg-green-600 text-white px-4 py-2 rounded font-semibold text-sm hover:bg-green-700 transition flex-1"
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-700 transition flex-1"
                   >
                     🔗 Copy Link
                   </button>
@@ -620,17 +649,20 @@ export default function MyProfilePage() {
         {activeTab === 'private' && (
           <div>
             {/* PRIVATE BANNER - Clear messaging */}
-            <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 mb-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-bold text-green-900">🔒 YOUR PRIVATE INFORMATION</p>
-                  <p className="text-xs text-green-800 mt-1">Only you can see this. Edit your profile details, manage certificates, and view sensitive information here.</p>
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 rounded-2xl p-4 mb-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3 flex-1">
+                  <span className="text-2xl animate-bounce">🔒</span>
+                  <div>
+                    <p className="text-sm font-bold text-green-900">YOUR PRIVATE INFORMATION</p>
+                    <p className="text-xs text-green-800 mt-1">✨ Only you can see this! Edit details, manage certificates & more.</p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setActiveTab('shared')}
-                  className="text-xs bg-green-600 text-white px-3 py-1.5 rounded font-semibold hover:bg-green-700 transition whitespace-nowrap"
+                  className="text-xs bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 transition whitespace-nowrap"
                 >
-                  👁️ Preview Public
+                  👁️ Preview
                 </button>
               </div>
             </div>
@@ -671,12 +703,13 @@ export default function MyProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-gray-600 block mb-1">Monthly Household Income</label>
-                      <input
-                        type="number"
-                        value={editForm.monthly_household_income}
-                        onChange={(e) => setEditForm({ ...editForm, monthly_household_income: e.target.value })}
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Bio</label>
+                      <textarea
+                        value={editForm.bio}
+                        onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                        placeholder="Tell others about yourself"
                         className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-errandify-orange"
+                        rows={3}
                       />
                     </div>
                     <div className="flex gap-2">
@@ -705,10 +738,13 @@ export default function MyProfilePage() {
                       <p className="text-xs text-gray-600 font-semibold">Mobile</p>
                       <p className="text-sm text-gray-800">{profile.mobile || 'Not set'}</p>
                     </div>
-                    {profile.monthlyHouseholdIncome && (
+                    {profile.gender && (
                       <div>
-                        <p className="text-xs text-gray-600 font-semibold">Monthly Household Income</p>
-                        <p className="text-sm text-gray-800">${profile.monthlyHouseholdIncome}</p>
+                        <p className="text-xs text-gray-600 font-semibold">Gender</p>
+                        <p className="text-sm text-gray-800 flex items-center gap-2">
+                          <span>{profile.gender === 'M' ? '👨 Male' : '👩 Female'}</span>
+                          <span className="text-xs text-gray-500">(from SingPass - cannot edit)</span>
+                        </p>
                       </div>
                     )}
                   </div>
@@ -717,14 +753,14 @@ export default function MyProfilePage() {
 
               {/* Private: User ID & CHAS Card */}
               <div className="bg-white rounded-lg shadow p-6 space-y-4">
-                {profile.userId && (
+                {profile.formattedUserId && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
                     <div>
                       <p className="text-xs text-gray-600 font-semibold">Your User ID</p>
-                      <code className="text-sm font-mono font-bold text-errandify-brown">{profile.userId}</code>
+                      <code className="text-sm font-mono font-bold text-errandify-brown">{profile.formattedUserId}</code>
                     </div>
                     <button
-                      onClick={() => navigator.clipboard.writeText(profile.userId || '')}
+                      onClick={() => navigator.clipboard.writeText(profile.formattedUserId || '')}
                       className="text-xs text-errandify-orange hover:text-orange-600 font-semibold transition px-2 py-1 hover:bg-orange-50 rounded"
                     >
                       Copy
@@ -737,7 +773,7 @@ export default function MyProfilePage() {
                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold text-white ${
                       profile.chasCardColor === 'blue' ? 'bg-blue-600' : 'bg-green-600'
                     }`}>
-                      CHAS {profile.chasCardColor.toUpperCase()} ({profile.chasSubsidyPercentage}% subsidy)
+                      CHAS {profile.chasCardColor.toUpperCase()}
                     </span>
                   </div>
                 )}
@@ -805,20 +841,65 @@ export default function MyProfilePage() {
                 )}
               </div>
 
-              {/* Private: Certificate Management (Placeholder) */}
+              {/* Private: Certificate Management */}
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-bold text-errandify-brown mb-4">📜 Qualifications & Certificates</h3>
-                <p className="text-sm text-gray-600 mb-4">Upload certificates to display on your public profile (titles only)</p>
-                <button className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-errandify-orange hover:bg-orange-50 transition text-center">
-                  <p className="text-2xl mb-2">📄</p>
-                  <p className="text-sm font-semibold text-gray-700">Click to upload certificate</p>
-                  <p className="text-xs text-gray-500">Max 5MB, PNG/JPG/PDF</p>
-                </button>
+                <p className="text-sm text-gray-600 mb-4">Store up to 10 certificates to show your qualifications</p>
+
+                {/* AI Matching Tip */}
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl p-4 mb-6">
+                  <div className="flex gap-3">
+                    <span className="text-2xl flex-shrink-0">💡</span>
+                    <div>
+                      <p className="text-sm font-bold text-blue-900 mb-2">Pro Tip: Write Descriptive Titles</p>
+                      <p className="text-xs text-blue-800 mb-2">
+                        Our AI learns best when you add clear details! Instead of just "Certificate", try:
+                      </p>
+                      <ul className="text-xs text-blue-800 space-y-1 ml-3">
+                        <li>✓ "First Aid & CPR Certification - Red Cross 2024"</li>
+                        <li>✓ "Professional Cleaning License - Singapore Authority"</li>
+                        <li>✓ "Childcare Provider Qualification - ECDA Certified"</li>
+                      </ul>
+                      <p className="text-xs text-blue-700 mt-2 italic">More details = Better job matching! 🎯</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Display existing certificates */}
+                {profile.certificates && profile.certificates.length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    {profile.certificates.map((cert, idx) => (
+                      <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex justify-between items-center">
+                        <span className="text-sm font-semibold text-gray-700">{cert.title || `Certificate ${idx + 1}`}</span>
+                        <button className="text-xs text-red-600 hover:text-red-800 font-semibold">Delete</button>
+                      </div>
+                    ))}
+                    {profile.certificates.length < 10 && (
+                      <p className="text-xs text-gray-500 mt-2">{10 - profile.certificates.length} slots remaining</p>
+                    )}
+                  </div>
+                )}
+
+                {(!profile.certificates || profile.certificates.length < 10) && (
+                  <button className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-errandify-orange hover:bg-orange-50 transition text-center">
+                    <p className="text-2xl mb-2">📄</p>
+                    <p className="text-sm font-semibold text-gray-700">Add Certificate</p>
+                    <p className="text-xs text-gray-500">PNG, JPG, or PDF</p>
+                  </button>
+                )}
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        title={successMessage}
+        icon="✨"
+        onClose={() => setShowSuccessModal(false)}
+      />
     </div>
   );
 }

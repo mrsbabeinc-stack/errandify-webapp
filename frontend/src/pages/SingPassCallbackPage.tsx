@@ -71,6 +71,7 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
                   email: singpassData.email,
                   phone: singpassData.phone_number,
                   role: 'asker',
+                  gender: singpassData.gender,
                   singpassVerified: true,
                 }
               );

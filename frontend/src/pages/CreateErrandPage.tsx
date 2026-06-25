@@ -774,7 +774,7 @@ export default function CreateErrandPage() {
           setSuccessErrandId(response.data.data.errandId);
           setShowSuccess(true);
         } else {
-          alert('✓ Errand posted successfully! Dummy payment confirmed.');
+          alert('🎉 Your errand is live! Doers are already interested! ⚡');
           navigate('/home');
         }
       } else {

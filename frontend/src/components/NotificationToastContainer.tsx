@@ -19,17 +19,17 @@ export default function NotificationToastContainer() {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className="pointer-events-auto bg-white rounded-lg shadow-lg border border-gray-200 p-4 animate-slideup"
+          className="pointer-events-auto bg-gradient-to-r from-white to-orange-50 rounded-2xl shadow-2xl border-2 border-errandify-orange p-4 animate-slideup"
         >
           <div className="flex items-start gap-3">
-            {toast.icon && <span className="text-2xl flex-shrink-0">{toast.icon}</span>}
+            {toast.icon && <span className="text-3xl flex-shrink-0 animate-bounce">{toast.icon}</span>}
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-800">{toast.title}</p>
-              <p className="text-sm text-gray-600 mt-1">{toast.body}</p>
+              <p className="font-bold text-errandify-brown text-base">{toast.title}</p>
+              <p className="text-sm text-gray-700 mt-1">{toast.body}</p>
               {toast.actionUrl && toast.actionLabel && (
                 <button
                   onClick={() => handleAction(toast.actionUrl, toast.id)}
-                  className="text-errandify-orange font-semibold text-sm mt-2 hover:underline"
+                  className="text-white font-bold text-sm mt-2 bg-errandify-orange hover:bg-orange-600 px-3 py-1 rounded-lg transition-colors inline-block"
                 >
                   {toast.actionLabel}
                 </button>
@@ -37,7 +37,7 @@ export default function NotificationToastContainer() {
             </div>
             <button
               onClick={() => removeToast(toast.id)}
-              className="flex-shrink-0 text-gray-400 hover:text-gray-600 text-lg leading-none"
+              className="flex-shrink-0 text-errandify-orange hover:text-orange-600 text-lg leading-none font-bold"
             >
               ✕
             </button>
