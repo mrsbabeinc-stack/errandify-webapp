@@ -72,17 +72,30 @@ export default function MyAccountPage() {
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setProfileData(profileRes.data.data);
-          // Update localStorage with latest profile data including formatted user ID
-          if (profileRes.data.data.formattedUserId) {
-            const updatedUser = { ...user, formattedUserId: profileRes.data.data.formattedUserId };
-            localStorage.setItem('user', JSON.stringify(updatedUser));
+
+          // Load profile image if available
+          if (profileRes.data.data.profileImageUrl) {
+            setProfileImage(profileRes.data.data.profileImageUrl);
           }
+
+          // Update localStorage with latest profile data including formatted user ID and profile image
+          const updatedUser = { ...user };
+          if (profileRes.data.data.formattedUserId) {
+            updatedUser.formattedUserId = profileRes.data.data.formattedUserId;
+          }
+          if (profileRes.data.data.profileImageUrl) {
+            updatedUser.profile_image_url = profileRes.data.data.profileImageUrl;
+          }
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+
           setEditForm({
             display_name: profileRes.data.data.name || '',
             email: profileRes.data.data.email || '',
             mobile: profileRes.data.data.mobile || '',
             monthly_household_income: profileRes.data.data.monthlyHouseholdIncome ? String(profileRes.data.data.monthlyHouseholdIncome) : '',
             chas_card_color: profileRes.data.data.chasCardColor || '',
+            alias: profileRes.data.data.alias || '',
+            bio: profileRes.data.data.bio || '',
           });
         } catch (error) {
           console.error('Profile API error:', error);
@@ -102,11 +115,20 @@ export default function MyAccountPage() {
             categories: [],
           };
           setProfileData(fallbackProfile);
+
+          // Load profile image from localStorage if available
+          if (user.profile_image_url) {
+            setProfileImage(user.profile_image_url);
+          }
+
           setEditForm({
             display_name: fallbackProfile.name,
             email: fallbackProfile.email,
             mobile: fallbackProfile.mobile,
             monthly_household_income: '',
+            alias: user.alias || '',
+            bio: user.bio || '',
+            chas_card_color: user.chas_card_color || '',
           });
         }
 
@@ -155,20 +177,39 @@ export default function MyAccountPage() {
       }
 
       const token = localStorage.getItem('token');
+      const profilePayload: any = {
+        display_name: editForm.display_name,
+        alias: editForm.alias,
+        bio: editForm.bio,
+        email: editForm.email,
+        mobile: editForm.mobile,
+        monthly_household_income: editForm.monthly_household_income,
+        chas_card_color: editForm.chas_card_color,
+      };
+
+      // Add profile image if it was uploaded
+      if (profileImage && profileImage.startsWith('data:')) {
+        profilePayload.profile_image = profileImage;
+      }
+
       await axios.put(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
-        {
-          display_name: editForm.display_name,
-          alias: editForm.alias,
-          bio: editForm.bio,
-          email: editForm.email,
-          mobile: editForm.mobile,
-          monthly_household_income: editForm.monthly_household_income,
-          chas_card_color: editForm.chas_card_color,
-        },
+        profilePayload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       setIsEditing(false);
+
+      // Update localStorage with new profile data
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (profileImage) {
+          user.profile_image_url = profileImage;
+        }
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+
       if (profileData) {
         setProfileData({
           ...profileData,
@@ -178,6 +219,7 @@ export default function MyAccountPage() {
           email: editForm.email,
           mobile: editForm.mobile,
           chasCardColor: editForm.chas_card_color,
+          profileImageUrl: profileImage || profileData.profileImageUrl,
         });
       }
       alert('✅ Profile saved successfully!');
