@@ -79,7 +79,7 @@ export default function AdCarousel() {
     <div className="max-w-6xl mx-auto px-4 py-2">
       {/* AD CAROUSEL */}
       <div
-        className={`${currentAd.bgColor} rounded-lg shadow p-5 text-white relative overflow-hidden transition-all duration-500`}
+        className={`${currentAd.bgColor} rounded-lg shadow p-5 text-white relative overflow-hidden transition-all duration-500 min-h-[100px]`}
         onMouseEnter={() => setIsAutoPlay(false)}
         onMouseLeave={() => setIsAutoPlay(true)}
       >
