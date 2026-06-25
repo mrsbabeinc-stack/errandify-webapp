@@ -2551,39 +2551,52 @@ export default function MyAccountPage() {
             <div className="flex flex-col gap-2 pt-2">
               <button
                 onClick={() => {
+                  console.log('🎁 Send Gift button clicked');
                   const pointsToSend = parseInt(giftForm.points || '0', 10);
+                  console.log('Points to send:', pointsToSend);
+                  console.log('Recipients:', giftForm.recipients);
+                  console.log('User balance:', userBalance);
+
                   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
                   const currentUserId = currentUser?.id?.toString();
                   const sendingToSelf = giftForm.recipients.some((recipientId) => recipientId === currentUserId);
 
                   if (!giftForm.points || pointsToSend <= 0) {
+                    console.warn('❌ Invalid amount');
                     setModalMessage('❌ Please enter a valid amount');
                     setShowErrorModal(true);
                   } else if (giftForm.recipients.length === 0) {
+                    console.warn('❌ No recipients selected');
                     setModalMessage('❌ Please select at least one recipient');
                     setShowErrorModal(true);
                   } else if (sendingToSelf) {
+                    console.warn('❌ Sending to self');
                     setModalMessage('❌ You cannot send points to yourself!');
                     setShowErrorModal(true);
                   } else if (pointsToSend * giftForm.recipients.length > userBalance) {
+                    console.warn('❌ Not enough points');
                     setModalMessage('❌ Not enough points for all recipients');
                     setShowErrorModal(true);
                   } else {
+                    console.log('✅ All validations passed, showing confirmation');
                     // Show confirmation modal
                     const recipientNames = giftForm.recipients
                       .map((id) => availableUsers.find((u) => u.id === id)?.name)
                       .join(', ');
                     const totalPointsDeducted = pointsToSend * giftForm.recipients.length;
 
-                    setGiftConfirmationData({
+                    const confirmationData = {
                       pointsToSend,
                       totalPointsDeducted,
                       recipientCount: giftForm.recipients.length,
                       recipientNames,
                       message: giftForm.useCustomMessage ? giftForm.customMessage : giftForm.giftCardMessage,
                       giftDate: giftForm.giftDate,
-                    });
+                    };
+                    console.log('📋 Confirmation data:', confirmationData);
+                    setGiftConfirmationData(confirmationData);
                     setShowGiftConfirmation(true);
+                    console.log('✅ Confirmation modal should show now');
                   }
                 }}
                 className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white py-2.5 rounded-lg font-bold text-sm hover:shadow-lg transition"
