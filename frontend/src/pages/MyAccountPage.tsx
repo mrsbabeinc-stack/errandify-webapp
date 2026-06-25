@@ -1132,32 +1132,62 @@ export default function MyAccountPage() {
               )}
             </div>
 
-            {/* Recent Activity */}
+            {/* Recent Activity - Compact */}
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-              <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-3">
-                <h3 className="text-sm font-bold">📊 Recent Activity</h3>
+              <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-2">
+                <h3 className="text-xs font-bold">📊 Recent Activity</h3>
               </div>
-              <div className="divide-y divide-gray-100 text-xs max-h-48 overflow-y-auto">
-                <div className="p-3 flex justify-between items-center hover:bg-green-50 transition">
-                  <div>
-                    <p className="font-bold text-gray-900">✅ Completed: Clean apartment</p>
+              <div className="divide-y divide-gray-100 text-xs max-h-32 overflow-y-auto">
+                <div className="p-2 flex justify-between items-center hover:bg-green-50 transition">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900 truncate">✅ Completed: Clean apartment</p>
                     <p className="text-gray-500 text-xs">Today 10:28 AM</p>
                   </div>
-                  <p className="font-bold text-green-600 text-sm">+$80</p>
+                  <p className="font-bold text-green-600 text-xs ml-2 flex-shrink-0">+$80</p>
                 </div>
-                <div className="p-3 flex justify-between items-center hover:bg-orange-50 transition">
-                  <div>
-                    <p className="font-bold text-gray-900">📝 Posted: Home repairs</p>
+                <div className="p-2 flex justify-between items-center hover:bg-orange-50 transition">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900 truncate">📝 Posted: Home repairs</p>
                     <p className="text-gray-500 text-xs">Yesterday 10:25 PM</p>
                   </div>
-                  <p className="font-bold text-orange-600 text-sm">-$120</p>
+                  <p className="font-bold text-orange-600 text-xs ml-2 flex-shrink-0">-$120</p>
                 </div>
-                <div className="p-3 flex justify-between items-center hover:bg-purple-50 transition">
-                  <div>
-                    <p className="font-bold text-gray-900">🎁 Referral bonus: @SunnyLove</p>
+                <div className="p-2 flex justify-between items-center hover:bg-purple-50 transition">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900 truncate">🎁 Referral: @SunnyLove</p>
                     <p className="text-gray-500 text-xs">2 days ago</p>
                   </div>
-                  <p className="font-bold text-purple-600 text-sm">+$50</p>
+                  <p className="font-bold text-purple-600 text-xs ml-2 flex-shrink-0">+$50</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Payout Details - Editable */}
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold">💳 Payout Details</h3>
+                  <button className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 rounded transition">
+                    ✏️ Edit
+                  </button>
+                </div>
+              </div>
+              <div className="p-3 space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Bank Name:</span>
+                  <span className="font-semibold text-gray-800">DBS Bank Singapore</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Account Holder:</span>
+                  <span className="font-semibold text-gray-800">Sarah Tan</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Account Number:</span>
+                  <span className="font-semibold text-gray-800">****5678</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-gray-200">
+                  <span className="text-gray-600">Status:</span>
+                  <span className="font-semibold text-green-600">✅ Verified</span>
                 </div>
               </div>
             </div>
