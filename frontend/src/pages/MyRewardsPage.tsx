@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export default function MyRewardSpacePage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'errandify' | 'rewards' | 'history' | 'vouchers'>('errandify');
+  const [redeeming, setRedeeming] = useState(false);
+  const [message, setMessage] = useState('');
 
   const rewards = [
     { id: 1, name: '$5 Discount', cost: '50 EP', available: true },
@@ -20,6 +23,26 @@ export default function MyRewardSpacePage() {
     { activity: 'Point Granted', points: '+20 EP', date: '15-06-2026 02:54 PM' },
   ];
 
+  const handleRedeem = async (rewardId: number, points: number) => {
+    setRedeeming(true);
+    setMessage('');
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/redeem`,
+        { rewardId, points },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMessage('✅ Reward redeemed successfully!');
+      // Refresh page or update UI
+      setTimeout(() => navigate(0), 2000);
+    } catch (error: any) {
+      setMessage(`❌ ${error.response?.data?.error || 'Failed to redeem'}`);
+    } finally {
+      setRedeeming(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-errandify-bg px-2 py-2 pb-24">
       <div className="max-w-2xl mx-auto">
@@ -29,6 +52,13 @@ export default function MyRewardSpacePage() {
           <h1 className="text-xl font-bold text-errandify-brown">💎 MyRewardSpace</h1>
           <div className="w-6" />
         </div>
+
+        {/* Message Display */}
+        {message && (
+          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm font-bold text-blue-900">
+            {message}
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="bg-white rounded-xl border border-gray-200 mb-3 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
@@ -85,8 +115,12 @@ export default function MyRewardSpacePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all duration-200 active:scale-95">
-                    🎁 Redeem Now
+                  <button
+                    onClick={() => handleRedeem(1, 50)}
+                    disabled={redeeming}
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all duration-200 active:scale-95 disabled:opacity-50"
+                  >
+                    🎁 {redeeming ? 'Redeeming...' : 'Redeem Now'}
                   </button>
                   <button className="w-full bg-gradient-to-r from-pink-500 to-rose-600 text-white py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all duration-200 active:scale-95">
                     🎀 Send A Gift
@@ -109,7 +143,14 @@ export default function MyRewardSpacePage() {
                       <p className="font-bold text-gray-900">{reward.name}</p>
                       <p className="text-errandify-orange font-bold">{reward.cost}</p>
                     </div>
-                    <button className={`px-2 py-1 rounded text-xs font-bold ${reward.available ? 'bg-errandify-orange text-white' : 'bg-gray-300 text-gray-500'}`}>
+                    <button
+                      onClick={() => {
+                        const points = parseInt(reward.cost);
+                        handleRedeem(reward.id, points);
+                      }}
+                      disabled={!reward.available || redeeming}
+                      className={`px-2 py-1 rounded text-xs font-bold ${reward.available ? 'bg-errandify-orange text-white hover:bg-orange-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                    >
                       {reward.available ? 'Redeem' : 'Need'}
                     </button>
                   </div>
@@ -154,8 +195,15 @@ export default function MyRewardSpacePage() {
                         <span className="font-bold text-gray-800">Cost: {voucher.cost}</span>
                         <span className="text-gray-600">{voucher.expiry}</span>
                       </div>
-                      <button className="w-full bg-errandify-orange text-white py-1.5 rounded font-bold text-xs hover:bg-orange-600">
-                        🎁 Redeem
+                      <button
+                        onClick={() => {
+                          const points = parseInt(voucher.cost);
+                          handleRedeem(voucher.id, points);
+                        }}
+                        disabled={redeeming}
+                        className="w-full bg-errandify-orange text-white py-1.5 rounded font-bold text-xs hover:bg-orange-600 disabled:opacity-50"
+                      >
+                        🎁 {redeeming ? 'Redeeming...' : 'Redeem'}
                       </button>
                     </div>
                   ))
