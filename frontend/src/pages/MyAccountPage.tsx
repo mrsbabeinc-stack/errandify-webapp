@@ -382,6 +382,13 @@ export default function MyAccountPage() {
     };
 
     fetchData();
+
+    // Auto-refresh stats every 5 seconds
+    const refreshInterval = setInterval(() => {
+      fetchData();
+    }, 5000);
+
+    return () => clearInterval(refreshInterval);
   }, []);
 
   // Manual refresh function for stats
@@ -1014,17 +1021,6 @@ export default function MyAccountPage() {
             {/* DASHBOARD CONTENT */}
             {/* COMPACT FUN DASHBOARD - HAPPY DESIGN */}
             <div className="space-y-1">
-
-              {/* REFRESH BUTTON */}
-              <button
-                onClick={handleRefreshStats}
-                disabled={refreshing}
-                className="w-full bg-gradient-to-r from-cyan-400 to-blue-400 hover:from-cyan-500 hover:to-blue-500 rounded-lg px-3 py-2 shadow-md hover:shadow-lg transition text-white text-center border-2 border-cyan-600 disabled:opacity-60"
-              >
-                <span className={refreshing ? 'animate-spin inline-block' : ''}>
-                  🔄 {refreshing ? 'Refreshing...' : 'Refresh Stats'}
-                </span>
-              </button>
 
               {/* STATS GRID - CELEBRATORY */}
               <div className="grid grid-cols-4 gap-1.5">
