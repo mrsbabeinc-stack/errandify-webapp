@@ -2433,7 +2433,10 @@ export default function MyAccountPage() {
 
             {/* Gift Card Message - Scrollable */}
             <div>
-              <label className="text-sm font-bold text-gray-700">🎀 Gift Card Message</label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-sm font-bold text-gray-700">🎀 Gift Card Message</label>
+                <span className="text-xs text-gray-500">(Optional)</span>
+              </div>
               <div className="max-h-32 overflow-y-auto border border-orange-100 rounded-lg p-2 bg-orange-50 space-y-1">
                 {giftCardTemplates.map((template, idx) => (
                   <label
@@ -2529,7 +2532,7 @@ export default function MyAccountPage() {
 
                   if (!giftForm.points || pointsToSend <= 0) {
                     console.warn('❌ Invalid amount');
-                    setModalMessage('❌ Please enter a valid amount');
+                    setModalMessage('❌ Please enter a valid amount of EP to send\n\nHint: How many points do you want to give each friend?');
                     setShowErrorModal(true);
                   } else if (giftForm.recipients.length === 0) {
                     console.warn('❌ No recipients selected');
@@ -2551,15 +2554,19 @@ export default function MyAccountPage() {
                       .join(', ');
                     const totalPointsDeducted = pointsToSend * giftForm.recipients.length;
 
+                    // Use selected message or default
+                    const selectedMessage = giftForm.useCustomMessage ? giftForm.customMessage : giftForm.giftCardMessage;
+
                     const confirmationData = {
                       pointsToSend,
                       totalPointsDeducted,
                       recipientCount: giftForm.recipients.length,
                       recipientNames,
-                      message: giftForm.useCustomMessage ? giftForm.customMessage : giftForm.giftCardMessage,
+                      message: selectedMessage,
                       giftDate: giftForm.giftDate,
                     };
                     console.log('📋 Confirmation data:', confirmationData);
+                    console.log('💌 Using message:', selectedMessage);
                     setGiftConfirmationData(confirmationData);
                     setShowGiftConfirmation(true);
                     console.log('✅ Confirmation modal should show now');
