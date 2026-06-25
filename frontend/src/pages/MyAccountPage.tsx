@@ -49,6 +49,7 @@ export default function MyAccountPage() {
     reviews: [],
   });
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
     display_name: '',
@@ -382,6 +383,42 @@ export default function MyAccountPage() {
 
     fetchData();
   }, []);
+
+  // Manual refresh function for stats
+  const handleRefreshStats = async () => {
+    setRefreshing(true);
+    try {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+      // Fetch latest profile data
+      const profileRes = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setProfileData(profileRes.data.data);
+
+      // Fetch latest ratings
+      try {
+        const ratingsRes = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/ratings`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setRatings(ratingsRes.data.data);
+      } catch {
+        setRatings({ averageRating: 0, reviewCount: 0, reviews: [] });
+      }
+
+      setModalMessage('📊 Stats updated! Your latest data is loaded.');
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error('Error refreshing stats:', error);
+      setModalMessage('❌ Failed to refresh stats. Please try again.');
+      setShowErrorModal(true);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Load saved groups from localStorage on mount
   useEffect(() => {
@@ -977,6 +1014,17 @@ export default function MyAccountPage() {
             {/* DASHBOARD CONTENT */}
             {/* COMPACT FUN DASHBOARD - HAPPY DESIGN */}
             <div className="space-y-1">
+
+              {/* REFRESH BUTTON */}
+              <button
+                onClick={handleRefreshStats}
+                disabled={refreshing}
+                className="w-full bg-gradient-to-r from-cyan-400 to-blue-400 hover:from-cyan-500 hover:to-blue-500 rounded-lg px-3 py-2 shadow-md hover:shadow-lg transition text-white text-center border-2 border-cyan-600 disabled:opacity-60"
+              >
+                <span className={refreshing ? 'animate-spin inline-block' : ''}>
+                  🔄 {refreshing ? 'Refreshing...' : 'Refresh Stats'}
+                </span>
+              </button>
 
               {/* STATS GRID - CELEBRATORY */}
               <div className="grid grid-cols-4 gap-1.5">
