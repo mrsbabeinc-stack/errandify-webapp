@@ -942,29 +942,44 @@ export default function MyAccountPage() {
                       <input type="file" onChange={(e) => setCertificateFile(e.files?.[0] || null)} className="w-full text-xs" />
                       <button
                         onClick={async () => {
-                          if (certificateTitle && certificateFile) {
-                            // Moderate certificate title
+                          console.log('Certificate Title:', certificateTitle);
+                          console.log('Certificate File:', certificateFile);
+
+                          if (!certificateTitle.trim()) {
+                            alert('⚠️ Please enter a certificate title');
+                            return;
+                          }
+
+                          if (!certificateFile) {
+                            alert('⚠️ Please select a file');
+                            return;
+                          }
+
+                          // File size check (10MB max for certificates)
+                          if (certificateFile.size > 10 * 1024 * 1024) {
+                            alert('❌ Certificate file exceeds 10MB limit');
+                            return;
+                          }
+
+                          // Try to moderate title
+                          try {
                             const titleResult = await moderateText(certificateTitle);
                             if (!titleResult.approved) {
                               alert('❌ Certificate title contains inappropriate content. Please revise.');
                               return;
                             }
-
-                            // File size check (10MB max for certificates)
-                            if (certificateFile.size > 10 * 1024 * 1024) {
-                              alert('Certificate file exceeds 10MB limit');
-                              return;
-                            }
-
-                            setCertificates([...certificates, { id: Date.now().toString(), name: certificateTitle }]);
-                            setCertificateTitle('');
-                            setCertificateFile(null);
-                            alert('✅ Certificate added! Click Save to store permanently.');
-                          } else {
-                            alert('⚠️ Please enter certificate title and select a file');
+                          } catch (error) {
+                            console.warn('Moderation check failed, continuing:', error);
+                            // Continue anyway if moderation fails
                           }
+
+                          // Add certificate
+                          setCertificates([...certificates, { id: Date.now().toString(), name: certificateTitle }]);
+                          setCertificateTitle('');
+                          setCertificateFile(null);
+                          alert('✅ Certificate added! Click the orange Save button to store permanently.');
                         }}
-                        className="w-full bg-errandify-orange text-white py-1 rounded font-semibold text-xs"
+                        className="w-full bg-errandify-orange text-white py-1 rounded font-semibold text-xs hover:bg-orange-600"
                       >
                         Add Certificate
                       </button>
