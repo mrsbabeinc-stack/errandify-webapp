@@ -37,8 +37,9 @@ interface Rating {
 
 export default function MyAccountPage() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify'>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | 'categories' | 'faq'>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
+  const [blockedTab, setBlockedTab] = useState<'blocked' | 'trusted'>('blocked');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
@@ -1210,13 +1211,54 @@ export default function MyAccountPage() {
         {/* BLOCKED SECTION */}
         {activeSection === 'blocked' && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="bg-errandify-orange text-white p-2">
-              <h3 className="text-xs font-bold">🚫 Blocked Users</h3>
+            {/* Sub-tabs for Blocked & Trusted */}
+            <div className="flex gap-2 border-b border-gray-200 p-3">
+              <button
+                onClick={() => setBlockedTab('blocked')}
+                className={`px-3 py-1.5 text-xs font-bold transition rounded ${
+                  blockedTab === 'blocked' || !blockedTab
+                    ? 'bg-errandify-orange text-white'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                🚫 Blocked Users
+              </button>
+              <button
+                onClick={() => setBlockedTab('trusted')}
+                className={`px-3 py-1.5 text-xs font-bold transition rounded ${
+                  blockedTab === 'trusted'
+                    ? 'bg-errandify-orange text-white'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                ❤️ Trusted Users
+              </button>
             </div>
-            <div className="text-center text-gray-600 py-6 px-4">
-              <p className="mb-2 text-sm">No blocked users yet</p>
-              <p className="text-xs">Users you block won't be able to contact you or see your profile</p>
-            </div>
+
+            {/* Blocked Users Tab */}
+            {(!blockedTab || blockedTab === 'blocked') && (
+              <div className="text-center text-gray-600 py-6 px-4">
+                <p className="mb-2 text-sm">No blocked users yet</p>
+                <p className="text-xs">Users you block won't be able to contact you or see your profile</p>
+              </div>
+            )}
+
+            {/* Trusted Users Tab */}
+            {blockedTab === 'trusted' && (
+              <div className="text-center text-gray-600 py-6 px-4">
+                <p className="mb-2 text-sm">❤️ Your Trusted Network</p>
+                <p className="text-xs mb-3">Users who've rated you 5 stars appear here</p>
+                <div className="bg-blue-50 rounded p-3 text-left">
+                  <p className="text-xs font-semibold text-blue-900 mb-2">Who gets marked as Trusted?</p>
+                  <ul className="text-xs text-blue-800 space-y-1">
+                    <li>✅ Users who rate you 5 stars</li>
+                    <li>✅ Completed multiple errands with you</li>
+                    <li>✅ No disputes or complaints</li>
+                    <li>✅ Consistent positive feedback</li>
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
