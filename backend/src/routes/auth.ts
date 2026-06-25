@@ -78,6 +78,7 @@ router.post('/singpass-callback', async (req: Request, res: Response) => {
         birthdate: '1990-01-15',
         address: '123 Clementi Ave 3, Singapore 129957',
         nationality: 'Singapore',
+        gender: 'M', // M for Male, F for Female
       };
     } else {
       // Real SingPass code - exchange with real API
@@ -108,7 +109,7 @@ router.post('/singpass-callback', async (req: Request, res: Response) => {
 router.post('/signup', async (req: Request, res: Response) => {
   const client = await db.getClient();
   try {
-    const { nric, displayName, email, phone, role, singpassVerified, ref } = req.body;
+    const { nric, displayName, email, phone, role, singpassVerified, singpassId, gender, ref } = req.body;
 
     // Validate required fields
     if (!nric || !displayName || !email || !phone) {
@@ -137,10 +138,10 @@ router.post('/signup', async (req: Request, res: Response) => {
     // Insert temporarily to get the database-assigned ID, then update with formatted ID
     const tempResult = await client.query(
       `INSERT INTO users (
-        user_id, nric_hash, display_name, email, mobile,
+        user_id, nric_hash, display_name, email, mobile, singpass_id, gender,
         font_size_pref, language_pref, role, kyc_status, referral_code, referred_by,
         screening_completed, screening_completed_date
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())
       RETURNING id, user_id, display_name, email, mobile, role, criminal_conviction`,
       [
         userId,
@@ -148,6 +149,8 @@ router.post('/signup', async (req: Request, res: Response) => {
         displayName,
         email,
         phone,
+        singpassId,
+        gender || null,
         16, // Default font size
         'en', // Default language
         role || 'asker',
@@ -159,7 +162,7 @@ router.post('/signup', async (req: Request, res: Response) => {
     );
 
     const newUserId = tempResult.rows[0].id;
-    const formattedUserId = generateFormattedUserId(newUserId);
+    const formattedUserId = generateFormattedUserId(singpassId || nric);
 
     // Update with formatted user ID
     const result = await client.query(
@@ -249,6 +252,7 @@ router.post('/signup', async (req: Request, res: Response) => {
         user: {
           id: user.id,
           userId: user.user_id,
+          formattedUserId: user.formatted_user_id,
           displayName: user.display_name,
           email: user.email,
           phone: user.mobile,
@@ -325,7 +329,7 @@ router.post('/verify-otp', async (req: Request, res: Response) => {
 
     // Get user
     const result = await db.query(
-      'SELECT id, display_name, mobile, role FROM users WHERE mobile = $1',
+      'SELECT id, display_name, mobile, role, formatted_user_id FROM users WHERE mobile = $1',
       [mobile]
     );
 
@@ -354,6 +358,7 @@ router.post('/verify-otp', async (req: Request, res: Response) => {
           name: user.display_name,
           mobile: user.mobile,
           role: user.role,
+          formattedUserId: user.formatted_user_id,
         },
       },
     });
@@ -414,10 +419,32 @@ router.post('/demo-login', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Account required' });
     }
 
-    // Demo account mapping with CHAS info
-    const demoAccounts: Record<string, { mobile: string; name: string; nric: string; defaultRole: string; monthlyIncome?: number; chasColor?: string; chasPercent?: number }> = {
-      sarah: { mobile: '98765432', name: 'Sarah Tan', nric: 'S1234567A', defaultRole: 'doer', monthlyIncome: 1800, chasColor: 'blue', chasPercent: 25 },
-      john: { mobile: '87654321', name: 'John Lee', nric: 'S7654321B', defaultRole: 'doer', monthlyIncome: 3500, chasColor: 'green', chasPercent: 15 },
+    // Demo account mapping with gender, bio, and certificates
+    const demoAccounts: Record<string, { mobile: string; email: string; name: string; nric: string; defaultRole: string; gender?: string; bio?: string; certificates?: Array<{ title: string }> }> = {
+      sarah: {
+        mobile: '98765432',
+        email: 'sarah.tan@example.com',
+        name: 'Sarah Tan',
+        nric: 'S1234567A',
+        defaultRole: 'doer',
+        gender: 'F',
+        bio: 'Experienced cleaner with 5 years of professional experience. Reliable, trustworthy, and detail-oriented!',
+        certificates: [
+          { title: 'Childcare Certificate 1' }
+        ]
+      },
+      john: {
+        mobile: '87654321',
+        email: 'john.lee@example.com',
+        name: 'John Lee',
+        nric: 'S7654321B',
+        defaultRole: 'doer',
+        gender: 'M',
+        bio: 'Handyman specialist - plumbing, electrical, and general repairs. Fast turnaround, quality work!',
+        certificates: [
+          { title: 'Licensed Plumber - BCA Singapore' }
+        ]
+      },
     };
 
     const demoUser = demoAccounts[account.toLowerCase()];
@@ -429,7 +456,7 @@ router.post('/demo-login', async (req: Request, res: Response) => {
 
     // Check if user exists, if not create them
     let result = await db.query(
-      'SELECT id, display_name, mobile, role, chas_card_color, chas_subsidy_percentage FROM users WHERE mobile = $1',
+      'SELECT id, display_name, mobile, role, chas_card_color, formatted_user_id FROM users WHERE mobile = $1',
       [demoUser.mobile]
     );
 
@@ -437,34 +464,40 @@ router.post('/demo-login', async (req: Request, res: Response) => {
     if (result.rows.length === 0) {
       // Create demo user with CHAS data
       const referralCode = generateReferralCode();
+      const singpassId = 'S' + Math.random().toString().substring(2, 9) + Math.random().toString(36).substring(2, 3).toUpperCase();
+      const formattedUserId = generateFormattedUserId(singpassId);
+
       const createResult = await db.query(
         `INSERT INTO users (
-          nric_hash, display_name, mobile, address,
+          nric_hash, display_name, email, mobile, address, singpass_id, formatted_user_id, gender, bio, certificates,
           font_size_pref, language_pref, role, kyc_status, referral_code,
-          monthly_household_income, chas_card_color, chas_subsidy_percentage, chas_verified
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-        RETURNING id, display_name, mobile, role, chas_card_color, chas_subsidy_percentage`,
+          chas_card_color
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+        RETURNING id, display_name, email, mobile, role, chas_card_color, formatted_user_id, gender, bio, certificates`,
         [
           hashNric(demoUser.nric),
           demoUser.name,
+          demoUser.email,
           demoUser.mobile,
           '123 Demo Street, Singapore 123456',
+          singpassId,
+          formattedUserId,
+          demoUser.gender || 'M',
+          demoUser.bio || '',
+          JSON.stringify(demoUser.certificates || []),
           16,
           'en',
           demoUser.defaultRole,
           'verified',
           referralCode,
-          demoUser.monthlyIncome || null,
-          demoUser.chasColor || 'none',
-          demoUser.chasPercent || 0,
-          demoUser.monthlyIncome ? true : false,
+          'none',
         ]
       );
       user = createResult.rows[0];
     } else {
       // User exists - update display name to ensure correct demo user name
       const updateResult = await db.query(
-        'UPDATE users SET display_name = $1 WHERE mobile = $2 RETURNING id, display_name, mobile, role, chas_card_color, chas_subsidy_percentage',
+        'UPDATE users SET display_name = $1 WHERE mobile = $2 RETURNING id, display_name, mobile, role, chas_card_color, formatted_user_id',
         [demoUser.name, demoUser.mobile]
       );
       user = updateResult.rows[0];
@@ -484,11 +517,11 @@ router.post('/demo-login', async (req: Request, res: Response) => {
         user: {
           id: user.id,
           name: user.display_name,
+          email: user.email,
           mobile: user.mobile,
           role: user.role,
-          monthlyHouseholdIncome: user.monthly_household_income,
+          formattedUserId: user.formatted_user_id,
           chasCardColor: user.chas_card_color,
-          chasSubsidyPercentage: user.chas_subsidy_percentage,
         },
       },
     });

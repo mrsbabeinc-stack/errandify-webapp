@@ -315,7 +315,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      alert('✓ Errand marked as completed! Awaiting asker rating.');
+      alert('🎉 You did it! The asker will rate you soon. Great work!');
       fetchErrandDetail();
     } catch (error: any) {
       console.error('Failed to complete errand:', error);

@@ -9,7 +9,7 @@ const router = Router();
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, user_id, display_name, email, mobile, role, formatted_user_id, chas_card_color, profile_image_url, alias, bio, certificates FROM users WHERE id = $1',
+      'SELECT id, user_id, display_name, email, mobile, role, formatted_user_id, chas_card_color, profile_image_url, alias, bio, certificates, average_rating, total_ratings, criminal_conviction, singpass_id, gender FROM users WHERE id = $1',
       [req.userId]
     );
 
@@ -21,7 +21,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
 
     // Auto-generate formatted_user_id if missing (for existing users)
     if (!user.formatted_user_id) {
-      const formattedUserId = generateFormattedUserId(user.id);
+      const formattedUserId = generateFormattedUserId(user.singpass_id || user.user_id);
       await db.query(
         'UPDATE users SET formatted_user_id = $1 WHERE id = $2',
         [formattedUserId, user.id]
@@ -39,11 +39,15 @@ router.get('/profile', authMiddleware, async (req, res) => {
         email: user.email,
         mobile: user.mobile,
         role: user.role,
+        gender: user.gender,
         chasCardColor: user.chas_card_color,
         profileImageUrl: user.profile_image_url,
         alias: user.alias,
         bio: user.bio,
         certificates: user.certificates || [],
+        averageRating: user.average_rating,
+        totalRatings: user.total_ratings || 0,
+        criminalConviction: user.criminal_conviction || false,
         categories: [],
       },
     });
@@ -56,7 +60,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
 // Update user profile
 router.put('/profile', authMiddleware, async (req, res) => {
   try {
-    const { display_name, mobile, monthly_household_income, chas_card_color, email, alias, bio, profile_image, certificates } = req.body;
+    const { display_name, mobile, chas_card_color, email, alias, bio, profile_image, certificates } = req.body;
     const userId = req.userId;
 
     let updateFields = [];
@@ -87,60 +91,23 @@ router.put('/profile', authMiddleware, async (req, res) => {
       updateFields.push(`profile_image_url = $${++paramCount}`);
       updateValues.push(profile_image);
     }
-
-    // Handle CHAS card color (manual selection)
     if (chas_card_color !== undefined) {
       updateFields.push(`chas_card_color = $${++paramCount}`);
-      updateValues.push(chas_card_color || null);
-      updateFields.push(`chas_verified = $${++paramCount}`);
-      updateValues.push(true);
-      updateFields.push(`chas_verified_at = $${++paramCount}`);
-      updateValues.push(new Date());
-      updateFields.push(`chas_verification_method = $${++paramCount}`);
-      updateValues.push('manual_selection');
+      updateValues.push(chas_card_color || 'none');
     }
 
-    // Handle monthly income (auto-calculate CHAS if income provided)
-    if (monthly_household_income !== undefined) {
-      updateFields.push(`monthly_household_income = $${++paramCount}`);
-      updateValues.push(monthly_household_income);
-
-      // Only auto-calculate CHAS if manual CHAS not set
-      if (chas_card_color === undefined) {
-        let chasColor = 'none';
-        let chasPercent = 0;
-        if (monthly_household_income <= 1900) {
-          chasColor = 'blue';
-          chasPercent = 25;
-        } else if (monthly_household_income <= 3900) {
-          chasColor = 'green';
-          chasPercent = 15;
-        }
-
-        updateFields.push(`chas_card_color = $${++paramCount}`);
-        updateValues.push(chasColor);
-        updateFields.push(`chas_subsidy_percentage = $${++paramCount}`);
-        updateValues.push(chasPercent);
-        updateFields.push(`chas_verified = $${++paramCount}`);
-        updateValues.push(true);
-        updateFields.push(`chas_verified_at = $${++paramCount}`);
-        updateValues.push(new Date());
-        updateFields.push(`chas_verification_method = $${++paramCount}`);
-        updateValues.push('income_self_declared');
-      }
-    }
-
-    // Handle certificates
+    // Handle certificates (max 10)
     if (certificates !== undefined && Array.isArray(certificates)) {
+      const limitedCerts = certificates.slice(0, 10);
       updateFields.push(`certificates = $${++paramCount}`);
-      updateValues.push(JSON.stringify(certificates));
+      updateValues.push(JSON.stringify(limitedCerts));
     }
 
     if (updateFields.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
     }
 
-    const query = `UPDATE users SET ${updateFields.join(', ')}, updated_at = NOW() WHERE id = $1 RETURNING id, display_name, mobile, monthly_household_income, chas_card_color, chas_subsidy_percentage, profile_image_url, alias, bio, certificates`;
+    const query = `UPDATE users SET ${updateFields.join(', ')}, updated_at = NOW() WHERE id = $1 RETURNING id, user_id, formatted_user_id, display_name, mobile, email, role, gender, chas_card_color, profile_image_url, alias, bio, certificates, average_rating, total_ratings, criminal_conviction`;
 
     const result = await db.query(query, updateValues);
 
@@ -148,17 +115,49 @@ router.put('/profile', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    const user = result.rows[0];
     res.json({
       success: true,
       data: {
-        ...result.rows[0],
-        profileImageUrl: result.rows[0].profile_image_url,
-        certificates: result.rows[0].certificates || [],
+        id: user.id,
+        userId: user.user_id,
+        formattedUserId: user.formatted_user_id,
+        name: user.display_name,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role,
+        gender: user.gender,
+        chasCardColor: user.chas_card_color,
+        profileImageUrl: user.profile_image_url,
+        alias: user.alias,
+        bio: user.bio,
+        certificates: user.certificates || [],
+        averageRating: user.average_rating,
+        totalRatings: user.total_ratings || 0,
+        criminalConviction: user.criminal_conviction || false,
       },
     });
   } catch (error) {
     console.error('Profile update error:', error);
     res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// Upload profile photo
+router.post('/profile-photo', authMiddleware, async (req, res) => {
+  try {
+    // For now, just accept the upload without storing (frontend stores as data URL)
+    // In production, you would save to cloud storage (S3, etc.)
+    res.json({
+      success: true,
+      message: 'Photo uploaded successfully',
+      data: {
+        photoUrl: null // Frontend will use the data URL
+      }
+    });
+  } catch (error) {
+    console.error('Photo upload error:', error);
+    res.status(500).json({ error: 'Failed to upload photo' });
   }
 });
 

@@ -8,6 +8,7 @@ interface SignupData {
   email: string;
   phone: string;
   role: 'asker' | 'doer' | 'both';
+  gender?: string;
 }
 
 export default function SingPassSignupPage() {
@@ -49,6 +50,7 @@ export default function SingPassSignupPage() {
         nric: data.nric,
         displayName: data.name || '',
         phone: data.phone || '',
+        gender: data.gender || '', // Capture gender from SingPass
       }));
 
       setStep('profile');
@@ -94,6 +96,7 @@ export default function SingPassSignupPage() {
           email: formData.email,
           phone: formData.phone,
           role: formData.role,
+          gender: formData.gender,
           singpassVerified: true,
         }
       );

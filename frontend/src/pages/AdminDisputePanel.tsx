@@ -92,7 +92,7 @@ export default function AdminDisputePanel() {
         }
       );
 
-      alert('✓ Dispute resolved successfully');
+      alert('✨ Dispute resolved! Fair solutions made. Thank you! 🤝');
       setSelectedDispute(null);
       fetchDisputes();
     } catch (error: any) {
