@@ -74,6 +74,24 @@ export default function MyAccountPage() {
     accountHolder: 'Sarah Tan',
     accountNumber: '****5678',
   });
+  const [activitySearch, setActivitySearch] = useState('');
+  const [activityFilter, setActivityFilter] = useState<'all' | 'completed' | 'posted' | 'referral' | 'rating' | 'accepted'>('all');
+
+  // Sample activity data
+  const allActivities = [
+    { id: 1, type: 'completed', emoji: '✅', title: 'Completed: Clean apartment', date: 'Today 10:28 AM', amount: '+$80', color: 'green' },
+    { id: 2, type: 'posted', emoji: '📝', title: 'Posted: Home repairs', date: 'Yesterday 10:25 PM', amount: '-$120', color: 'orange' },
+    { id: 3, type: 'referral', emoji: '🎁', title: 'Referral: @SunnyLove', date: '2 days ago', amount: '+$50', color: 'purple' },
+    { id: 4, type: 'rating', emoji: '⭐', title: 'Rating given: Clean apartment', date: '3 days ago', amount: '5 stars', color: 'blue' },
+    { id: 5, type: 'accepted', emoji: '✅', title: 'Accepted bid: Tutoring', date: '4 days ago', amount: 'SGD $60', color: 'green' },
+    { id: 6, type: 'posted', emoji: '📋', title: 'Posted: Office admin', date: '5 days ago', amount: '-$75', color: 'orange' },
+  ];
+
+  const filteredActivities = allActivities.filter(activity => {
+    const matchesSearch = activity.title.toLowerCase().includes(activitySearch.toLowerCase());
+    const matchesFilter = activityFilter === 'all' || activity.type === activityFilter;
+    return matchesSearch && matchesFilter;
+  });
 
   useEffect(() => {
     // Fetch AI-generated alerts
@@ -1141,54 +1159,58 @@ export default function MyAccountPage() {
               )}
             </div>
 
-            {/* Recent Activity - Expanded */}
+            {/* Recent Activity - With Search & Filter */}
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
               <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-2">
                 <h3 className="text-xs font-bold">📊 Recent Activity</h3>
               </div>
+
+              {/* Search Bar */}
+              <div className="p-2 border-b border-gray-100">
+                <input
+                  type="text"
+                  placeholder="🔍 Search activity..."
+                  value={activitySearch}
+                  onChange={(e) => setActivitySearch(e.target.value)}
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+                />
+              </div>
+
+              {/* Filter Buttons */}
+              <div className="p-2 border-b border-gray-100 flex gap-1 flex-wrap">
+                {(['all', 'completed', 'posted', 'referral', 'rating', 'accepted'] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setActivityFilter(filter)}
+                    className={`px-2 py-1 rounded text-xs font-semibold transition ${
+                      activityFilter === filter
+                        ? 'bg-errandify-orange text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {filter === 'all' ? '📋 All' : filter === 'completed' ? '✅ Completed' : filter === 'posted' ? '📝 Posted' : filter === 'referral' ? '🎁 Referral' : filter === 'rating' ? '⭐ Rating' : '✅ Accepted'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Activity List */}
               <div className="divide-y divide-gray-100 text-xs max-h-64 overflow-y-auto">
-                <div className="p-2 flex justify-between items-center hover:bg-green-50 transition">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 truncate">✅ Completed: Clean apartment</p>
-                    <p className="text-gray-500 text-xs">Today 10:28 AM</p>
+                {filteredActivities.length > 0 ? (
+                  filteredActivities.map((activity) => (
+                    <div key={activity.id} className={`p-2 flex justify-between items-center hover:bg-${activity.color}-50 transition`}>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-gray-900 truncate">{activity.emoji} {activity.title}</p>
+                        <p className="text-gray-500 text-xs">{activity.date}</p>
+                      </div>
+                      <p className={`font-bold text-${activity.color}-600 text-xs ml-2 flex-shrink-0`}>{activity.amount}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-gray-500">
+                    <p className="text-xs">🔍 No activities found</p>
+                    <p className="text-xs mt-1">Try adjusting your search or filters</p>
                   </div>
-                  <p className="font-bold text-green-600 text-xs ml-2 flex-shrink-0">+$80</p>
-                </div>
-                <div className="p-2 flex justify-between items-center hover:bg-orange-50 transition">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 truncate">📝 Posted: Home repairs</p>
-                    <p className="text-gray-500 text-xs">Yesterday 10:25 PM</p>
-                  </div>
-                  <p className="font-bold text-orange-600 text-xs ml-2 flex-shrink-0">-$120</p>
-                </div>
-                <div className="p-2 flex justify-between items-center hover:bg-purple-50 transition">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 truncate">🎁 Referral: @SunnyLove</p>
-                    <p className="text-gray-500 text-xs">2 days ago</p>
-                  </div>
-                  <p className="font-bold text-purple-600 text-xs ml-2 flex-shrink-0">+$50</p>
-                </div>
-                <div className="p-2 flex justify-between items-center hover:bg-blue-50 transition">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 truncate">⭐ Rating given: Clean apartment</p>
-                    <p className="text-gray-500 text-xs">3 days ago</p>
-                  </div>
-                  <p className="font-bold text-blue-600 text-xs ml-2 flex-shrink-0">5 stars</p>
-                </div>
-                <div className="p-2 flex justify-between items-center hover:bg-green-50 transition">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 truncate">✅ Accepted bid: Tutoring</p>
-                    <p className="text-gray-500 text-xs">4 days ago</p>
-                  </div>
-                  <p className="font-bold text-green-600 text-xs ml-2 flex-shrink-0">SGD $60</p>
-                </div>
-                <div className="p-2 flex justify-between items-center hover:bg-orange-50 transition">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 truncate">📋 Posted: Office admin</p>
-                    <p className="text-gray-500 text-xs">5 days ago</p>
-                  </div>
-                  <p className="font-bold text-orange-600 text-xs ml-2 flex-shrink-0">-$75</p>
-                </div>
+                )}
               </div>
             </div>
 
