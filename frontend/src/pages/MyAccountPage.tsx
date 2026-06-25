@@ -77,6 +77,22 @@ export default function MyAccountPage() {
   const [activitySearch, setActivitySearch] = useState('');
   const [activityFilter, setActivityFilter] = useState<'all' | 'completed' | 'posted' | 'referral' | 'rating' | 'accepted'>('all');
 
+  // Singapore banks list
+  const singaporeBanks = [
+    'DBS Bank Singapore',
+    'OCBC Bank',
+    'UOB Bank',
+    'Standard Chartered',
+    'Maybank Singapore',
+    'CIMB Bank',
+    'HSBC Singapore',
+    'Citibank Singapore',
+    'Bank of Singapore',
+    'RHB Bank',
+    'AEON Credit',
+    'Barclays Singapore',
+  ];
+
   // Sample activity data
   const allActivities = [
     { id: 1, type: 'completed', emoji: '✅', title: 'Completed: Clean apartment', errandId: 'ERR-2847', date: 'Today 10:28 AM', amount: '+$80', color: 'green' },
@@ -1246,12 +1262,18 @@ export default function MyAccountPage() {
                   <>
                     <div>
                       <label className="text-gray-600 block mb-1">Bank Name:</label>
-                      <input
-                        type="text"
+                      <select
                         value={payoutForm.bankName}
                         onChange={(e) => setPayoutForm({ ...payoutForm, bankName: e.target.value })}
-                        className="w-full border border-gray-300 rounded px-2 py-1 text-gray-800"
-                      />
+                        className="w-full border border-gray-300 rounded px-2 py-1.5 text-gray-800 text-xs focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        <option value="">Select a bank...</option>
+                        {singaporeBanks.map((bank) => (
+                          <option key={bank} value={bank}>
+                            {bank}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="text-gray-600 block mb-1">Account Holder:</label>
