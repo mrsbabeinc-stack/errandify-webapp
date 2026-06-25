@@ -2011,6 +2011,31 @@ export default function MyAccountPage() {
               />
             </div>
 
+            {/* Show saved groups count */}
+            {savedGroups.length > 0 && (
+              <div className="bg-gradient-to-r from-green-100 to-green-50 border-2 border-green-400 rounded-lg p-3">
+                <p className="text-xs font-bold text-green-700">✅ You have {savedGroups.length} saved group{savedGroups.length !== 1 ? 's' : ''}:</p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {savedGroups.map((group) => (
+                    <button
+                      key={group.id}
+                      onClick={() => {
+                        setGiftForm({
+                          ...giftForm,
+                          recipients: group.members,
+                        });
+                        setModalMessage(`✅ Loaded group "${group.name}" with ${group.members.length} members!`);
+                        setShowSuccessModal(true);
+                      }}
+                      className="bg-white text-xs px-3 py-1 rounded-full border border-green-400 text-green-700 font-bold hover:bg-green-50 transition"
+                    >
+                      {group.name} ({group.members.length}) →
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Live EP Calculation - Shows when recipients selected + points entered */}
             {(giftForm.recipients?.length ?? 0) > 0 && giftForm.points && (
               <div className="space-y-2 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-3 border-2 border-orange-200">
@@ -2209,6 +2234,11 @@ export default function MyAccountPage() {
                     />
                     <button
                       onClick={() => {
+                        console.log('🔵 Save button clicked');
+                        console.log('Group name value:', giftForm.groupName);
+                        console.log('Group name trimmed:', giftForm.groupName.trim());
+                        console.log('Recipients:', giftForm.recipients);
+
                         if (giftForm.groupName.trim()) {
                           const groupNameToSave = giftForm.groupName;
                           const newGroup = {
@@ -2216,9 +2246,15 @@ export default function MyAccountPage() {
                             name: groupNameToSave,
                             members: giftForm.recipients,
                           };
-                          console.log('💾 Saving group:', newGroup);
-                          setSavedGroups([...savedGroups, newGroup]);
-                          console.log('✅ Group saved to state. Will persist to localStorage.');
+                          console.log('💾 Creating new group:', newGroup);
+                          console.log('Current savedGroups before:', savedGroups);
+
+                          const updatedGroups = [...savedGroups, newGroup];
+                          console.log('Updated groups after:', updatedGroups);
+
+                          setSavedGroups(updatedGroups);
+                          console.log('✅ setSavedGroups called with:', updatedGroups);
+
                           setGiftForm({
                             points: '',
                             recipients: [],
@@ -2230,9 +2266,17 @@ export default function MyAccountPage() {
                           });
                           setGiftSearch('');
                           setTimeout(() => {
-                            setModalMessage(`✅ Group "${groupNameToSave}" saved with ${newGroup.members.length} members!\n\nScroll up to find it in "⚡ Quick Load Saved Group" or search for it below.`);
+                            // Auto-focus the quick load search
+                            const quickLoadInput = document.querySelector('input[placeholder="Search group name..."]');
+                            if (quickLoadInput) {
+                              (quickLoadInput as HTMLInputElement).focus();
+                              (quickLoadInput as HTMLInputElement).value = '';
+                            }
+                            setModalMessage(`✅ Group "${groupNameToSave}" saved with ${newGroup.members.length} members!\n\nFind it above in "⚡ Quick Load Saved Group" - it's already loaded!`);
                             setShowSuccessModal(true);
                           }, 100);
+                        } else {
+                          console.warn('⚠️ Group name is empty or whitespace only');
                         }
                       }}
                       className="px-3 py-2 bg-purple-500 text-white rounded-lg text-xs font-bold hover:bg-purple-600 transition whitespace-nowrap"
