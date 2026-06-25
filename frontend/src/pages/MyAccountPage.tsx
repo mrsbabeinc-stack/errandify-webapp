@@ -77,7 +77,7 @@ export default function MyAccountPage() {
   });
   const [activitySearch, setActivitySearch] = useState('');
   const [activityFilter, setActivityFilter] = useState<'all' | 'completed' | 'posted' | 'referral' | 'rating' | 'accepted'>('all');
-  const [userBalance, setUserBalance] = useState(25);
+  const [userBalance, setUserBalance] = useState(10000);
   const [redemptionHistory, setRedemptionHistory] = useState<Array<{ id: string; date: string; item: string; code: string; amount: number; emoji: string }>>([
     { id: '1', date: '10-06-2026', item: '$5 Discount', code: 'ERRAND5', amount: -50, emoji: '💳' },
   ]);
