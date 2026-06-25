@@ -300,7 +300,13 @@ export default function MyAccountPage() {
             }
           );
 
-          const result = response.data.output?.choices?.[0]?.message?.content;
+          // Parse Qwen response - check both possible response formats
+          const result = response.data.output?.text ||
+                        response.data.output?.choices?.[0]?.message?.content ||
+                        response.data.choices?.[0]?.message?.content ||
+                        '';
+
+          console.log('Qwen image moderation response:', result);
 
           if (result && result.includes('APPROVED')) {
             setProfileImage(base64Image);
@@ -309,8 +315,8 @@ export default function MyAccountPage() {
             const reason = result?.replace('REJECTED: ', '') || 'Image does not meet community standards';
             alert(`❌ Photo rejected: ${reason}`);
           }
-        } catch (error) {
-          console.error('Image moderation error:', error);
+        } catch (error: any) {
+          console.error('Image moderation error:', error.response?.data || error.message);
           // Fallback: accept image if moderation fails
           setProfileImage(base64Image);
           alert('⚠️ Could not verify image. Uploaded anyway - please ensure it follows community guidelines.');
