@@ -6,6 +6,8 @@ import EventBanner from '../components/EventBanner';
 import SuccessModal from '../components/SuccessModal';
 import ErrorModal from '../components/ErrorModal';
 import ProfilePlaque from '../components/ProfilePlaque';
+import BottomNav from '../components/BottomNav';
+import HanaCustomerService from '../components/HanaCustomerService';
 
 interface UserProfile {
   id?: number;
@@ -3519,6 +3521,12 @@ export default function MyAccountPage() {
           </div>
         </div>
       )}
+
+      {/* Bottom Navigation Footer */}
+      <BottomNav />
+
+      {/* Floating Hana */}
+      <HanaCustomerService />
     </div>
   );
 }
