@@ -541,6 +541,34 @@ router.post('/favorite/:userId', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/users/favorites - Get user's favorite users list
+router.get('/favorites', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const currentUserId = parseInt(req.userId || '0', 10);
+
+    const result = await db.query(
+      `SELECT u.id, u.display_name, u.profile_image_url, u.location, uf.added_at
+       FROM users u
+       INNER JOIN user_favorites uf ON u.id = uf.favorite_user_id
+       WHERE uf.user_id = $1
+       ORDER BY uf.added_at DESC`,
+      [currentUserId]
+    );
+
+    res.json({
+      success: true,
+      data: result.rows,
+      count: result.rows.length,
+    });
+  } catch (error: any) {
+    console.error('Get favorites endpoint error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch favorites',
+      details: error.message,
+    });
+  }
+});
+
 // Add Certificate
 router.post('/certificates', authMiddleware, async (req: AuthRequest, res) => {
   try {
