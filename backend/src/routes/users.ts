@@ -9,7 +9,7 @@ const router = Router();
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, user_id, display_name, mobile, role, formatted_user_id FROM users WHERE id = $1',
+      'SELECT id, user_id, display_name, email, mobile, role, formatted_user_id, chas_card_color FROM users WHERE id = $1',
       [req.userId]
     );
 
@@ -36,8 +36,10 @@ router.get('/profile', authMiddleware, async (req, res) => {
         userId: user.user_id,
         formattedUserId: user.formatted_user_id,
         name: user.display_name,
+        email: user.email,
         mobile: user.mobile,
         role: user.role,
+        chasCardColor: user.chas_card_color,
         categories: [],
       },
     });
@@ -50,7 +52,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
 // Update user profile
 router.put('/profile', authMiddleware, async (req, res) => {
   try {
-    const { display_name, mobile, monthly_household_income } = req.body;
+    const { display_name, mobile, monthly_household_income, chas_card_color, email, alias, bio } = req.body;
     const userId = req.userId;
 
     let updateFields = [];
@@ -61,35 +63,63 @@ router.put('/profile', authMiddleware, async (req, res) => {
       updateFields.push(`display_name = $${++paramCount}`);
       updateValues.push(display_name);
     }
+    if (email) {
+      updateFields.push(`email = $${++paramCount}`);
+      updateValues.push(email);
+    }
     if (mobile) {
       updateFields.push(`mobile = $${++paramCount}`);
       updateValues.push(mobile);
     }
-    if (monthly_household_income !== undefined) {
-      updateFields.push(`monthly_household_income = $${++paramCount}`);
-      updateValues.push(monthly_household_income);
+    if (alias !== undefined) {
+      updateFields.push(`alias = $${++paramCount}`);
+      updateValues.push(alias || null);
+    }
+    if (bio !== undefined) {
+      updateFields.push(`bio = $${++paramCount}`);
+      updateValues.push(bio || null);
+    }
 
-      // Auto-calculate CHAS card color based on income
-      let chasColor = 'none';
-      let chasPercent = 0;
-      if (monthly_household_income <= 1900) {
-        chasColor = 'blue';
-        chasPercent = 25;
-      } else if (monthly_household_income <= 3900) {
-        chasColor = 'green';
-        chasPercent = 15;
-      }
-
+    // Handle CHAS card color (manual selection)
+    if (chas_card_color !== undefined) {
       updateFields.push(`chas_card_color = $${++paramCount}`);
-      updateValues.push(chasColor);
-      updateFields.push(`chas_subsidy_percentage = $${++paramCount}`);
-      updateValues.push(chasPercent);
+      updateValues.push(chas_card_color || null);
       updateFields.push(`chas_verified = $${++paramCount}`);
       updateValues.push(true);
       updateFields.push(`chas_verified_at = $${++paramCount}`);
       updateValues.push(new Date());
       updateFields.push(`chas_verification_method = $${++paramCount}`);
-      updateValues.push('income_self_declared');
+      updateValues.push('manual_selection');
+    }
+
+    // Handle monthly income (auto-calculate CHAS if income provided)
+    if (monthly_household_income !== undefined) {
+      updateFields.push(`monthly_household_income = $${++paramCount}`);
+      updateValues.push(monthly_household_income);
+
+      // Only auto-calculate CHAS if manual CHAS not set
+      if (chas_card_color === undefined) {
+        let chasColor = 'none';
+        let chasPercent = 0;
+        if (monthly_household_income <= 1900) {
+          chasColor = 'blue';
+          chasPercent = 25;
+        } else if (monthly_household_income <= 3900) {
+          chasColor = 'green';
+          chasPercent = 15;
+        }
+
+        updateFields.push(`chas_card_color = $${++paramCount}`);
+        updateValues.push(chasColor);
+        updateFields.push(`chas_subsidy_percentage = $${++paramCount}`);
+        updateValues.push(chasPercent);
+        updateFields.push(`chas_verified = $${++paramCount}`);
+        updateValues.push(true);
+        updateFields.push(`chas_verified_at = $${++paramCount}`);
+        updateValues.push(new Date());
+        updateFields.push(`chas_verification_method = $${++paramCount}`);
+        updateValues.push('income_self_declared');
+      }
     }
 
     if (updateFields.length === 0) {
