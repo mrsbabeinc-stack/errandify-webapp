@@ -1,5 +1,11 @@
 import Stripe from 'stripe';
 
+// Development: Disable strict SSL verification (for local testing)
+// Production: Always verify SSL (MUST be enabled in production)
+if (process.env.NODE_ENV !== 'production') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_51TPCNWRpPAWSpeM0...', {
   apiVersion: '2024-04-10',
 });
