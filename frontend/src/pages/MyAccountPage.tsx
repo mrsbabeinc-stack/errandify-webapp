@@ -1869,8 +1869,7 @@ export default function MyAccountPage() {
                     {availableUsers
                       .filter(
                         (user) =>
-                          user.name.toLowerCase().includes(giftSearch.toLowerCase()) &&
-                          user.id !== userId
+                          user.name.toLowerCase().includes(giftSearch.toLowerCase())
                       )
                       .map((user) => {
                         const isSelected = giftForm.recipients?.includes(user.id) ?? false;
