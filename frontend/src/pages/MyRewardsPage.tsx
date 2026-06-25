@@ -8,6 +8,7 @@ export default function MyRewardSpacePage() {
   const [redeeming, setRedeeming] = useState(false);
   const [message, setMessage] = useState('');
   const [redeemed, setRedeemed] = useState<number[]>([]);
+  const [confirmRedeemData, setConfirmRedeemData] = useState<{ rewardId: number; points: number; name: string } | null>(null);
 
   const rewards = [
     { id: 1, name: '$5 Discount', cost: '50 EP', available: true },
@@ -24,18 +25,25 @@ export default function MyRewardSpacePage() {
     { activity: 'Point Granted', points: '+20 EP', date: '15-06-2026 02:54 PM' },
   ];
 
-  const handleRedeem = async (rewardId: number, points: number) => {
+  const confirmRedeem = (rewardId: number, points: number, name: string) => {
+    setConfirmRedeemData({ rewardId, points, name });
+  };
+
+  const handleRedeemConfirm = async () => {
+    if (!confirmRedeemData) return;
+
     setRedeeming(true);
     setMessage('');
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/redeem`,
-        { rewardId, points },
+        { rewardId: confirmRedeemData.rewardId, points: confirmRedeemData.points },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMessage('✅ Reward redeemed successfully! Points deducted from your account.');
-      setRedeemed([...redeemed, rewardId]);
+      setRedeemed([...redeemed, confirmRedeemData.rewardId]);
+      setConfirmRedeemData(null);
       // Auto-clear message after 5 seconds but keep the redeemed state
       setTimeout(() => setMessage(''), 5000);
     } catch (error: any) {
@@ -44,6 +52,10 @@ export default function MyRewardSpacePage() {
     } finally {
       setRedeeming(false);
     }
+  };
+
+  const handleRedeemCancel = () => {
+    setConfirmRedeemData(null);
   };
 
   return (
@@ -119,7 +131,7 @@ export default function MyRewardSpacePage() {
 
                 <div className="space-y-2">
                   <button
-                    onClick={() => handleRedeem(1, 50)}
+                    onClick={() => confirmRedeem(1, 50, '$5 Discount')}
                     disabled={redeeming}
                     className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all duration-200 active:scale-95 disabled:opacity-50"
                   >
@@ -149,7 +161,7 @@ export default function MyRewardSpacePage() {
                     <button
                       onClick={() => {
                         const points = parseInt(reward.cost);
-                        handleRedeem(reward.id, points);
+                        confirmRedeem(reward.id, points, reward.name);
                       }}
                       disabled={!reward.available || redeeming}
                       className={`px-2 py-1 rounded text-xs font-bold ${reward.available ? 'bg-errandify-orange text-white hover:bg-orange-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
@@ -201,7 +213,7 @@ export default function MyRewardSpacePage() {
                       <button
                         onClick={() => {
                           const points = parseInt(voucher.cost);
-                          handleRedeem(voucher.id, points);
+                          confirmRedeem(voucher.id, points, voucher.name);
                         }}
                         disabled={redeeming}
                         className="w-full bg-errandify-orange text-white py-1.5 rounded font-bold text-xs hover:bg-orange-600 disabled:opacity-50"
@@ -215,6 +227,51 @@ export default function MyRewardSpacePage() {
             )}
           </div>
         </div>
+
+        {/* Confirmation Modal */}
+        {confirmRedeemData && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+              <div className="text-center mb-6">
+                <p className="text-4xl mb-3">🎁</p>
+                <h2 className="text-2xl font-bold text-errandify-brown mb-2">Confirm Redemption</h2>
+                <p className="text-gray-600">Are you sure you want to redeem this reward?</p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="mb-3">
+                  <p className="text-xs text-gray-600 font-semibold">Reward</p>
+                  <p className="text-lg font-bold text-errandify-brown">{confirmRedeemData.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 font-semibold">Cost</p>
+                  <p className="text-2xl font-bold text-errandify-orange">{confirmRedeemData.points} EP</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-700 mb-6 text-center">
+                These points will be deducted from your account and cannot be recovered.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleRedeemCancel}
+                  disabled={redeeming}
+                  className="flex-1 bg-gray-200 text-gray-800 py-2.5 rounded-lg font-bold hover:bg-gray-300 transition disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRedeemConfirm}
+                  disabled={redeeming}
+                  className="flex-1 bg-errandify-orange text-white py-2.5 rounded-lg font-bold hover:bg-orange-600 transition disabled:opacity-50"
+                >
+                  {redeeming ? 'Redeeming...' : 'Confirm'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
