@@ -51,6 +51,7 @@ export default function MyAccountPage() {
     email: '',
     mobile: '',
     monthly_household_income: '',
+    chas_card_color: '',
   });
   const [saving, setSaving] = useState(false);
   const [certificates, setCertificates] = useState<Array<{ id: string; name: string }>>([]);
@@ -81,6 +82,7 @@ export default function MyAccountPage() {
             email: profileRes.data.data.email || '',
             mobile: profileRes.data.data.mobile || '',
             monthly_household_income: profileRes.data.data.monthlyHouseholdIncome ? String(profileRes.data.data.monthlyHouseholdIncome) : '',
+            chas_card_color: profileRes.data.data.chasCardColor || '',
           });
         } catch (error) {
           console.error('Profile API error:', error);
@@ -162,6 +164,7 @@ export default function MyAccountPage() {
           email: editForm.email,
           mobile: editForm.mobile,
           monthly_household_income: editForm.monthly_household_income,
+          chas_card_color: editForm.chas_card_color,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -174,6 +177,7 @@ export default function MyAccountPage() {
           bio: editForm.bio,
           email: editForm.email,
           mobile: editForm.mobile,
+          chasCardColor: editForm.chas_card_color,
         });
       }
       alert('✅ Profile saved successfully!');
@@ -806,6 +810,28 @@ export default function MyAccountPage() {
                     rows={3}
                   />
                   <p className="text-xs text-gray-600 mt-1">{editForm.bio?.length || 0}/200</p>
+                </div>
+
+                {/* CHAS Card Status */}
+                <div className="bg-white rounded shadow p-3">
+                  <h3 className="text-xs font-bold text-errandify-brown mb-2">🏥 CHAS Card Status (Optional)</h3>
+                  <select
+                    value={editForm.chas_card_color || ''}
+                    onChange={(e) => setEditForm({ ...editForm, chas_card_color: e.target.value })}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                  >
+                    <option value="">No CHAS Card</option>
+                    <option value="blue">🟦 Blue Card (Monthly income ≤ $1,900)</option>
+                    <option value="green">🟩 Green Card (Monthly income ≤ $3,900)</option>
+                  </select>
+                  <p className="text-xs text-gray-600 mt-1">
+                    🔒 Private: Only used to show you special discounts and support
+                  </p>
+                  {profileData.chasCardColor && (
+                    <p className="text-xs text-green-600 mt-1">
+                      ✅ Your CHAS status: {profileData.chasCardColor === 'blue' ? '🟦 Blue Card' : profileData.chasCardColor === 'green' ? '🟩 Green Card' : 'None'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Delete Account Confirmation Modal */}
