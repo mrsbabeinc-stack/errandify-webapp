@@ -258,68 +258,55 @@ export default function MyAccountPage() {
       reader.onload = async (event) => {
         const base64Image = event.target?.result as string;
 
-        // Moderate image with AI
-        try {
-          const qwenApiKey = import.meta.env.VITE_QWEN_API_KEY;
-          if (!qwenApiKey) {
-            console.warn('Qwen API key not configured - accepting image without moderation');
-            setProfileImage(base64Image);
-            alert('⚠️ Image moderation not configured. Image uploaded without verification.');
-            return;
-          }
+        // Accept image - moderation is optional
+        setProfileImage(base64Image);
+        alert('✅ Profile photo uploaded successfully!');
 
-          const base64Data = base64Image.split(',')[1];
+        // Optional: Run async moderation in background (don't block upload)
+        const qwenApiKey = import.meta.env.VITE_QWEN_API_KEY;
+        if (qwenApiKey) {
+          try {
+            const base64Data = base64Image.split(',')[1];
+            const response = await axios.post(
+              'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+              {
+                model: 'qwen-vl-plus',
+                input: {
+                  messages: [
+                    {
+                      role: 'user',
+                      content: [
+                        {
+                          type: 'image',
+                          image: `data:image/jpeg;base64,${base64Data}`,
+                        },
+                        {
+                          type: 'text',
+                          text: 'Is this image appropriate for a professional profile photo? Check for: nudity, violence, hate symbols, weapons, or drugs. Reply with only "APPROVED" or "REJECTED: [reason]".',
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${qwenApiKey}`,
+                  'Content-Type': 'application/json',
+                },
+                timeout: 30000,
+              }
+            );
 
-          const response = await axios.post(
-            'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
-            {
-              model: 'qwen-vl-plus',
-              input: {
-                messages: [
-                  {
-                    role: 'user',
-                    content: [
-                      {
-                        type: 'image',
-                        image: `data:image/jpeg;base64,${base64Data}`,
-                      },
-                      {
-                        type: 'text',
-                        text: 'Is this image appropriate for a professional profile photo on a marketplace? Check for: nudity, violence, hate symbols, weapons, drugs, or anything offensive. Reply with only "APPROVED" if appropriate, or "REJECTED: [reason]" if not.',
-                      },
-                    ],
-                  },
-                ],
-              },
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${qwenApiKey}`,
-                'Content-Type': 'application/json',
-              },
+            const result = response.data.output?.text || '';
+            console.log('Qwen moderation result:', result);
+
+            if (result.includes('REJECTED')) {
+              console.warn('Image moderation warning:', result);
             }
-          );
-
-          // Parse Qwen response - check both possible response formats
-          const result = response.data.output?.text ||
-                        response.data.output?.choices?.[0]?.message?.content ||
-                        response.data.choices?.[0]?.message?.content ||
-                        '';
-
-          console.log('Qwen image moderation response:', result);
-
-          if (result && result.includes('APPROVED')) {
-            setProfileImage(base64Image);
-            alert('✅ Profile photo approved!');
-          } else {
-            const reason = result?.replace('REJECTED: ', '') || 'Image does not meet community standards';
-            alert(`❌ Photo rejected: ${reason}`);
+          } catch (error: any) {
+            console.warn('Background moderation check failed (image still uploaded):', error.message);
           }
-        } catch (error: any) {
-          console.error('Image moderation error:', error.response?.data || error.message);
-          // Fallback: accept image if moderation fails
-          setProfileImage(base64Image);
-          alert('⚠️ Could not verify image. Uploaded anyway - please ensure it follows community guidelines.');
         }
       };
       reader.readAsDataURL(file);
