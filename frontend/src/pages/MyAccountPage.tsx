@@ -66,6 +66,26 @@ export default function MyAccountPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [aiAlerts, setAiAlerts] = useState<Array<{ type: string; emoji: string; title: string; message: string }>>([]);
+
+  useEffect(() => {
+    // Fetch AI-generated alerts
+    const fetchAiAlerts = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/ai-alerts`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (response.data.data?.alerts) {
+          setAiAlerts(response.data.data.alerts);
+        }
+      } catch (error) {
+        console.warn('Failed to fetch AI alerts:', error);
+      }
+    };
+    fetchAiAlerts();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1087,20 +1107,29 @@ export default function MyAccountPage() {
               </div>
             </div>
 
-            {/* Happy Notifications */}
+            {/* AI-Generated Alerts */}
             <div className="space-y-2">
-              <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-3">
-                <p className="text-xs font-bold text-green-900 mb-1">✅ Great News!</p>
-                <p className="text-xs text-green-800">Your last errand earned you SGD $80! 🎉</p>
-              </div>
-              <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-3">
-                <p className="text-xs font-bold text-blue-900 mb-1">🚀 On Fire!</p>
-                <p className="text-xs text-blue-800">You've completed 5 errands this month. You're a superstar! ⭐</p>
-              </div>
-              <div className="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-3">
-                <p className="text-xs font-bold text-purple-900 mb-1">🎁 Bonus Alert!</p>
-                <p className="text-xs text-purple-800">Earn SGD $50 more to unlock the "Speed Demon" badge! 🏃‍♂️</p>
-              </div>
+              {aiAlerts.length > 0 ? (
+                aiAlerts.map((alert, idx) => {
+                  const bgColor = alert.type === 'success' ? 'bg-green-50' : alert.type === 'achievement' ? 'bg-blue-50' : 'bg-purple-50';
+                  const borderColor = alert.type === 'success' ? 'border-green-500' : alert.type === 'achievement' ? 'border-blue-500' : 'border-purple-500';
+                  const titleColor = alert.type === 'success' ? 'text-green-900' : alert.type === 'achievement' ? 'text-blue-900' : 'text-purple-900';
+                  const textColor = alert.type === 'success' ? 'text-green-800' : alert.type === 'achievement' ? 'text-blue-800' : 'text-purple-800';
+                  return (
+                    <div key={idx} className={`${bgColor} border-l-4 ${borderColor} rounded-lg p-3`}>
+                      <p className={`text-xs font-bold ${titleColor} mb-1`}>{alert.emoji} {alert.title}</p>
+                      <p className={`text-xs ${textColor}`}>{alert.message}</p>
+                    </div>
+                  );
+                })
+              ) : (
+                <>
+                  <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-3">
+                    <p className="text-xs font-bold text-green-900 mb-1">✅ Great News!</p>
+                    <p className="text-xs text-green-800">Loading your personalized alerts...</p>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Recent Activity */}
