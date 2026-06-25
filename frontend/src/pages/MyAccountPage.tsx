@@ -689,84 +689,7 @@ export default function MyAccountPage() {
                   <p className="text-xs text-green-800 mt-0.5">Only you see this</p>
                 </div>
 
-                {/* Edit Form */}
-                <div className="bg-white rounded shadow p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xs font-bold text-errandify-brown">📝 Edit Profile</h3>
-                    {!isEditing && (
-                      <button
-                        onClick={() => setIsEditing(true)}
-                        className="text-xs text-errandify-orange font-semibold hover:underline"
-                      >
-                        Edit
-                      </button>
-                    )}
-                  </div>
-
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">Name</label>
-                        <input
-                          type="text"
-                          value={editForm.display_name}
-                          onChange={(e) => setEditForm({ ...editForm, display_name: e.target.value })}
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">Email</label>
-                        <input
-                          type="email"
-                          value={editForm.email}
-                          onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600 block mb-1">Mobile</label>
-                        <input
-                          type="text"
-                          value={editForm.mobile}
-                          onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })}
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleSaveProfile}
-                          disabled={saving}
-                          className="flex-1 bg-errandify-orange text-white py-1 rounded font-semibold text-xs"
-                        >
-                          {saving ? 'Saving...' : 'Save'}
-                        </button>
-                        <button
-                          onClick={() => setIsEditing(false)}
-                          className="flex-1 border border-gray-300 text-gray-700 py-1 rounded font-semibold text-xs"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5 text-xs">
-                      <div>
-                        <p className="text-gray-600 font-semibold">Name</p>
-                        <p className="text-gray-800">{profileData.name}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600 font-semibold">Email</p>
-                        <p className="text-gray-800">{profileData.email || 'Not set'}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600 font-semibold">Mobile</p>
-                        <p className="text-gray-800">{profileData.mobile || 'Not set'}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Profile Photo Upload */}
+                {/* Profile Photo Upload - FIRST */}
                 <div className="bg-white rounded shadow p-3">
                   <h3 className="text-xs font-bold text-errandify-brown mb-2">📸 Profile Photo</h3>
                   <div className="flex gap-3 items-start">
@@ -785,17 +708,105 @@ export default function MyAccountPage() {
                   </div>
                 </div>
 
-                {/* Alias Setup */}
+                {/* Edit Form - Name (Read-only from SingPass) + Alias beside it */}
                 <div className="bg-white rounded shadow p-3">
-                  <h3 className="text-xs font-bold text-errandify-brown mb-2">🎭 Set Alias</h3>
-                  <input
-                    type="text"
-                    value={editForm.alias || ''}
-                    onChange={(e) => setEditForm({ ...editForm, alias: e.target.value })}
-                    placeholder="Enter your alias (instead of name)"
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                  />
-                  <p className="text-xs text-gray-600 mt-1">This is how others will see you in the app</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-bold text-errandify-brown">👤 Name & Alias</h3>
+                    {!isEditing && (
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="text-xs text-errandify-orange font-semibold hover:underline"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      {/* Name - Read Only from SingPass */}
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">
+                          Name (from SingPass - Read Only) 🔐
+                        </label>
+                        <div className="w-full px-2 py-1 border border-gray-300 rounded text-xs bg-gray-100 text-gray-600">
+                          {profileData.name}
+                        </div>
+                      </div>
+
+                      {/* Alias - Editable */}
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Alias (How others see you)</label>
+                        <input
+                          type="text"
+                          value={editForm.alias || ''}
+                          onChange={(e) => setEditForm({ ...editForm, alias: e.target.value })}
+                          placeholder="Optional: your display name"
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                        />
+                        <p className="text-xs text-gray-500 mt-0.5">Leave blank to show your real name</p>
+                      </div>
+
+                      {/* Email */}
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={editForm.email}
+                          onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                        />
+                      </div>
+
+                      {/* Mobile */}
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 block mb-1">Mobile</label>
+                        <input
+                          type="text"
+                          value={editForm.mobile}
+                          onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSaveProfile}
+                          disabled={saving}
+                          className="flex-1 bg-errandify-orange text-white py-1 rounded font-semibold text-xs"
+                        >
+                          {saving ? 'Saving...' : 'Save'}
+                        </button>
+                        <button
+                          onClick={() => setIsEditing(false)}
+                          className="flex-1 border border-gray-300 text-gray-700 py-1 rounded font-semibold text-xs"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between gap-2">
+                        <div>
+                          <p className="text-gray-600 font-semibold">Name (SingPass)</p>
+                          <p className="text-gray-800">{profileData.name}</p>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-gray-600 font-semibold">Alias</p>
+                          <p className="text-gray-800">{editForm.alias || '(not set)'}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-gray-600 font-semibold">Email</p>
+                        <p className="text-gray-800">{profileData.email || 'Not set'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600 font-semibold">Mobile</p>
+                        <p className="text-gray-800">{profileData.mobile || 'Not set'}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Bio */}
