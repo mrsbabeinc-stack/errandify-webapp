@@ -68,6 +68,7 @@ export default function MyAccountPage() {
   const [modalMessage, setModalMessage] = useState('');
   const [aiAlerts, setAiAlerts] = useState<Array<{ type: string; emoji: string; title: string; message: string }>>([]);
   const [editingPayout, setEditingPayout] = useState(false);
+  const [expandPayout, setExpandPayout] = useState(false);
   const [payoutForm, setPayoutForm] = useState({
     bankName: 'DBS Bank Singapore',
     accountHolder: 'Sarah Tan',
@@ -1140,12 +1141,12 @@ export default function MyAccountPage() {
               )}
             </div>
 
-            {/* Recent Activity - Compact */}
+            {/* Recent Activity - Expanded */}
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
               <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-2">
                 <h3 className="text-xs font-bold">📊 Recent Activity</h3>
               </div>
-              <div className="divide-y divide-gray-100 text-xs max-h-32 overflow-y-auto">
+              <div className="divide-y divide-gray-100 text-xs max-h-64 overflow-y-auto">
                 <div className="p-2 flex justify-between items-center hover:bg-green-50 transition">
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-900 truncate">✅ Completed: Clean apartment</p>
@@ -1167,22 +1168,52 @@ export default function MyAccountPage() {
                   </div>
                   <p className="font-bold text-purple-600 text-xs ml-2 flex-shrink-0">+$50</p>
                 </div>
+                <div className="p-2 flex justify-between items-center hover:bg-blue-50 transition">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900 truncate">⭐ Rating given: Clean apartment</p>
+                    <p className="text-gray-500 text-xs">3 days ago</p>
+                  </div>
+                  <p className="font-bold text-blue-600 text-xs ml-2 flex-shrink-0">5 stars</p>
+                </div>
+                <div className="p-2 flex justify-between items-center hover:bg-green-50 transition">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900 truncate">✅ Accepted bid: Tutoring</p>
+                    <p className="text-gray-500 text-xs">4 days ago</p>
+                  </div>
+                  <p className="font-bold text-green-600 text-xs ml-2 flex-shrink-0">SGD $60</p>
+                </div>
+                <div className="p-2 flex justify-between items-center hover:bg-orange-50 transition">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900 truncate">📋 Posted: Office admin</p>
+                    <p className="text-gray-500 text-xs">5 days ago</p>
+                  </div>
+                  <p className="font-bold text-orange-600 text-xs ml-2 flex-shrink-0">-$75</p>
+                </div>
               </div>
             </div>
 
-            {/* Payout Details - Editable */}
+            {/* Payout Details - Collapsible */}
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-              <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-3">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold">💳 Payout Details</h3>
                   <button
-                    onClick={() => setEditingPayout(!editingPayout)}
-                    className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 rounded transition"
+                    onClick={() => setExpandPayout(!expandPayout)}
+                    className="flex-1 flex items-center gap-2 text-xs font-bold hover:opacity-80 transition"
                   >
-                    {editingPayout ? '✅ Done' : '✏️ Edit'}
+                    <span>{expandPayout ? '▼' : '▶'}</span>
+                    <span>💳 Payout Details</span>
                   </button>
+                  {expandPayout && (
+                    <button
+                      onClick={() => setEditingPayout(!editingPayout)}
+                      className="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 rounded transition ml-2"
+                    >
+                      {editingPayout ? '✅ Done' : '✏️ Edit'}
+                    </button>
+                  )}
                 </div>
               </div>
+              {expandPayout && (
               <div className="p-3 space-y-2 text-xs">
                 {editingPayout ? (
                   <>
@@ -1254,6 +1285,7 @@ export default function MyAccountPage() {
                   </>
                 )}
               </div>
+              )}
             </div>
           </div>
         )}
