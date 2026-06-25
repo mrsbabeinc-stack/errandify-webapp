@@ -1579,7 +1579,15 @@ export default function MyAccountPage() {
                   <button
                     onClick={() => {
                       setShowGiftModal(true);
-                      setGiftForm({ points: '', recipient: '' });
+                      setGiftForm({
+                        points: '',
+                        recipients: [],
+                        giftCardMessage: 'Thank you for being a friend',
+                        customMessage: '',
+                        giftDate: new Date().toISOString().split('T')[0],
+                        groupName: '',
+                        useCustomMessage: false,
+                      });
                     }}
                     className="flex-1 bg-gradient-to-r from-pink-400 to-rose-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition transform shadow-md"
                   >
