@@ -2124,10 +2124,38 @@ export default function MyAccountPage() {
                     </span>
                   )}
                   {(!giftForm.recipients || giftForm.recipients.length === 0) && (
-                    <span className="text-xs text-gray-500">Check boxes below to select</span>
+                    <span className="text-xs text-gray-500">No limit - check boxes below</span>
                   )}
                 </div>
               </div>
+
+              {/* Selected Recipients Display - Show who is selected */}
+              {giftForm.recipients && giftForm.recipients.length > 0 && (
+                <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                  <p className="text-xs font-bold text-orange-700 mb-2">✅ Selected Recipients:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {giftForm.recipients.map((recipientId) => {
+                      const user = availableUsers.find(u => u.id === recipientId);
+                      return user ? (
+                        <div key={recipientId} className="bg-white rounded-full px-3 py-1 text-xs border border-orange-300 flex items-center gap-2">
+                          <span>{user.name}</span>
+                          <button
+                            onClick={() => {
+                              setGiftForm({
+                                ...giftForm,
+                                recipients: giftForm.recipients.filter(r => r !== recipientId),
+                              });
+                            }}
+                            className="text-orange-600 hover:text-orange-800 font-bold"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Group Name - Appears at Top When Selecting */}
               {giftForm.recipients && giftForm.recipients.length > 0 && (
