@@ -746,13 +746,13 @@ export default function MyAccountPage() {
                 {/* Edit Form - Name (Read-only from SingPass) + Alias beside it */}
                 <div className="bg-white rounded shadow p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xs font-bold text-errandify-brown">👤 Name & Alias</h3>
+                    <h3 className="text-xs font-bold text-errandify-brown">👤 Edit Profile</h3>
                     {!isEditing && (
                       <button
                         onClick={() => setIsEditing(true)}
-                        className="text-xs text-errandify-orange font-semibold hover:underline"
+                        className="text-xs bg-errandify-orange text-white px-3 py-1 rounded font-semibold hover:bg-orange-600"
                       >
-                        Edit
+                        ✏️ Edit
                       </button>
                     )}
                   </div>
@@ -908,7 +908,18 @@ export default function MyAccountPage() {
 
                 {/* Certificates */}
                 <div className="bg-white rounded shadow p-3">
-                  <h3 className="text-xs font-bold text-errandify-brown mb-1.5">📜 Certificates ({certificates.length}/10)</h3>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h3 className="text-xs font-bold text-errandify-brown">📜 Certificates ({certificates.length}/10)</h3>
+                    {certificates.length > 0 && (
+                      <button
+                        onClick={handleSaveProfile}
+                        disabled={saving}
+                        className="text-xs bg-errandify-orange text-white px-2 py-0.5 rounded font-semibold"
+                      >
+                        {saving ? 'Saving...' : 'Save'}
+                      </button>
+                    )}
+                  </div>
                   {certificates.length > 0 && (
                     <div className="mb-2 space-y-1">
                       {certificates.map((cert, idx) => (
@@ -948,11 +959,14 @@ export default function MyAccountPage() {
                             setCertificates([...certificates, { id: Date.now().toString(), name: certificateTitle }]);
                             setCertificateTitle('');
                             setCertificateFile(null);
+                            alert('✅ Certificate added! Click Save to store permanently.');
+                          } else {
+                            alert('⚠️ Please enter certificate title and select a file');
                           }
                         }}
                         className="w-full bg-errandify-orange text-white py-1 rounded font-semibold text-xs"
                       >
-                        Add
+                        Add Certificate
                       </button>
                     </div>
                   )}
