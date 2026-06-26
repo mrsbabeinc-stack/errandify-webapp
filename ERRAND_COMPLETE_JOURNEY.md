@@ -242,13 +242,20 @@ User experience from errand creation through payment, with all notifications, re
 **Option D: Do Nothing**
 - If no action in 48 hours
 - Timer expires
-- Auto-payment releases
+- Dispute window closes
 - Status: `completed`
 - Rating deadline passed (but can still rate later)
+- NO AUTO-PAYMENT - Asker must rate to release payment
+- Payment held until asker rates or admin intervenes
 
 **Notifications at Hour 47:**
-- Reminder Toast: "5 hours left to rate John's work - don't forget!"
-- Reminder Email: "Your rating deadline is in 5 hours"
+- Reminder Toast: "5 hours left to rate John - payment is waiting for his rating!"
+- Reminder Email: "Your rating deadline is in 5 hours - John won't get paid until you rate"
+
+**Notification at Hour 48:**
+- Toast: "Dispute window closed - please rate John so he can get paid"
+- Email: "Rate John to release his $50 payment"
+- Payment remains held until asker rates or admin approves release
 
 ### Step 2: Payment Processing
 
