@@ -64,7 +64,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       if (existingBid.status === 'rejected') {
         return res.status(403).json({
           error: 'Cannot modify rejected offer',
-          message: 'Your offer was not selected for this task. You cannot submit another offer for this errand.'
+          message: 'Your offer was not selected for this errand. You cannot submit another offer for this errand.'
         });
       }
 
@@ -103,7 +103,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           'SELECT title FROM errands WHERE id = $1',
           [task_id]
         );
-        const errandTitle = errandData.rows[0]?.title || 'Your task';
+        const errandTitle = errandData.rows[0]?.title || 'Your errand';
 
         await db.query(
           `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
@@ -239,7 +239,7 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
             otherBid.doer_id,
             'bid_rejected',
             '❌ Offer Not Selected',
-            `Your offer for "${errandTitle}" was not selected. Don't worry, more tasks are coming!`,
+            `Your offer for "${errandTitle}" was not selected. Don't worry, more errands are coming!`,
             bid.errand_id,
           ]
         );

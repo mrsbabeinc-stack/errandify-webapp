@@ -194,82 +194,82 @@ export async function notifyBidReceived(askerId: number, doerName: string, amoun
   );
 }
 
-export async function notifyBidAccepted(doerId: number, taskTitle: string, amount: number) {
+export async function notifyBidAccepted(doerId: number, errandTitle: string, amount: number) {
   await createNotification(
     doerId,
-    'task_bid_accepted',
-    '🎉 Bid Accepted!',
-    `Awesome! You're hired for "${taskTitle}". Get ready to start!`,
+    'errand_bid_accepted',
+    'Bid Accepted',
+    `Awesome! You're hired for "${errandTitle}". Get ready to start!`,
     null
   );
 }
 
-export async function notifyBidRejected(doerId: number, taskTitle: string) {
+export async function notifyBidRejected(doerId: number, errandTitle: string) {
   await createNotification(
     doerId,
-    'task_bid_rejected',
-    '😕 Bid Not Selected',
-    `Your bid for "${taskTitle}" wasn't chosen. Want to resubmit?`,
+    'errand_bid_rejected',
+    'Bid Not Selected',
+    `Your bid for "${errandTitle}" wasn't chosen. Want to resubmit?`,
     null
   );
 }
 
-export async function notifyTaskReopenedAfterCancellation(
+export async function notifyErrandReopenedAfterCancellation(
   doerId: number,
-  taskTitle: string,
+  errandTitle: string,
   bidAmount: number,
   errandId: number
 ) {
   const actionUrl = `/errand/${errandId}/reaccept-bid/${bidAmount}`;
   await createNotification(
     doerId,
-    'task_reopened_for_bid',
-    '🎯 Task Available Again!',
-    `${taskTitle}" is available again! Your original bid of $${bidAmount} is ready to go. [Accept Now]`,
+    'errand_reopened_for_bid',
+    'Errand Available Again',
+    `${errandTitle}" is available again! Your original bid of $${bidAmount} is ready to go. [Accept Now]`,
     actionUrl
   );
 }
 
-export async function notifyJobStarted(askerId: number, doerName: string, taskTitle: string) {
+export async function notifyErrandStarted(askerId: number, doerName: string, errandTitle: string) {
   await createNotification(
     askerId,
-    'task_started',
-    '⏰ Job Started',
-    `${doerName} has started "${taskTitle}". They're on their way!`,
+    'errand_started',
+    'Errand Started',
+    `${doerName} has started "${errandTitle}". They're on their way!`,
     null
   );
 }
 
-export async function notifyJobCompleted(
+export async function notifyErrandCompleted(
   askerId: number,
   doerName: string,
-  taskTitle: string,
+  errandTitle: string,
   releaseTime: string
 ) {
   await createNotification(
     askerId,
-    'task_completed',
-    '✅ Job Completed',
-    `${doerName} finished "${taskTitle}". Confirm or dispute before ${releaseTime}.`,
+    'errand_completed',
+    'Errand Completed',
+    `${doerName} finished "${errandTitle}". Confirm or dispute before ${releaseTime}.`,
     null
   );
 }
 
 export async function notifyPaymentReminder24h(
   askerId: number,
-  taskTitle: string,
+  errandTitle: string,
   releaseTime: string
 ) {
   await createNotification(
     askerId,
     'payment_reminder_24h',
-    '🌸 24 Hours Left',
-    `Payment for "${taskTitle}" releases in 24h. Confirm now or raise dispute if needed.`,
+    '24 Hours Left',
+    `Payment for "${errandTitle}" releases in 24h. Confirm now or raise dispute if needed.`,
     null
   );
 }
 
-export async function notifyPaymentReminder1h(askerId: number, taskTitle: string) {
+export async function notifyPaymentReminder1h(askerId: number, errandTitle: string) {
   await createNotification(
     askerId,
     'payment_reminder_1h',
@@ -279,12 +279,12 @@ export async function notifyPaymentReminder1h(askerId: number, taskTitle: string
   );
 }
 
-export async function notifyPaymentReleased(doerId: number, amount: number, taskTitle: string) {
+export async function notifyPaymentReleased(doerId: number, amount: number, errandTitle: string) {
   await createNotification(
     doerId,
     'payment_released',
-    '🎊 Payment Released!',
-    `Your payment of $${amount} for "${taskTitle}" is in your wallet! 💰`,
+    'Payment Released',
+    `Your payment of $${amount} for "${errandTitle}" is in your wallet!`,
     null
   );
 }
