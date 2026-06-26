@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { uploadMultiplePhotos } from '../utils/photoUploadService.js';
 
 interface TaskDetail {
   id: number;
@@ -22,6 +23,8 @@ export default function TaskCompleteEvidencePage() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [completionNotes, setCompletionNotes] = useState('');
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadingPhotoIndex, setUploadingPhotoIndex] = useState<number | null>(null);
 
   useEffect(() => {
     fetchTaskDetail();
@@ -67,26 +70,31 @@ export default function TaskCompleteEvidencePage() {
       return [];
     }
 
-    // In a real implementation, these would be uploaded to a file storage service (S3, Cloudinary, etc.)
-    // For MVP, we'll create data URLs or mock URLs
-    const urls: string[] = [];
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
 
-    for (let i = 0; i < uploadedFiles.length; i++) {
-      // Create a data URL for the file (for demo purposes)
-      // In production, upload to cloud storage and get real URLs
-      const reader = new FileReader();
-      await new Promise((resolve, reject) => {
-        reader.onload = (e) => {
-          const dataUrl = e.target?.result as string;
-          urls.push(dataUrl);
-          resolve(null);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(uploadedFiles[i]);
-      });
+      // Upload to Alibaba OSS using signed URLs
+      const uploadedPhotos = await uploadMultiplePhotos(
+        {
+          token,
+          errandId: parseInt(id || '0', 10),
+          files: uploadedFiles,
+        },
+        (photoUrl: string, index: number, total: number) => {
+          setUploadProgress(Math.round((index / total) * 100));
+          setUploadingPhotoIndex(index);
+        }
+      );
+
+      // Return the public URLs from Alibaba
+      return uploadedPhotos.map(photo => photo.photoUrl);
+    } catch (err: any) {
+      console.error('Alibaba photo upload error:', err);
+      throw new Error(`Photo upload failed: ${err.message || 'Unknown error'}`);
     }
-
-    return urls;
   };
 
   const handleSubmitCompletion = async () => {
@@ -97,6 +105,7 @@ export default function TaskCompleteEvidencePage() {
 
     setSubmitting(true);
     setError('');
+    setUploadProgress(0);
 
     try {
       // First upload photos if any
@@ -104,9 +113,12 @@ export default function TaskCompleteEvidencePage() {
       if (uploadedFiles.length > 0) {
         try {
           uploadedUrls = await uploadFiles();
+          setUploadProgress(100);
         } catch (uploadErr: any) {
-          console.warn('Photo upload failed, continuing without photos:', uploadErr);
+          console.warn('Alibaba photo upload failed, continuing without photos:', uploadErr);
+          setError(`⚠️ Photo upload failed: ${uploadErr.message}. Continuing without photos...`);
           // Continue without photos - notes are sufficient for MVP
+          setTimeout(() => setError(''), 3000);
         }
       }
 
@@ -273,6 +285,20 @@ export default function TaskCompleteEvidencePage() {
               />
             </div>
 
+            {/* Upload Progress */}
+            {submitting && uploadProgress > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-xs text-blue-900 font-semibold mb-2">📸 Uploading photos to Alibaba...</p>
+                <div className="w-full bg-blue-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-blue-700 mt-2 text-center font-semibold">{uploadProgress}% uploaded</p>
+              </div>
+            )}
+
             {/* Submit Button */}
             <button
               onClick={handleSubmitCompletion}
@@ -283,7 +309,7 @@ export default function TaskCompleteEvidencePage() {
                   : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-xl'
               }`}
             >
-              {submitting ? '⏳ Submitting...' : '🎉 Submit'}
+              {submitting ? (uploadProgress > 0 ? `⏳ ${uploadProgress}%` : '⏳ Submitting...') : '🎉 Submit'}
             </button>
 
             {/* Info - Compact Timeline */}
