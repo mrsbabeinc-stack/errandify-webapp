@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { uploadMultiplePhotos } from '../utils/photoUploadService.js';
 
 interface TaskDetail {
   id: number;
@@ -70,6 +71,8 @@ export default function TaskCompletionFlow() {
   const [notes, setNotes] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadingPhotoIndex, setUploadingPhotoIndex] = useState<number | null>(null);
 
   // Reviews state
   const [doerReview, setDoerReview] = useState<Review | null>(null);
@@ -157,45 +160,56 @@ export default function TaskCompletionFlow() {
 
   const handleSubmitCompletion = async () => {
     if (photos.length === 0 && !notes.trim()) {
-      alert('Please add at least a photo or some notes to prove completion!');
+      setError('Please add at least a photo or some notes to prove completion!');
       return;
     }
 
     setSubmitting(true);
     setError('');
+    setUploadProgress(0);
 
     try {
       const token = localStorage.getItem('token');
 
-      // Mark task as completed
+      // Step 1: Mark task as completed
       await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/complete`,
         { notes: notes.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Upload photos
+      // Step 2: Upload photos to Alibaba OSS (if any)
       if (photos.length > 0) {
-        const formData = new FormData();
-        photos.forEach(photo => {
-          if (photo.file) {
-            formData.append('photos', photo.file);
-          }
-        });
+        const filesToUpload = photos
+          .filter(p => p.file)
+          .map(p => p.file as File);
 
-        await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${id}/photos`,
-          formData,
-          { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
-        );
+        try {
+          await uploadMultiplePhotos(
+            {
+              token,
+              errandId: parseInt(id || '0', 10),
+              files: filesToUpload,
+            },
+            (photoUrl: string, index: number, total: number) => {
+              setUploadProgress(Math.round((index / total) * 100));
+            }
+          );
+        } catch (uploadErr: any) {
+          setError(`Photo upload failed: ${uploadErr.message || 'Unknown error'}`);
+          // Don't fail - photos are optional, move to review anyway
+          console.warn('Photo upload warning:', uploadErr);
+        }
       }
 
-      // Move to review step
+      setUploadProgress(0);
       setCurrentStep('review');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to submit completion');
+      setSubmitting(false);
     } finally {
       setSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
@@ -365,11 +379,30 @@ export default function TaskCompletionFlow() {
                 <p className="text-xs text-gray-500 mt-1">{notes.length}/500 characters</p>
               </div>
 
+              {/* Upload Progress */}
+              {submitting && uploadProgress > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-900 font-semibold mb-2">Uploading photos...</p>
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-blue-700 mt-2 text-center">{uploadProgress}% complete</p>
+                </div>
+              )}
+
               {/* Buttons */}
               <div className="grid grid-cols-2 gap-3 pt-4">
                 <button
                   onClick={() => navigate(-1)}
-                  className="py-3 rounded-lg font-bold text-errandify-brown border-2 border-gray-300 hover:bg-gray-50 transition"
+                  disabled={submitting}
+                  className={`py-3 rounded-lg font-bold transition ${
+                    submitting
+                      ? 'text-gray-400 border-gray-300 cursor-not-allowed'
+                      : 'text-errandify-brown border-2 border-gray-300 hover:bg-gray-50'
+                  }`}
                 >
                   ← Cancel
                 </button>
@@ -382,7 +415,7 @@ export default function TaskCompletionFlow() {
                       : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
                   }`}
                 >
-                  {submitting ? '⏳ Submitting...' : '✓ Complete Task'}
+                  {submitting ? (uploadProgress > 0 ? `⏳ ${uploadProgress}%` : '⏳ Submitting...') : '✓ Complete Task'}
                 </button>
               </div>
             </div>
