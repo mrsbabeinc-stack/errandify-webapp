@@ -121,6 +121,37 @@ export const stripeService = {
   },
 
   /**
+   * Create transfer to doer's connected account
+   * Called after task completion and approval
+   */
+  async createTransfer(amount: number, destinationAccountId: string, taskId: string, reason: string): Promise<any> {
+    try {
+      console.log(`[Stripe] Creating transfer to account ${destinationAccountId}, amount: $${amount}`);
+
+      const transfer = await stripe.transfers.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: 'sgd',
+        destination: destinationAccountId,
+        description: `Payment for task ${taskId}`,
+        metadata: {
+          taskId,
+          reason,
+        },
+      });
+
+      console.log(`[Stripe] Transfer created: ${transfer.id}`);
+      return {
+        id: transfer.id,
+        status: transfer.status,
+        amount: transfer.amount / 100,
+      };
+    } catch (error) {
+      console.error('[Stripe] Failed to create transfer:', error);
+      throw new Error('Failed to create transfer');
+    }
+  },
+
+  /**
    * Create payout to doer
    * Called after task completion and rating
    */
