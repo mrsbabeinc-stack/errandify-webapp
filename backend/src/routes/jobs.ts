@@ -408,8 +408,8 @@ async function releasePayment(taskId: string, task: any, reason: 'early_confirm'
       await createNotification(
         task.doer_id,
         'payment_released',
-        '💰 Payment Released!',
-        `Payment of SGD $${finalPayout.toFixed(2)} released for errand ${errandId} "${task.title}"! 🎊 Arrives in 1-2 business days.`,
+        'Payment Released',
+        `Payment of SGD $${finalPayout.toFixed(2)} released for errand ${errandId} "${task.title}". Arrives in 1-2 business days.`,
         null
       ).catch(err => console.warn('[Payment] Failed to notify doer:', err));
 
@@ -417,7 +417,7 @@ async function releasePayment(taskId: string, task: any, reason: 'early_confirm'
       await createNotification(
         task.asker_id,
         'payment_sent',
-        '✅ Payment Sent',
+        'Payment Sent',
         `Payment of SGD $${finalPayout.toFixed(2)} sent to ${doerDisplay} for errand ${errandId} "${task.title}" (after 20% platform fee).`,
         null
       ).catch(err => console.warn('[Payment] Failed to notify asker:', err));
