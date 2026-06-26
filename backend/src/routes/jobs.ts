@@ -346,13 +346,15 @@ async function releasePayment(taskId: string, task: any, reason: 'early_confirm'
     const platformFee = bidAmount * 0.20; // 20% platform fee
     const doerPayout = bidAmount - platformFee;
 
-    // Check for penalties on doer
+    // Check for penalties on doer and get user info
     const doerResult = await db.query(
-      'SELECT penalty_owed FROM users WHERE id = $1',
+      'SELECT penalty_owed, display_name, alias FROM users WHERE id = $1',
       [task.doer_id]
     );
 
     const penaltyOwed = doerResult.rows[0]?.penalty_owed || 0;
+    const doerName = doerResult.rows[0]?.display_name || 'Doer';
+    const doerAlias = doerResult.rows[0]?.alias || '';
     const finalPayout = doerPayout - penaltyOwed;
 
     // Execute Stripe transfer to doer's Connect account
@@ -398,9 +400,9 @@ async function releasePayment(taskId: string, task: any, reason: 'early_confirm'
 
     // Send notifications to both parties
     try {
-      const doerName = task.doer?.display_name || 'Doer';
       const askerName = task.asker?.display_name || 'Asker';
       const errandId = task.errand_id_formatted || `#${taskId}`;
+      const doerDisplay = doerAlias ? `${doerName} (@${doerAlias})` : doerName;
 
       // Notify doer of payment release
       await createNotification(
@@ -416,7 +418,7 @@ async function releasePayment(taskId: string, task: any, reason: 'early_confirm'
         task.asker_id,
         'payment_sent',
         '✅ Payment Sent',
-        `Payment of SGD $${finalPayout.toFixed(2)} sent to ${doerName} for errand ${errandId} "${task.title}" (after 20% platform fee).`,
+        `Payment of SGD $${finalPayout.toFixed(2)} sent to ${doerDisplay} for errand ${errandId} "${task.title}" (after 20% platform fee).`,
         null
       ).catch(err => console.warn('[Payment] Failed to notify asker:', err));
     } catch (notifErr) {
