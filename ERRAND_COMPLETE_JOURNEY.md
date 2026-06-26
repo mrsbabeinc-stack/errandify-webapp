@@ -234,10 +234,13 @@ User experience from errand creation through payment, with all notifications, re
 **Option C: Raise Dispute**
 - If major issue within 48h
 - Clicks "Raise Dispute"
-- Explains problem
-- Admin reviews
+- Explains problem with evidence in chat
 - Status: `disputed`
-- Payment held pending investigation
+- 48-hour timer STOPS - no more countdown
+- Payment held during investigation
+- Admin reviews both parties' evidence
+- Admin decides: Pay doer, refund asker, or split
+- Payment released MANUALLY by admin (not automatic)
 
 **Option D: Do Nothing**
 - If no action in 48 hours
@@ -299,11 +302,14 @@ User experience from errand creation through payment, with all notifications, re
 **What Happens:**
 - Asker clicks "Raise Dispute"
 - Describes issue: "Work not up to standard"
-- Admin notified
-- Payment held
+- Status: `disputed`
+- 48-hour timer STOPS immediately - no countdown
+- Payment held indefinitely pending investigation
 - Both parties can provide evidence in chat
-- Admin reviews and decides
-- Activity Log: "Dispute raised", "Dispute resolved" (decision, timestamp)
+- Admin reviews evidence from both sides
+- Admin decides: Release to doer, refund asker, or partial split
+- Admin releases payment MANUALLY (no automatic release)
+- Activity Log: "Dispute raised" (timestamp), "Dispute resolved" (decision, timestamp)
 - Notifications to both: "Dispute resolved - [decision]"
 
 ### Scenario 4: Job Reopened
