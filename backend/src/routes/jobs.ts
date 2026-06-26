@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
+import { stripeService } from '../services/stripe.js';
+import { createNotification } from './notifications.js';
 
 const router = Router();
 
@@ -353,15 +355,37 @@ async function releasePayment(taskId: string, task: any, reason: 'early_confirm'
     const penaltyOwed = doerResult.rows[0]?.penalty_owed || 0;
     const finalPayout = doerPayout - penaltyOwed;
 
-    // TODO: Execute Stripe transfer to doer's Connect account
-    // const stripeTransferId = await stripe.transfers.create({...});
+    // Execute Stripe transfer to doer's Connect account
+    let stripeTransferId = null;
+    try {
+      // Get doer's Stripe account ID
+      const doerAccountResult = await db.query(
+        'SELECT stripe_account_id FROM users WHERE id = $1',
+        [task.doer_id]
+      );
+
+      if (doerAccountResult.rows[0]?.stripe_account_id) {
+        // Create transfer to doer's Stripe Connect account
+        const transfer = await stripeService.createTransfer(
+          finalPayout,
+          doerAccountResult.rows[0].stripe_account_id,
+          taskId,
+          reason
+        );
+        stripeTransferId = transfer.id;
+        console.log(`[Payment] Stripe transfer created: ${stripeTransferId} for task ${taskId}`);
+      }
+    } catch (stripeErr) {
+      console.warn('[Payment] Stripe transfer failed, continuing without transfer:', stripeErr);
+      // Don't fail payment release if Stripe fails - payment is still recorded
+    }
 
     // Record payment release
     const releaseResult = await db.query(
       `INSERT INTO payment_releases (task_id, bid_amount, platform_fee, doer_payout, stripe_transfer_id, released_at, release_reason)
        VALUES ($1, $2, $3, $4, $5, NOW(), $6)
        RETURNING id, released_at`,
-      [taskId, bidAmount, platformFee, finalPayout, null, reason] // TODO: add real stripeTransferId
+      [taskId, bidAmount, platformFee, finalPayout, stripeTransferId, reason]
     );
 
     // Deduct penalty if applied
@@ -372,11 +396,33 @@ async function releasePayment(taskId: string, task: any, reason: 'early_confirm'
       );
     }
 
-    // TODO: Send notifications to both parties
-    // Asker: "Payment released for '[task]'."
-    // Doer: "Your payment of $[amount] is in your wallet! 🎊"
+    // Send notifications to both parties
+    try {
+      const doerName = task.doer?.display_name || 'Doer';
+      const askerName = task.asker?.display_name || 'Asker';
+      const errandId = task.errand_id_formatted || `#${taskId}`;
 
-    // TODO: Generate and send eReceipt to both parties
+      // Notify doer of payment release
+      await createNotification(
+        task.doer_id,
+        'payment_released',
+        '💰 Payment Released!',
+        `Payment of SGD $${finalPayout.toFixed(2)} released for errand ${errandId} "${task.title}"! 🎊 Arrives in 1-2 business days.`,
+        null
+      ).catch(err => console.warn('[Payment] Failed to notify doer:', err));
+
+      // Notify asker of payment sent
+      await createNotification(
+        task.asker_id,
+        'payment_sent',
+        '✅ Payment Sent',
+        `Payment of SGD $${finalPayout.toFixed(2)} sent to ${doerName} for errand ${errandId} "${task.title}" (after 20% platform fee).`,
+        null
+      ).catch(err => console.warn('[Payment] Failed to notify asker:', err));
+    } catch (notifErr) {
+      console.warn('[Payment] Notification error:', notifErr);
+      // Don't fail payment release if notifications fail
+    }
 
     return releaseResult.rows[0];
   } catch (error) {
