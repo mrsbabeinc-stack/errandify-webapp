@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import BottomNav from './BottomNav';
 import RoleToggle from './RoleToggle';
 import HanaCustomerService from './HanaCustomerService';
+import NotificationBell from './NotificationBell';
 
 interface LayoutProps {
   userRole: 'asker' | 'doer';
@@ -61,8 +62,13 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
         {/* Role Toggle */}
         <RoleToggle currentRole={userRole} onRoleChange={handleRoleChange} />
 
-        {/* Profile & Logout */}
-        <div className="flex items-center gap-2">
+        {/* Notifications & Profile */}
+        <div className="flex items-center gap-4">
+          {/* Notification Bell */}
+          <NotificationBell />
+
+          {/* Profile & Logout */}
+          <div className="flex items-center gap-2">
           {userProfile ? (
             <>
               {/* Profile Photo & Alias */}
@@ -108,6 +114,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
               Login
             </button>
           )}
+          </div>
         </div>
       </div>
 
