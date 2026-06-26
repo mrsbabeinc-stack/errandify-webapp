@@ -1,138 +1,170 @@
-export type NotificationTier = 'critical' | 'important' | 'info';
-export type NotificationType = 'bid_accepted' | 'job_confirmed' | 'job_started' | 'job_completed' | 'dispute_raised' | 'bid_received' | 'bid_rejected' | 'message' | 'progress_update';
+// Notification service for managing notifications
+import axios from 'axios';
 
 export interface Notification {
   id: string;
-  type: NotificationType;
-  tier: NotificationTier;
+  userId: number;
+  type: string;
   title: string;
   message: string;
-  action?: { label: string; path: string };
-  timestamp: Date;
+  relatedErrandId?: number;
   read: boolean;
+  tier: 'critical' | 'important' | 'info';
+  action?: {
+    label: string;
+    path: string;
+  };
+  createdAt: string;
 }
 
 class NotificationService {
+  private subscribers: Set<(notifications: Notification[]) => void> = new Set();
   private notifications: Notification[] = [];
-  private listeners: Array<(notifications: Notification[]) => void> = [];
+  private pollInterval: NodeJS.Timeout | null = null;
+
+  constructor() {
+    this.startPolling();
+  }
 
   subscribe(callback: (notifications: Notification[]) => void) {
-    this.listeners.push(callback);
+    this.subscribers.add(callback);
+    // Send current notifications immediately
+    callback(this.notifications);
+    // Return unsubscribe function
     return () => {
-      this.listeners = this.listeners.filter(l => l !== callback);
+      this.subscribers.delete(callback);
     };
   }
 
-  private notifyListeners() {
-    this.listeners.forEach(listener => listener(this.notifications));
+  private notifySubscribers() {
+    this.subscribers.forEach(callback => callback(this.notifications));
   }
 
-  add(notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) {
-    const newNotification: Notification = {
-      ...notification,
-      id: Date.now().toString(),
-      timestamp: new Date(),
-      read: false,
+  private startPolling() {
+    // Poll for new notifications every 5 seconds
+    this.pollInterval = setInterval(() => {
+      this.fetchNotifications();
+    }, 5000);
+  }
+
+  stopPolling() {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
+  }
+
+  private async fetchNotifications() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data.success && response.data.data) {
+        // Transform database notifications to UI format
+        this.notifications = (response.data.data || []).map((notif: any) => ({
+          id: notif.id?.toString() || `notif_${Date.now()}`,
+          userId: notif.user_id,
+          type: notif.type || 'info',
+          title: notif.title || 'Notification',
+          message: notif.message || '',
+          relatedErrandId: notif.related_errand_id,
+          read: notif.is_read || false,
+          tier: this.getTier(notif.type),
+          action: this.getAction(notif.type, notif.related_errand_id),
+          createdAt: notif.created_at,
+        }));
+
+        this.notifySubscribers();
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  }
+
+  private getTier(type: string): 'critical' | 'important' | 'info' {
+    const criticalTypes = ['bid_accepted', 'payment_released', 'dispute_raised'];
+    const importantTypes = ['bid_placed', 'task_completed', 'rating_received', 'payment_sent'];
+
+    if (criticalTypes.includes(type)) return 'critical';
+    if (importantTypes.includes(type)) return 'important';
+    return 'info';
+  }
+
+  private getAction(type: string, errandId?: number) {
+    if (!errandId) return undefined;
+
+    const actions: Record<string, { label: string; pathPrefix: string }> = {
+      bid_placed: { label: 'View Bids', pathPrefix: '/errand/' },
+      bid_accepted: { label: 'Start Job', pathPrefix: '/errand/' },
+      task_completed: { label: 'Review Work', pathPrefix: '/errand/' },
+      rating_received: { label: 'View Rating', pathPrefix: '/profile/' },
+      payment_released: { label: 'View Details', pathPrefix: '/my-offer' },
+      payment_sent: { label: 'View Details', pathPrefix: '/my-offer' },
     };
-    this.notifications.unshift(newNotification);
-    this.notifyListeners();
 
-    // Auto-dismiss non-critical after 5s
-    if (notification.tier !== 'critical') {
-      setTimeout(() => this.remove(newNotification.id), 5000);
+    const action = actions[type];
+    if (!action) return undefined;
+
+    return {
+      label: action.label,
+      path: `${action.pathPrefix}${errandId}`,
+    };
+  }
+
+  async markAsRead(notificationId: string) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      await axios.patch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/${notificationId}/read`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Update local state
+      const notif = this.notifications.find(n => n.id === notificationId);
+      if (notif) {
+        notif.read = true;
+        this.notifySubscribers();
+      }
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
     }
-
-    return newNotification;
   }
 
-  remove(id: string) {
-    this.notifications = this.notifications.filter(n => n.id !== id);
-    this.notifyListeners();
-  }
+  async clear() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
 
-  markAsRead(id: string) {
-    const notif = this.notifications.find(n => n.id === id);
-    if (notif) {
-      notif.read = true;
-      this.notifyListeners();
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      this.notifications = [];
+      this.notifySubscribers();
+    } catch (error) {
+      console.error('Failed to clear notifications:', error);
     }
   }
 
-  getAll() {
-    return this.notifications;
-  }
-
-  getUnread() {
-    return this.notifications.filter(n => !n.read);
-  }
-
-  getByTier(tier: NotificationTier) {
-    return this.notifications.filter(n => n.tier === tier);
-  }
-
-  clear() {
-    this.notifications = [];
-    this.notifyListeners();
+  destroy() {
+    this.stopPolling();
+    this.subscribers.clear();
   }
 }
 
 export const notificationService = new NotificationService();
-
-// Preset notification templates
-export const NotificationTemplates = {
-  bidAccepted: (doerName: string, amount: number): Omit<Notification, 'id' | 'timestamp' | 'read'> => ({
-    type: 'bid_accepted',
-    tier: 'critical',
-    title: '✅ Your bid was accepted!',
-    message: `${doerName} accepted your $${amount} bid. Confirm within 24 hours.`,
-    action: { label: 'Confirm Job', path: '/my-bids' },
-  }),
-
-  jobConfirmed: (askerName: string): Omit<Notification, 'id' | 'timestamp' | 'read'> => ({
-    type: 'job_confirmed',
-    tier: 'critical',
-    title: '🟢 Job confirmed!',
-    message: `${askerName} confirmed you'll do the job. Payment is held in escrow.`,
-    action: { label: 'Start Job', path: '/my-bids' },
-  }),
-
-  jobStarted: (taskName: string): Omit<Notification, 'id' | 'timestamp' | 'read'> => ({
-    type: 'job_started',
-    tier: 'important',
-    title: '🔄 Job started',
-    message: `You started working on "${taskName}". Submit work proof when done.`,
-    action: { label: 'View Task', path: '/errands' },
-  }),
-
-  bidRejected: (reason: string): Omit<Notification, 'id' | 'timestamp' | 'read'> => ({
-    type: 'bid_rejected',
-    tier: 'important',
-    title: '❌ Bid rejected',
-    message: `Your bid was rejected: ${reason}. Try another errand!`,
-    action: { label: 'Browse Errands', path: '/browse' },
-  }),
-
-  messageReceived: (senderName: string): Omit<Notification, 'id' | 'timestamp' | 'read'> => ({
-    type: 'message',
-    tier: 'important',
-    title: '💬 New message',
-    message: `${senderName} sent you a message`,
-    action: { label: 'Open MyChat', path: '/chat' },
-  }),
-
-  timeout24h: (action: string): Omit<Notification, 'id' | 'timestamp' | 'read'> => ({
-    type: 'bid_accepted',
-    tier: 'critical',
-    title: '⏰ 1 hour left!',
-    message: `${action} within 1 hour or job reopens for other doers.`,
-    action: { label: 'Act Now', path: '/my-bids' },
-  }),
-
-  timeout48h: (): Omit<Notification, 'id' | 'timestamp' | 'read'> => ({
-    type: 'job_completed',
-    tier: 'critical',
-    title: '⏰ Dispute window closing',
-    message: 'You have 1 hour left to raise a dispute. After that, payment is auto-released.',
-    action: { label: 'Review Job', path: '/errands' },
-  }),
-};
