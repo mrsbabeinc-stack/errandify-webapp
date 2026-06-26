@@ -34,6 +34,7 @@ import speechRoutes from './routes/speech.js';
 import activityLogRoutes from './routes/activityLog.js';
 import mockAuthRoutes from './routes/mockAuth.js';
 import mockPaymentRoutes from './routes/mockPayment.js';
+import uploadRoutes from './routes/uploads.js';
 import { startCrons } from './cron.js';
 
 const app = express();
@@ -85,6 +86,7 @@ app.use('/api/email', emailRoutes);
 app.use('/api/verification', verificationRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/referrals', referralRoutes);
+app.use('/api/uploads', uploadRoutes);
 app.use('/api', hanaRoutes);
 
 // Error handling
