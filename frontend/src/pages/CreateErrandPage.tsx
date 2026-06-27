@@ -1485,12 +1485,13 @@ export default function CreateErrandPage() {
       {/* Confirmation Modal */}
       {showConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 pointer-events-auto">
-          <div className="bg-white rounded-lg shadow-lg max-w-sm w-full flex flex-col max-h-[90vh] pointer-events-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 pb-0">
-              <h2 className="text-xl font-bold text-errandify-brown">Confirm & Post</h2>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full flex flex-col max-h-[90vh] pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 pb-3 border-b-2 border-orange-100">
+              <h2 className="text-2xl font-bold text-errandify-brown">Ready to post?</h2>
+              <p className="text-sm text-gray-600 mt-1">Here's what helpers will see</p>
             </div>
 
-            <div className="p-6 pt-1 flex-1 overflow-y-auto space-y-3 text-sm text-gray-700">
+            <div className="p-5 pt-4 flex-1 overflow-y-auto space-y-2.5 text-sm text-gray-700">
               <p>
                 <span className="font-semibold">Title:</span> {formData.title}
               </p>
@@ -1547,13 +1548,13 @@ export default function CreateErrandPage() {
               )}
             </div>
 
-            <div className="border-t px-6 py-4 flex gap-2 pointer-events-auto">
+            <div className="border-t-2 border-orange-100 px-5 py-4 flex gap-2.5 pointer-events-auto bg-gradient-to-r from-orange-50 to-white">
               <button
                 onClick={() => {
                   console.log('[DEBUG] Edit button clicked');
                   setShowConfirm(false);
                 }}
-                className="flex-1 px-3 py-1 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer pointer-events-auto"
+                className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-colors cursor-pointer pointer-events-auto"
               >
                 Edit
               </button>
@@ -1565,9 +1566,9 @@ export default function CreateErrandPage() {
                   handleSubmit();
                 }}
                 disabled={loading}
-                className="flex-1 px-3 py-1 bg-errandify-orange text-white rounded-lg font-semibold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer pointer-events-auto"
+                className="flex-1 px-3 py-2 bg-errandify-orange text-white rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer pointer-events-auto transition-all shadow-sm"
               >
-                {loading ? '⏳ Posting...' : '✓ Post'}
+                {loading ? 'Posting...' : 'Post'}
               </button>
             </div>
           </div>
