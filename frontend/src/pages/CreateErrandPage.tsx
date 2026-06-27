@@ -39,6 +39,7 @@ export default function CreateErrandPage() {
   const [successErrandId, setSuccessErrandId] = useState('');
   const [skillInput, setSkillInput] = useState('');
   const [postalCode, setPostalCode] = useState('');
+  const [area, setArea] = useState('');
   const [fullAddress, setFullAddress] = useState('');
   const [startLocationPostalCode, setStartLocationPostalCode] = useState('');
   const [startLocationFullAddress, setStartLocationFullAddress] = useState('');
@@ -352,7 +353,11 @@ export default function CreateErrandPage() {
           console.log('[EXTRACT] Setting postal code:', extracted.postalCode);
           setPostalCode(extracted.postalCode);
         }
-        // Set full address from OneMap lookup
+        // Set full address and area from OneMap lookup
+        if (extracted.area) {
+          console.log('[EXTRACT] Setting area:', extracted.area);
+          setArea(extracted.area);
+        }
         if (extracted.fullAddress) {
           console.log('[EXTRACT] Setting full address:', extracted.fullAddress);
           setFullAddress(extracted.fullAddress);
@@ -1136,8 +1141,8 @@ export default function CreateErrandPage() {
                     <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
                       Area
                     </label>
-                    <div className={`w-full px-2 py-0.5 border-b-2 border-gray-300 bg-gray-50 text-sm ${formData.location ? 'text-gray-900' : 'text-gray-400'}`}>
-                      {formData.location || 'Auto-filled'}
+                    <div className={`w-full px-2 py-0.5 border-b-2 border-gray-300 bg-gray-50 text-sm ${area ? 'text-gray-900' : 'text-gray-400'}`}>
+                      {area || 'Auto-filled'}
                     </div>
                   </div>
                 </div>
