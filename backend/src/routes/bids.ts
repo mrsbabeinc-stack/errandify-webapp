@@ -76,6 +76,14 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         });
       }
 
+      // Prevent updating a cancelled bid (job was cancelled)
+      if (existingBid.status === 'cancelled') {
+        return res.status(403).json({
+          error: 'Cannot modify cancelled offer',
+          message: 'The job has been cancelled. Your offer is no longer valid.'
+        });
+      }
+
       // Prevent updating a confirmed bid (job already confirmed)
       if (existingBid.status === 'confirmed') {
         return res.status(403).json({
