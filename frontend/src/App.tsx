@@ -170,15 +170,11 @@ export default function App() {
           }
         />
 
-        {/* Create errand - direct, no category page needed */}
+        {/* Create errand - redirect to Hana (no manual mode) */}
         <Route
           path="/create-errand"
           element={
-            isAuthenticated ? (
-              <CreateErrandPage />
-            ) : (
-              <Navigate to="/login" replace />
-            )
+            <Navigate to="/create-errand-hana" replace />
           }
         />
 
