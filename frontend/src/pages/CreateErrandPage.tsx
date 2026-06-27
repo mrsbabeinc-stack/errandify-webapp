@@ -1444,19 +1444,9 @@ export default function CreateErrandPage() {
 
             {/* AI Suggestion for Notes - Compact inline */}
             {aiSuggestions.suggestedNotes && !formData.specialNote && (
-              <button
-                type="button"
-                onClick={() => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    specialNote: aiSuggestions.suggestedNotes,
-                  }));
-                }}
-                className="mt-2 inline-block px-3 py-1 bg-orange-100 text-errandify-orange-700 text-xs rounded-full hover:bg-orange-200 transition-colors font-medium"
-                title="Click to use AI suggestion"
-              >
+              <div className="mt-2 inline-block px-3 py-1 bg-orange-100 text-errandify-orange-700 text-xs rounded-full font-medium">
                 💡 {aiSuggestions.suggestedNotes}
-              </button>
+              </div>
             )}
           </div>
         </div>
