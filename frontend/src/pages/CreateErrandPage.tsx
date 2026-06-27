@@ -869,7 +869,9 @@ export default function CreateErrandPage() {
                   debouncedFetchAiSuggestions(e.target.value, formData.description);
                 }}
                 placeholder="e.g., help move boxes, tutoring, cleaning..."
-                className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm font-medium ${
+                  formData.title ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                }`}
               />
             </div>
 
@@ -886,7 +888,9 @@ export default function CreateErrandPage() {
                   placeholder="What specifically? Any requirements?"
                   rows={1}
                   maxLength={150}
-                  className="w-full px-2 pb-3 pt-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-xs resize-none"
+                  className={`w-full px-2 pb-3 pt-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-xs resize-none font-medium ${
+                    formData.description ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                  }`}
                 />
                 <span className="absolute bottom-0.5 right-0 text-xs text-gray-400">{formData.description.length}/150</span>
               </div>
@@ -906,7 +910,9 @@ export default function CreateErrandPage() {
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm font-medium ${
+                  formData.category ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                }`}
               >
                 <option value="">Pick a category</option>
                 {Object.entries(categoryNames).map(([key, name]) => (
@@ -933,8 +939,10 @@ export default function CreateErrandPage() {
                   value={formData.budget}
                   onChange={handleChange}
                   placeholder="$"
-                  className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm ${
-                    aiSuggestions.suggestedBudget
+                  className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm font-medium ${
+                    formData.budget
+                      ? 'border-errandify-orange text-errandify-brown'
+                      : aiSuggestions.suggestedBudget
                       ? 'border-gray-200 text-gray-500'
                       : 'border-gray-300 text-gray-900'
                   }`}
@@ -949,7 +957,9 @@ export default function CreateErrandPage() {
                   name="deadline"
                   value={formData.deadline}
                   onChange={handleChange}
-                  className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                  className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm font-medium ${
+                    formData.deadline ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                  }`}
                 />
               </div>
               <div className="relative">
@@ -969,7 +979,9 @@ export default function CreateErrandPage() {
                   onFocus={() => setShowTimePicker(true)}
                   onBlur={() => setTimeout(() => setShowTimePicker(false), 200)}
                   placeholder="HH:MM"
-                  className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm placeholder:text-gray-400 cursor-pointer"
+                  className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm placeholder:text-gray-400 cursor-pointer font-medium ${
+                    formData.time ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                  }`}
                 />
               </div>
             </div>
@@ -1127,7 +1139,9 @@ export default function CreateErrandPage() {
                       }
                       // Otherwise: don't update location (partial postal codes won't modify anything)
                     }}
-                    className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                    className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm font-medium ${
+                      postalCode ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                    }`}
                   />
                 </div>
 
@@ -1136,7 +1150,9 @@ export default function CreateErrandPage() {
                   <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
                     Area
                   </label>
-                  <div className={`w-full px-2 py-0.5 border-b-2 border-gray-300 bg-gray-50 text-sm ${area ? 'text-gray-900' : 'text-gray-400'}`}>
+                  <div className={`w-full px-2 py-0.5 border-b-2 text-sm font-medium ${
+                    area ? 'border-errandify-orange bg-orange-50 text-errandify-brown' : 'border-gray-300 bg-gray-50 text-gray-400'
+                  }`}>
                     {area || 'Auto-filled'}
                   </div>
                 </div>
@@ -1154,7 +1170,9 @@ export default function CreateErrandPage() {
                     onChange={(e) => setFullAddress(e.target.value)}
                     placeholder="e.g., Block 1, Unit #5-10"
                     rows={1}
-                    className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-xs resize-none"
+                    className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-xs resize-none font-medium ${
+                      fullAddress ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                    }`}
                   />
 
                   {/* GPS Location Notice */}
