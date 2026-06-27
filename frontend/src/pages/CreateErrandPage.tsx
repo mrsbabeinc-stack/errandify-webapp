@@ -340,6 +340,7 @@ export default function CreateErrandPage() {
         console.log('[EXTRACT] Setting form data with:', extracted);
         setFormData((prev) => ({
           ...prev,
+          ...(extracted.category && { category: extracted.category }),
           ...(extracted.time && { time: extracted.time }),
           ...(extracted.duration && { duration: extracted.duration }),
           ...(extracted.durationUnit && { durationUnit: extracted.durationUnit }),
