@@ -523,9 +523,9 @@ export default function HanaTaskCreation({
           </div>
         </div>
 
-        {/* Main Content - Proportionate: Hana First, Then Bubble, Input */}
-        <div className="flex-1 overflow-y-auto flex flex-col px-6 py-4 gap-3">
-          {/* Hana Full Body - Appears First (Slightly Smaller, Fills Space) */}
+        {/* Main Content - Bubble Renders First (Loads First), Hana Below (Visual Order) */}
+        <div className="flex-1 overflow-y-auto flex flex-col px-6 py-4 gap-3" style={{ display: 'flex', flexDirection: 'column-reverse' }}>
+          {/* Hana Full Body - Renders Last but Appears First (Slightly Smaller, Fills Space) */}
           <div className="flex-1 flex items-end justify-center overflow-hidden min-h-0">
             <div style={{ height: '100%', width: 'auto', maxWidth: '260px' }}>
               <HanaAnimatedAvatar
@@ -535,7 +535,7 @@ export default function HanaTaskCreation({
             </div>
           </div>
 
-          {/* Speech Bubble - Appears After Hana (Centered, Happy 3D Design) */}
+          {/* Speech Bubble - Renders First but Appears Second (Centered, Happy 3D Design) */}
           {hanaMessage && (
             <div className="flex-shrink-0 pb-2">
               <div className="relative animate-slideDown mx-auto max-w-md"
