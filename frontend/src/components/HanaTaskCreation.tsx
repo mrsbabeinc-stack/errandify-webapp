@@ -523,24 +523,55 @@ export default function HanaTaskCreation({
           </div>
         </div>
 
-        {/* Main Content - Proportionate: Bubble, Hana Full Body, Input */}
-        <div className="flex-1 overflow-y-auto flex flex-col px-6 py-4 gap-2">
-          {/* Speech Bubble - Below Top (Centered, Moved Down, Bigger with Bold) */}
+        {/* Main Content - Proportionate: Hana First, Then Bubble, Input */}
+        <div className="flex-1 overflow-y-auto flex flex-col px-6 py-4 gap-3">
+          {/* Hana Full Body - Appears First (Slightly Smaller, Fills Space) */}
+          <div className="flex-1 flex items-end justify-center overflow-hidden min-h-0">
+            <div style={{ height: '100%', width: 'auto', maxWidth: '260px' }}>
+              <HanaAnimatedAvatar
+                isSpeaking={isSpeaking}
+                message={hanaMessage}
+              />
+            </div>
+          </div>
+
+          {/* Speech Bubble - Appears After Hana (Centered, Happy 3D Design) */}
           {hanaMessage && (
-            <div className="flex-shrink-0 pt-4">
+            <div className="flex-shrink-0 pb-2">
               <div className="relative animate-slideDown mx-auto max-w-md"
                    style={{
-                     background: 'linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%)',
-                     border: '1.5px solid #FF8C42',
-                     borderRadius: '18px',
-                     padding: '16px 22px',
-                     boxShadow: '0 4px 12px rgba(255, 140, 66, 0.12), 0 1px 3px rgba(0,0,0,0.06)',
+                     background: 'linear-gradient(135deg, #FFFBF7 0%, #FFE8D6 50%, #FFD9BB 100%)',
+                     border: '2px solid #FF8C42',
+                     borderRadius: '24px',
+                     padding: '18px 24px',
+                     boxShadow: `
+                       0 12px 24px rgba(255, 140, 66, 0.18),
+                       0 6px 12px rgba(255, 140, 66, 0.12),
+                       0 2px 4px rgba(0, 0, 0, 0.08),
+                       inset -1px -1px 2px rgba(255, 255, 255, 0.6),
+                       inset 1px 1px 2px rgba(255, 140, 66, 0.1)
+                     `,
+                     transform: 'perspective(1000px) rotateX(2deg)',
                    }}>
-                <p className="whitespace-pre-line text-base font-bold text-center"
-                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", lineHeight: '1.6', letterSpacing: '0px'}}>
+                <p className="whitespace-pre-line text-base font-bold text-center leading-relaxed"
+                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", letterSpacing: '-0.3px'}}>
                   {hanaMessage}
                 </p>
-                {/* Speech bubble tail - pointing down */}
+                {/* Speech bubble tail - 3D pointing down */}
+                {/* Outer tail (shadow for depth) */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-10px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '8px solid transparent',
+                  borderRight: '8px solid transparent',
+                  borderTop: '10px solid rgba(255, 140, 66, 0.25)',
+                  filter: 'drop-shadow(0 2px 3px rgba(0, 0, 0, 0.1))',
+                }} />
+                {/* Inner tail (main color) */}
                 <div style={{
                   position: 'absolute',
                   bottom: '-8px',
@@ -552,6 +583,7 @@ export default function HanaTaskCreation({
                   borderRight: '7px solid transparent',
                   borderTop: '8px solid #FF8C42',
                 }} />
+                {/* Inner tail highlight (3D effect) */}
                 <div style={{
                   position: 'absolute',
                   bottom: '-6px',
@@ -561,21 +593,11 @@ export default function HanaTaskCreation({
                   height: '0',
                   borderLeft: '5px solid transparent',
                   borderRight: '5px solid transparent',
-                  borderTop: '6px solid #FFF8F0',
+                  borderTop: '6px solid #FFFBF7',
                 }} />
               </div>
             </div>
           )}
-
-          {/* Hana Full Body - Slightly Smaller, Fills Space, Feet Touch Input */}
-          <div className="flex-1 flex items-end justify-center overflow-hidden min-h-0">
-            <div style={{ height: '100%', width: 'auto', maxWidth: '260px' }}>
-              <HanaAnimatedAvatar
-                isSpeaking={isSpeaking}
-                message={hanaMessage}
-              />
-            </div>
-          </div>
 
           {/* Input Section - Bottom (Full Width, Feet Touch Top) */}
           {currentStep === 'input' && (
