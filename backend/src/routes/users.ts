@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { authMiddleware, AuthRequest } from '../middleware/auth.js';
 import db from '../db.js';
 import { generateFormattedUserId } from '../utils/idFormatter.js';
@@ -489,6 +489,35 @@ router.get('/referral', authMiddleware, async (req: any, res: Response) => {
   }
 });
 
+// GET /api/users/referrals/stats - Get detailed referral stats (for MyReferralsPage)
+router.get('/referrals/stats', authMiddleware, async (req: AuthRequest, res: any) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Import referral service functions
+    const { getReferralStats } = await import('../services/referralService.js');
+
+    const stats = await getReferralStats(userId);
+
+    res.json({
+      success: true,
+      data: {
+        myCode: stats.referral_code,
+        myLink: stats.referral_link,
+        totalReferred: stats.total_referred,
+        totalEarned: stats.total_earned_points,
+        referralsList: [], // Placeholder - frontend shows mock data
+      },
+    });
+  } catch (error: any) {
+    console.error('Referral stats error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch referral stats',
+      details: error.message,
+    });
+  }
+});
+
 // POST /api/users/favorite/:userId - Add/remove user from favorites
 router.post('/favorite/:userId', authMiddleware, async (req, res) => {
   try {
@@ -564,6 +593,83 @@ router.get('/favorites', authMiddleware, async (req: AuthRequest, res) => {
     console.error('Get favorites endpoint error:', error);
     res.status(500).json({
       error: 'Failed to fetch favorites',
+      details: error.message,
+    });
+  }
+});
+
+// POST /api/users/accept-declaration - Save user's acceptance of safety declaration
+router.post('/accept-declaration', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const { declarations, acceptedAt } = req.body;
+
+    if (!declarations || typeof declarations !== 'object') {
+      return res.status(400).json({ error: 'Declarations object required' });
+    }
+
+    // Verify all declarations are accepted
+    const allAccepted = Object.values(declarations).every(v => v === true);
+    if (!allAccepted) {
+      return res.status(400).json({ error: 'All 5 declarations must be accepted' });
+    }
+
+    // Save to audit log
+    await db.query(
+      `INSERT INTO user_declarations_log (user_id, declaration_type, accepted, accepted_at, ip_address)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [userId, 'before_you_get_started', true, acceptedAt || new Date(), req.ip]
+    );
+
+    // Update user table
+    await db.query(
+      `UPDATE users SET declaration_accepted = true, declaration_accepted_at = NOW(), account_active = true
+       WHERE id = $1`,
+      [userId]
+    );
+
+    console.log(`✅ User ${userId} accepted "Before You Get Started" declaration`);
+
+    res.json({
+      success: true,
+      message: 'Declaration accepted. Welcome to Errandify!',
+    });
+  } catch (error: any) {
+    console.error('Declaration save error:', error);
+    res.status(500).json({
+      error: 'Failed to save declaration',
+      details: error.message,
+    });
+  }
+});
+
+// GET /api/users/declaration-status - Check if user has accepted declaration
+router.get('/declaration-status', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    const result = await db.query(
+      'SELECT declaration_accepted, declaration_accepted_at, account_active FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+    res.json({
+      success: true,
+      data: {
+        declarationAccepted: user.declaration_accepted,
+        declarationAcceptedAt: user.declaration_accepted_at,
+        accountActive: user.account_active,
+      },
+    });
+  } catch (error: any) {
+    console.error('Declaration status error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch declaration status',
       details: error.message,
     });
   }

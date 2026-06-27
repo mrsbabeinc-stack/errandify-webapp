@@ -41,6 +41,7 @@ import MyAccountPage from './pages/MyAccountPage';
 import HowItWorksPage from './pages/HowItWorksPage';
 import AboutErrandifyPage from './pages/AboutErrandifyPage';
 import NotificationPreferencesPage from './pages/NotificationPreferencesPage';
+import BeforeYouGetStartedPage from './pages/BeforeYouGetStartedPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -143,6 +144,18 @@ export default function App() {
         <Route
           path="/auth/singpass-callback"
           element={<SingPassCallbackPage onLogin={handleLogin} />}
+        />
+
+        {/* Safety Declaration - Mandatory pre-access gate */}
+        <Route
+          path="/before-you-get-started"
+          element={
+            isAuthenticated ? (
+              <BeforeYouGetStartedPage />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
         />
 
         {/* Hana task creation - AI-powered errand posting */}

@@ -1,7 +1,15 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
-import { generateSignedUrl } from '../services/ossService.js';
+// import { generateSignedUrl } from '../services/ossService.js';
 import db from '../db.js';
+
+// Stub for generateSignedUrl - Ali OSS integration coming soon
+async function generateSignedUrl(fileType: string = 'image/jpeg') {
+  return {
+    uploadUrl: 'https://placeholder-upload-url.example.com',
+    key: `photos/${Date.now()}.jpg`,
+  };
+}
 
 const router = Router();
 
