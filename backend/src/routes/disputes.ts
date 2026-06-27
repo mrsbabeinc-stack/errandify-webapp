@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { createNotification } from './notifications.js';
@@ -673,5 +673,82 @@ async function analyzeDisputeAI(context: {
     };
   }
 }
+
+// POST /api/disputes/auto-process - Trigger automatic dispute resolution (can be called periodically)
+router.post('/auto-process', async (req: Request, res: Response) => {
+  try {
+    // Import the resolution service
+    const { batchProcessDisputes } = await import('../services/disputeResolutionService.js');
+
+    const result = await batchProcessDisputes();
+
+    res.json({
+      success: true,
+      data: {
+        processed: result.processed,
+        autoResolved: result.resolved,
+        message: `Processed ${result.processed} disputes, auto-resolved ${result.resolved}`,
+      },
+    });
+  } catch (error) {
+    console.error('Auto-process disputes error:', error);
+    res.status(500).json({ error: 'Failed to process disputes' });
+  }
+});
+
+// POST /api/disputes/:disputeId/auto-resolve - Attempt to auto-resolve a specific dispute
+router.post('/:disputeId/auto-resolve', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = parseInt(req.params.disputeId, 10);
+
+    // Import the resolution service
+    const { checkAutoResolution, applyAutoResolution } = await import(
+      '../services/disputeResolutionService.js'
+    );
+
+    // Get task ID
+    const disputeResult = await db.query(
+      'SELECT task_id FROM disputes WHERE id = $1',
+      [disputeId]
+    );
+
+    if (disputeResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Dispute not found' });
+    }
+
+    const taskId = disputeResult.rows[0].task_id;
+
+    // Check if auto-resolvable
+    const autoResolution = await checkAutoResolution(disputeId, taskId);
+
+    if (!autoResolution) {
+      return res.json({
+        success: false,
+        message: 'Dispute does not qualify for auto-resolution',
+      });
+    }
+
+    // Apply resolution
+    const applied = await applyAutoResolution(disputeId, taskId, autoResolution);
+
+    if (applied) {
+      res.json({
+        success: true,
+        data: {
+          disputeId,
+          level: autoResolution.level,
+          decision: autoResolution.decision,
+          reason: autoResolution.reason,
+          refundAmount: autoResolution.refundAmount,
+        },
+      });
+    } else {
+      res.status(500).json({ error: 'Failed to apply auto-resolution' });
+    }
+  } catch (error) {
+    console.error('Auto-resolve dispute error:', error);
+    res.status(500).json({ error: 'Failed to auto-resolve dispute' });
+  }
+});
 
 export default router;
