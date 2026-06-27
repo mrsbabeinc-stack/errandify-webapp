@@ -708,45 +708,35 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     let fullAddress = `Singapore ${postalCode}`;
 
     if (postalCode && postalCode.length === 6) {
-      // Try OneMap API with proper error handling
-      try {
-        console.log(`[Extract] OneMap lookup: Postal code ${postalCode}`);
-        const oneMapUrl = `https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=Y&getAddrDetails=Y`;
+      // Postal code to area mapping (Singapore)
+      const postalToArea: Record<string, string> = {
+        '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
+        '05': 'Outram', '06': 'Chinatown', '07': 'Chinatown', '08': 'Marina', '09': 'Marina',
+        '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
+        '15': 'Serangoon', '16': 'Serangoon', '17': 'Balestier', '18': 'Jalan Besar',
+        '19': 'Geylang', '20': 'Geylang', '21': 'Paya Lebar', '22': 'Macpherson',
+        '23': 'Potong Pasir', '24': 'Woodleigh', '25': 'Tai Keng', '26': 'Tai Keng',
+        '27': 'Serangoon Gardens', '28': 'Lorong Chuan', '29': 'Kallang', '30': 'Kallang',
+        '31': 'Geylang East', '32': 'Geylang East', '33': 'Ubi', '34': 'Eunos', '35': 'East Coast',
+        '36': 'Katong', '37': 'Joo Chiat', '38': 'Siglap', '39': 'Marine Parade', '40': 'Marine Parade',
+        '41': 'Bedok', '42': 'Bedok', '43': 'Bedok', '44': 'Bedok', '45': 'Changi',
+        '46': 'Changi', '47': 'Tampines', '48': 'Tampines', '49': 'Tampines', '50': 'Tampines',
+        '51': 'Pasir Ris', '52': 'Pasir Ris', '53': 'Sengkang', '54': 'Sengkang', '55': 'Punggol',
+        '56': 'Punggol', '57': 'Hougang', '58': 'Hougang', '59': 'Bukit Merah', '60': 'Bukit Merah',
+        '61': 'Tiong Bahru', '62': 'Tiong Bahru', '63': 'Clementi', '64': 'Clementi', '65': 'West Coast',
+        '66': 'Jurong East', '67': 'Jurong East', '68': 'Jurong', '69': 'Jurong',
+        '70': 'Boon Lay', '71': 'Boon Lay', '72': 'Choa Chu Kang', '73': 'Choa Chu Kang',
+        '74': 'Bukit Batok', '75': 'Bukit Batok', '76': 'Bukit Timah', '77': 'Bukit Timah',
+        '78': 'Yung Ho', '79': 'Serangoon', '80': 'Ang Mo Kio', '81': 'Ang Mo Kio',
+        '82': 'Bishan', '83': 'Bishan', '84': 'Mattar', '85': 'Macpherson',
+      };
 
-        try {
-          console.log(`[Extract] Making OneMap request to: ${oneMapUrl}`);
-          // Try with axios first (more reliable)
-          const axiosResponse = await axios.get(oneMapUrl, {
-            timeout: 5000,
-            headers: { 'Accept': 'application/json' },
-            httpsAgent: new https.Agent({ rejectUnauthorized: false })
-          });
+      const areaPrefix = postalCode.substring(0, 2);
+      const areaName = postalToArea[areaPrefix] || 'Singapore';
 
-          console.log(`[Extract] OneMap response status:`, axiosResponse.status);
-          console.log(`[Extract] OneMap response data:`, axiosResponse.data);
-
-          if (axiosResponse.data?.results?.[0]) {
-            const addr = axiosResponse.data.results[0];
-            fullAddress = addr.ADDRESS || `Singapore ${postalCode}`;
-            area = addr.ROAD_NAME?.trim() || addr.BUILDING_NAME?.trim() || 'Singapore';
-            console.log(`[Extract] ✅ OneMap SUCCESS: address=${fullAddress}, area=${area}`);
-          } else {
-            console.log(`[Extract] OneMap: No results found in response`);
-            fullAddress = `Singapore ${postalCode}`;
-            area = 'Singapore';
-          }
-        } catch (axiosErr) {
-          const axiosErrMsg = axiosErr instanceof Error ? axiosErr.message : String(axiosErr);
-          console.warn(`[Extract] ❌ OneMap FAILED: ${axiosErrMsg}`);
-          fullAddress = `Singapore ${postalCode}`;
-          area = 'Singapore';
-        }
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        console.warn(`[Extract] OneMap lookup error (${errorMsg}), using postal code only`);
-        fullAddress = `Singapore ${postalCode}`;
-        area = 'Singapore';
-      }
+      fullAddress = `${areaName}, Singapore ${postalCode}`;
+      area = areaName;
+      console.log(`[Extract] ✅ Postal code ${postalCode} → Area: ${area}, Address: ${fullAddress}`);
     } else {
       console.log('[Extract] No postal code provided');
       // Keep detected area if found, otherwise default to Singapore
