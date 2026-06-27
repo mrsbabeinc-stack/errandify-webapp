@@ -1203,7 +1203,7 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
       ['cancelled', userId, reason || null, id]
     );
 
-    // Cancel all bids associated with this errand
+    // Cancel all bids associated with this errand with stage-specific messages
     try {
       // Get all bids for this errand
       const bidsResult = await db.query(
@@ -1217,22 +1217,50 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
         ['cancelled', id]
       );
 
-      // Notify all bidders that the job has been cancelled
+      // Get errand and canceller details
       const errandData = await db.query(
         'SELECT title FROM errands WHERE id = $1',
         [id]
       );
       const errandTitle = errandData.rows[0]?.title || 'A task';
 
+      // Determine stage-specific message based on previousStatus
+      let stageMessage = '';
+      let notificationType = 'job_cancelled';
+
+      switch(previousStatus) {
+        case 'open':
+          stageMessage = `The job for "${errandTitle}" has been cancelled by the asker before any selection. Your offer is closed.`;
+          break;
+        case 'confirmed':
+          stageMessage = `The job for "${errandTitle}" has been cancelled after offer confirmation. Your offer is closed.`;
+          break;
+        case 'in_progress':
+          stageMessage = `The job for "${errandTitle}" has been cancelled while in progress. A dispute may be raised. Your offer is closed.`;
+          notificationType = 'job_dispute_started';
+          break;
+        default:
+          stageMessage = `The job for "${errandTitle}" has been cancelled. Your offer is now closed.`;
+      }
+
+      // Notify all bidders with stage-specific messages
       for (const bid of bidsResult.rows) {
+        // Customize title based on stage
+        let notificationTitle = '❌ Job Cancelled';
+        if (previousStatus === 'confirmed') {
+          notificationTitle = '⚠️ Job Cancelled After Confirmation';
+        } else if (previousStatus === 'in_progress') {
+          notificationTitle = '⚠️ Job Cancelled In Progress';
+        }
+
         await db.query(
           `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
            VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
           [
             bid.doer_id,
-            'job_cancelled',
-            '❌ Job Cancelled',
-            `The job for "${errandTitle}" has been cancelled. Your offer is now closed.`,
+            notificationType,
+            notificationTitle,
+            stageMessage,
             id,
           ]
         );
@@ -1248,16 +1276,40 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
     const userRole = isAsker ? 'asker' : 'doer';
     await activityLogService.logActivity(id, 'cancelled', userId, userName, userRole, { reason, previousStatus });
 
-    // If in_progress, mark as dispute/pending resolution
+    // Return stage-specific response
+    const stageInfo = {
+      'open': 'Job cancelled before any doer was selected',
+      'confirmed': 'Job cancelled after offer was confirmed by doer',
+      'in_progress': 'Job cancelled while in progress - dispute may be raised',
+      'completed': 'Job already completed - cannot cancel',
+      'cancelled': 'Job already cancelled',
+    };
+
     if (previousStatus === 'in_progress') {
       res.status(400).json({
         error: 'Cannot cancel job in progress without asker confirmation. Contact asker to resolve dispute.',
+        stage: previousStatus,
+        stageDescription: stageInfo[previousStatus],
+      });
+    } else if (previousStatus === 'completed') {
+      res.status(400).json({
+        error: 'Cannot cancel completed job.',
+        stage: previousStatus,
+        stageDescription: stageInfo[previousStatus],
+      });
+    } else if (previousStatus === 'cancelled') {
+      res.status(400).json({
+        error: 'Job is already cancelled.',
+        stage: previousStatus,
+        stageDescription: stageInfo[previousStatus],
       });
     } else {
       res.json({
         success: true,
-        message: 'Errand cancelled. All bids and offers cancelled.',
-        previousStatus,
+        message: `Errand cancelled at ${previousStatus} stage. All bids and offers cancelled.`,
+        stage: previousStatus,
+        stageDescription: stageInfo[previousStatus] || 'Unknown stage',
+        allBiddersCancelled: true,
       });
     }
   } catch (error) {
