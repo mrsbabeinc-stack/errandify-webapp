@@ -257,7 +257,29 @@ export function startCrons() {
   setInterval(checkEventReminders1Hour, 60 * 60 * 1000);
   setInterval(checkEventRemindersDayOf, 60 * 60 * 1000);
 
+  // Dispute auto-resolution - run every 6 hours
+  setInterval(checkDisputeAutoResolution, 6 * 60 * 60 * 1000);
+  console.log('[CRON] Dispute auto-resolution scheduled to run every 6 hours');
+
   console.log('[CRON] All cron jobs started successfully');
+}
+
+/**
+ * Check and auto-resolve disputes (Level 1 & escalate Level 2+)
+ */
+export async function checkDisputeAutoResolution() {
+  try {
+    console.log('[CRON] Processing disputes for auto-resolution...');
+
+    const { batchProcessDisputes } = await import('./services/disputeResolutionService.js');
+    const result = await batchProcessDisputes();
+
+    if (result.processed > 0) {
+      console.log(`[CRON] Dispute processing: ${result.processed} processed, ${result.resolved} auto-resolved`);
+    }
+  } catch (error) {
+    console.error('[CRON] Dispute auto-resolution failed:', error);
+  }
 }
 
 /**
