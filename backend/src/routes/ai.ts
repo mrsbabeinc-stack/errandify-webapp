@@ -819,6 +819,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       description = `Moving/transport assistance. Specify items to move, pickup location, destination, timeline, equipment needed, help required (packing, lifting, driving).`;
     } else if (titleLowercase.includes('shop') || titleLowercase.includes('grocery') || titleLowercase.includes('buy') || titleLowercase.includes('purchasing')) {
       description = `Shopping/errand assistance. Specify what items to buy/shop for, stores to visit, budget, special requirements, and any dietary/preference restrictions.`;
+    } else if (titleLowercase.includes('design') || titleLowercase.includes('logo') || titleLowercase.includes('graphic') || titleLowercase.includes('art') || titleLowercase.includes('creative')) {
+      description = `Design/creative service. Specify what design is needed (logo, poster, social media, etc.), style preference, brand colors, target audience, and any specific requirements.`;
     } else {
       // Fallback: use category-based description with title reference
       const categoryDescriptions: Record<string, string> = {

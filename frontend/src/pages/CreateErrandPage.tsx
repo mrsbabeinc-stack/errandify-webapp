@@ -855,6 +855,7 @@ export default function CreateErrandPage() {
                 value={formData.title}
                 onChange={(e) => {
                   handleChange(e);
+                  debouncedExtractFields(e.target.value);
                   debouncedFetchAiSuggestions(e.target.value, formData.description);
                 }}
                 placeholder="What do you need help with?"
