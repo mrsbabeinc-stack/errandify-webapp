@@ -1093,59 +1093,62 @@ export default function CreateErrandPage() {
               <span className="text-sm text-gray-700">This is remote work (no specific location)</span>
             </label>
 
-            {/* Postal Code - Only shown when NOT remote work */}
+            {/* Postal Code and Area - Side by side */}
             {!isRemoteWork && (
-              <div className="mb-3">
-                <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
-                  Postal Code (SG)
-                </label>
-                <input
-                  type="text"
-                  placeholder="082001"
-                  value={postalCode}
-                  onChange={(e) => {
-                    const code = e.target.value.trim();
-                    setPostalCode(code);
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                {/* Postal Code */}
+                <div>
+                  <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
+                    Postal Code (SG)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="082001"
+                    value={postalCode}
+                    onChange={(e) => {
+                      const code = e.target.value.trim();
+                      setPostalCode(code);
 
-                    // Only update location if postal code is exactly 6 digits
-                    if (code.length === 6 && /^\d+$/.test(code)) {
-                      const areaPrefix = code.substring(0, 2);
-                      const areaData = postalCodeAreas[areaPrefix];
+                      // Only update location if postal code is exactly 6 digits
+                      if (code.length === 6 && /^\d+$/.test(code)) {
+                        const areaPrefix = code.substring(0, 2);
+                        const areaData = postalCodeAreas[areaPrefix];
 
-                      if (areaData) {
-                        // Only update if we have valid area data for this prefix
+                        if (areaData) {
+                          // Only update if we have valid area data for this prefix
+                          setFormData((prev) => ({
+                            ...prev,
+                            location: areaData.area,
+                          }));
+                          setFullAddress(`1 ${areaData.building}, Unit: __, Singapore ${code}`);
+                        }
+                        // Note: If areaData is not found (e.g., postal codes from OneMap/Hana),
+                        // we DON'T override - the location/fullAddress were already set from prefilled data
+                      } else if (code.length === 0) {
+                        // Clear addresses only if postal code is completely cleared
                         setFormData((prev) => ({
                           ...prev,
-                          location: areaData.area,
+                          location: '',
                         }));
-                        setFullAddress(`1 ${areaData.building}, Unit: __, Singapore ${code}`);
+                        setFullAddress('');
                       }
-                      // Note: If areaData is not found (e.g., postal codes from OneMap/Hana),
-                      // we DON'T override - the location/fullAddress were already set from prefilled data
-                    } else if (code.length === 0) {
-                      // Clear addresses only if postal code is completely cleared
-                      setFormData((prev) => ({
-                        ...prev,
-                        location: '',
-                      }));
-                      setFullAddress('');
-                    }
-                    // Otherwise: don't update location (partial postal codes won't modify anything)
-                  }}
-                  className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
-                />
+                      // Otherwise: don't update location (partial postal codes won't modify anything)
+                    }}
+                    className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                  />
+                </div>
+
+                {/* Area */}
+                <div>
+                  <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
+                    Area
+                  </label>
+                  <div className={`w-full px-2 py-0.5 border-b-2 border-gray-300 bg-gray-50 text-sm ${area ? 'text-gray-900' : 'text-gray-400'}`}>
+                    {area || 'Auto-filled'}
+                  </div>
+                </div>
               </div>
             )}
-
-            {/* Area - ALWAYS shown (tied to postal code) */}
-            <div className="mb-3">
-              <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
-                Area
-              </label>
-              <div className={`w-full px-2 py-0.5 border-b-2 border-gray-300 bg-gray-50 text-sm ${area ? 'text-gray-900' : 'text-gray-400'}`}>
-                {area || 'Auto-filled from postal code'}
-              </div>
-            </div>
 
             {/* Full Address - Only shown when NOT remote */}
             {!isRemoteWork && (
