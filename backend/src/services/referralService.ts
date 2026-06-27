@@ -145,8 +145,8 @@ export async function trackReferralFirstJob(
       [referrerId, referredUserId]
     );
 
-    // Award first job bonus (150 points)
-    const firstJobBonus = 150;
+    // Award first job bonus (50 points)
+    const firstJobBonus = 50;
     await awardReferralPoints(client, referrerId, firstJobBonus, 'first_job');
 
     await client.query('COMMIT');
