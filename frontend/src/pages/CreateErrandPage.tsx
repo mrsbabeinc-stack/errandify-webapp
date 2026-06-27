@@ -685,9 +685,7 @@ export default function CreateErrandPage() {
       // Continue anyway if duplication check fails
     }
 
-    console.log('[DEBUG] *** VALIDATION PASSED - SETTING LOADING TRUE ***');
-    setLoading(true);
-    console.log('[DEBUG] After setLoading(true) - loading will update asynchronously');
+    console.log('[DEBUG] *** VALIDATION PASSED - PROCEEDING WITH API CALL ***');
 
     try {
       const token = localStorage.getItem('token');
