@@ -541,59 +541,87 @@ export default function CreateErrandPage() {
     // ===== COMPREHENSIVE VALIDATION =====
 
     // 1. Title validation
+    console.log('[DEBUG] Validating title:', formData.title);
     if (!formData.title || formData.title.trim().length === 0) {
+      console.log('[DEBUG] VALIDATION FAILED: No title');
       setError('Please enter an errand title. Tell me what help you need 😊');
+      setLoading(false);
       return;
     }
     if (formData.title.trim().length < 5) {
+      console.log('[DEBUG] VALIDATION FAILED: Title too short');
       setError('Title is too short. Please provide more details 🙏');
+      setLoading(false);
       return;
     }
     if (formData.title.length > 100) {
+      console.log('[DEBUG] VALIDATION FAILED: Title too long');
       setError('Title is too long. Please keep it short and clear ✌️');
+      setLoading(false);
       return;
     }
 
     // 2. Category validation
+    console.log('[DEBUG] Validating category:', formData.category);
     if (!formData.category) {
+      console.log('[DEBUG] VALIDATION FAILED: No category');
       setError('Please select a category. What kind of help do you need? 🤔');
+      setLoading(false);
       return;
     }
 
     // 3. Location validation
-    if (!formData.isRemoteWork && (!formData.location || formData.location.trim().length === 0)) {
+    console.log('[DEBUG] Validating location, isRemoteWork:', isRemoteWork, 'location:', formData.location);
+    if (!isRemoteWork && (!formData.location || formData.location.trim().length === 0)) {
+      console.log('[DEBUG] VALIDATION FAILED: No location (not remote)');
       setError('Please enter the location or mark it as remote work 📍');
+      setLoading(false);
       return;
     }
 
     // 3b. Full address validation
-    if (!formData.isRemoteWork && (!fullAddress || fullAddress.trim().length === 0)) {
+    console.log('[DEBUG] Validating fullAddress:', fullAddress);
+    if (!isRemoteWork && (!fullAddress || fullAddress.trim().length === 0)) {
+      console.log('[DEBUG] VALIDATION FAILED: No full address (not remote)');
       setError('Please enter a valid address or mark it as remote work 📍');
+      setLoading(false);
       return;
     }
 
     // 4. Budget validation
+    console.log('[DEBUG] Validating budget:', formData.budget);
     if (!formData.budget || formData.budget.trim().length === 0) {
+      console.log('[DEBUG] VALIDATION FAILED: No budget');
       setError('Please enter a budget amount. How much are you willing to pay? 💰');
+      setLoading(false);
       return;
     }
     const budgetNum = parseFloat(formData.budget);
     if (isNaN(budgetNum) || budgetNum <= 0) {
+      console.log('[DEBUG] VALIDATION FAILED: Invalid budget number');
       setError('Budget must be a valid number 😄');
+      setLoading(false);
       return;
     }
     if (budgetNum > 99999) {
+      console.log('[DEBUG] VALIDATION FAILED: Budget too high');
       setError('Budget is too high. Please enter a reasonable amount 😅');
+      setLoading(false);
       return;
     }
     if (budgetNum < 8) {
+      console.log('[DEBUG] VALIDATION FAILED: Budget too low');
       setError('Minimum budget is $8. Please increase it slightly 🙂');
+      setLoading(false);
       return;
     }
 
     // 5. Date and time validation
+    console.log('[DEBUG] Validating deadline:', formData.deadline, 'time:', formData.time);
     if (!formData.deadline || !formData.time) {
+      console.log('[DEBUG] VALIDATION FAILED: No deadline or time');
       setError('Please enter the date and time. When do you need help? ⏰');
+      setLoading(false);
       return;
     }
 
