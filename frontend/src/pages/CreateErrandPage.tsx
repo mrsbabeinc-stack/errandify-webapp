@@ -1137,17 +1137,15 @@ export default function CreateErrandPage() {
               </div>
             )}
 
-            {/* Area - ALWAYS shown (from extraction) */}
-            {area && (
-              <div className="mb-3">
-                <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
-                  Area
-                </label>
-                <div className={`w-full px-2 py-0.5 border-b-2 border-gray-300 bg-gray-50 text-sm text-gray-900`}>
-                  {area}
-                </div>
+            {/* Area - ALWAYS shown (tied to postal code) */}
+            <div className="mb-3">
+              <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
+                Area
+              </label>
+              <div className={`w-full px-2 py-0.5 border-b-2 border-gray-300 bg-gray-50 text-sm ${area ? 'text-gray-900' : 'text-gray-400'}`}>
+                {area || 'Auto-filled from postal code'}
               </div>
-            )}
+            </div>
 
             {/* Full Address - Only shown when NOT remote */}
             {!isRemoteWork && (
