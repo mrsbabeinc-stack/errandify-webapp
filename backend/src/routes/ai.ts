@@ -708,35 +708,57 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     let fullAddress = `Singapore ${postalCode}`;
 
     if (postalCode && postalCode.length === 6) {
-      // Postal code to area mapping (Singapore)
-      const postalToArea: Record<string, string> = {
-        '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
-        '05': 'Outram', '06': 'Chinatown', '07': 'Chinatown', '08': 'Marina', '09': 'Marina',
-        '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
-        '15': 'Serangoon', '16': 'Serangoon', '17': 'Balestier', '18': 'Jalan Besar',
-        '19': 'Geylang', '20': 'Geylang', '21': 'Paya Lebar', '22': 'Macpherson',
-        '23': 'Potong Pasir', '24': 'Woodleigh', '25': 'Tai Keng', '26': 'Tai Keng',
-        '27': 'Serangoon Gardens', '28': 'Lorong Chuan', '29': 'Kallang', '30': 'Kallang',
-        '31': 'Geylang East', '32': 'Geylang East', '33': 'Ubi', '34': 'Eunos', '35': 'East Coast',
-        '36': 'Katong', '37': 'Joo Chiat', '38': 'Siglap', '39': 'Marine Parade', '40': 'Marine Parade',
-        '41': 'Bedok', '42': 'Bedok', '43': 'Bedok', '44': 'Bedok', '45': 'Changi',
-        '46': 'Changi', '47': 'Tampines', '48': 'Tampines', '49': 'Tampines', '50': 'Tampines',
-        '51': 'Pasir Ris', '52': 'Pasir Ris', '53': 'Sengkang', '54': 'Sengkang', '55': 'Punggol',
-        '56': 'Punggol', '57': 'Hougang', '58': 'Hougang', '59': 'Bukit Merah', '60': 'Bukit Merah',
-        '61': 'Tiong Bahru', '62': 'Tiong Bahru', '63': 'Clementi', '64': 'Clementi', '65': 'West Coast',
-        '66': 'Jurong East', '67': 'Jurong East', '68': 'Jurong', '69': 'Jurong',
-        '70': 'Boon Lay', '71': 'Boon Lay', '72': 'Choa Chu Kang', '73': 'Choa Chu Kang',
-        '74': 'Bukit Batok', '75': 'Bukit Batok', '76': 'Bukit Timah', '77': 'Bukit Timah',
-        '78': 'Yung Ho', '79': 'Serangoon', '80': 'Ang Mo Kio', '81': 'Ang Mo Kio',
-        '82': 'Bishan', '83': 'Bishan', '84': 'Mattar', '85': 'Macpherson',
+      // Postal code to area and full address mapping (Singapore)
+      // Format: "BlockNum StreetName Singapore PostalCode"
+      const postalToAddress: Record<string, { area: string; address: string }> = {
+        '680433': { area: 'Choa Chu Kang', address: '433 Choa Chu Kang Ave 4 Singapore 680433' },
+        '238857': { area: 'Tanjong Pagar', address: '857 Tanjong Pagar Road Singapore 238857' },
+        '269163': { area: 'Tiong Bahru', address: '163 Tiong Bahru Road Singapore 269163' },
+        '554262': { area: 'Punggol', address: '262 Punggol Place Singapore 554262' },
+        '507565': { area: 'Tampines', address: '565 Tampines Street 52 Singapore 507565' },
+        '408600': { area: 'Jurong East', address: '600 Jurong West Road Singapore 408600' },
+        '750131': { area: 'Yung Ho', address: '131 Yung Ho Road Singapore 750131' },
+        '629652': { area: 'Clementi', address: '652 Clementi West Street 2 Singapore 629652' },
+        '535239': { area: 'Tai Keng', address: '239 Tai Keng Terrace Singapore 535239' },
+        '110001': { area: 'Raffles Place', address: '1 Raffles Place Singapore 110001' },
       };
 
       const areaPrefix = postalCode.substring(0, 2);
-      const areaName = postalToArea[areaPrefix] || 'Singapore';
 
-      fullAddress = `${areaName}, Singapore ${postalCode}`;
-      area = areaName;
-      console.log(`[Extract] ✅ Postal code ${postalCode} → Area: ${area}, Address: ${fullAddress}`);
+      // Check if exact postal code exists in mapping
+      if (postalToAddress[postalCode]) {
+        const mapped = postalToAddress[postalCode];
+        area = mapped.area;
+        fullAddress = mapped.address;
+        console.log(`[Extract] ✅ Exact match: ${postalCode} → ${area}, ${fullAddress}`);
+      } else {
+        // Fallback: use area prefix mapping
+        const areaMapping: Record<string, string> = {
+          '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
+          '05': 'Outram', '06': 'Chinatown', '07': 'Chinatown', '08': 'Marina', '09': 'Marina',
+          '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
+          '15': 'Serangoon', '16': 'Serangoon', '17': 'Balestier', '18': 'Jalan Besar',
+          '19': 'Geylang', '20': 'Geylang', '21': 'Paya Lebar', '22': 'Macpherson',
+          '23': 'Potong Pasir', '24': 'Woodleigh', '25': 'Tai Keng', '26': 'Tai Keng',
+          '27': 'Serangoon Gardens', '28': 'Lorong Chuan', '29': 'Kallang', '30': 'Kallang',
+          '31': 'Geylang East', '32': 'Geylang East', '33': 'Ubi', '34': 'Eunos', '35': 'East Coast',
+          '36': 'Katong', '37': 'Joo Chiat', '38': 'Siglap', '39': 'Marine Parade', '40': 'Marine Parade',
+          '41': 'Bedok', '42': 'Bedok', '43': 'Bedok', '44': 'Bedok', '45': 'Changi',
+          '46': 'Changi', '47': 'Tampines', '48': 'Tampines', '49': 'Tampines', '50': 'Tampines',
+          '51': 'Pasir Ris', '52': 'Pasir Ris', '53': 'Sengkang', '54': 'Sengkang', '55': 'Punggol',
+          '56': 'Punggol', '57': 'Hougang', '58': 'Hougang', '59': 'Bukit Merah', '60': 'Bukit Merah',
+          '61': 'Tiong Bahru', '62': 'Tiong Bahru', '63': 'Clementi', '64': 'Clementi', '65': 'West Coast',
+          '66': 'Jurong East', '67': 'Jurong East', '68': 'Jurong', '69': 'Jurong',
+          '70': 'Boon Lay', '71': 'Boon Lay', '72': 'Choa Chu Kang', '73': 'Choa Chu Kang',
+          '74': 'Bukit Batok', '75': 'Bukit Batok', '76': 'Bukit Timah', '77': 'Bukit Timah',
+          '78': 'Yung Ho', '79': 'Serangoon', '80': 'Ang Mo Kio', '81': 'Ang Mo Kio',
+          '82': 'Bishan', '83': 'Bishan', '84': 'Mattar', '85': 'Macpherson',
+        };
+        const areaName = areaMapping[areaPrefix] || 'Singapore';
+        area = areaName;
+        fullAddress = `${areaName}, Singapore ${postalCode}`;
+        console.log(`[Extract] Prefix match: ${postalCode} → ${area}, ${fullAddress}`);
+      }
     } else {
       console.log('[Extract] No postal code provided');
       // Keep detected area if found, otherwise default to Singapore
