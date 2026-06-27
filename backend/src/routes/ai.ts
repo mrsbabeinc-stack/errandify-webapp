@@ -773,11 +773,27 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     console.log('[Extract] Extracted skills:', suggestedSkills);
 
+    // Generate AI-based description suggestion based on category and title
+    const descriptionSuggestions: Record<string, string> = {
+      'eldercare': 'Help with daily activities and companionship for elderly person. Include mobility assistance, meal prep, or medication reminders needed.',
+      'childcare': 'Provide childcare and supervision for child. Specify age group, activities, any allergies or special needs.',
+      'homehelp': 'Professional household assistance. Specify areas (bedroom, kitchen, bathroom) and type of work (cleaning, organizing, repairs).',
+      'wellness': 'Wellness and fitness support. Specify what help needed (exercise buddy, wellness coaching, yoga instruction).',
+      'tripcarry': 'Help with errands across Singapore or nearby regions. Specify items, delivery distance, and any special handling needs.',
+      'petcare': 'Pet care services. Specify pet type, size, temperament, and what\'s needed (walking, sitting, grooming).',
+      'delivery': 'Deliver items from point A to point B. Specify item type, size, weight, and any special handling needs.',
+      'eventhelp': 'Help with event preparation and execution. Specify event type (party, wedding, corporate), size, and setup needs.',
+      'donate': 'Donation and community support. Specify items to donate, community group, or volunteering needs.',
+      'localbiz': 'Microservices for local SMEs. Specify business need (delivery, setup, inventory management, customer service).',
+    };
+
+    const description = descriptionSuggestions[category] || `Help needed: ${title}`;
+
     res.json({
       success: true,
       data: {
         title,
-        description: '',
+        description,
         location: '', // Don't infer location - user enters this in Hana chat step 2
         area, // Area from OneMap lookup (e.g., "CHOA CHU KANG AVENUE")
         fullAddress,

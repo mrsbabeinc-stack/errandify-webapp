@@ -13,10 +13,16 @@ export interface TaskData {
   description: string;
   category: string;
   location: string;
+  area?: string;
+  fullAddress?: string;
+  postalCode?: string;
   date: string;
   time: string;
   budget: string;
+  duration?: string;
+  durationUnit?: string;
   notes: string;
+  suggestedSkills?: string[];
 }
 
 interface HanaTaskCreationPageProps {
