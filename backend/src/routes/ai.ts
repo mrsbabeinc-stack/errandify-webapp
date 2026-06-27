@@ -791,21 +791,45 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     console.log('[Extract] Extracted skills:', suggestedSkills);
 
-    // Generate AI-based description suggestion based on category and title
-    const descriptionSuggestions: Record<string, string> = {
-      'eldercare': 'Help with daily activities and companionship for elderly person. Include mobility assistance, meal prep, or medication reminders needed.',
-      'childcare': 'Provide childcare and supervision for child. Specify age group, activities, any allergies or special needs.',
-      'homehelp': 'Professional household assistance. Specify areas (bedroom, kitchen, bathroom) and type of work (cleaning, organizing, repairs).',
-      'wellness': 'Wellness and fitness support. Specify what help needed (exercise buddy, wellness coaching, yoga instruction).',
-      'tripcarry': 'Help with errands across Singapore or nearby regions. Specify items, delivery distance, and any special handling needs.',
-      'petcare': 'Pet care services. Specify pet type, size, temperament, and what\'s needed (walking, sitting, grooming).',
-      'delivery': 'Deliver items from point A to point B. Specify item type, size, weight, and any special handling needs.',
-      'eventhelp': 'Help with event preparation and execution. Specify event type (party, wedding, corporate), size, and setup needs.',
-      'donate': 'Donation and community support. Specify items to donate, community group, or volunteering needs.',
-      'localbiz': 'Microservices for local SMEs. Specify business need (delivery, setup, inventory management, customer service).',
-    };
+    // Generate AI-based description suggestion based on title keywords
+    // This creates context-aware descriptions tied to what the user actually typed
+    let description = '';
+    const titleLowercase = title.toLowerCase();
 
-    const description = descriptionSuggestions[category] || `Help needed: ${title}`;
+    // Check title for specific keywords and generate relevant descriptions
+    if (titleLowercase.includes('hair') || titleLowercase.includes('salon') || titleLowercase.includes('cut')) {
+      description = `Provide hair cutting/styling service. Specify hair type, length, style preference, and any special requirements.`;
+    } else if (titleLowercase.includes('cleaning') || titleLowercase.includes('clean')) {
+      description = `Professional cleaning service. Specify areas to clean (bedroom, kitchen, bathroom), type (deep clean, regular maintenance), and any allergies/sensitivities.`;
+    } else if (titleLowercase.includes('dog') || titleLowercase.includes('walk') || titleLowercase.includes('pet')) {
+      description = `Pet care service. Specify pet type, breed, size, temperament, health needs, and what's needed (walking, sitting, grooming, feeding).`;
+    } else if (titleLowercase.includes('babysit') || titleLowercase.includes('childcare') || titleLowercase.includes('child')) {
+      description = `Childcare service. Specify child age, activities to do, any allergies/dietary restrictions, bedtime routine, emergency contacts.`;
+    } else if (titleLowercase.includes('elderly') || titleLowercase.includes('elder') || titleLowercase.includes('senior')) {
+      description = `Elder care and companionship. Specify mobility needs, meal preparation, medication assistance, activities preferred, emergency contacts.`;
+    } else if (titleLowercase.includes('delivery') || titleLowercase.includes('send') || titleLowercase.includes('deliver')) {
+      description = `Delivery service. Specify what item(s) to deliver, pickup location, destination, size/weight, special handling needs, preferred timing.`;
+    } else if (titleLowercase.includes('event') || titleLowercase.includes('party') || titleLowercase.includes('setup')) {
+      description = `Event assistance. Specify event type, date, location, number of guests, setup/decoration needs, timeline, special requirements.`;
+    } else if (titleLowercase.includes('teach') || titleLowercase.includes('tutor') || titleLowercase.includes('lesson')) {
+      description = `Tutoring/teaching service. Specify subject, student age/level, learning goals, lesson frequency, duration per session, teaching style preference.`;
+    } else if (titleLowercase.includes('repair') || titleLowercase.includes('fix')) {
+      description = `Repair service. Specify what needs repair, issue/problem, preferred solution, timeline, budget constraints, any special requirements.`;
+    } else if (titleLowercase.includes('move') || titleLowercase.includes('carry') || titleLowercase.includes('transport')) {
+      description = `Moving/transport assistance. Specify items to move, pickup location, destination, timeline, equipment needed, help required (packing, lifting, driving).`;
+    } else {
+      // Fallback: use category-based description with title reference
+      const categoryDescriptions: Record<string, string> = {
+        'homehelp': 'Household assistance needed. Specify the task, areas involved, any materials needed, and timeline.',
+        'petcare': 'Pet care needed. Specify pet type, requirements, and what care is needed.',
+        'delivery': 'Delivery service needed. Specify items and destination.',
+        'eventhelp': 'Event support needed. Specify event type and requirements.',
+        'childcare': 'Childcare needed. Specify child age and requirements.',
+        'eldercare': 'Elder care needed. Specify care requirements.',
+        'wellness': 'Wellness support needed. Specify the type of assistance.',
+      };
+      description = categoryDescriptions[category] || `Help needed: ${title}. Please provide more details about the task, timeline, and specific requirements.`;
+    }
 
     res.json({
       success: true,
