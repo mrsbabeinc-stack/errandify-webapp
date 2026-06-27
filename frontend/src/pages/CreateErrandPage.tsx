@@ -352,6 +352,11 @@ export default function CreateErrandPage() {
           console.log('[EXTRACT] Setting postal code:', extracted.postalCode);
           setPostalCode(extracted.postalCode);
         }
+        // Set full address from OneMap lookup
+        if (extracted.fullAddress) {
+          console.log('[EXTRACT] Setting full address:', extracted.fullAddress);
+          setFullAddress(extracted.fullAddress);
+        }
       }
     } catch (err) {
       console.error('Extraction error:', err);
@@ -1508,6 +1513,11 @@ export default function CreateErrandPage() {
               {formData.location && (
                 <p>
                   <span className="font-semibold">Location:</span> {formData.location}
+                </p>
+              )}
+              {fullAddress && (
+                <p>
+                  <span className="font-semibold">Full Address:</span> {fullAddress}
                 </p>
               )}
               {formData.skills.length > 0 && (
