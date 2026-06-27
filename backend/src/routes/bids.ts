@@ -68,6 +68,14 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         });
       }
 
+      // Prevent updating a closed bid (another doer confirmed the job)
+      if (existingBid.status === 'closed') {
+        return res.status(403).json({
+          error: 'Cannot modify closed offer',
+          message: 'The job has started with another helper. Your offer is closed.'
+        });
+      }
+
       // Prevent updating a confirmed bid (job already confirmed)
       if (existingBid.status === 'confirmed') {
         return res.status(403).json({
@@ -543,6 +551,49 @@ router.put('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respons
       ['confirmed', bidId]
     );
 
+    // Close all other bids for this errand (set status to 'closed')
+    await db.query(
+      'UPDATE bids SET status = $1 WHERE errand_id = $2 AND id != $3',
+      ['closed', bid.errand_id, bidId]
+    );
+
+    // Update errand status to 'in_progress' (doer confirmed start)
+    await db.query(
+      'UPDATE errands SET status = $1 WHERE id = $2',
+      ['in_progress', bid.errand_id]
+    );
+
+    // Notify other bidders that the job has started and their offers are closed
+    try {
+      const otherBids = await db.query(
+        'SELECT DISTINCT doer_id FROM bids WHERE errand_id = $1 AND id != $2 AND status = $3',
+        [bid.errand_id, bidId, 'closed']
+      );
+
+      const errandData = await db.query(
+        'SELECT title FROM errands WHERE id = $1',
+        [bid.errand_id]
+      );
+      const errandTitle = errandData.rows[0]?.title || 'A task';
+
+      for (const otherBid of otherBids.rows) {
+        await db.query(
+          `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
+           VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
+          [
+            otherBid.doer_id,
+            'bid_closed',
+            '❌ Job Started',
+            `The job for "${errandTitle}" has started with another helper. Your offer is now closed.`,
+            bid.errand_id,
+          ]
+        );
+      }
+    } catch (notifErr) {
+      console.warn('[Bids] Failed to notify other bidders about job start:', notifErr);
+      // Don't fail the entire request if notification fails
+    }
+
     // Get updated bid
     const updatedBid = await db.query('SELECT * FROM bids WHERE id = $1', [bidId]);
 
@@ -551,7 +602,7 @@ router.put('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respons
       data: {
         id: updatedBid.rows[0].id,
         status: updatedBid.rows[0].status,
-        message: 'Bid confirmed successfully'
+        message: 'Bid confirmed successfully and other offers closed'
       }
     });
   } catch (error) {
