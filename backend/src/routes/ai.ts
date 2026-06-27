@@ -877,7 +877,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       data: {
         title,
         description,
-        location: '', // Don't infer location - user enters this in Hana chat step 2
+        location: area || '', // Use area as location (from postal code lookup)
         area, // Area from OneMap lookup (e.g., "CHOA CHU KANG AVENUE")
         fullAddress,
         date,
