@@ -525,7 +525,7 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
 
         if (referralInfo.rows.length > 0) {
           const referrerId = referralInfo.rows[0].referrer_id;
-          const firstJobBonus = 150;
+          const firstJobBonus = 50;
 
           // Update tracking status
           await db.query(
@@ -565,7 +565,7 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
                 referrerId,
                 'referral_first_job',
                 'Referral Bonus Earned',
-                `${doerName} completed their first errand! You earned +150 EP`,
+                `${doerName} completed their first errand! You earned +50 EP`,
                 JSON.stringify({ referrer_id: referrerId, referred_user_id: doerId, bonus_amount: firstJobBonus })
               ]
             );
