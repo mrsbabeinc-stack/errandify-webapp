@@ -708,63 +708,81 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     let fullAddress = `Singapore ${postalCode}`;
 
     if (postalCode && postalCode.length === 6) {
-      // Use OneMap API for accurate postal code lookup
+      // 3-tier postal code lookup: Local DB → OneMap API → Hardcoded Fallback
       try {
-        const oneMapUrl = `https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=Y&getAddrDetails=Y`;
-        const omResponse = await axios.get(oneMapUrl, { timeout: 3000 });
+        // 1. Check local PostgreSQL database first (FASTEST - 5ms)
+        const dbResult = await db.query(
+          'SELECT full_address, area FROM singapore_postcodes WHERE postal_code = $1',
+          [postalCode]
+        );
 
-        if (omResponse.data?.results?.[0]) {
-          const addr = omResponse.data.results[0];
-          fullAddress = addr.ADDRESS || `Singapore ${postalCode}`;
-          // Extract area name from road name (e.g., "CHOA CHU KANG AVENUE 4" → "Choa Chu Kang")
-          const roadParts = addr.ROAD_NAME?.split(' ') || [];
-          area = roadParts.slice(0, -1).join(' ').trim() || addr.BUILDING_NAME?.trim() || 'Singapore';
-          console.log(`[Extract] ✅ OneMap: ${area}, ${fullAddress}`);
+        if (dbResult.rows.length > 0) {
+          const record = dbResult.rows[0];
+          area = record.area || 'Singapore';
+          fullAddress = record.full_address || `${area}, Singapore ${postalCode}`;
+          console.log(`[Extract] ✅ LOCAL DB: ${area}, ${fullAddress}`);
         } else {
-          throw new Error('No results');
+          // 2. Try OneMap API if not in local DB
+          try {
+            const oneMapUrl = `https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=Y&getAddrDetails=Y`;
+            const omResponse = await axios.get(oneMapUrl, { timeout: 3000 });
+
+            if (omResponse.data?.results?.[0]) {
+              const addr = omResponse.data.results[0];
+              fullAddress = addr.ADDRESS || `Singapore ${postalCode}`;
+              const roadParts = addr.ROAD_NAME?.split(' ') || [];
+              area = roadParts.slice(0, -1).join(' ').trim() || addr.BUILDING_NAME?.trim() || 'Singapore';
+              console.log(`[Extract] ✅ OneMap API: ${area}, ${fullAddress}`);
+            } else {
+              throw new Error('No results');
+            }
+          } catch (omErr) {
+            // 3. Use hardcoded fallback mappings
+            console.warn(`[Extract] OneMap failed, using fallback: ${omErr instanceof Error ? omErr.message : String(omErr)}`);
+            const postalToAddress: Record<string, { area: string; address: string }> = {
+              '150101': { area: 'Henderson', address: '101 Henderson Road Singapore 150101' },
+              '680433': { area: 'Choa Chu Kang', address: '433 Choa Chu Kang Avenue 4 Singapore 680433' },
+              '238857': { area: 'Tanjong Pagar', address: '857 Tanjong Pagar Road Singapore 238857' },
+              '554262': { area: 'Punggol', address: '262 Punggol Place Singapore 554262' },
+              '507565': { area: 'Tampines', address: '565 Tampines Street 52 Singapore 507565' },
+            };
+
+            if (postalToAddress[postalCode]) {
+              const mapped = postalToAddress[postalCode];
+              area = mapped.area;
+              fullAddress = mapped.address;
+              console.log(`[Extract] Fallback exact match: ${postalCode} → ${area}, ${fullAddress}`);
+            } else {
+              const areaPrefix = postalCode.substring(0, 2);
+              const areaMapping: Record<string, string> = {
+                '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
+                '05': 'Outram', '06': 'Chinatown', '07': 'Chinatown', '08': 'Marina', '09': 'Marina',
+                '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
+                '15': 'Henderson', '16': 'Henderson', '17': 'Balestier', '18': 'Macpherson',
+                '19': 'Paya Lebar', '20': 'Paya Lebar', '21': 'Geylang', '22': 'Geylang', '23': 'Geylang',
+                '24': 'Eunos', '25': 'Bedok', '26': 'Bedok', '27': 'Bedok', '28': 'Tampines', '29': 'Tampines',
+                '30': 'Tampines', '31': 'Pasir Ris', '32': 'Pasir Ris', '33': 'Punggol', '34': 'Sengkang',
+                '35': 'Hougang', '36': 'Hougang', '37': 'Serangoon', '38': 'Serangoon', '39': 'Ang Mo Kio',
+                '40': 'Ang Mo Kio', '41': 'Jurong West', '42': 'Jurong', '43': 'Jurong East', '44': 'Clementi',
+                '45': 'Clementi', '46': 'Clementi', '47': 'Bukit Merah', '48': 'Bukit Merah', '49': 'Tiong Bahru',
+                '50': 'Redhill', '51': 'Queenstown', '52': 'Commonwealth', '53': 'Pasir Panjang', '54': 'Pasir Panjang',
+                '55': 'Punggol', '56': 'Punggol', '57': 'Hougang', '58': 'Hougang', '59': 'Bukit Merah',
+                '60': 'Bukit Timah', '61': 'Bishan', '62': 'Bishan', '63': 'Ang Mo Kio', '64': 'Ang Mo Kio',
+                '65': 'Serangoon', '66': 'Serangoon', '67': 'Ang Mo Kio', '68': 'Choa Chu Kang', '69': 'Geylang',
+                '70': 'Bedok', '71': 'Bedok', '72': 'Bedok', '73': 'Bedok', '74': 'Tampines', '75': 'Yung Ho',
+                '76': 'Tampines', '77': 'Tampines', '78': 'Tampines', '79': 'Sengkang', '80': 'Sengkang',
+                '81': 'Sengkang', '82': 'Sengkang',
+              };
+              area = areaMapping[areaPrefix] || 'Singapore';
+              fullAddress = `${area}, Singapore ${postalCode}`;
+              console.log(`[Extract] Fallback prefix match: ${postalCode} → ${area}`);
+            }
+          }
         }
       } catch (err) {
-        console.warn(`[Extract] OneMap failed, using fallback: ${err instanceof Error ? err.message : String(err)}`);
-        // Postal code to area + address mapping (fallback when OneMap unavailable)
-        const postalToAddress: Record<string, { area: string; address: string }> = {
-          '150101': { area: 'Henderson', address: '101 Henderson Road Singapore 150101' },
-          '680433': { area: 'Choa Chu Kang', address: '433 Choa Chu Kang Avenue 4 Singapore 680433' },
-          '238857': { area: 'Tanjong Pagar', address: '857 Tanjong Pagar Road Singapore 238857' },
-          '554262': { area: 'Punggol', address: '262 Punggol Place Singapore 554262' },
-          '507565': { area: 'Tampines', address: '565 Tampines Street 52 Singapore 507565' },
-        };
-
-        if (postalToAddress[postalCode]) {
-          const mapped = postalToAddress[postalCode];
-          area = mapped.area;
-          fullAddress = mapped.address;
-          console.log(`[Extract] Fallback exact match: ${postalCode} → ${area}, ${fullAddress}`);
-        } else {
-          // If not in exact mapping, use area prefix
-          const areaPrefix = postalCode.substring(0, 2);
-          const areaMapping: Record<string, string> = {
-            '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
-            '05': 'Outram', '06': 'Chinatown', '07': 'Chinatown', '08': 'Marina', '09': 'Marina',
-            '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
-            '15': 'Henderson', '16': 'Henderson', '17': 'Balestier', '18': 'Macpherson',
-            '19': 'Paya Lebar', '20': 'Paya Lebar', '21': 'Geylang', '22': 'Geylang', '23': 'Geylang',
-            '24': 'Eunos', '25': 'Bedok', '26': 'Bedok', '27': 'Bedok', '28': 'Tampines', '29': 'Tampines',
-            '30': 'Tampines', '31': 'Pasir Ris', '32': 'Pasir Ris', '33': 'Punggol', '34': 'Sengkang',
-            '35': 'Hougang', '36': 'Hougang', '37': 'Serangoon', '38': 'Serangoon', '39': 'Ang Mo Kio',
-            '40': 'Ang Mo Kio', '41': 'Jurong West', '42': 'Jurong', '43': 'Jurong East', '44': 'Clementi',
-            '45': 'Clementi', '46': 'Clementi', '47': 'Bukit Merah', '48': 'Bukit Merah', '49': 'Tiong Bahru',
-            '50': 'Redhill', '51': 'Queenstown', '52': 'Commonwealth', '53': 'Pasir Panjang', '54': 'Pasir Panjang',
-            '55': 'Punggol', '56': 'Punggol', '57': 'Hougang', '58': 'Hougang', '59': 'Bukit Merah',
-            '60': 'Bukit Timah', '61': 'Bishan', '62': 'Bishan', '63': 'Ang Mo Kio', '64': 'Ang Mo Kio',
-            '65': 'Serangoon', '66': 'Serangoon', '67': 'Ang Mo Kio', '68': 'Choa Chu Kang', '69': 'Geylang',
-            '70': 'Bedok', '71': 'Bedok', '72': 'Bedok', '73': 'Bedok', '74': 'Tampines', '75': 'Yung Ho',
-            '76': 'Tampines', '77': 'Tampines', '78': 'Tampines', '79': 'Sengkang', '80': 'Sengkang',
-            '81': 'Sengkang', '82': 'Sengkang',
-          };
-          area = areaMapping[areaPrefix] || 'Singapore';
-          fullAddress = `${area}, Singapore ${postalCode}`;
-          console.log(`[Extract] Fallback prefix match: ${postalCode} → ${area}`);
-        }
+        console.error(`[Extract] Local DB error: ${err instanceof Error ? err.message : String(err)}, falling back`);
+        area = 'Singapore';
+        fullAddress = `Singapore ${postalCode}`;
       }
     } else {
       console.log('[Extract] No postal code provided');
