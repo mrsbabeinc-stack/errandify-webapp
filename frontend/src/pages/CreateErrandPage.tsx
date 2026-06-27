@@ -848,16 +848,16 @@ export default function CreateErrandPage() {
           </div>
         )}
 
-        {/* Main Form */}
-        <div className="bg-white rounded-lg shadow-sm space-y-1 p-2">
+        {/* Main Form - Compact & Warm */}
+        <div className="bg-white rounded-lg shadow-sm p-2">
           {/* Section 1: Essentials (Title, Description, Category) */}
-          <div className="space-y-1">
-            <h3 className="font-bold text-errandify-brown text-sm">About Your Errand</h3>
+          <div className="space-y-0.5 mb-1">
+            <h3 className="font-bold text-errandify-brown text-xs leading-tight">Tell us what you need</h3>
 
             {/* Title - Required */}
             <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
-                Errand Title *
+              <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+                What help do you need? *
               </label>
               <input
                 type="text"
@@ -868,50 +868,47 @@ export default function CreateErrandPage() {
                   debouncedExtractFields(e.target.value);
                   debouncedFetchAiSuggestions(e.target.value, formData.description);
                 }}
-                placeholder="What do you need help with?"
+                placeholder="e.g., help move boxes, tutoring, cleaning..."
                 className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
               />
-
             </div>
 
-            {/* Description */}
+            {/* Description - Compact */}
             <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
-                Description
+              <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+                More details
               </label>
               <div className="relative">
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  placeholder="Describe your errand..."
-                  rows={2}
+                  placeholder="What specifically? Any requirements?"
+                  rows={1}
                   maxLength={150}
-                  className="w-full px-2 pb-4 pt-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm resize-none"
+                  className="w-full px-2 pb-3 pt-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-xs resize-none"
                 />
-                <span className="absolute bottom-1 right-0 text-xs text-gray-400">{formData.description.length}/150</span>
+                <span className="absolute bottom-0.5 right-0 text-xs text-gray-400">{formData.description.length}/150</span>
               </div>
-
-              {/* AI Tip for Description - Just show the tip, no click needed */}
               {aiSuggestions.suggestedDescription && !formData.description && (
-                <div className="mt-2 px-3 py-1 bg-orange-100 text-errandify-orange-700 text-xs rounded-full font-medium">
-                  💡 {aiSuggestions.suggestedDescription}
+                <div className="text-xs text-errandify-orange-700 mt-0.5">
+                  Tip: {aiSuggestions.suggestedDescription}
                 </div>
               )}
             </div>
 
             {/* Category - Auto-detected */}
             <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
-                Category *
+              <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+                Type of help *
               </label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full px-3 py-1 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
               >
-                <option value="">Select a category</option>
+                <option value="">Pick a category</option>
                 {Object.entries(categoryNames).map(([key, name]) => (
                   <option key={key} value={key}>
                     {name}
@@ -922,20 +919,20 @@ export default function CreateErrandPage() {
           </div>
 
           {/* Section 2: Logistics (Budget, Deadline, Duration) */}
-          <div className="border-t pt-1 space-y-1">
-            <h3 className="font-bold text-errandify-brown text-sm">Timeline & Budget</h3>
+          <div className="border-t pt-0.5 space-y-0.5 mb-1">
+            <h3 className="font-bold text-errandify-brown text-xs leading-tight">When & how much</h3>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               <div>
-                <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
-                  Budget (SGD) {aiSuggestions.suggestedBudget && <span className="text-xs text-gray-400">(suggested)</span>}
+                <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+                  Pay (SGD) *
                 </label>
                 <input
                   type="number"
                   name="budget"
                   value={formData.budget}
                   onChange={handleChange}
-                  placeholder="Amount"
+                  placeholder="$"
                   className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm ${
                     aiSuggestions.suggestedBudget
                       ? 'border-gray-200 text-gray-500'
@@ -944,8 +941,8 @@ export default function CreateErrandPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
-                  Date
+                <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+                  Date *
                 </label>
                 <input
                   type="date"
@@ -956,8 +953,8 @@ export default function CreateErrandPage() {
                 />
               </div>
               <div className="relative">
-                <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
-                  Time
+                <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+                  Time *
                 </label>
                 <input
                   type="time"
@@ -974,17 +971,12 @@ export default function CreateErrandPage() {
                   placeholder="HH:MM"
                   className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm placeholder:text-gray-400 cursor-pointer"
                 />
-                {showTimePicker && (
-                  <div className="absolute right-2 bottom-1 text-lg animate-pulse">
-                    🕐
-                  </div>
-                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 items-end">
+            <div className="grid grid-cols-3 gap-1.5 items-end">
               <div>
-                <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
+                <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
                   Duration
                 </label>
                 <input
@@ -997,7 +989,7 @@ export default function CreateErrandPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
+                <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
                   Unit
                 </label>
                 <select
@@ -1073,10 +1065,10 @@ export default function CreateErrandPage() {
 
           {/* Section 3: Location - Only area shown here */}
           <div className="border-t pt-1 space-y-1">
-            <h3 className="font-bold text-errandify-brown text-sm">Errand Location</h3>
+            <h3 className="font-bold text-errandify-brown text-xs leading-tight mb-0.5">Where</h3>
 
             {/* Remote Work Checkbox */}
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2 mb-0.5">
               <input
                 type="checkbox"
                 checked={isRemoteWork}
@@ -1089,14 +1081,14 @@ export default function CreateErrandPage() {
                     setFormData((prev) => ({ ...prev, location: '' }));
                   }
                 }}
-                className="w-4 h-4"
+                className="w-3 h-3"
               />
-              <span className="text-sm text-gray-700">This is remote work (no specific location)</span>
+              <span className="text-xs text-gray-700">Online only</span>
             </label>
 
             {/* Postal Code and Area - Side by side */}
             {!isRemoteWork && (
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-2 gap-1.5 mb-1">
                 {/* Postal Code */}
                 <div>
                   <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
@@ -1154,15 +1146,15 @@ export default function CreateErrandPage() {
             {/* Full Address - Only shown when NOT remote */}
             {!isRemoteWork && (
               <div>
-                  <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
-                    Full Address <span className="text-xs text-gray-600">(Shown to Confirmed Doer - Add Unit Number if Required)</span>
+                  <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+                    Full address (add unit if needed)
                   </label>
                   <textarea
                     value={fullAddress}
                     onChange={(e) => setFullAddress(e.target.value)}
-                    placeholder="e.g., Block 1, Tanjong Pagar Plaza, Unit #5-10, Singapore 082001"
-                    rows={2}
-                    className="w-full px-3 py-1 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
+                    placeholder="e.g., Block 1, Unit #5-10"
+                    rows={1}
+                    className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-xs resize-none"
                   />
 
                   {/* GPS Location Notice */}
@@ -1423,50 +1415,49 @@ export default function CreateErrandPage() {
 
         {/* Section 6: Notes - At end of form */}
         <div className="border-t pt-1 space-y-1">
-          <h3 className="font-bold text-errandify-brown text-sm">Additional Notes</h3>
+          <h3 className="font-bold text-errandify-brown text-xs leading-tight mb-0.5">Anything else</h3>
 
           <div>
-            <label className="block text-sm font-semibold text-errandify-brown mb-0.5">
-              Notes (Shown to Confirmed Doer) <span className="text-xs text-gray-600">(optional)</span>
+            <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+              Notes to helper
             </label>
             <div className="relative">
               <textarea
                 name="specialNote"
                 value={formData.specialNote}
                 onChange={handleChange}
-                placeholder="e.g., access instructions, special requirements, or preferences"
-                rows={2}
+                placeholder="access tips, requests, special needs..."
+                rows={1}
                 maxLength={300}
-                className="w-full px-3 py-1 border-2 border-gray-300 rounded focus:outline-none focus:border-errandify-orange text-sm"
+                className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-xs resize-none"
               />
-              <span className="absolute bottom-1 right-2 text-xs text-gray-500">{formData.specialNote.length}/300</span>
+              <span className="absolute bottom-0.5 right-0 text-xs text-gray-400">{formData.specialNote.length}/300</span>
             </div>
 
-            {/* AI Suggestion for Notes - Compact inline */}
+            {/* AI Tip for Notes */}
             {aiSuggestions.suggestedNotes && !formData.specialNote && (
-              <div className="mt-2 inline-block px-3 py-1 bg-orange-100 text-errandify-orange-700 text-xs rounded-full font-medium">
-                💡 {aiSuggestions.suggestedNotes}
+              <div className="text-xs text-errandify-orange-700 mt-0.5">
+                Tip: {aiSuggestions.suggestedNotes}
               </div>
             )}
           </div>
         </div>
 
         {/* Quick Summary & Post Button */}
-        <div className="mt-6 space-y-3">
-          <div className="bg-orange-50 border-l-4 border-errandify-orange p-2 rounded text-sm">
-            <p className="font-semibold text-errandify-brown mb-0.5">Ready to post?</p>
-            <p className="text-gray-700 text-xs">
-              {formData.title} • {categoryNames[formData.category] || 'No category'} •{' '}
-              {formData.budget ? `SGD $${formData.budget}` : 'No budget'}
+        <div className="mt-2 space-y-1.5">
+          <div className="bg-orange-50 border-l-3 border-errandify-orange p-1.5 rounded text-xs">
+            <p className="font-semibold text-errandify-brown">Ready?</p>
+            <p className="text-gray-700 text-xs leading-tight">
+              {formData.title} • {categoryNames[formData.category] || '?'} • SGD ${formData.budget || '?'}
             </p>
           </div>
 
           <button
             onClick={() => setShowConfirm(true)}
             disabled={!formData.title || !formData.category || loading}
-            className="w-full bg-errandify-orange text-white py-1 rounded-lg font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="w-full bg-errandify-orange text-white py-1.5 rounded-lg font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
-            {loading ? 'Posting...' : 'Post Now'}
+            {loading ? 'Posting...' : 'Post'}
           </button>
         </div>
       </div>
