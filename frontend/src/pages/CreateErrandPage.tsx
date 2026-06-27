@@ -338,6 +338,11 @@ export default function CreateErrandPage() {
       if (response.data.success && response.data.data) {
         const extracted = response.data.data;
         console.log('[EXTRACT] Setting form data with:', extracted);
+        console.log('[EXTRACT] Description from extraction:', extracted.description);
+        console.log('[EXTRACT] Area from extraction:', extracted.area);
+        console.log('[EXTRACT] FullAddress from extraction:', extracted.fullAddress);
+
+        // Set main form fields
         setFormData((prev) => ({
           ...prev,
           ...(extracted.category && { category: extracted.category }),
@@ -349,12 +354,12 @@ export default function CreateErrandPage() {
           ...(extracted.date && { deadline: extracted.date }),
           ...(extracted.description && { description: extracted.description }),
         }));
-        // Set postal code separately (it's not in formData, it's a separate state)
+
+        // Set separate state fields
         if (extracted.postalCode) {
           console.log('[EXTRACT] Setting postal code:', extracted.postalCode);
           setPostalCode(extracted.postalCode);
         }
-        // Set full address and area from OneMap lookup
         if (extracted.area) {
           console.log('[EXTRACT] Setting area:', extracted.area);
           setArea(extracted.area);
