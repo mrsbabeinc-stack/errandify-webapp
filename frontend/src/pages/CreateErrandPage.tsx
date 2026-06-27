@@ -1437,7 +1437,7 @@ export default function CreateErrandPage() {
 
           <div>
             <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
-              Notes to helper
+              Notes to Confirmed Doer <span className="text-xs font-normal text-gray-500">(Shown to Confirmed Doer)</span>
             </label>
             <div className="relative">
               <textarea
