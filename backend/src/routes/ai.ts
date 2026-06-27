@@ -775,7 +775,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       data: {
         title,
         description: '',
-        location: area,
+        location: '', // Don't infer location - user enters this in Hana chat step 2
         fullAddress,
         date,
         time,
