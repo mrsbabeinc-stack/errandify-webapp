@@ -848,15 +848,15 @@ export default function CreateErrandPage() {
           </div>
         )}
 
-        {/* Main Form - Compact & Warm */}
-        <div className="bg-white rounded-lg shadow-sm p-2">
+        {/* Main Form - Warm, Approachable, Breathing Room */}
+        <div className="bg-white rounded-2xl shadow-md p-4 space-y-4">
           {/* Section 1: Essentials (Title, Description, Category) */}
-          <div className="space-y-0.5 mb-1">
-            <h3 className="font-bold text-errandify-brown text-xs leading-tight">Tell us what you need</h3>
+          <div className="space-y-2.5">
+            <h3 className="font-bold text-errandify-brown text-sm leading-relaxed tracking-tight">Tell us what you need</h3>
 
             {/* Title - Required */}
             <div>
-              <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+              <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
                 What help do you need? *
               </label>
               <input
@@ -869,15 +869,15 @@ export default function CreateErrandPage() {
                   debouncedFetchAiSuggestions(e.target.value, formData.description);
                 }}
                 placeholder="e.g., help move boxes, tutoring, cleaning..."
-                className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm font-medium ${
-                  formData.title ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium ${
+                  formData.title ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
                 }`}
               />
             </div>
 
             {/* Description - Compact */}
             <div>
-              <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+              <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
                 More details
               </label>
               <div className="relative">
@@ -886,32 +886,32 @@ export default function CreateErrandPage() {
                   value={formData.description}
                   onChange={handleChange}
                   placeholder="What specifically? Any requirements?"
-                  rows={1}
+                  rows={2}
                   maxLength={150}
-                  className={`w-full px-2 pb-3 pt-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-xs resize-none font-medium ${
-                    formData.description ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                  className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium ${
+                    formData.description ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
                   }`}
                 />
-                <span className="absolute bottom-0.5 right-0 text-xs text-gray-400">{formData.description.length}/150</span>
+                <span className="absolute bottom-2 right-3 text-xs text-gray-400">{formData.description.length}/150</span>
               </div>
               {aiSuggestions.suggestedDescription && !formData.description && (
-                <div className="text-xs text-errandify-orange-700 mt-0.5">
-                  Tip: {aiSuggestions.suggestedDescription}
+                <div className="text-xs text-errandify-orange-700 mt-1.5 px-2 py-1 bg-orange-50 rounded">
+                  💡 Tip: {aiSuggestions.suggestedDescription}
                 </div>
               )}
             </div>
 
             {/* Category - Auto-detected */}
             <div>
-              <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+              <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
                 Type of help *
               </label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm font-medium ${
-                  formData.category ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium appearance-none cursor-pointer ${
+                  formData.category ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900'
                 }`}
               >
                 <option value="">Pick a category</option>
@@ -925,12 +925,12 @@ export default function CreateErrandPage() {
           </div>
 
           {/* Section 2: Logistics (Budget, Deadline, Duration) */}
-          <div className="border-t pt-0.5 space-y-0.5 mb-1">
-            <h3 className="font-bold text-errandify-brown text-xs leading-tight">When & how much</h3>
+          <div className="border-t-2 border-gray-100 pt-4 space-y-2.5">
+            <h3 className="font-bold text-errandify-brown text-sm leading-relaxed tracking-tight">When & how much</h3>
 
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+                <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
                   Pay (SGD) *
                 </label>
                 <input
@@ -939,17 +939,17 @@ export default function CreateErrandPage() {
                   value={formData.budget}
                   onChange={handleChange}
                   placeholder="$"
-                  className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm font-medium ${
+                  className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium ${
                     formData.budget
                       ? 'border-errandify-orange text-errandify-brown'
                       : aiSuggestions.suggestedBudget
                       ? 'border-gray-200 text-gray-500'
-                      : 'border-gray-300 text-gray-900'
+                      : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
                   }`}
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+                <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
                   Date *
                 </label>
                 <input
@@ -957,13 +957,13 @@ export default function CreateErrandPage() {
                   name="deadline"
                   value={formData.deadline}
                   onChange={handleChange}
-                  className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm font-medium ${
-                    formData.deadline ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                  className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium ${
+                    formData.deadline ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900'
                   }`}
                 />
               </div>
               <div className="relative">
-                <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+                <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
                   Time *
                 </label>
                 <input
@@ -979,16 +979,16 @@ export default function CreateErrandPage() {
                   onFocus={() => setShowTimePicker(true)}
                   onBlur={() => setTimeout(() => setShowTimePicker(false), 200)}
                   placeholder="HH:MM"
-                  className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm placeholder:text-gray-400 cursor-pointer font-medium ${
-                    formData.time ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                  className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm placeholder:text-gray-400 cursor-pointer font-medium ${
+                    formData.time ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900'
                   }`}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-1.5 items-end">
+            <div className="grid grid-cols-3 gap-3 items-end">
               <div>
-                <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+                <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
                   Duration
                 </label>
                 <input
@@ -997,18 +997,18 @@ export default function CreateErrandPage() {
                   value={formData.duration}
                   onChange={handleChange}
                   placeholder="1"
-                  className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white focus:border-errandify-orange transition-colors text-sm font-medium"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+                <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
                   Unit
                 </label>
                 <select
                   name="durationUnit"
                   value={formData.durationUnit}
                   onChange={handleChange}
-                  className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-sm"
+                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white focus:border-errandify-orange transition-colors text-sm font-medium appearance-none cursor-pointer"
                 >
                   <option>Min</option>
                   <option>Hr</option>
@@ -1076,11 +1076,11 @@ export default function CreateErrandPage() {
           </div>
 
           {/* Section 3: Location - Only area shown here */}
-          <div className="border-t pt-1 space-y-1">
-            <h3 className="font-bold text-errandify-brown text-xs leading-tight mb-0.5">Where</h3>
+          <div className="border-t-2 border-gray-100 pt-4 space-y-2.5">
+            <h3 className="font-bold text-errandify-brown text-sm leading-relaxed tracking-tight mb-2">Where</h3>
 
             {/* Remote Work Checkbox */}
-            <label className="flex items-center gap-2 mb-0.5">
+            <label className="flex items-center gap-2 mb-2">
               <input
                 type="checkbox"
                 checked={isRemoteWork}
@@ -1093,17 +1093,17 @@ export default function CreateErrandPage() {
                     setFormData((prev) => ({ ...prev, location: '' }));
                   }
                 }}
-                className="w-3 h-3"
+                className="w-4 h-4 rounded cursor-pointer"
               />
-              <span className="text-xs text-gray-700">Online only</span>
+              <span className="text-sm text-gray-700 cursor-pointer">Online only</span>
             </label>
 
             {/* Postal Code and Area - Side by side */}
             {!isRemoteWork && (
-              <div className="grid grid-cols-2 gap-1.5 mb-1">
+              <div className="grid grid-cols-2 gap-3 mb-2">
                 {/* Postal Code */}
                 <div>
-                  <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
+                  <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
                     Postal Code (SG)
                   </label>
                   <input
@@ -1139,19 +1139,19 @@ export default function CreateErrandPage() {
                       }
                       // Otherwise: don't update location (partial postal codes won't modify anything)
                     }}
-                    className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-sm font-medium ${
-                      postalCode ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                    className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium ${
+                      postalCode ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
                     }`}
                   />
                 </div>
 
                 {/* Area */}
                 <div>
-                  <label className="block text-xs font-semibold text-errandify-brown mb-0.5">
+                  <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
                     Area
                   </label>
-                  <div className={`w-full px-2 py-0.5 border-b-2 text-sm font-medium ${
-                    area ? 'border-errandify-orange bg-orange-50 text-errandify-brown' : 'border-gray-300 bg-gray-50 text-gray-400'
+                  <div className={`w-full px-3 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                    area ? 'border-errandify-orange bg-orange-100 text-errandify-brown' : 'border-gray-200 bg-gray-100 text-gray-500'
                   }`}>
                     {area || 'Auto-filled'}
                   </div>
@@ -1162,16 +1162,16 @@ export default function CreateErrandPage() {
             {/* Full Address - Only shown when NOT remote */}
             {!isRemoteWork && (
               <div>
-                  <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+                  <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
                     Full address (add unit if needed)
                   </label>
                   <textarea
                     value={fullAddress}
                     onChange={(e) => setFullAddress(e.target.value)}
                     placeholder="e.g., Block 1, Unit #5-10"
-                    rows={1}
-                    className={`w-full px-2 py-0.5 border-b-2 bg-transparent focus:outline-none focus:border-errandify-orange text-xs resize-none font-medium ${
-                      fullAddress ? 'border-errandify-orange text-errandify-brown' : 'border-gray-300 text-gray-900'
+                    rows={2}
+                    className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium ${
+                      fullAddress ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
                     }`}
                   />
 
@@ -1432,11 +1432,11 @@ export default function CreateErrandPage() {
         </div>
 
         {/* Section 6: Notes - At end of form */}
-        <div className="border-t pt-1 space-y-1">
-          <h3 className="font-bold text-errandify-brown text-xs leading-tight mb-0.5">Anything else</h3>
+        <div className="border-t-2 border-gray-100 pt-4 space-y-2.5">
+          <h3 className="font-bold text-errandify-brown text-sm leading-relaxed tracking-tight">Anything else</h3>
 
           <div>
-            <label className="block text-xs font-semibold text-errandify-brown mb-0.25">
+            <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
               Notes to helper
             </label>
             <div className="relative">
@@ -1445,35 +1445,37 @@ export default function CreateErrandPage() {
                 value={formData.specialNote}
                 onChange={handleChange}
                 placeholder="access tips, requests, special needs..."
-                rows={1}
+                rows={2}
                 maxLength={300}
-                className="w-full px-2 py-0.5 border-b-2 border-gray-300 bg-transparent focus:outline-none focus:border-errandify-orange text-xs resize-none"
+                className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium ${
+                  formData.specialNote ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
+                }`}
               />
-              <span className="absolute bottom-0.5 right-0 text-xs text-gray-400">{formData.specialNote.length}/300</span>
+              <span className="absolute bottom-2 right-3 text-xs text-gray-400">{formData.specialNote.length}/300</span>
             </div>
 
             {/* AI Tip for Notes */}
             {aiSuggestions.suggestedNotes && !formData.specialNote && (
-              <div className="text-xs text-errandify-orange-700 mt-0.5">
-                Tip: {aiSuggestions.suggestedNotes}
+              <div className="text-xs text-errandify-orange-700 mt-1.5 px-2 py-1 bg-orange-50 rounded">
+                💡 Tip: {aiSuggestions.suggestedNotes}
               </div>
             )}
           </div>
         </div>
 
         {/* Quick Summary & Post Button */}
-        <div className="mt-2 space-y-1.5">
-          <div className="bg-orange-50 border-l-3 border-errandify-orange p-1.5 rounded text-xs">
-            <p className="font-semibold text-errandify-brown">Ready?</p>
-            <p className="text-gray-700 text-xs leading-tight">
-              {formData.title} • {categoryNames[formData.category] || '?'} • SGD ${formData.budget || '?'}
+        <div className="mt-4 space-y-2.5">
+          <div className="bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-errandify-orange p-3 rounded-lg">
+            <p className="font-semibold text-errandify-brown text-sm">Ready to post?</p>
+            <p className="text-gray-700 text-sm leading-relaxed">
+              <strong>{formData.title}</strong> • {categoryNames[formData.category] || '?'} • SGD ${formData.budget || '?'}
             </p>
           </div>
 
           <button
             onClick={() => setShowConfirm(true)}
             disabled={!formData.title || !formData.category || loading}
-            className="w-full bg-errandify-orange text-white py-1.5 rounded-lg font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="w-full bg-errandify-orange text-white py-2.5 rounded-xl font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base shadow-sm"
           >
             {loading ? 'Posting...' : 'Post'}
           </button>
