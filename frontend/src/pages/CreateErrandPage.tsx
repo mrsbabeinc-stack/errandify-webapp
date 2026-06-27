@@ -546,6 +546,7 @@ export default function CreateErrandPage() {
       console.log('[DEBUG] VALIDATION FAILED: No title');
       setError('Please enter an errand title. Tell me what help you need 😊');
       setLoading(false);
+      setShowConfirm(false);
       return;
     }
     if (formData.title.trim().length < 5) {
@@ -1505,7 +1506,15 @@ export default function CreateErrandPage() {
           </div>
 
           <button
-            onClick={() => setShowConfirm(true)}
+            onClick={() => {
+              console.log('[DEBUG] *** POST BUTTON IN FORM CLICKED ***');
+              console.log('[DEBUG] formData.title:', formData.title);
+              console.log('[DEBUG] formData.category:', formData.category);
+              console.log('[DEBUG] loading:', loading);
+              console.log('[DEBUG] *** SETTING showConfirm to true ***');
+              setShowConfirm(true);
+              console.log('[DEBUG] *** setShowConfirm CALLED ***');
+            }}
             disabled={!formData.title || !formData.category || loading}
             className="w-full bg-errandify-orange text-white py-2.5 rounded-xl font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base shadow-sm"
           >
@@ -1595,7 +1604,15 @@ export default function CreateErrandPage() {
                 onClick={() => {
                   console.log('[DEBUG] *** POST BUTTON CLICKED - DIRECT HANDLER ***');
                   console.log('[DEBUG] Current loading state:', loading);
+                  console.log('[DEBUG] showConfirm:', showConfirm);
+                  console.log('[DEBUG] handleSubmit function:', typeof handleSubmit);
+                  if (loading) {
+                    console.log('[DEBUG] *** ALREADY LOADING - IGNORING CLICK ***');
+                    return;
+                  }
+                  console.log('[DEBUG] *** CALLING handleSubmit ***');
                   handleSubmit();
+                  console.log('[DEBUG] *** handleSubmit RETURNED ***');
                 }}
                 disabled={loading}
                 className="flex-1 px-3 py-2 bg-errandify-orange text-white rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer pointer-events-auto transition-all shadow-sm"
