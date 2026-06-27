@@ -708,139 +708,45 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     let fullAddress = `Singapore ${postalCode}`;
 
     if (postalCode && postalCode.length === 6) {
-      // Postal code to area and full address mapping (Singapore)
-      // Format: "BlockNum StreetName Singapore PostalCode"
-      const postalToAddress: Record<string, { area: string; address: string }> = {
-        // Central (01-09)
-        '010001': { area: 'Raffles Place', address: '1 Raffles Place Singapore 010001' },
-        '020001': { area: 'Cecil Street', address: '1 Cecil Street Singapore 020001' },
-        '030001': { area: 'Tanjong Pagar', address: '1 Tanjong Pagar Road Singapore 030001' },
-        '238857': { area: 'Tanjong Pagar', address: '857 Tanjong Pagar Road Singapore 238857' },
-        '050001': { area: 'Outram', address: '1 Outram Road Singapore 050001' },
-        '060001': { area: 'Chinatown', address: '1 Pagoda Street Singapore 060001' },
-        '070001': { area: 'Chinatown', address: '1 Chinatown Street Singapore 070001' },
-        '080001': { area: 'Marina', address: '1 Marina Boulevard Singapore 080001' },
-        '090001': { area: 'Marina', address: '1 Marina Bay Singapore 090001' },
-        // Central-East (10-20)
-        '100001': { area: 'Orchard', address: '1 Orchard Road Singapore 100001' },
-        '110001': { area: 'Orchard', address: '1 Orchard Boulevard Singapore 110001' },
-        '120001': { area: 'Novena', address: '1 Novena Square Singapore 120001' },
-        '130001': { area: 'Newton', address: '1 Newton Road Singapore 130001' },
-        '140001': { area: 'Farrer Park', address: '1 Farrer Road Singapore 140001' },
-        '150101': { area: 'Henderson', address: '101 Henderson Road Singapore 150101' },
-        '160001': { area: 'Henderson', address: '1 Henderson Road Singapore 160001' },
-        '170001': { area: 'Balestier', address: '1 Balestier Road Singapore 170001' },
-        '180001': { area: 'Macpherson', address: '1 Macpherson Road Singapore 180001' },
-        '190001': { area: 'Paya Lebar', address: '1 Paya Lebar Road Singapore 190001' },
-        '200001': { area: 'Paya Lebar', address: '1 Paya Lebar Avenue Singapore 200001' },
-        // East (21-40)
-        '210001': { area: 'Geylang', address: '1 Geylang Road Singapore 210001' },
-        '220001': { area: 'Geylang', address: '1 Geylang Lorong Singapore 220001' },
-        '230001': { area: 'Geylang', address: '1 Geylang East Avenue Singapore 230001' },
-        '240001': { area: 'Eunos', address: '1 Eunos Crescent Singapore 240001' },
-        '250001': { area: 'Bedok', address: '1 Bedok Road Singapore 250001' },
-        '260001': { area: 'Bedok', address: '1 Bedok North Avenue Singapore 260001' },
-        '270001': { area: 'Bedok', address: '1 Bedok South Road Singapore 270001' },
-        '280001': { area: 'Tampines', address: '1 Tampines Avenue Singapore 280001' },
-        '290001': { area: 'Tampines', address: '1 Tampines Street Singapore 290001' },
-        '300001': { area: 'Tampines', address: '1 Tampines Central Singapore 300001' },
-        '310001': { area: 'Pasir Ris', address: '1 Pasir Ris Street Singapore 310001' },
-        '320001': { area: 'Pasir Ris', address: '1 Pasir Ris Drive Singapore 320001' },
-        '330001': { area: 'Punggol', address: '1 Punggol Drive Singapore 330001' },
-        '340001': { area: 'Sengkang', address: '1 Sengkang West Avenue Singapore 340001' },
-        '350001': { area: 'Hougang', address: '1 Hougang Avenue Singapore 350001' },
-        '360001': { area: 'Hougang', address: '1 Hougang Street Singapore 360001' },
-        '370001': { area: 'Serangoon', address: '1 Serangoon Road Singapore 370001' },
-        '380001': { area: 'Serangoon', address: '1 Serangoon Avenue Singapore 380001' },
-        '390001': { area: 'Ang Mo Kio', address: '1 Ang Mo Kio Avenue Singapore 390001' },
-        '400001': { area: 'Ang Mo Kio', address: '1 Ang Mo Kio Street Singapore 400001' },
-        // West (41-60)
-        '410001': { area: 'Jurong West', address: '1 Jurong West Street Singapore 410001' },
-        '420001': { area: 'Jurong', address: '1 Jurong Road Singapore 420001' },
-        '430001': { area: 'Jurong East', address: '1 Jurong East Street Singapore 430001' },
-        '408600': { area: 'Jurong East', address: '600 Jurong West Road Singapore 408600' },
-        '440001': { area: 'Clementi', address: '1 Clementi Road Singapore 440001' },
-        '450001': { area: 'Clementi', address: '1 Clementi Avenue Singapore 450001' },
-        '629652': { area: 'Clementi', address: '652 Clementi West Street 2 Singapore 629652' },
-        '470001': { area: 'Bukit Merah', address: '1 Bukit Merah View Singapore 470001' },
-        '480001': { area: 'Bukit Merah', address: '1 Bukit Merah Lane Singapore 480001' },
-        '490001': { area: 'Tiong Bahru', address: '1 Tiong Bahru Road Singapore 490001' },
-        '269163': { area: 'Tiong Bahru', address: '163 Tiong Bahru Road Singapore 269163' },
-        '500001': { area: 'Redhill', address: '1 Redhill Road Singapore 500001' },
-        '510001': { area: 'Queenstown', address: '1 Queenstown Drive Singapore 510001' },
-        '520001': { area: 'Commonwealth', address: '1 Commonwealth Avenue Singapore 520001' },
-        '530001': { area: 'Pasir Panjang', address: '1 Pasir Panjang Road Singapore 530001' },
-        '540001': { area: 'Pasir Panjang', address: '1 Pasir Panjang Lane Singapore 540001' },
-        '550001': { area: 'Bukit Timah', address: '1 Bukit Timah Road Singapore 550001' },
-        '560001': { area: 'Bukit Timah', address: '1 Bukit Timah Avenue Singapore 560001' },
-        '570001': { area: 'Holland', address: '1 Holland Road Singapore 570001' },
-        '580001': { area: 'Tanglin', address: '1 Tanglin Road Singapore 580001' },
-        '590001': { area: 'Clementi', address: '1 West Coast Road Singapore 590001' },
-        '600001': { area: 'Bukit Timah', address: '1 Bukit Timah Park Singapore 600001' },
-        // North-Central (61-70)
-        '610001': { area: 'Bishan', address: '1 Bishan Street Singapore 610001' },
-        '620001': { area: 'Bishan', address: '1 Bishan Avenue Singapore 620001' },
-        '630001': { area: 'Ang Mo Kio', address: '1 Ang Mo Kio Central Singapore 630001' },
-        '640001': { area: 'Ang Mo Kio', address: '1 Ang Mo Kio North Street Singapore 640001' },
-        '650001': { area: 'Serangoon', address: '1 Serangoon Central Singapore 650001' },
-        '660001': { area: 'Serangoon', address: '1 Serangoon Garden Way Singapore 660001' },
-        '670001': { area: 'Ang Mo Kio', address: '1 Ang Mo Kio South Avenue Singapore 670001' },
-        '680433': { area: 'Choa Chu Kang', address: '433 Choa Chu Kang Ave 4 Singapore 680433' },
-        '690001': { area: 'Geylang', address: '1 Geylang Bahru Singapore 690001' },
-        '700001': { area: 'Bedok', address: '1 Bedok Green Singapore 700001' },
-        // North-East (71-85)
-        '710001': { area: 'Bedok', address: '1 Bedok South Avenue Singapore 710001' },
-        '720001': { area: 'Bedok', address: '1 Bedok North Road Singapore 720001' },
-        '730001': { area: 'Bedok', address: '1 Bedok Reservoir Road Singapore 730001' },
-        '740001': { area: 'Tampines', address: '1 Tampines East Avenue Singapore 740001' },
-        '750131': { area: 'Yung Ho', address: '131 Yung Ho Road Singapore 750131' },
-        '760001': { area: 'Tampines', address: '1 Tampines North Drive Singapore 760001' },
-        '770001': { area: 'Tampines', address: '1 Tampines West Avenue Singapore 770001' },
-        '780001': { area: 'Tampines', address: '1 Tampines North Avenue Singapore 780001' },
-        '790001': { area: 'Sengkang', address: '1 Sengkang Central Singapore 790001' },
-        '554262': { area: 'Punggol', address: '262 Punggol Place Singapore 554262' },
-        '800001': { area: 'Sengkang', address: '1 Sengkang East Road Singapore 800001' },
-        '810001': { area: 'Sengkang', address: '1 Sengkang East Avenue Singapore 810001' },
-        '820001': { area: 'Sengkang', address: '1 Sengkang North Drive Singapore 820001' },
-        '507565': { area: 'Tampines', address: '565 Tampines Street 52 Singapore 507565' },
-        '535239': { area: 'Tai Keng', address: '239 Tai Keng Terrace Singapore 535239' },
-      };
+      // Use OneMap API for accurate postal code lookup
+      try {
+        const oneMapUrl = `https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=Y&getAddrDetails=Y`;
+        const omResponse = await axios.get(oneMapUrl, { timeout: 3000 });
 
-      const areaPrefix = postalCode.substring(0, 2);
-
-      // Check if exact postal code exists in mapping
-      if (postalToAddress[postalCode]) {
-        const mapped = postalToAddress[postalCode];
-        area = mapped.area;
-        fullAddress = mapped.address;
-        console.log(`[Extract] ✅ Exact match: ${postalCode} → ${area}, ${fullAddress}`);
-      } else {
-        // Fallback: use area prefix mapping
+        if (omResponse.data?.results?.[0]) {
+          const addr = omResponse.data.results[0];
+          fullAddress = addr.ADDRESS || `Singapore ${postalCode}`;
+          // Extract area name from road name (e.g., "CHOA CHU KANG AVENUE 4" → "Choa Chu Kang")
+          const roadParts = addr.ROAD_NAME?.split(' ') || [];
+          area = roadParts.slice(0, -1).join(' ').trim() || addr.BUILDING_NAME?.trim() || 'Singapore';
+          console.log(`[Extract] ✅ OneMap: ${area}, ${fullAddress}`);
+        } else {
+          throw new Error('No results');
+        }
+      } catch (err) {
+        console.warn(`[Extract] OneMap failed, using default: ${err instanceof Error ? err.message : String(err)}`);
+        const areaPrefix = postalCode.substring(0, 2);
         const areaMapping: Record<string, string> = {
           '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
           '05': 'Outram', '06': 'Chinatown', '07': 'Chinatown', '08': 'Marina', '09': 'Marina',
           '10': 'Orchard', '11': 'Orchard', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park',
-          '15': 'Serangoon', '16': 'Serangoon', '17': 'Balestier', '18': 'Jalan Besar',
-          '19': 'Geylang', '20': 'Geylang', '21': 'Paya Lebar', '22': 'Macpherson',
-          '23': 'Potong Pasir', '24': 'Woodleigh', '25': 'Tai Keng', '26': 'Tai Keng',
-          '27': 'Serangoon Gardens', '28': 'Lorong Chuan', '29': 'Kallang', '30': 'Kallang',
-          '31': 'Geylang East', '32': 'Geylang East', '33': 'Ubi', '34': 'Eunos', '35': 'East Coast',
-          '36': 'Katong', '37': 'Joo Chiat', '38': 'Siglap', '39': 'Marine Parade', '40': 'Marine Parade',
-          '41': 'Bedok', '42': 'Bedok', '43': 'Bedok', '44': 'Bedok', '45': 'Changi',
-          '46': 'Changi', '47': 'Tampines', '48': 'Tampines', '49': 'Tampines', '50': 'Tampines',
-          '51': 'Pasir Ris', '52': 'Pasir Ris', '53': 'Sengkang', '54': 'Sengkang', '55': 'Punggol',
-          '56': 'Punggol', '57': 'Hougang', '58': 'Hougang', '59': 'Bukit Merah', '60': 'Bukit Merah',
-          '61': 'Tiong Bahru', '62': 'Tiong Bahru', '63': 'Clementi', '64': 'Clementi', '65': 'West Coast',
-          '66': 'Jurong East', '67': 'Jurong East', '68': 'Jurong', '69': 'Jurong',
-          '70': 'Boon Lay', '71': 'Boon Lay', '72': 'Choa Chu Kang', '73': 'Choa Chu Kang',
-          '74': 'Bukit Batok', '75': 'Bukit Batok', '76': 'Bukit Timah', '77': 'Bukit Timah',
-          '78': 'Yung Ho', '79': 'Serangoon', '80': 'Ang Mo Kio', '81': 'Ang Mo Kio',
-          '82': 'Bishan', '83': 'Bishan', '84': 'Mattar', '85': 'Macpherson',
+          '15': 'Henderson', '16': 'Henderson', '17': 'Balestier', '18': 'Macpherson',
+          '19': 'Paya Lebar', '20': 'Paya Lebar', '21': 'Geylang', '22': 'Geylang', '23': 'Geylang',
+          '24': 'Eunos', '25': 'Bedok', '26': 'Bedok', '27': 'Bedok', '28': 'Tampines', '29': 'Tampines',
+          '30': 'Tampines', '31': 'Pasir Ris', '32': 'Pasir Ris', '33': 'Punggol', '34': 'Sengkang',
+          '35': 'Hougang', '36': 'Hougang', '37': 'Serangoon', '38': 'Serangoon', '39': 'Ang Mo Kio',
+          '40': 'Ang Mo Kio', '41': 'Jurong West', '42': 'Jurong', '43': 'Jurong East', '44': 'Clementi',
+          '45': 'Clementi', '46': 'Clementi', '47': 'Bukit Merah', '48': 'Bukit Merah', '49': 'Tiong Bahru',
+          '50': 'Redhill', '51': 'Queenstown', '52': 'Commonwealth', '53': 'Pasir Panjang', '54': 'Pasir Panjang',
+          '55': 'Bukit Timah', '56': 'Bukit Timah', '57': 'Holland', '58': 'Tanglin', '59': 'Clementi',
+          '60': 'Bukit Timah', '61': 'Bishan', '62': 'Bishan', '63': 'Ang Mo Kio', '64': 'Ang Mo Kio',
+          '65': 'Serangoon', '66': 'Serangoon', '67': 'Ang Mo Kio', '68': 'Choa Chu Kang', '69': 'Geylang',
+          '70': 'Bedok', '71': 'Bedok', '72': 'Bedok', '73': 'Bedok', '74': 'Tampines', '75': 'Yung Ho',
+          '76': 'Tampines', '77': 'Tampines', '78': 'Tampines', '79': 'Sengkang', '80': 'Sengkang',
+          '81': 'Sengkang', '82': 'Sengkang',
         };
-        const areaName = areaMapping[areaPrefix] || 'Singapore';
-        area = areaName;
-        fullAddress = `${areaName}, Singapore ${postalCode}`;
-        console.log(`[Extract] Prefix match: ${postalCode} → ${area}, ${fullAddress}`);
+        area = areaMapping[areaPrefix] || 'Singapore';
+        fullAddress = `${area}, Singapore ${postalCode}`;
       }
     } else {
       console.log('[Extract] No postal code provided');
