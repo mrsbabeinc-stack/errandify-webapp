@@ -484,11 +484,11 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
             messages: [
               {
                 role: 'system',
-                content: 'Extract ONLY the task title from the user input. Remove all metadata like dates, times, locations, postal codes, budgets, durations, etc. Return ONLY the clean task title, 5-10 words max. Be concise.',
+                content: 'You are a task title extractor. Your ONLY job is to extract the core task description from user input. Remove ALL metadata: dates, times, deadlines, locations, addresses, postal codes, budgets, prices, durations. Return ONLY the task title (3-10 words, no punctuation except periods). Examples: Input "Fix my leaky tap on Saturday at 2pm" → Output "Fix leaky tap". Input "Deliver groceries tomorrow" → Output "Deliver groceries".',
               },
               {
                 role: 'user',
-                content: `Extract title from: ${input}`,
+                content: input,
               },
             ],
           },
@@ -515,8 +515,10 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     if (cleanedTitle === title) {
       cleanedTitle = title
         .replace(/\s*\(\d{6}\)\s*/g, ' ') // Remove postal codes in parens
-        .replace(/\s+on\s+\w+.*$/i, '') // Remove "on [day]..."
-        .replace(/\s+at\s+\d{1,2}.*$/i, '') // Remove "at [time]..."
+        .replace(/\s*,?\s*deadline.*$/i, '') // Remove "deadline..." (case-insensitive)
+        .replace(/\s+on\s+\w+day.*$/i, '') // Remove "on Monday/Tuesday/etc..."
+        .replace(/\s+at\s+\d{1,2}[ap]m.*$/i, '') // Remove "at 2pm, 10am, etc..."
+        .replace(/\s*,?\s*\d{1,2}(:\d{2})?\s*[ap]m.*$/i, '') // Remove time patterns
         .replace(/\s+for\s+[\d.]+\s*(?:hours?|hrs?|h|mins?|m).*$/i, '') // Remove "for [duration]..."
         .replace(/\s*,?\s*budget.*$/i, '') // Remove "budget..."
         .replace(/\s*,?\s*\$.*$/i, '') // Remove "$..."
