@@ -836,8 +836,12 @@ export default function CreateErrandPage() {
 
         {/* Error Display */}
         {error && (
-          <div className="mb-0.5 p-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs">
-            {error}
+          <div className="mb-3 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg text-sm font-medium">
+            <p className="font-bold mb-1">⚠️ Error:</p>
+            <p>{error}</p>
+            {error.includes('Authentication') && (
+              <p className="text-xs text-red-600 mt-2">Please log in first, then try posting again.</p>
+            )}
           </div>
         )}
 

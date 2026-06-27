@@ -373,7 +373,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       try {
         // Find doers with matching category preferences OR who have completed similar tasks
         const notifyResult = await db.query(
-          `SELECT DISTINCT u.id as doer_id, u.display_name, u.fcm_token
+          `SELECT DISTINCT u.id as doer_id, u.display_name
            FROM users u
            WHERE u.role = 'doer'
            AND (
