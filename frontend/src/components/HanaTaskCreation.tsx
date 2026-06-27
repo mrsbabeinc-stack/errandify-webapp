@@ -219,6 +219,7 @@ export default function HanaTaskCreation({
         description: extracted.description || '',
         category: extracted.category || '',
         location: extracted.location || '',
+        area: extracted.area || '',
         fullAddress: extracted.fullAddress || extracted.location || '',
         date: extracted.date || '',
         time: extracted.time || '10:00',
