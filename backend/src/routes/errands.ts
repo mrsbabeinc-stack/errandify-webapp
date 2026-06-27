@@ -1203,6 +1203,45 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
       ['cancelled', userId, reason || null, id]
     );
 
+    // Cancel all bids associated with this errand
+    try {
+      // Get all bids for this errand
+      const bidsResult = await db.query(
+        'SELECT id, doer_id, status FROM bids WHERE errand_id = $1',
+        [id]
+      );
+
+      // Update all bids to cancelled status
+      await db.query(
+        'UPDATE bids SET status = $1 WHERE errand_id = $2',
+        ['cancelled', id]
+      );
+
+      // Notify all bidders that the job has been cancelled
+      const errandData = await db.query(
+        'SELECT title FROM errands WHERE id = $1',
+        [id]
+      );
+      const errandTitle = errandData.rows[0]?.title || 'A task';
+
+      for (const bid of bidsResult.rows) {
+        await db.query(
+          `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
+           VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
+          [
+            bid.doer_id,
+            'job_cancelled',
+            '❌ Job Cancelled',
+            `The job for "${errandTitle}" has been cancelled. Your offer is now closed.`,
+            id,
+          ]
+        );
+      }
+    } catch (bidErr) {
+      console.warn('[Errands] Failed to cancel bids:', bidErr);
+      // Don't fail the entire request if bid cancellation fails
+    }
+
     // Log activity: Errand cancelled
     const userResult = await db.query('SELECT display_name FROM users WHERE id = $1', [userId]);
     const userName = userResult.rows[0]?.display_name || 'Unknown User';
@@ -1217,7 +1256,7 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
     } else {
       res.json({
         success: true,
-        message: 'Errand cancelled. All bids rejected.',
+        message: 'Errand cancelled. All bids and offers cancelled.',
         previousStatus,
       });
     }
