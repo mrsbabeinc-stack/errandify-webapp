@@ -45,18 +45,27 @@ export default function TaskReviewModal({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs font-semibold text-gray-600 mb-1">📍 Location</p>
-              <p className="text-sm text-gray-700">{taskData.location}</p>
-            </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-600 mb-1">📍 Location</p>
+            <p className="text-sm text-gray-700">{taskData.location}</p>
+            {taskData.area && <p className="text-xs text-gray-500">Area: {taskData.area}</p>}
+            {taskData.fullAddress && <p className="text-xs text-gray-500">📬 {taskData.fullAddress}</p>}
+          </div>
 
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs font-semibold text-gray-600 mb-1">💰 Budget</p>
               <p className="text-sm font-semibold text-errandify-orange">
                 SGD ${taskData.budget || '0'}
               </p>
             </div>
+
+            {taskData.duration && (
+              <div>
+                <p className="text-xs font-semibold text-gray-600 mb-1">⏱️ Duration</p>
+                <p className="text-sm text-gray-700">{taskData.duration} {taskData.durationUnit || 'Hr'}</p>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
