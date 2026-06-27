@@ -66,9 +66,10 @@ class NotificationService {
         }
       );
 
-      if (response.data.success && response.data.data) {
+      if (response.data.success) {
+        const notificationData = Array.isArray(response.data.data) ? response.data.data : [];
         // Transform database notifications to UI format
-        this.notifications = (response.data.data || []).map((notif: any) => ({
+        this.notifications = notificationData.map((notif: any) => ({
           id: notif.id?.toString() || `notif_${Date.now()}`,
           userId: notif.user_id,
           type: notif.type || 'info',
@@ -85,6 +86,8 @@ class NotificationService {
       }
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
+      this.notifications = [];
+      this.notifySubscribers();
     }
   }
 
