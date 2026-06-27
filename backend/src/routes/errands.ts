@@ -214,6 +214,14 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
       [errand.asker_id]
     );
 
+    // Check if current user is the confirmed doer (can view notes)
+    const userId = req.userId ? parseInt(req.userId, 10) : null;
+    const isConfirmedDoer = userId && errand.accepted_bid_id ?
+      (await db.query(
+        'SELECT doer_id FROM bids WHERE id = $1',
+        [errand.accepted_bid_id]
+      )).rows[0]?.doer_id === userId : false;
+
     res.json({
       success: true,
       data: {
@@ -221,7 +229,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         errandId: errand.errand_id,
         title: errand.title,
         description: errand.description,
-        notes: errand.notes,
+        notes: isConfirmedDoer ? errand.notes : null, // Only show to confirmed doer
         category: errand.category,
         status: errand.status,
         budget: errand.budget,
