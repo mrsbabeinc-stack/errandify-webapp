@@ -892,21 +892,11 @@ export default function CreateErrandPage() {
                 <span className="absolute bottom-1 right-0 text-xs text-gray-400">{formData.description.length}/150</span>
               </div>
 
-              {/* AI Suggestion for Description - Compact inline */}
+              {/* AI Tip for Description - Just show the tip, no click needed */}
               {aiSuggestions.suggestedDescription && !formData.description && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      description: aiSuggestions.suggestedDescription,
-                    }));
-                  }}
-                  className="mt-2 inline-block px-3 py-1 bg-orange-100 text-errandify-orange-700 text-xs rounded-full hover:bg-orange-200 transition-colors font-medium"
-                  title="Click to use AI suggestion"
-                >
+                <div className="mt-2 px-3 py-1 bg-orange-100 text-errandify-orange-700 text-xs rounded-full font-medium">
                   💡 {aiSuggestions.suggestedDescription}
-                </button>
+                </div>
               )}
             </div>
 
