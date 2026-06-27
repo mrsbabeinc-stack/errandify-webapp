@@ -1175,7 +1175,7 @@ export default function CreateErrandPage() {
                       )}
                     </div>
                   )}
-              </>
+              </div>
             )}
 
           </div>
