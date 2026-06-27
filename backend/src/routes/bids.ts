@@ -68,6 +68,14 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         });
       }
 
+      // Prevent updating a confirmed bid (job already confirmed)
+      if (existingBid.status === 'confirmed') {
+        return res.status(403).json({
+          error: 'Cannot modify confirmed offer',
+          message: 'This offer is confirmed and the job has started. You cannot modify it anymore.'
+        });
+      }
+
       // Update existing bid (only if still pending or accepted)
       const bidId = existingBid.id;
       await db.query(
