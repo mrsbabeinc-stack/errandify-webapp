@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import HanaAnimatedAvatar from './HanaAnimatedAvatar';
+import { loadResponsiveVoice } from '../main';
 
 interface TaskData {
   title: string;
@@ -61,8 +62,13 @@ export default function HanaTaskCreation({
   const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
-    if (isOpen && !hanaMessage) {
-      initializeChat();
+    if (isOpen) {
+      // Lazy-load ResponsiveVoice only when Hana opens
+      loadResponsiveVoice().then(() => {
+        if (!hanaMessage) {
+          initializeChat();
+        }
+      });
     }
   }, [isOpen, defaultCategory]);
 
