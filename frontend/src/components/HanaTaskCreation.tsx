@@ -663,7 +663,6 @@ export default function HanaTaskCreation({
             </button>
           </div>
         )}
-        </div>
       </div>
 
       <style>{`
