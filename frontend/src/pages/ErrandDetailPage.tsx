@@ -262,18 +262,39 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(
+      const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/cancel`,
         { reason: reason || null },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      alert('✓ Errand cancelled. All bids have been rejected.');
+
+      // Show stage-specific success message
+      const stage = response.data.stage;
+      const stageMessages = {
+        open: '✓ Errand cancelled. All bidders have been notified. No doer was selected yet.',
+        confirmed: '⚠️ Errand cancelled after confirmation. The confirmed doer has been notified.',
+        in_progress: '⚠️ Errand cancelled while in progress. A dispute has been initiated and all parties notified.',
+      };
+
+      const successMsg = stageMessages[stage] || '✓ Errand cancelled. All bids and offers have been cancelled.';
+      alert(successMsg);
       navigate('/errands');
     } catch (error: any) {
       console.error('Failed to cancel errand:', error);
-      alert(error.response?.data?.error || 'Failed to cancel errand. Please try again.');
+      const errorMsg = error.response?.data?.error || 'Failed to cancel errand. Please try again.';
+      const stage = error.response?.data?.stage;
+
+      if (stage === 'in_progress') {
+        alert('⚠️ Cannot cancel job in progress.\n\nPlease contact the asker or raise a dispute if needed.');
+      } else if (stage === 'completed') {
+        alert('❌ Cannot cancel a completed job.');
+      } else if (stage === 'cancelled') {
+        alert('ℹ️ This job is already cancelled.');
+      } else {
+        alert(errorMsg);
+      }
     }
   };
 
