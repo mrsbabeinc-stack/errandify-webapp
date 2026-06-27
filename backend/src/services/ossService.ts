@@ -1,13 +1,14 @@
-import OSS from 'ali-oss';
+// import OSS from 'ali-oss';
 import { v4 as uuidv4 } from 'uuid';
 
 // Initialize OSS client
-const ossClient = new OSS({
-  region: process.env.ALIBABA_OSS_REGION || 'oss-ap-southeast-1',
-  accessKeyId: process.env.ALIBABA_ACCESS_KEY_ID,
-  accessKeySecret: process.env.ALIBABA_ACCESS_KEY_SECRET,
-  bucket: process.env.ALIBABA_OSS_BUCKET || 'errandify-jobs',
-});
+// TODO: Implement Ali OSS integration when ali-oss package is added
+// const ossClient = new OSS({
+//   region: process.env.ALIBABA_OSS_REGION || 'oss-ap-southeast-1',
+//   accessKeyId: process.env.ALIBABA_ACCESS_KEY_ID,
+//   accessKeySecret: process.env.ALIBABA_ACCESS_KEY_SECRET,
+//   bucket: process.env.ALIBABA_OSS_BUCKET || 'errandify-jobs',
+// });
 
 /**
  * Generate signed URL for direct browser upload

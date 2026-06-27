@@ -12,6 +12,7 @@ const router = Router();
 
 /**
  * GET /api/referrals/me - Get current user's referral code and stats
+ * Also aliased as GET /api/user/referrals/stats (for frontend compatibility)
  */
 router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
