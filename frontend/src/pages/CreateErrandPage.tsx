@@ -1148,7 +1148,7 @@ export default function CreateErrandPage() {
                 {/* Area */}
                 <div>
                   <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
-                    Area
+                    Area <span className="text-xs font-normal text-gray-500">(Shown to All)</span>
                   </label>
                   <div className={`w-full px-3 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
                     area ? 'border-errandify-orange bg-orange-100 text-errandify-brown' : 'border-gray-200 bg-gray-100 text-gray-500'
@@ -1163,7 +1163,7 @@ export default function CreateErrandPage() {
             {!isRemoteWork && (
               <div>
                   <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
-                    Full address (add unit if needed)
+                    Full address (add unit if needed) <span className="text-xs font-normal text-gray-500">(Shown to Confirmed Doer)</span>
                   </label>
                   <textarea
                     value={fullAddress}
