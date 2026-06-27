@@ -516,6 +516,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       cleanedTitle = title
         .replace(/\s*\(\d{6}\)\s*/g, ' ') // Remove postal codes in parens
         .replace(/\s*,?\s*deadline.*$/i, '') // Remove "deadline..." (case-insensitive)
+        .replace(/\s*,?\s*at\s+\d{6}\b.*$/i, '') // Remove "at [postal code]..." and everything after
         .replace(/\s*,?\s*(?:on\s+)?\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\b.*$/i, '') // Remove day names and anything after (with or without "on")
         .replace(/\s+at\s+\d{1,2}[ap]m.*$/i, '') // Remove "at 2pm, 10am, etc..."
         .replace(/\s*,?\s*\d{1,2}(:\d{2})?\s*[ap]m.*$/i, '') // Remove time patterns like "10am", "2:30pm"
@@ -523,6 +524,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         .replace(/\s*,?\s*budget.*$/i, '') // Remove "budget..."
         .replace(/\s*,?\s*postal.*$/i, '') // Remove "postal code..."
         .replace(/\s*,?\s*\$.*$/i, '') // Remove "$..."
+        .replace(/\s+\d{6}\s*$/i, '') // Remove trailing 6-digit postal code at end
         .trim();
     }
 
