@@ -517,6 +517,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         .replace(/\s*\(\d{6}\)\s*/g, ' ') // Remove postal codes in parens
         .replace(/\s*,?\s*deadline.*$/i, '') // Remove "deadline..." (case-insensitive)
         .replace(/\s*,?\s*at\s+\d{6}\b.*$/i, '') // Remove "at [postal code]..." and everything after
+        // Remove common Singapore area names (at [area] or just [area] if at end)
+        .replace(/\s*,?\s*at\s+\b(?:clementi|bedok|tampines|jurong|bukit|pasir ris|yishun|hougang|serangoon|punggol|ang mo kio|bishan|toa payoh|novena|newton|tiong bahru|outram|queenstown|tanjong pagar|orchard|dhoby ghaut|chinatown|marina|raffles|sentosa|changi|kranji|woodlands|sembawang)\b.*$/i, '') // Remove area names
         .replace(/\s*,?\s*(?:on\s+)?\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\b.*$/i, '') // Remove day names and anything after (with or without "on")
         .replace(/\s+at\s+\d{1,2}[ap]m.*$/i, '') // Remove "at 2pm, 10am, etc..."
         .replace(/\s*,?\s*\d{1,2}(:\d{2})?\s*[ap]m.*$/i, '') // Remove time patterns like "10am", "2:30pm"
@@ -688,8 +690,21 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     console.log('[Extract] Parsed - title:', title, 'postal:', postalCode, 'date:', date, 'time:', time, 'duration:', duration, 'budget:', budget);
 
+    // Extract area name if mentioned (e.g., "at clementi", "at orchard")
+    const singaporeAreas = ['clementi', 'bedok', 'tampines', 'jurong', 'bukit', 'pasir ris', 'yishun', 'hougang', 'serangoon', 'punggol', 'ang mo kio', 'bishan', 'toa payoh', 'novena', 'newton', 'tiong bahru', 'outram', 'queenstown', 'tanjong pagar', 'orchard', 'dhoby ghaut', 'chinatown', 'marina', 'raffles', 'sentosa', 'changi', 'kranji', 'woodlands', 'sembawang'];
+    let detectedArea = '';
+    for (const area_name of singaporeAreas) {
+      // Match "at clementi" or just "clementi" as standalone word (lowerInput already defined above)
+      if (new RegExp(`(at\\s+)?\\b${area_name}\\b`, 'i').test(input)) {
+        detectedArea = area_name.charAt(0).toUpperCase() + area_name.slice(1);
+        console.log('[Extract] Detected area from input:', detectedArea);
+        break;
+      }
+    }
+
     // Use OneMap API to get real address from postal code
-    let area = 'Singapore';
+    let area = detectedArea || 'Singapore';
+    console.log('[Extract] Area set to:', area, '(detected:', detectedArea, ')');
     let fullAddress = `Singapore ${postalCode}`;
 
     if (postalCode && postalCode.length === 6) {
@@ -734,8 +749,11 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       }
     } else {
       console.log('[Extract] No postal code provided');
-      area = 'Singapore';
-      fullAddress = 'Singapore';
+      // Keep detected area if found, otherwise default to Singapore
+      if (!detectedArea) {
+        area = 'Singapore';
+      }
+      fullAddress = detectedArea ? `${detectedArea}, Singapore` : 'Singapore';
     }
 
 
