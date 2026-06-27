@@ -121,28 +121,29 @@ export default function HanaTaskCreation({
 
   const getExampleByCategory = (category: string) => {
     const postalCode = getRandomPostalCode();
+    const time = getRandomTime();
     const duration = getRandomDuration();
     const budget = getRandomBudget();
 
     const examples: Record<string, string> = {
-      'home-maintenance': `Fix leaky kitchen tap at ${postalCode}, ${duration}, budget $${budget}`,
-      'cleaning-household': `Clean my house at ${postalCode}, ${duration}, budget $${budget}`,
-      'food-beverage': `Prepare lunch for 4 people at ${postalCode}, ${duration}, budget $${budget}`,
-      'furniture-assembly': `Assemble IKEA bookshelf at ${postalCode}, ${duration}, budget $${budget}`,
-      'shopping-errands': `Grocery shopping at ${postalCode}, ${duration}, budget $${budget}`,
-      'delivery-moving': `Move boxes from office to home at ${postalCode}, ${duration}, budget $${budget}`,
-      'travel-mobility': `Drive me to airport at ${postalCode}, budget $${budget}`,
-      'event-planning': `Decorate apartment for party at ${postalCode}, ${duration}, budget $${budget}`,
-      'childcare-education': `Tutor my son in Math at ${postalCode}, ${duration}, budget $${budget}`,
-      'eldercare-healthcare': `Help mum with groceries at ${postalCode}, ${duration}, budget $${budget}`,
-      'pet-care': `Walk my dog at ${postalCode}, ${duration}, budget $${budget}`,
-      'personal-care': `Hair cut at home (${postalCode}), ${duration}, budget $${budget}`,
-      'tech-support': `Fix WiFi router at ${postalCode}, ${duration}, budget $${budget}`,
+      'home-maintenance': `Fix leaky kitchen tap at ${postalCode}, ${time}, ${duration}, budget $${budget}`,
+      'cleaning-household': `Clean my house at ${postalCode}, ${time}, ${duration}, budget $${budget}`,
+      'food-beverage': `Prepare lunch for 4 people at ${postalCode}, ${time}, ${duration}, budget $${budget}`,
+      'furniture-assembly': `Assemble IKEA bookshelf at ${postalCode}, ${time}, ${duration}, budget $${budget}`,
+      'shopping-errands': `Grocery shopping at ${postalCode}, ${time}, ${duration}, budget $${budget}`,
+      'delivery-moving': `Move boxes from office to home at ${postalCode}, ${time}, ${duration}, budget $${budget}`,
+      'travel-mobility': `Drive me to airport at ${postalCode}, ${time}, budget $${budget}`,
+      'event-planning': `Decorate apartment for party at ${postalCode}, ${time}, ${duration}, budget $${budget}`,
+      'childcare-education': `Tutor my son in Math at ${postalCode}, ${time}, ${duration}, budget $${budget}`,
+      'eldercare-healthcare': `Help mum with groceries at ${postalCode}, ${time}, ${duration}, budget $${budget}`,
+      'pet-care': `Walk my dog at ${postalCode}, ${time}, ${duration}, budget $${budget}`,
+      'personal-care': `Hair cut at home (${postalCode}), ${time}, ${duration}, budget $${budget}`,
+      'tech-support': `Fix WiFi router at ${postalCode}, ${time}, ${duration}, budget $${budget}`,
       'creative-arts': `Design logo for my business, budget $${budget}`,
-      'admin-business': `Data entry for my business at ${postalCode}, ${duration}, budget $${budget}`,
-      'charity-community': `Pack donation boxes at ${postalCode}, ${duration}, budget $${budget}`,
+      'admin-business': `Data entry for my business at ${postalCode}, ${time}, ${duration}, budget $${budget}`,
+      'charity-community': `Pack donation boxes at ${postalCode}, ${time}, ${duration}, budget $${budget}`,
     };
-    return examples[category] || `Describe your errand: what, postal code, duration, and budget`;
+    return examples[category] || `Describe your errand: what, postal code, time, duration, and budget`;
   };
 
   const initializeChat = () => {
