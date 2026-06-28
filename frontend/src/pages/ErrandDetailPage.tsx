@@ -685,13 +685,55 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </div>
             )}
 
-            {/* Activity Timeline - Only show when job is confirmed */}
+            {/* Errand Completion Progress */}
             {errand.status !== 'open' && (
               <div className="border-t border-orange-200 pt-1.5 mt-1.5">
+                {/* Fun Progress Bar */}
+                <div className="mb-2">
+                  <div className="flex justify-between items-center mb-1">
+                    <p className="text-xs font-semibold text-gray-700">Journey Progress</p>
+                    <p className="text-xs font-bold text-errandify-orange">
+                      {errand.status === 'confirmed' && '25%'}
+                      {errand.status === 'in_progress' && '50%'}
+                      {errand.status === 'completed' && '75%'}
+                      {errand.status === 'completed_unconfirmed' && '90%'}
+                      {errand.status === 'disputed' && '⚠️ On Hold'}
+                    </p>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-green-400 via-errandify-orange to-green-500 rounded-full transition-all duration-500 ease-out"
+                      style={{
+                        width:
+                          errand.status === 'confirmed'
+                            ? '25%'
+                            : errand.status === 'in_progress'
+                            ? '50%'
+                            : errand.status === 'completed'
+                            ? '75%'
+                            : errand.status === 'completed_unconfirmed'
+                            ? '90%'
+                            : '100%',
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500 mt-1 px-1">
+                    <span>Accepted</span>
+                    <span>In Progress</span>
+                    <span>Done</span>
+                    <span>Complete</span>
+                  </div>
+                </div>
+
+                {/* Activity Timeline - Scrollable */}
                 <h2 className="font-bold text-errandify-brown mb-1.5 text-xs">
                   Activity Timeline
                 </h2>
-                {errand.id && <ErrandActivityLog ref={activityTimelineRef} errandId={errand.id} userRole={userRole} />}
+                <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                  <div className="max-h-48 overflow-y-auto">
+                    {errand.id && <ErrandActivityLog ref={activityTimelineRef} errandId={errand.id} userRole={userRole} />}
+                  </div>
+                </div>
               </div>
             )}
 
