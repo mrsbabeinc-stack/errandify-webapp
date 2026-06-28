@@ -850,9 +850,17 @@ export default function MyAccountPage() {
         {/* Profile & Logout - Same as Layout */}
         <div className="flex items-center gap-2">
           {/* Profile Photo */}
-          <div className="w-8 h-8 rounded-full bg-errandify-orange flex items-center justify-center text-white text-xs font-bold">
-            S
-          </div>
+          {profileImage ? (
+            <img
+              src={profileImage}
+              alt="Profile"
+              className="w-8 h-8 rounded-full object-cover border border-gray-300"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-errandify-orange flex items-center justify-center text-white text-xs font-bold">
+              {profileData?.name?.charAt(0).toUpperCase() || 'U'}
+            </div>
+          )}
           {/* Logout Button */}
           <button
             onClick={handleLogout}
