@@ -151,7 +151,7 @@ function getActivityDisplayText(type: string, actorName: string, details: any, f
     case 'posted':
       return `${prefix}${actorName} posted this task`;
     case 'bid_placed':
-      return `${prefix}${actorName} submitted an offer of $${details?.amount || 0}`;
+      return `${prefix}${actorName} submitted an offer`;
     case 'bid_rejected':
       return `${prefix}${actorName}'s offer was not selected`;
     case 'bid_accepted':
