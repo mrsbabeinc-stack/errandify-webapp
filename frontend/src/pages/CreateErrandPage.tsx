@@ -933,12 +933,6 @@ export default function CreateErrandPage() {
                 </div>
               )}
 
-              {formData.title && aiSuggestions.skills && aiSuggestions.skills.length > 0 && (
-                <div className="text-xs text-gray-600 mt-2 px-2 py-1.5 bg-gray-50 rounded border-l-2 border-gray-300">
-                  <div>💡 <strong>Skills needed:</strong> {aiSuggestions.skills.slice(0, 2).join(', ')}</div>
-                </div>
-              )}
-
               {formData.title && aiSuggestions.suggestedNotes && (
                 <div className="text-xs text-gray-600 mt-1.5 px-2 py-1.5 bg-gray-50 rounded border-l-2 border-gray-300">
                   <div>💡 <strong>Note for doer:</strong> {aiSuggestions.suggestedNotes}</div>
