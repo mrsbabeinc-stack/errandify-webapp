@@ -78,7 +78,9 @@ const ErrandActivityLog = forwardRef<ErrandActivityLogHandle, ErrandActivityLogP
   }
 
   if (error) {
-    return <div className="text-xs text-amber-600 italic">Activity log temporarily unavailable</div>;
+    // 403 means user is not authorized to view this errand's activities
+    // This is expected for unselected doers after confirmation
+    return <div className="text-xs text-gray-600 italic">Activity details not available for this errand</div>;
   }
 
   if (activities.length === 0) {
