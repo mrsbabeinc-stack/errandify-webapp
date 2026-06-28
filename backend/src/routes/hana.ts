@@ -76,16 +76,16 @@ router.post('/chat/hana/sos', authMiddleware, async (req: any, res: any) => {
     const { conversationId } = req.body;
 
     // For SOS, give immediate supportive response
-    const sosResponse = `🆘 I'm here to help!
+    const sosResponse = `I'm here to help!
 
 I understand you need emergency assistance. Here's what you can do:
 
-**Immediate Steps:**
-1. **Call local emergency**: Dial 999 for police/ambulance (Singapore)
-2. **Contact Errandify Support**: We'll connect you with nearby doers
-3. **Ask for what you need**: Tell me specifically what help is needed
+Immediate Steps:
+1. Call local emergency: Dial 999 for police/ambulance (Singapore)
+2. Contact Errandify Support: We'll connect you with nearby doers
+3. Ask for what you need: Tell me specifically what help is needed
 
-**Common Emergency Support:**
+Common Emergency Support:
 - Medical assistance (injuries, health emergencies)
 - Safety concerns (lost, stranded, dangerous situation)
 - Financial emergency (need urgent funds)
@@ -93,7 +93,7 @@ I understand you need emergency assistance. Here's what you can do:
 
 We'll mobilize our community doers immediately. What specific help do you need right now?
 
-📞 If this is a life-threatening emergency, please call 999 first.`;
+If this is a life-threatening emergency, please call 999 first.`;
 
     res.json({
       success: true,
@@ -204,7 +204,7 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
         } else if (messageZh.includes('如何') || messageZh.includes('怎么')) {
           reply = '我可以帮助你。你是在询问如何发布帮帮、如何竞标工作、支付相关的问题，还是其他方面的帮助呢？';
         } else {
-          reply = '谢谢你的联系。我是帮帮乐的助手 Hana。今天有什么我可以为你效劳的吗？';
+          reply = '你好！很高兴为你服务～ 我是帮帮乐的Hana，随时准备帮你处理各种生活小任务。';
         }
       } else {
         // English fallback responses - standard English unless user uses Singlish
@@ -239,10 +239,13 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
       }
     }
 
+    // Remove emoticons and emojis from response
+    const cleanReply = reply.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim();
+
     res.json({
       success: true,
       data: {
-        reply,
+        reply: cleanReply,
       },
     });
   } catch (error: any) {
@@ -260,10 +263,19 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
 // Using Alibaba Qwen TTS for superior Chinese voice support (motherly, warm, passionate)
 router.post('/chat/hana/speak', async (req: any, res: any) => {
   try {
-    const { text, language = 'en' } = req.body;
+    let { text, language = 'en' } = req.body;
 
     if (!text) {
       return res.status(400).json({ error: 'Text required' });
+    }
+
+    // For Chinese languages, remove English brand name and references to avoid TTS pronunciation issues
+    // Chinese voice cannot read mixed English-Chinese text well
+    if (language === 'zh' || language === 'yue') {
+      // Remove parenthetical English names like "(Errandify)" or "Errandify (帮帮乐)"
+      text = text.replace(/\s*\(Errandify[^)]*\)/gi, '');
+      text = text.replace(/Errandify[—–-]*(known as )?帮帮乐[^。，]*[。，]/gi, '帮帮乐');
+      text = text.replace(/Errandify/gi, '');
     }
 
     console.log('[Hana TTS] Converting text to speech:', { language, textLength: text.length });
