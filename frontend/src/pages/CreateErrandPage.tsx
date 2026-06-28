@@ -927,9 +927,9 @@ export default function CreateErrandPage() {
                 />
                 <span className="absolute bottom-2 right-3 text-xs text-gray-400">{formData.description.length}/150</span>
               </div>
-              {formData.title && (
-                <div className="text-xs text-gray-600 mt-1.5 px-2 py-1.5 bg-gray-50 rounded border-l-2 border-gray-300">
-                  💡 <strong>About "{formData.title.substring(0, 30)}{formData.title.length > 30 ? '...' : ''}":</strong> {aiSuggestions.suggestedDescription || 'Add specific details, requirements, or instructions'}
+              {formData.title && aiSuggestions.suggestedDescription && (
+                <div className="text-xs text-errandify-orange-700 mt-1.5 px-2 py-1 bg-orange-50 rounded">
+                  💡 Tip: {aiSuggestions.suggestedDescription}
                 </div>
               )}
 
