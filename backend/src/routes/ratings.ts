@@ -22,7 +22,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // Verify task exists and is completed
     const taskResult = await db.query(
-      'SELECT id, asker_id, accepted_bid_id, status FROM errands WHERE id = $1',
+      'SELECT id, asker_id, status FROM errands WHERE id = $1',
       [taskId]
     );
 
@@ -39,21 +39,13 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // If ratedUserId not provided, try to find it from bids
     if (!ratedUserId) {
-      let bidResult;
-      if (task.accepted_bid_id) {
-        bidResult = await db.query(
-          'SELECT doer_id FROM bids WHERE id = $1',
-          [task.accepted_bid_id]
-        );
-      } else {
-        // Fallback: find any confirmed bid
-        bidResult = await db.query(
-          `SELECT doer_id FROM bids
-           WHERE errand_id = $1 AND status IN ('confirmed', 'confirmed_awaiting_start', 'in_progress')
-           ORDER BY created_at DESC LIMIT 1`,
-          [taskId]
-        );
-      }
+      // Find any confirmed bid for this errand
+      const bidResult = await db.query(
+        `SELECT doer_id FROM bids
+         WHERE errand_id = $1 AND status IN ('confirmed', 'confirmed_awaiting_start', 'in_progress')
+         ORDER BY created_at DESC LIMIT 1`,
+        [taskId]
+      );
 
       if (bidResult.rows[0]) {
         ratedUserId = bidResult.rows[0].doer_id;
@@ -87,12 +79,14 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     }
 
     // Insert rating
+    console.log('[Rating] Inserting rating:', { taskId, raterId, ratedUserId, rating });
     const ratingResult = await db.query(
       `INSERT INTO ratings (task_id, rater_id, rated_user_id, rating, comment, created_at)
        VALUES ($1, $2, $3, $4, $5, NOW())
        RETURNING id, created_at`,
       [taskId, raterId, ratedUserId, rating, comment || null]
     );
+    console.log('[Rating] Rating inserted successfully:', ratingResult.rows[0]);
 
     // Get rater info for notification
     const raterResult = await db.query(
@@ -157,7 +151,11 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Rating submission error:', error);
-    res.status(500).json({ error: 'Failed to submit rating' });
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    res.status(500).json({ error: 'Failed to submit rating', details: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
