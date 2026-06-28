@@ -68,6 +68,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [completionPhotos, setCompletionPhotos] = useState<any[]>([]);
   const [completionNotes, setCompletionNotes] = useState('');
   const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(null);
+  const [rating, setRating] = useState(5);
+  const [ratingComment, setRatingComment] = useState('');
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -847,6 +850,61 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                             <p className="text-xs text-gray-700 bg-white p-2 rounded border border-blue-200">{completionNotes}</p>
                           </div>
                         )}
+
+                        {/* Quick Rating Form */}
+                        <div className="mt-3 pt-2 border-t border-blue-200">
+                          <p className="font-semibold text-xs text-gray-700 mb-2">Rate this work now 😊</p>
+                          <div className="flex gap-1 mb-2 justify-center">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                onClick={() => setRating(star)}
+                                className={`text-2xl transition-all ${
+                                  star <= rating ? 'text-yellow-400 drop-shadow' : 'text-gray-300'
+                                }`}
+                              >
+                                ★
+                              </button>
+                            ))}
+                          </div>
+                          <textarea
+                            value={ratingComment}
+                            onChange={(e) => setRatingComment(e.target.value)}
+                            placeholder="Optional feedback (max 200 chars)"
+                            maxLength={200}
+                            rows={2}
+                            className="w-full text-xs px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                          />
+                          <button
+                            onClick={async () => {
+                              if (!currentUser || !errand) return;
+                              setRatingSubmitting(true);
+                              try {
+                                const token = localStorage.getItem('token');
+                                await axios.post(
+                                  `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings`,
+                                  {
+                                    taskId: errand.id,
+                                    ratedUserId: errand.doerId,
+                                    rating,
+                                    comment: ratingComment || null,
+                                  },
+                                  { headers: { Authorization: `Bearer ${token}` } }
+                                );
+                                setRatingComment('');
+                                alert('Thanks for rating! Your feedback helps the community.');
+                              } catch (err: any) {
+                                alert('Error submitting rating: ' + (err.response?.data?.error || err.message));
+                              } finally {
+                                setRatingSubmitting(false);
+                              }
+                            }}
+                            disabled={ratingSubmitting}
+                            className="w-full mt-2 px-2 py-1 text-xs bg-gradient-to-r from-green-500 to-green-600 text-white rounded font-semibold hover:shadow disabled:opacity-50 transition"
+                          >
+                            {ratingSubmitting ? '✨ Sending...' : '⭐ Submit Rating'}
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
