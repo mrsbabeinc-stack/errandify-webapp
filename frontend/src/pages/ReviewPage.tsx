@@ -5,8 +5,10 @@ import axios from 'axios';
 interface Job {
   id: number;
   title: string;
+  formatted_id?: string;
   doerId: number;
   doerName: string;
+  doerAlias?: string;
   status: string;
   budget: number;
 }
@@ -80,17 +82,17 @@ export default function ReviewPage() {
         <button
           onClick={() => navigate(-1)}
           className="text-lg text-gray-600 font-bold mb-4">‹</button>
-        {/* Success Message */}
+        {/* Info Message */}
         {!submitting && !loading && !error && (
-          <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded">
-            <p className="text-green-700 font-semibold">✅ Thank you for completing this errand!</p>
-            <p className="text-green-600 text-sm">Your rating helps build trust in the community.</p>
+          <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+            <p className="text-blue-700 font-semibold">📋 Review the completed work</p>
+            <p className="text-blue-600 text-sm">Your rating helps doers improve and builds community trust.</p>
           </div>
         )}
 
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">⭐ Rate Your Experience</h1>
-          <p className="text-gray-600">Your feedback helps {job.doerName} improve and helps others make informed decisions</p>
+          <p className="text-gray-600">Your feedback helps {job.doerAlias || job.doerName} improve and helps others make informed decisions</p>
         </div>
 
         {/* Task Summary */}
@@ -98,9 +100,12 @@ export default function ReviewPage() {
           <div className="flex items-start gap-4">
             <div className="text-3xl">📋</div>
             <div className="flex-1">
+              {job.formatted_id && (
+                <p className="text-xs text-errandify-orange font-semibold mb-1">{job.formatted_id}</p>
+              )}
               <h3 className="font-bold text-gray-800 text-lg mb-1">{job.title}</h3>
               <p className="text-sm text-gray-600 mb-2">
-                <strong>Completed with:</strong> {job.doerName}
+                <strong>Completed with:</strong> {job.doerAlias || job.doerName}
               </p>
               <p className="text-sm font-semibold text-errandify-orange">Budget: SGD ${job.budget}</p>
             </div>
