@@ -293,71 +293,22 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
 
     console.log('[Hana TTS] Converting text to speech:', { language, textLength: text.length });
 
-    // Map language to Alibaba Qwen TTS voice
-    // All FEMALE voices with motherly, warm, passionate tone
-    const voiceMap: Record<string, { voice: string; lang: string }> = {
-      en: {
-        voice: 'Joanna', // Natural US female - warm, conversational
-        lang: 'en-SG',
-      },
-      zh: {
-        voice: 'Siqi', // Mandarin Chinese - natural, warm female voice (帮帮乐助手 tone)
-        lang: 'zh-CN',
-      },
-      yue: {
-        voice: 'Hui', // Cantonese - warm, natural female voice
-        lang: 'zh-HK',
-      },
+    // Map language to language codes
+    const voiceMap: Record<string, { lang: string }> = {
+      en: { lang: 'en-SG' },
+      zh: { lang: 'zh-CN' },
+      yue: { lang: 'zh-HK' },
     };
 
     const voiceConfig = voiceMap[language] || voiceMap['en'];
 
-    console.log('[Hana TTS] Using voice:', voiceConfig.voice);
+    console.log('[Hana TTS] Using language:', voiceConfig.lang);
 
-    // Try to use Alibaba Qwen TTS
-    try {
-      const qwenTtsResponse = await axios.post(
-        'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text2speech/synthesis',
-        {
-          model: 'cosyvoice-v1',
-          input: {
-            text: text,
-          },
-          parameters: {
-            voice: voiceConfig.voice,
-            rate: language === 'en' ? 1.0 : 0.95, // Natural speaking pace, slightly slower for Chinese warmth
-            pitch: 1.0, // Natural pitch - no robotic effect
-            volume: 50, // Standard volume
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${config.qwen.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          responseType: 'arraybuffer',
-        }
-      );
+    // Use Google TTS for natural female voices
+    // Google TTS provides natural, warm female voices in all languages
+    console.log('[Hana TTS] Using Google TTS for warm female voice');
+    fallbackToGTTS(text, voiceConfig.lang, res, cacheKey);
 
-      const audioBase64 = Buffer.from(qwenTtsResponse.data).toString('base64');
-      console.log('[Hana TTS] Alibaba Qwen TTS generated successfully');
-
-      // Cache the result
-      audioCache.set(cacheKey, { audio: `data:audio/wav;base64,${audioBase64}`, timestamp: Date.now() });
-
-      res.json({
-        success: true,
-        data: {
-          audio: `data:audio/wav;base64,${audioBase64}`,
-          format: 'base64',
-        },
-      });
-    } catch (qwenError: any) {
-      console.log('[Hana TTS] Alibaba Qwen TTS failed, falling back to Google TTS');
-      console.log('Qwen error:', qwenError.response?.data || qwenError.message);
-      // Fallback to gTTS
-      fallbackToGTTS(text, voiceConfig.lang, res, cacheKey);
-    }
   } catch (error: any) {
     console.error('TTS error:', error.message);
     res.status(500).json({
