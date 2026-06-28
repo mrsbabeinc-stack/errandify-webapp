@@ -6,15 +6,18 @@ import { activityLogService } from '../services/activityLogService.js';
 
 const router = Router();
 
-// POST /api/bids - Submit a bid
+// POST /api/bids - Submit a bid (single errand or multiple sessions for recurring tasks)
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { task_id, amount, note } = req.body;
+    const { task_id, amount, note, sessions } = req.body;
     const doerId = parseInt(req.userId || '0', 10);
 
     if (!task_id || !amount) {
       return res.status(400).json({ error: 'task_id and amount required' });
     }
+
+    // sessions is optional array of instance numbers for recurring tasks
+    const selectedSessions = Array.isArray(sessions) ? sessions.map(s => parseInt(s, 10)) : [];
 
     // Validate minimum bid amount
     const bidAmount = parseFloat(amount);
@@ -147,6 +150,31 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // If this is a recurring task bid with selected sessions, map bid to sessions
+    if (selectedSessions.length > 0) {
+      try {
+        // Get session IDs for selected instance numbers
+        const sessionResult = await db.query(
+          `SELECT id, instance_number FROM recurring_sessions
+           WHERE parent_errand_id = $1 AND instance_number = ANY($2::int[])`,
+          [task_id, selectedSessions]
+        );
+
+        // Insert bid-session mappings
+        for (const session of sessionResult.rows) {
+          await db.query(
+            'INSERT INTO bid_sessions (bid_id, session_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+            [bid.id, session.id]
+          );
+        }
+
+        console.log(`[Bids] Mapped bid ${bid.id} to ${sessionResult.rows.length} sessions for errand ${task_id}`);
+      } catch (sessionErr) {
+        console.error('[Bids] Failed to map bid to sessions:', sessionErr);
+        // Don't fail the bid creation if session mapping fails
+      }
+    }
+
     // Log activity: Bid placed
     await activityLogService.logBidPlaced(task_id, doerName, doerId, parseFloat(amount));
 
@@ -160,6 +188,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         amount: bid.amount,
         note: bid.note,
         status: bid.status,
+        selectedSessions: selectedSessions.length > 0 ? selectedSessions : undefined,
         createdAt: bid.created_at,
       },
     });
@@ -634,6 +663,199 @@ router.put('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respons
   } catch (error) {
     console.error('Bid confirm error:', error);
     res.status(500).json({ error: 'Failed to confirm bid' });
+  }
+});
+
+// PUT /api/bids/:id/accept-sessions - Asker accepts doer for specific sessions
+router.put('/:id/accept-sessions', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const bidId = parseInt(req.params.id, 10);
+    const { sessions } = req.body;
+    const askerId = parseInt(req.userId || '0', 10);
+
+    if (!Array.isArray(sessions) || sessions.length === 0) {
+      return res.status(400).json({ error: 'At least one session must be selected' });
+    }
+
+    const selectedSessions = sessions.map(s => parseInt(s, 10));
+
+    // Get the bid
+    const bidResult = await db.query(
+      `SELECT b.id, b.errand_id, b.doer_id, e.asker_id
+       FROM bids b
+       JOIN errands e ON b.errand_id = e.id
+       WHERE b.id = $1`,
+      [bidId]
+    );
+
+    if (bidResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Bid not found' });
+    }
+
+    const bid = bidResult.rows[0];
+
+    // Verify asker is accepting their own errand
+    if (bid.asker_id !== askerId) {
+      return res.status(403).json({ error: 'Only asker can accept bids' });
+    }
+
+    // Get all sessions for this recurring errand
+    const sessionsResult = await db.query(
+      `SELECT id, instance_number, errand_id FROM recurring_sessions
+       WHERE parent_errand_id = $1 AND instance_number = ANY($2::int[])`,
+      [bid.errand_id, selectedSessions]
+    );
+
+    const sessionsToConfirm = sessionsResult.rows;
+
+    // For each selected session, update its status to confirmed
+    for (const session of sessionsToConfirm) {
+      await db.query(
+        'UPDATE errands SET status = $1 WHERE id = $2',
+        ['confirmed', session.errand_id]
+      );
+
+      // Create bid record for this specific session instance
+      // (This links the doer to this specific session)
+      const bidForSessionResult = await db.query(
+        `SELECT id FROM bids WHERE errand_id = $1 AND doer_id = $2 LIMIT 1`,
+        [session.errand_id, bid.doer_id]
+      );
+
+      if (bidForSessionResult.rows.length === 0) {
+        // Create a new bid for this session if one doesn't exist
+        await db.query(
+          'INSERT INTO bids (errand_id, doer_id, amount, status) VALUES ($1, $2, $3, $4)',
+          [session.errand_id, bid.doer_id, bid.amount, 'confirmed']
+        );
+      } else {
+        // Update existing bid to confirmed
+        await db.query(
+          'UPDATE bids SET status = $1 WHERE id = $2',
+          ['confirmed', bidForSessionResult.rows[0].id]
+        );
+      }
+    }
+
+    // Log which sessions were accepted
+    console.log(`[Bids] Asker ${askerId} accepted bid ${bidId} for sessions: ${selectedSessions.join(', ')}`);
+
+    res.json({
+      success: true,
+      data: {
+        bidId,
+        doerId: bid.doer_id,
+        acceptedSessions: selectedSessions,
+        message: `Accepted doer for ${selectedSessions.length} session(s)`
+      }
+    });
+  } catch (error) {
+    console.error('Error accepting bid sessions:', error);
+    res.status(500).json({ error: 'Failed to accept bid' });
+  }
+});
+
+// GET /api/bids/recurring/:errandId - Get all bids for a recurring errand grouped by sessions
+router.get('/recurring/:errandId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const errandId = parseInt(req.params.errandId, 10);
+    const currentUserId = parseInt(req.userId || '0', 10);
+
+    // Verify this is a recurring errand and user is the asker
+    const errandResult = await db.query(
+      'SELECT id, asker_id, is_recurring FROM errands WHERE id = $1',
+      [errandId]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    if (!errand.is_recurring) {
+      return res.status(400).json({ error: 'Not a recurring errand' });
+    }
+
+    if (errand.asker_id !== currentUserId) {
+      return res.status(403).json({ error: 'Only asker can view bids' });
+    }
+
+    // Get all sessions for this recurring errand
+    const sessionsResult = await db.query(
+      `SELECT rs.id, rs.instance_number, rs.errand_id, rs.scheduled_date,
+              e.title, e.status, e.budget
+       FROM recurring_sessions rs
+       JOIN errands e ON rs.errand_id = e.id
+       WHERE rs.parent_errand_id = $1
+       ORDER BY rs.instance_number ASC`,
+      [errandId]
+    );
+
+    const sessions = sessionsResult.rows;
+
+    // Get all bids for all sessions
+    const bidsResult = await db.query(
+      `SELECT DISTINCT b.id, b.doer_id, b.amount, b.note, b.status, b.created_at,
+              u.display_name, u.average_rating, u.total_ratings
+       FROM bids b
+       JOIN users u ON b.doer_id = u.id
+       WHERE b.errand_id IN (
+         SELECT errand_id FROM recurring_sessions WHERE parent_errand_id = $1
+       )
+       ORDER BY b.created_at DESC`,
+      [errandId]
+    );
+
+    const bids = bidsResult.rows;
+
+    // Map bids to their sessions
+    const bidSessionsResult = await db.query(
+      `SELECT bs.bid_id, rs.instance_number
+       FROM bid_sessions bs
+       JOIN recurring_sessions rs ON bs.session_id = rs.id
+       WHERE rs.parent_errand_id = $1`,
+      [errandId]
+    );
+
+    const bidSessionMap: Record<number, number[]> = {};
+    for (const row of bidSessionsResult.rows) {
+      if (!bidSessionMap[row.bid_id]) {
+        bidSessionMap[row.bid_id] = [];
+      }
+      bidSessionMap[row.bid_id].push(row.instance_number);
+    }
+
+    // Build response with sessions and grouped bids
+    res.json({
+      success: true,
+      data: {
+        errandId,
+        sessions: sessions.map(s => ({
+          instanceNumber: s.instance_number,
+          errandId: s.errand_id,
+          scheduledDate: s.scheduled_date,
+          title: s.title,
+          status: s.status,
+          budget: s.budget,
+        })),
+        bids: bids.map(b => ({
+          bidId: b.id,
+          doerId: b.doer_id,
+          doerName: b.display_name,
+          doerRating: b.average_rating || 'New',
+          doerRatings: b.total_ratings || 0,
+          amount: b.amount,
+          note: b.note,
+          status: b.status,
+          selectedSessions: bidSessionMap[b.id] || [],
+          createdAt: b.created_at,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching recurring bids:', error);
+    res.status(500).json({ error: 'Failed to fetch bids' });
   }
 });
 
