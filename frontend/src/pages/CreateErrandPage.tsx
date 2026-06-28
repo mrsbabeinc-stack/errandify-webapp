@@ -933,58 +933,68 @@ export default function CreateErrandPage() {
                 </div>
               )}
 
-              {formData.category && (
-                <div className="text-xs text-gray-600 mt-2 px-2 py-1.5 bg-gray-50 rounded border-l-2 border-gray-300">
-                  {formData.category === 'childcare-education' && (
-                    <span>💡 <strong>Example:</strong> "Help my son with Math homework on Saturday 10am, 2 hours"</span>
-                  )}
-                  {formData.category === 'eldercare-healthcare' && (
-                    <span>💡 <strong>Example:</strong> "Accompany elderly mom to doctor on Friday 2pm, 3 hours"</span>
-                  )}
-                  {formData.category === 'pet-care' && (
-                    <span>💡 <strong>Example:</strong> "Dog walking on weekdays 6pm, 1 hour each"</span>
-                  )}
-                  {formData.category === 'creative-arts' && (
-                    <span>💡 <strong>Example:</strong> "Design logo by next Friday, 2-3 hours"</span>
-                  )}
-                  {formData.category === 'tech-support' && (
-                    <span>💡 <strong>Example:</strong> "Fix my laptop printer on Sunday 3pm, 1-2 hours"</span>
-                  )}
-                  {formData.category === 'home-maintenance' && (
-                    <span>💡 <strong>Example:</strong> "Fix leaky tap on Saturday morning, 1 hour"</span>
-                  )}
-                  {formData.category === 'cleaning-household' && (
-                    <span>💡 <strong>Example:</strong> "Deep clean apartment on next Sunday, 3-4 hours"</span>
-                  )}
-                  {formData.category === 'furniture-assembly' && (
-                    <span>💡 <strong>Example:</strong> "Assemble IKEA bed by Friday evening, 2 hours"</span>
-                  )}
-                  {formData.category === 'event-planning' && (
-                    <span>💡 <strong>Example:</strong> "Plan birthday party for 20 people on April 15"</span>
-                  )}
-                  {formData.category === 'delivery-moving' && (
-                    <span>💡 <strong>Example:</strong> "Move 2 boxes to new flat on Saturday 9am, 2 hours"</span>
-                  )}
-                  {formData.category === 'shopping-errands' && (
-                    <span>💡 <strong>Example:</strong> "Grocery shopping at 408600, 2pm, 30 mins, budget $150" (date defaults to today if omitted)</span>
-                  )}
-                  {formData.category === 'personal-care' && (
-                    <span>💡 <strong>Example:</strong> "Haircut on Saturday 11am, 1.5 hours"</span>
-                  )}
-                  {formData.category === 'travel-mobility' && (
-                    <span>💡 <strong>Example:</strong> "Drive to airport tomorrow 6am, 30 mins"</span>
-                  )}
-                  {formData.category === 'admin-business' && (
-                    <span>💡 <strong>Example:</strong> "Data entry by next Wednesday, 4 hours"</span>
-                  )}
-                  {formData.category === 'food-beverage' && (
-                    <span>💡 <strong>Example:</strong> "Catering for 10 people on Saturday 6pm"</span>
-                  )}
-                  {formData.category === 'charity-community' && (
-                    <span>💡 <strong>Example:</strong> "Volunteer at food bank next Sunday 10am, 2 hours"</span>
-                  )}
-                </div>
-              )}
+              {formData.category && (() => {
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const nextWeek = new Date(today);
+                nextWeek.setDate(nextWeek.getDate() + 7);
+                const tomorrowDate = tomorrow.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const nextWeekDate = nextWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+                return (
+                  <div className="text-xs text-gray-600 mt-2 px-2 py-1.5 bg-gray-50 rounded border-l-2 border-gray-300">
+                    {formData.category === 'childcare-education' && (
+                      <span>💡 <strong>Example:</strong> "Help my son with Math homework on {tomorrowDate} 10am, 2 hours"</span>
+                    )}
+                    {formData.category === 'eldercare-healthcare' && (
+                      <span>💡 <strong>Example:</strong> "Accompany elderly mom to doctor on {tomorrowDate} 2pm, 3 hours"</span>
+                    )}
+                    {formData.category === 'pet-care' && (
+                      <span>💡 <strong>Example:</strong> "Dog walking on {tomorrowDate} 6pm, 1 hour"</span>
+                    )}
+                    {formData.category === 'creative-arts' && (
+                      <span>💡 <strong>Example:</strong> "Design logo by {nextWeekDate}, 2-3 hours"</span>
+                    )}
+                    {formData.category === 'tech-support' && (
+                      <span>💡 <strong>Example:</strong> "Fix my laptop printer on {tomorrowDate} 3pm, 1-2 hours"</span>
+                    )}
+                    {formData.category === 'home-maintenance' && (
+                      <span>💡 <strong>Example:</strong> "Fix leaky tap on {tomorrowDate} 9am, 1 hour"</span>
+                    )}
+                    {formData.category === 'cleaning-household' && (
+                      <span>💡 <strong>Example:</strong> "Deep clean apartment on {nextWeekDate}, 3-4 hours"</span>
+                    )}
+                    {formData.category === 'furniture-assembly' && (
+                      <span>💡 <strong>Example:</strong> "Assemble IKEA bed by {nextWeekDate}, 2 hours"</span>
+                    )}
+                    {formData.category === 'event-planning' && (
+                      <span>💡 <strong>Example:</strong> "Plan birthday party for 20 people on {nextWeekDate}"</span>
+                    )}
+                    {formData.category === 'delivery-moving' && (
+                      <span>💡 <strong>Example:</strong> "Move 2 boxes to new flat on {tomorrowDate} 9am, 2 hours"</span>
+                    )}
+                    {formData.category === 'shopping-errands' && (
+                      <span>💡 <strong>Example:</strong> "Grocery shopping at 408600, {tomorrowDate} 2pm, 30 mins, budget $150"</span>
+                    )}
+                    {formData.category === 'personal-care' && (
+                      <span>💡 <strong>Example:</strong> "Haircut on {nextWeekDate} 11am, 1.5 hours"</span>
+                    )}
+                    {formData.category === 'travel-mobility' && (
+                      <span>💡 <strong>Example:</strong> "Drive to airport on {tomorrowDate} 6am, 30 mins"</span>
+                    )}
+                    {formData.category === 'admin-business' && (
+                      <span>💡 <strong>Example:</strong> "Data entry by {nextWeekDate}, 4 hours"</span>
+                    )}
+                    {formData.category === 'food-beverage' && (
+                      <span>💡 <strong>Example:</strong> "Catering for 10 people on {nextWeekDate} 6pm"</span>
+                    )}
+                    {formData.category === 'charity-community' && (
+                      <span>💡 <strong>Example:</strong> "Volunteer at food bank on {nextWeekDate} 10am, 2 hours"</span>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Category - Auto-detected */}
