@@ -337,6 +337,31 @@ export default function HanaManualMode({
           />
         </div>
 
+        {/* Validation Messages */}
+        {(
+          !taskData.title?.trim() ||
+          !taskData.description?.trim() ||
+          !taskData.category?.trim() ||
+          !taskData.location?.trim() ||
+          !taskData.date?.trim() ||
+          !taskData.time?.trim() ||
+          !taskData.budget ||
+          parseFloat(taskData.budget) <= 0
+        ) && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700">
+            <p className="font-bold mb-1.5">Missing required fields:</p>
+            <ul className="space-y-0.5 list-disc list-inside">
+              {!taskData.title?.trim() && <li>Task title</li>}
+              {!taskData.description?.trim() && <li>Description</li>}
+              {!taskData.category?.trim() && <li>Category</li>}
+              {!taskData.location?.trim() && <li>Location</li>}
+              {!taskData.date?.trim() && <li>Date</li>}
+              {!taskData.time?.trim() && <li>Time</li>}
+              {(!taskData.budget || parseFloat(taskData.budget) <= 0) && <li>Valid budget amount</li>}
+            </ul>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex gap-3 pt-4">
           <button
