@@ -242,6 +242,20 @@ export default function CreateErrandPage() {
     'Animal First Aid',
   ];
 
+  // Extract area name from full address string
+  const extractAreaFromAddress = (address: string): string => {
+    if (!address) return '';
+    // Remove postal code and SINGAPORE
+    const parts = address.replace(/\d{6}/, '').replace(/SINGAPORE/i, '').trim().split(' ');
+    // Get the most meaningful part (usually after street number)
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (parts[i] && parts[i].length > 2 && !/^(ROAD|STREET|AVENUE|LANE|DRIVE|BOULEVARD|ST|RD|AVE)$/i.test(parts[i])) {
+        return parts[i];
+      }
+    }
+    return parts.filter(p => p && p.length > 2)[0] || '';
+  };
+
   // Singapore postal code to area and building/location name mapping (first 2 digits)
   const postalCodeAreas: Record<string, { area: string; building: string }> = {
     '01': { area: 'Raffles Place', building: 'Raffles Place' },
@@ -1177,22 +1191,33 @@ export default function CreateErrandPage() {
                       const code = e.target.value.trim();
                       setPostalCode(code);
 
-                      // Only update location if postal code is exactly 6 digits
+                      // Only look up postal code if exactly 6 digits
                       if (code.length === 6 && /^\d+$/.test(code)) {
-                        const areaPrefix = code.substring(0, 2);
-                        const areaData = postalCodeAreas[areaPrefix];
+                        // Call OneMap API to get accurate area/address for this postal code
+                        fetch(`https://www.onemap.sg/api/common/searchaddress?searchval=${code}&returnGeom=Y&getAddrDetails=Y`)
+                          .then(res => res.json())
+                          .then(data => {
+                            if (data.results && data.results.length > 0) {
+                              const result = data.results[0];
+                              // Extract area from BUILDING_NAME or ADDRESS
+                              const address = result.ADDRESS || '';
+                              const buildingName = result.BUILDING_NAME || '';
 
-                        if (areaData) {
-                          // Only update if we have valid area data for this prefix
-                          setFormData((prev) => ({
-                            ...prev,
-                            location: areaData.area,
-                          }));
-                          setArea(areaData.area);
-                          setFullAddress(`1 ${areaData.building}, Unit: __, Singapore ${code}`);
-                        }
-                        // Note: If areaData is not found (e.g., postal codes from OneMap/Hana),
-                        // we DON'T override - the location/fullAddress were already set from prefilled data
+                              // Try to extract area from address (e.g., "8 GUL AVENUE SINGAPORE 629652" -> extract area intelligently)
+                              const extractedArea = extractAreaFromAddress(address || buildingName);
+
+                              setFormData((prev) => ({
+                                ...prev,
+                                location: extractedArea,
+                              }));
+                              setArea(extractedArea);
+                              setFullAddress(address);
+                            }
+                          })
+                          .catch(err => {
+                            console.warn('OneMap lookup failed for postal code:', err);
+                            // Keep existing location/area if lookup fails
+                          });
                       } else if (code.length === 0) {
                         // Clear addresses only if postal code is completely cleared
                         setFormData((prev) => ({
