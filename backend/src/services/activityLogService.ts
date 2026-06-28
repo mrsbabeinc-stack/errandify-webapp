@@ -34,7 +34,7 @@ export const activityLogService = {
   },
 
   async logBidPlaced(errandId: number, doerName: string, doerId: number, amount: number) {
-    await this.logActivity(errandId, 'bid_placed', doerId, doerName, 'doer');
+    await this.logActivity(errandId, 'bid_placed', doerId, doerName, 'doer', { amount });
   },
 
   async logBidAccepted(errandId: number, askerName: string, askerId: number) {

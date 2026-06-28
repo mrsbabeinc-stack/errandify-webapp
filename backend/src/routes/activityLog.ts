@@ -82,6 +82,13 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
 
     console.log(`[ActivityLog] Authorization GRANTED`);
 
+    // Fetch errand details to get formatted_id
+    const errandDetailsResult = await db.query(
+      'SELECT formatted_id FROM errands WHERE id = $1',
+      [errandId]
+    );
+    const formattedId = errandDetailsResult.rows[0]?.formatted_id || `ER${errandId}`;
+
     // Fetch activity log
     let activitiesResult;
     try {
@@ -114,7 +121,7 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
       },
       timestamp: activity.created_at,
       details: activity.details,
-      displayText: getActivityDisplayText(activity.activity_type, activity.actor_name, activity.details),
+      displayText: getActivityDisplayText(activity.activity_type, activity.actor_name, activity.details, formattedId),
     }));
 
     res.json({
@@ -138,34 +145,35 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
 });
 
 // Helper function to generate display text for activities
-function getActivityDisplayText(type: string, actorName: string, details: any): string {
+function getActivityDisplayText(type: string, actorName: string, details: any, formattedId: string): string {
+  const prefix = `${formattedId}: `;
   switch (type) {
     case 'posted':
-      return `${actorName} posted this task`;
+      return `${prefix}${actorName} posted this task`;
     case 'bid_placed':
-      return `${actorName} submitted an offer of $${details?.amount || 'unknown'}`;
+      return `${prefix}${actorName} submitted an offer of $${details?.amount || 0}`;
     case 'bid_rejected':
-      return `${actorName}'s offer was not selected`;
+      return `${prefix}${actorName}'s offer was not selected`;
     case 'bid_accepted':
-      return `${actorName}'s offer was selected`;
+      return `${prefix}${actorName}'s offer was selected`;
     case 'confirmed':
-      return `Offer confirmed - task is ready to start`;
+      return `${prefix}Offer confirmed - ready to start`;
     case 'started':
-      return `${actorName} started the job`;
+      return `${prefix}${actorName} started the job`;
     case 'completed':
-      return `${actorName} submitted completion evidence`;
+      return `${prefix}${actorName} submitted completion evidence`;
     case 'review_submitted':
-      return `${actorName} submitted a review`;
+      return `${prefix}${actorName} submitted a review`;
     case 'rating_submitted':
-      return `${actorName} rated the work`;
+      return `${prefix}${actorName} rated the work`;
     case 'changes_requested':
-      return `${actorName} requested changes: ${details?.reason || 'see details'}`;
+      return `${prefix}${actorName} requested changes: ${details?.reason || 'see details'}`;
     case 'dispute_raised':
-      return `A dispute was raised`;
+      return `${prefix}A dispute was raised`;
     case 'dispute_resolved':
-      return `Dispute resolved`;
+      return `${prefix}Dispute resolved`;
     default:
-      return `${type}`;
+      return `${prefix}${type}`;
   }
 }
 
