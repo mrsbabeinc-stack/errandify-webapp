@@ -30,7 +30,6 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   const [errands, setErrands] = useState<Errand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [expandedErrandId, setExpandedErrandId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -293,12 +292,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
               >
                 {/* Ultra-Compact Header */}
                 <div
-                  onClick={() =>
-                    setExpandedErrandId(
-                      expandedErrandId === errand.id ? null : errand.id
-                    )
-                  }
-                  className="w-full p-2 text-left hover:bg-opacity-50 transition-colors cursor-pointer"
+                  className="w-full p-2 text-left"
                 >
                   <div className="flex items-start justify-between gap-2">
                     {/* Left: Errand ID + Title & Quick Info */}
@@ -396,20 +390,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                   </div>
                 </div>
 
-                {/* Expanded Details - Compact */}
-                {expandedErrandId === errand.id && (
-                  <div className="border-t border-gray-200 px-2 py-2 bg-gray-50 space-y-1.5 text-xs">
-                    {errand.description && (
-                      <div>
-                        <p className="font-semibold text-gray-600">Details</p>
-                        <p className="text-gray-700 line-clamp-2">
-                          {errand.description}
-                        </p>
-                      </div>
-                    )}
-
-                  </div>
-                )}
+                {/* Details shown on Detail page only - not here to save space */}
               </div>
             );
             })
