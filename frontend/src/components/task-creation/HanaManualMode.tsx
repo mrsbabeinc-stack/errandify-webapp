@@ -411,19 +411,33 @@ export default function HanaManualMode({
         <div className="flex gap-3 pt-4">
           <button
             type="submit"
-            disabled={
-              !taskData.title?.trim() ||
-              taskData.title.trim().length < 5 ||
-              !taskData.description?.trim() ||
-              taskData.description.trim().length < 10 ||
-              !taskData.category?.trim() ||
-              !taskData.location?.trim() ||
-              !taskData.date?.trim() ||
-              !taskData.time?.trim() ||
-              !taskData.budget ||
-              parseFloat(taskData.budget) <= 0 ||
-              parseFloat(taskData.budget) < 5
-            }
+            disabled={(() => {
+              // Check title
+              if (!taskData.title?.trim() || taskData.title.trim().length < 5) return true;
+              // Check description
+              if (!taskData.description?.trim() || taskData.description.trim().length < 10) return true;
+              // Check category
+              if (!taskData.category?.trim()) return true;
+              // Check location
+              if (!taskData.location?.trim()) return true;
+              // Check date
+              if (!taskData.date?.trim()) return true;
+              const selectedDate = new Date(taskData.date);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              if (selectedDate < today) return true;
+              // Check time
+              if (!taskData.time?.trim()) return true;
+              const selectedDateTime = new Date(taskData.date);
+              const [hours, minutes] = taskData.time.split(':').map(Number);
+              selectedDateTime.setHours(hours, minutes, 0, 0);
+              const now = new Date();
+              const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60000);
+              if (selectedDateTime < thirtyMinutesFromNow) return true;
+              // Check budget
+              if (!taskData.budget || parseFloat(taskData.budget) <= 0 || parseFloat(taskData.budget) < 5) return true;
+              return false;
+            })()}
             className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Review & Post
