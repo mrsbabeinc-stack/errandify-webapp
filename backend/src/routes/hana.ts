@@ -275,73 +275,17 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
       return res.status(400).json({ error: 'Text required' });
     }
 
-    // Check cache first
-    const cacheKey = `${language}:${crypto.createHash('md5').update(text).digest('hex')}`;
-    const cached = audioCache.get(cacheKey);
+    // TTS disabled temporarily - return empty audio
+    // TODO: Fix TTS integration when gTTS works properly
+    console.log('[Hana TTS] TTS disabled - returning empty response');
 
-    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
-      console.log('[Hana TTS] Returning cached audio');
-      return res.json({
-        success: true,
-        data: {
-          audio: cached.audio,
-          format: 'base64',
-          cached: true,
-        },
-      });
-    }
-
-    console.log('[Hana TTS] Converting text to speech:', { language, textLength: text.length });
-
-    console.log('[Hana TTS] Using Qwen Cosyvoice for language:', language);
-
-    // Try to use Alibaba Qwen TTS (Cosyvoice - Text to Speech)
-    try {
-      const qwenTtsResponse = await axios.post(
-        'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text2speech/synthesis',
-        {
-          model: 'cosyvoice',
-          input: {
-            text: text,
-          },
-          parameters: {
-            voice: 'xiaoxiao', // Female voice - warm and natural
-            rate: language === 'en' ? 1.0 : 0.9,
-            pitch: language === 'en' ? 1.0 : 0.95,
-            volume: 50,
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${config.qwen.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          responseType: 'arraybuffer',
-        }
-      );
-
-      const audioBase64 = Buffer.from(qwenTtsResponse.data).toString('base64');
-      console.log('[Hana TTS] Alibaba Qwen TTS generated successfully');
-
-      // Cache the result
-      audioCache.set(cacheKey, { audio: `data:audio/wav;base64,${audioBase64}`, timestamp: Date.now() });
-
-      res.json({
-        success: true,
-        data: {
-          audio: `data:audio/wav;base64,${audioBase64}`,
-          format: 'base64',
-        },
-      });
-    } catch (qwenError: any) {
-      console.log('[Hana TTS] Alibaba Qwen TTS failed');
-      console.log('Qwen error details:', qwenError.response?.data || qwenError.message);
-      // Log full error for debugging
-      if (qwenError.response?.data) {
-        console.log('Qwen response body:', qwenError.response.data.toString());
-      }
-      throw qwenError;
-    }
+    res.json({
+      success: true,
+      data: {
+        audio: null,
+        format: 'empty',
+      },
+    });
 
   } catch (error: any) {
     console.error('TTS error:', error.message);
@@ -355,14 +299,17 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
 // Fallback function using Google TTS
 const fallbackToGTTS = async (text: string, lang: string, res: any, cacheKey: string) => {
   try {
+    console.log('[fallbackToGTTS] Called with lang:', lang, 'typeof:', typeof lang);
+
     // Map to gTTS language codes
     const gttsLangMap: Record<string, string> = {
-      'en-SG': 'en',
+      'en': 'en',
       'zh-CN': 'zh-CN',
-      'zh-HK': 'zh-TW',
+      'zh-TW': 'zh-TW',
     };
 
     const gttsLang = gttsLangMap[lang] || 'en';
+    console.log('[fallbackToGTTS] Mapped gttsLang:', gttsLang);
 
     // Generate speech using gTTS
     const gtts = new gTTS(text, { lang: gttsLang, slow: false });
