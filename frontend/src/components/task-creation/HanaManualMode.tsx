@@ -140,8 +140,29 @@ export default function HanaManualMode({
     <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto">
       <form onSubmit={(e) => {
         e.preventDefault();
+        // Validate all required fields (except notes which is optional)
+        if (!taskData.title?.trim()) {
+          alert('Please enter a task title.');
+          return;
+        }
         if (!taskData.description?.trim()) {
           alert('Please describe what you need help with.');
+          return;
+        }
+        if (!taskData.category?.trim()) {
+          alert('Please select a category.');
+          return;
+        }
+        if (!taskData.location?.trim()) {
+          alert('Please enter a location.');
+          return;
+        }
+        if (!taskData.date?.trim()) {
+          alert('Please select a date.');
+          return;
+        }
+        if (!taskData.budget || parseFloat(taskData.budget) <= 0) {
+          alert('Please enter a valid budget amount.');
           return;
         }
         onReview();
@@ -217,7 +238,7 @@ export default function HanaManualMode({
         {taskData.title.trim() && (
           <div className="animate-fade-in">
             <label className="block text-sm font-semibold text-gray-600 mb-3">
-              Category
+              Category *
             </label>
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(categoryMap).map(([key, label]) => (
@@ -316,7 +337,15 @@ export default function HanaManualMode({
         <div className="flex gap-3 pt-4">
           <button
             type="submit"
-            disabled={!taskData.description?.trim()}
+            disabled={
+              !taskData.title?.trim() ||
+              !taskData.description?.trim() ||
+              !taskData.category?.trim() ||
+              !taskData.location?.trim() ||
+              !taskData.date?.trim() ||
+              !taskData.budget ||
+              parseFloat(taskData.budget) <= 0
+            }
             className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Review & Post
