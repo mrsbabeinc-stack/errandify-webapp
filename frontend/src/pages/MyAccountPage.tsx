@@ -2704,61 +2704,54 @@ export default function MyAccountPage() {
         {/* CATEGORIES SECTION */}
         {activeSection === 'categories' && (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="bg-errandify-orange text-white p-3">
-              <h2 className="text-lg font-bold">🎯 My Categories</h2>
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4">
+              <h2 className="text-lg font-bold mb-1">🎯 My Categories</h2>
+              <p className="text-xs text-purple-100">Smart AI-powered category preferences for better matches</p>
             </div>
-            <div className="p-4 space-y-3">
-              <p className="text-sm text-gray-600">Select categories you're interested in as an asker or specialized in as a doer.</p>
-
-              {/* Role Tabs */}
-              <div className="flex gap-2 bg-gray-100 rounded-lg p-1">
-                <button className="flex-1 py-2 px-3 text-xs font-bold rounded bg-errandify-orange text-white">💼 I Can Help</button>
-                <button className="flex-1 py-2 px-3 text-xs font-bold rounded hover:bg-gray-200">🙋 I Need Help</button>
+            <div className="p-6 space-y-6">
+              {/* Info Box */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4">
+                <p className="text-sm font-semibold text-blue-900 mb-2">🤖 AI-Powered Matching</p>
+                <ul className="text-xs text-blue-800 space-y-1">
+                  <li>✓ <strong>I Can Help:</strong> Mark categories you specialize in as a doer</li>
+                  <li>✓ <strong>I Need Help:</strong> Mark categories you need help with as an asker</li>
+                  <li>✓ <strong>Smart Suggestions:</strong> AI learns from your job history and suggests specializations</li>
+                  <li>✓ <strong>Better Matches:</strong> Get paired with doers who specialize in what you need!</li>
+                </ul>
               </div>
 
-              {/* Category Grid */}
-              <div className="grid grid-cols-4 gap-2">
-                <div className="p-3 rounded border-2 border-errandify-orange bg-orange-50 text-center cursor-pointer">
-                  <p className="text-2xl mb-1">🧹</p>
-                  <p className="text-xs font-bold text-errandify-brown">Cleaning</p>
+              {/* Features */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 text-center">
+                  <p className="text-3xl mb-2">💚</p>
+                  <p className="font-bold text-green-900 text-sm">All 16 Categories</p>
+                  <p className="text-xs text-green-700 mt-1">Complete coverage from Home Maintenance to Charity</p>
                 </div>
-                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
-                  <p className="text-2xl mb-1">🏠</p>
-                  <p className="text-xs font-bold text-errandify-brown">Home Maintenance</p>
-                </div>
-                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
-                  <p className="text-2xl mb-1">🛍️</p>
-                  <p className="text-xs font-bold text-errandify-brown">Shopping</p>
-                </div>
-                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
-                  <p className="text-2xl mb-1">📦</p>
-                  <p className="text-xs font-bold text-errandify-brown">Delivery</p>
-                </div>
-                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
-                  <p className="text-2xl mb-1">🧒</p>
-                  <p className="text-xs font-bold text-errandify-brown">Childcare</p>
-                </div>
-                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
-                  <p className="text-2xl mb-1">🐕</p>
-                  <p className="text-xs font-bold text-errandify-brown">Pet Care</p>
-                </div>
-                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
-                  <p className="text-2xl mb-1">💻</p>
-                  <p className="text-xs font-bold text-errandify-brown">Tech Support</p>
-                </div>
-                <div className="p-3 rounded border-2 border-gray-200 hover:border-gray-300 text-center cursor-pointer">
-                  <p className="text-2xl mb-1">⭐</p>
-                  <p className="text-xs font-bold text-errandify-brown">Other</p>
+                <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4 text-center">
+                  <p className="text-3xl mb-2">🧠</p>
+                  <p className="font-bold text-purple-900 text-sm">AI Detection</p>
+                  <p className="text-xs text-purple-700 mt-1">System learns from your completed tasks</p>
                 </div>
               </div>
 
-              <div className="text-center text-xs text-gray-600 mt-4">
-                <p>1 selected (1 total)</p>
-              </div>
+              {/* Call to Action */}
+              <button
+                onClick={() => navigate('/category-preferences')}
+                className="w-full py-4 rounded-lg font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:shadow-lg transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+              >
+                <span>✨</span>
+                <span>Manage My Preferences (All 16 Categories)</span>
+                <span>→</span>
+              </button>
 
-              <div className="flex gap-2 mt-4">
-                <button className="flex-1 px-3 py-2 border border-gray-300 rounded text-xs font-bold text-gray-700 hover:bg-gray-50">Skip</button>
-                <button className="flex-1 px-3 py-2 bg-errandify-orange text-white rounded text-xs font-bold hover:bg-orange-600">Save</button>
+              {/* Tips */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <p className="text-xs font-semibold text-amber-900 mb-2">💡 Smart Tips</p>
+                <ul className="text-xs text-amber-800 space-y-1">
+                  <li>🎯 The more you complete, the better AI suggestions get</li>
+                  <li>⭐ Specialize in what you're good at = higher earnings</li>
+                  <li>🚀 Let askers find you faster with clear specializations</li>
+                </ul>
               </div>
             </div>
           </div>
