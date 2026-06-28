@@ -45,6 +45,14 @@ export default function MyAccountPage() {
   const [trustedUsers, setTrustedUsers] = useState<Array<{ id: string; name: string; alias?: string; avatar?: string; markedDate: string }>>([]);
   const [rewardsTab, setRewardsTab] = useState<'overview' | 'shop' | 'gift' | 'myVoucher' | 'history'>('overview');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
+  const [headerProfile, setHeaderProfile] = useState<{ name: string; profileImage?: string } | null>(() => {
+    try {
+      const user = localStorage.getItem('user');
+      return user ? JSON.parse(user) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [ratings, setRatings] = useState<{ averageRating: number; reviewCount: number; reviews: Rating[] }>({
     averageRating: 0,
     reviewCount: 0,
@@ -177,6 +185,39 @@ export default function MyAccountPage() {
     const matchesFilter = activityFilter === 'all' || activity.type === activityFilter;
     return matchesSearch && matchesFilter;
   });
+
+  useEffect(() => {
+    // Listen for profile updates from localStorage and update header display
+    const handleProfileUpdate = () => {
+      try {
+        const user = localStorage.getItem('user');
+        if (user) {
+          setHeaderProfile(JSON.parse(user));
+        }
+      } catch (e) {
+        console.error('Failed to update header profile:', e);
+      }
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    window.addEventListener('storage', handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+      window.removeEventListener('storage', handleProfileUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Update header profile when profileData is loaded
+    if (profileData?.name) {
+      setHeaderProfile(prev => ({
+        ...prev,
+        name: profileData.name,
+        profileImage: profileImage || undefined,
+      }));
+    }
+  }, [profileData?.name, profileImage]);
 
   useEffect(() => {
     // Fetch AI-generated alerts
@@ -853,20 +894,20 @@ export default function MyAccountPage() {
         {/* Profile & Logout - Same as Layout */}
         <div className="flex items-center gap-2">
           {/* Profile Photo */}
-          {profileImage ? (
+          {(profileImage || headerProfile?.profile_image_url) ? (
             <img
-              src={profileImage}
+              src={profileImage || headerProfile?.profile_image_url}
               alt="Profile"
               className="w-8 h-8 rounded-full object-cover border border-gray-300"
             />
           ) : (
             <div className="w-8 h-8 rounded-full bg-errandify-orange flex items-center justify-center text-white text-xs font-bold">
-              {profileData?.name?.charAt(0).toUpperCase() || 'U'}
+              {(headerProfile?.name || profileData?.name)?.charAt(0).toUpperCase() || 'U'}
             </div>
           )}
           {/* User Alias/Name */}
           <span className="text-sm font-semibold text-gray-700 max-w-[100px] truncate">
-            {profileData?.name || 'User'}
+            {headerProfile?.name || profileData?.name || 'User'}
           </span>
           {/* Logout Button */}
           <button
