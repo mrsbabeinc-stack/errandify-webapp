@@ -300,14 +300,15 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                   <div className="flex items-start justify-between gap-2">
                     {/* Left: Errand ID + Title & Quick Info */}
                     <div className="flex-1 min-w-0">
-                      {/* Errand ID - Format: ER26HM-XXXX */}
-                      <span className="font-mono text-xs font-bold text-gray-600 block mb-0.5">
-                        {errand.errand_id}
-                      </span>
-
-                      <h3 className="font-bold text-errandify-brown truncate text-sm">
-                        {errand.title}
-                      </h3>
+                      {/* Title with Errand ID inline */}
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-mono text-xs font-bold text-gray-500 flex-shrink-0">
+                          {errand.errand_id}
+                        </span>
+                        <h3 className="font-bold text-errandify-brown truncate text-sm">
+                          {errand.title}
+                        </h3>
+                      </div>
 
                       <div className="flex flex-wrap items-center gap-1 mt-0.5">
                         <span className="text-gray-500 text-xs">
