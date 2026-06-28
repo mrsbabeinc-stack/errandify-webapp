@@ -718,8 +718,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
         if (dbResult.rows.length > 0) {
           const record = dbResult.rows[0];
-          area = record.area || 'Singapore';
-          fullAddress = record.full_address || `${area}, Singapore ${postalCode}`;
+          area = 'Singapore';
+          fullAddress = record.full_address || `Singapore ${postalCode}`;
           console.log(`[Extract] ✅ LOCAL DB: ${area}, ${fullAddress}`);
         } else {
           // 2. Try OneMap API if not in local DB
