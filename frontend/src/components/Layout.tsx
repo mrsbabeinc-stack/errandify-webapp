@@ -21,6 +21,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
+    // Load initial user profile
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
@@ -30,6 +31,21 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
         console.error('Failed to parse user profile:', e);
       }
     }
+
+    // Listen for storage changes (when user updates profile elsewhere)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user' && e.newValue) {
+        try {
+          const user = JSON.parse(e.newValue);
+          setUserProfile(user);
+        } catch (err) {
+          console.error('Failed to parse updated user profile:', err);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const handleCreateTask = () => {
