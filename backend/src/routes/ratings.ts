@@ -10,23 +10,19 @@ const router = Router();
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const raterId = parseInt(req.userId || '0', 10);
-    const { taskId, ratedUserId, rating, comment } = req.body;
+    let { taskId, ratedUserId, rating, comment } = req.body;
 
-    if (!taskId || !ratedUserId || !rating) {
-      return res.status(400).json({ error: 'taskId, ratedUserId, and rating required' });
+    if (!taskId || !rating) {
+      return res.status(400).json({ error: 'taskId and rating required' });
     }
 
     if (rating < 1 || rating > 5) {
       return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
 
-    if (raterId === ratedUserId) {
-      return res.status(400).json({ error: 'Cannot rate yourself' });
-    }
-
     // Verify task exists and is completed
     const taskResult = await db.query(
-      'SELECT * FROM errands WHERE id = $1',
+      'SELECT id, asker_id, accepted_bid_id, status FROM errands WHERE id = $1',
       [taskId]
     );
 
@@ -41,14 +37,42 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Can only rate completed tasks' });
     }
 
-    // Verify rater is either asker or assigned doer
-    const isAsker = task.asker_id === raterId;
-    const isDoer = await db.query(
-      'SELECT * FROM errand_assignments WHERE errand_id = $1 AND doer_id = $2',
-      [taskId, raterId]
-    );
+    // If ratedUserId not provided, try to find it from bids
+    if (!ratedUserId) {
+      let bidResult;
+      if (task.accepted_bid_id) {
+        bidResult = await db.query(
+          'SELECT doer_id FROM bids WHERE id = $1',
+          [task.accepted_bid_id]
+        );
+      } else {
+        // Fallback: find any confirmed bid
+        bidResult = await db.query(
+          `SELECT doer_id FROM bids
+           WHERE errand_id = $1 AND status IN ('confirmed', 'confirmed_awaiting_start', 'in_progress')
+           ORDER BY created_at DESC LIMIT 1`,
+          [taskId]
+        );
+      }
 
-    if (!isAsker && isDoer.rows.length === 0) {
+      if (bidResult.rows[0]) {
+        ratedUserId = bidResult.rows[0].doer_id;
+      }
+    }
+
+    if (!ratedUserId) {
+      return res.status(400).json({ error: 'Could not find doer for this task. No confirmed bid found.' });
+    }
+
+    if (raterId === ratedUserId) {
+      return res.status(400).json({ error: 'Cannot rate yourself' });
+    }
+
+    // Verify rater is either asker or the doer being rated
+    const isAsker = task.asker_id === raterId;
+    const isDoer = raterId === ratedUserId;
+
+    if (!isAsker && !isDoer) {
       return res.status(403).json({ error: 'Only task participants can rate' });
     }
 
