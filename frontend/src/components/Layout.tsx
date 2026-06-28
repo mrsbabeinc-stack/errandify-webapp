@@ -30,6 +30,9 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
           const user = JSON.parse(userStr);
           console.log('[Layout] Parsed user:', user);
           console.log('[Layout] display_name:', user.display_name);
+          console.log('[Layout] profile_image_url:', user.profile_image_url);
+          console.log('[Layout] profileImageUrl:', (user as any).profileImageUrl);
+          console.log('[Layout] profile_photo:', (user as any).profile_photo);
           setUserProfile(user);
         } catch (e) {
           console.error('[Layout] Failed to parse user profile:', e);
