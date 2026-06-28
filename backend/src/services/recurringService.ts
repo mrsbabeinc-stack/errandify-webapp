@@ -6,6 +6,38 @@ interface RecurringConfig {
   occurrences?: number | null;
 }
 
+// Category codes mapping (same as in errands.ts)
+const categoryCodeMap: { [key: string]: string } = {
+  'home-maintenance': 'HM',
+  'cleaning-household': 'CL',
+  'food-beverage': 'FD',
+  'furniture-assembly': 'FR',
+  'shopping-errands': 'SH',
+  'delivery-moving': 'DV',
+  'travel-mobility': 'TR',
+  'event-planning': 'EV',
+  'childcare-education': 'CH',
+  'eldercare-healthcare': 'EL',
+  'pet-care': 'PC',
+  'personal-care': 'PS',
+  'tech-support': 'TC',
+  'creative-arts': 'AR',
+  'admin-business': 'AD',
+  'charity-community': 'CC',
+};
+
+// Generate unique errand ID: ER26HM-XXXX
+function generateErrandId(category: string): string {
+  const year = new Date().getFullYear().toString().slice(-2); // Get last 2 digits: 2026 -> 26
+  const categoryCode = categoryCodeMap[category.toLowerCase()] || 'XX';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `ER${year}${categoryCode}-${code}`;
+}
+
 // Generate recurring task instances based on config
 export const generateRecurringInstances = async (
   parentErrandId: number,
@@ -33,14 +65,15 @@ export const generateRecurringInstances = async (
   // Generate instances
   for (let i = 1; i <= occurrences; i++) {
     const scheduledDate = calculateNextDate(startDate, config.repeatEvery, config.repeatUnit, i - 1);
+    const errandId = generateErrandId(parent.category);
 
-    // Create instance errand
+    // Create instance errand with unique errand_id
     const instanceResult = await db.query(
       `INSERT INTO errands (
-        asker_id, title, description, category, location, postal_code, budget, deadline, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'open')
+        asker_id, title, description, category, location, postal_code, budget, deadline, status, errand_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'open', $9)
        RETURNING id`,
-      [parent.asker_id, parent.title, parent.description, parent.category, parent.location, parent.postal_code, parent.budget, scheduledDate]
+      [parent.asker_id, parent.title, parent.description, parent.category, parent.location, parent.postal_code, parent.budget, scheduledDate, errandId]
     );
 
     const instanceId = instanceResult.rows[0].id;
@@ -53,7 +86,7 @@ export const generateRecurringInstances = async (
       [parentErrandId, i, instanceId, scheduledDate]
     );
 
-    console.log(`[Recurring] Created instance ${i}/${occurrences} for errand ${parentErrandId}: errand_id=${instanceId}, scheduled=${scheduledDate.toISOString()}`);
+    console.log(`[Recurring] Created instance ${i}/${occurrences} for errand ${parentErrandId}: instance_id=${instanceId}, errand_id=${errandId}, scheduled=${scheduledDate.toISOString()}`);
   }
 
   return instances;
