@@ -1108,7 +1108,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                   // Auto-hide celebratory message and navigate after 3 seconds
                                   setTimeout(() => {
                                     setShowCelebratory(false);
-                                    navigate('/my-errands');
+                                    navigate('/errands');
                                   }, 3000);
                                 } catch (err: any) {
                                   console.error('Rating submission error:', err);
