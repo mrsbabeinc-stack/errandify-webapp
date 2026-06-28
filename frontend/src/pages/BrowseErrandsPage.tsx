@@ -225,7 +225,9 @@ export default function BrowseErrandsPage() {
         </div>
       ) : (
         <div className="space-y-4 pb-8">
-          {errands.map((errand) => (
+          {errands.map((errand) => {
+            console.log('[BrowseErrands] Rendering errand:', errand.id, 'errandId:', errand.errandId, 'deadline:', errand.deadline);
+            return (
             <div
               key={errand.id}
               className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden"
@@ -366,7 +368,8 @@ export default function BrowseErrandsPage() {
               )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
