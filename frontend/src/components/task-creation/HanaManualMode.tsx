@@ -165,6 +165,10 @@ export default function HanaManualMode({
           alert('Please enter a valid budget amount.');
           return;
         }
+        if (!taskData.time?.trim()) {
+          alert('Please select a time.');
+          return;
+        }
         onReview();
       }} className="space-y-6">
         {/* Title Input with AI Suggestions */}
@@ -289,7 +293,7 @@ export default function HanaManualMode({
 
           <div>
             <label className="block text-sm font-semibold text-gray-600 mb-2">
-              Time
+              Time *
             </label>
             <input
               type="time"
@@ -343,6 +347,7 @@ export default function HanaManualMode({
               !taskData.category?.trim() ||
               !taskData.location?.trim() ||
               !taskData.date?.trim() ||
+              !taskData.time?.trim() ||
               !taskData.budget ||
               parseFloat(taskData.budget) <= 0
             }
