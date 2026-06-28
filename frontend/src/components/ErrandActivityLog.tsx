@@ -47,8 +47,12 @@ const ErrandActivityLog = forwardRef<ErrandActivityLogHandle, ErrandActivityLogP
         }
       );
 
-      if (response.data.success) {
-        setActivities(response.data.data?.activities || []);
+      // Handle the response - the API returns success: true with data.activities
+      if (response.data && response.data.data) {
+        setActivities(response.data.data.activities || []);
+        setError('');
+      } else if (response.data.success) {
+        setActivities(response.data.activities || []);
         setError('');
       } else {
         setActivities([]);
@@ -62,6 +66,7 @@ const ErrandActivityLog = forwardRef<ErrandActivityLogHandle, ErrandActivityLogP
         setError('');
       } else {
         setError('Unable to load activity log');
+        setActivities([]);
       }
     } finally {
       setLoading(false);
@@ -78,8 +83,8 @@ const ErrandActivityLog = forwardRef<ErrandActivityLogHandle, ErrandActivityLogP
 
   if (activities.length === 0) {
     return (
-      <div className="text-xs text-gray-500 italic">
-        No activities recorded yet. Activities will appear as the errand progresses.
+      <div className="text-xs text-gray-600">
+        <p className="italic">Activities will appear here as the errand progresses.</p>
       </div>
     );
   }
