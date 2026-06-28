@@ -64,6 +64,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [confirmationTimeLeft, setConfirmationTimeLeft] = useState<string>('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedTipToClipboard, setCopiedTipToClipboard] = useState(false);
+  const [showCompletionEvidence, setShowCompletionEvidence] = useState(false);
+  const [completionPhotos, setCompletionPhotos] = useState<any[]>([]);
+  const [completionNotes, setCompletionNotes] = useState('');
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -117,6 +120,33 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       setError(errorMsg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleCompletionEvidence = async () => {
+    if (showCompletionEvidence) {
+      setShowCompletionEvidence(false);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${id}/submissions`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success && response.data.data) {
+        const submissions = response.data.data.submissions || [];
+        const latestSubmission = submissions[submissions.length - 1];
+        if (latestSubmission) {
+          setCompletionNotes(latestSubmission.completion_notes || '');
+          setCompletionPhotos(latestSubmission.files || []);
+        }
+        setShowCompletionEvidence(true);
+      }
+    } catch (err: any) {
+      console.error('Failed to load completion evidence:', err);
     }
   };
 
@@ -778,11 +808,41 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   <div className="space-y-1 pt-2 border-t border-green-200">
                     <p className="font-semibold text-gray-700 text-xs">📸 Completion Evidence:</p>
                     <button
-                      onClick={() => navigate(`/task/${id}/review-completion`)}
+                      onClick={toggleCompletionEvidence}
                       className="w-full px-2 py-1.5 bg-blue-50 border border-blue-300 text-blue-700 text-xs rounded font-medium hover:bg-blue-100 transition-all"
                     >
-                      View Photos & Notes
+                      {showCompletionEvidence ? '▼ Hide Evidence' : '▶ View Photos & Notes'}
                     </button>
+
+                    {/* Completion Evidence Expanded View */}
+                    {showCompletionEvidence && (
+                      <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200 space-y-2">
+                        {completionPhotos.length > 0 && (
+                          <div>
+                            <p className="font-semibold text-xs text-gray-700 mb-1">📷 Photos:</p>
+                            <div className="flex gap-2 flex-wrap">
+                              {completionPhotos.map((photo, idx) => (
+                                <a
+                                  key={idx}
+                                  href={photo.file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs bg-white text-blue-600 px-2 py-1 rounded border border-blue-300 hover:bg-blue-50"
+                                >
+                                  Photo {idx + 1}
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {completionNotes && (
+                          <div>
+                            <p className="font-semibold text-xs text-gray-700 mb-1">📝 Notes:</p>
+                            <p className="text-xs text-gray-700 bg-white p-2 rounded border border-blue-200">{completionNotes}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
