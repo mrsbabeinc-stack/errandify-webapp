@@ -299,6 +299,9 @@ export default function MyAccountPage() {
           }
           localStorage.setItem('user', JSON.stringify(updatedUser));
 
+          // Notify Layout component to update alias
+          window.dispatchEvent(new Event('profileUpdated'));
+
           setEditForm({
             display_name: profileRes.data.data.name || '',
             email: profileRes.data.data.email || '',

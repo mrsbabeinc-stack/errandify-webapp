@@ -22,30 +22,41 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
 
   useEffect(() => {
     // Load initial user profile
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        setUserProfile(user);
-      } catch (e) {
-        console.error('Failed to parse user profile:', e);
-      }
-    }
-
-    // Listen for storage changes (when user updates profile elsewhere)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user' && e.newValue) {
+    const loadUserProfile = () => {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
         try {
-          const user = JSON.parse(e.newValue);
+          const user = JSON.parse(userStr);
           setUserProfile(user);
-        } catch (err) {
-          console.error('Failed to parse updated user profile:', err);
+          console.log('[Layout] User profile loaded:', user.display_name);
+        } catch (e) {
+          console.error('Failed to parse user profile:', e);
         }
       }
     };
 
+    loadUserProfile();
+
+    // Listen for custom profile update events (same tab)
+    const handleProfileUpdate = (e: any) => {
+      console.log('[Layout] Profile update event received');
+      loadUserProfile();
+    };
+
+    // Listen for storage changes (different tabs)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user' && e.newValue) {
+        console.log('[Layout] Storage change detected');
+        loadUserProfile();
+      }
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const handleCreateTask = () => {
