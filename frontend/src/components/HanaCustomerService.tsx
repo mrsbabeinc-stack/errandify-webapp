@@ -48,19 +48,19 @@ const QUICK_REPLIES: Record<Language, Array<{ label: string; action: string }>> 
     { label: 'Create new errand', action: '/create-errand-hana' },
     { label: 'My errands', action: '/errands' },
     { label: 'My wallet', action: '/wallet' },
-    { label: 'My ratings', action: '/my-profile' },
+    { label: 'Referral', action: '/referral' },
   ],
   zh: [
     { label: '创建新任务', action: '/create-errand-hana' },
     { label: '我的任务', action: '/errands' },
     { label: '我的钱包', action: '/wallet' },
-    { label: '我的评分', action: '/my-profile' },
+    { label: '推荐', action: '/referral' },
   ],
   yue: [
     { label: '創建新任務', action: '/create-errand-hana' },
     { label: '我的任務', action: '/errands' },
     { label: '我的錢包', action: '/wallet' },
-    { label: '我的評分', action: '/my-profile' },
+    { label: '推薦', action: '/referral' },
   ],
 };
 
