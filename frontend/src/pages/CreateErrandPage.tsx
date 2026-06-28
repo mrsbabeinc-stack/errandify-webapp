@@ -837,10 +837,13 @@ export default function CreateErrandPage() {
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
+          timeout: 15000, // 15 second timeout
         }
       );
 
       console.log('[DEBUG] *** API RESPONSE RECEIVED ***:', response.data);
+      setLoading(false);
+      console.log('[DEBUG] *** setLoading(false) called ***');
 
       if (response.data.success) {
         console.log('[DEBUG] *** SUCCESS - ERRAND POSTED ***');
