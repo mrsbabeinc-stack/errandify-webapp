@@ -739,11 +739,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 <p className="text-xs text-red-600">Dispute is being reviewed. Payment is held.</p>
               </div>
             ) : errand.status === 'completed' ? (
-              <div className="w-full bg-green-50 border border-green-200 rounded-lg p-4 mt-2 space-y-3">
+              <div className="w-full bg-green-50 border border-green-200 rounded-lg p-3 mt-2 space-y-2">
                 {/* Status Header */}
-                <div className="text-center pb-3 border-b border-green-200">
-                  <p className="text-green-800 font-bold text-lg">✓ Errand Completed</p>
-                  <p className="text-xs text-green-600 mt-1">
+                <div className="text-center pb-2 border-b border-green-200">
+                  <p className="text-green-800 font-bold text-base">✓ Errand Completed</p>
+                  <p className="text-xs text-green-600 mt-0.5">
                     {currentUser && currentUser.id === errand.askerId
                       ? 'Review and rate the doer\'s work'
                       : 'Waiting for asker to review and rate your work'}
@@ -751,9 +751,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 </div>
 
                 {/* Process Flow */}
-                <div className="space-y-2 text-xs">
-                  <p className="font-semibold text-gray-700">📋 What Happens Next:</p>
-                  <div className="space-y-1 text-gray-600">
+                <div className="space-y-1 text-xs">
+                  <p className="font-semibold text-gray-700 text-xs">📋 What Happens Next:</p>
+                  <div className="space-y-0.5 text-gray-600 text-xs">
                     {currentUser && currentUser.id === errand.askerId ? (
                       <>
                         <p>✓ Doer submitted completion evidence</p>
@@ -771,6 +771,19 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     )}
                   </div>
                 </div>
+
+                {/* Asker: Show Doer's Completion Evidence */}
+                {currentUser && currentUser.id === errand.askerId && (
+                  <div className="space-y-1 pt-2 border-t border-green-200">
+                    <p className="font-semibold text-gray-700 text-xs">📸 Completion Evidence:</p>
+                    <button
+                      onClick={() => navigate(`/task/${id}/review-completion`)}
+                      className="w-full px-2 py-1.5 bg-blue-50 border border-blue-300 text-blue-700 text-xs rounded font-medium hover:bg-blue-100 transition-all"
+                    >
+                      View Photos & Notes
+                    </button>
+                  </div>
+                )}
 
                 {/* Doer Actions - Only show if current user is the doer */}
                 {currentUser && currentUser.id !== errand.askerId && (
@@ -797,19 +810,19 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
                 {/* Asker Actions - Only show if current user is the asker */}
                 {currentUser && currentUser.id === errand.askerId && (
-                  <div className="space-y-2 pt-2 border-t border-green-200">
-                    <p className="font-semibold text-gray-700 text-xs">📌 Your Options:</p>
-                    <div className="flex flex-col gap-2">
+                  <div className="space-y-1 pt-2 border-t border-green-200">
+                    <p className="font-semibold text-gray-700 text-xs">Your Actions:</p>
+                    <div className="flex flex-col gap-1">
                       <button
                         onClick={() => navigate(`/review/${id}`)}
-                        className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 text-xs transition-all"
+                        className="w-full bg-green-600 text-white py-1.5 px-2 rounded font-semibold hover:bg-green-700 text-xs transition-all"
                       >
                         ⭐ Review & Rate
                       </button>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1">
                         <button
                           onClick={() => setShowChat(true)}
-                          className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-xs transition-all"
+                          className="flex-1 bg-blue-600 text-white py-1.5 px-2 rounded font-semibold hover:bg-blue-700 text-xs transition-all"
                         >
                           💬 Chat
                         </button>
@@ -830,7 +843,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                               })
                               .catch(e => alert('Error: ' + e.message));
                           }}
-                          className="flex-1 bg-amber-500 text-white py-2 rounded-lg font-semibold hover:bg-amber-600 text-xs transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          className="flex-1 bg-amber-500 text-white py-1.5 px-2 rounded font-semibold hover:bg-amber-600 text-xs transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
                           disabled={errand.status === 'disputed'}
                           title={errand.status === 'disputed' ? 'Cannot reopen during dispute' : 'Request doer to make changes'}
                         >
