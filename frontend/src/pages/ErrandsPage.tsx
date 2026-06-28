@@ -340,7 +340,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
 
                         {errand.deadline && (
                           <span className="text-gray-600 text-xs">
-                            📅 {new Date(errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
+                            🗓️ {new Date(errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
                           </span>
                         )}
 
