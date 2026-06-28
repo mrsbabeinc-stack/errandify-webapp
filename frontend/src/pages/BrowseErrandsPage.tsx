@@ -137,7 +137,12 @@ export default function BrowseErrandsPage() {
       return;
     }
     // Navigate to bid page with selected sessions
-    navigate(`/errand/${parentErrandId}?bid&sessions=${sessions.join(',')}`);
+    // Store selected sessions in sessionStorage to pass to bid page
+    sessionStorage.setItem('recurringSessionsToBid', JSON.stringify({
+      parentErrandId,
+      selectedSessions: sessions,
+    }));
+    navigate(`/errand/${parentErrandId}?mode=bid-recurring`);
   };
 
   return (

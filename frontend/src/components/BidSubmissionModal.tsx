@@ -7,6 +7,7 @@ interface BidSubmissionModalProps {
   taskTitle: string;
   existingBidAmount?: number;
   askerId?: number;
+  selectedSessions?: number[];
   onSuccess: () => void;
   onClose: () => void;
 }
@@ -17,6 +18,7 @@ export default function BidSubmissionModal({
   taskTitle,
   existingBidAmount,
   askerId,
+  selectedSessions,
   onSuccess,
   onClose,
 }: BidSubmissionModalProps) {
@@ -41,6 +43,7 @@ export default function BidSubmissionModal({
           task_id: taskId,
           amount: parseFloat(bidAmount),
           note: bidNote || null,
+          ...(selectedSessions && selectedSessions.length > 0 && { sessions: selectedSessions }),
         },
         {
           headers: { Authorization: `Bearer ${token}` },
