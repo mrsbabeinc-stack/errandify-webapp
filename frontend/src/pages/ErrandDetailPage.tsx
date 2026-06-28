@@ -1073,20 +1073,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                 if (!currentUser || !errand) return;
                                 setRatingSubmitting(true);
                                 try {
-                                  console.log('[Rating] errand:', errand);
-                                  console.log('[Rating] errand.doerId:', errand.doerId);
-
-                                  if (!errand.doerId) {
-                                    console.error('[Rating] Missing doerId. Errand status:', errand.status);
-                                    alert('Error: Doer information not available. This errand may not have a confirmed doer yet. Please refresh and try again.');
-                                    return;
-                                  }
                                   const token = localStorage.getItem('token');
+                                  // Backend will auto-lookup doer from bids if not provided
                                   await axios.post(
                                     `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings`,
                                     {
                                       taskId: errand.id,
-                                      ratedUserId: errand.doerId,
+                                      ratedUserId: errand.doerId || undefined, // Let backend find if not available
                                       rating,
                                       comment: ratingComment || null,
                                     },
