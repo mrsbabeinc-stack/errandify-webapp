@@ -26,7 +26,8 @@ export default function HanaPage() {
   const handleComplete = (taskData: TaskData) => {
     // Navigate to create errand with prefilled data
     const prefilledJson = encodeURIComponent(JSON.stringify(taskData));
-    navigate(`/create-errand?prefilled=${prefilledJson}`);
+    // Use window.location to force navigation and prevent page refresh issues
+    window.location.href = `/create-errand?prefilled=${prefilledJson}`;
   };
 
   const handleClose = () => {
