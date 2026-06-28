@@ -11,24 +11,32 @@ interface LayoutProps {
 }
 
 interface UserProfile {
-  id: number;
-  display_name: string;
+  id?: number;
+  name?: string;
+  display_name?: string;
+  alias?: string;
   profile_image_url?: string;
 }
 
 export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps) {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load initial user profile
+    // Load initial user profile and image
     const loadUserProfile = () => {
       const userStr = localStorage.getItem('user');
+      const profileImg = localStorage.getItem('profileImage');
       console.log('[Layout] localStorage.user:', userStr);
+      console.log('[Layout] profileImage:', profileImg ? 'present' : 'not found');
       if (userStr) {
         try {
           const user = JSON.parse(userStr);
           setUserProfile(user);
+          if (profileImg) {
+            setProfileImage(profileImg);
+          }
         } catch (e) {
           console.error('[Layout] Failed to parse user profile:', e);
         }
@@ -40,15 +48,15 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
     loadUserProfile();
 
     // Listen for custom profile update events (same tab)
-    const handleProfileUpdate = (e: any) => {
+    const handleProfileUpdate = () => {
       console.log('[Layout] Profile update event received');
       loadUserProfile();
     };
 
     // Listen for storage changes (different tabs)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user' && e.newValue) {
-        console.log('[Layout] Storage change detected');
+      if ((e.key === 'user' || e.key === 'profileImage') && e.newValue) {
+        console.log('[Layout] Storage change detected:', e.key);
         loadUserProfile();
       }
     };
@@ -103,21 +111,21 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
               <button
                 onClick={handleProfileClick}
                 className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                title={userProfile.display_name}
+                title={userProfile.alias || userProfile.display_name || userProfile.name || 'User'}
               >
-                {userProfile.profile_image_url ? (
+                {profileImage ? (
                   <img
-                    src={userProfile.profile_image_url}
-                    alt={userProfile.display_name || 'User'}
+                    src={profileImage}
+                    alt={userProfile.alias || userProfile.name || 'User'}
                     className="w-8 h-8 rounded-full object-cover border border-gray-300"
                   />
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-errandify-orange flex items-center justify-center text-white text-xs font-bold">
-                    {(userProfile.display_name || 'U').charAt(0).toUpperCase()}
+                    {(userProfile.alias || userProfile.name || 'U').charAt(0).toUpperCase()}
                   </div>
                 )}
                 <span className="text-sm font-semibold text-gray-700 max-w-[100px] truncate">
-                  {userProfile.display_name || (userProfile as any).name || 'User'}
+                  {userProfile.alias || userProfile.display_name || userProfile.name || 'User'}
                 </span>
               </button>
               {/* Logout Button */}
