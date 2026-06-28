@@ -22,7 +22,8 @@ interface ErrandDetail {
   postal_code?: string;
   postalCode?: string;
   askerId?: number;
-  asker?: { name: string; mobile: string };
+  askerName?: string;
+  asker?: { name: string; mobile: string; display_name?: string };
   doerName?: string;
   createdAt: string;
   isRecurring?: boolean;
@@ -628,21 +629,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </div>
             )}
 
-            {/* Asker Info - Show name or fallback */}
-            {errand.asker && (
+            {/* Asker Info - Show alias/display_name */}
+            {(errand.askerName || errand.asker) && (
               <div className="border-t border-orange-200 pt-1.5 mt-1.5">
                 <p className="text-xs text-gray-600 font-bold mb-0.5">Posted By</p>
                 <p className="text-xs text-gray-800 font-medium mb-0.5">
-                  {errand.askerName || errand.asker?.name || 'Community Member'}
+                  {errand.askerName || errand.asker?.display_name || errand.asker?.name || 'Community Member'}
                 </p>
-              </div>
-            )}
-
-            {/* Show asker name if not shown above */}
-            {!errand.asker && errand.askerName && (
-              <div className="border-t border-orange-200 pt-1.5 mt-1.5">
-                <p className="text-xs text-gray-600 font-bold mb-0.5">Posted By</p>
-                <p className="text-xs text-gray-800 font-medium mb-0.5">{errand.askerName}</p>
               </div>
             )}
 
