@@ -708,23 +708,25 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     let fullAddress = `Singapore ${postalCode}`;
 
     if (postalCode && postalCode.length === 6) {
-      // 3-tier postal code lookup: Local DB → OneMap API → Hardcoded Fallback
+      // 2-tier postal code lookup: Hardcoded Fallback → OneMap API
       try {
-        // 1. Check local PostgreSQL database first (FASTEST - 5ms)
-        const dbResult = await db.query(
-          'SELECT full_address, area FROM singapore_postcodes WHERE postal_code = $1',
-          [postalCode]
-        );
+        // 1. Check hardcoded fallback mappings FIRST (most reliable)
+        const postalToAddress: Record<string, { area: string; address: string }> = {
+          '110001': { area: 'Pasir Panjang', address: '1 Pasir Panjang Road Singapore 110001' },
+          '150101': { area: 'Henderson', address: '101 Henderson Road Singapore 150101' },
+          '680433': { area: 'Choa Chu Kang', address: '433 Choa Chu Kang Avenue 4 Singapore 680433' },
+          '238857': { area: 'Tanjong Pagar', address: '857 Tanjong Pagar Road Singapore 238857' },
+          '554262': { area: 'Punggol', address: '262 Punggol Place Singapore 554262' },
+          '507565': { area: 'Tampines', address: '565 Tampines Street 52 Singapore 507565' },
+        };
 
-        if (dbResult.rows.length > 0) {
-          const record = dbResult.rows[0];
-          // Extract area from full address (usually in format "DISTRICT, ADDRESS SINGAPORE POSTCODE")
-          const addressParts = (record.full_address || '').split(',');
-          area = addressParts[0]?.trim() || 'Singapore';
-          fullAddress = record.full_address || `${area} Singapore ${postalCode}`;
-          console.log(`[Extract] ✅ LOCAL DB: ${area}, ${fullAddress}`);
+        if (postalToAddress[postalCode]) {
+          const mapped = postalToAddress[postalCode];
+          area = mapped.area;
+          fullAddress = mapped.address;
+          console.log(`[Extract] ✅ Fallback exact match: ${postalCode} → ${area}, ${fullAddress}`);
         } else {
-          // 2. Try OneMap API if not in local DB
+          // 2. Try OneMap API if not in fallback
           try {
             const oneMapUrl = `https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=Y&getAddrDetails=Y`;
             const omResponse = await axios.get(oneMapUrl, { timeout: 3000 });
@@ -739,16 +741,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
               throw new Error('No results');
             }
           } catch (omErr) {
-            // 3. Use hardcoded fallback mappings
+            // 3. Use hardcoded fallback mappings (already defined above)
             console.warn(`[Extract] OneMap failed, using fallback: ${omErr instanceof Error ? omErr.message : String(omErr)}`);
-            const postalToAddress: Record<string, { area: string; address: string }> = {
-              '110001': { area: 'Pasir Panjang', address: '1 Pasir Panjang Road Singapore 110001' },
-              '150101': { area: 'Henderson', address: '101 Henderson Road Singapore 150101' },
-              '680433': { area: 'Choa Chu Kang', address: '433 Choa Chu Kang Avenue 4 Singapore 680433' },
-              '238857': { area: 'Tanjong Pagar', address: '857 Tanjong Pagar Road Singapore 238857' },
-              '554262': { area: 'Punggol', address: '262 Punggol Place Singapore 554262' },
-              '507565': { area: 'Tampines', address: '565 Tampines Street 52 Singapore 507565' },
-            };
 
             if (postalToAddress[postalCode]) {
               const mapped = postalToAddress[postalCode];
