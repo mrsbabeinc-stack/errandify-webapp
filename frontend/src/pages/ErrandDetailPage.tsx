@@ -1211,27 +1211,18 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
         {/* Celebratory Modal - Show after rating submitted */}
         {showCelebratory && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 animate-fadeIn">
-            <div className="bg-gradient-to-br from-green-100 via-emerald-100 to-green-50 rounded-2xl max-w-sm shadow-2xl relative overflow-hidden border-2 border-green-400 animate-scaleIn">
-              {/* Confetti Background */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute text-6xl top-1/4 left-1/4 animate-bounce">✨</div>
-                <div className="absolute text-6xl top-1/3 right-1/4 animate-bounce" style={{ animationDelay: '0.2s' }}>🎉</div>
-                <div className="absolute text-6xl bottom-1/4 left-1/3 animate-bounce" style={{ animationDelay: '0.4s' }}>⭐</div>
-              </div>
-
+          <div className="fixed bottom-6 right-6 z-50 animate-fadeIn pointer-events-none">
+            <div className="bg-gradient-to-br from-green-100 via-emerald-100 to-green-50 rounded-xl max-w-xs shadow-2xl relative overflow-hidden border-2 border-green-400 animate-scaleIn pointer-events-auto p-4">
               {/* Content */}
-              <div className="relative z-10 p-6 text-center">
-                <p className="text-4xl mb-3 animate-pulse">🎊</p>
-                <h2 className="text-2xl font-bold text-green-800 mb-2">Amazing!</h2>
-                <p className="text-green-700 font-semibold mb-1">You've approved this work</p>
-                <p className="text-sm text-green-600 mb-4">The doer will receive your rating and feedback. Great job supporting the community!</p>
-                <div className="text-lg font-bold text-errandify-orange mb-2">Job Complete ✓</div>
+              <div className="relative z-10 text-center">
+                <p className="text-3xl mb-1 animate-pulse">🎉</p>
+                <h2 className="text-lg font-bold text-green-800 mb-1">Amazing!</h2>
+                <p className="text-xs text-green-700 mb-2">You've approved this work</p>
                 <button
                   onClick={() => setShowCelebratory(false)}
-                  className="px-4 py-2 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 transition-all text-sm"
+                  className="px-3 py-1 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 transition-all text-xs"
                 >
-                  Continue
+                  Done
                 </button>
               </div>
             </div>
