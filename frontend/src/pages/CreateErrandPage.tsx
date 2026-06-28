@@ -934,6 +934,7 @@ export default function CreateErrandPage() {
               )}
 
               {formData.category && (() => {
+                console.log('[CreateErrand] Rendering examples for category:', formData.category);
                 const today = new Date();
                 const tomorrow = new Date(today);
                 tomorrow.setDate(tomorrow.getDate() + 1);
@@ -941,6 +942,7 @@ export default function CreateErrandPage() {
                 nextWeek.setDate(nextWeek.getDate() + 7);
                 const tomorrowDate = tomorrow.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 const nextWeekDate = nextWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                console.log('[CreateErrand] Tomorrow date:', tomorrowDate, 'Next week:', nextWeekDate);
 
                 return (
                   <div className="text-xs text-gray-600 mt-2 px-2 py-1.5 bg-gray-50 rounded border-l-2 border-gray-300">
