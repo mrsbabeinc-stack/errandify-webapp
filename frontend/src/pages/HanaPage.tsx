@@ -24,10 +24,13 @@ export default function HanaPage() {
   const selectedCategory = searchParams.get('category');
 
   const handleComplete = (taskData: TaskData) => {
+    console.log('[HanaPage] handleComplete called with:', taskData);
     // Navigate to create errand with prefilled data
     const prefilledJson = encodeURIComponent(JSON.stringify(taskData));
-    // Use window.location to force navigation and prevent page refresh issues
-    window.location.href = `/create-errand?prefilled=${prefilledJson}`;
+    const targetUrl = `/create-errand?prefilled=${prefilledJson}`;
+    console.log('[HanaPage] Navigating to:', targetUrl);
+    // Use navigate from react-router
+    navigate(targetUrl);
   };
 
   const handleClose = () => {
