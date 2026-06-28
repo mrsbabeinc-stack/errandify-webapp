@@ -9,17 +9,20 @@ interface ErrandsPageProps {
 
 interface Errand {
   id: number;
-  errand_id?: string;
+  errandId?: string; // API returns camelCase
   title: string;
   description?: string;
   category: string;
   status: string;
-  budget?: number;
+  budget?: number | string;
   deadline?: string;
   location?: string;
   postal_code?: string;
+  postalCode?: string;
   isRecurring?: boolean;
   createdAt: string;
+  askerName?: string;
+  askerRating?: number;
 }
 
 export default function ErrandsPage({ userRole }: ErrandsPageProps) {
@@ -77,9 +80,6 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
       console.log('[ErrandsPage] API Response received:', response.data);
       const errandsList = response.data.data || [];
       console.log('[ErrandsPage] Errands count:', errandsList.length);
-      console.log('[ErrandsPage] First errand keys:', Object.keys(errandsList[0]));
-      console.log('[ErrandsPage] First errand errand_id:', errandsList[0]?.errand_id);
-      console.log('[ErrandsPage] First errand full:', JSON.stringify(errandsList[0], null, 2));
       setErrands(errandsList);
     } catch (err: any) {
       console.error('Failed to fetch errands:', {
@@ -306,7 +306,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                       {/* Title with Errand ID inline */}
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-mono text-xs font-bold text-gray-500 flex-shrink-0">
-                          {errand.errand_id}
+                          {errand.errandId}
                         </span>
                         <h3 className="font-bold text-errandify-brown truncate text-sm">
                           {errand.title}
@@ -326,9 +326,9 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                           {errand.category}
                         </span>
 
-                        {errand.postal_code && (
+                        {(errand.postal_code || errand.postalCode) && (
                           <span className="text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded font-semibold">
-                            {errand.postal_code}
+                            {errand.postal_code || errand.postalCode}
                           </span>
                         )}
 
