@@ -885,87 +885,42 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                           </p>
 
                           {/* AI Suggestions based on rating */}
-                          <p className="text-xs text-green-700 font-semibold mb-1">What needs improvement?</p>
-                          <div className="bg-white p-2 rounded mb-2 space-y-1">
+                          <p className="text-xs text-green-700 font-semibold mb-1">Feedback tags:</p>
+                          <div className="flex flex-wrap gap-1 mb-2">
                             {rating === 1 && (
-                              <div className="space-y-1">
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Didn't follow instructions</span>
-                                </label>
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Quality not acceptable</span>
-                                </label>
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Late or incomplete</span>
-                                </label>
-                              </div>
+                              <>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Didn't follow instructions</span>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Quality not acceptable</span>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Late or incomplete</span>
+                              </>
                             )}
                             {rating === 2 && (
-                              <div className="space-y-1">
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Took longer than expected</span>
-                                </label>
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Some parts need fixing</span>
-                                </label>
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" />
-                                  <span>Could communicate better</span>
-                                </label>
-                              </div>
+                              <>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Took longer than expected</span>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Some parts need fixing</span>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Could communicate better</span>
+                              </>
                             )}
                             {rating === 3 && (
-                              <div className="space-y-1">
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Did the job well</span>
-                                </label>
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Good communication</span>
-                                </label>
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Finished on time</span>
-                                </label>
-                              </div>
+                              <>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Did the job well</span>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Good communication</span>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Finished on time</span>
+                              </>
                             )}
                             {rating === 4 && (
-                              <div className="space-y-1">
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Excellent work quality</span>
-                                </label>
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Very helpful & friendly</span>
-                                </label>
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Quick to complete</span>
-                                </label>
-                              </div>
+                              <>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Excellent work quality</span>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Very helpful & friendly</span>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Quick to complete</span>
+                              </>
                             )}
                             {rating === 5 && (
-                              <div className="space-y-1">
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Exceptional care & quality</span>
-                                </label>
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Truly a wonderful neighbor</span>
-                                </label>
-                                <label className="flex items-start gap-2 text-xs">
-                                  <input type="checkbox" className="mt-0.5" defaultChecked />
-                                  <span>Went above & beyond</span>
-                                </label>
-                              </div>
+                              <>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Exceptional care & quality</span>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Truly a wonderful neighbor</span>
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Went above & beyond</span>
+                              </>
                             )}
                           </div>
 
@@ -1005,7 +960,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                               disabled={ratingSubmitting}
                               className="w-full mt-2 px-2 py-1 text-xs bg-gradient-to-r from-green-500 to-green-600 text-white rounded font-semibold hover:shadow disabled:opacity-50 transition"
                             >
-                            {ratingSubmitting ? '✨ Sending...' : '⭐ Submit Rating'}
+                            {ratingSubmitting ? '✨ Sending...' : '✓ Submit & Approved Completion'}
                           </button>
                           ) : (
                             <div className="w-full mt-2 px-2 py-1 text-xs bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded font-semibold text-center border border-green-300">
