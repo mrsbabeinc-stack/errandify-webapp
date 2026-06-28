@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { activityLogService } from '../services/activityLogService.js';
+import { generateRecurringInstances } from '../services/recurringService.js';
 
 const router = Router();
 
@@ -378,7 +379,21 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         status: errand.status,
         budget: errand.budget,
         deadline: errand.deadline,
+        isRecurring: errand.is_recurring,
       });
+
+      // Generate recurring instances if this is a recurring errand
+      if (isRecurring && recurringConfig && deadline) {
+        try {
+          const config = JSON.parse(recurringConfig);
+          const deadlineDate = new Date(deadline);
+          const instanceIds = await generateRecurringInstances(errand.id, deadlineDate, config);
+          console.log(`[RECURRING] Generated ${instanceIds.length} instances for errand ${errand.id}`);
+        } catch (recurringError) {
+          console.error('[RECURRING] Failed to generate recurring instances:', recurringError);
+          // Don't fail the errand creation if recurring generation fails
+        }
+      }
 
       // Notify relevant doers about this new errand
       try {
@@ -1519,6 +1534,72 @@ router.get('/recommended', authMiddleware, async (req: AuthRequest, res: Respons
   } catch (error) {
     console.error('Error fetching recommendations:', error);
     res.status(500).json({ error: 'Failed to fetch recommendations' });
+  }
+});
+
+// GET /api/errands/:id/recurring - Get recurring instances and parent info
+router.get('/:id/recurring', async (req: AuthRequest, res: Response) => {
+  try {
+    const errandId = parseInt(req.params.id, 10);
+
+    // Check if this is part of a recurring series
+    const sessionResult = await db.query(
+      `SELECT parent_errand_id, instance_number
+       FROM recurring_sessions
+       WHERE errand_id = $1`,
+      [errandId]
+    );
+
+    if (sessionResult.rows.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          isRecurringInstance: false,
+          parent: null,
+          siblings: [],
+        },
+      });
+    }
+
+    const session = sessionResult.rows[0];
+    const parentId = session.parent_errand_id;
+    const instanceNumber = session.instance_number;
+
+    // Get parent errand
+    const parentResult = await db.query(
+      `SELECT id, title, is_recurring, recurring_schedule FROM errands WHERE id = $1`,
+      [parentId]
+    );
+
+    // Get all instances
+    const siblingsResult = await db.query(
+      `SELECT rs.instance_number, rs.errand_id, rs.scheduled_date, e.title, e.status, e.budget
+       FROM recurring_sessions rs
+       JOIN errands e ON rs.errand_id = e.id
+       WHERE rs.parent_errand_id = $1
+       ORDER BY rs.instance_number ASC`,
+      [parentId]
+    );
+
+    res.json({
+      success: true,
+      data: {
+        isRecurringInstance: true,
+        currentInstance: instanceNumber,
+        parent: parentResult.rows[0] || null,
+        siblings: siblingsResult.rows.map(row => ({
+          instanceNumber: row.instance_number,
+          errandId: row.errand_id,
+          scheduledDate: row.scheduled_date,
+          title: row.title,
+          status: row.status,
+          budget: row.budget,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching recurring info:', error);
+    res.status(500).json({ error: 'Failed to fetch recurring info' });
   }
 });
 
