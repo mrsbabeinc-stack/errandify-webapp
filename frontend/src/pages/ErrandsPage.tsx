@@ -286,13 +286,13 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                 className={`bg-white rounded border border-gray-200 overflow-hidden hover:shadow-md transition-shadow ${getStatusBarColor(errand)}`}
               >
                 {/* Ultra-Compact Header */}
-                <button
+                <div
                   onClick={() =>
                     setExpandedErrandId(
                       expandedErrandId === errand.id ? null : errand.id
                     )
                   }
-                  className="w-full p-2 text-left hover:bg-opacity-50 transition-colors"
+                  className="w-full p-2 text-left hover:bg-opacity-50 transition-colors cursor-pointer"
                 >
                   <div className="flex items-start justify-between gap-2">
                     {/* Left: Errand ID + Title & Quick Info */}
@@ -362,7 +362,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                       </div>
                     </div>
                   </div>
-                </button>
+                </div>
 
                 {/* Expanded Details - Compact */}
                 {expandedErrandId === errand.id && (
