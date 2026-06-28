@@ -67,6 +67,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [showCompletionEvidence, setShowCompletionEvidence] = useState(false);
   const [completionPhotos, setCompletionPhotos] = useState<any[]>([]);
   const [completionNotes, setCompletionNotes] = useState('');
+  const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -829,15 +830,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                             <p className="font-semibold text-xs text-gray-700 mb-1">📷 Photos:</p>
                             <div className="flex gap-2 flex-wrap">
                               {completionPhotos.map((photo, idx) => (
-                                <a
+                                <button
                                   key={idx}
-                                  href={photo.file_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs bg-white text-blue-600 px-2 py-1 rounded border border-blue-300 hover:bg-blue-50"
+                                  onClick={() => setSelectedPhotoUrl(photo.file_url)}
+                                  className="text-xs bg-white text-blue-600 px-2 py-1 rounded border border-blue-300 hover:bg-blue-100 cursor-pointer transition-all"
                                 >
                                   Photo {idx + 1}
-                                </a>
+                                </button>
                               ))}
                             </div>
                           </div>
@@ -926,6 +925,28 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           </div>
         </div>
 
+        {/* Photo Modal */}
+        {selectedPhotoUrl && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg max-w-2xl max-h-96 relative">
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedPhotoUrl(null)}
+                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-lg transition-all z-10"
+                title="Close photo"
+              >
+                ✕
+              </button>
+
+              {/* Photo */}
+              <img
+                src={selectedPhotoUrl}
+                alt="Completion evidence"
+                className="w-full h-full object-contain"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Q&A Section */}
         {errand && (
