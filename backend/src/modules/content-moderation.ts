@@ -110,6 +110,13 @@ const MISLEADING_PATTERNS = [
   /\b(asap|urgent|emergency)\b.*\b(free|cheap)\b/i,
 ];
 
+const ADDRESS_PATTERNS = [
+  /\b(street|st|avenue|ave|road|rd|drive|dr|lane|ln|close|cl|crescent|cres|way|park|gardens|gdns|terrace|t|hill|boulevard|blvd|plaza|court|ct|square|sq|circle|mews|grove|row|hall|gate|place|pk|walk|rise|view|chase|end|green|heights|house|pavilion)\b.*\d+/i,
+  /\b\d{1,4}\s+(a|b|c|d)?\s+\w+\s+(street|avenue|road|drive|lane|close|way)/i,
+  /\b(blk|block)\s+\d+/i, // Block numbers (common in Singapore addresses)
+  /\b\d{6}\b/, // 6-digit postal codes
+];
+
 export function performBasicModerationCheck(
   title: string,
   description: string = '',
@@ -161,6 +168,16 @@ export function performBasicModerationCheck(
     if (pattern.test(fullText)) {
       issues.misleading = true;
       flags.push('misleading_content');
+      break;
+    }
+  }
+
+  // Check for addresses in description (should be in address field, not description)
+  for (const pattern of ADDRESS_PATTERNS) {
+    if (pattern.test(description.toLowerCase())) {
+      issues.inappropriate = true;
+      flags.push('address_in_description');
+      console.log('[Moderation] Address detected in description');
       break;
     }
   }
