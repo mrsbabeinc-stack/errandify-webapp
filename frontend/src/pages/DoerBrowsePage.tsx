@@ -4,6 +4,7 @@ import axios from 'axios';
 
 interface Errand {
   id: string;
+  errandId?: string;
   title: string;
   description: string;
   budget: number | null;
@@ -12,6 +13,7 @@ interface Errand {
   category: string;
   askerName: string;
   askerRating: number;
+  isRecurring?: boolean;
 }
 
 interface Props {
@@ -369,9 +371,22 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
             {filteredErrands.map((errand) => (
               <div
                 key={errand.id}
-                className="bg-white rounded-xl p-2 shadow-sm hover:shadow-md hover:border-orange-200 transition-all cursor-pointer border border-orange-50"
+                className="bg-white rounded-xl shadow-sm hover:shadow-md hover:border-orange-200 transition-all cursor-pointer border border-orange-50 overflow-hidden"
                 onClick={() => navigate(`/errand/${errand.id}`)}
               >
+                {/* Errand ID & Start Date Header */}
+                {(errand.errandId || errand.deadline) && (
+                  <div className="bg-gray-50 px-2 py-1 border-b border-gray-200 flex items-center justify-between text-xs">
+                    <code className="font-mono text-gray-700 font-semibold">{errand.errandId || 'N/A'}</code>
+                    {errand.deadline && (
+                      <span className="text-gray-600">
+                        📅 {new Date(errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div className="p-2">
                 {/* Title + Budget + Your Bid */}
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <div className="flex-1 min-w-0">
@@ -415,6 +430,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                   </button>
                   <span className="font-semibold">⭐ {errand.askerRating ? errand.askerRating.toFixed(1) : 'New'}</span>
                   <span className="text-gray-700 font-medium">{errand.askerName}</span>
+                </div>
                 </div>
               </div>
             ))}
