@@ -1637,6 +1637,32 @@ export default function CreateErrandPage() {
             </p>
           </div>
 
+          {/* Missing Fields Checklist */}
+          {(() => {
+            const missingFields = [];
+            if (!formData.title || formData.title.trim().length < 5) missingFields.push({ icon: '📝', label: 'Add a clear title', field: 'title' });
+            if (!formData.description || formData.description.trim().length === 0) missingFields.push({ icon: '📋', label: 'Describe what you need', field: 'description' });
+            if (!formData.category) missingFields.push({ icon: '🏷️', label: 'Pick a category', field: 'category' });
+            if (!formData.deadline || !formData.time) missingFields.push({ icon: '📅', label: 'Set a date and time', field: 'deadline' });
+            if (!formData.budget || parseFloat(formData.budget) <= 0) missingFields.push({ icon: '💰', label: 'Enter your budget', field: 'budget' });
+            const isRemoteWork = formData.location === 'remote';
+            if (!isRemoteWork && (!formData.location || formData.location.trim().length === 0)) missingFields.push({ icon: '📍', label: 'Add a location', field: 'location' });
+
+            return missingFields.length > 0 ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+                <p className="text-sm font-semibold text-blue-900">✨ Just a couple things:</p>
+                <div className="space-y-1">
+                  {missingFields.map((item) => (
+                    <div key={item.field} className="flex items-center gap-2 text-sm text-blue-800">
+                      <span>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null;
+          })()}
+
           <button
             onClick={() => {
               console.log('[DEBUG] *** POST BUTTON IN FORM CLICKED ***');
