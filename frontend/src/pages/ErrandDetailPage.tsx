@@ -862,7 +862,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
                         {/* Quick Rating Form */}
                         <div className="mt-3 pt-2 border-t border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-2 rounded">
-                          <p className="font-semibold text-xs text-green-800 mb-2 text-center">How happy are you? 🌟</p>
+                          <p className="font-semibold text-xs text-green-800 mb-2 text-center">How wonderful was the experience?</p>
                           <div className="flex gap-1 mb-3 justify-center">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <button
@@ -876,17 +876,103 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                               </button>
                             ))}
                           </div>
-                          <p className="text-xs text-center text-green-700 mb-2 font-medium">
-                            {rating === 1 && '😞'}
-                            {rating === 2 && '😐'}
-                            {rating === 3 && '😊'}
-                            {rating === 4 && '😄'}
-                            {rating === 5 && '🤩 Perfect!'}
+                          <p className="text-xs text-center text-green-800 mb-3 font-semibold">
+                            {rating === 1 && 'Needs improvement'}
+                            {rating === 2 && 'Could be better'}
+                            {rating === 3 && 'Good work!'}
+                            {rating === 4 && 'Really good!'}
+                            {rating === 5 && 'Amazing! Wonderful work!'}
                           </p>
+
+                          {/* AI Suggestions based on rating */}
+                          <p className="text-xs text-green-700 font-semibold mb-1">What needs improvement?</p>
+                          <div className="bg-white p-2 rounded mb-2 space-y-1">
+                            {rating === 1 && (
+                              <div className="space-y-1">
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Didn't follow instructions</span>
+                                </label>
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Quality not acceptable</span>
+                                </label>
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Late or incomplete</span>
+                                </label>
+                              </div>
+                            )}
+                            {rating === 2 && (
+                              <div className="space-y-1">
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Took longer than expected</span>
+                                </label>
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Some parts need fixing</span>
+                                </label>
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" />
+                                  <span>Could communicate better</span>
+                                </label>
+                              </div>
+                            )}
+                            {rating === 3 && (
+                              <div className="space-y-1">
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Did the job well</span>
+                                </label>
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Good communication</span>
+                                </label>
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Finished on time</span>
+                                </label>
+                              </div>
+                            )}
+                            {rating === 4 && (
+                              <div className="space-y-1">
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Excellent work quality</span>
+                                </label>
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Very helpful & friendly</span>
+                                </label>
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Quick to complete</span>
+                                </label>
+                              </div>
+                            )}
+                            {rating === 5 && (
+                              <div className="space-y-1">
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Exceptional care & quality</span>
+                                </label>
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Truly a wonderful neighbor</span>
+                                </label>
+                                <label className="flex items-start gap-2 text-xs">
+                                  <input type="checkbox" className="mt-0.5" defaultChecked />
+                                  <span>Went above & beyond</span>
+                                </label>
+                              </div>
+                            )}
+                          </div>
+
                           <textarea
                             value={ratingComment}
                             onChange={(e) => setRatingComment(e.target.value)}
-                            placeholder="Tell them what was great! (optional)"
+                            placeholder="Add your personal message... (optional)"
                             maxLength={200}
                             rows={2}
                             className="w-full text-xs px-2 py-1 border border-green-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-green-500 resize-none"
