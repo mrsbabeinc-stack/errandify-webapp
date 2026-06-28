@@ -293,21 +293,71 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
 
     console.log('[Hana TTS] Converting text to speech:', { language, textLength: text.length });
 
-    // Map language to language codes
-    const voiceMap: Record<string, { lang: string }> = {
-      en: { lang: 'en-SG' },
-      zh: { lang: 'zh-CN' },
-      yue: { lang: 'zh-HK' },
+    // Map language to Alibaba Qwen TTS voice (CosyVoice)
+    // All FEMALE voices with motherly, warm, passionate tone
+    const voiceMap: Record<string, { voice: string; lang: string }> = {
+      en: {
+        voice: 'Shannon', // Female English voice - warm, natural
+        lang: 'en-SG',
+      },
+      zh: {
+        voice: 'Ningning', // Mandarin female - warm, natural
+        lang: 'zh-CN',
+      },
+      yue: {
+        voice: 'Xiaoxiao', // Cantonese female - warm, natural
+        lang: 'zh-HK',
+      },
     };
 
     const voiceConfig = voiceMap[language] || voiceMap['en'];
 
-    console.log('[Hana TTS] Using language:', voiceConfig.lang);
+    console.log('[Hana TTS] Using Qwen CosyVoice with voice:', voiceConfig.voice);
 
-    // Use Google TTS for natural female voices
-    // Google TTS provides natural, warm female voices in all languages
-    console.log('[Hana TTS] Using Google TTS for warm female voice');
-    fallbackToGTTS(text, voiceConfig.lang, res, cacheKey);
+    // Try to use Alibaba Qwen TTS (CosyVoice) for natural female voices
+    try {
+      const qwenTtsResponse = await axios.post(
+        'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text2speech/synthesis',
+        {
+          model: 'cosyvoice-v1',
+          input: {
+            text: text,
+          },
+          parameters: {
+            voice: voiceConfig.voice,
+            rate: language === 'en' ? 1.0 : 0.9, // Natural speaking pace
+            pitch: language === 'en' ? 1.0 : 0.95, // Warm pitch
+            volume: 50, // Standard volume
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${config.qwen.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          responseType: 'arraybuffer',
+        }
+      );
+
+      const audioBase64 = Buffer.from(qwenTtsResponse.data).toString('base64');
+      console.log('[Hana TTS] Alibaba Qwen TTS generated successfully');
+
+      // Cache the result
+      audioCache.set(cacheKey, { audio: `data:audio/wav;base64,${audioBase64}`, timestamp: Date.now() });
+
+      res.json({
+        success: true,
+        data: {
+          audio: `data:audio/wav;base64,${audioBase64}`,
+          format: 'base64',
+        },
+      });
+    } catch (qwenError: any) {
+      console.log('[Hana TTS] Alibaba Qwen TTS failed');
+      console.log('Qwen error:', qwenError.response?.data || qwenError.message);
+      // If Qwen fails, still fail (don't fallback to Google)
+      throw qwenError;
+    }
 
   } catch (error: any) {
     console.error('TTS error:', error.message);
