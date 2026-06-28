@@ -33,6 +33,7 @@ export default function BrowseErrandsPage() {
   const [expandedRecurringId, setExpandedRecurringId] = useState<string | null>(null);
   const [recurringInfo, setRecurringInfo] = useState<Record<string, RecurringInfo>>({});
   const [selectedSessions, setSelectedSessions] = useState<Record<string, number[]>>({});
+  const [bidAmounts, setBidAmounts] = useState<Record<string, string>>({});
 
   const categoryNames: Record<string, string> = {
     'home-maintenance': 'Home Maintenance',
@@ -136,13 +137,47 @@ export default function BrowseErrandsPage() {
       alert('Please select at least one session');
       return;
     }
-    // Navigate to bid page with selected sessions
-    // Store selected sessions in sessionStorage to pass to bid page
-    sessionStorage.setItem('recurringSessionsToBid', JSON.stringify({
-      parentErrandId,
-      selectedSessions: sessions,
-    }));
-    navigate(`/errand/${parentErrandId}?mode=bid-recurring`);
+
+    const amount = parseFloat(bidAmounts[errandId] || '0');
+    if (isNaN(amount) || amount < 8) {
+      alert('Bid must be at least $8');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids`,
+        {
+          task_id: parentErrandId,
+          amount,
+          note: '',
+          sessions: sessions, // Pass selected session numbers
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data.success) {
+        alert(`✅ Bid placed for ${sessions.length} session(s) at $${amount}!`);
+        // Reset selection
+        setSelectedSessions(prev => ({
+          ...prev,
+          [errandId]: [],
+        }));
+        setBidAmounts(prev => ({
+          ...prev,
+          [errandId]: '',
+        }));
+        setExpandedRecurringId(null);
+        // Refresh bids
+        await fetchRecurringInfo(parentErrandId);
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to place bid');
+      console.error('Bid error:', err);
+    }
   };
 
   return (
@@ -279,11 +314,33 @@ export default function BrowseErrandsPage() {
                       </label>
                     ))}
                   </div>
+
+                  {/* Bid Amount Input */}
+                  <div className="mb-3">
+                    <label className="text-sm font-semibold text-gray-700 block mb-1">
+                      Your Bid Per Session
+                    </label>
+                    <div className="flex gap-2">
+                      <span className="text-lg font-semibold text-gray-600">$</span>
+                      <input
+                        type="number"
+                        value={bidAmounts[errand.id] || ''}
+                        onChange={(e) => setBidAmounts(prev => ({ ...prev, [errand.id]: e.target.value }))}
+                        placeholder="Enter bid amount"
+                        min="8"
+                        step="5"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Minimum $8 per session</p>
+                  </div>
+
                   <button
                     onClick={() => handleBidOnRecurringSessions(errand.id, errand.id)}
-                    className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm"
+                    disabled={!bidAmounts[errand.id] || (selectedSessions[errand.id]?.length || 0) === 0}
+                    className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
-                    Bid on Selected Sessions
+                    ✅ Bid for {selectedSessions[errand.id]?.length || 0} Session(s)
                   </button>
                 </div>
               )}
