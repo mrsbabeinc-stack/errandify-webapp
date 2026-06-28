@@ -1515,7 +1515,18 @@ export default function CreateErrandPage() {
               setShowConfirm(true);
               console.log('[DEBUG] *** setShowConfirm CALLED ***');
             }}
-            disabled={!formData.title || !formData.category || loading}
+            disabled={(() => {
+              // Check all required fields
+              if (!formData.title || formData.title.trim().length < 5) return true;
+              if (!formData.category) return true;
+              if (!formData.deadline) return true;
+              if (!formData.time) return true;
+              if (!formData.budget || parseFloat(formData.budget) <= 0) return true;
+              const isRemoteWork = formData.location === 'remote';
+              if (!isRemoteWork && (!formData.location || formData.location.trim().length === 0)) return true;
+              if (loading) return true;
+              return false;
+            })()}
             className="w-full bg-errandify-orange text-white py-2.5 rounded-xl font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base shadow-sm"
           >
             {loading ? 'Posting...' : 'Post'}
