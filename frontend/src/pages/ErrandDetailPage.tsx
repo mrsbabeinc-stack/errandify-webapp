@@ -570,21 +570,21 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             )}
 
             {/* Description */}
-            <div className="border-t border-gray-200 pt-2">
-              <h2 className="font-semibold text-errandify-brown mb-1 text-xs">
-                About This Errand
+            <div className="border-t border-orange-200 pt-1.5 mt-1.5">
+              <h2 className="font-bold text-errandify-brown mb-1 text-xs">
+                About This Task
               </h2>
               <p className="text-xs text-gray-700 leading-relaxed">
-                {errand.description || 'No description provided'}
+                {errand.description || 'No description yet - asker will add more details!'}
               </p>
             </div>
 
             {/* Notes & Tips for Confirmed Doer - Only show if current user is the confirmed doer */}
             {errand.status === 'confirmed' && errand.notes && currentUser && currentUser.id !== errand.askerId && (
-              <div className="border-t border-gray-200 pt-2 mt-2">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="font-semibold text-errandify-brown text-xs">
-                    💡 Instructions from Asker
+              <div className="border-t border-orange-200 pt-1.5 mt-1.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <h2 className="font-bold text-errandify-brown text-xs">
+                    Instructions from Neighbor
                   </h2>
                   <button
                     onClick={() => {
@@ -592,12 +592,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                       setCopiedTipToClipboard(true);
                       setTimeout(() => setCopiedTipToClipboard(false), 2000);
                     }}
-                    className="text-xs px-2 py-1 bg-errandify-orange text-white rounded hover:bg-orange-600 transition font-medium"
+                    className="text-xs px-2 py-1 bg-errandify-orange text-white rounded-full hover:bg-orange-600 transition font-medium"
                   >
-                    {copiedTipToClipboard ? '✓ Copied!' : '📋 Copy to Notes'}
+                    {copiedTipToClipboard ? 'Saved!' : 'Save'}
                   </button>
                 </div>
-                <div className="text-xs text-gray-600 bg-blue-50 border-l-2 border-blue-300 px-2 py-1.5 rounded leading-relaxed">
+                <div className="text-xs text-gray-700 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 px-2 py-1.5 rounded-lg leading-relaxed">
                   {errand.notes}
                 </div>
               </div>
@@ -605,10 +605,10 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
             {/* AI Tips (only if no asker notes and user is confirmed doer) */}
             {errand.status === 'confirmed' && !errand.notes && errand.title && currentUser && currentUser.id !== errand.askerId && (
-              <div className="border-t border-gray-200 pt-2 mt-2">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="font-semibold text-errandify-brown text-xs">
-                    💡 Tips for this Task
+              <div className="border-t border-orange-200 pt-1.5 mt-1.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <h2 className="font-bold text-errandify-brown text-xs">
+                    Helpful Tips
                   </h2>
                   <button
                     onClick={() => {
@@ -616,12 +616,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                       setCopiedTipToClipboard(true);
                       setTimeout(() => setCopiedTipToClipboard(false), 2000);
                     }}
-                    className="text-xs px-2 py-1 bg-errandify-orange text-white rounded hover:bg-orange-600 transition font-medium"
+                    className="text-xs px-2 py-1 bg-errandify-orange text-white rounded-full hover:bg-orange-600 transition font-medium"
                   >
-                    {copiedTipToClipboard ? '✓ Copied!' : '📋 Copy to Notes'}
+                    {copiedTipToClipboard ? 'Saved!' : 'Save'}
                   </button>
                 </div>
-                <div className="text-xs text-gray-600 bg-blue-50 border-l-2 border-blue-300 px-2 py-1.5 rounded leading-relaxed">
+                <div className="text-xs text-gray-700 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 px-2 py-1.5 rounded-lg leading-relaxed">
                   {getTaskSpecificTips(errand.title, errand.category)}
                 </div>
               </div>
@@ -629,9 +629,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
             {/* Asker Info - Only show alias */}
             {errand.asker && (
-              <div className="border-t border-gray-200 pt-1 pb-1">
-                <p className="text-xs text-gray-600 font-semibold mb-0.5">Posted By</p>
-                <p className="text-xs text-gray-700 mb-0.5">{errand.asker.display_name || 'Anonymous'}</p>
+              <div className="border-t border-orange-200 pt-1.5 mt-1.5">
+                <p className="text-xs text-gray-600 font-bold mb-0.5">Posted By</p>
+                <p className="text-xs text-gray-800 font-medium mb-0.5">{errand.asker.name || 'Community Member'}</p>
               </div>
             )}
 
