@@ -1541,6 +1541,7 @@ export default function CreateErrandPage() {
             disabled={(() => {
               // Check all required fields
               if (!formData.title || formData.title.trim().length < 5) return true;
+              if (!formData.description || formData.description.trim().length === 0) return true;
               if (!formData.category) return true;
               if (!formData.deadline) return true;
               if (!formData.time) return true;
