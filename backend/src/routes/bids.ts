@@ -72,7 +72,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       if (existingBid.status === 'closed') {
         return res.status(403).json({
           error: 'Cannot modify closed offer',
-          message: 'The job has started with another helper. Your offer is closed.'
+          message: 'The job has started with another doer. Your offer is closed.'
         });
       }
 
@@ -592,7 +592,7 @@ router.put('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respons
             otherBid.doer_id,
             'bid_closed',
             '❌ Job Started',
-            `The job for "${errandTitle}" has started with another helper. Your offer is now closed.`,
+            `The job for "${errandTitle}" has started with another doer. Your offer is now closed.`,
             bid.errand_id,
           ]
         );

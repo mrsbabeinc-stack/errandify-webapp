@@ -70,10 +70,10 @@ const CONTEXT_MEMORY_LIMIT = 5;
 // Intent detection for common questions - provide instant answers
 const INTENT_RESPONSES: Record<Language, Record<string, string>> = {
   en: {
-    'post_errand': 'To post an errand:\n1. Tap the + button at the bottom\n2. Describe what you need\n3. Set your budget and deadline\n4. Submit\n\nThat\'s it! You\'ll see bids from helpers.',
+    'post_errand': 'To post an errand:\n1. Tap the + button at the bottom\n2. Describe what you need\n3. Set your budget and deadline\n4. Submit\n\nThat\'s it! You\'ll see bids from doers.',
     'browse_errands': 'To find errands:\n1. Tap the magnifying glass icon (Browse)\n2. Browse available errands by category\n3. Tap one to see details\n4. Tap Accept to place your bid',
     'payment': 'Your payment is secure with us until the work is done and confirmed. You get paid once the errand poster approves your work.',
-    'bidding': 'You can place a bid on any errand by tapping Accept. The person who posted will choose their favourite helper. You can bid any amount you think is fair.',
+    'bidding': 'You can place a bid on any errand by tapping Accept. The person who posted will choose their favourite doer. You can bid any amount you think is fair.',
   },
   zh: {
     'post_errand': '发布帮帮很简单：\n1. 点击底部的 + 按钮\n2. 描述你需要的帮助\n3. 设定预算和截止日期\n4. 提交\n\n就这样！你会收到帮手的出价。',
@@ -215,8 +215,23 @@ export default function HanaCustomerService() {
   const handleSpeak = async (text: string) => {
     try {
       console.log('[Hana] Speaking text for language:', language);
-      // Use Alibaba Qwen TTS for all languages (superior Chinese voice support)
-      await speakWithQwenTTS(text);
+      // Use Web Speech API directly for guaranteed female voice
+      // Wait for voices to load if needed
+      if (window.speechSynthesis.getVoices().length === 0) {
+        console.log('[Hana] Voices not loaded yet, waiting...');
+        await new Promise(resolve => {
+          const onVoicesChanged = () => {
+            window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
+            resolve(true);
+          };
+          window.speechSynthesis.addEventListener('voiceschanged', onVoicesChanged);
+          setTimeout(() => {
+            window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
+            resolve(true);
+          }, 2000);
+        });
+      }
+      fallbackBrowserTTS(text);
     } catch (error: any) {
       console.error('[Hana] Error:', error.message);
       setIsSpeaking(false);
@@ -251,21 +266,16 @@ export default function HanaCustomerService() {
 
         audio.onerror = (error: any) => {
           console.error('[Hana] Qwen TTS error:', error);
-          console.log('[Hana] Falling back to native TTS');
-          fallbackBrowserTTS(text);
         };
 
         audio.play().catch((error: any) => {
           console.error('[Hana] Failed to play Qwen TTS:', error);
-          fallbackBrowserTTS(text);
         });
       } else {
         console.error('[Hana] No audio in response');
-        fallbackBrowserTTS(text);
       }
     } catch (error: any) {
       console.error('[Hana] Qwen TTS exception:', error.message);
-      fallbackBrowserTTS(text);
     }
   };
 

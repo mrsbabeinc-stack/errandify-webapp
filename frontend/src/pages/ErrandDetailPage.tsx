@@ -317,7 +317,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      alert('🚀 Amazing! You\'ve started the errand.\n\nYou\'re making a real difference in someone\'s life. Thank you for being an awesome community helper! 🌟');
+      alert('🚀 Amazing! You\'ve started the errand.\n\nYou\'re making a real difference in someone\'s life. Thank you for being an awesome community doer! 🌟');
       fetchErrandDetail();
     } catch (error: any) {
       console.error('Failed to start job:', error);
