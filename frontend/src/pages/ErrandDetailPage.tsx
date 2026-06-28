@@ -1073,6 +1073,10 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                 if (!currentUser || !errand) return;
                                 setRatingSubmitting(true);
                                 try {
+                                  if (!errand.doerId) {
+                                    alert('Error: Doer information not available. Please refresh and try again.');
+                                    return;
+                                  }
                                   const token = localStorage.getItem('token');
                                   await axios.post(
                                     `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings`,
@@ -1090,6 +1094,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                   // Auto-hide celebratory message after 5 seconds
                                   setTimeout(() => setShowCelebratory(false), 5000);
                                 } catch (err: any) {
+                                  console.error('Rating submission error:', err);
                                   alert('Error submitting rating: ' + (err.response?.data?.error || err.message));
                                 } finally {
                                   setRatingSubmitting(false);
