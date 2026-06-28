@@ -77,55 +77,32 @@ export default function ReviewPage() {
   if (!job) return <div className="p-6 text-center">Job not found</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 p-6 pb-32">
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 p-3 pb-20">
+      <div className="max-w-md mx-auto bg-white rounded-lg shadow p-4">
         <button
           onClick={() => navigate(-1)}
-          className="text-lg text-gray-600 font-bold mb-4">‹</button>
-        {/* Info Message */}
-        {!submitting && !loading && !error && (
-          <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
-            <p className="text-blue-700 font-semibold">📋 Review the completed work</p>
-            <p className="text-blue-600 text-sm">Your rating helps doers improve and builds community trust.</p>
-          </div>
-        )}
+          className="text-sm text-gray-600 font-bold mb-3">‹ Back</button>
 
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">⭐ Rate Your Experience</h1>
-          <p className="text-gray-600">Your feedback helps {job.doerAlias || job.doerName} improve and helps others make informed decisions</p>
+        <div className="text-center mb-4">
+          <h1 className="text-lg font-bold text-gray-800 mb-2">How was it? 😊</h1>
+          {job.formatted_id && (
+            <p className="text-xs text-errandify-orange font-semibold mb-1">{job.formatted_id}</p>
+          )}
+          <p className="text-xs text-gray-600">{job.title}</p>
+          <p className="text-xs text-gray-500 mt-0.5">with {job.doerAlias || job.doerName}</p>
         </div>
 
-        {/* Task Summary */}
-        <div className="mb-8 p-6 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border border-orange-200">
-          <div className="flex items-start gap-4">
-            <div className="text-3xl">📋</div>
-            <div className="flex-1">
-              {job.formatted_id && (
-                <p className="text-xs text-errandify-orange font-semibold mb-1">{job.formatted_id}</p>
-              )}
-              <h3 className="font-bold text-gray-800 text-lg mb-1">{job.title}</h3>
-              <p className="text-sm text-gray-600 mb-2">
-                <strong>Completed with:</strong> {job.doerAlias || job.doerName}
-              </p>
-              <p className="text-sm font-semibold text-errandify-orange">Budget: SGD ${job.budget}</p>
-            </div>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmitReview} className="space-y-6">
+        <form onSubmit={handleSubmitReview} className="space-y-3">
           {/* Star Rating */}
           <div>
-            <label className="block text-lg font-bold text-gray-800 mb-4">
-              How would you rate this work?
-            </label>
-            <div className="flex gap-3 justify-center mb-4">
+            <div className="flex gap-2 justify-center mb-2">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
                   type="button"
                   onClick={() => setRating(star)}
-                  className={`text-5xl transition-all hover:scale-125 ${
-                    star <= rating ? 'text-yellow-400 drop-shadow-lg' : 'text-gray-300 hover:text-yellow-300'
+                  className={`text-3xl transition-all hover:scale-110 ${
+                    star <= rating ? 'text-yellow-400 drop-shadow' : 'text-gray-300 hover:text-yellow-300'
                   }`}
                 >
                   ★
@@ -133,70 +110,56 @@ export default function ReviewPage() {
               ))}
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-errandify-orange mb-1">{rating}.0</p>
-              <p className="text-sm text-gray-600 font-medium">
-                {rating === 1 && '😞 Poor - Needs improvement'}
-                {rating === 2 && '😐 Fair - Below expectations'}
-                {rating === 3 && '😊 Good - Met expectations'}
-                {rating === 4 && '😄 Very Good - Exceeded expectations'}
-                {rating === 5 && '🤩 Excellent - Outstanding work!'}
+              <p className="text-lg font-bold text-errandify-orange mb-0.5">{rating}.0</p>
+              <p className="text-xs text-gray-600">
+                {rating === 1 && '😞 Needs improvement'}
+                {rating === 2 && '😐 Below expectations'}
+                {rating === 3 && '😊 Met expectations'}
+                {rating === 4 && '😄 Exceeded expectations'}
+                {rating === 5 && '🤩 Excellent work!'}
               </p>
             </div>
           </div>
 
-          {/* Hana Suggestions */}
+          {/* Hana Tip */}
           {rating < 5 && (
-            <div className="p-4 bg-orange-50 border border-errandify-orange-200 rounded-lg mb-6">
-              <div className="flex gap-3">
-                <span className="text-2xl">🤖</span>
-                <div>
-                  <p className="font-semibold text-errandify-orange-900 mb-1">Hana's Tip</p>
-                  <p className="text-sm text-errandify-orange-800">
-                    {rating <= 2 && 'Help the doer improve! Specific feedback about what went wrong is most helpful.'}
-                    {rating === 3 && 'Let them know what you loved and what could be improved next time.'}
-                    {rating === 4 && 'Tell them what exceeded your expectations – they\'ll love to hear it!'}
-                  </p>
-                </div>
-              </div>
+            <div className="p-2 bg-orange-50 border border-orange-200 rounded text-center">
+              <p className="text-xs text-orange-700">💡 Specific feedback helps them improve!</p>
             </div>
           )}
 
           {/* Comment */}
           <div>
-            <label className="block text-sm font-bold text-gray-800 mb-3">
-              Share Your Feedback {comment.length > 0 && `(${comment.length}/500)`}
-            </label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder={
                 rating === 5
-                  ? 'What did they do exceptionally well? 💫'
-                  : 'Be specific: What went well? What could improve? 💭'
+                  ? 'What went great? ✨'
+                  : 'Any feedback? (optional)'
               }
               maxLength={500}
-              rows={4}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-errandify-orange focus:ring-2 focus:ring-orange-100 resize-none"
+              rows={2}
+              className="w-full px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none focus:border-errandify-orange focus:ring-1 focus:ring-orange-100 resize-none"
             />
-            <p className="text-xs text-gray-500 mt-2">Optional but helpful for the community</p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-8">
+          <div className="flex gap-2 pt-2">
             <button
               type="button"
               onClick={() => navigate('/home')}
               disabled={submitting}
-              className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-bold hover:bg-gray-50 disabled:opacity-50 transition"
+              className="flex-1 px-3 py-2 text-xs border border-gray-300 text-gray-700 rounded font-semibold hover:bg-gray-50 disabled:opacity-50 transition"
             >
               Skip
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-errandify-orange to-orange-600 text-white rounded-lg font-bold hover:shadow-lg disabled:opacity-50 transition transform hover:scale-105"
+              className="flex-1 px-3 py-2 text-xs bg-gradient-to-r from-errandify-orange to-orange-600 text-white rounded font-bold hover:shadow disabled:opacity-50 transition"
             >
-              {submitting ? '✨ Submitting...' : '⭐ Submit Review'}
+              {submitting ? '✨ Sending...' : '⭐ Submit'}
             </button>
           </div>
         </form>
