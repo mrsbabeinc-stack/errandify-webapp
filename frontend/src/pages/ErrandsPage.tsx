@@ -9,6 +9,7 @@ interface ErrandsPageProps {
 
 interface Errand {
   id: number;
+  errand_id?: string;
   title: string;
   description?: string;
   category: string;
@@ -16,6 +17,7 @@ interface Errand {
   budget?: number;
   deadline?: string;
   location?: string;
+  postal_code?: string;
   isRecurring?: boolean;
   createdAt: string;
 }
@@ -132,6 +134,21 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
       'tech-support-it': 'bg-indigo-100 text-indigo-700',
     };
     return colors[category] || 'bg-gray-100 text-gray-700';
+  };
+
+  const getPendingAction = (errand: Errand) => {
+    if (errand.status === 'completed') return { type: 'awaiting_rating', label: '⚠️ Rate Now', color: 'bg-red-500' };
+    return null;
+  };
+
+  const getStatusBarColor = (errand: Errand) => {
+    const pendingAction = getPendingAction(errand);
+    if (pendingAction?.type === 'awaiting_rating') return 'border-l-4 border-red-500 bg-red-50';
+    if (errand.status === 'in_progress') return 'border-l-4 border-blue-500 bg-blue-50';
+    if (errand.status === 'completed') return 'border-l-4 border-orange-500 bg-orange-50';
+    if (errand.status === 'rated') return 'border-l-4 border-green-500 bg-green-50';
+    if (errand.status === 'confirmed') return 'border-l-4 border-purple-500 bg-purple-50';
+    return 'border-l-4 border-gray-300 bg-gray-50';
   };
 
   const formatDate = (dateString: string) => {
@@ -261,10 +278,12 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
               No errands found
             </div>
           ) : (
-            filteredErrands.map((errand) => (
+            filteredErrands.map((errand) => {
+              const pendingAction = getPendingAction(errand);
+              return (
               <div
                 key={errand.id}
-                className="bg-white rounded border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                className={`bg-white rounded border border-gray-200 overflow-hidden hover:shadow-md transition-shadow ${getStatusBarColor(errand)}`}
               >
                 {/* Ultra-Compact Header */}
                 <button
@@ -273,11 +292,16 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                       expandedErrandId === errand.id ? null : errand.id
                     )
                   }
-                  className="w-full p-2 text-left hover:bg-gray-50 transition-colors"
+                  className="w-full p-2 text-left hover:bg-opacity-50 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    {/* Left: Title & Quick Info */}
+                    {/* Left: Errand ID + Title & Quick Info */}
                     <div className="flex-1 min-w-0">
+                      {/* Errand ID */}
+                      <span className="font-mono text-xs font-bold text-gray-500 block mb-0.5">
+                        {errand.errand_id || `ER-${errand.id}`}
+                      </span>
+
                       <h3 className="font-bold text-errandify-brown truncate text-sm">
                         {errand.title}
                       </h3>
@@ -295,6 +319,12 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                           {errand.category}
                         </span>
 
+                        {errand.postal_code && (
+                          <span className="text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded font-semibold">
+                            {errand.postal_code}
+                          </span>
+                        )}
+
                         {errand.budget && (
                           <span className="text-errandify-orange font-bold text-xs">
                             SGD ${errand.budget}
@@ -304,6 +334,12 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                         <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-semibold">
                           {capitalizeStatus(errand.status)}
                         </span>
+
+                        {pendingAction && (
+                          <span className={`text-xs ${pendingAction.color} text-white px-2 py-0.5 rounded-full font-bold`}>
+                            {pendingAction.label}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -370,7 +406,8 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                   </div>
                 )}
               </div>
-            ))
+            );
+            })
           )}
         </div>
       </div>

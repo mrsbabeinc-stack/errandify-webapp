@@ -42,6 +42,7 @@ import HowItWorksPage from './pages/HowItWorksPage';
 import AboutErrandifyPage from './pages/AboutErrandifyPage';
 import NotificationPreferencesPage from './pages/NotificationPreferencesPage';
 import BeforeYouGetStartedPage from './pages/BeforeYouGetStartedPage';
+import MyErrands from './pages/MyErrands';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
