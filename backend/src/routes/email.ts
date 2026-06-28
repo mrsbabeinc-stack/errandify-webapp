@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { sendEmail } from '../services/email';
+import { sendEmail } from '../services/email.js';
 import {
   templateEventConfirmation,
   templateEventReminder7Days,

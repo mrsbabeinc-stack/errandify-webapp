@@ -59,6 +59,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [userBidAmount, setUserBidAmount] = useState<number | null>(null);
   const [confirmationTimeLeft, setConfirmationTimeLeft] = useState<string>('');
   const [showShareModal, setShowShareModal] = useState(false);
+  const [copiedTipToClipboard, setCopiedTipToClipboard] = useState(false);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -376,6 +377,44 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     );
   }
 
+  const getTaskSpecificTips = (title: string, category?: string): string => {
+    const lowerTitle = title.toLowerCase();
+
+    if (lowerTitle.includes('lunch') || lowerTitle.includes('meal') || lowerTitle.includes('cook') || lowerTitle.includes('prepare') || category === 'food-beverage') {
+      return '• Confirm any dietary restrictions or allergies with the asker. • Bring all necessary cooking equipment unless specified otherwise. • Arrive 15-30 minutes early to prep ingredients.';
+    }
+
+    if (lowerTitle.includes('clean') || category === 'cleaning-laundry') {
+      return '• Bring all cleaning supplies unless the asker provides them. • Take photos before and after as evidence. • Check if access to any restricted areas needs prior arrangement.';
+    }
+
+    if (lowerTitle.includes('babysit') || lowerTitle.includes('childcare') || category === 'childcare-tutoring') {
+      return '• Get emergency contact numbers and ensure you have them saved. • Ask about bedtime routines and any special dietary needs. • Keep the asker updated with photos/messages during the job.';
+    }
+
+    if (lowerTitle.includes('elderly') || lowerTitle.includes('elder') || lowerTitle.includes('care')) {
+      return '• Ask about any mobility assistance or special care requirements. • Ensure you have emergency contacts and medical history if needed. • Be patient and maintain a calm, supportive demeanor.';
+    }
+
+    if (lowerTitle.includes('delivery') || lowerTitle.includes('send') || lowerTitle.includes('transport')) {
+      return '• Take photos of items before and after delivery. • Keep the asker informed of your location and ETA. • Handle items with care and avoid damage.';
+    }
+
+    if (lowerTitle.includes('tutor') || lowerTitle.includes('teach') || lowerTitle.includes('lesson')) {
+      return '• Clarify learning goals and student level before the session. • Prepare materials and examples relevant to the subject. • Provide feedback and suggest next steps for improvement.';
+    }
+
+    if (lowerTitle.includes('event') || lowerTitle.includes('party') || lowerTitle.includes('setup')) {
+      return '• Arrive early to understand the layout and setup needs. • Confirm what materials/decorations you need to provide. • Have a clear timeline and stay in touch with the organizer.';
+    }
+
+    if (lowerTitle.includes('repair') || lowerTitle.includes('fix')) {
+      return '• Assess the problem and provide a cost estimate upfront. • Use quality materials and ensure proper installation. • Provide warranty or guarantee if applicable.';
+    }
+
+    return '• Communicate clearly with the asker about expectations. • Take progress photos/videos as documentation. • Follow any special instructions provided by the asker.';
+  };
+
   return (
     <div className="min-h-screen bg-errandify-bg pb-32">
       {/* Page Container */}
@@ -557,15 +596,53 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </p>
             </div>
 
-            {/* Notes */}
-            <div className="border-t border-gray-200 pt-2">
-              <h2 className="font-semibold text-errandify-brown mb-1 text-xs">
-                📝 Additional Notes
-              </h2>
-              <p className="text-xs text-gray-700 leading-relaxed">
-                {errand.notes || 'No additional notes'}
-              </p>
-            </div>
+            {/* Notes & Tips for Confirmed Doer */}
+            {errand.notes && (
+              <div className="border-t border-gray-200 pt-2 mt-2">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="font-semibold text-errandify-brown text-xs">
+                    💡 Instructions from Asker
+                  </h2>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(errand.notes || '');
+                      setCopiedTipToClipboard(true);
+                      setTimeout(() => setCopiedTipToClipboard(false), 2000);
+                    }}
+                    className="text-xs px-2 py-1 bg-errandify-orange text-white rounded hover:bg-orange-600 transition font-medium"
+                  >
+                    {copiedTipToClipboard ? '✓ Copied!' : '📋 Copy to Notes'}
+                  </button>
+                </div>
+                <div className="text-xs text-gray-600 bg-blue-50 border-l-2 border-blue-300 px-2 py-1.5 rounded leading-relaxed">
+                  {errand.notes}
+                </div>
+              </div>
+            )}
+
+            {/* AI Tips (only if no asker notes) */}
+            {!errand.notes && errand.title && (
+              <div className="border-t border-gray-200 pt-2 mt-2">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="font-semibold text-errandify-brown text-xs">
+                    💡 Tips for this Task
+                  </h2>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(getTaskSpecificTips(errand.title, errand.category));
+                      setCopiedTipToClipboard(true);
+                      setTimeout(() => setCopiedTipToClipboard(false), 2000);
+                    }}
+                    className="text-xs px-2 py-1 bg-errandify-orange text-white rounded hover:bg-orange-600 transition font-medium"
+                  >
+                    {copiedTipToClipboard ? '✓ Copied!' : '📋 Copy to Notes'}
+                  </button>
+                </div>
+                <div className="text-xs text-gray-600 bg-blue-50 border-l-2 border-blue-300 px-2 py-1.5 rounded leading-relaxed">
+                  {getTaskSpecificTips(errand.title, errand.category)}
+                </div>
+              </div>
+            )}
 
             {/* Asker Info - Only show alias */}
             {errand.asker && (

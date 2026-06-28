@@ -26,9 +26,9 @@ import userDataExportRoutes from './routes/userDataExport.js';
 import errandSearchRoutes from './routes/errandSearch.js';
 import adminRoutes from './routes/admin.js';
 import questionsRoutes from './routes/questions.js';
-import emailRoutes from './routes/email.js';
+// import emailRoutes from './routes/email.js'; // TODO: Fix email module imports
 import newsRoutes from './routes/news.js';
-import verificationRoutes from './routes/verification.js';
+// import verificationRoutes from './routes/verification.js'; // TODO: Fix module imports
 import referralRoutes from './routes/referrals.js';
 import speechRoutes from './routes/speech.js';
 import activityLogRoutes from './routes/activityLog.js';
@@ -82,8 +82,8 @@ app.use('/api/user-data', userDataExportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/speech', speechRoutes);
 app.use('/api/questions', questionsRoutes);
-app.use('/api/email', emailRoutes);
-app.use('/api/verification', verificationRoutes);
+// app.use('/api/email', emailRoutes); // TODO: Fix email module imports
+// app.use('/api/verification', verificationRoutes); // TODO: Fix module imports
 app.use('/api/news', newsRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/uploads', uploadRoutes);
