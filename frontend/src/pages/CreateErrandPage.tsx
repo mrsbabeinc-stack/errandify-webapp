@@ -254,7 +254,7 @@ export default function CreateErrandPage() {
     '08': { area: 'Tanjong Pagar', building: 'Tanjong Pagar Plaza' },
     '09': { area: 'Tanjong Pagar', building: 'Tanjong Pagar Plaza' },
     '10': { area: 'Orchard', building: 'Orchard Road' },
-    '11': { area: 'Orchard', building: 'Orchard Road' },
+    '11': { area: 'Pasir Panjang', building: 'Pasir Panjang' },
     '12': { area: 'Novena', building: 'Novena Square' },
     '13': { area: 'Newton', building: 'Newton Food Centre' },
     '14': { area: 'Farrer Park', building: 'Farrer Park' },
