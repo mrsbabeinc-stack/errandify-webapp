@@ -138,7 +138,14 @@ export default function HanaManualMode({
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto">
-      <form onSubmit={(e) => { e.preventDefault(); onReview(); }} className="space-y-6">
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        if (!taskData.description?.trim()) {
+          alert('Please describe what you need help with.');
+          return;
+        }
+        onReview();
+      }} className="space-y-6">
         {/* Title Input with AI Suggestions */}
         <div className="relative">
           <label className="block text-sm font-semibold text-gray-600 mb-2">
@@ -191,7 +198,7 @@ export default function HanaManualMode({
         {taskData.title.trim() && (
           <div className="animate-fade-in">
             <label className="block text-sm font-semibold text-gray-600 mb-2">
-              Description
+              Description *
             </label>
             <textarea
               value={taskData.description}
@@ -200,6 +207,9 @@ export default function HanaManualMode({
               rows={4}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange"
             />
+            {!taskData.description?.trim() && (
+              <p className="text-xs text-red-600 mt-1">Description is required</p>
+            )}
           </div>
         )}
 
