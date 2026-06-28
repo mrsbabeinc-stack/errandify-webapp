@@ -416,51 +416,21 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-errandify-bg pb-32">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-errandify-bg pb-20">
       {/* Page Container */}
-      <div className="max-w-3xl mx-auto px-2">
+      <div className="max-w-2xl mx-auto px-2 py-1">
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="text-errandify-orange font-semibold mb-1 text-xs"
+          className="text-errandify-orange font-bold mb-1 text-xs hover:text-orange-600 transition"
         >
           ← Back
         </button>
 
         {/* Main Errand Card */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Errand ID Banner */}
-          {errand.errandId && (
-            <div className="bg-gray-100 px-3 py-1.5 border-b border-gray-200 flex items-center justify-between">
-              <span className="text-xs text-gray-600 font-semibold">Errand ID:</span>
-              <div className="flex items-center gap-2">
-                <code className="text-sm font-mono text-errandify-brown font-bold">{errand.errandId}</code>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(errand.errandId || '');
-                  }}
-                  className="text-xs text-errandify-orange hover:text-orange-600 font-semibold transition"
-                  title="Copy ID"
-                >
-                  Copy
-                </button>
-                <button
-                  onClick={() => setShowShareModal(true)}
-                  disabled={errand.status !== 'open'}
-                  className={`px-2.5 py-1 text-xs font-bold rounded transition transform ${
-                    errand.status === 'open'
-                      ? 'bg-gradient-to-r from-errandify-orange to-orange-500 text-white hover:shadow-md hover:scale-105 animate-pulse cursor-pointer'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50'
-                  }`}
-                  title={errand.status === 'open' ? 'Share this errand' : 'Cannot share: job is already confirmed'}
-                >
-                  🚀 SHARE & EARN
-                </button>
-              </div>
-            </div>
-          )}
-          {/* Header Section */}
-          <div className="relative bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-1">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-orange-100">
+          {/* Header Section - Warm & Compact */}
+          <div className="relative bg-gradient-to-r from-errandify-orange via-orange-400 to-orange-500 text-white p-2.5">
             {/* Title Row + Price */}
             <div className="flex items-start justify-between gap-1.5">
               <div className="flex-1">
@@ -519,14 +489,14 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             </div>
           )}
 
-          {/* Content Section */}
-          <div className="p-1 space-y-1">
-            {/* Deadline + Location */}
-            <div className="grid grid-cols-1 gap-0.5">
-              {errand.deadline && (
-                <div className="bg-orange-50 p-1 rounded-lg">
-                  <p className="text-xs text-gray-600">Deadline</p>
-                  <p className="text-xs text-gray-700">
+          {/* Content Section - Compact & Warm */}
+          <div className="p-2 space-y-1.5">
+            {/* Deadline + Location Grid */}
+            {errand.deadline && errand.location ? (
+              <div className="grid grid-cols-2 gap-1">
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-1.5 rounded-lg border border-orange-200">
+                  <p className="text-xs text-gray-600 font-semibold mb-0.5">📅 When</p>
+                  <p className="text-xs text-gray-800 font-medium">
                     {new Date(errand.deadline).toLocaleDateString('en-SG', {
                       weekday: 'short',
                       month: 'short',
@@ -537,21 +507,45 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     })}
                   </p>
                 </div>
-              )}
-
-              {errand.location && (
-                <>
-                  {/* Area (shown always) */}
-                  <div className="bg-orange-50 p-1 rounded-lg border-l-4 border-errandify-orange">
-                    <p className="text-xs text-gray-600">Area</p>
-                    <p className="text-xs text-gray-700 font-semibold">
-                      📍 {getAreaOnly(errand.location) || errand.location}
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-1.5 rounded-lg border border-orange-200">
+                  <p className="text-xs text-gray-600 font-semibold mb-0.5">📍 Where</p>
+                  <p className="text-xs text-gray-800 font-medium">
+                    {getAreaOnly(errand.location) || errand.location}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                {errand.deadline && (
+                  <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-1.5 rounded-lg border border-orange-200">
+                    <p className="text-xs text-gray-600 font-semibold mb-0.5">📅 Deadline</p>
+                    <p className="text-xs text-gray-800 font-medium">
+                      {new Date(errand.deadline).toLocaleDateString('en-SG', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                      })} {new Date(errand.deadline).toLocaleTimeString('en-SG', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </p>
                   </div>
+                )}
+                {errand.location && (
+                  <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-1.5 rounded-lg border border-orange-200">
+                    <p className="text-xs text-gray-600 font-semibold mb-0.5">📍 Location</p>
+                    <p className="text-xs text-gray-800 font-medium">
+                      {getAreaOnly(errand.location) || errand.location}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
 
-                  {/* Full Address Field */}
-                  <div className="bg-orange-50 p-1 rounded-lg border-l-4 border-errandify-orange">
-                    <p className="text-xs text-gray-600">Full Address</p>
+            {/* Full Address (when confirmed) */}
+            {errand.location && (
+              <>
+                {errand.status === 'confirmed' ? (
                     {errand.status === 'confirmed' ? (
                       <p className="text-xs text-gray-700 font-semibold break-words">
                         📍 {(() => {
