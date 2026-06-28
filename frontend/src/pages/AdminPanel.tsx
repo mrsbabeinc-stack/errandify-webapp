@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { capitalizeStatus } from '../utils/format';
 
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -305,7 +306,7 @@ export default function AdminPanel() {
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {reward.status}
+                        {capitalizeStatus(reward.status)}
                       </span>
                     </div>
                   </div>

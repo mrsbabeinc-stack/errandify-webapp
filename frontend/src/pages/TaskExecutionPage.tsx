@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import TaskChat from '../components/TaskChat';
+import { capitalizeStatus } from '../utils/format';
 
 interface TaskStatus {
   id: number;
@@ -169,7 +170,7 @@ export default function TaskExecutionPage() {
           {/* Status Display */}
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
             <p className="text-sm text-gray-600">
-              Task Status: <span className="font-semibold">{task.status}</span>
+              Task Status: <span className="font-semibold">{capitalizeStatus(task.status)}</span>
             </p>
             {isDoer && (
               <p className="text-sm text-gray-600 mt-1">

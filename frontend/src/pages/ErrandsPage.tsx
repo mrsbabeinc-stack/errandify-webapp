@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { capitalizeStatus } from '../utils/format';
 
 interface ErrandsPageProps {
   userRole: 'asker' | 'doer';
@@ -301,7 +302,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                         )}
 
                         <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-semibold">
-                          {errand.status}
+                          {capitalizeStatus(errand.status)}
                         </span>
                       </div>
                     </div>
