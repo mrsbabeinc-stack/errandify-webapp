@@ -934,7 +934,7 @@ export default function CreateErrandPage() {
               )}
 
               {formData.category && (() => {
-                console.log('[CreateErrand] Rendering examples for category:', formData.category);
+                console.log('[CreateErrand] Rendering examples - Category:', formData.category);
                 const today = new Date();
                 const tomorrow = new Date(today);
                 tomorrow.setDate(tomorrow.getDate() + 1);
