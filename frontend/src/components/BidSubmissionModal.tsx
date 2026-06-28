@@ -119,9 +119,9 @@ export default function BidSubmissionModal({
                 −
               </button>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 min="8"
-                step="1"
                 value={bidAmount}
                 onChange={(e) => {
                   const val = e.target.value;
