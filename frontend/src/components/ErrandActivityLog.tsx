@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import axios from 'axios';
 
 interface Activity {
@@ -15,9 +15,15 @@ interface Activity {
 
 interface ErrandActivityLogProps {
   errandId: number;
+  userRole?: 'asker' | 'doer';
 }
 
-export default function ErrandActivityLog({ errandId }: ErrandActivityLogProps) {
+interface ErrandActivityLogHandle {
+  refreshActivity: () => Promise<void>;
+}
+
+const ErrandActivityLog = forwardRef<ErrandActivityLogHandle, ErrandActivityLogProps>(
+  ({ errandId }, ref) => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,6 +31,11 @@ export default function ErrandActivityLog({ errandId }: ErrandActivityLogProps) 
   useEffect(() => {
     fetchActivityLog();
   }, [errandId]);
+
+  // Expose refresh method to parent components
+  useImperativeHandle(ref, () => ({
+    refreshActivity: fetchActivityLog,
+  }));
 
   const fetchActivityLog = async () => {
     try {
@@ -97,4 +108,9 @@ export default function ErrandActivityLog({ errandId }: ErrandActivityLogProps) 
       ))}
     </div>
   );
-}
+  }
+);
+
+ErrandActivityLog.displayName = 'ErrandActivityLog';
+export default ErrandActivityLog;
+

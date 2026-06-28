@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import BidSubmissionModal from '../components/BidSubmissionModal';
@@ -48,6 +48,7 @@ interface Props {
 export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const activityTimelineRef = useRef<any>(null);
   const [errand, setErrand] = useState<ErrandDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -636,11 +637,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             )}
 
             {/* Activity Timeline */}
-            <div className="border-t border-gray-200 pt-2 mt-2">
-              <h2 className="font-semibold text-errandify-brown mb-2 text-xs">
-                📅 Activity Timeline
+            <div className="border-t border-orange-200 pt-1.5 mt-1.5">
+              <h2 className="font-bold text-errandify-brown mb-1.5 text-xs">
+                Activity Timeline
               </h2>
-              {errand.id && <ErrandActivityLog errandId={errand.id} />}
+              {errand.id && <ErrandActivityLog ref={activityTimelineRef} errandId={errand.id} userRole={userRole} />}
             </div>
 
             {/* Action Button */}
@@ -857,6 +858,10 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             // Reload bid amount
             const bids = JSON.parse(localStorage.getItem('userBids') || '{}');
             setUserBidAmount(bids[errand.id] || null);
+            // Refresh activity timeline to show new bid
+            if (activityTimelineRef.current?.refreshActivity) {
+              activityTimelineRef.current.refreshActivity();
+            }
           }}
           onClose={() => setShowBidModal(false)}
         />
