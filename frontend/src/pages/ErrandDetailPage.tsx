@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import BidSubmissionModal from '../components/BidSubmissionModal';
 import BidsViewer from '../components/BidsViewer';
+import RecurringBidsViewer from '../components/RecurringBidsViewer';
 import TaskChatbox from '../components/TaskChatbox';
 import RecurringErrandSessionSelector from '../components/RecurringErrandSessionSelector';
 import TaskQA from '../components/TaskQA';
@@ -1304,11 +1305,18 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         {/* Bids Section - Only for Asker when task is open */}
         {currentUser && currentUser.id === errand?.askerId && errand?.status === 'open' && (
           <div className="mt-6">
-            <BidsViewer
-              taskId={errand?.id || 0}
-              taskBudget={errand?.budget || 0}
-              onBidAccepted={() => fetchErrandDetail()}
-            />
+            {errand?.isRecurring ? (
+              <RecurringBidsViewer
+                errandId={errand?.id || 0}
+                onAcceptBid={() => fetchErrandDetail()}
+              />
+            ) : (
+              <BidsViewer
+                taskId={errand?.id || 0}
+                taskBudget={errand?.budget || 0}
+                onBidAccepted={() => fetchErrandDetail()}
+              />
+            )}
           </div>
         )}
 
