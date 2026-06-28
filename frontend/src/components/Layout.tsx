@@ -24,14 +24,18 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
     // Load initial user profile
     const loadUserProfile = () => {
       const userStr = localStorage.getItem('user');
+      console.log('[Layout] localStorage.user:', userStr);
       if (userStr) {
         try {
           const user = JSON.parse(userStr);
+          console.log('[Layout] Parsed user:', user);
+          console.log('[Layout] display_name:', user.display_name);
           setUserProfile(user);
-          console.log('[Layout] User profile loaded:', user.display_name);
         } catch (e) {
-          console.error('Failed to parse user profile:', e);
+          console.error('[Layout] Failed to parse user profile:', e);
         }
+      } else {
+        console.log('[Layout] No user in localStorage');
       }
     };
 
