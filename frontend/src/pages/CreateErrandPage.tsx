@@ -1145,46 +1145,83 @@ export default function CreateErrandPage() {
             </div>
 
             {formData.isRecurring && (
-              <div className="grid grid-cols-3 gap-2 bg-gray-50 p-2 rounded">
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-0.5 block">
-                    Every
-                  </label>
-                  <input
-                    type="number"
-                    name="repeatEvery"
-                    value={formData.repeatEvery}
-                    onChange={handleChange}
-                    className="w-full px-2 py-0.5 border border-gray-300 rounded text-sm"
-                  />
+              <div className="bg-blue-50 border border-blue-200 p-3 rounded space-y-3">
+                {/* Input Row */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-0.5 block">
+                      Every
+                    </label>
+                    <input
+                      type="number"
+                      name="repeatEvery"
+                      value={formData.repeatEvery}
+                      onChange={handleChange}
+                      min="1"
+                      className="w-full px-2 py-0.5 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-0.5 block">
+                      Unit
+                    </label>
+                    <select
+                      name="repeatUnit"
+                      value={formData.repeatUnit}
+                      onChange={handleChange}
+                      className="w-full px-2 py-0.5 border border-gray-300 rounded text-sm"
+                    >
+                      <option value="day">Day</option>
+                      <option value="week">Week</option>
+                      <option value="month">Month</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-0.5 block">
+                      Times
+                    </label>
+                    <input
+                      type="number"
+                      name="occurrences"
+                      value={formData.occurrences}
+                      onChange={handleChange}
+                      min="1"
+                      max="12"
+                      className="w-full px-2 py-0.5 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-0.5 block">
-                    Unit
-                  </label>
-                  <select
-                    name="repeatUnit"
-                    value={formData.repeatUnit}
-                    onChange={handleChange}
-                    className="w-full px-2 py-0.5 border border-gray-300 rounded text-sm"
-                  >
-                    <option value="day">Day</option>
-                    <option value="week">Week</option>
-                    <option value="month">Month</option>
-                  </select>
+
+                {/* Preview Row */}
+                <div className="border-t border-blue-200 pt-2">
+                  <p className="text-xs text-gray-600 mb-2">📅 <strong>Scheduled Dates:</strong></p>
+                  <div className="flex flex-wrap gap-1">
+                    {Array.from({ length: Math.min(parseInt(formData.occurrences || '1'), 12) }).map((_, idx) => {
+                      const date = new Date(formData.deadline || new Date());
+                      const multiplier = {
+                        'day': 1,
+                        'week': 7,
+                        'month': 30,
+                      }[formData.repeatUnit] || 1;
+                      date.setDate(date.getDate() + idx * (parseInt(formData.repeatEvery || '1') * multiplier));
+                      return (
+                        <span key={idx} className="text-xs bg-white border border-blue-200 px-2 py-1 rounded">
+                          {date.toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-0.5 block">
-                    Times
-                  </label>
-                  <input
-                    type="number"
-                    name="occurrences"
-                    value={formData.occurrences}
-                    onChange={handleChange}
-                    className="w-full px-2 py-0.5 border border-gray-300 rounded text-sm"
-                  />
-                </div>
+
+                {/* Cost Row */}
+                {formData.budget && (
+                  <div className="border-t border-blue-200 pt-2">
+                    <p className="text-sm font-semibold text-blue-700">
+                      💰 Total: <span className="text-lg text-errandify-orange">${(parseFloat(formData.budget) * parseInt(formData.occurrences || '1')).toFixed(2)}</span>
+                      <span className="text-xs text-gray-600 ml-2">({formData.occurrences} × ${formData.budget})</span>
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
