@@ -39,10 +39,10 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // If ratedUserId not provided, try to find it from bids
     if (!ratedUserId) {
-      // Find any confirmed bid for this errand
+      // Find any bid for this errand (confirmed or any status)
       const bidResult = await db.query(
         `SELECT doer_id FROM bids
-         WHERE errand_id = $1 AND status IN ('confirmed', 'confirmed_awaiting_start', 'in_progress')
+         WHERE errand_id = $1
          ORDER BY created_at DESC LIMIT 1`,
         [taskId]
       );
@@ -53,7 +53,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     }
 
     if (!ratedUserId) {
-      return res.status(400).json({ error: 'Could not find doer for this task. No confirmed bid found.' });
+      return res.status(400).json({ error: 'Could not find doer for this task. No bid found for this errand.' });
     }
 
     if (raterId === ratedUserId) {
