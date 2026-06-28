@@ -144,6 +144,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           setCompletionPhotos(latestSubmission.files || []);
         }
         setShowCompletionEvidence(true);
+
+        // Log that asker viewed the evidence
+        await axios.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/log-viewed-evidence`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        ).catch(err => console.error('Failed to log evidence viewed:', err));
       }
     } catch (err: any) {
       console.error('Failed to load completion evidence:', err);

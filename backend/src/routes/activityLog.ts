@@ -162,6 +162,8 @@ function getActivityDisplayText(type: string, actorName: string, details: any, f
       return `${prefix}${actorName} started the job`;
     case 'completed':
       return `${prefix}${actorName} submitted completion evidence`;
+    case 'completion_evidence_viewed':
+      return `${prefix}${actorName} viewed the completion evidence`;
     case 'review_submitted':
       return `${prefix}${actorName} submitted a review`;
     case 'rating_submitted':
@@ -176,5 +178,48 @@ function getActivityDisplayText(type: string, actorName: string, details: any, f
       return `${prefix}${type}`;
   }
 }
+
+// POST /api/errands/:errandId/log-viewed-evidence - Log when asker views completion evidence
+router.post('/:errandId/log-viewed-evidence', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { errandId } = req.params;
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Verify user is the asker
+    const errandResult = await db.query(
+      'SELECT asker_id, status FROM errands WHERE id = $1',
+      [errandId]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+    if (errand.asker_id !== userId) {
+      return res.status(403).json({ error: 'Only asker can log this action' });
+    }
+
+    // Get asker name
+    const userResult = await db.query(
+      'SELECT display_name FROM users WHERE id = $1',
+      [userId]
+    );
+
+    const askerName = userResult.rows[0]?.display_name || 'Unknown';
+
+    // Log the activity
+    await db.query(
+      `INSERT INTO errand_activity_log (errand_id, activity_type, actor_id, actor_name, actor_role, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [errandId, 'completion_evidence_viewed', userId, askerName, 'asker']
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Log evidence viewed error:', error);
+    res.status(500).json({ error: 'Failed to log activity' });
+  }
+});
 
 export default router;
