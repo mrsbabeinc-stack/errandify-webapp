@@ -161,13 +161,13 @@ export default function BidSubmissionModal({
               rows={3}
               className="w-full px-3 py-2 border border-errandify-orange rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
             />
-            <div className="text-xs text-errandify-orange-700 mt-2 px-3 py-2 bg-orange-50 rounded">
-              💡 Suggestion: Mention your relevant experience, skills, and why you're the best fit for this task!
+            <div className="text-xs text-errandify-orange mt-2 px-3 py-2 bg-orange-50 rounded-lg border border-orange-200 font-medium">
+              Suggestion: Mention your relevant experience, skills, and why you're the best fit for this task!
             </div>
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+            <div className="p-2 bg-red-100 border border-red-300 text-red-800 text-xs rounded-lg font-medium">
               {error}
             </div>
           )}

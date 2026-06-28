@@ -402,7 +402,7 @@ Your message doesn't meet our community standards. Please keep messages:
 
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-1.5 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-2 space-y-1.5 bg-gradient-to-b from-orange-50 to-orange-100">
           {messages.length === 0 ? (
             <div className="text-center text-gray-500 text-sm py-8">
               <p>💬 No messages yet</p>
@@ -451,7 +451,7 @@ Your message doesn't meet our community standards. Please keep messages:
                       msg.flagged
                         ? 'bg-yellow-100 text-yellow-900 border border-yellow-200'
                         : msg.senderId === askerId
-                        ? 'bg-blue-50 border border-blue-200'
+                        ? 'bg-orange-50 border border-orange-200'
                         : 'bg-green-50 border border-green-200'
                     }`}
                   >
@@ -485,7 +485,7 @@ Your message doesn't meet our community standards. Please keep messages:
 
         {/* Validation Messages - Prominent Display */}
         {(validationErrors.length > 0 || validationWarnings.length > 0 || validationSuggestions.length > 0) && (
-          <div className={`px-4 py-4 border-t border-gray-200 space-y-2 text-sm rounded-t-lg ${
+          <div className={`px-4 py-4 border-t border-orange-200 space-y-2 text-sm rounded-t-lg ${
             validationErrors.length > 0
               ? 'bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-l-red-500'
               : 'bg-amber-50 border-l-4 border-l-amber-500'
@@ -518,7 +518,7 @@ Your message doesn't meet our community standards. Please keep messages:
         {/* Input Area */}
         <form
           onSubmit={handleSendMessage}
-          className="border-t border-gray-200 p-3 bg-white space-y-2"
+          className="border-t border-orange-200 p-3 bg-white space-y-2"
         >
           {error && (
             <p className="text-red-600 text-xs mb-2">{error}</p>
@@ -570,7 +570,7 @@ Your message doesn't meet our community standards. Please keep messages:
                       fileInputRef.current?.click();
                       setShowImageMenu(false);
                     }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 border-b border-gray-200"
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-orange-100 border-b border-orange-200"
                   >
                     📁 From Gallery
                   </button>
@@ -637,9 +637,9 @@ Your message doesn't meet our community standards. Please keep messages:
 
           {/* Right Sidebar - Errand Details */}
           {errandDetails && (
-            <div className="w-80 flex flex-col border-l border-gray-200 bg-gray-50 p-4 overflow-y-auto">
+            <div className="w-80 flex flex-col border-l border-orange-200 bg-orange-50 p-4 overflow-y-auto">
               {/* Participants - Show other person first based on current user role */}
-              <div className="mb-4 pb-4 border-b border-gray-200">
+              <div className="mb-4 pb-4 border-b border-orange-200">
                 {/* Show the OTHER person prominently */}
                 {currentUserId === askerId ? (
                   // Current user is ASKER - show Doer first
@@ -680,7 +680,7 @@ Your message doesn't meet our community standards. Please keep messages:
                 ) : (
                   // Current user is DOER - show Asker first
                   <>
-                    <div className="flex items-center gap-2 justify-between mb-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-2 justify-between mb-3 p-2 bg-orange-50 rounded-lg border border-orange-200">
                       <div className="flex items-center gap-2 flex-1">
                         <div className="relative w-8 h-8 rounded-full bg-blue-300 flex items-center justify-center flex-shrink-0 text-xs font-bold">
                           A
