@@ -12,6 +12,15 @@ interface Errand {
   deadline: string | null;
   askerName: string;
   askerRating: number;
+  isRecurring?: boolean;
+  recurringSchedule?: string;
+}
+
+interface RecurringInfo {
+  isRecurringInstance: boolean;
+  currentInstance?: number;
+  parent?: { id: number; title: string; recurring_schedule: string };
+  siblings?: Array<{ instanceNumber: number; errandId: number; scheduledDate: string; status: string; budget: number }>;
 }
 
 export default function BrowseErrandsPage() {
@@ -21,6 +30,9 @@ export default function BrowseErrandsPage() {
   const [errands, setErrands] = useState<Errand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [expandedRecurringId, setExpandedRecurringId] = useState<string | null>(null);
+  const [recurringInfo, setRecurringInfo] = useState<Record<string, RecurringInfo>>({});
+  const [selectedSessions, setSelectedSessions] = useState<Record<string, number[]>>({});
 
   const categoryNames: Record<string, string> = {
     'home-maintenance': 'Home Maintenance',
@@ -78,8 +90,54 @@ export default function BrowseErrandsPage() {
     fetchErrands();
   }, [categoryId]);
 
+  const fetchRecurringInfo = async (errandId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errandId}/recurring`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setRecurringInfo(prev => ({
+        ...prev,
+        [errandId]: response.data.data,
+      }));
+    } catch (err) {
+      console.error('Failed to fetch recurring info:', err);
+    }
+  };
+
+  const handleExpandRecurring = async (errandId: string) => {
+    setExpandedRecurringId(expandedRecurringId === errandId ? null : errandId);
+    if (expandedRecurringId !== errandId && !recurringInfo[errandId]) {
+      await fetchRecurringInfo(errandId);
+    }
+  };
+
+  const handleSessionToggle = (errandId: string, instanceNumber: number) => {
+    setSelectedSessions(prev => ({
+      ...prev,
+      [errandId]: prev[errandId]?.includes(instanceNumber)
+        ? prev[errandId].filter(n => n !== instanceNumber)
+        : [...(prev[errandId] || []), instanceNumber],
+    }));
+  };
+
   const handleAcceptErrand = (errandId: string) => {
     navigate(`/errand/${errandId}/accept`);
+  };
+
+  const handleBidOnRecurringSessions = async (parentErrandId: string, errandId: string) => {
+    const sessions = selectedSessions[errandId] || [];
+    if (sessions.length === 0) {
+      alert('Please select at least one session');
+      return;
+    }
+    // Navigate to bid page with selected sessions
+    navigate(`/errand/${parentErrandId}?bid&sessions=${sessions.join(',')}`);
   };
 
   return (
@@ -176,18 +234,64 @@ export default function BrowseErrandsPage() {
                 </div>
               </div>
 
+              {/* Recurring Badge */}
+              {errand.isRecurring && (
+                <div className="bg-blue-50 border-t border-blue-100 px-4 py-2">
+                  <button
+                    onClick={() => handleExpandRecurring(errand.id)}
+                    className="w-full text-left flex items-center justify-between text-sm font-semibold text-blue-700 hover:text-blue-900"
+                  >
+                    <span>📋 Recurring (Multiple Sessions)</span>
+                    <span>{expandedRecurringId === errand.id ? '▼' : '▶'}</span>
+                  </button>
+                </div>
+              )}
+
               {/* Asker */}
               <div className="border-t pt-3 mb-4">
                 <p className="text-xs text-gray-600">Posted by: <span className="font-semibold">{errand.askerName}</span></p>
               </div>
 
-                {/* Accept Button */}
+              {/* Recurring Sessions Expansion */}
+              {errand.isRecurring && expandedRecurringId === errand.id && recurringInfo[errand.id] && (
+                <div className="border-t bg-blue-50 px-4 py-4">
+                  <p className="text-sm font-semibold text-gray-700 mb-3">Select sessions you're available for:</p>
+                  <div className="space-y-2 mb-4">
+                    {recurringInfo[errand.id]?.siblings?.map((session) => (
+                      <label key={`${errand.id}-${session.instanceNumber}`} className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedSessions[errand.id]?.includes(session.instanceNumber) || false}
+                          onChange={() => handleSessionToggle(errand.id, session.instanceNumber)}
+                          className="w-4 h-4"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            Part {session.instanceNumber} • {new Date(session.scheduledDate).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
+                          </p>
+                          <p className="text-xs text-gray-600">${session.budget} • Status: {session.status}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => handleBidOnRecurringSessions(errand.id, errand.id)}
+                    className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    Bid on Selected Sessions
+                  </button>
+                </div>
+              )}
+
+              {/* Accept Button */}
+              {!errand.isRecurring && (
                 <button
                   onClick={() => handleAcceptErrand(errand.id)}
                   className="w-full bg-errandify-orange text-white py-2 rounded-lg font-semibold hover:bg-opacity-90 transition-colors"
                 >
                   View & Accept
                 </button>
+              )}
               </div>
             </div>
           ))}
