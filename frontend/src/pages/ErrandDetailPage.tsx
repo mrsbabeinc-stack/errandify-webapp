@@ -117,6 +117,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
       if (response.data.success && response.data.data) {
         setErrand(response.data.data);
+
+        // Check if current user has already rated this errand
+        const currentUserData = localStorage.getItem('user');
+        if (currentUserData && id) {
+          const user = JSON.parse(currentUserData);
+          await checkIfAlreadyRated(user.id, parseInt(id));
+        }
       } else {
         setError('Invalid response from server');
       }
@@ -126,6 +133,22 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       setError(errorMsg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkIfAlreadyRated = async (userId: number, errandId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings/check?errandId=${errandId}&userId=${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.success && response.data.data && response.data.data.hasRated) {
+        setHasRated(true);
+      }
+    } catch (err: any) {
+      // If endpoint doesn't exist, just ignore - rating check is optional
+      console.log('Could not check rating status:', err.message);
     }
   };
 
