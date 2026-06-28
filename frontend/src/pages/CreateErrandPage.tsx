@@ -153,7 +153,13 @@ export default function CreateErrandPage() {
                 if (data.results && data.results.length > 0) {
                   const result = data.results[0];
                   const address = result.ADDRESS || '';
-                  const extractedArea = extractAreaFromAddress(address);
+                  let extractedArea = extractAreaFromAddress(address);
+
+                  // Apply corrections for postal codes where OneMap data is inaccurate
+                  if (postalCodeCorrections[prefilledData.postalCode]) {
+                    extractedArea = postalCodeCorrections[prefilledData.postalCode];
+                  }
+
                   setArea(extractedArea);
                   setFormData((prev) => ({
                     ...prev,
@@ -266,6 +272,11 @@ export default function CreateErrandPage() {
     'Pet Care Certification',
     'Animal First Aid',
   ];
+
+  // Override map for postal codes where OneMap data is inaccurate
+  const postalCodeCorrections: Record<string, string> = {
+    '629652': 'Jurong/Tuas',
+  };
 
   // Extract area name from full address string
   const extractAreaFromAddress = (address: string): string => {
@@ -1229,7 +1240,12 @@ export default function CreateErrandPage() {
                               const buildingName = result.BUILDING_NAME || '';
 
                               // Try to extract area from address (e.g., "8 GUL AVENUE SINGAPORE 629652" -> extract area intelligently)
-                              const extractedArea = extractAreaFromAddress(address || buildingName);
+                              let extractedArea = extractAreaFromAddress(address || buildingName);
+
+                              // Apply corrections for postal codes where OneMap data is inaccurate
+                              if (postalCodeCorrections[code]) {
+                                extractedArea = postalCodeCorrections[code];
+                              }
 
                               setFormData((prev) => ({
                                 ...prev,
