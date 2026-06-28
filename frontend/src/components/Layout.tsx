@@ -87,7 +87,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
                     {(userProfile.display_name || 'U').charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="text-sm font-semibold text-gray-700 hidden sm:inline max-w-[100px] truncate">
+                <span className="text-sm font-semibold text-gray-700 max-w-[100px] truncate">
                   {userProfile.display_name || 'User'}
                 </span>
               </button>
