@@ -782,6 +782,14 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 <p className="text-xs text-red-600">Dispute is being reviewed. Payment is held.</p>
               </div>
             ) : errand.status === 'completed' ? (
+              <>
+                {/* Reminder banner if evidence viewed but not rated */}
+                {showCompletionEvidence && !hasRated && (
+                  <div className="w-full bg-amber-50 border-l-4 border-amber-400 p-2 mt-2 mb-2 rounded">
+                    <p className="text-xs text-amber-800 font-semibold">⚡ Don't forget: Rate the work to complete this job!</p>
+                  </div>
+                )}
+
               <div className="w-full bg-green-50 border border-green-200 rounded-lg p-3 mt-2 space-y-2">
                 {/* Status Header */}
                 <div className="text-center pb-2 border-b border-green-200">
@@ -992,6 +1000,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   </div>
                 )}
               </div>
+            ) : null}
+              </>
             ) : null}
           </div>
         </div>
