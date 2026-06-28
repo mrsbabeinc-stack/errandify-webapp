@@ -1130,6 +1130,10 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                   setHasRated(true);
                                   setShowCelebratory(true);
                                   setRatingComment('');
+
+                                  // Trigger refresh for MyAccountPage (if user visits it later)
+                                  window.dispatchEvent(new Event('ratingsUpdated'));
+
                                   // Auto-hide celebratory message and navigate after 3 seconds
                                   setTimeout(() => {
                                     setShowCelebratory(false);

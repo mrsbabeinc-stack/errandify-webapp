@@ -231,6 +231,27 @@ export default function MyAccountPage() {
   }, [profileData?.name, profileImage]);
 
   useEffect(() => {
+    // Listen for ratings update event from ErrandDetailPage
+    const handleRatingsUpdated = async () => {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      try {
+        const ratingsRes = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/ratings`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setRatings(ratingsRes.data.data);
+        console.log('[MyAccountPage] Ratings refreshed:', ratingsRes.data.data);
+      } catch (error) {
+        console.error('[MyAccountPage] Failed to refresh ratings:', error);
+      }
+    };
+
+    window.addEventListener('ratingsUpdated', handleRatingsUpdated);
+    return () => window.removeEventListener('ratingsUpdated', handleRatingsUpdated);
+  }, []);
+
+  useEffect(() => {
     // Fetch AI-generated alerts
     const fetchAiAlerts = async () => {
       try {
