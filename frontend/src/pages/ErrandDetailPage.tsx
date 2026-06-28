@@ -831,7 +831,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                       onClick={toggleCompletionEvidence}
                       className="w-full px-2 py-1.5 bg-blue-50 border border-blue-300 text-blue-700 text-xs rounded font-medium hover:bg-blue-100 transition-all"
                     >
-                      {showCompletionEvidence ? '▼ Hide Evidence' : '▶ View Photos & Notes'}
+                      {showCompletionEvidence ? '▼ Hide' : '▶ View & Complete'}
                     </button>
 
                     {/* Completion Evidence Expanded View */}
