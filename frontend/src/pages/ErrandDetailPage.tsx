@@ -302,7 +302,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   };
 
   const handleStartJob = async () => {
-    const confirmMessage = `🌟 Ready to Make a Difference?\n\n"${errand.title}"\n\nYou're about to help someone in your community. Your efforts will brighten their day and create positive impact.\n\nLet's get started! 💪`;
+    const confirmMessage = `Ready to Make a Difference?\n\n"${errand.title}"\n\nYou're about to help someone in your community. Your efforts will brighten their day and create positive impact.\n\nLet's get started!`;
 
     if (!window.confirm(confirmMessage)) {
       return;
@@ -317,7 +317,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      alert('🚀 Amazing! You\'ve started the errand.\n\nYou\'re making a real difference in someone\'s life. Thank you for being an awesome community doer! 🌟');
+      alert('Amazing! You\'ve started the errand.\n\nYou\'re making a real difference in someone\'s life. Thank you for being an awesome community doer!');
       fetchErrandDetail();
     } catch (error: any) {
       console.error('Failed to start job:', error);
@@ -339,7 +339,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      alert('🎉 You did it! The asker will rate you soon. Great work!');
+      alert('You did it! The asker will rate you soon. Great work!');
       fetchErrandDetail();
     } catch (error: any) {
       console.error('Failed to complete errand:', error);
@@ -438,7 +438,6 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               <div className="flex-1">
                 <h1 className="text-sm font-bold leading-tight">
                   {errand.title}
-                  {errand.doerName && <span className="text-xs font-normal text-orange-100"> • Posted by {errand.doerName}</span>}
                 </h1>
               </div>
               <div className="text-right flex-shrink-0 flex flex-col items-end gap-0">
@@ -574,7 +573,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             {/* Description */}
             <div className="border-t border-orange-200 pt-1.5 mt-1.5">
               <h2 className="font-bold text-errandify-brown mb-1 text-xs">
-                About This Task
+                About This Errand
               </h2>
               <p className="text-xs text-gray-700 leading-relaxed">
                 {errand.description || 'No description yet - asker will add more details!'}
@@ -634,7 +633,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               <div className="border-t border-orange-200 pt-1.5 mt-1.5">
                 <p className="text-xs text-gray-600 font-bold mb-0.5">Posted By</p>
                 <p className="text-xs text-gray-800 font-medium mb-0.5">
-                  {errand.askerName || errand.asker?.display_name || errand.asker?.name || 'Community Member'}
+                  {errand.asker?.alias || errand.askerName || errand.asker?.display_name || errand.asker?.name || 'Community Member'}
                 </p>
               </div>
             )}

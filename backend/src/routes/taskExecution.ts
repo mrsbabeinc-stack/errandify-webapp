@@ -56,8 +56,8 @@ router.post('/:id/start', authMiddleware, async (req: AuthRequest, res: Response
     await createNotification(
       errand.asker_id,
       'task_started',
-      '⏰ Work Started',
-      `Doer has started work on "${errand.title}"`,
+      'Errand Started',
+      `Your errand "${errand.title}" has been started`,
       null
     ).catch(console.error);
 
@@ -195,7 +195,7 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
         await createNotification(
           assignment.doer_id,
           'task_completed',
-          '✅ Task Completed',
+          'Errand Completed',
           `Your work on "${errand.title}" was approved. Payment will be released after 48h.`,
           null
         ).catch(console.error);

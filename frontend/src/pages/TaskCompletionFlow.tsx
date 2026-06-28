@@ -415,7 +415,7 @@ export default function TaskCompletionFlow() {
                       : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
                   }`}
                 >
-                  {submitting ? (uploadProgress > 0 ? `⏳ ${uploadProgress}%` : '⏳ Submitting...') : '✓ Complete Task'}
+                  {submitting ? (uploadProgress > 0 ? `⏳ ${uploadProgress}%` : '⏳ Submitting...') : '✓ Complete Errand'}
                 </button>
               </div>
             </div>
