@@ -390,9 +390,16 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                 {/* Title + Budget + Your Bid */}
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-xs font-bold text-errandify-brown leading-tight line-clamp-1">
-                      {errand.title}
-                    </h3>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h3 className="text-xs font-bold text-errandify-brown leading-tight line-clamp-1">
+                        {errand.title}
+                      </h3>
+                      {errand.errandId && (
+                        <code className="text-xs font-mono text-gray-600 bg-gray-100 px-1 py-0.5 rounded flex-shrink-0">
+                          {errand.errandId}
+                        </code>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1 mt-0.5">
                       <span className="inline-block bg-gradient-to-r from-orange-100 to-orange-50 text-errandify-orange text-xs px-1.5 py-0.5 rounded-full font-semibold border border-orange-200">
                         {categoryNames[errand.category] || errand.category}
@@ -437,11 +444,29 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
           </div>
         )}
 
-        {filteredErrands.length > 0 && (
-          <div className="mt-4 text-center text-xs text-gray-600">
-            Showing {filteredErrands.length} errand{filteredErrands.length !== 1 ? 's' : ''}
+        {/* Footer */}
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          {filteredErrands.length > 0 ? (
+            <div className="text-center text-xs text-gray-600 mb-3">
+              <p className="font-medium text-gray-700 mb-1">
+                ✅ Showing {filteredErrands.length} errand{filteredErrands.length !== 1 ? 's' : ''}
+              </p>
+              <p className="text-gray-500">
+                💡 Tap an errand card to view details and place your bid
+              </p>
+            </div>
+          ) : (
+            <div className="text-center text-xs text-gray-600 mb-3">
+              <p className="font-medium text-gray-700 mb-1">No errands found</p>
+              <p className="text-gray-500">
+                Try adjusting your filters or check back later
+              </p>
+            </div>
+          )}
+          <div className="text-center text-xs text-gray-500 pb-4">
+            <p>🏠 Errandify • Find jobs that fit your schedule</p>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
