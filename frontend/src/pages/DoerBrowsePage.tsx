@@ -291,7 +291,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
         {userRole === 'doer' && (
           <div className="bg-white rounded-xl p-2 border border-orange-100 shadow-sm mb-2">
           <h3 className="text-xs font-bold text-errandify-brown mb-1.5 uppercase tracking-wide">
-            🎯 Categories
+            🎯 Categories <span className="text-gray-500 font-normal">(Click to Select)</span>
           </h3>
           <div className="grid grid-cols-4 gap-1 mb-2">
             {categories.map((category) => {
