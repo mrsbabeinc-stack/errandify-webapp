@@ -293,31 +293,57 @@ router.get('/:id/ratings', async (req, res) => {
     const { id } = req.params;
     const userId = parseInt(id, 10);
 
+    // Fetch from ratings table
     const result = await db.query(
       `SELECT
-        AVG(CAST(rating_score AS FLOAT)) as average_rating,
-        COUNT(*) as review_count,
-        json_agg(json_build_object(
-          'score', rating_score,
-          'comment', rating_comment,
-          'taskId', task_id,
-          'createdAt', created_at
-        ) ORDER BY created_at DESC) as reviews
-       FROM errand_assignments
-       WHERE doer_id = $1 AND rating_score IS NOT NULL`,
+        r.id,
+        r.rating,
+        r.comment,
+        r.created_at,
+        u.display_name as rater_name,
+        u.alias as rater_alias,
+        e.title as task_title
+       FROM ratings r
+       JOIN users u ON r.rater_id = u.id
+       JOIN errands e ON r.task_id = e.id
+       WHERE r.rated_user_id = $1
+       ORDER BY r.created_at DESC
+       LIMIT 50`,
       [userId]
     );
 
-    const data = result.rows[0];
-    const averageRating = data.average_rating ? Math.round(data.average_rating * 10) / 10 : 0;
-    const reviews = data.reviews && data.reviews[0].score ? data.reviews : [];
+    const ratings = result.rows;
+
+    // Calculate stats
+    const totalRatings = ratings.length;
+    const averageRating =
+      totalRatings > 0
+        ? Math.round((ratings.reduce((sum, r) => sum + r.rating, 0) / totalRatings) * 10) / 10
+        : 0;
+
+    const ratingBreakdown = {
+      5: ratings.filter((r) => r.rating === 5).length,
+      4: ratings.filter((r) => r.rating === 4).length,
+      3: ratings.filter((r) => r.rating === 3).length,
+      2: ratings.filter((r) => r.rating === 2).length,
+      1: ratings.filter((r) => r.rating === 1).length,
+    };
 
     res.json({
       success: true,
       data: {
         averageRating,
-        reviewCount: parseInt(data.review_count, 10),
-        reviews,
+        reviewCount: totalRatings,
+        reviews: ratings.map((r) => ({
+          id: r.id,
+          score: r.rating,
+          comment: r.comment,
+          raterName: r.rater_name,
+          raterAlias: r.rater_alias,
+          taskTitle: r.task_title,
+          createdAt: r.created_at,
+        })),
+        breakdown: ratingBreakdown,
       },
     });
   } catch (error) {
