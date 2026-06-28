@@ -119,7 +119,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
                   </div>
                 )}
                 <span className="text-sm font-semibold text-gray-700 max-w-[100px] truncate">
-                  {userProfile.display_name || 'User'}
+                  {userProfile.display_name || (userProfile as any).name || 'User'}
                 </span>
               </button>
               {/* Logout Button */}
