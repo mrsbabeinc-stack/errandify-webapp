@@ -374,30 +374,27 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                 className="bg-white rounded-xl shadow-sm hover:shadow-md hover:border-orange-200 transition-all cursor-pointer border border-orange-50 overflow-hidden"
                 onClick={() => navigate(`/errand/${errand.id}`)}
               >
-                {/* Errand ID & Start Date Header */}
-                {(errand.errandId || errand.deadline) && (
-                  <div className="bg-gray-50 px-2 py-1 border-b border-gray-200 flex items-center justify-between text-xs">
-                    <code className="font-mono text-gray-700 font-semibold">{errand.errandId || 'N/A'}</code>
-                    {errand.deadline && (
-                      <span className="text-gray-600">
-                        📅 {new Date(errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
-                      </span>
-                    )}
-                  </div>
-                )}
-
                 <div className="p-2">
                 {/* Title + Budget + Your Bid */}
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="text-xs font-bold text-errandify-brown leading-tight line-clamp-1">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <h3 className="text-xs font-bold text-errandify-brown leading-tight">
                         {errand.title}
                       </h3>
-                      {errand.errandId && (
-                        <code className="text-xs font-mono text-gray-600 bg-gray-100 px-1 py-0.5 rounded flex-shrink-0">
-                          {errand.errandId}
-                        </code>
+                      {(errand.errandId || errand.deadline) && (
+                        <div className="flex items-center gap-1 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0 whitespace-nowrap">
+                          {errand.errandId && (
+                            <code className="text-xs font-mono text-gray-700 font-semibold">
+                              {errand.errandId}
+                            </code>
+                          )}
+                          {errand.deadline && (
+                            <span className="text-xs text-gray-600">
+                              📅 {new Date(errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                     <div className="flex items-center gap-1 mt-0.5">
