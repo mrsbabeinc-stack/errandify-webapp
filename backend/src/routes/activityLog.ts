@@ -41,6 +41,8 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
     const { errandId } = req.params;
     const userId = parseInt(req.userId || '0', 10);
 
+    console.log(`[ActivityLog] Fetching for errandId=${errandId}, userId=${userId}`);
+
     // Ensure table exists
     await ensureActivityLogTable();
 
@@ -63,6 +65,9 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
     const isConfirmedDoer = errand.confirmed_doer_id === userId;
     const hasUserBidded = errand.user_bid_doer_id === userId;
 
+    console.log(`[ActivityLog] Auth check - isAsker=${isAsker}, isConfirmedDoer=${isConfirmedDoer}, hasUserBidded=${hasUserBidded}`);
+    console.log(`[ActivityLog] Errand details - asker_id=${errand.asker_id}, confirmed_doer_id=${errand.confirmed_doer_id}, status=${errand.status}`);
+
     // Authorization logic:
     // - Asker can always view
     // - Confirmed doer can always view
@@ -71,8 +76,11 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
     const isUnselectedDoer = hasUserBidded && !isConfirmedDoer && isJobConfirmed;
 
     if (!isAsker && !isConfirmedDoer && (isUnselectedDoer || !hasUserBidded)) {
+      console.log(`[ActivityLog] Authorization DENIED`);
       return res.status(403).json({ error: 'Not authorized to view this errand' });
     }
+
+    console.log(`[ActivityLog] Authorization GRANTED`);
 
     // Fetch activity log
     let activitiesResult;
@@ -84,6 +92,7 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
          ORDER BY created_at ASC`,
         [errandId]
       );
+      console.log(`[ActivityLog] Found ${activitiesResult.rows.length} activities`);
     } catch (dbError) {
       console.warn('Activity log table may not be ready, returning empty:', dbError);
       return res.json({
