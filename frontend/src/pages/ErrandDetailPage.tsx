@@ -905,7 +905,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                           </div>
                         )}
 
-                        {/* Quick Rating Form */}
+                        {/* Quick Rating Form - Hidden after rating submitted */}
+                        {!hasRated && (
                         <div className="mt-3 pt-2 border-t border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-2 rounded">
                           <p className="font-semibold text-xs text-green-800 mb-2 text-center">How wonderful was the experience?</p>
                           <div className="flex gap-1 mb-3 justify-center">
@@ -1128,6 +1129,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                             </div>
                           )}
                         </div>
+                        )}
                       </div>
                     )}
                   </div>
