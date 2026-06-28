@@ -6,6 +6,32 @@ import { awardEp, getRatingBonus } from '../services/gamificationService.js';
 
 const router = Router();
 
+// GET /api/ratings/check - Check if user has already rated an errand
+router.get('/check', async (req, res) => {
+  try {
+    const { errandId, userId } = req.query;
+
+    if (!errandId || !userId) {
+      return res.status(400).json({ error: 'errandId and userId required' });
+    }
+
+    const result = await db.query(
+      'SELECT id FROM ratings WHERE errand_id = $1 AND rater_id = $2 LIMIT 1',
+      [parseInt(errandId as string), parseInt(userId as string)]
+    );
+
+    res.json({
+      success: true,
+      data: {
+        hasRated: result.rows.length > 0
+      }
+    });
+  } catch (error) {
+    console.error('Check rating error:', error);
+    res.status(500).json({ error: 'Failed to check rating status' });
+  }
+});
+
 // POST /api/ratings - Submit a rating/review
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
