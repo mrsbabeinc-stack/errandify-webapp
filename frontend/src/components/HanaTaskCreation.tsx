@@ -16,6 +16,10 @@ interface TaskData {
   budget: string;
   postalCode: string;
   notes: string;
+  isRecurring?: boolean;
+  repeatEvery?: number;
+  repeatUnit?: 'day' | 'week' | 'month';
+  occurrences?: number;
   suggestedSkills?: string[];
   suggestedDescription?: string;
   suggestedNotes?: string;
@@ -233,6 +237,10 @@ export default function HanaTaskCreation({
         budget: extracted.budget ? String(extracted.budget) : '',
         postalCode: extracted.postalCode || '',
         notes: extracted.notes || '',
+        isRecurring: extracted.isRecurring || false,
+        repeatEvery: extracted.repeatEvery || 1,
+        repeatUnit: extracted.repeatUnit || 'week',
+        occurrences: extracted.occurrences || 1,
         suggestedSkills: extracted.suggestedSkills || [],
       };
 

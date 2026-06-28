@@ -804,6 +804,52 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     console.log('[Extract] Extracted skills:', suggestedSkills);
 
+    // Extract recurring pattern from input (e.g., "every 2 weeks", "weekly", "monthly")
+    let isRecurring = false;
+    let repeatEvery = 1;
+    let repeatUnit: 'day' | 'week' | 'month' = 'week';
+    let occurrences = 1;
+
+    const recurringPatterns = [
+      { pattern: /every\s+(\d+)\s+weeks?/i, unit: 'week' as const },
+      { pattern: /every\s+(\d+)\s+days?/i, unit: 'day' as const },
+      { pattern: /every\s+(\d+)\s+months?/i, unit: 'month' as const },
+      { pattern: /weekly/i, unit: 'week' as const, every: 1 },
+      { pattern: /daily/i, unit: 'day' as const, every: 1 },
+      { pattern: /monthly/i, unit: 'month' as const, every: 1 },
+      { pattern: /bi-weekly|biweekly|every\s+other\s+week/i, unit: 'week' as const, every: 2 },
+      { pattern: /fortnightly/i, unit: 'week' as const, every: 2 },
+    ];
+
+    const occurrencePatterns = [
+      { pattern: /for\s+(\d+)\s+(?:weeks?|days?|months?|times?|sessions?|occurrences?)/i },
+      { pattern: /(\d+)\s+(?:weeks?|days?|months?|times?|sessions?|occurrences?)$/i },
+    ];
+
+    const lowerInput = input.toLowerCase();
+
+    for (const rec of recurringPatterns) {
+      const match = lowerInput.match(rec.pattern);
+      if (match) {
+        isRecurring = true;
+        repeatUnit = rec.unit;
+        repeatEvery = rec.every || parseInt(match[1], 10) || 1;
+        console.log(`[Extract] Detected recurring: every ${repeatEvery} ${repeatUnit}(s)`);
+        break;
+      }
+    }
+
+    if (isRecurring) {
+      for (const occ of occurrencePatterns) {
+        const match = lowerInput.match(occ.pattern);
+        if (match) {
+          occurrences = parseInt(match[1], 10);
+          console.log(`[Extract] Detected occurrences: ${occurrences}`);
+          break;
+        }
+      }
+    }
+
     // Generate AI-based description suggestion based on title keywords
     // This creates context-aware descriptions tied to what the user actually typed
     let description = '';
@@ -864,6 +910,10 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         category,
         postalCode,
         notes: '',
+        isRecurring,
+        repeatEvery,
+        repeatUnit,
+        occurrences,
         suggestedSkills,
       },
     });
