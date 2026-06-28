@@ -173,6 +173,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           budget: errand.budget,
           location: errand.location,
           deadline: errand.deadline,
+          isRecurring: errand.is_recurring || false,
           askerName: askerResult.rows[0]?.display_name || 'Anonymous',
           askerRating: 4.8, // TODO: Calculate from ratings table
           createdAt: errand.created_at,
