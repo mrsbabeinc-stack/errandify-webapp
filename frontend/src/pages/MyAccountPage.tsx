@@ -589,6 +589,9 @@ export default function MyAccountPage() {
           user.profile_image_url = profileImage;
         }
         localStorage.setItem('user', JSON.stringify(user));
+
+        // Notify all pages to update profile display
+        window.dispatchEvent(new Event('profileUpdated'));
       }
 
       // Save profile image separately so it persists
