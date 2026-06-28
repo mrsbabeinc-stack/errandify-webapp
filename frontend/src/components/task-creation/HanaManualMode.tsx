@@ -150,15 +150,15 @@ export default function HanaManualMode({
           return;
         }
         if (!taskData.description?.trim()) {
-          alert('Tell us more! Describe what you need help with so helpers understand.');
+          alert('Tell us more! Describe what you need help with so doers understand.');
           return;
         }
         if (taskData.description.trim().length < 10) {
-          alert('A bit more detail please - at least 10 characters helps helpers understand better.');
+          alert('A bit more detail please - at least 10 characters helps doers understand better.');
           return;
         }
         if (!taskData.category?.trim()) {
-          alert('Which category best fits your task? This helps us find the right helpers.');
+          alert('Which category best fits your task? This helps us find the right doers.');
           return;
         }
         if (!taskData.location?.trim()) {
@@ -188,7 +188,7 @@ export default function HanaManualMode({
         const now = new Date();
         const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60000);
         if (selectedDateTime < thirtyMinutesFromNow) {
-          alert('Give helpers a bit of time! Please schedule at least 30 minutes from now.');
+          alert('Give doers a bit of time! Please schedule at least 30 minutes from now.');
           return;
         }
         if (!taskData.budget || parseFloat(taskData.budget) <= 0) {
@@ -197,7 +197,7 @@ export default function HanaManualMode({
         }
         const budgetNum = parseFloat(taskData.budget);
         if (budgetNum < 5) {
-          alert('Budget should be at least SGD $5 to attract good helpers.');
+          alert('Budget should be at least SGD $5 to attract good doers.');
           return;
         }
         onReview();
@@ -373,9 +373,9 @@ export default function HanaManualMode({
           const errors = [];
 
           if (!taskData.title?.trim()) errors.push('Add a task title - what do you need help with?');
-          if (!taskData.description?.trim()) errors.push('Describe your task - give more details so helpers understand');
+          if (!taskData.description?.trim()) errors.push('Describe your task - give more details so doers understand');
           if (taskData.title?.trim() && taskData.title.trim().length < 5) errors.push('Make the title a bit longer - at least 5 characters');
-          if (taskData.description?.trim() && taskData.description.trim().length < 10) errors.push('Give more details - at least 10 characters helps helpers');
+          if (taskData.description?.trim() && taskData.description.trim().length < 10) errors.push('Give more details - at least 10 characters helps doers');
           if (!taskData.category?.trim()) errors.push('Pick a category - which type of task is this?');
           if (!taskData.location?.trim()) errors.push('Tell us where - which area do you need help in?');
           if (!taskData.date?.trim()) errors.push('When? - Pick a date for your task');
@@ -392,10 +392,10 @@ export default function HanaManualMode({
             selectedDateTime.setHours(hours, minutes, 0, 0);
             const now = new Date();
             const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60000);
-            if (selectedDateTime < thirtyMinutesFromNow) errors.push('Give helpers notice - schedule at least 30 minutes from now');
+            if (selectedDateTime < thirtyMinutesFromNow) errors.push('Give doers notice - schedule at least 30 minutes from now');
           }
           if (!taskData.budget || parseFloat(taskData.budget) <= 0) errors.push('What\'s your budget? - Tell us how much you can pay');
-          if (taskData.budget && parseFloat(taskData.budget) < 5) errors.push('Budget needs to be at least SGD $5 to attract helpers');
+          if (taskData.budget && parseFloat(taskData.budget) < 5) errors.push('Budget needs to be at least SGD $5 to attract doers');
 
           return errors.length > 0 && (
             <div className="bg-orange-50 border-l-4 border-orange-300 rounded-lg p-3 text-xs text-orange-800">
