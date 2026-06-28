@@ -1171,11 +1171,17 @@ export default function MyAccountPage() {
                 {/* Beautiful Profile Plaque */}
                 {profileData && (
                   <div className="mb-6">
+                    {console.log('[MyAccountPage] Rendering ProfilePlaque with:', {
+                      name: profileData.name,
+                      bio: profileData.bio,
+                      certificates: certificates,
+                      profileImage: profileImage
+                    })}
                     <ProfilePlaque
                       name={profileData.name}
                       gender={profileData.gender}
                       bio={profileData.bio}
-                      certificates={profileData.certificates}
+                      certificates={certificates}
                       profileImage={profileImage}
                       role={profileData.role}
                       trustedCount={3}
