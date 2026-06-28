@@ -338,6 +338,12 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                           </span>
                         )}
 
+                        {errand.deadline && (
+                          <span className="text-gray-600 text-xs">
+                            📅 {new Date(errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+
                         <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-semibold">
                           {capitalizeStatus(errand.status)}
                         </span>
@@ -379,15 +385,6 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                         <p className="font-semibold text-gray-600">Details</p>
                         <p className="text-gray-700 line-clamp-2">
                           {errand.description}
-                        </p>
-                      </div>
-                    )}
-
-                    {errand.deadline && (
-                      <div>
-                        <p className="font-semibold text-gray-600">Deadline</p>
-                        <p className="text-gray-700">
-                          {new Date(errand.deadline).toLocaleDateString()}
                         </p>
                       </div>
                     )}
