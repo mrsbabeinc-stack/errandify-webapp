@@ -77,6 +77,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
       console.log('[ErrandsPage] API Response received:', response.data);
       const errandsList = response.data.data || [];
       console.log('[ErrandsPage] Errands count:', errandsList.length);
+      console.log('[ErrandsPage] First errand:', errandsList[0]);
       setErrands(errandsList);
     } catch (err: any) {
       console.error('Failed to fetch errands:', {
