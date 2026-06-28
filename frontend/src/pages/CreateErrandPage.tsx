@@ -647,7 +647,7 @@ export default function CreateErrandPage() {
     const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60 * 1000);
 
     if (errandDateTime < thirtyMinutesFromNow) {
-      setError('Please schedule at least 30 minutes from now to give helpers time to respond ⏳');
+      setError('Please schedule at least 30 minutes from now to give doers time to respond ⏳');
       return;
     }
 
@@ -1564,7 +1564,7 @@ export default function CreateErrandPage() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full flex flex-col max-h-[90vh] pointer-events-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 pb-3 border-b-2 border-orange-100">
               <h2 className="text-2xl font-bold text-errandify-brown">Ready to post?</h2>
-              <p className="text-sm text-gray-600 mt-1">Here's what helpers will see</p>
+              <p className="text-sm text-gray-600 mt-1">Here's what doers will see</p>
             </div>
 
             <div className="p-5 pt-4 flex-1 overflow-y-auto space-y-2.5 text-sm text-gray-700">

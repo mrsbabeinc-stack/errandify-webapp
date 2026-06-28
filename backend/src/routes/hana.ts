@@ -2,17 +2,8 @@ import { Router } from 'express';
 import axios from 'axios';
 import { config } from '../config.js';
 import { authMiddleware } from '../middleware/auth.js';
-import gTTS from 'gtts';
-import { execSync } from 'child_process';
-import fs from 'fs';
-import path from 'path';
-import crypto from 'crypto';
 
 const router = Router();
-
-// Audio cache to avoid regenerating same text
-const audioCache = new Map<string, { audio: string; timestamp: number }>();
-const CACHE_TTL = 3600000; // 1 hour in milliseconds
 
 // Hana AI Assistant - Process user messages
 router.post('/chat/hana', authMiddleware, async (req: any, res: any) => {
@@ -91,7 +82,7 @@ I understand you need emergency assistance. Here's what you can do:
 
 **Immediate Steps:**
 1. **Call local emergency**: Dial 999 for police/ambulance (Singapore)
-2. **Contact Errandify Support**: We'll connect you with nearby helpers
+2. **Contact Errandify Support**: We'll connect you with nearby doers
 3. **Ask for what you need**: Tell me specifically what help is needed
 
 **Common Emergency Support:**
@@ -100,7 +91,7 @@ I understand you need emergency assistance. Here's what you can do:
 - Financial emergency (need urgent funds)
 - Missing persons
 
-We'll mobilize our community helpers immediately. What specific help do you need right now?
+We'll mobilize our community doers immediately. What specific help do you need right now?
 
 📞 If this is a life-threatening emergency, please call 999 first.`;
 
@@ -155,7 +146,7 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
 
         const systemPrompt = usesSinglish
           ? `You are Hana, a warm and friendly Singaporean assistant for Errandify (帮帮乐). Match the user's friendly, casual tone. Use natural conversational Singapore English with particles like lor, lah, leh when appropriate. Be genuine and caring. Keep it brief. No emoticons. ${languageInstruction}`
-          : `You are Hana, a helpful and warm AI assistant for Errandify (帮帮乐). Respond in clear, professional English. You are friendly and neighbourly, like a caring community helper. Keep responses brief (2-3 sentences). No emoticons or icons. Sound warm and genuine. ${languageInstruction}`;
+          : `You are Hana, a helpful and warm AI assistant for Errandify (帮帮乐). Respond in clear, professional English. You are friendly and neighbourly, like a caring community doer. Keep responses brief (2-3 sentences). No emoticons or icons. Sound warm and genuine. ${languageInstruction}`;
 
         const response = await axios.post(
           'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
@@ -226,8 +217,8 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
             : 'To post an errand, tap the plus button at the bottom of the screen. Fill in what you need help with, choose your budget and deadline, then submit.';
         } else if (messageLower.includes('bid') || messageLower.includes('accept') || messageLower.includes('job')) {
           reply = usesSinglish
-            ? 'Browse the errands, check the details, then tap accept to place your bid lor. The person will pick their favourite helper.'
-            : 'You can browse available errands, check the details, and tap accept to place your bid. The person who posted will choose their preferred helper.';
+            ? 'Browse the errands, check the details, then tap accept to place your bid lor. The person will pick their favourite doer.'
+            : 'You can browse available errands, check the details, and tap accept to place your bid. The person who posted will choose their preferred doer.';
         } else if (messageLower.includes('payment') || messageLower.includes('money') || messageLower.includes('price')) {
           reply = usesSinglish
             ? 'Don\'t worry, the money is safe with us until the work is done. You get paid once they approve your work lor.'
@@ -275,18 +266,71 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
       return res.status(400).json({ error: 'Text required' });
     }
 
-    // TTS disabled temporarily - return empty audio
-    // TODO: Fix TTS integration when gTTS works properly
-    console.log('[Hana TTS] TTS disabled - returning empty response');
+    console.log('[Hana TTS] Converting text to speech:', { language, textLength: text.length });
 
-    res.json({
-      success: true,
-      data: {
-        audio: null,
-        format: 'empty',
+    // Map language to Alibaba Qwen TTS voice
+    // All FEMALE voices with motherly, warm, passionate tone
+    const voiceMap: Record<string, { voice: string; lang: string }> = {
+      en: {
+        voice: 'Joanna', // Natural US female - warm, conversational
+        lang: 'en-SG',
       },
-    });
+      zh: {
+        voice: 'Siqi', // Mandarin Chinese - natural, warm female voice (帮帮乐助手 tone)
+        lang: 'zh-CN',
+      },
+      yue: {
+        voice: 'Hui', // Cantonese - warm, natural female voice
+        lang: 'zh-HK',
+      },
+    };
 
+    const voiceConfig = voiceMap[language] || voiceMap['en'];
+
+    console.log('[Hana TTS] Using voice:', voiceConfig.voice);
+
+    // Try to use Alibaba Qwen TTS
+    try {
+      const qwenTtsResponse = await axios.post(
+        'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text2speech/synthesis',
+        {
+          model: 'cosyvoice-v1',
+          input: {
+            text: text,
+          },
+          parameters: {
+            voice: voiceConfig.voice,
+            rate: language === 'en' ? 1.0 : 0.95, // Natural speaking pace, slightly slower for Chinese warmth
+            pitch: 1.0, // Natural pitch - no robotic effect
+            volume: 50, // Standard volume
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${config.qwen.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          responseType: 'arraybuffer',
+        }
+      );
+
+      const audioBase64 = Buffer.from(qwenTtsResponse.data).toString('base64');
+      console.log('[Hana TTS] Alibaba Qwen TTS generated successfully');
+
+      res.json({
+        success: true,
+        data: {
+          audio: `data:audio/wav;base64,${audioBase64}`,
+          format: 'base64',
+        },
+      });
+    } catch (qwenError: any) {
+      console.log('[Hana TTS] Alibaba Qwen TTS failed, falling back to Google TTS');
+      console.log('Qwen error:', qwenError.response?.data || qwenError.message);
+      console.log('[Hana TTS] voiceConfig:', voiceConfig, 'voiceConfig.lang:', voiceConfig.lang, 'typeof:', typeof voiceConfig.lang);
+      // Fallback to gTTS
+      return await fallbackToGTTS(text, voiceConfig.lang, res);
+    }
   } catch (error: any) {
     console.error('TTS error:', error.message);
     res.status(500).json({
@@ -296,43 +340,35 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
   }
 });
 
-// Fallback function using Google TTS
-const fallbackToGTTS = async (text: string, lang: string, res: any, cacheKey: string) => {
+// Fallback function using Google Translate TTS
+const fallbackToGTTS = async (text: string, lang: string, res: any) => {
   try {
-    console.log('[fallbackToGTTS] Called with lang:', lang, 'typeof:', typeof lang);
+    console.log('[fallbackToGTTS] Using Google Translate API');
 
-    // Map to gTTS language codes
-    const gttsLangMap: Record<string, string> = {
-      'en': 'en',
+    // Map to language codes
+    const langMap: Record<string, string> = {
+      'en-SG': 'en',
       'zh-CN': 'zh-CN',
-      'zh-TW': 'zh-TW',
+      'zh-HK': 'zh-TW',
     };
 
-    const gttsLang = gttsLangMap[lang] || 'en';
-    console.log('[fallbackToGTTS] Mapped gttsLang:', gttsLang);
+    const targetLang = langMap[lang] || 'en';
 
-    // Generate speech using gTTS
-    const gtts = new gTTS(text, { lang: gttsLang, slow: false });
+    // Use Google Translate TTS endpoint
+    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${targetLang}&client=gtx`;
 
-    const audioBuffer = await new Promise<Buffer>((resolve, reject) => {
-      const chunks: Buffer[] = [];
-
-      gtts.stream().on('data', (chunk: Buffer) => {
-        chunks.push(chunk);
-      }).on('end', () => {
-        resolve(Buffer.concat(chunks));
-      }).on('error', (error: any) => {
-        reject(error);
-      });
+    const audioResponse = await axios.get(ttsUrl, {
+      responseType: 'arraybuffer',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      },
+      timeout: 10000
     });
 
-    console.log('[Hana TTS] Google TTS fallback generated successfully');
-
-    const audioBase64 = audioBuffer.toString('base64');
+    const audioBase64 = Buffer.from(audioResponse.data).toString('base64');
     const audioUrl = `data:audio/mpeg;base64,${audioBase64}`;
 
-    // Cache the result
-    audioCache.set(cacheKey, { audio: audioUrl, timestamp: Date.now() });
+    console.log('[fallbackToGTTS] Audio generated successfully, size:', audioBase64.length);
 
     res.json({
       success: true,
@@ -342,7 +378,7 @@ const fallbackToGTTS = async (text: string, lang: string, res: any, cacheKey: st
       },
     });
   } catch (error: any) {
-    console.error('Fallback TTS error:', error.message);
+    console.error('[fallbackToGTTS] Error:', error.message);
     res.status(500).json({
       error: 'Failed to generate speech',
       message: error.message,

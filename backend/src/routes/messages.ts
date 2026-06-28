@@ -657,7 +657,7 @@ async function getHanaResponse(
 ): Promise<string> {
   try {
     const prompt = `
-      You are Hana, Errandify's warm AI helper. A community member has a question
+      You are Hana, Errandify's warm AI doer. A community member has a question
       about their task.
 
       Task: ${task.title}
