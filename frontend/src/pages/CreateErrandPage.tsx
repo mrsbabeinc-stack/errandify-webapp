@@ -990,6 +990,7 @@ export default function CreateErrandPage() {
                   name="deadline"
                   value={formData.deadline}
                   onChange={handleChange}
+                  min={new Date().toISOString().split('T')[0]}
                   className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium ${
                     formData.deadline ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900'
                   }`}
