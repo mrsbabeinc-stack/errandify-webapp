@@ -291,6 +291,48 @@ router.post('/:taskId/request-more-work', authMiddleware, async (req: AuthReques
   }
 });
 
+// GET /api/jobs/:taskId - Get job details for review page
+router.get('/:taskId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { taskId } = req.params;
+
+    const result = await db.query(
+      `SELECT
+        e.id,
+        e.title,
+        e.budget,
+        e.status,
+        b.doer_id,
+        u.display_name as doer_name
+       FROM errands e
+       LEFT JOIN bids b ON e.id = b.errand_id AND b.status = 'confirmed'
+       LEFT JOIN users u ON b.doer_id = u.id
+       WHERE e.id = $1`,
+      [taskId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    const job = result.rows[0];
+    res.json({
+      success: true,
+      data: {
+        id: job.id,
+        title: job.title,
+        budget: job.budget,
+        status: job.status,
+        doerId: job.doer_id,
+        doerName: job.doer_name || 'Unknown',
+      },
+    });
+  } catch (error) {
+    console.error('Get job error:', error);
+    res.status(500).json({ error: 'Failed to get job details' });
+  }
+});
+
 // GET /api/jobs/:taskId/photos - Get task completion photos
 router.get('/:taskId/photos', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {

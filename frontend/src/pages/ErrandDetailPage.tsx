@@ -801,7 +801,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     <p className="font-semibold text-gray-700 text-xs">📌 Your Options:</p>
                     <div className="flex flex-col gap-2">
                       <button
-                        onClick={() => navigate(`/task/${id}/review`)}
+                        onClick={() => navigate(`/review/${id}`)}
                         className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 text-xs transition-all"
                       >
                         ⭐ Review & Rate
