@@ -1088,7 +1088,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </div>
             ) : null}
               </>
-            ) : null}
+            )
           </div>
         </div>
 
