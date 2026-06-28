@@ -225,10 +225,15 @@ export default function BrowseErrandsPage() {
               key={errand.id}
               className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden"
             >
-              {/* Errand ID Badge */}
-              {errand.errandId && (
-                <div className="bg-gray-50 px-4 py-1.5 border-b border-gray-200 flex items-center justify-between">
-                  <code className="text-xs font-mono text-gray-600">{errand.errandId}</code>
+              {/* Errand ID & Start Date Header */}
+              {(errand.errandId || errand.deadline) && (
+                <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between text-xs">
+                  <code className="font-mono text-gray-700 font-semibold">{errand.errandId || 'N/A'}</code>
+                  {errand.deadline && (
+                    <span className="text-gray-600">
+                      📅 {new Date(errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
+                    </span>
+                  )}
                 </div>
               )}
               {/* Content */}
