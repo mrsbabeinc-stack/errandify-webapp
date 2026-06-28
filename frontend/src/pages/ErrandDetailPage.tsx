@@ -628,11 +628,21 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </div>
             )}
 
-            {/* Asker Info - Only show alias */}
+            {/* Asker Info - Show name or fallback */}
             {errand.asker && (
               <div className="border-t border-orange-200 pt-1.5 mt-1.5">
                 <p className="text-xs text-gray-600 font-bold mb-0.5">Posted By</p>
-                <p className="text-xs text-gray-800 font-medium mb-0.5">{errand.asker.name || 'Community Member'}</p>
+                <p className="text-xs text-gray-800 font-medium mb-0.5">
+                  {errand.askerName || errand.asker?.name || 'Community Member'}
+                </p>
+              </div>
+            )}
+
+            {/* Show asker name if not shown above */}
+            {!errand.asker && errand.askerName && (
+              <div className="border-t border-orange-200 pt-1.5 mt-1.5">
+                <p className="text-xs text-gray-600 font-bold mb-0.5">Posted By</p>
+                <p className="text-xs text-gray-800 font-medium mb-0.5">{errand.askerName}</p>
               </div>
             )}
 
