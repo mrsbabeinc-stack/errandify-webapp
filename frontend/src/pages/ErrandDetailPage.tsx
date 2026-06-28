@@ -730,10 +730,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 <h2 className="font-bold text-errandify-brown mb-1.5 text-xs">
                   Activity Timeline
                 </h2>
-                <div className="bg-white rounded border border-gray-200 overflow-hidden">
-                  <div className="max-h-48 overflow-y-auto">
+                <div className="bg-white rounded border border-gray-200 overflow-hidden relative">
+                  <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                     {errand.id && <ErrandActivityLog ref={activityTimelineRef} errandId={errand.id} userRole={userRole} />}
                   </div>
+                  {/* Visual scroll indicator */}
+                  <div className="absolute right-0 top-0 bottom-0 w-1 bg-gradient-to-b from-errandify-orange to-green-500 opacity-30 pointer-events-none"></div>
                 </div>
               </div>
             )}
