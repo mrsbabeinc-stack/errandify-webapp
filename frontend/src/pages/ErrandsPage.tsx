@@ -392,9 +392,6 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                           Copy
                         </button>
                       )}
-                      <div className="text-gray-400 text-sm cursor-pointer">
-                        {expandedErrandId === errand.id ? '▼' : '▶'}
-                      </div>
                     </div>
                   </div>
                 </div>
