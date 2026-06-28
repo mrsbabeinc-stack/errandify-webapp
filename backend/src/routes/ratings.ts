@@ -103,9 +103,10 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         ? `${ratingEmoji} New Review from ${raterName}`
         : `${ratingEmoji} New Review from ${raterName}`;
 
+      const formattedErrandId = task.errand_id || `ER26-${taskId}`;
       const notificationBody = rating === 5
-        ? `Errand #${taskId}: ${raterName} loved your work on "${task.title}"! You earned ${totalEpAwarded} EP\n\nPayment releases in 24-48 hours if no dispute.`
-        : `Errand #${taskId}: ${raterName} left you a ${Math.round(rating)}-star rating on "${task.title}". You earned ${totalEpAwarded} EP!`;
+        ? `${formattedErrandId}: ${raterName} loved your work on "${task.title}"! You earned ${totalEpAwarded} EP\n\nPayment releases in 24-48 hours if no dispute.`
+        : `${formattedErrandId}: ${raterName} left you a ${Math.round(rating)}-star rating on "${task.title}". You earned ${totalEpAwarded} EP!`;
 
       // Notify rated user with EP celebration
       await createNotification(
