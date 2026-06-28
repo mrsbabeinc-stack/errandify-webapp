@@ -738,7 +738,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
             '56': 'Bukit Timah', '57': 'Bukit Timah', '58': 'Ang Mo Kio', '59': 'Ang Mo Kio',
             '60': 'Ang Mo Kio', '61': 'Bishan', '62': 'Bishan', '63': 'Bishan',
             '64': 'Toa Payoh', '65': 'Toa Payoh', '66': 'Toa Payoh', '67': 'Serangoon',
-            '68': 'Serangoon', '69': 'Serangoon', '70': 'Hougang', '71': 'Hougang',
+            '68': 'Choa Chu Kang', '69': 'Serangoon', '70': 'Hougang', '71': 'Hougang',
             '72': 'Hougang', '73': 'Punggol', '74': 'Punggol', '75': 'Punggol',
             '76': 'Sengkang', '77': 'Sengkang', '78': 'Sengkang', '79': 'Sengkang',
             '80': 'Yishun', '81': 'Yishun', '82': 'Yishun', '83': 'Sembawang',
