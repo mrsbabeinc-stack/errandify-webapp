@@ -25,18 +25,18 @@ const categoryCodeMap: { [key: string]: string } = {
   'charity-community': 'CC',
 };
 
-// Generate unique errand ID: ER26-XX-XXXXXX
-// Format: ER[YEAR_SHORT]-[CATEGORY_CODE]-[6_RANDOM_CHARS]
-// Example: ER26-FD-K9M7X2 (Food & Beverage)
+// Generate unique errand ID: ER26HM-XXXX
+// Format: ER[YEAR_SHORT][CATEGORY_CODE]-[4_RANDOM_CHARS]
+// Example: ER26FD-K9M7 (Food & Beverage)
 function generateErrandId(category: string): string {
   const year = new Date().getFullYear().toString().slice(-2); // Get last 2 digits: 2026 -> 26
   const categoryCode = categoryCodeMap[category.toLowerCase()] || 'XX';
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 4; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `ER${year}-${categoryCode}-${code}`;
+  return `ER${year}${categoryCode}-${code}`;
 }
 
 // Get all errands (with filters)

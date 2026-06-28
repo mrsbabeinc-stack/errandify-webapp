@@ -124,10 +124,11 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       // Send notification to asker about new bid
       try {
         const errandData = await db.query(
-          'SELECT title FROM errands WHERE id = $1',
+          'SELECT title, errand_id FROM errands WHERE id = $1',
           [task_id]
         );
         const errandTitle = errandData.rows[0]?.title || 'Your errand';
+        const formattedErrandId = errandData.rows[0]?.errand_id || `ER26-${task_id}`;
 
         await db.query(
           `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
@@ -136,7 +137,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
             errand.asker_id,
             'bid_placed',
             'New Bid Placed',
-            `Errand #${task_id}: ${doerName} has offered to help with "${errandTitle}" for $${parseFloat(amount)}`,
+            `${formattedErrandId}: ${doerName} has offered to help with "${errandTitle}" for $${parseFloat(amount)}`,
             task_id,
           ]
         );
@@ -250,10 +251,11 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
       );
 
       const errandData = await db.query(
-        'SELECT title FROM errands WHERE id = $1',
+        'SELECT title, errand_id FROM errands WHERE id = $1',
         [bid.errand_id]
       );
       const errandTitle = errandData.rows[0]?.title || 'A task';
+      const formattedErrandId = errandData.rows[0]?.errand_id || `ER26-${bid.errand_id}`;
 
       for (const otherBid of otherBids.rows) {
         await db.query(
@@ -263,7 +265,7 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
             otherBid.doer_id,
             'bid_rejected',
             'Offer Not Selected',
-            `Errand #${bid.errand_id}: Your offer for "${errandTitle}" was not selected. Don't worry, more errands are coming!`,
+            `${formattedErrandId}: Your offer for "${errandTitle}" was not selected. Don't worry, more errands are coming!`,
             bid.errand_id,
           ]
         );
@@ -312,10 +314,11 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
     // Send notification to doer that their bid was accepted
     try {
       const errandData = await db.query(
-        'SELECT title FROM errands WHERE id = $1',
+        'SELECT title, errand_id FROM errands WHERE id = $1',
         [bid.errand_id]
       );
       const errandTitle = errandData.rows[0]?.title || 'Your task';
+      const formattedErrandId = errandData.rows[0]?.errand_id || `ER26-${bid.errand_id}`;
 
       await db.query(
         `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
@@ -324,7 +327,7 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
           bid.doer_id,
           'bid_accepted',
           'Offer Accepted',
-          `Errand #${bid.errand_id}: Your offer of $${bid.amount} for "${errandTitle}" was accepted! Please confirm you're ready to help.`,
+          `${formattedErrandId}: Your offer of $${bid.amount} for "${errandTitle}" was accepted! Please confirm you're ready to help.`,
           bid.errand_id,
         ]
       );

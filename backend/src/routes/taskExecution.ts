@@ -57,7 +57,7 @@ router.post('/:id/start', authMiddleware, async (req: AuthRequest, res: Response
       errand.asker_id,
       'task_started',
       'Errand Started',
-      `Errand #${errand.id}: "${errand.title}" has been started`,
+      `${errand.errand_id}: "${errand.title}" has been started`,
       null
     ).catch(console.error);
 
@@ -196,7 +196,7 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
           assignment.doer_id,
           'task_completed',
           'Errand Completed',
-          `Errand #${errand.id}: Your work on "${errand.title}" was approved. Payment will be released after 48h.`,
+          `${errand.errand_id}: Your work on "${errand.title}" was approved. Payment will be released after 48h.`,
           null
         ).catch(console.error);
       } else {
@@ -204,7 +204,7 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
           assignment.doer_id,
           'task_needs_revision',
           'Needs Revision',
-          `Errand #${errand.id}: Your work on "${errand.title}" needs revision: ${notes || 'Please redo the work'}`,
+          `${errand.errand_id}: Your work on "${errand.title}" needs revision: ${notes || 'Please redo the work'}`,
           null
         ).catch(console.error);
       }
