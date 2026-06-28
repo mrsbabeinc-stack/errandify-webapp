@@ -70,7 +70,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // Check if rating already exists
     const existingResult = await db.query(
-      'SELECT id FROM ratings WHERE task_id = $1 AND rater_id = $2',
+      'SELECT id FROM ratings WHERE errand_id = $1 AND rater_id = $2',
       [taskId, raterId]
     );
 
@@ -81,8 +81,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     // Insert rating
     console.log('[Rating] Inserting rating:', { taskId, raterId, ratedUserId, rating });
     const ratingResult = await db.query(
-      `INSERT INTO ratings (task_id, rater_id, rated_user_id, rating, comment, created_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())
+      `INSERT INTO ratings (errand_id, rater_id, ratee_id, rating, review_text)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING id, created_at`,
       [taskId, raterId, ratedUserId, rating, comment || null]
     );
