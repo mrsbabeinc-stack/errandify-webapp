@@ -639,13 +639,15 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </div>
             )}
 
-            {/* Activity Timeline */}
-            <div className="border-t border-orange-200 pt-1.5 mt-1.5">
-              <h2 className="font-bold text-errandify-brown mb-1.5 text-xs">
-                Activity Timeline
-              </h2>
-              {errand.id && <ErrandActivityLog ref={activityTimelineRef} errandId={errand.id} userRole={userRole} />}
-            </div>
+            {/* Activity Timeline - Only show when job is confirmed */}
+            {errand.status !== 'open' && (
+              <div className="border-t border-orange-200 pt-1.5 mt-1.5">
+                <h2 className="font-bold text-errandify-brown mb-1.5 text-xs">
+                  Activity Timeline
+                </h2>
+                {errand.id && <ErrandActivityLog ref={activityTimelineRef} errandId={errand.id} userRole={userRole} />}
+              </div>
+            )}
 
             {/* Action Button */}
             {errand.status === 'open' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
