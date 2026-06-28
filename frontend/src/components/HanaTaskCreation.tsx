@@ -226,7 +226,7 @@ export default function HanaTaskCreation({
         location: extracted.location || '',
         area: extracted.area || '',
         fullAddress: extracted.fullAddress || extracted.location || '',
-        date: extracted.date || '',
+        date: extracted.date || new Date().toISOString().split('T')[0],
         time: extracted.time || '10:00',
         duration: extracted.duration || '',
         durationUnit: extracted.durationUnit || 'Hr',

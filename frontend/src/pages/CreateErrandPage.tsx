@@ -125,7 +125,7 @@ export default function CreateErrandPage() {
             location: prefilledData.location || '',
             startLocation: '',
             budget: prefilledData.budget ? String(prefilledData.budget) : '',
-            deadline: prefilledData.date || '',
+            deadline: prefilledData.date || new Date().toISOString().split('T')[0],
             time: prefilledData.time || '',
             duration: prefilledData.duration ? String(prefilledData.duration) : '',
             durationUnit: (prefilledData.durationUnit || 'Hr') as 'Min' | 'Hr' | 'Day' | 'Week',
@@ -966,7 +966,7 @@ export default function CreateErrandPage() {
                     <span>💡 <strong>Example:</strong> "Move 2 boxes to new flat on Saturday 9am, 2 hours"</span>
                   )}
                   {formData.category === 'shopping-errands' && (
-                    <span>💡 <strong>Example:</strong> "Buy groceries by Friday 5pm, 1 hour"</span>
+                    <span>💡 <strong>Example:</strong> "Grocery shopping at 408600, 2pm, 30 mins, budget $150" (date defaults to today if omitted)</span>
                   )}
                   {formData.category === 'personal-care' && (
                     <span>💡 <strong>Example:</strong> "Haircut on Saturday 11am, 1.5 hours"</span>
