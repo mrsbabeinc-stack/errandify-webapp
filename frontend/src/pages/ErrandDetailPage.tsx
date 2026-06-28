@@ -11,6 +11,7 @@ import ErrandActivityLog from '../components/ErrandActivityLog';
 interface ErrandDetail {
   id: number;
   errandId?: string;
+  formatted_id?: string;
   title: string;
   description?: string;
   notes?: string;
@@ -436,6 +437,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             {/* Title Row + Price */}
             <div className="flex items-start justify-between gap-1.5">
               <div className="flex-1">
+                {errand.formatted_id && (
+                  <p className="text-xs text-orange-100 font-semibold mb-1">{errand.formatted_id}</p>
+                )}
                 <h1 className="text-sm font-bold leading-tight">
                   {errand.title}
                 </h1>
@@ -738,18 +742,33 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               <div className="w-full bg-green-50 border border-green-200 rounded-lg p-4 mt-2 space-y-3">
                 {/* Status Header */}
                 <div className="text-center pb-3 border-b border-green-200">
-                  <p className="text-green-800 font-bold text-lg">✓ Job Completed</p>
-                  <p className="text-xs text-green-600 mt-1">Waiting for asker to review and rate your work</p>
+                  <p className="text-green-800 font-bold text-lg">✓ Errand Completed</p>
+                  <p className="text-xs text-green-600 mt-1">
+                    {currentUser && currentUser.id === errand.askerId
+                      ? 'Review and rate the doer\'s work'
+                      : 'Waiting for asker to review and rate your work'}
+                  </p>
                 </div>
 
                 {/* Process Flow */}
                 <div className="space-y-2 text-xs">
                   <p className="font-semibold text-gray-700">📋 What Happens Next:</p>
                   <div className="space-y-1 text-gray-600">
-                    <p>✓ You submitted completion evidence</p>
-                    <p>⏳ Asker has 48 hours to review</p>
-                    <p>⭐ Asker rates your work</p>
-                    <p>💰 Payment releases automatically</p>
+                    {currentUser && currentUser.id === errand.askerId ? (
+                      <>
+                        <p>✓ Doer submitted completion evidence</p>
+                        <p>⏳ You have 48 hours to review</p>
+                        <p>⭐ Rate the doer's work</p>
+                        <p>💰 Payment releases after rating</p>
+                      </>
+                    ) : (
+                      <>
+                        <p>✓ You submitted completion evidence</p>
+                        <p>⏳ Asker has 48 hours to review</p>
+                        <p>⭐ Asker rates your work</p>
+                        <p>💰 Payment releases automatically</p>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -780,36 +799,44 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 {currentUser && currentUser.id === errand.askerId && (
                   <div className="space-y-2 pt-2 border-t border-green-200">
                     <p className="font-semibold text-gray-700 text-xs">📌 Your Options:</p>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2">
                       <button
-                        onClick={() => setShowChat(true)}
-                        className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-xs transition-all"
+                        onClick={() => navigate(`/task/${id}/review`)}
+                        className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 text-xs transition-all"
                       >
-                        💬 Chat
+                        ⭐ Review & Rate
                       </button>
-                      <button
-                        onClick={() => {
-                          const reason = window.prompt('Why do you need to reopen this job? (Explain to doer)');
-                          if (reason === null) return;
-                          const token = localStorage.getItem('token');
-                          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/reopen`, {
-                            method: 'POST',
-                            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ reason: reason || 'Please revise your work' }),
-                          })
-                            .then(r => r.json())
-                            .then(() => {
-                              alert('✓ Job reopened. Doer notified to make changes.');
-                              fetchErrandDetail();
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setShowChat(true)}
+                          className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-xs transition-all"
+                        >
+                          💬 Chat
+                        </button>
+                        <button
+                          onClick={() => {
+                            const reason = window.prompt('Why do you need to reopen this job? (Explain to doer)');
+                            if (reason === null) return;
+                            const token = localStorage.getItem('token');
+                            fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/reopen`, {
+                              method: 'POST',
+                              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ reason: reason || 'Please revise your work' }),
                             })
-                            .catch(e => alert('Error: ' + e.message));
-                        }}
-                        className="flex-1 bg-amber-500 text-white py-2 rounded-lg font-semibold hover:bg-amber-600 text-xs transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        disabled={errand.status === 'disputed'}
-                        title={errand.status === 'disputed' ? 'Cannot reopen during dispute' : 'Request doer to make changes'}
-                      >
-                        🔄 Request Changes
-                      </button>
+                              .then(r => r.json())
+                              .then(() => {
+                                alert('✓ Job reopened. Doer notified to make changes.');
+                                fetchErrandDetail();
+                              })
+                              .catch(e => alert('Error: ' + e.message));
+                          }}
+                          className="flex-1 bg-amber-500 text-white py-2 rounded-lg font-semibold hover:bg-amber-600 text-xs transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          disabled={errand.status === 'disputed'}
+                          title={errand.status === 'disputed' ? 'Cannot reopen during dispute' : 'Request doer to make changes'}
+                        >
+                          🔄 Request Changes
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
