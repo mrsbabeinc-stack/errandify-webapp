@@ -309,16 +309,26 @@ export default function HanaCustomerService() {
     console.log('[Hana] Language:', language, 'Target Lang:', targetLang);
     console.log('[Hana] Matching voices:', matchingVoices.map(v => ({ name: v.name, lang: v.lang })));
 
-    // Blacklist male voices and select female
-    const malePatterns = ['Li-Mu', 'Lü-Si', 'Lu-Si', 'male', 'man', 'david', 'google uk english', 'alex', 'bruce', 'junior'];
-    const femalePatterns = ['victoria', 'karen', 'samantha', 'zira', 'susan', 'mei-jia', 'sin-ji', 'female', 'woman', 'hui-shan', 'yating', 'ting-ting', 'sirine'];
+    // Blacklist male voices and select warm, comforting female voice
+    const malePatterns = ['Li-Mu', 'Lü-Si', 'Lu-Si', 'male', 'man', 'david', 'google uk english', 'alex', 'bruce', 'junior', 'tom', 'george', 'rishi'];
 
-    // First try to find voices with explicit female patterns
+    // Priority female voice patterns (warm, comforting, motherly)
+    const priorityFemalePatterns = ['victoria', 'samantha', 'karen', 'zira', 'susan', 'mei-jia', 'hui-shan', 'yating', 'ting-ting', 'sirine', 'moira', 'siri'];
+    const allFemalePatterns = [...priorityFemalePatterns, 'sin-ji', 'female', 'woman'];
+
+    // Priority 1: Find voices with explicit warm female patterns
     let selectedVoice = matchingVoices.find(v =>
-      femalePatterns.some(pattern => v.name.toLowerCase().includes(pattern.toLowerCase()))
+      priorityFemalePatterns.some(pattern => v.name.toLowerCase().includes(pattern.toLowerCase()))
     );
 
-    // If not found, filter out male voices
+    // Priority 2: Find any voice with female patterns
+    if (!selectedVoice) {
+      selectedVoice = matchingVoices.find(v =>
+        allFemalePatterns.some(pattern => v.name.toLowerCase().includes(pattern.toLowerCase()))
+      );
+    }
+
+    // Priority 3: Filter out male voices and use remaining voices
     if (!selectedVoice) {
       const femaleVoices = matchingVoices.filter(v =>
         !malePatterns.some(pattern => v.name.toLowerCase().includes(pattern.toLowerCase()))
@@ -326,7 +336,7 @@ export default function HanaCustomerService() {
       selectedVoice = femaleVoices[0];
     }
 
-    // Last resort - use any voice
+    // Last resort - use any voice (fallback only)
     if (!selectedVoice) {
       selectedVoice = matchingVoices[0];
     }
@@ -336,17 +346,17 @@ export default function HanaCustomerService() {
       console.log('[Hana] SELECTED voice for', language + ':', selectedVoice.name, 'lang:', selectedVoice.lang);
     }
 
-    // Adjust voice settings by language
+    // Adjust voice settings by language - warm, comforting, motherly female voice
     if (language === 'zh' || language === 'yue') {
-      // Chinese (Mandarin & Cantonese): motherly, passionate, warm
-      utterance.rate = 0.9;
-      utterance.pitch = 1.05;
-      utterance.volume = 1.0;
+      // Chinese (Mandarin & Cantonese): warm, gentle, motherly
+      utterance.rate = 0.85;        // Slightly slower for clarity and warmth
+      utterance.pitch = 1.1;        // Warm female pitch
+      utterance.volume = 1.0;       // Full volume for clarity
     } else {
-      // English: motherly, passionate, warm female - faster to avoid delay
-      utterance.rate = 1.2;
-      utterance.pitch = 1.15;
-      utterance.volume = 1.0;
+      // English: warm, comforting, motherly female voice
+      utterance.rate = 1.0;         // Natural pace for warmth
+      utterance.pitch = 1.2;        // Warm female pitch
+      utterance.volume = 1.0;       // Full volume for clarity
     }
 
     utterance.onstart = () => {
