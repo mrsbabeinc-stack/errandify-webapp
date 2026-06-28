@@ -356,8 +356,8 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                       </div>
                     </div>
 
-                    {/* Right: MyChat Icon or Expand Arrow */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* Right: Action buttons */}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
                       {userRole === 'asker' && errand.status === 'confirmed' && (
                         <button
                           onClick={(e) => {
@@ -370,7 +370,29 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                           💬
                         </button>
                       )}
-                      <div className="text-gray-400 text-sm">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/errand/${errand.id}`);
+                        }}
+                        className="px-2 py-1 bg-errandify-orange text-white text-xs rounded font-semibold hover:bg-opacity-90 transition"
+                        title="View errand details"
+                      >
+                        View
+                      </button>
+                      {userRole === 'asker' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyErrand(errand);
+                          }}
+                          className="px-2 py-1 bg-orange-500 text-white text-xs rounded font-semibold hover:bg-orange-600 transition"
+                          title="Copy this errand"
+                        >
+                          Copy
+                        </button>
+                      )}
+                      <div className="text-gray-400 text-sm cursor-pointer">
                         {expandedErrandId === errand.id ? '▼' : '▶'}
                       </div>
                     </div>
@@ -389,24 +411,6 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                       </div>
                     )}
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-1.5 mt-1">
-                      <button
-                        onClick={() => navigate(`/errand/${errand.id}`)}
-                        className="flex-1 bg-errandify-orange text-white py-1.5 rounded font-semibold hover:bg-opacity-90 text-xs"
-                      >
-                        View
-                      </button>
-                      {userRole === 'asker' && (
-                        <button
-                          onClick={() => handleCopyErrand(errand)}
-                          className="flex-1 bg-orange-500 text-white py-1.5 rounded font-semibold hover:bg-orange-600 text-xs"
-                          title="Copy this errand"
-                        >
-                          Copy
-                        </button>
-                      )}
-                    </div>
                   </div>
                 )}
               </div>
