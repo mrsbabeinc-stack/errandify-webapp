@@ -316,7 +316,8 @@ export default function HanaManualMode({
         <div className="flex gap-3 pt-4">
           <button
             type="submit"
-            className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90"
+            disabled={!taskData.description?.trim()}
+            className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Review & Post
           </button>
