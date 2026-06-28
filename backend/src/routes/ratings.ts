@@ -168,6 +168,18 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     // Update user's average rating
     await updateUserRating(ratedUserId);
 
+    // Update errand status to 'rated' after rating is submitted
+    try {
+      await db.query(
+        'UPDATE errands SET status = $1 WHERE id = $2',
+        ['rated', taskId]
+      );
+      console.log('[Rating] Updated errand status to rated:', taskId);
+    } catch (statusError) {
+      console.error('Failed to update errand status:', statusError);
+      // Don't fail the rating submission if status update fails
+    }
+
     res.status(201).json({
       success: true,
       data: {
