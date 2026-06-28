@@ -447,12 +447,8 @@ export default function MyAccountPage() {
 
     fetchData();
 
-    // Auto-refresh stats every 5 seconds
-    const refreshInterval = setInterval(() => {
-      fetchData();
-    }, 5000);
-
-    return () => clearInterval(refreshInterval);
+    // Auto-refresh stats only on initial load, not every 5 seconds
+    // (5-second refresh was resetting editForm and causing text disappearance while editing)
   }, []);
 
   // Manual refresh function for stats
