@@ -149,15 +149,15 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <p className="text-gray-600 text-sm">Loading bids...</p>
+      <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
+        <p className="text-gray-600 text-xs">Loading bids...</p>
       </div>
     );
   }
 
   if (bids.length === 0) {
     return (
-      <div className="bg-white rounded-lg p-6 border border-gray-200">
+      <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
         <p className="text-gray-600 text-sm">No offers yet. Doers will see your errand and bid soon!</p>
       </div>
     );
@@ -256,7 +256,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
 
         <div className="space-y-3">
           {pendingBids.map(bid => (
-            <div key={bid.id} className="bg-white border border-gray-200 rounded-lg p-4">
+            <div key={bid.id} className="bg-white border border-orange-200 rounded-xl p-3 shadow-sm">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3 flex-1">
                   {bid.doerAvatar && (
@@ -304,7 +304,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
 
               {/* Confidence Signals */}
               {doerConfidence[bid.doerId] && (
-                <div className="mb-3 p-2 bg-blue-50 rounded border border-blue-100">
+                <div className="mb-3 p-2 bg-orange-50 rounded-lg border border-orange-200">
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <p className="text-gray-600">Jobs: {doerConfidence[bid.doerId].total_jobs}</p>
