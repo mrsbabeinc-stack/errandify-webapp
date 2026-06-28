@@ -116,6 +116,15 @@ const detectIntent = (message: string): string | null => {
   return null;
 };
 
+const getGreeting = (lang: Language) => {
+  if (lang === 'yue') {
+    return '你好呀! 我係帮帮乐嘅助手。随时准备帮你处理各种生活小任务。有咩我可以幫你嘅呢?';
+  } else if (lang === 'zh') {
+    return '你好！很高兴为你服务～ 我是帮帮乐的助手，随时准备帮你处理各种生活小任务。';
+  }
+  return "Hi there! I'm Hana, your Errandify assistant. How can I help you today?";
+};
+
 export default function HanaCustomerService() {
   console.log('[Hana] Component mounted');
   const [isOpen, setIsOpen] = useState(false);
@@ -125,11 +134,7 @@ export default function HanaCustomerService() {
     {
       id: '1',
       sender: 'hana',
-      text: language === 'yue'
-        ? '你好呀! 我係Hana，帮帮乐嘅助手。有咩我可以幫你嘅呢?'
-        : language === 'zh'
-        ? '你好! 我是Hana，帮帮乐的助手。有什么我可以帮你的呢?'
-        : "Hi there! I'm Hana, your Errandify assistant. How can I help you today?",
+      text: getGreeting('en'),
       timestamp: new Date(),
     },
   ]);
@@ -139,11 +144,12 @@ export default function HanaCustomerService() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
-  const [showQuickReplies, setShowQuickReplies] = useState(false);
+  const [showQuickReplies, setShowQuickReplies] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const lastUserMessageRef = useRef<string>('');
+  const lastSpokenTextRef = useRef<string>('');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -159,6 +165,16 @@ export default function HanaCustomerService() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+
+  // Auto-speak greeting when Hana is first opened
+  useEffect(() => {
+    if (isOpen && messages.length === 1 && autoSpeak) {
+      setTimeout(() => {
+        handleSpeak(messages[0].text);
+      }, 500);
+    }
+  }, [isOpen]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -215,6 +231,9 @@ export default function HanaCustomerService() {
   const handleSpeak = async (text: string) => {
     try {
       console.log('[Hana] Speaking text for language:', language);
+      // Save text for potential resume on unmute
+      lastSpokenTextRef.current = text;
+
       // Use Web Speech API directly for guaranteed female voice
       // Wait for voices to load if needed
       if (window.speechSynthesis.getVoices().length === 0) {
@@ -322,9 +341,9 @@ export default function HanaCustomerService() {
     // Blacklist male voices and select warm, comforting female voice
     const malePatterns = ['Li-Mu', 'Lü-Si', 'Lu-Si', 'male', 'man', 'david', 'google uk english', 'alex', 'bruce', 'junior', 'tom', 'george', 'rishi'];
 
-    // Priority female voice patterns (warm, comforting, motherly)
-    const priorityFemalePatterns = ['victoria', 'samantha', 'karen', 'zira', 'susan', 'mei-jia', 'hui-shan', 'yating', 'ting-ting', 'sirine', 'moira', 'siri'];
-    const allFemalePatterns = [...priorityFemalePatterns, 'sin-ji', 'female', 'woman'];
+    // Priority female voice patterns (smooth, warm, younger-sounding female)
+    const priorityFemalePatterns = ['joelle', 'joanna', 'zira', 'ava', 'clara', 'ivy', 'nova', 'rose', 'sophia', 'victoria', 'samantha', 'mei-jia', 'hui-shan', 'yating', 'ting-ting', 'sirine', 'moira', 'siri'];
+    const allFemalePatterns = [...priorityFemalePatterns, 'sin-ji', 'female', 'woman', 'karen'];
 
     // Priority 1: Find voices with explicit warm female patterns
     let selectedVoice = matchingVoices.find(v =>
@@ -392,8 +411,8 @@ export default function HanaCustomerService() {
       utterance.pitch = 1.1;        // Warm female pitch
       utterance.volume = 1.0;       // Full volume for clarity
     } else {
-      // English: warm, comforting, motherly female voice
-      utterance.rate = 1.0;         // Natural pace for warmth
+      // English: warm, comforting female voice
+      utterance.rate = 1.0;         // Natural pace
       utterance.pitch = 1.2;        // Warm female pitch
       utterance.volume = 1.0;       // Full volume for clarity
     }
@@ -585,7 +604,20 @@ export default function HanaCustomerService() {
 
           {/* Speaker Toggle Button */}
           <button
-            onClick={() => setAutoSpeak(!autoSpeak)}
+            onClick={() => {
+              const newState = !autoSpeak;
+              setAutoSpeak(newState);
+
+              if (!newState) {
+                // Muting: cancel any ongoing speech immediately
+                window.speechSynthesis.cancel();
+              } else {
+                // Unmuting: resume speaking the last text if available
+                if (lastSpokenTextRef.current) {
+                  handleSpeak(lastSpokenTextRef.current);
+                }
+              }
+            }}
             className={`absolute top-2 right-9 z-10 w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${
               autoSpeak
                 ? 'bg-errandify-orange text-white'
@@ -623,7 +655,33 @@ export default function HanaCustomerService() {
               {(Object.keys(LANGUAGE_NAMES) as Language[]).map((lang) => (
                 <button
                   key={lang}
-                  onClick={() => setLanguage(lang)}
+                  onClick={() => {
+                    if (language !== lang) {
+                      // Get greeting for new language
+                      const newGreeting = getGreeting(lang);
+                      console.log('[Hana] Language toggle:', { from: language, to: lang, greeting: newGreeting });
+
+                      // Update language
+                      setLanguage(lang);
+
+                      // Update messages immediately
+                      setMessages([
+                        {
+                          id: '1',
+                          sender: 'hana',
+                          text: newGreeting,
+                          timestamp: new Date(),
+                        },
+                      ]);
+
+                      // Auto-speak the greeting in the new language if autoSpeak is enabled
+                      if (autoSpeak) {
+                        setTimeout(() => {
+                          handleSpeak(newGreeting);
+                        }, 300);
+                      }
+                    }
+                  }}
                   className={`text-xs px-2 py-1 rounded-full transition-all ${
                     language === lang
                       ? 'bg-errandify-orange text-white font-semibold'
@@ -694,7 +752,7 @@ export default function HanaCustomerService() {
             </div>
 
             {/* Quick Replies */}
-            {showQuickReplies && messages.length > 1 && (
+            {showQuickReplies && (
               <div className="px-3 py-2 bg-orange-50 border-t border-orange-200 flex flex-wrap gap-2">
                 {QUICK_REPLIES[language].slice(0, 4).map((reply, idx) => (
                   <button
