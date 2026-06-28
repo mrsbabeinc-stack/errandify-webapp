@@ -446,9 +446,8 @@ router.get('/:taskId/submissions', authMiddleware, async (req: AuthRequest, res:
         cs.submission_number,
         cs.completion_notes,
         cs.submitted_by,
-        cs.submitted_at,
+        cs.created_at as submitted_at,
         cs.status,
-        cs.asker_feedback,
         u.display_name as submitted_by_name
        FROM completion_submissions cs
        LEFT JOIN users u ON cs.submitted_by = u.id
@@ -466,12 +465,11 @@ router.get('/:taskId/submissions', authMiddleware, async (req: AuthRequest, res:
         submission_number,
         file_url,
         file_name,
-        file_type,
         uploaded_by,
-        uploaded_at
+        created_at as uploaded_at
        FROM task_files
        WHERE errand_id = $1
-       ORDER BY submission_number DESC, uploaded_at ASC`,
+       ORDER BY submission_number DESC, created_at ASC`,
       [taskId]
     );
 
