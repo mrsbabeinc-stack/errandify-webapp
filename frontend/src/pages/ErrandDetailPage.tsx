@@ -912,10 +912,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                             {[1, 2, 3, 4, 5].map((star) => (
                               <button
                                 key={star}
-                                onClick={() => setRating(star)}
+                                onClick={() => !hasRated && setRating(star)}
+                                disabled={hasRated}
                                 className={`text-3xl transition-all hover:scale-110 ${
                                   star <= rating ? 'text-yellow-400 drop-shadow-md' : 'text-gray-300 hover:text-yellow-300'
-                                }`}
+                                } ${hasRated ? 'opacity-50 cursor-not-allowed' : ''}`}
                               >
                                 ★
                               </button>
@@ -937,21 +938,24 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Didn\'t follow instructions' : 'Didn\'t follow instructions')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Didn't follow instructions
                                 </button>
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Quality not acceptable' : 'Quality not acceptable')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Quality not acceptable
                                 </button>
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Late or incomplete' : 'Late or incomplete')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Late or incomplete
                                 </button>
@@ -962,21 +966,24 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Took longer than expected' : 'Took longer than expected')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Took longer than expected
                                 </button>
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Some parts need fixing' : 'Some parts need fixing')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Some parts need fixing
                                 </button>
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Could communicate better' : 'Could communicate better')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Could communicate better
                                 </button>
@@ -987,21 +994,24 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Did the job well' : 'Did the job well')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Did the job well
                                 </button>
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Good communication' : 'Good communication')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Good communication
                                 </button>
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Finished on time' : 'Finished on time')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Finished on time
                                 </button>
@@ -1012,21 +1022,24 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Excellent work quality' : 'Excellent work quality')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Excellent work quality
                                 </button>
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Very helpful & friendly' : 'Very helpful & friendly')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Very helpful & friendly
                                 </button>
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Quick to complete' : 'Quick to complete')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Quick to complete
                                 </button>
@@ -1037,21 +1050,24 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Exceptional care & quality' : 'Exceptional care & quality')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Exceptional care & quality
                                 </button>
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Truly a wonderful neighbor' : 'Truly a wonderful neighbor')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Truly a wonderful neighbor
                                 </button>
                                 <button
                                   onClick={() => setRatingComment(prev => prev ? prev + ' • Went above & beyond' : 'Went above & beyond')}
                                   type="button"
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                  disabled={hasRated}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition ${hasRated ? 'opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-700' : ''}`}
                                 >
                                   Went above & beyond
                                 </button>
@@ -1061,11 +1077,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
                           <textarea
                             value={ratingComment}
-                            onChange={(e) => setRatingComment(e.target.value)}
+                            onChange={(e) => !hasRated && setRatingComment(e.target.value)}
+                            disabled={hasRated}
                             placeholder="Add your personal message... (optional)"
                             maxLength={200}
                             rows={2}
-                            className="w-full text-xs px-2 py-1 border border-green-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-green-500 resize-none"
+                            className={`w-full text-xs px-2 py-1 border border-green-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-green-500 resize-none ${hasRated ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
                           />
                           {!hasRated ? (
                             <button
@@ -1088,8 +1105,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                   setHasRated(true);
                                   setShowCelebratory(true);
                                   setRatingComment('');
-                                  // Auto-hide celebratory message after 5 seconds
-                                  setTimeout(() => setShowCelebratory(false), 5000);
+                                  // Auto-hide celebratory message and navigate after 3 seconds
+                                  setTimeout(() => {
+                                    setShowCelebratory(false);
+                                    navigate('/my-errands');
+                                  }, 3000);
                                 } catch (err: any) {
                                   console.error('Rating submission error:', err);
                                   alert('Error submitting rating: ' + (err.response?.data?.error || err.message));
