@@ -246,17 +246,22 @@ export default function CreateErrandPage() {
   }, [searchParams]);
 
   const categoryNames: Record<string, string> = {
-    'eldercare': 'Caregiving & Elder Companionship',
-    'childcare': 'Childcare & School Pickup/Drop-off',
-    'homehelp': 'Household Errands & Home Maintenance',
-    'wellness': 'Wellness Support (incl. Mental Wellness)',
-    'tripcarry': 'Cross-Border Errands',
-    'petcare': 'Pet Care (sitting, grooming, walking)',
-    'delivery': 'Delivery (local errands, parcels, food, documents)',
-    'eventhelp': 'Events (setup, shopping, planning)',
-    'data-entry': 'Data Entry & Administrative Work',
-    'donate': 'Donate / Giveback',
-    'localbiz': 'Microservices for Local SMEs',
+    'home-maintenance': 'Home Maintenance',
+    'cleaning-household': 'Cleaning & Laundry',
+    'food-beverage': 'Food & Beverage',
+    'furniture-assembly': 'Furniture Assembly',
+    'shopping-errands': 'Shopping & Errands',
+    'delivery-moving': 'Delivery & Moving',
+    'travel-mobility': 'Travel & Mobility',
+    'event-planning': 'Event Planning & Setup',
+    'childcare-education': 'Childcare & Education',
+    'eldercare-healthcare': 'Eldercare & Healthcare',
+    'pet-care': 'Pet Care',
+    'personal-care': 'Personal Care',
+    'tech-support': 'Tech Support',
+    'creative-arts': 'Creative & Arts',
+    'admin-business': 'Admin & Business',
+    'charity-community': 'Charity & Community',
   };
 
   const commonCertifications = [
