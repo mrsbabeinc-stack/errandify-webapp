@@ -21,6 +21,7 @@ export default function HanaManualMode({
   const [titleSuggestions, setTitleSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [descriptionTips, setDescriptionTips] = useState<string>('');
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const categoryMap: Record<string, string> = {
@@ -34,6 +35,44 @@ export default function HanaManualMode({
     'eventhelp': '🎉 Events',
     'donate': '❤️ Donate / Giveback',
     'localbiz': '🏪 Microservices for Local SMEs',
+  };
+
+  const getTaskSpecificTips = (title: string, category?: string): string => {
+    const lowerTitle = title.toLowerCase();
+
+    if (lowerTitle.includes('lunch') || lowerTitle.includes('meal') || lowerTitle.includes('cook') || lowerTitle.includes('prepare') || category === 'food-beverage') {
+      return '• Confirm any dietary restrictions or allergies with the asker. • Bring all necessary cooking equipment unless specified otherwise. • Arrive 15-30 minutes early to prep ingredients.';
+    }
+
+    if (lowerTitle.includes('clean') || category === 'cleaning-laundry') {
+      return '• Bring all cleaning supplies unless the asker provides them. • Take photos before and after as evidence. • Check if access to any restricted areas needs prior arrangement.';
+    }
+
+    if (lowerTitle.includes('babysit') || lowerTitle.includes('childcare') || category === 'childcare-tutoring') {
+      return '• Get emergency contact numbers and ensure you have them saved. • Ask about bedtime routines and any special dietary needs. • Keep the asker updated with photos/messages during the job.';
+    }
+
+    if (lowerTitle.includes('elderly') || lowerTitle.includes('elder') || lowerTitle.includes('care')) {
+      return '• Ask about any mobility assistance or special care requirements. • Ensure you have emergency contacts and medical history if needed. • Be patient and maintain a calm, supportive demeanor.';
+    }
+
+    if (lowerTitle.includes('delivery') || lowerTitle.includes('send') || lowerTitle.includes('transport')) {
+      return '• Take photos of items before and after delivery. • Keep the asker informed of your location and ETA. • Handle items with care and avoid damage.';
+    }
+
+    if (lowerTitle.includes('tutor') || lowerTitle.includes('teach') || lowerTitle.includes('lesson')) {
+      return '• Clarify learning goals and student level before the session. • Prepare materials and examples relevant to the subject. • Provide feedback and suggest next steps for improvement.';
+    }
+
+    if (lowerTitle.includes('event') || lowerTitle.includes('party') || lowerTitle.includes('setup')) {
+      return '• Arrive early to understand the layout and setup needs. • Confirm what materials/decorations you need to provide. • Have a clear timeline and stay in touch with the organizer.';
+    }
+
+    if (lowerTitle.includes('repair') || lowerTitle.includes('fix')) {
+      return '• Assess the problem and provide a cost estimate upfront. • Use quality materials and ensure proper installation. • Provide warranty or guarantee if applicable.';
+    }
+
+    return '• Communicate clearly with the asker about expectations. • Take progress photos/videos as documentation. • Follow any special instructions provided by the asker.';
   };
 
   // Debounced title input to fetch suggestions
@@ -78,6 +117,15 @@ export default function HanaManualMode({
       }
     };
   }, [taskData.title]);
+
+  // Generate description tips based on title
+  useEffect(() => {
+    if (!taskData.title.trim()) {
+      setDescriptionTips('');
+      return;
+    }
+    setDescriptionTips(getTaskSpecificTips(taskData.title, taskData.category));
+  }, [taskData.title, taskData.category]);
 
   const handleSuggestionClick = (suggestion: string) => {
     onTaskUpdate({ title: suggestion });
@@ -129,42 +177,56 @@ export default function HanaManualMode({
           )}
         </div>
 
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-600 mb-2">
-            Description
-          </label>
-          <textarea
-            value={taskData.description}
-            onChange={(e) => onTaskUpdate({ description: e.target.value })}
-            placeholder="Give more details about what you need done..."
-            rows={4}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange"
-          />
-        </div>
-
-        {/* Category Selection */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-600 mb-3">
-            Category
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {Object.entries(categoryMap).map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => handleCategoryChange(key)}
-                className={`px-4 py-3 rounded-lg border-2 font-medium transition-all text-sm ${
-                  taskData.category === key
-                    ? 'bg-errandify-orange text-white border-errandify-orange'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-errandify-orange'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+        {/* Tips Section - Shows instantly as title is typed */}
+        {taskData.title.trim() && descriptionTips && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 animate-fade-in">
+            <p className="text-xs font-semibold text-errandify-orange-700 mb-2">💡 Tips for this task:</p>
+            <p className="text-xs text-errandify-orange-700 leading-relaxed">
+              {descriptionTips}
+            </p>
           </div>
-        </div>
+        )}
+
+        {/* Description - Shows instantly as title is typed */}
+        {taskData.title.trim() && (
+          <div className="animate-fade-in">
+            <label className="block text-sm font-semibold text-gray-600 mb-2">
+              Description
+            </label>
+            <textarea
+              value={taskData.description}
+              onChange={(e) => onTaskUpdate({ description: e.target.value })}
+              placeholder="Give more details about what you need done..."
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange"
+            />
+          </div>
+        )}
+
+        {/* Category Selection - Shows instantly as title is typed */}
+        {taskData.title.trim() && (
+          <div className="animate-fade-in">
+            <label className="block text-sm font-semibold text-gray-600 mb-3">
+              Category
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(categoryMap).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handleCategoryChange(key)}
+                  className={`px-4 py-3 rounded-lg border-2 font-medium transition-all text-sm ${
+                    taskData.category === key
+                      ? 'bg-errandify-orange text-white border-errandify-orange'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-errandify-orange'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Location */}
         <div>

@@ -41,25 +41,48 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   }, [userRole, navigate]);
 
   const categories = [
-    { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50' },
-    { id: 'cleaning-laundry', name: 'Cleaning & Laundry', icon: '🧺', color: 'from-errandify-orange-100 to-errandify-orange-50' },
-    { id: 'shopping-errands', name: 'Shopping & Errands', icon: '🛍️', color: 'from-pink-100 to-pink-50' },
-    { id: 'delivery-moving', name: 'Delivery & Moving', icon: '📦', color: 'from-yellow-100 to-yellow-50' },
-    { id: 'childcare-tutoring', name: 'Childcare & Tutoring', icon: '🧒', color: 'from-green-100 to-green-50' },
-    { id: 'pet-care', name: 'Pet Care', icon: '🐕', color: 'from-purple-100 to-purple-50' },
-    { id: 'tech-support', name: 'Tech Support', icon: '💻', color: 'from-indigo-100 to-indigo-50' },
-    { id: 'moving-help', name: 'Moving Help', icon: '🚚', color: 'from-red-100 to-red-50' },
+    // GROUP 1: HOME & HOUSEHOLD
+    { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50', group: '🏠 Home & Household' },
+    { id: 'cleaning-household', name: 'Cleaning & Household', icon: '🧹', color: 'from-errandify-orange-100 to-errandify-orange-50', group: '🏠 Home & Household' },
+    { id: 'food-beverage', name: 'Food & Beverage', icon: '🍕', color: 'from-red-100 to-red-50', group: '🏠 Home & Household' },
+    { id: 'furniture-assembly', name: 'Furniture & Assembly', icon: '🛋️', color: 'from-amber-100 to-amber-50', group: '🏠 Home & Household' },
+
+    // GROUP 2: ERRANDS & LOGISTICS
+    { id: 'shopping-errands', name: 'Shopping & Errands', icon: '🛍️', color: 'from-pink-100 to-pink-50', group: '🚚 Errands & Logistics' },
+    { id: 'delivery-moving', name: 'Delivery & Moving', icon: '📦', color: 'from-yellow-100 to-yellow-50', group: '🚚 Errands & Logistics' },
+    { id: 'travel-mobility', name: 'Travel & Mobility', icon: '✈️', color: 'from-sky-100 to-sky-50', group: '🚚 Errands & Logistics' },
+    { id: 'event-planning', name: 'Event Planning', icon: '✨', color: 'from-violet-100 to-violet-50', group: '🚚 Errands & Logistics' },
+
+    // GROUP 3: CARE & WELLBEING
+    { id: 'childcare-education', name: 'Childcare & Education', icon: '🧒', color: 'from-green-100 to-green-50', group: '❤️ Care & Wellbeing' },
+    { id: 'eldercare-healthcare', name: 'Eldercare & Healthcare', icon: '👵', color: 'from-gray-100 to-gray-50', group: '❤️ Care & Wellbeing' },
+    { id: 'pet-care', name: 'Pet Care', icon: '🐕', color: 'from-purple-100 to-purple-50', group: '❤️ Care & Wellbeing' },
+    { id: 'personal-care', name: 'Personal Care & Wellness', icon: '💆', color: 'from-rose-100 to-rose-50', group: '❤️ Care & Wellbeing' },
+
+    // GROUP 4: SKILLS & SERVICES
+    { id: 'tech-support', name: 'Tech Support & IT', icon: '💻', color: 'from-indigo-100 to-indigo-50', group: '💡 Skills & Services' },
+    { id: 'creative-arts', name: 'Creative & Arts', icon: '🎨', color: 'from-fuchsia-100 to-fuchsia-50', group: '💡 Skills & Services' },
+    { id: 'admin-business', name: 'Admin & Business', icon: '📚', color: 'from-slate-100 to-slate-50', group: '💡 Skills & Services' },
+    { id: 'charity-community', name: 'Charity & Community', icon: '❤️', color: 'from-red-100 to-red-50', group: '💡 Skills & Services' },
   ];
 
   const categoryNames: Record<string, string> = {
     'home-maintenance': 'Home Maintenance',
-    'cleaning-laundry': 'Cleaning & Laundry',
+    'cleaning-household': 'Cleaning & Household',
+    'food-beverage': 'Food & Beverage',
+    'furniture-assembly': 'Furniture & Assembly',
     'shopping-errands': 'Shopping & Errands',
     'delivery-moving': 'Delivery & Moving',
-    'childcare-tutoring': 'Childcare & Tutoring',
+    'travel-mobility': 'Travel & Mobility',
+    'event-planning': 'Event Planning',
+    'childcare-education': 'Childcare & Education',
+    'eldercare-healthcare': 'Eldercare & Healthcare',
     'pet-care': 'Pet Care',
-    'tech-support': 'Tech Support',
-    'moving-help': 'Moving Help',
+    'personal-care': 'Personal Care & Wellness',
+    'tech-support': 'Tech Support & IT',
+    'creative-arts': 'Creative & Arts',
+    'admin-business': 'Admin & Business',
+    'charity-community': 'Charity & Community',
   };
 
   const handleCategoryToggle = (categoryId: string) => {

@@ -596,8 +596,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </p>
             </div>
 
-            {/* Notes & Tips for Confirmed Doer */}
-            {errand.notes && (
+            {/* Notes & Tips for Confirmed Doer - Only show if current user is the confirmed doer */}
+            {errand.status === 'confirmed' && errand.notes && currentUser && currentUser.id !== errand.askerId && (
               <div className="border-t border-gray-200 pt-2 mt-2">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="font-semibold text-errandify-brown text-xs">
@@ -620,8 +620,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </div>
             )}
 
-            {/* AI Tips (only if no asker notes) */}
-            {!errand.notes && errand.title && (
+            {/* AI Tips (only if no asker notes and user is confirmed doer) */}
+            {errand.status === 'confirmed' && !errand.notes && errand.title && currentUser && currentUser.id !== errand.askerId && (
               <div className="border-t border-gray-200 pt-2 mt-2">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="font-semibold text-errandify-brown text-xs">

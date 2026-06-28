@@ -145,7 +145,9 @@ export default function TaskQA({ errandId, isAsker, userRole = 'doer', errandSta
       {loading ? (
         <p className="text-gray-600 text-xs">Loading questions...</p>
       ) : questions.length === 0 ? (
-        <p className="text-gray-600 text-xs italic">No questions yet. Be the first to ask!</p>
+        <p className="text-gray-600 text-xs italic">
+          {isAsker ? 'No questions yet. Doers can ask clarifying questions here.' : 'No questions yet. Be the first to ask!'}
+        </p>
       ) : (
         <div className="space-y-1">
           {questions.map((q) => (
