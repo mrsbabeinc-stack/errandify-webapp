@@ -142,31 +142,31 @@ export default function HanaManualMode({
         e.preventDefault();
         // Validate all required fields (except notes which is optional)
         if (!taskData.title?.trim()) {
-          alert('Please enter a task title.');
+          alert('What would you like help with? Please give your task a title.');
           return;
         }
         if (taskData.title.trim().length < 5) {
-          alert('Task title must be at least 5 characters.');
+          alert('Give your task a bit more detail - at least 5 characters please.');
           return;
         }
         if (!taskData.description?.trim()) {
-          alert('Please describe what you need help with.');
+          alert('Tell us more! Describe what you need help with so helpers understand.');
           return;
         }
         if (taskData.description.trim().length < 10) {
-          alert('Description must be at least 10 characters.');
+          alert('A bit more detail please - at least 10 characters helps helpers understand better.');
           return;
         }
         if (!taskData.category?.trim()) {
-          alert('Please select a category.');
+          alert('Which category best fits your task? This helps us find the right helpers.');
           return;
         }
         if (!taskData.location?.trim()) {
-          alert('Please enter a location.');
+          alert('Where do you need help? Let us know your location.');
           return;
         }
         if (!taskData.date?.trim()) {
-          alert('Please select a date.');
+          alert('When do you need this done? Please pick a date.');
           return;
         }
         // Validate date is not in the past
@@ -174,11 +174,11 @@ export default function HanaManualMode({
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (selectedDate < today) {
-          alert('Please select a date today or in the future.');
+          alert('We can only schedule for today or later. Pick a date coming up!');
           return;
         }
         if (!taskData.time?.trim()) {
-          alert('Please select a time.');
+          alert('What time works for you? Please select a time.');
           return;
         }
         // Validate time is at least 30 minutes from now
@@ -188,16 +188,16 @@ export default function HanaManualMode({
         const now = new Date();
         const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60000);
         if (selectedDateTime < thirtyMinutesFromNow) {
-          alert('Please select a time at least 30 minutes from now.');
+          alert('Give helpers a bit of time! Please schedule at least 30 minutes from now.');
           return;
         }
         if (!taskData.budget || parseFloat(taskData.budget) <= 0) {
-          alert('Please enter a valid budget amount.');
+          alert('What\'s your budget? Tell us how much you can pay.');
           return;
         }
         const budgetNum = parseFloat(taskData.budget);
         if (budgetNum < 5) {
-          alert('Budget must be at least SGD $5.');
+          alert('Budget should be at least SGD $5 to attract good helpers.');
           return;
         }
         onReview();
@@ -372,34 +372,34 @@ export default function HanaManualMode({
         {(() => {
           const errors = [];
 
-          if (!taskData.title?.trim()) errors.push('Task title (min 5 characters)');
-          if (!taskData.description?.trim()) errors.push('Description (min 10 characters)');
-          if (taskData.title?.trim() && taskData.title.trim().length < 5) errors.push('Task title must be at least 5 characters');
-          if (taskData.description?.trim() && taskData.description.trim().length < 10) errors.push('Description must be at least 10 characters');
-          if (!taskData.category?.trim()) errors.push('Category');
-          if (!taskData.location?.trim()) errors.push('Location');
-          if (!taskData.date?.trim()) errors.push('Date');
+          if (!taskData.title?.trim()) errors.push('Add a task title - what do you need help with?');
+          if (!taskData.description?.trim()) errors.push('Describe your task - give more details so helpers understand');
+          if (taskData.title?.trim() && taskData.title.trim().length < 5) errors.push('Make the title a bit longer - at least 5 characters');
+          if (taskData.description?.trim() && taskData.description.trim().length < 10) errors.push('Give more details - at least 10 characters helps helpers');
+          if (!taskData.category?.trim()) errors.push('Pick a category - which type of task is this?');
+          if (!taskData.location?.trim()) errors.push('Tell us where - which area do you need help in?');
+          if (!taskData.date?.trim()) errors.push('When? - Pick a date for your task');
           if (taskData.date?.trim()) {
             const selectedDate = new Date(taskData.date);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            if (selectedDate < today) errors.push('Date cannot be in the past');
+            if (selectedDate < today) errors.push('Pick a future date - we can\'t schedule for the past');
           }
-          if (!taskData.time?.trim()) errors.push('Time');
+          if (!taskData.time?.trim()) errors.push('What time? - Pick a time for your task');
           if (taskData.time?.trim() && taskData.date?.trim()) {
             const selectedDateTime = new Date(taskData.date);
             const [hours, minutes] = taskData.time.split(':').map(Number);
             selectedDateTime.setHours(hours, minutes, 0, 0);
             const now = new Date();
             const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60000);
-            if (selectedDateTime < thirtyMinutesFromNow) errors.push('Time must be at least 30 minutes from now');
+            if (selectedDateTime < thirtyMinutesFromNow) errors.push('Give helpers notice - schedule at least 30 minutes from now');
           }
-          if (!taskData.budget || parseFloat(taskData.budget) <= 0) errors.push('Valid budget amount (min SGD $5)');
-          if (taskData.budget && parseFloat(taskData.budget) < 5) errors.push('Budget must be at least SGD $5');
+          if (!taskData.budget || parseFloat(taskData.budget) <= 0) errors.push('What\'s your budget? - Tell us how much you can pay');
+          if (taskData.budget && parseFloat(taskData.budget) < 5) errors.push('Budget needs to be at least SGD $5 to attract helpers');
 
           return errors.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700">
-              <p className="font-bold mb-1.5">Please fix these issues:</p>
+            <div className="bg-orange-50 border-l-4 border-orange-300 rounded-lg p-3 text-xs text-orange-800">
+              <p className="font-bold mb-1.5">Almost there! Just a few things:</p>
               <ul className="space-y-0.5 list-disc list-inside">
                 {errors.map((error, idx) => <li key={idx}>{error}</li>)}
               </ul>
