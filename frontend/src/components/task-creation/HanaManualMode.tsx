@@ -303,9 +303,37 @@ export default function HanaManualMode({
             type="text"
             value={taskData.location}
             onChange={(e) => onTaskUpdate({ location: e.target.value })}
-            placeholder="e.g., Tanjong Pagar, 150101"
+            placeholder="e.g., Tanjong Pagar"
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange"
           />
+        </div>
+
+        {/* Area & Full Address */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-2">
+              Area / Postal Code
+            </label>
+            <input
+              type="text"
+              value={taskData.postalCode || ''}
+              onChange={(e) => onTaskUpdate({ postalCode: e.target.value })}
+              placeholder="e.g., 150101"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-2">
+              Full Address (Optional)
+            </label>
+            <input
+              type="text"
+              value={taskData.fullAddress || ''}
+              onChange={(e) => onTaskUpdate({ fullAddress: e.target.value })}
+              placeholder="Complete address for doer"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange"
+            />
+          </div>
         </div>
 
         {/* Date & Time */}
