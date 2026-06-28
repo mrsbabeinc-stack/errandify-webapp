@@ -1087,6 +1087,17 @@ export default function MyAccountPage() {
                       <p className="text-xs text-yellow-900 font-bold mt-1">({ratings.reviewCount} reviews) 💝</p>
                     </div>
                   </div>
+
+                  {/* Positive Reviews Count */}
+                  {ratings.reviews && (
+                    <div className="mt-3 flex justify-center gap-4">
+                      <div className="bg-white rounded-full px-3 py-1 shadow-md">
+                        <p className="text-sm font-bold text-green-700">
+                          💚 {ratings.reviews.filter((r: any) => r.rating >= 4).length} Love You
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Celebratory Reviews */}
