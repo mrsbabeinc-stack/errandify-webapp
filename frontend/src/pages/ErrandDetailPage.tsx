@@ -7,6 +7,7 @@ import TaskChatbox from '../components/TaskChatbox';
 import RecurringErrandSessionSelector from '../components/RecurringErrandSessionSelector';
 import TaskQA from '../components/TaskQA';
 import ErrandActivityLog from '../components/ErrandActivityLog';
+import { capitalizeStatus } from '../utils/format';
 
 interface ErrandDetail {
   id: number;
@@ -472,7 +473,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     : 'bg-gray-400 text-white'
                 }`}
               >
-                {errand.status}
+                {capitalizeStatus(errand.status)}
               </span>
               {userBidAmount && (
                 <span className="text-xs bg-white text-errandify-orange px-1 py-0.5 rounded font-bold">
