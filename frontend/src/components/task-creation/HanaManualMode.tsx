@@ -303,37 +303,9 @@ export default function HanaManualMode({
             type="text"
             value={taskData.location}
             onChange={(e) => onTaskUpdate({ location: e.target.value })}
-            placeholder="e.g., Tanjong Pagar"
+            placeholder="e.g., Tanjong Pagar, 150101"
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange"
           />
-        </div>
-
-        {/* Area & Full Address */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-600 mb-2">
-              Area / Postal Code
-            </label>
-            <input
-              type="text"
-              value={taskData.postalCode || ''}
-              onChange={(e) => onTaskUpdate({ postalCode: e.target.value })}
-              placeholder="e.g., 150101"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-600 mb-2">
-              Full Address (Optional)
-            </label>
-            <input
-              type="text"
-              value={taskData.fullAddress || ''}
-              onChange={(e) => onTaskUpdate({ fullAddress: e.target.value })}
-              placeholder="Complete address for doer"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange"
-            />
-          </div>
         </div>
 
         {/* Date & Time */}
@@ -441,13 +413,16 @@ export default function HanaManualMode({
             type="submit"
             disabled={
               !taskData.title?.trim() ||
+              taskData.title.trim().length < 5 ||
               !taskData.description?.trim() ||
+              taskData.description.trim().length < 10 ||
               !taskData.category?.trim() ||
               !taskData.location?.trim() ||
               !taskData.date?.trim() ||
               !taskData.time?.trim() ||
               !taskData.budget ||
-              parseFloat(taskData.budget) <= 0
+              parseFloat(taskData.budget) <= 0 ||
+              parseFloat(taskData.budget) < 5
             }
             className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
