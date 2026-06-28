@@ -305,7 +305,7 @@ export default function CreateErrandPage() {
     '59': { area: 'Clementi', building: 'Clementi' },
     '60': { area: 'Bukit Timah', building: 'Bukit Timah' },
     '61': { area: 'Bishan', building: 'Bishan' },
-    '62': { area: 'Bishan', building: 'Bishan' },
+    '62': { area: 'Bukit Batok', building: 'Bukit Batok' },
     '63': { area: 'Ang Mo Kio', building: 'Ang Mo Kio' },
     '64': { area: 'Ang Mo Kio', building: 'Ang Mo Kio' },
     '65': { area: 'Serangoon', building: 'Serangoon Central' },
@@ -1188,6 +1188,7 @@ export default function CreateErrandPage() {
                             ...prev,
                             location: areaData.area,
                           }));
+                          setArea(areaData.area);
                           setFullAddress(`1 ${areaData.building}, Unit: __, Singapore ${code}`);
                         }
                         // Note: If areaData is not found (e.g., postal codes from OneMap/Hana),
@@ -1198,6 +1199,7 @@ export default function CreateErrandPage() {
                           ...prev,
                           location: '',
                         }));
+                        setArea('');
                         setFullAddress('');
                       }
                       // Otherwise: don't update location (partial postal codes won't modify anything)
