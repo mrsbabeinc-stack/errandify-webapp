@@ -50,14 +50,19 @@ const ErrandActivityLog = forwardRef<ErrandActivityLogHandle, ErrandActivityLogP
         }
       );
 
+      console.log('[ActivityLog] Response:', response.data);
+
       // Handle the response - the API returns success: true with data.activities
-      if (response.data && response.data.data) {
-        setActivities(response.data.data.activities || []);
+      if (response.data && response.data.data && response.data.data.activities) {
+        console.log('[ActivityLog] Setting activities:', response.data.data.activities);
+        setActivities(response.data.data.activities);
         setError('');
-      } else if (response.data.success) {
-        setActivities(response.data.activities || []);
+      } else if (response.data && response.data.activities) {
+        console.log('[ActivityLog] Setting activities from alternate path:', response.data.activities);
+        setActivities(response.data.activities);
         setError('');
       } else {
+        console.log('[ActivityLog] No activities found in response');
         setActivities([]);
         setError('');
       }
