@@ -170,11 +170,11 @@ export default function App() {
           }
         />
 
-        {/* Create errand - redirect to Hana (no manual mode) */}
+        {/* Create errand - manual form with prefilled data from Hana */}
         <Route
           path="/create-errand"
           element={
-            <Navigate to="/create-errand-hana" replace />
+            <CreateErrandPage />
           }
         />
 
