@@ -927,41 +927,131 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                           </p>
 
                           {/* AI Suggestions based on rating */}
-                          <p className="text-xs text-green-700 font-semibold mb-1">Feedback tags:</p>
+                          <p className="text-xs text-green-700 font-semibold mb-1">Feedback tags (click to add):</p>
                           <div className="flex flex-wrap gap-1 mb-2">
                             {rating === 1 && (
                               <>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Didn't follow instructions</span>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Quality not acceptable</span>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Late or incomplete</span>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Didn\'t follow instructions' : 'Didn\'t follow instructions')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Didn't follow instructions
+                                </button>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Quality not acceptable' : 'Quality not acceptable')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Quality not acceptable
+                                </button>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Late or incomplete' : 'Late or incomplete')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Late or incomplete
+                                </button>
                               </>
                             )}
                             {rating === 2 && (
                               <>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Took longer than expected</span>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Some parts need fixing</span>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Could communicate better</span>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Took longer than expected' : 'Took longer than expected')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Took longer than expected
+                                </button>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Some parts need fixing' : 'Some parts need fixing')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Some parts need fixing
+                                </button>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Could communicate better' : 'Could communicate better')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Could communicate better
+                                </button>
                               </>
                             )}
                             {rating === 3 && (
                               <>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Did the job well</span>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Good communication</span>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Finished on time</span>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Did the job well' : 'Did the job well')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Did the job well
+                                </button>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Good communication' : 'Good communication')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Good communication
+                                </button>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Finished on time' : 'Finished on time')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Finished on time
+                                </button>
                               </>
                             )}
                             {rating === 4 && (
                               <>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Excellent work quality</span>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Very helpful & friendly</span>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Quick to complete</span>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Excellent work quality' : 'Excellent work quality')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Excellent work quality
+                                </button>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Very helpful & friendly' : 'Very helpful & friendly')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Very helpful & friendly
+                                </button>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Quick to complete' : 'Quick to complete')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Quick to complete
+                                </button>
                               </>
                             )}
                             {rating === 5 && (
                               <>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Exceptional care & quality</span>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Truly a wonderful neighbor</span>
-                                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 cursor-pointer transition">Went above & beyond</span>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Exceptional care & quality' : 'Exceptional care & quality')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Exceptional care & quality
+                                </button>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Truly a wonderful neighbor' : 'Truly a wonderful neighbor')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Truly a wonderful neighbor
+                                </button>
+                                <button
+                                  onClick={() => setRatingComment(prev => prev ? prev + ' • Went above & beyond' : 'Went above & beyond')}
+                                  type="button"
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-green-200 hover:text-green-800 cursor-pointer transition"
+                                >
+                                  Went above & beyond
+                                </button>
                               </>
                             )}
                           </div>
