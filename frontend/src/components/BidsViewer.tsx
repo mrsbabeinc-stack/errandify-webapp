@@ -109,7 +109,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
           }
         );
 
-        alert('✓ Offer confirmed! Payment confirmed and amount held in escrow.');
+        alert('Your offer is confirmed! Payment is held safely.');
       }
 
       onBidAccepted();
