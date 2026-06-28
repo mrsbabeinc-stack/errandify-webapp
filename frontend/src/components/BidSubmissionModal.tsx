@@ -25,6 +25,8 @@ export default function BidSubmissionModal({
   const [bidNote, setBidNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successAmount, setSuccessAmount] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,12 +73,13 @@ export default function BidSubmissionModal({
           }
         }
 
-        // Show warm, kampung-style success message
-        const message = isUpdating
-          ? `💚 Your bid updated to $${bidAmount}! We've got you, neighbor!`
-          : `🎉 Your bid for $${bidAmount} is in! Let's help out! 🤝`;
-        alert(message);
-        onSuccess();
+        // Show warm, kampung-style success modal
+        setSuccessAmount(bidAmount);
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          onSuccess();
+        }, 2500);
       }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to submit bid');
@@ -190,6 +193,28 @@ export default function BidSubmissionModal({
           </div>
         </form>
       </div>
+
+      {/* Success Modal - Happy & Warm */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-b from-white to-orange-50 rounded-2xl max-w-sm w-full p-8 text-center shadow-2xl">
+            <div className="text-5xl mb-4">
+              {isUpdating ? '💚' : '🎉'}
+            </div>
+            <h2 className="text-2xl font-bold text-errandify-brown mb-2">
+              {isUpdating ? 'Bid Updated!' : 'Bid Submitted!'}
+            </h2>
+            <p className="text-gray-700 mb-1 font-medium">
+              {isUpdating
+                ? `Your bid updated to $${successAmount}`
+                : `Your offer for $${successAmount} is in!`}
+            </p>
+            <p className="text-gray-600 text-sm">
+              We've got you, neighbor!
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
