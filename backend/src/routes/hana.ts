@@ -293,41 +293,22 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
 
     console.log('[Hana TTS] Converting text to speech:', { language, textLength: text.length });
 
-    // Map language to Alibaba Qwen TTS voice (CosyVoice)
-    // All FEMALE voices with motherly, warm, passionate tone
-    const voiceMap: Record<string, { voice: string; lang: string }> = {
-      en: {
-        voice: 'Shannon', // Female English voice - warm, natural
-        lang: 'en-SG',
-      },
-      zh: {
-        voice: 'Ningning', // Mandarin female - warm, natural
-        lang: 'zh-CN',
-      },
-      yue: {
-        voice: 'Xiaoxiao', // Cantonese female - warm, natural
-        lang: 'zh-HK',
-      },
-    };
+    console.log('[Hana TTS] Using Qwen Cosyvoice for language:', language);
 
-    const voiceConfig = voiceMap[language] || voiceMap['en'];
-
-    console.log('[Hana TTS] Using Qwen CosyVoice with voice:', voiceConfig.voice);
-
-    // Try to use Alibaba Qwen TTS (CosyVoice) for natural female voices
+    // Try to use Alibaba Qwen TTS (Cosyvoice - Text to Speech)
     try {
       const qwenTtsResponse = await axios.post(
         'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text2speech/synthesis',
         {
-          model: 'cosyvoice-v1',
+          model: 'cosyvoice',
           input: {
             text: text,
           },
           parameters: {
-            voice: voiceConfig.voice,
-            rate: language === 'en' ? 1.0 : 0.9, // Natural speaking pace
-            pitch: language === 'en' ? 1.0 : 0.95, // Warm pitch
-            volume: 50, // Standard volume
+            voice: 'xiaoxiao', // Female voice - warm and natural
+            rate: language === 'en' ? 1.0 : 0.9,
+            pitch: language === 'en' ? 1.0 : 0.95,
+            volume: 50,
           },
         },
         {
@@ -354,8 +335,11 @@ router.post('/chat/hana/speak', async (req: any, res: any) => {
       });
     } catch (qwenError: any) {
       console.log('[Hana TTS] Alibaba Qwen TTS failed');
-      console.log('Qwen error:', qwenError.response?.data || qwenError.message);
-      // If Qwen fails, still fail (don't fallback to Google)
+      console.log('Qwen error details:', qwenError.response?.data || qwenError.message);
+      // Log full error for debugging
+      if (qwenError.response?.data) {
+        console.log('Qwen response body:', qwenError.response.data.toString());
+      }
       throw qwenError;
     }
 
