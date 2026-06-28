@@ -136,7 +136,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
             errand.asker_id,
             'bid_placed',
             'New Bid Placed',
-            `${doerName} has offered to help with "${errandTitle}" for $${parseFloat(amount)}`,
+            `Errand #${task_id}: ${doerName} has offered to help with "${errandTitle}" for $${parseFloat(amount)}`,
             task_id,
           ]
         );
@@ -262,8 +262,8 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
           [
             otherBid.doer_id,
             'bid_rejected',
-            '❌ Offer Not Selected',
-            `Your offer for "${errandTitle}" was not selected. Don't worry, more errands are coming!`,
+            'Offer Not Selected',
+            `Errand #${bid.errand_id}: Your offer for "${errandTitle}" was not selected. Don't worry, more errands are coming!`,
             bid.errand_id,
           ]
         );
@@ -324,7 +324,7 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
           bid.doer_id,
           'bid_accepted',
           'Offer Accepted',
-          `Your offer of $${bid.amount} for "${errandTitle}" was accepted! Please confirm you're ready to help.`,
+          `Errand #${bid.errand_id}: Your offer of $${bid.amount} for "${errandTitle}" was accepted! Please confirm you're ready to help.`,
           bid.errand_id,
         ]
       );

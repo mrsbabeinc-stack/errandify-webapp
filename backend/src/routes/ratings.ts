@@ -104,8 +104,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         : `${ratingEmoji} New Review from ${raterName}`;
 
       const notificationBody = rating === 5
-        ? `${raterName} loved your work on "${task.title}"! You earned ${totalEpAwarded} EP 🎉\n\nPayment releases in 24-48 hours if no dispute.`
-        : `${raterName} left you a ${Math.round(rating)}-star rating on "${task.title}". You earned ${totalEpAwarded} EP!`;
+        ? `Errand #${taskId}: ${raterName} loved your work on "${task.title}"! You earned ${totalEpAwarded} EP\n\nPayment releases in 24-48 hours if no dispute.`
+        : `Errand #${taskId}: ${raterName} left you a ${Math.round(rating)}-star rating on "${task.title}". You earned ${totalEpAwarded} EP!`;
 
       // Notify rated user with EP celebration
       await createNotification(
