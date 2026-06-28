@@ -48,7 +48,12 @@ export default function MyAccountPage() {
   const [headerProfile, setHeaderProfile] = useState<{ name: string; profileImage?: string } | null>(() => {
     try {
       const user = localStorage.getItem('user');
-      return user ? JSON.parse(user) : null;
+      const profileImage = localStorage.getItem('profileImage');
+      const parsed = user ? JSON.parse(user) : null;
+      if (parsed && profileImage) {
+        parsed.profileImage = profileImage;
+      }
+      return parsed;
     } catch (e) {
       return null;
     }
@@ -191,8 +196,14 @@ export default function MyAccountPage() {
     const handleProfileUpdate = () => {
       try {
         const user = localStorage.getItem('user');
+        const profileImage = localStorage.getItem('profileImage');
         if (user) {
-          setHeaderProfile(JSON.parse(user));
+          const parsed = JSON.parse(user);
+          if (profileImage) {
+            parsed.profileImage = profileImage;
+          }
+          setHeaderProfile(parsed);
+          console.log('[MyAccountPage] Header profile updated:', parsed);
         }
       } catch (e) {
         console.error('Failed to update header profile:', e);
@@ -894,9 +905,9 @@ export default function MyAccountPage() {
         {/* Profile & Logout - Same as Layout */}
         <div className="flex items-center gap-2">
           {/* Profile Photo */}
-          {(profileImage || headerProfile?.profile_image_url) ? (
+          {(profileImage || headerProfile?.profileImage) ? (
             <img
-              src={profileImage || headerProfile?.profile_image_url}
+              src={profileImage || headerProfile?.profileImage}
               alt="Profile"
               className="w-8 h-8 rounded-full object-cover border border-gray-300"
             />
