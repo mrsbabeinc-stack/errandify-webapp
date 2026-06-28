@@ -929,7 +929,30 @@ export default function CreateErrandPage() {
               </div>
               {formData.title && aiSuggestions.suggestedDescription && (
                 <div className="text-xs text-errandify-orange-700 mt-1.5 px-2 py-1 bg-orange-50 rounded">
-                  💡 Tip: {aiSuggestions.suggestedDescription}
+                  💡 Tip: {(() => {
+                    let tip = aiSuggestions.suggestedDescription;
+                    // Add time-based tips if duration and time are specified
+                    if (formData.time && formData.duration) {
+                      const [hours, minutes] = formData.time.split(':').map(Number);
+                      const duration = parseFloat(formData.duration);
+                      const durationUnit = formData.durationUnit || 'hr';
+
+                      // Convert duration to minutes
+                      let durationMinutes = duration * 60;
+                      if (durationUnit === 'min') durationMinutes = duration;
+
+                      // Calculate completion time
+                      const startTime = new Date();
+                      startTime.setHours(hours, minutes, 0);
+                      const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+                      const endHours = endTime.getHours();
+                      const endMinutes = endTime.getMinutes();
+                      const endTimeStr = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+
+                      tip += ` Place should be ready by ${endTimeStr}.`;
+                    }
+                    return tip;
+                  })()}
                 </div>
               )}
 
