@@ -6,24 +6,24 @@ interface RecurringConfig {
   occurrences?: number | null;
 }
 
-// Category codes mapping (same as in errands.ts)
+// Category codes mapping - All 16 Categories (same as in errands.ts)
 const categoryCodeMap: { [key: string]: string } = {
-  'home-maintenance': 'HM',
-  'cleaning-household': 'CL',
-  'food-beverage': 'FD',
-  'furniture-assembly': 'FR',
-  'shopping-errands': 'SH',
-  'delivery-moving': 'DV',
-  'travel-mobility': 'TR',
-  'event-planning': 'EV',
-  'childcare-education': 'CH',
-  'eldercare-healthcare': 'EL',
-  'pet-care': 'PC',
-  'personal-care': 'PS',
-  'tech-support': 'TC',
-  'creative-arts': 'AR',
-  'admin-business': 'AD',
-  'charity-community': 'CC',
+  'home-maintenance': 'HM',      // Home Maintenance
+  'cleaning-household': 'CL',    // Cleaning & Laundry
+  'food-beverage': 'FD',         // Food & Beverage
+  'furniture-assembly': 'FR',    // Furniture Assembly
+  'shopping-errands': 'SH',      // Shopping & Errands
+  'delivery-moving': 'DV',       // Delivery & Moving
+  'travel-mobility': 'TR',       // Travel & Mobility
+  'event-planning': 'EV',        // Event Planning & Setup
+  'childcare-education': 'CH',   // Childcare & Education
+  'eldercare-healthcare': 'EL',  // Eldercare & Healthcare
+  'pet-care': 'PC',              // Pet Care
+  'personal-care': 'PS',         // Personal Care
+  'tech-support': 'TC',          // Tech Support
+  'creative-arts': 'AR',         // Creative & Arts
+  'admin-business': 'AD',        // Admin & Business
+  'charity-community': 'CC',     // Charity & Community
 };
 
 // Generate unique errand ID: ER26HM-XXXX
