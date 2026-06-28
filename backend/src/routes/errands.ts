@@ -228,6 +228,18 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         doerId = bidResult.rows[0].doer_id;
         isConfirmedDoer = doerId === userId;
       }
+    } else if (errand.status.includes('completed')) {
+      // Fallback: if errand is completed but no accepted_bid_id, find any confirmed bid
+      const bidResult = await db.query(
+        `SELECT doer_id FROM bids
+         WHERE errand_id = $1 AND status IN ('confirmed', 'confirmed_awaiting_start', 'in_progress')
+         LIMIT 1`,
+        [errand.id]
+      );
+      if (bidResult.rows[0]) {
+        doerId = bidResult.rows[0].doer_id;
+        isConfirmedDoer = doerId === userId;
+      }
     }
 
     res.json({
