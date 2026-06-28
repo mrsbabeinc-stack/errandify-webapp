@@ -99,7 +99,7 @@ export default function TaskQA({ errandId, isAsker, userRole = 'doer', errandSta
   };
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-2 mb-2 ${isQAClosed ? 'opacity-60 bg-gray-50' : ''}`}>
+    <div className={`bg-white rounded-xl border border-orange-100 p-2 mb-2 shadow-sm ${isQAClosed ? 'opacity-60 bg-orange-50' : ''}`}>
       <h2 className="text-xs font-bold text-errandify-brown mb-1 flex items-center gap-1">
         <span>Questions</span>
         {questions.length > 0 && (
@@ -114,9 +114,9 @@ export default function TaskQA({ errandId, isAsker, userRole = 'doer', errandSta
 
       {/* Ask Question Section (for doers only, only when open) */}
       {userRole === 'doer' && !isAsker && !isQAClosed && (
-        <div className="mb-1.5 p-1.5 bg-orange-50 rounded border border-orange-200">
+        <div className="mb-1.5 p-1.5 bg-orange-50 rounded-lg border border-orange-200">
           <p className="text-xs font-semibold text-gray-700 mb-1">
-            💡 Ask a question - others can see the answer
+            Ask a question - others can see the answer
           </p>
           <textarea
             value={newQuestion}
@@ -137,7 +137,7 @@ export default function TaskQA({ errandId, isAsker, userRole = 'doer', errandSta
       )}
 
       {error && (
-        <div className="p-1.5 bg-red-50 border border-red-200 text-red-700 rounded text-xs mb-2">
+        <div className="p-1.5 bg-red-100 border border-red-300 text-red-800 rounded-lg text-xs mb-2 font-medium">
           {error}
         </div>
       )}
@@ -151,7 +151,7 @@ export default function TaskQA({ errandId, isAsker, userRole = 'doer', errandSta
       ) : (
         <div className="space-y-1">
           {questions.map((q) => (
-            <div key={q.id} className="border border-gray-200 rounded p-1.5 bg-orange-50">
+            <div key={q.id} className="border border-orange-200 rounded-lg p-1.5 bg-orange-50">
               {/* Question */}
               <div className="mb-1.5">
                 <div className="flex items-start justify-between mb-1">
