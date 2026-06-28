@@ -48,11 +48,21 @@ const ErrandActivityLog = forwardRef<ErrandActivityLogHandle, ErrandActivityLogP
       );
 
       if (response.data.success) {
-        setActivities(response.data.data.activities);
+        setActivities(response.data.data?.activities || []);
+        setError('');
+      } else {
+        setActivities([]);
+        setError('');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch activity log:', err);
-      setError('Failed to load activity log');
+      // Don't show error if it's authorization - just show empty
+      if (err.response?.status === 403) {
+        setActivities([]);
+        setError('');
+      } else {
+        setError('Unable to load activity log');
+      }
     } finally {
       setLoading(false);
     }
