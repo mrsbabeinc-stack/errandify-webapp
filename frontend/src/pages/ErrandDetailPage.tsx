@@ -1222,7 +1222,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 {/* After Rating - Show happy message */}
                 {currentUser && currentUser.id === errand.askerId && hasRated && (
                   <div className="mt-2 p-2 bg-gradient-to-r from-green-100 to-emerald-100 border border-green-300 rounded text-center">
-                    <p className="text-xs text-green-700 font-semibold">✨ All done! Job marked complete</p>
+                    <p className="text-xs text-green-700 font-semibold">✨ All done! Errand marked complete</p>
                   </div>
                 )}
               </div>
