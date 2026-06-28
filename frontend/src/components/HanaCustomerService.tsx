@@ -328,22 +328,51 @@ export default function HanaCustomerService() {
       );
     }
 
-    // Priority 3: Filter out male voices and use remaining voices
+    // Priority 3: Filter out male voices using negative patterns
     if (!selectedVoice) {
-      const femaleVoices = matchingVoices.filter(v =>
-        !malePatterns.some(pattern => v.name.toLowerCase().includes(pattern.toLowerCase()))
-      );
-      selectedVoice = femaleVoices[0];
+      // Aggressive male filtering: exclude anything that looks male
+      const femaleVoices = matchingVoices.filter(v => {
+        const voiceName = v.name.toLowerCase();
+        // Exclude if matches male pattern
+        if (malePatterns.some(pattern => voiceName.includes(pattern.toLowerCase()))) {
+          return false;
+        }
+        // Exclude common male voice names
+        if (['google us english', 'daniel', 'gordon', 'daniel', 'bad', 'default'].some(m => voiceName.includes(m))) {
+          return false;
+        }
+        return true;
+      });
+
+      console.log('[Hana] Female voices after filtering:', femaleVoices.map(v => v.name));
+
+      if (femaleVoices.length > 0) {
+        selectedVoice = femaleVoices[0];
+      }
     }
 
-    // Last resort - use any voice (fallback only)
+    // Last resort - check if we have voices with "female" in name first
+    if (!selectedVoice) {
+      const explicitFemale = voices.find(v =>
+        v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman')
+      );
+      if (explicitFemale) {
+        selectedVoice = explicitFemale;
+        console.log('[Hana] Using explicit female voice as last resort:', explicitFemale.name);
+      }
+    }
+
+    // Absolute last resort - use any voice
     if (!selectedVoice) {
       selectedVoice = matchingVoices[0];
+      console.warn('[Hana] WARNING: Using potentially male voice as last resort:', selectedVoice?.name);
     }
 
     if (selectedVoice) {
       utterance.voice = selectedVoice;
       console.log('[Hana] SELECTED voice for', language + ':', selectedVoice.name, 'lang:', selectedVoice.lang);
+    } else {
+      console.warn('[Hana] No voice selected! All available voices:', voices.map(v => ({ name: v.name, lang: v.lang })));
     }
 
     // Adjust voice settings by language - warm, comforting, motherly female voice
