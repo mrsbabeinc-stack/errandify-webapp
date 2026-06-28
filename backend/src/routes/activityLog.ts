@@ -132,31 +132,31 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
 function getActivityDisplayText(type: string, actorName: string, details: any): string {
   switch (type) {
     case 'posted':
-      return `📝 ${actorName} posted the errand`;
+      return `${actorName} posted this task`;
     case 'bid_placed':
-      return `💰 ${actorName} placed an offer of $${details?.amount || 'unknown'}`;
+      return `${actorName} submitted an offer of $${details?.amount || 'unknown'}`;
     case 'bid_rejected':
-      return `❌ ${actorName}'s offer was not selected`;
+      return `${actorName}'s offer was not selected`;
     case 'bid_accepted':
-      return `✅ ${actorName}'s offer was selected`;
+      return `${actorName}'s offer was selected`;
     case 'confirmed':
-      return `🤝 Offer confirmed - task is ready to start`;
+      return `Offer confirmed - task is ready to start`;
     case 'started':
-      return `🚀 ${actorName} started the job`;
+      return `${actorName} started the job`;
     case 'completed':
-      return `✓ ${actorName} submitted completion evidence`;
+      return `${actorName} submitted completion evidence`;
     case 'review_submitted':
-      return `⭐ ${actorName} submitted a review`;
+      return `${actorName} submitted a review`;
     case 'rating_submitted':
-      return `🌟 ${actorName} rated the work`;
+      return `${actorName} rated the work`;
     case 'changes_requested':
-      return `🔄 ${actorName} requested changes: ${details?.reason || 'see details'}`;
+      return `${actorName} requested changes: ${details?.reason || 'see details'}`;
     case 'dispute_raised':
-      return `⚠️ A dispute was raised`;
+      return `A dispute was raised`;
     case 'dispute_resolved':
-      return `✓ Dispute resolved`;
+      return `Dispute resolved`;
     default:
-      return `📌 ${type}`;
+      return `${type}`;
   }
 }
 

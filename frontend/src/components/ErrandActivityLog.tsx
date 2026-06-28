@@ -90,32 +90,32 @@ const ErrandActivityLog = forwardRef<ErrandActivityLogHandle, ErrandActivityLogP
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {activities.map((activity, index) => (
-        <div key={activity.id} className="flex gap-3">
+        <div key={activity.id} className="flex gap-2">
           {/* Timeline dot and line */}
           <div className="flex flex-col items-center">
-            <div className="w-3 h-3 rounded-full bg-errandify-orange flex-shrink-0 mt-1" />
+            <div className="w-2.5 h-2.5 rounded-full bg-errandify-orange flex-shrink-0 mt-1" />
             {index < activities.length - 1 && (
-              <div className="w-0.5 h-12 bg-gray-300 mt-1" />
+              <div className="w-0.5 h-10 bg-orange-200 mt-0.5" />
             )}
           </div>
 
           {/* Activity content */}
-          <div className="flex-1 pb-2">
-            <p className="text-xs font-semibold text-gray-900">
+          <div className="flex-1 pb-1.5">
+            <p className="text-xs font-semibold text-gray-800">
               {activity.displayText}
             </p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {new Date(activity.timestamp).toLocaleDateString('en-SG')} {' '}
+            <p className="text-xs text-gray-600 mt-0.5">
+              {new Date(activity.timestamp).toLocaleDateString('en-SG')} at {' '}
               {new Date(activity.timestamp).toLocaleTimeString('en-SG', {
                 hour: '2-digit',
                 minute: '2-digit',
               })}
             </p>
-            {activity.details && (
+            {activity.details && Object.keys(activity.details).length > 0 && (
               <p className="text-xs text-gray-600 mt-1">
-                {JSON.stringify(activity.details, null, 2)}
+                {JSON.stringify(activity.details)}
               </p>
             )}
           </div>
