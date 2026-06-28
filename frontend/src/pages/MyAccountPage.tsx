@@ -376,9 +376,11 @@ export default function MyAccountPage() {
             userId: user.userId || '',
             formattedUserId: user.formattedUserId || '',
             name: user.name || 'User',
+            alias: user.alias || '',
             email: user.email || '',
             mobile: user.mobile || '',
             role: user.role || 'doer',
+            bio: user.bio || '',
             reviewCount: 0,
             completedTasks: 0,
             totalEarnings: 0,
@@ -386,6 +388,11 @@ export default function MyAccountPage() {
             categories: [],
           };
           setProfileData(fallbackProfile);
+
+          // Set fallback certificates if available
+          if (user.certificates && Array.isArray(user.certificates)) {
+            setCertificates(user.certificates);
+          }
 
           // Load profile image from localStorage if available
           if (user.profile_image_url) {
