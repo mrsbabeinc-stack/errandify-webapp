@@ -279,6 +279,21 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
       ['confirmed', id, bid.errand_id]
     );
 
+    // Log activity for confirmation
+    try {
+      const askerResult = await db.query('SELECT name FROM users WHERE id = $1', [bid.asker_id]);
+      const askerName = askerResult.rows[0]?.name || 'Asker';
+      await activityLogService.logActivity(
+        bid.errand_id,
+        'confirmed',
+        bid.asker_id,
+        askerName,
+        'asker'
+      );
+    } catch (activityErr) {
+      console.warn('[Bids] Failed to log confirmation activity:', activityErr);
+    }
+
     // Create errand assignment record for the accepted doer
     try {
       await db.query(

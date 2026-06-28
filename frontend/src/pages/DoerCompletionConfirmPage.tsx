@@ -319,7 +319,7 @@ export default function DoerCompletionConfirmPage() {
                     : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
                 }`}
               >
-                {submitting ? '⏳ Submitting...' : '✓ Complete Task'}
+                {submitting ? '⏳ Submitting...' : '✓ Complete Errand'}
               </button>
             </div>
 

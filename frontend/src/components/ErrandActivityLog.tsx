@@ -30,6 +30,9 @@ const ErrandActivityLog = forwardRef<ErrandActivityLogHandle, ErrandActivityLogP
 
   useEffect(() => {
     fetchActivityLog();
+    // Poll for activity updates every 2 seconds
+    const interval = setInterval(fetchActivityLog, 2000);
+    return () => clearInterval(interval);
   }, [errandId]);
 
   // Expose refresh method to parent components
