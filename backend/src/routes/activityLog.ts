@@ -45,9 +45,8 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
     await ensureActivityLogTable();
 
     // Verify user is asker or doer of this errand
-    // For doers, check if they have ANY bid on this errand or if they're the confirmed doer
     const errandResult = await db.query(
-      `SELECT DISTINCT e.asker_id, e.id,
+      `SELECT e.asker_id, e.id, e.status,
         (SELECT doer_id FROM bids WHERE errand_id = e.id AND status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress') LIMIT 1) as confirmed_doer_id,
         (SELECT doer_id FROM bids WHERE errand_id = e.id AND doer_id = $2 LIMIT 1) as user_bid_doer_id
        FROM errands e
@@ -64,8 +63,14 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
     const isConfirmedDoer = errand.confirmed_doer_id === userId;
     const hasUserBidded = errand.user_bid_doer_id === userId;
 
-    // Allow access if user is asker, confirmed doer, or has placed a bid
-    if (!isAsker && !isConfirmedDoer && !hasUserBidded) {
+    // Authorization logic:
+    // - Asker can always view
+    // - Confirmed doer can always view
+    // - Other doers can view only if errand is still 'open' (not yet confirmed)
+    const isJobConfirmed = errand.status !== 'open';
+    const isUnselectedDoer = hasUserBidded && !isConfirmedDoer && isJobConfirmed;
+
+    if (!isAsker && !isConfirmedDoer && (isUnselectedDoer || !hasUserBidded)) {
       return res.status(403).json({ error: 'Not authorized to view this errand' });
     }
 
