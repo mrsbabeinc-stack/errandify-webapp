@@ -515,8 +515,10 @@ router.get('/:taskId', authMiddleware, async (req: AuthRequest, res: Response) =
         e.title,
         e.budget,
         e.status,
+        e.formatted_id,
         b.doer_id,
-        u.display_name as doer_name
+        u.display_name as doer_name,
+        u.alias as doer_alias
        FROM errands e
        LEFT JOIN bids b ON e.id = b.errand_id AND b.status = 'confirmed'
        LEFT JOIN users u ON b.doer_id = u.id
@@ -536,8 +538,10 @@ router.get('/:taskId', authMiddleware, async (req: AuthRequest, res: Response) =
         title: job.title,
         budget: job.budget,
         status: job.status,
+        formatted_id: job.formatted_id,
         doerId: job.doer_id,
         doerName: job.doer_name || 'Unknown',
+        doerAlias: job.doer_alias,
       },
     });
   } catch (error) {
