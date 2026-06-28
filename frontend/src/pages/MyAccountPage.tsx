@@ -864,6 +864,10 @@ export default function MyAccountPage() {
               {profileData?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
           )}
+          {/* User Alias/Name */}
+          <span className="text-sm font-semibold text-gray-700 max-w-[100px] truncate">
+            {profileData?.name || 'User'}
+          </span>
           {/* Logout Button */}
           <button
             onClick={handleLogout}
