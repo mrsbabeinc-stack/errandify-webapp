@@ -543,42 +543,31 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             )}
 
             {/* Full Address (when confirmed) */}
-            {errand.location && (
-              <>
-                {errand.status === 'confirmed' ? (
-                    {errand.status === 'confirmed' ? (
-                      <p className="text-xs text-gray-700 font-semibold break-words">
-                        📍 {(() => {
-                          const location = errand.location || 'Not specified';
-                          let postalCode = errand.postal_code;
+            {errand.location && errand.status === 'confirmed' && (
+              <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-1.5 rounded-lg border border-orange-200">
+                <p className="text-xs text-gray-600 font-semibold mb-0.5">📍 Full Address</p>
+                <p className="text-xs text-gray-800 font-medium break-words">
+                  {(() => {
+                    const location = errand.location || 'Not specified';
+                    let postalCode = errand.postal_code;
 
-                          // If no explicit postal code, try to extract from location
-                          if (!postalCode) {
-                            const postalMatch = location.match(/(\d{6})/);
-                            if (postalMatch) {
-                              postalCode = postalMatch[1];
-                            }
-                          }
+                    if (!postalCode) {
+                      const postalMatch = location.match(/(\d{6})/);
+                      if (postalMatch) {
+                        postalCode = postalMatch[1];
+                      }
+                    }
 
-                          // If we found a postal code, format the address
-                          if (postalCode) {
-                            // Remove any existing postal code from location to avoid duplication
-                            const cleanLocation = location.replace(/\s*S?\d{6}\s*$/, '').trim();
-                            return `${cleanLocation} S${postalCode}`;
-                          }
+                    if (postalCode) {
+                      const cleanLocation = location.replace(/\s*S?\d{6}\s*$/, '').trim();
+                      return `${cleanLocation} S${postalCode}`;
+                    }
 
-                          return location;
-                        })()}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-gray-500 italic">
-                        Full address shown once errand confirmed
-                      </p>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
+                    return location;
+                  })()}
+                </p>
+              </div>
+            )}
 
             {/* Description */}
             <div className="border-t border-gray-200 pt-2">

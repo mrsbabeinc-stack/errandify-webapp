@@ -67,6 +67,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   ];
 
   const categoryNames: Record<string, string> = {
+    // New category names
     'home-maintenance': 'Home Maintenance',
     'cleaning-household': 'Cleaning & Household',
     'food-beverage': 'Food & Beverage',
@@ -83,6 +84,10 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
     'creative-arts': 'Creative & Arts',
     'admin-business': 'Admin & Business',
     'charity-community': 'Charity & Community',
+    // Legacy/old category names (for backward compatibility with existing errands)
+    'cleaning-laundry': 'Cleaning & Household',
+    'childcare-tutoring': 'Childcare & Education',
+    'moving-help': 'Delivery & Moving',
   };
 
   const handleCategoryToggle = (categoryId: string) => {
@@ -219,17 +224,17 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   });
 
   return (
-    <div className="min-h-screen bg-errandify-bg pb-32">
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        {/* Header - Compact */}
-        <div className="mb-3">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-errandify-bg pb-20">
+      <div className="max-w-2xl mx-auto px-2 py-1">
+        {/* Header - Warm & Compact */}
+        <div className="mb-2">
           <button
             onClick={() => navigate('/home')}
-            className="text-errandify-orange font-semibold mb-1 text-xs"
+            className="text-errandify-orange font-bold text-xs hover:text-orange-600 transition mb-1"
           >
             ← Back
           </button>
-          <h1 className="text-xl font-bold text-errandify-brown">
+          <h1 className="text-lg font-bold text-errandify-brown">
             {userRole === 'asker' ? 'My Posted Tasks' : 'Browse ToHelp'}
           </h1>
           <p className="text-gray-600 text-xs">
@@ -238,30 +243,30 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
         </div>
 
         {userRole === 'asker' && (
-          <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4 text-xs text-blue-700">
-            Switch to Doer role to browse and bid on other posted tasks.
+          <div className="bg-blue-100 border border-blue-300 p-2 rounded-lg mb-2 text-xs text-blue-800 font-medium">
+            💡 Switch to Doer role to browse and bid on tasks.
           </div>
         )}
 
-        {/* Tab Selection - Only for Doers */}
+        {/* Tab Selection - Warm Style */}
         {userRole === 'doer' && (
-          <div className="flex gap-2 mb-3">
+          <div className="flex gap-1.5 mb-2">
             <button
               onClick={() => setShowRecommended(false)}
-              className={`flex-1 py-1.5 px-3 rounded-lg font-semibold text-xs transition-all ${
+              className={`flex-1 py-1.5 px-2 rounded-lg font-semibold text-xs transition-all ${
                 !showRecommended
-                  ? 'bg-errandify-orange text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-gradient-to-r from-errandify-orange to-orange-500 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               All
             </button>
             <button
               onClick={() => setShowRecommended(true)}
-              className={`flex-1 py-1.5 px-3 rounded-lg font-semibold text-xs transition-all ${
+              className={`flex-1 py-1.5 px-2 rounded-lg font-semibold text-xs transition-all ${
                 showRecommended
-                  ? 'bg-errandify-orange text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-gradient-to-r from-errandify-orange to-orange-500 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               For You
@@ -269,26 +274,26 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
           </div>
         )}
 
-        {/* Search Bar - Only for Doers */}
+        {/* Search Bar */}
         {userRole === 'doer' && (
-          <div className="mb-3">
+          <div className="mb-2">
             <input
               type="text"
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-1.5 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange text-xs"
+              className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange focus:ring-1 focus:ring-orange-200 text-xs"
             />
           </div>
         )}
 
-        {/* Category Selection Card - Compact Grid - Only for Doers */}
+        {/* Category Selection Card - Warm & Compact */}
         {userRole === 'doer' && (
-          <div className="bg-white rounded-lg p-2 border border-gray-200 mb-3">
-          <h3 className="text-xs font-semibold text-errandify-brown mb-1.5 uppercase tracking-wide">
-            Categories <span className="text-gray-500 font-normal">(Click to Select)</span>
+          <div className="bg-white rounded-xl p-2 border border-orange-100 shadow-sm mb-2">
+          <h3 className="text-xs font-bold text-errandify-brown mb-1.5 uppercase tracking-wide">
+            🎯 Categories
           </h3>
-          <div className="grid grid-cols-4 gap-1.5 mb-2">
+          <div className="grid grid-cols-4 gap-1 mb-2">
             {categories.map((category) => {
               const isSelected = selectedCategories.includes(category.id);
               return (
@@ -333,19 +338,19 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
 
         {/* Errands List */}
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm mb-4">
-            {error}
+          <div className="p-2 bg-red-100 border border-red-300 text-red-800 rounded-lg text-xs mb-2 font-medium">
+            ⚠️ {error}
           </div>
         )}
 
         {loading ? (
-          <div className="text-center py-8">
-            <p className="text-gray-600 text-sm">Loading errands...</p>
+          <div className="text-center py-6">
+            <p className="text-gray-600 text-xs">Loading errands...</p>
           </div>
         ) : filteredErrands.length === 0 ? (
-          <div className="text-center py-8 bg-white rounded-lg p-4">
-            <p className="text-gray-600 text-sm mb-2">
-              No errands found{selectedCategories.length > 0 ? ` in selected categories` : ''}{searchQuery ? ` matching "${searchQuery}"` : ''}.
+          <div className="text-center py-6 bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
+            <p className="text-gray-700 text-xs font-medium mb-1.5">
+              😊 No errands found{selectedCategories.length > 0 ? ` in selected categories` : ''}{searchQuery ? ` matching "${searchQuery}"` : ''}.
             </p>
             {(selectedCategories.length > 0 || searchQuery) && (
               <button
@@ -353,57 +358,63 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                   setSelectedCategories([]);
                   setSearchQuery('');
                 }}
-                className="text-errandify-orange font-semibold text-xs hover:underline"
+                className="text-errandify-orange font-semibold text-xs hover:text-orange-600 transition"
               >
                 Clear filters
               </button>
             )}
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {filteredErrands.map((errand) => (
               <div
                 key={errand.id}
-                className="bg-white rounded-lg p-2 shadow hover:shadow-lg transition-shadow cursor-pointer"
+                className="bg-white rounded-xl p-2 shadow-sm hover:shadow-md hover:border-orange-200 transition-all cursor-pointer border border-orange-50"
                 onClick={() => navigate(`/errand/${errand.id}`)}
               >
-                {/* Line 1: Title + Category + Your Bid */}
+                {/* Title + Budget + Your Bid */}
                 <div className="flex items-start justify-between gap-2 mb-1">
-                  <div className="flex-1">
-                    <h3 className="text-xs font-semibold text-errandify-brown leading-tight">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xs font-bold text-errandify-brown leading-tight line-clamp-1">
                       {errand.title}
                     </h3>
-                    <span className="inline-block bg-orange-100 text-errandify-orange text-xs px-1.5 py-0.5 rounded font-semibold mt-0.5">
-                      {categoryNames[errand.category] || errand.category}
-                    </span>
-                  </div>
-                  {getUserBid(errand.id) && (
-                    <div className="bg-green-100 border border-green-300 rounded px-1.5 py-0.5 text-xs font-semibold text-green-700 whitespace-nowrap">
-                      Bidded ${getUserBid(errand.id)?.toFixed(0)}
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className="inline-block bg-gradient-to-r from-orange-100 to-orange-50 text-errandify-orange text-xs px-1.5 py-0.5 rounded-full font-semibold border border-orange-200">
+                        {categoryNames[errand.category] || errand.category}
+                      </span>
                     </div>
-                  )}
+                  </div>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className="text-sm font-bold text-errandify-orange">
+                      ${Number(errand.budget || 0).toFixed(0)}
+                    </span>
+                    {getUserBid(errand.id) && (
+                      <div className="bg-green-100 border border-green-300 rounded-full px-1.5 py-0.5 text-xs font-bold text-green-700 whitespace-nowrap">
+                        ✓ ${getUserBid(errand.id)?.toFixed(0)}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Line 2: Budget + Location + Heart + Rating + Posted by */}
-                <div className="flex items-center gap-2 text-xs text-gray-600">
-                  {errand.budget && (
-                    <span className="text-errandify-orange font-semibold">SGD ${Number(errand.budget).toFixed(0)}</span>
-                  )}
+                {/* Location + Heart + Rating + Name */}
+                <div className="flex items-center gap-1.5 text-xs text-gray-600 flex-wrap">
                   {errand.location && (
-                    <span>📍 {getMaskedLocation(errand.location)}</span>
+                    <span className="bg-orange-50 px-1.5 py-0.5 rounded-full text-gray-700 font-medium">
+                      📍 {getMaskedLocation(errand.location)}
+                    </span>
                   )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleFavorite(errand.id);
                     }}
-                    className="text-lg transition-transform hover:scale-125"
+                    className="text-base transition-transform hover:scale-125"
                     title={favorites.has(errand.id) ? 'Remove from favorites' : 'Add to favorites'}
                   >
                     {favorites.has(errand.id) ? '❤️' : '🤍'}
                   </button>
-                  <span>⭐ {errand.askerRating ? errand.askerRating.toFixed(1) : 'New'}</span>
-                  <span className="font-semibold">{errand.askerName}</span>
+                  <span className="font-semibold">⭐ {errand.askerRating ? errand.askerRating.toFixed(1) : 'New'}</span>
+                  <span className="text-gray-700 font-medium">{errand.askerName}</span>
                 </div>
               </div>
             ))}
