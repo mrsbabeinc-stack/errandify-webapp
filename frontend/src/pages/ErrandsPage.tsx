@@ -137,7 +137,10 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   };
 
   const getPendingAction = (errand: Errand) => {
-    if (errand.status === 'completed') return { type: 'awaiting_rating', label: '⚠️ Rate Now', color: 'bg-red-500' };
+    // Only show "Rate Now" badge if status is exactly 'completed', not 'rated'
+    if (errand.status === 'completed' && errand.status !== 'rated') {
+      return { type: 'awaiting_rating', label: '⚠️ Rate Now', color: 'bg-red-500' };
+    }
     return null;
   };
 
