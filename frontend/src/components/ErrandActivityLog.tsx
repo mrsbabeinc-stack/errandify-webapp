@@ -130,11 +130,6 @@ const ErrandActivityLog = forwardRef<ErrandActivityLogHandle, ErrandActivityLogP
                 minute: '2-digit',
               })}
             </p>
-            {activity.details && Object.keys(activity.details).length > 0 && (
-              <p className="text-xs text-gray-600 mt-1">
-                {JSON.stringify(activity.details)}
-              </p>
-            )}
           </div>
         </div>
       ))}
