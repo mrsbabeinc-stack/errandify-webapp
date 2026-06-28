@@ -72,6 +72,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [ratingComment, setRatingComment] = useState('');
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
   const [hasRated, setHasRated] = useState(false);
+  const [showCelebratory, setShowCelebratory] = useState(false);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -1082,7 +1083,10 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                     { headers: { Authorization: `Bearer ${token}` } }
                                   );
                                   setHasRated(true);
+                                  setShowCelebratory(true);
                                   setRatingComment('');
+                                  // Auto-hide celebratory message after 5 seconds
+                                  setTimeout(() => setShowCelebratory(false), 5000);
                                 } catch (err: any) {
                                   alert('Error submitting rating: ' + (err.response?.data?.error || err.message));
                                 } finally {
@@ -1092,7 +1096,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                               disabled={ratingSubmitting}
                               className="w-full mt-2 px-2 py-1 text-xs bg-gradient-to-r from-green-500 to-green-600 text-white rounded font-semibold hover:shadow disabled:opacity-50 transition"
                             >
-                            {ratingSubmitting ? '✨ Sending...' : '✓ Submit & Approved Completion'}
+                            {ratingSubmitting ? '✨ Sending...' : '✓ Submit Review & Approve Completion'}
                           </button>
                           ) : (
                             <div className="w-full mt-2 px-2 py-1 text-xs bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded font-semibold text-center border border-green-300">
@@ -1157,8 +1161,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                             .catch(e => alert('Error: ' + e.message));
                         }}
                         className="flex-1 bg-amber-500 text-white py-1.5 px-2 rounded font-semibold hover:bg-amber-600 text-xs transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        disabled={errand.status === 'disputed'}
-                        title={errand.status === 'disputed' ? 'Cannot reopen during dispute' : 'Request doer to make changes'}
+                        disabled={errand.status === 'disputed' || hasRated}
+                        title={hasRated ? 'Already approved - cannot request changes' : errand.status === 'disputed' ? 'Cannot reopen during dispute' : 'Request doer to make changes'}
                       >
                         🔄 Request Changes
                       </button>
@@ -1200,6 +1204,52 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             </div>
           </div>
         )}
+
+        {/* Celebratory Modal - Show after rating submitted */}
+        {showCelebratory && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 animate-fadeIn">
+            <div className="bg-gradient-to-br from-green-100 via-emerald-100 to-green-50 rounded-2xl max-w-sm shadow-2xl relative overflow-hidden border-2 border-green-400 animate-scaleIn">
+              {/* Confetti Background */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute text-6xl top-1/4 left-1/4 animate-bounce">✨</div>
+                <div className="absolute text-6xl top-1/3 right-1/4 animate-bounce" style={{ animationDelay: '0.2s' }}>🎉</div>
+                <div className="absolute text-6xl bottom-1/4 left-1/3 animate-bounce" style={{ animationDelay: '0.4s' }}>⭐</div>
+              </div>
+
+              {/* Content */}
+              <div className="relative z-10 p-6 text-center">
+                <p className="text-4xl mb-3 animate-pulse">🎊</p>
+                <h2 className="text-2xl font-bold text-green-800 mb-2">Amazing!</h2>
+                <p className="text-green-700 font-semibold mb-1">You've approved this work</p>
+                <p className="text-sm text-green-600 mb-4">The doer will receive your rating and feedback. Great job supporting the community!</p>
+                <div className="text-lg font-bold text-errandify-orange mb-2">Job Complete ✓</div>
+                <button
+                  onClick={() => setShowCelebratory(false)}
+                  className="px-4 py-2 bg-green-500 text-white rounded-full font-bold hover:bg-green-600 transition-all text-sm"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <style>{`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes scaleIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.3s ease-in;
+          }
+          .animate-scaleIn {
+            animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+          }
+        `}</style>
 
         {/* Q&A Section */}
         {errand && (
