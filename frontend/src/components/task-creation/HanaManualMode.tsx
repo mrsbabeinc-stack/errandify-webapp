@@ -145,8 +145,16 @@ export default function HanaManualMode({
           alert('Please enter a task title.');
           return;
         }
+        if (taskData.title.trim().length < 5) {
+          alert('Task title must be at least 5 characters.');
+          return;
+        }
         if (!taskData.description?.trim()) {
           alert('Please describe what you need help with.');
+          return;
+        }
+        if (taskData.description.trim().length < 10) {
+          alert('Description must be at least 10 characters.');
           return;
         }
         if (!taskData.category?.trim()) {
@@ -161,12 +169,35 @@ export default function HanaManualMode({
           alert('Please select a date.');
           return;
         }
-        if (!taskData.budget || parseFloat(taskData.budget) <= 0) {
-          alert('Please enter a valid budget amount.');
+        // Validate date is not in the past
+        const selectedDate = new Date(taskData.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate < today) {
+          alert('Please select a date today or in the future.');
           return;
         }
         if (!taskData.time?.trim()) {
           alert('Please select a time.');
+          return;
+        }
+        // Validate time is at least 30 minutes from now
+        const selectedDateTime = new Date(taskData.date);
+        const [hours, minutes] = taskData.time.split(':').map(Number);
+        selectedDateTime.setHours(hours, minutes, 0, 0);
+        const now = new Date();
+        const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60000);
+        if (selectedDateTime < thirtyMinutesFromNow) {
+          alert('Please select a time at least 30 minutes from now.');
+          return;
+        }
+        if (!taskData.budget || parseFloat(taskData.budget) <= 0) {
+          alert('Please enter a valid budget amount.');
+          return;
+        }
+        const budgetNum = parseFloat(taskData.budget);
+        if (budgetNum < 5) {
+          alert('Budget must be at least SGD $5.');
           return;
         }
         onReview();
@@ -338,29 +369,43 @@ export default function HanaManualMode({
         </div>
 
         {/* Validation Messages */}
-        {(
-          !taskData.title?.trim() ||
-          !taskData.description?.trim() ||
-          !taskData.category?.trim() ||
-          !taskData.location?.trim() ||
-          !taskData.date?.trim() ||
-          !taskData.time?.trim() ||
-          !taskData.budget ||
-          parseFloat(taskData.budget) <= 0
-        ) && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700">
-            <p className="font-bold mb-1.5">Missing required fields:</p>
-            <ul className="space-y-0.5 list-disc list-inside">
-              {!taskData.title?.trim() && <li>Task title</li>}
-              {!taskData.description?.trim() && <li>Description</li>}
-              {!taskData.category?.trim() && <li>Category</li>}
-              {!taskData.location?.trim() && <li>Location</li>}
-              {!taskData.date?.trim() && <li>Date</li>}
-              {!taskData.time?.trim() && <li>Time</li>}
-              {(!taskData.budget || parseFloat(taskData.budget) <= 0) && <li>Valid budget amount</li>}
-            </ul>
-          </div>
-        )}
+        {(() => {
+          const errors = [];
+
+          if (!taskData.title?.trim()) errors.push('Task title (min 5 characters)');
+          if (!taskData.description?.trim()) errors.push('Description (min 10 characters)');
+          if (taskData.title?.trim() && taskData.title.trim().length < 5) errors.push('Task title must be at least 5 characters');
+          if (taskData.description?.trim() && taskData.description.trim().length < 10) errors.push('Description must be at least 10 characters');
+          if (!taskData.category?.trim()) errors.push('Category');
+          if (!taskData.location?.trim()) errors.push('Location');
+          if (!taskData.date?.trim()) errors.push('Date');
+          if (taskData.date?.trim()) {
+            const selectedDate = new Date(taskData.date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (selectedDate < today) errors.push('Date cannot be in the past');
+          }
+          if (!taskData.time?.trim()) errors.push('Time');
+          if (taskData.time?.trim() && taskData.date?.trim()) {
+            const selectedDateTime = new Date(taskData.date);
+            const [hours, minutes] = taskData.time.split(':').map(Number);
+            selectedDateTime.setHours(hours, minutes, 0, 0);
+            const now = new Date();
+            const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60000);
+            if (selectedDateTime < thirtyMinutesFromNow) errors.push('Time must be at least 30 minutes from now');
+          }
+          if (!taskData.budget || parseFloat(taskData.budget) <= 0) errors.push('Valid budget amount (min SGD $5)');
+          if (taskData.budget && parseFloat(taskData.budget) < 5) errors.push('Budget must be at least SGD $5');
+
+          return errors.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700">
+              <p className="font-bold mb-1.5">Please fix these issues:</p>
+              <ul className="space-y-0.5 list-disc list-inside">
+                {errors.map((error, idx) => <li key={idx}>{error}</li>)}
+              </ul>
+            </div>
+          );
+        })()}
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-4">
