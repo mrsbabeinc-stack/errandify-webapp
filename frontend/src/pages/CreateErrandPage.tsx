@@ -1493,13 +1493,6 @@ export default function CreateErrandPage() {
               />
               <span className="absolute bottom-2 right-3 text-xs text-gray-400">{formData.specialNote.length}/300</span>
             </div>
-
-            {/* AI Tip for Notes */}
-            {aiSuggestions.suggestedNotes && !formData.specialNote && (
-              <div className="text-xs text-errandify-orange-700 mt-1.5 px-2 py-1 bg-orange-50 rounded">
-                💡 Tip: {aiSuggestions.suggestedNotes}
-              </div>
-            )}
           </div>
         </div>
 

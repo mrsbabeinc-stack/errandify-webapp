@@ -7,7 +7,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_51TPCNWRpPAWSpeM0...', {
-  apiVersion: '2024-04-10',
+  apiVersion: '2023-10-16',
 });
 
 export const stripeService = {

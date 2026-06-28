@@ -480,7 +480,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         const titleCleanResponse = await axios.post(
           `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
           {
-            model: 'qwen-plus',
+            model: 'qwen-max',
             messages: [
               {
                 role: 'system',
@@ -495,6 +495,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           {
             headers: {
               'Authorization': `Bearer ${qwenApiKey}`,
+            'X-DashScope-AsyncRequest': 'false',
               'Content-Type': 'application/json',
             },
             timeout: 5000,
@@ -957,70 +958,64 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     };
 
     // Make all Qwen calls in parallel
+    console.log('[Suggestions] Making Qwen API calls...');
     const [skillsResult, descriptionResult, notesResult] = await Promise.allSettled([
       qwenApiKey ? axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
-          model: 'qwen-plus',
+          model: 'qwen-max',
           messages: [
             {
-              role: 'system',
-              content: 'You are a skills assessment expert. Given a task, list 4-5 specific skills required to complete it successfully. Return ONLY the skills as a comma-separated list. Be specific to THIS task, not generic.',
-            },
-            {
               role: 'user',
-              content: `Task: "${title}"\nCategory: ${detectedCategory}\nWhat specific skills are required?`,
+              content: `You are a skills assessment expert. Given a task, list 4-5 specific skills required to complete it successfully. Return ONLY the skills as a comma-separated list. Be specific to THIS task, not generic.\n\nTask: "${title}"\nCategory: ${detectedCategory}\nWhat specific skills are required?`,
             },
           ],
         },
         {
           headers: {
             'Authorization': `Bearer ${qwenApiKey}`,
+            'X-DashScope-AsyncRequest': 'false',
             'Content-Type': 'application/json',
           },
           timeout: 3000,
         }
       ) : Promise.reject('No API key'),
       qwenApiKey ? axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
-          model: 'qwen-plus',
+          model: 'qwen-max',
           messages: [
             {
-              role: 'system',
-              content: 'You are a task description expert. Write a clear, specific task description that helps doers understand exactly what work is needed. Include: (1) What specifically needs to be done, (2) What the doer should bring/know, (3) Expected outcome. Keep it under 180 characters. Be direct and specific, not generic.',
-            },
-            {
               role: 'user',
-              content: `Task: "${title}"\nCategory: ${detectedCategory}\nDate: ${date || 'TBD'}\nTime: ${time || 'TBD'}\n\nWrite a clear description of what this task involves and what doers should expect.`,
+              content: `You are a task description expert. Write a clear, specific task description that helps doers understand exactly what work is needed. Include: (1) What specifically needs to be done, (2) What the doer should bring/know, (3) Expected outcome. Keep it under 180 characters. Be direct and specific, not generic.\n\nTask: "${title}"\nCategory: ${detectedCategory}\nDate: ${date || 'TBD'}\nTime: ${time || 'TBD'}\n\nWrite a clear description of what this task involves and what doers should expect.`,
             },
           ],
         },
         {
           headers: {
-            Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
+            'Authorization': `Bearer ${qwenApiKey}`,
+            'X-DashScope-AsyncRequest': 'false',
+            'Content-Type': 'application/json',
           },
           timeout: 3000,
         }
       ) : Promise.reject('No API key'),
       qwenApiKey ? axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
-          model: 'qwen-plus',
+          model: 'qwen-max',
           messages: [
             {
-              role: 'system',
-              content: 'You are a task screening expert. Generate 2-3 specific, practical questions the task poster should ask potential doers. Focus on: (1) Experience/qualifications needed, (2) Safety or quality concerns, (3) Logistical requirements. Use action-oriented language like "Ask doer about..." or "Verify...". Keep under 220 characters. Be specific to this task type.',
-            },
-            {
               role: 'user',
-              content: `Task: "${title}"\nCategory: ${detectedCategory}\nWhat important questions should be asked to qualified doers for this task?`,
+              content: `You are a task screening expert. Generate 2-3 specific, practical questions the task poster should ask potential doers. Focus on: (1) Experience/qualifications needed, (2) Safety or quality concerns, (3) Logistical requirements. Use action-oriented language like "Ask doer about..." or "Verify...". Keep under 220 characters. Be specific to this task type.\n\nTask: "${title}"\nCategory: ${detectedCategory}\nWhat important questions should be asked to qualified doers for this task?`,
             },
           ],
         },
         {
           headers: {
-            Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
+            'Authorization': `Bearer ${qwenApiKey}`,
+            'X-DashScope-AsyncRequest': 'false',
+            'Content-Type': 'application/json',
           },
           timeout: 3000,
         }
@@ -1033,27 +1028,28 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     let notes = '';
 
     if (skillsResult.status === 'fulfilled') {
-      const skillsText = skillsResult.value.data?.output?.text?.trim() || '';
+      // OpenAI compatible response format: choices[0].message.content
+      const skillsText = skillsResult.value.data?.choices?.[0]?.message?.content?.trim() || '';
       if (skillsText) {
         skills = skillsText.split(',').map(s => s.trim()).filter(s => s && s.length > 0);
-        console.log('[Qwen] Generated skills:', skills);
+        console.log('[Qwen] ✅ Generated skills:', skills);
       }
     } else {
-      console.warn('[Qwen] Skills generation failed');
+      console.warn('[Qwen] Skills generation failed:', skillsResult.reason instanceof Error ? skillsResult.reason.message : JSON.stringify(skillsResult.reason));
     }
 
     if (descriptionResult.status === 'fulfilled') {
-      const aiText = descriptionResult.value.data?.output?.text || '';
+      const aiText = descriptionResult.value.data?.choices?.[0]?.message?.content || '';
       if (aiText && aiText.trim().length > 0) {
         suggestedDescription = aiText.substring(0, 180).trim();
         console.log('[Qwen] ✅ Description generated:', suggestedDescription);
       }
     } else {
-      console.warn('[Qwen] Description generation failed');
+      console.warn('[Qwen] Description generation failed:', descriptionResult.reason instanceof Error ? descriptionResult.reason.message : JSON.stringify(descriptionResult.reason));
     }
 
     if (notesResult.status === 'fulfilled') {
-      const aiNotes = notesResult.value.data?.output?.text || '';
+      const aiNotes = notesResult.value.data?.choices?.[0]?.message?.content || '';
       if (aiNotes && aiNotes.trim().length > 0) {
         notes = aiNotes.substring(0, 220).trim();
         console.log('[Qwen] ✅ Notes/questions generated:', notes);
@@ -1180,7 +1176,7 @@ Return ONLY valid JSON, no markdown or code blocks.`;
       const response = await axios.post(
         `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
         {
-          model: 'qwen-plus',
+          model: 'qwen-max',
           messages: [
             {
               role: 'user',
@@ -1192,6 +1188,7 @@ Return ONLY valid JSON, no markdown or code blocks.`;
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${qwenApiKey}`,
+            'X-DashScope-AsyncRequest': 'false',
           },
           timeout: 15000,
         }
@@ -1305,7 +1302,7 @@ Format: Return as JSON with fields: doer_profile, asker_profile, skill_insights,
       const response = await axios.post(
         `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
         {
-          model: 'qwen-plus',
+          model: 'qwen-max',
           messages: [
             {
               role: 'user',
@@ -1317,6 +1314,7 @@ Format: Return as JSON with fields: doer_profile, asker_profile, skill_insights,
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${qwenApiKey}`,
+            'X-DashScope-AsyncRequest': 'false',
           },
           timeout: 10000,
         }
@@ -1437,7 +1435,7 @@ Return ONLY valid JSON.`;
       const response = await axios.post(
         `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
         {
-          model: 'qwen-plus',
+          model: 'qwen-max',
           messages: [
             {
               role: 'user',
@@ -1449,6 +1447,7 @@ Return ONLY valid JSON.`;
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${qwenApiKey}`,
+            'X-DashScope-AsyncRequest': 'false',
           },
           timeout: 15000,
         }
