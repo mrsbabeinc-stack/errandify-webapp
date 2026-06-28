@@ -80,9 +80,14 @@ export default function BrowseErrandsPage() {
             },
           }
         );
+        console.log('[BrowseErrands] API Response:', response.data.data);
+        if (response.data.data && response.data.data.length > 0) {
+          console.log('[BrowseErrands] First errand:', response.data.data[0]);
+        }
         setErrands(response.data.data || []);
       } catch (err: any) {
         setError(err.response?.data?.error || 'Failed to load errands');
+        console.error('[BrowseErrands] Error:', err);
       } finally {
         setLoading(false);
       }
