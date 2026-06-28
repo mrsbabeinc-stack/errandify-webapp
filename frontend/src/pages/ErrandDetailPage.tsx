@@ -1073,8 +1073,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                 if (!currentUser || !errand) return;
                                 setRatingSubmitting(true);
                                 try {
+                                  console.log('[Rating] errand:', errand);
+                                  console.log('[Rating] errand.doerId:', errand.doerId);
+
                                   if (!errand.doerId) {
-                                    alert('Error: Doer information not available. Please refresh and try again.');
+                                    console.error('[Rating] Missing doerId. Errand status:', errand.status);
+                                    alert('Error: Doer information not available. This errand may not have a confirmed doer yet. Please refresh and try again.');
                                     return;
                                   }
                                   const token = localStorage.getItem('token');
