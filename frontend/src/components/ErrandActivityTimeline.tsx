@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import axios from 'axios';
 
 interface Activity {
@@ -15,10 +15,12 @@ interface ErrandActivityTimelineProps {
   userRole: 'asker' | 'doer';
 }
 
-export default function ErrandActivityTimeline({
-  errandId,
-  userRole,
-}: ErrandActivityTimelineProps) {
+interface ErrandActivityTimelineHandle {
+  refreshActivity: () => Promise<void>;
+}
+
+const ErrandActivityTimeline = forwardRef<ErrandActivityTimelineHandle, ErrandActivityTimelineProps>(
+  ({ errandId }, ref) => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -26,6 +28,11 @@ export default function ErrandActivityTimeline({
   useEffect(() => {
     fetchActivityLog();
   }, [errandId]);
+
+  // Expose refresh method to parent components
+  useImperativeHandle(ref, () => ({
+    refreshActivity: fetchActivityLog,
+  }));
 
   const fetchActivityLog = async () => {
     try {
@@ -130,39 +137,39 @@ export default function ErrandActivityTimeline({
   }
 
   return (
-    <div className="rounded-lg border-2 border-gray-200 overflow-hidden">
-      {/* Header */}
-      <div className="bg-gray-100 px-6 py-3 border-b border-gray-200">
-        <h3 className="font-bold text-lg flex items-center gap-2">
-          📋 Activity Timeline
+    <div className="rounded-xl border border-orange-100 overflow-hidden bg-white shadow-sm">
+      {/* Header - Warm & Compact */}
+      <div className="bg-gradient-to-r from-orange-50 to-orange-100 px-3 py-2 border-b border-orange-200">
+        <h3 className="font-bold text-sm flex items-center gap-2 text-errandify-brown">
+          📅 Activity Timeline
         </h3>
-        <p className="text-sm text-gray-600 mt-1">
-          Complete history of all actions on this errand
+        <p className="text-xs text-gray-600 mt-0.5">
+          What's happened on this task
         </p>
       </div>
 
-      {/* Timeline */}
-      <div className="p-6 space-y-4">
+      {/* Timeline - Compact */}
+      <div className="p-2 space-y-1.5">
         {activities.map((activity, idx) => {
           const isLastItem = idx === activities.length - 1;
 
           return (
-            <div key={activity.id} className="flex gap-4">
+            <div key={activity.id} className="flex gap-2">
               {/* Timeline Dot and Line */}
               <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full bg-blue-100 border-2 border-blue-500 flex items-center justify-center text-lg flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-orange-100 border-2 border-errandify-orange flex items-center justify-center text-sm flex-shrink-0">
                   {getActivityIcon(activity.activity_type)}
                 </div>
                 {!isLastItem && (
-                  <div className="w-1 bg-gray-300 flex-grow my-2" style={{ minHeight: '3rem' }} />
+                  <div className="w-0.5 bg-orange-200 flex-grow my-1" style={{ minHeight: '2rem' }} />
                 )}
               </div>
 
-              {/* Activity Content */}
-              <div className="flex-1 pb-4">
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <p className="font-bold text-gray-900">
+              {/* Activity Content - Compact */}
+              <div className="flex-1 pb-1.5">
+                <div className="bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-2">
+                  <div className="flex justify-between items-start">
+                    <p className="font-semibold text-xs text-errandify-brown">
                       {getActivityLabel(
                         activity.activity_type,
                         activity.actor_name,
@@ -170,7 +177,7 @@ export default function ErrandActivityTimeline({
                         activity.details
                       )}
                     </p>
-                    <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                    <span className="text-xs text-gray-600 font-medium whitespace-nowrap ml-1 flex-shrink-0">
                       {formatTime(activity.created_at)}
                     </span>
                   </div>
@@ -195,4 +202,8 @@ export default function ErrandActivityTimeline({
       </div>
     </div>
   );
-}
+  }
+);
+
+ErrandActivityTimeline.displayName = 'ErrandActivityTimeline';
+export default ErrandActivityTimeline;

@@ -71,7 +71,11 @@ export default function BidSubmissionModal({
           }
         }
 
-        alert(`✓ Bid ${isUpdating ? 'updated' : 'submitted'} for $${bidAmount}!`);
+        // Show warm, kampung-style success message
+        const message = isUpdating
+          ? `💚 Your bid updated to $${bidAmount}! We've got you, neighbor!`
+          : `🎉 Your bid for $${bidAmount} is in! Let's help out! 🤝`;
+        alert(message);
         onSuccess();
       }
     } catch (err: any) {
@@ -155,8 +159,11 @@ export default function BidSubmissionModal({
               onChange={(e) => setBidNote(e.target.value)}
               placeholder="Explain your experience, why you're a good fit, etc."
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+              className="w-full px-3 py-2 border border-errandify-orange rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
             />
+            <div className="text-xs text-errandify-orange-700 mt-2 px-3 py-2 bg-orange-50 rounded">
+              💡 Suggestion: Mention your relevant experience, skills, and why you're the best fit for this task!
+            </div>
           </div>
 
           {error && (
