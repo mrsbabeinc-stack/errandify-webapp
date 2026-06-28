@@ -276,6 +276,7 @@ export default function CreateErrandPage() {
   // Override map for postal codes where OneMap data is inaccurate
   const postalCodeCorrections: Record<string, string> = {
     '629652': 'Jurong/Tuas',
+    '507565': 'Loyang/Pasir Ris',
   };
 
   // Extract area name from full address string
