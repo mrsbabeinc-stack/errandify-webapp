@@ -269,30 +269,28 @@ export default function HanaManualMode({
           </div>
         )}
 
-        {/* Category Selection - Shows instantly as title is typed */}
-        {taskData.title.trim() && (
-          <div className="animate-fade-in">
-            <label className="block text-sm font-semibold text-gray-600 mb-3">
-              Category *
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(categoryMap).map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleCategoryChange(key)}
-                  className={`px-4 py-3 rounded-lg border-2 font-medium transition-all text-sm ${
-                    taskData.category === key
-                      ? 'bg-errandify-orange text-white border-errandify-orange'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-errandify-orange'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+        {/* Category Selection */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-600 mb-3">
+            Category *
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(categoryMap).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => handleCategoryChange(key)}
+                className={`px-4 py-3 rounded-lg border-2 font-medium transition-all text-sm ${
+                  taskData.category === key
+                    ? 'bg-errandify-orange text-white border-errandify-orange'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-errandify-orange'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
 
         {/* Location */}
         <div>
