@@ -49,6 +49,9 @@ import DisputeReviewPage from './pages/DisputeReviewPage';
 import AppealDashboardPage from './pages/AppealDashboardPage';
 import AdminDashboard from './pages/admin/Dashboard';
 import CasesPage from './pages/admin/Cases';
+import CategoriesPage from './pages/admin/Categories';
+import VouchersPage from './pages/admin/Vouchers';
+import ReportsPage from './pages/admin/Reports';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -278,6 +281,9 @@ export default function App() {
         {/* Admin Dashboard Routes */}
         <Route path="/admin/dashboard" element={isAuthenticated && isAdmin ? <AdminDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/cases" element={isAuthenticated && isAdmin ? <CasesPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/manage/categories" element={isAuthenticated && isAdmin ? <CategoriesPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/manage/vouchers" element={isAuthenticated && isAdmin ? <VouchersPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/reports" element={isAuthenticated && isAdmin ? <ReportsPage /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout - for asker/doer AND admin users */}
         <Route
