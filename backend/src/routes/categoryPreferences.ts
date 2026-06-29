@@ -5,7 +5,7 @@ import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 const router = Router();
 
 // GET user's category preferences
-router.get('/:userId/category-preferences', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get('/:userId/preferences', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req.params;
     const requestingUserId = req.userId ? parseInt(req.userId, 10) : null;
@@ -42,7 +42,7 @@ router.get('/:userId/category-preferences', authMiddleware, async (req: AuthRequ
 });
 
 // POST/UPDATE user's category preferences
-router.post('/:userId/category-preferences', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/:userId/preferences', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req.params;
     const { canHelp, needHelp } = req.body;
@@ -72,9 +72,9 @@ router.post('/:userId/category-preferences', authMiddleware, async (req: AuthReq
 });
 
 // AI: Suggest categories based on user's job history
-router.post('/suggest-categories', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/:userId/suggest-categories', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { userId } = req.body;
+    const { userId } = req.params;
     const requestingUserId = req.userId ? parseInt(req.userId, 10) : null;
 
     if (parseInt(userId) !== requestingUserId) {

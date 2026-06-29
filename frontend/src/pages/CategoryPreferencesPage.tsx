@@ -56,7 +56,7 @@ export default function CategoryPreferencesPage() {
 
       // Fetch saved preferences
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/category-preferences`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/preferences`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -92,7 +92,7 @@ export default function CategoryPreferencesPage() {
 
       // Call AI to analyze user's job history and suggest specializations
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggest-categories`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/suggest-categories`,
         { userId: user.id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -150,7 +150,7 @@ export default function CategoryPreferencesPage() {
       const needHelpCategories = categories.filter(c => c.needHelp).map(c => c.id);
 
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/category-preferences`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/preferences`,
         {
           canHelp: canHelpCategories,
           needHelp: needHelpCategories,
