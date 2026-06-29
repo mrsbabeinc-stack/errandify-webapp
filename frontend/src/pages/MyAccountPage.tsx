@@ -2812,11 +2812,26 @@ export default function MyAccountPage() {
         {activeSection === 'categories' && (
           <div className="bg-gradient-to-br from-purple-100 via-pink-100 to-orange-100 rounded-lg shadow-md p-4 space-y-3">
             {/* Header with stats */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-bold text-purple-900">🎯 My Categories</h2>
               <div className="flex gap-2 text-sm font-bold">
                 <span className="bg-green-500 text-white px-3 py-1 rounded-full">💪 {categoriesCanHelpCount}</span>
                 <span className="bg-blue-500 text-white px-3 py-1 rounded-full">🙋 {categoriesNeedHelpCount}</span>
+              </div>
+            </div>
+
+            {/* AI Info Banner */}
+            <div className="bg-white bg-opacity-80 rounded-lg p-3 border-2 border-purple-300 mb-2">
+              <p className="text-sm font-bold text-purple-900 mb-2">🤖 How AI Uses This:</p>
+              <div className="grid grid-cols-2 gap-2 text-xs text-gray-800">
+                <div className="bg-green-50 p-2 rounded">
+                  <p className="font-bold text-green-700">💪 I Can Help</p>
+                  <p>AI shows you tasks in these categories first. Build your reputation here!</p>
+                </div>
+                <div className="bg-blue-50 p-2 rounded">
+                  <p className="font-bold text-blue-700">🙋 I Need Help</p>
+                  <p>AI finds best doers in these categories for you. Smart matching!</p>
+                </div>
               </div>
             </div>
 
