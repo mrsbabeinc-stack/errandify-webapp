@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import TaskChatbox from '../components/TaskChatbox';
-import { initializeSocket, getSocket, isSocketConnected } from '../utils/socketClient';
+import { initializeSocket, getSocket, isSocketConnected as checkSocketConnected } from '../utils/socketClient';
 
 interface ChatPageProps {
   userRole: 'asker' | 'doer';
@@ -146,7 +146,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
     socket.on('disconnect', handleDisconnect);
 
     // Set initial status
-    setIsSocketConnected(isSocketConnected());
+    setIsSocketConnected(checkSocketConnected());
 
     return () => {
       socket.off('connect', handleConnect);
