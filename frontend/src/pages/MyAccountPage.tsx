@@ -1191,7 +1191,7 @@ export default function MyAccountPage() {
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >
-              🚫 Blocked
+              🚫 Blocked/Trusted
             </button>
             <button
               onClick={() => setActiveSection('notify')}
