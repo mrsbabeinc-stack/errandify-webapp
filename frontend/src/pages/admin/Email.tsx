@@ -16,6 +16,15 @@ export const EmailPage: React.FC = () => {
           <button className="btn-primary">+ New Campaign</button>
         </div>
 
+        {/* Happy Message Box */}
+        <div className="happy-message-box">
+          <span className="emoji">✨</span>
+          <div>
+            <strong>Email Marketing Magic!</strong>
+            <p>Keep your campaigns engaging and on-brand. Reach users with timely, personalized messages that drive action and loyalty.</p>
+          </div>
+        </div>
+
         <div className="campaigns-list">
           {campaigns.map((c) => (
             <div key={c.id} className="campaign-card">
@@ -47,6 +56,10 @@ export const EmailPage: React.FC = () => {
         .badge-active { background: #e6f9f0; color: #27b55d; }
         .badge-scheduled { background: #fff9f5; color: #ff6b35; }
         .btn-small { padding: 6px 10px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
+        .happy-message-box { background: linear-gradient(135deg, #fff9f5 0%, #fffbf7 100%); border-left: 4px solid #ff6b35; border-radius: 8px; padding: 12px 14px; display: flex; gap: 12px; align-items: flex-start; }
+        .happy-message-box .emoji { font-size: 24px; min-width: 24px; }
+        .happy-message-box strong { color: #ff6b35; font-size: 13px; display: block; margin-bottom: 2px; }
+        .happy-message-box p { margin: 0; font-size: 12px; color: #666; line-height: 1.5; }
       `}</style>
     </AdminLayout>
   );
