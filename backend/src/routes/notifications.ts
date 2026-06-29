@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
+import { storePushSubscription, sendPushNotification } from '../services/pushService.js';
 
 const router = Router();
 
@@ -524,6 +525,65 @@ router.post('/preferences', authMiddleware, async (req: AuthRequest, res: Respon
   } catch (error) {
     console.error('Save preferences error:', error);
     res.status(500).json({ error: 'Failed to save preferences' });
+  }
+});
+
+// POST /api/notifications/subscribe - Subscribe to push notifications
+router.post('/subscribe', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const { subscription } = req.body;
+
+    if (!subscription || !subscription.endpoint) {
+      return res.status(400).json({ error: 'Invalid subscription data' });
+    }
+
+    // Store subscription in database
+    await storePushSubscription(userId, {
+      endpoint: subscription.endpoint,
+      keys: {
+        auth: subscription.keys?.auth || '',
+        p256dh: subscription.keys?.p256dh || '',
+      },
+      userAgent: req.headers['user-agent'],
+    });
+
+    res.json({
+      success: true,
+      message: 'Successfully subscribed to push notifications',
+    });
+  } catch (error) {
+    console.error('Push subscribe error:', error);
+    res.status(500).json({ error: 'Failed to subscribe to push notifications' });
+  }
+});
+
+// POST /api/notifications/test-push - Send test push notification (development only)
+router.post('/test-push', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({ error: 'Test push not available in production' });
+    }
+
+    const result = await sendPushNotification(userId, {
+      title: 'Test Notification',
+      body: 'This is a test push notification from Errandify',
+      tag: 'test-notification',
+      data: {
+        type: 'test',
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Test push sent',
+      result,
+    });
+  } catch (error) {
+    console.error('Test push error:', error);
+    res.status(500).json({ error: 'Failed to send test push' });
   }
 });
 
