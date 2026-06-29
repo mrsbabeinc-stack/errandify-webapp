@@ -1,28 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 
-interface KPICard {
-  title: string;
-  value: string | number;
-  change: string;
-  icon: string;
-  trend: 'up' | 'down' | 'neutral';
-}
-
 export const AdminDashboard: React.FC = () => {
-  const [kpis, setKpis] = useState<KPICard[]>([
+  const [kpis] = useState([
     { title: 'Platform Health', value: '98.5%', change: '+2.3%', icon: '💚', trend: 'up' },
     { title: 'Total Revenue', value: '$24.5K', change: '+15.2%', icon: '💰', trend: 'up' },
     { title: 'Active Users', value: '2,847', change: '+8.1%', icon: '👥', trend: 'up' },
     { title: 'Average Rating', value: '4.8★', change: '+0.1★', icon: '⭐', trend: 'up' },
   ]);
 
-  const [alerts, setAlerts] = useState([
+  const [alerts] = useState([
     { id: 1, type: 'warning', message: '5 open disputes awaiting resolution', timestamp: '5 min ago' },
     { id: 2, type: 'info', message: 'Weekly report available', timestamp: '1 hour ago' },
   ]);
 
-  const [recentActivity, setRecentActivity] = useState([
+  const [recentActivity] = useState([
     { id: 1, event: '✅ Task Completed', user: 'Sarah Tan → John Lee', time: '2 min ago' },
     { id: 2, event: '💬 Dispute Filed', user: 'Complaint: Incomplete work', time: '15 min ago' },
     { id: 3, event: '👤 New User', user: 'Alice Wong registered', time: '1 hour ago' },
