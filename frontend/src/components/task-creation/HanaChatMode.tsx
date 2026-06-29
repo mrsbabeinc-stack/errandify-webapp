@@ -124,13 +124,17 @@ export default function HanaChatMode({
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
         { input }
       );
-      console.log('[Hana] Title extraction response:', response.data.data);
+      console.log('[Hana] Full extraction response:', response.data.data);
+      console.log('[Hana] Category from API:', response.data.data?.category);
       if (response.data.data?.category) {
-        console.log('[Hana] Updating category to:', response.data.data.category);
+        console.log('[Hana] ✅ Extracted category:', response.data.data.category);
         onTaskUpdate({ category: response.data.data.category });
+        console.log('[Hana] Category update called with:', response.data.data.category);
+      } else {
+        console.log('[Hana] ❌ No category in extraction response');
       }
     } catch (err) {
-      console.log('Category detection failed', err);
+      console.log('[Hana] ❌ Category extraction failed:', err);
     }
 
     addHanaMessage("Got it! Now, where do you need this done?");
