@@ -2606,37 +2606,65 @@ export default function MyAccountPage() {
                   <div className="divide-y divide-purple-100 text-xs max-h-48 overflow-y-auto">
                     {redemptionHistory.length > 0 || allActivities.filter(a => a.type === 'gift').length > 0 ? (
                       <>
-                        {/* Redemptions */}
-                        {(historyFilter === 'all' || historyFilter === 'redemptions') && redemptionHistory
-                          .filter(record =>
-                            record.item.toLowerCase().includes(historySearch.toLowerCase()) ||
-                            record.code.toLowerCase().includes(historySearch.toLowerCase())
-                          )
-                          .map((record) => (
-                            <div key={`redemption-${record.id}`} className="p-3 flex justify-between hover:bg-purple-50 transition bg-gradient-to-r from-transparent to-purple-50">
-                              <div>
-                                <p className="font-bold text-gray-900">{record.emoji} {record.item}</p>
-                                <p className="text-gray-500 text-xs">{record.date}{record.time && ` at ${record.time}`} • Code: {record.code}</p>
-                              </div>
-                              <p className="font-bold text-orange-600 text-sm">{record.amount} EP</p>
-                            </div>
-                          ))}
+                        {/* Combined & Sorted History - Latest First */}
+                        {(() => {
+                          const allRecords: any[] = [];
 
-                        {/* Gifts */}
-                        {(historyFilter === 'all' || historyFilter === 'gifts') && allActivities
-                          .filter(a => a.type === 'gift' && (
-                            a.title.toLowerCase().includes(historySearch.toLowerCase()) ||
-                            a.emoji.includes(historySearch)
-                          ))
-                          .map((gift) => (
-                            <div key={`gift-${gift.id}`} className="p-3 flex justify-between hover:bg-pink-50 transition bg-gradient-to-r from-transparent to-pink-50">
-                              <div>
-                                <p className="font-bold text-gray-900">{gift.emoji} {gift.title}</p>
-                                <p className="text-gray-500 text-xs">{gift.date}{gift.time && ` at ${gift.time}`}</p>
+                          // Add filtered redemptions
+                          if (historyFilter === 'all' || historyFilter === 'redemptions') {
+                            redemptionHistory
+                              .filter(record =>
+                                record.item.toLowerCase().includes(historySearch.toLowerCase()) ||
+                                record.code.toLowerCase().includes(historySearch.toLowerCase())
+                              )
+                              .forEach(record => {
+                                allRecords.push({
+                                  ...record,
+                                  sortKey: record.date === 'Today' ? new Date().getTime() : new Date(record.date).getTime(),
+                                  type: 'redemption'
+                                });
+                              });
+                          }
+
+                          // Add filtered gifts
+                          if (historyFilter === 'all' || historyFilter === 'gifts') {
+                            allActivities
+                              .filter(a => a.type === 'gift' && (
+                                a.title.toLowerCase().includes(historySearch.toLowerCase()) ||
+                                a.emoji.includes(historySearch)
+                              ))
+                              .forEach(gift => {
+                                allRecords.push({
+                                  ...gift,
+                                  sortKey: gift.date === 'Today' ? new Date().getTime() : new Date(gift.date).getTime(),
+                                  type: 'gift'
+                                });
+                              });
+                          }
+
+                          // Sort by date - latest first
+                          allRecords.sort((a, b) => b.sortKey - a.sortKey);
+
+                          return allRecords.map((record) => (
+                            record.type === 'redemption' ? (
+                              <div key={`redemption-${record.id}`} className="p-3 flex justify-between hover:bg-purple-50 transition bg-gradient-to-r from-transparent to-purple-50">
+                                <div>
+                                  <p className="font-bold text-gray-900">{record.emoji} {record.item}</p>
+                                  <p className="text-gray-500 text-xs">{record.date}{record.time && ` at ${record.time}`} • Code: {record.code}</p>
+                                </div>
+                                <p className="font-bold text-orange-600 text-sm">{record.amount} EP</p>
                               </div>
-                              <p className="font-bold text-pink-600 text-sm">{gift.amount}</p>
-                            </div>
-                          ))}
+                            ) : (
+                              <div key={`gift-${record.id}`} className="p-3 flex justify-between hover:bg-pink-50 transition bg-gradient-to-r from-transparent to-pink-50">
+                                <div>
+                                  <p className="font-bold text-gray-900">{record.emoji} {record.title}</p>
+                                  <p className="text-gray-500 text-xs">{record.date}{record.time && ` at ${record.time}`}</p>
+                                </div>
+                                <p className="font-bold text-pink-600 text-sm">{record.amount}</p>
+                              </div>
+                            )
+                          ));
+                        })()}
                       </>
                     ) : (
                       <div className="p-4 text-center text-gray-500">
