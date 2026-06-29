@@ -469,4 +469,62 @@ Keep messages warm, encouraging, and specific to their activity. Use Singaporean
   }
 });
 
+// GET /api/notifications/preferences - Get user's notification preferences
+router.get('/preferences', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    const result = await db.query(
+      'SELECT notification_preferences FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const prefs = result.rows[0].notification_preferences || {
+      offerConfirmed: true,
+      errandReopened: true,
+      paymentReleased: true,
+      newOffer: true,
+      messageReceived: true,
+      errandDone: true,
+      profileViewed: false,
+      referralActivity: false,
+      platformUpdates: false,
+    };
+
+    res.json({
+      success: true,
+      data: prefs,
+    });
+  } catch (error) {
+    console.error('Get preferences error:', error);
+    res.status(500).json({ error: 'Failed to fetch preferences' });
+  }
+});
+
+// POST /api/notifications/preferences - Save user's notification preferences
+router.post('/preferences', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const prefs = req.body;
+
+    await db.query(
+      'UPDATE users SET notification_preferences = $1 WHERE id = $2',
+      [JSON.stringify(prefs), userId]
+    );
+
+    res.json({
+      success: true,
+      data: prefs,
+      message: 'Preferences saved successfully',
+    });
+  } catch (error) {
+    console.error('Save preferences error:', error);
+    res.status(500).json({ error: 'Failed to save preferences' });
+  }
+});
+
 export default router;

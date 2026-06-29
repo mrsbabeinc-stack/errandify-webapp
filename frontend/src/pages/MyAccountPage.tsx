@@ -168,10 +168,42 @@ export default function MyAccountPage() {
     }
   });
 
-  const toggleNotificationPref = (key: keyof typeof notificationPrefs) => {
+  // Load notification preferences from backend on mount
+  useEffect(() => {
+    const loadNotificationPrefs = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/preferences`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (response.data.success) {
+          setNotificationPrefs(response.data.data);
+          localStorage.setItem('errandify_notification_prefs', JSON.stringify(response.data.data));
+        }
+      } catch (error) {
+        console.warn('Failed to load notification preferences:', error);
+      }
+    };
+    loadNotificationPrefs();
+  }, []);
+
+  const toggleNotificationPref = async (key: keyof typeof notificationPrefs) => {
     const updated = { ...notificationPrefs, [key]: !notificationPrefs[key] };
     setNotificationPrefs(updated);
     localStorage.setItem('errandify_notification_prefs', JSON.stringify(updated));
+
+    // Save to backend
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/preferences`,
+        updated,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (error) {
+      console.error('Failed to save notification preferences:', error);
+    }
   };
 
   const ALL_16_CATEGORIES = [
