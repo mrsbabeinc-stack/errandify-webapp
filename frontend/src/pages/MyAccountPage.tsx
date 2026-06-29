@@ -138,6 +138,42 @@ export default function MyAccountPage() {
   const categoriesCanHelpCount = selectedCategoriesHelp.length;
   const categoriesNeedHelpCount = selectedCategoriesNeed.length;
 
+  // Notification preferences state
+  const [notificationPrefs, setNotificationPrefs] = useState(() => {
+    try {
+      const saved = localStorage.getItem('errandify_notification_prefs');
+      return saved ? JSON.parse(saved) : {
+        offerConfirmed: true,
+        errandReopened: true,
+        paymentReleased: true,
+        newOffer: true,
+        messageReceived: true,
+        errandDone: true,
+        profileViewed: false,
+        referralActivity: false,
+        platformUpdates: false,
+      };
+    } catch {
+      return {
+        offerConfirmed: true,
+        errandReopened: true,
+        paymentReleased: true,
+        newOffer: true,
+        messageReceived: true,
+        errandDone: true,
+        profileViewed: false,
+        referralActivity: false,
+        platformUpdates: false,
+      };
+    }
+  });
+
+  const toggleNotificationPref = (key: keyof typeof notificationPrefs) => {
+    const updated = { ...notificationPrefs, [key]: !notificationPrefs[key] };
+    setNotificationPrefs(updated);
+    localStorage.setItem('errandify_notification_prefs', JSON.stringify(updated));
+  };
+
   const ALL_16_CATEGORIES = [
     { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠' },
     { id: 'cleaning-household', name: 'Cleaning & Laundry', icon: '🧹' },
@@ -2802,15 +2838,42 @@ export default function MyAccountPage() {
                 <div className="divide-y divide-gray-100 p-2 space-y-2">
                   <div className="flex justify-between items-center text-xs">
                     <span>New Offer</span>
-                    <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs">Toggle</span>
+                    <button
+                      onClick={() => toggleNotificationPref('newOffer')}
+                      className={`px-3 py-1 rounded text-xs font-bold transition ${
+                        notificationPrefs.newOffer
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                      }`}
+                    >
+                      {notificationPrefs.newOffer ? 'ON' : 'OFF'}
+                    </button>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span>Message Received</span>
-                    <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs">Toggle</span>
+                    <button
+                      onClick={() => toggleNotificationPref('messageReceived')}
+                      className={`px-3 py-1 rounded text-xs font-bold transition ${
+                        notificationPrefs.messageReceived
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                      }`}
+                    >
+                      {notificationPrefs.messageReceived ? 'ON' : 'OFF'}
+                    </button>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span>Errand Done</span>
-                    <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs">Toggle</span>
+                    <button
+                      onClick={() => toggleNotificationPref('errandDone')}
+                      className={`px-3 py-1 rounded text-xs font-bold transition ${
+                        notificationPrefs.errandDone
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                      }`}
+                    >
+                      {notificationPrefs.errandDone ? 'ON' : 'OFF'}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -2823,17 +2886,49 @@ export default function MyAccountPage() {
                 <div className="divide-y divide-gray-100 p-2 space-y-2">
                   <div className="flex justify-between items-center text-xs">
                     <span>Profile Viewed</span>
-                    <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs">Toggle</span>
+                    <button
+                      onClick={() => toggleNotificationPref('profileViewed')}
+                      className={`px-3 py-1 rounded text-xs font-bold transition ${
+                        notificationPrefs.profileViewed
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                      }`}
+                    >
+                      {notificationPrefs.profileViewed ? 'ON' : 'OFF'}
+                    </button>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span>Referral Activity</span>
-                    <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs">Toggle</span>
+                    <button
+                      onClick={() => toggleNotificationPref('referralActivity')}
+                      className={`px-3 py-1 rounded text-xs font-bold transition ${
+                        notificationPrefs.referralActivity
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                      }`}
+                    >
+                      {notificationPrefs.referralActivity ? 'ON' : 'OFF'}
+                    </button>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span>Platform Updates</span>
-                    <span className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-xs">Toggle</span>
+                    <button
+                      onClick={() => toggleNotificationPref('platformUpdates')}
+                      className={`px-3 py-1 rounded text-xs font-bold transition ${
+                        notificationPrefs.platformUpdates
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                      }`}
+                    >
+                      {notificationPrefs.platformUpdates ? 'ON' : 'OFF'}
+                    </button>
                   </div>
                 </div>
+              </div>
+
+              {/* Success Message */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                <p className="text-xs text-green-700 font-semibold">✅ Preferences saved automatically</p>
               </div>
             </div>
           </div>
