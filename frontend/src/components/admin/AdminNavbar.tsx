@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import RoleToggle from './RoleToggle';
 
 interface AdminNavbarProps {
   onMenuToggle?: () => void;
@@ -10,17 +8,24 @@ interface AdminNavbarProps {
 
 export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOpen = true }) => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
+  // Get user from localStorage
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const userName = user?.display_name || user?.name || 'Admin';
+
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('current_role');
+    navigate('/login');
   };
 
   const handleBackToUser = () => {
     localStorage.setItem('current_role', 'asker');
-    navigate('/myerrand');
+    navigate('/home');
   };
 
   return (
@@ -48,15 +53,13 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
         </div>
 
         <div className="navbar-right">
-          <RoleToggle />
-
           <div className="user-menu">
             <button
               className="user-button"
               onClick={() => setShowUserMenu(!showUserMenu)}
             >
               <span className="user-avatar">👤</span>
-              <span className="user-name">{user?.display_name || 'Admin'}</span>
+              <span className="user-name">{userName}</span>
               <span className="dropdown-arrow">▼</span>
             </button>
 
