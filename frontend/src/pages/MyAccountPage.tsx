@@ -378,6 +378,21 @@ export default function MyAccountPage() {
   }, [profileData?.name, profileImage]);
 
   useEffect(() => {
+    // Listen for profile update event
+    const handleProfileDataUpdated = async () => {
+      const token = localStorage.getItem('token');
+      try {
+        const profileRes = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setProfileData(profileRes.data.data);
+        console.log('[MyAccountPage] Profile data refreshed:', profileRes.data.data);
+      } catch (error) {
+        console.error('[MyAccountPage] Failed to refresh profile data:', error);
+      }
+    };
+
     // Listen for ratings update event from ErrandDetailPage
     const handleRatingsUpdated = async () => {
       const token = localStorage.getItem('token');
@@ -394,8 +409,12 @@ export default function MyAccountPage() {
       }
     };
 
+    window.addEventListener('profileDataUpdated', handleProfileDataUpdated);
     window.addEventListener('ratingsUpdated', handleRatingsUpdated);
-    return () => window.removeEventListener('ratingsUpdated', handleRatingsUpdated);
+    return () => {
+      window.removeEventListener('profileDataUpdated', handleProfileDataUpdated);
+      window.removeEventListener('ratingsUpdated', handleRatingsUpdated);
+    };
   }, []);
 
   useEffect(() => {

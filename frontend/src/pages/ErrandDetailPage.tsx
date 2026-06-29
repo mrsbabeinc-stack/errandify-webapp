@@ -1133,6 +1133,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
                                   // Trigger refresh for MyAccountPage (if user visits it later)
                                   window.dispatchEvent(new Event('ratingsUpdated'));
+                                  window.dispatchEvent(new Event('profileDataUpdated'));
 
                                   // Auto-hide celebratory message and navigate after 3 seconds
                                   setTimeout(() => {
