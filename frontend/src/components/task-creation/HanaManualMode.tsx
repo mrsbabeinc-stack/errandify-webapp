@@ -23,7 +23,6 @@ export default function HanaManualMode({
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [descriptionTips, setDescriptionTips] = useState<string>('');
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const locationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const categoryMap: Record<string, string> = {
     'eldercare': '👴 Caregiving & Elder Companionship',
@@ -129,42 +128,6 @@ export default function HanaManualMode({
     setDescriptionTips(getTaskSpecificTips(taskData.title, taskData.category));
   }, [taskData.title, taskData.category]);
 
-  // Extract area and postal code from location
-  useEffect(() => {
-    if (!taskData.location.trim()) {
-      return;
-    }
-
-    if (locationTimer.current) {
-      clearTimeout(locationTimer.current);
-    }
-
-    locationTimer.current = setTimeout(async () => {
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-        const response = await axios.post(
-          `${apiUrl}/api/ai/extract-task-info`,
-          { input: taskData.location }
-        );
-
-        if (response.data.data?.area || response.data.data?.fullAddress) {
-          onTaskUpdate({
-            area: response.data.data?.area,
-            fullAddress: response.data.data?.fullAddress,
-            postalCode: response.data.data?.postalCode,
-          });
-        }
-      } catch (err) {
-        console.log('Could not extract location details');
-      }
-    }, 800);
-
-    return () => {
-      if (locationTimer.current) {
-        clearTimeout(locationTimer.current);
-      }
-    };
-  }, [taskData.location]);
 
   const handleSuggestionClick = (suggestion: string) => {
     onTaskUpdate({ title: suggestion });
@@ -345,17 +308,6 @@ export default function HanaManualMode({
             placeholder="e.g., Tanjong Pagar, 150101"
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange"
           />
-          {taskData.area && (
-            <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-xs text-blue-700 font-semibold">Area: {taskData.area}</p>
-              {taskData.fullAddress && (
-                <p className="text-xs text-blue-600 mt-1">📍 {taskData.fullAddress}</p>
-              )}
-              {taskData.postalCode && (
-                <p className="text-xs text-blue-600">Postal: {taskData.postalCode}</p>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Date & Time */}
