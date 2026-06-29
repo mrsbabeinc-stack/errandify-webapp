@@ -3547,35 +3547,43 @@ export default function MyAccountPage() {
                 onClick={() => {
                   console.log('🎁 Send Gift button clicked');
                   const pointsToSend = parseInt(giftForm.points || '0', 10);
-                  console.log('Points to send:', pointsToSend);
-                  console.log('Recipients:', giftForm.recipients);
-                  console.log('User balance:', userBalance);
+                  console.log('🔍 Points to send:', pointsToSend);
+                  console.log('🔍 Recipients:', giftForm.recipients);
+                  console.log('🔍 Recipients count:', giftForm.recipients.length);
+                  console.log('🔍 User balance:', userBalance);
 
                   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
                   const currentUserId = currentUser?.id?.toString();
                   const sendingToSelf = giftForm.recipients.some((recipientId) => recipientId === currentUserId);
 
+                  let errorMsg = '';
+
                   if (!giftForm.points || pointsToSend <= 0) {
-                    console.warn('❌ Invalid amount');
-                    setModalMessage('❌ Please enter a valid amount of EP to send\n\nHint: How many points do you want to give each friend?');
-                    setShowErrorModal(true);
+                    errorMsg = '❌ Please enter amount\n\nHow many EP per friend?';
+                    console.warn('Invalid amount:', giftForm.points);
                   } else if (giftForm.recipients.length === 0) {
-                    console.warn('❌ No recipients selected');
-                    setModalMessage('❌ Please select at least one recipient');
-                    setShowErrorModal(true);
+                    errorMsg = '❌ Select at least 1 friend';
+                    console.warn('No recipients selected');
                   } else if (sendingToSelf) {
-                    console.warn('❌ Sending to self');
-                    setModalMessage('❌ You cannot send points to yourself!');
-                    setShowErrorModal(true);
+                    errorMsg = '❌ Cannot send to yourself!';
+                    console.warn('Trying to send to self');
                   } else if (pointsToSend * giftForm.recipients.length > userBalance) {
-                    console.warn('❌ Not enough points');
-                    setModalMessage('❌ Not enough points for all recipients');
+                    const needed = pointsToSend * giftForm.recipients.length;
+                    const current = userBalance;
+                    errorMsg = `❌ Not enough EP!\n\nNeed: ${needed}\nHave: ${current}`;
+                    console.warn('Not enough points:', { needed, current });
+                  }
+
+                  if (errorMsg) {
+                    console.warn('❌ Validation failed:', errorMsg);
+                    setModalMessage(errorMsg);
                     setShowErrorModal(true);
                   } else {
-                    console.log('✅ All validations passed, showing confirmation');
+                    console.log('✅ All validations passed!');
                     // Show confirmation modal
                     const recipientNames = giftForm.recipients
                       .map((id) => availableUsers.find((u) => u.id === id)?.name)
+                      .filter(Boolean)
                       .join(', ');
                     const totalPointsDeducted = pointsToSend * giftForm.recipients.length;
 
@@ -3590,14 +3598,13 @@ export default function MyAccountPage() {
                       message: selectedMessage,
                       giftDate: giftForm.giftDate,
                     };
-                    console.log('📋 Confirmation data:', confirmationData);
-                    console.log('💌 Using message:', selectedMessage);
+                    console.log('✅ Confirmation ready:', confirmationData);
                     setGiftConfirmationData(confirmationData);
                     setShowGiftConfirmation(true);
-                    console.log('✅ Confirmation modal should show now');
+                    console.log('✅ Confirmation modal opened!');
                   }
                 }}
-                className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white py-2.5 rounded-lg font-bold text-sm hover:shadow-lg transition"
+                className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white py-3 rounded-lg font-bold text-base hover:shadow-lg transition active:scale-95"
               >
                 💝 Send Gift
               </button>
