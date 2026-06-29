@@ -145,42 +145,16 @@ export default function CreateErrandPage() {
           if (prefilledData.postalCode) {
             setPostalCode(prefilledData.postalCode);
             console.log('[CreateErrand] Postal code:', prefilledData.postalCode);
+          }
 
-            // Look up real area from OneMap for this postal code
-            fetch(`https://www.onemap.sg/api/common/searchaddress?searchval=${prefilledData.postalCode}&returnGeom=Y&getAddrDetails=Y`)
-              .then(res => res.json())
-              .then(data => {
-                if (data.results && data.results.length > 0) {
-                  const result = data.results[0];
-                  const address = result.ADDRESS || '';
-                  let extractedArea = extractAreaFromAddress(address);
-
-                  // Apply corrections for postal codes where OneMap data is inaccurate
-                  if (postalCodeCorrections[prefilledData.postalCode]) {
-                    extractedArea = postalCodeCorrections[prefilledData.postalCode];
-                  }
-
-                  setArea(extractedArea);
-                  setFormData((prev) => ({
-                    ...prev,
-                    location: extractedArea,
-                  }));
-                  if (address) {
-                    setFullAddress(address);
-                  }
-                  console.log('[CreateErrand] Updated area from OneMap:', extractedArea);
-                }
-              })
-              .catch(err => {
-                console.warn('OneMap lookup failed for prefilled postal code:', err);
-                // Fallback: use prefilled area if lookup fails
-                if (prefilledData.area) {
-                  setArea(prefilledData.area);
-                }
-              });
-          } else if (prefilledData.area) {
+          // Use prefilled area directly (already correctly extracted by Hana/backend)
+          if (prefilledData.area) {
             setArea(prefilledData.area);
-            console.log('[CreateErrand] Area:', prefilledData.area);
+            setFormData((prev) => ({
+              ...prev,
+              location: prefilledData.area,
+            }));
+            console.log('[CreateErrand] Area set from prefilled data:', prefilledData.area);
           }
 
           if (prefilledData.fullAddress) {
