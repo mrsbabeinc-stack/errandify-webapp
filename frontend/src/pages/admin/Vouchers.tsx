@@ -368,58 +368,70 @@ export const VouchersPage: React.FC = () => {
           </div>
         )}
 
-        {/* Voucher Details View */}
+        {/* Voucher Details View - Professional Compact Card */}
         {selectedVoucher && (
           <div className="details-view">
             <button className="btn-close" onClick={() => setSelectedVoucher(null)}>✕ Close</button>
-            <div className="details-grid">
-              <div className="details-image">
-                <img src={selectedVoucher.image} alt={selectedVoucher.name} />
+
+            <div className="voucher-detail-card">
+              {/* Left: Image */}
+              <div className="detail-image-section">
+                <img src={selectedVoucher.image} alt={selectedVoucher.name} className="detail-image" />
               </div>
-              <div className="details-content">
-                <h2>{selectedVoucher.name}</h2>
-                <div className="details-section">
-                  <h3>Voucher Overview</h3>
-                  <div className="detail-row"><strong>Voucher Name:</strong> {selectedVoucher.name}</div>
-                  <div className="detail-row"><strong>Category:</strong> {selectedVoucher.category}</div>
-                  <div className="detail-row"><strong>Created Date:</strong> {selectedVoucher.createdDate}</div>
+
+              {/* Right: Info */}
+              <div className="detail-info-section">
+                {/* Header */}
+                <div className="detail-header">
+                  <div>
+                    <h2>{selectedVoucher.name}</h2>
+                    <p className="detail-code">Code: <code>{selectedVoucher.code}</code></p>
+                  </div>
+                  <div className="detail-discount">
+                    <div className="discount-big">{selectedVoucher.discount}</div>
+                  </div>
                 </div>
 
-                <div className="details-section">
-                  <h3>Settings</h3>
-                  <div className="detail-row"><strong>Points Required:</strong> {selectedVoucher.pointsRequired}</div>
-                  <div className="detail-row"><strong>Quantity Available:</strong> {selectedVoucher.quantityAvailable || 'Unlimited'}</div>
-                  <div className="detail-row"><strong>Quantity Redeemed:</strong> {selectedVoucher.used}</div>
+                {/* Description */}
+                <p className="detail-description">{selectedVoucher.description}</p>
+
+                {/* Key Info Grid */}
+                <div className="detail-info-grid">
+                  <div className="info-item">
+                    <div className="info-label">Category</div>
+                    <div className="info-value">{selectedVoucher.category}</div>
+                  </div>
+                  <div className="info-item">
+                    <div className="info-label">Points</div>
+                    <div className="info-value">{selectedVoucher.pointsRequired}</div>
+                  </div>
+                  <div className="info-item">
+                    <div className="info-label">Created</div>
+                    <div className="info-value">{selectedVoucher.createdDate}</div>
+                  </div>
+                  <div className="info-item">
+                    <div className="info-label">Redeemed</div>
+                    <div className="info-value">{selectedVoucher.used}</div>
+                  </div>
                 </div>
 
-                <div className="details-section">
-                  <h3>Description</h3>
-                  <p>{selectedVoucher.description}</p>
-                </div>
-
-                <div className="details-section">
-                  <h3>Active Redemptions ({selectedVoucher.redemptions?.length || 0})</h3>
-                  {selectedVoucher.redemptions && selectedVoucher.redemptions.length > 0 ? (
-                    <div className="redemptions-table">
-                      <div className="table-header">
-                        <div className="col-username">Username</div>
-                        <div className="col-date">Redeemed Date</div>
-                        <div className="col-points">Points</div>
-                        <div className="col-status">Status</div>
-                      </div>
-                      {selectedVoucher.redemptions.map((r: any) => (
-                        <div key={r.id} className="table-row">
-                          <div className="col-username"><strong>{r.username}</strong></div>
-                          <div className="col-date">{r.date}</div>
-                          <div className="col-points">{r.pointsSpent}</div>
-                          <div className="col-status"><span className="badge-redeemed">✓ {r.status}</span></div>
+                {/* Redemption History - Compact */}
+                {selectedVoucher.redemptions && selectedVoucher.redemptions.length > 0 && (
+                  <div className="redemption-summary">
+                    <div className="summary-title">Recently Redeemed</div>
+                    <div className="redemption-list">
+                      {selectedVoucher.redemptions.slice(0, 3).map((r: any) => (
+                        <div key={r.id} className="redemption-item">
+                          <div className="redemption-user">{r.username}</div>
+                          <div className="redemption-time">{r.date}</div>
                         </div>
                       ))}
+                      {selectedVoucher.redemptions.length > 3 && (
+                        <div className="redemption-more">+{selectedVoucher.redemptions.length - 3} more</div>
+                      )}
                     </div>
-                  ) : (
-                    <p style={{ textAlign: 'center', color: '#999' }}>No redemptions yet</p>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -528,29 +540,47 @@ export const VouchersPage: React.FC = () => {
         .btn-submit { padding: 12px 20px; background: #ff6b35; color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; }
         .btn-submit:hover { background: #ff5722; }
 
-        .details-view { background: white; border: 1px solid #ffb88c; border-radius: 8px; padding: 20px; position: relative; }
-        .btn-close { position: absolute; top: 16px; right: 16px; padding: 8px 12px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
+        .details-view { background: white; border: 1px solid #ffb88c; border-radius: 8px; padding: 16px; position: relative; }
+        .btn-close { position: absolute; top: 12px; right: 12px; padding: 6px 10px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .btn-close:hover { background: #ff6b35; color: white; }
 
-        .details-grid { display: grid; grid-template-columns: 300px 1fr; gap: 30px; margin-top: 20px; }
-        .details-image { display: flex; justify-content: center; }
-        .details-image img { width: 100%; max-width: 300px; border-radius: 8px; }
+        .voucher-detail-card { display: grid; grid-template-columns: 200px 1fr; gap: 20px; align-items: start; }
 
-        .details-content h2 { font-size: 24px; font-weight: 700; margin: 0 0 16px 0; color: #ff6b35; }
-        .details-section { margin-bottom: 20px; }
-        .details-section h3 { font-size: 13px; font-weight: 700; color: #333; margin: 0 0 12px 0; }
-        .detail-row { font-size: 13px; color: #666; margin-bottom: 8px; }
-        .detail-row strong { color: #333; display: block; margin-bottom: 2px; }
-        .details-content p { margin: 0; font-size: 13px; color: #666; line-height: 1.6; }
+        .detail-image-section { }
+        .detail-image { width: 200px; height: auto; aspect-ratio: 3/2; object-fit: contain; border-radius: 6px; background: #f9f9f9; padding: 8px; display: block; }
 
-        .redemptions-table { border: 1px solid #ffb88c; border-radius: 6px; overflow: hidden; }
-        .table-header { display: grid; grid-template-columns: 1fr 1.2fr 1fr 1fr; background: #fff5f0; border-bottom: 2px solid #ffb88c; padding: 8px; font-size: 11px; font-weight: 700; color: #ff6b35; }
-        .table-row { display: grid; grid-template-columns: 1fr 1.2fr 1fr 1fr; border-bottom: 1px solid #ffe6d9; padding: 10px 8px; font-size: 12px; align-items: center; }
-        .table-row:hover { background: #fff9f5; }
-        .col-username { font-weight: 600; }
-        .col-date { color: #888; font-size: 11px; }
-        .col-points { font-weight: 600; color: #27b55d; }
-        .badge-redeemed { display: inline-block; background: #e6f9f0; color: #27b55d; padding: 2px 6px; border-radius: 3px; font-size: 10px; }
+        .detail-info-section { display: flex; flex-direction: column; gap: 12px; }
+
+        .detail-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+        .detail-header h2 { font-size: 20px; font-weight: 700; margin: 0; color: #333; }
+        .detail-code { margin: 4px 0 0 0; font-size: 12px; color: #888; }
+        .detail-code code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace; color: #ff6b35; font-weight: 600; }
+
+        .detail-discount { text-align: center; }
+        .discount-big { font-size: 32px; font-weight: 800; color: #ff6b35; line-height: 1; }
+
+        .detail-description { margin: 0; font-size: 13px; color: #666; line-height: 1.5; }
+
+        .detail-info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .info-item { background: #fff9f5; border-radius: 6px; padding: 10px; text-align: center; border: 1px solid #ffe6d9; }
+        .info-label { font-size: 10px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .info-value { font-size: 14px; font-weight: 700; color: #ff6b35; }
+
+        .redemption-summary { background: #fff9f5; border-radius: 6px; padding: 10px; border: 1px solid #ffe6d9; }
+        .summary-title { font-size: 11px; font-weight: 700; color: #ff6b35; text-transform: uppercase; margin-bottom: 8px; }
+
+        .redemption-list { display: flex; flex-direction: column; gap: 6px; }
+        .redemption-item { display: grid; grid-template-columns: 1fr auto; gap: 8px; font-size: 12px; padding: 6px 0; border-bottom: 1px solid #ffe6d9; align-items: center; }
+        .redemption-item:last-child { border-bottom: none; }
+        .redemption-user { font-weight: 600; color: #333; }
+        .redemption-time { font-size: 11px; color: #888; white-space: nowrap; }
+        .redemption-more { font-size: 11px; color: #ff6b35; font-weight: 600; text-align: center; padding: 6px 0; }
+
+        @media (max-width: 768px) {
+          .voucher-detail-card { grid-template-columns: 1fr; }
+          .detail-image { width: 100%; }
+          .detail-info-grid { grid-template-columns: repeat(2, 1fr); }
+        }
 
         .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
         .stat-card { background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); color: white; border-radius: 8px; padding: 16px; text-align: center; }
