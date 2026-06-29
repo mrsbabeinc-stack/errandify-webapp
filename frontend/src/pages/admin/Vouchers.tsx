@@ -465,21 +465,18 @@ export const VouchersPage: React.FC = () => {
                 <div className="voucher-grid">
                   {filteredVouchers.map((v) => (
                     <div key={v.id} className="voucher-card-display" onClick={() => setSelectedVoucher(v)}>
-                      <div className="voucher-image-container">
-                        <img src={v.image} alt={v.name} className="voucher-image" />
-                        <div className="discount-badge">
-                          <div className="discount-value">{v.discount}</div>
-                          <div className="discount-label">SAVE</div>
+                      <div className="voucher-card-header">
+                        <div className="discount-circle">{v.discount}</div>
+                        <div>
+                          <h3>{v.name}</h3>
+                          <p className="voucher-code">{v.code}</p>
                         </div>
                       </div>
-                      <div className="voucher-info">
-                        <h3>{v.name}</h3>
-                        <p>{v.description}</p>
-                        <div className="meta">
-                          <span className="category">{v.category}</span>
-                          <span className="badge-active">active</span>
-                        </div>
-                        <small>{v.used} redeemed</small>
+                      <p className="voucher-desc">{v.description}</p>
+                      <div className="voucher-footer">
+                        <span className="category">{v.category}</span>
+                        <span className="badge-active">active</span>
+                        <span className="redeemed-count">{v.used} redeemed</span>
                       </div>
                     </div>
                   ))}
@@ -610,22 +607,21 @@ export const VouchersPage: React.FC = () => {
         .vouchers-section h2 { font-size: 14px; font-weight: 700; margin: 0; color: #333; }
 
         .voucher-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-        .voucher-card-display { background: white; border: 1px solid #ffb88c; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
-        .voucher-card-display:hover { border-color: #ff6b35; box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15); transform: translateY(-2px); }
+        .voucher-card-display { background: linear-gradient(135deg, #fff9f5 0%, #fffbf7 100%); border: 1px solid #ffb88c; border-radius: 8px; cursor: pointer; transition: all 0.2s; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        .voucher-card-display:hover { border-color: #ff6b35; box-shadow: 0 4px 16px rgba(255, 107, 53, 0.2); transform: translateY(-2px); }
 
-        .voucher-image-container { position: relative; overflow: hidden; background: #f5f5f5; aspect-ratio: 3/2; }
-        .voucher-image { width: 100%; height: 100%; object-fit: contain; display: block; padding: 8px; background: white; }
+        .voucher-card-header { display: flex; gap: 12px; align-items: flex-start; }
+        .discount-circle { background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); color: white; border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; flex-shrink: 0; box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2); }
 
-        .discount-badge { position: absolute; top: 6px; right: 6px; background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); color: white; border-radius: 50%; width: 54px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 3px 10px rgba(0,0,0,0.25); border: 3px solid white; z-index: 10; }
-        .discount-value { font-size: 14px; font-weight: 800; line-height: 1; }
-        .discount-label { font-size: 8px; font-weight: 700; text-transform: uppercase; margin-top: 1px; letter-spacing: 0.5px; }
-        .voucher-info { padding: 12px; }
-        .voucher-info h3 { margin: 0; font-size: 13px; font-weight: 700; color: #333; }
-        .voucher-info p { margin: 4px 0 0 0; font-size: 11px; color: #666; line-height: 1.4; }
-        .voucher-info .meta { display: flex; gap: 8px; font-size: 11px; margin: 8px 0; }
-        .category { background: #fff5f0; color: #ff6b35; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
-        .badge-active { background: #e6f9f0; color: #27b55d; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
-        .voucher-info small { color: #888; font-size: 10px; }
+        .voucher-card-header h3 { margin: 0; font-size: 14px; font-weight: 700; color: #333; }
+        .voucher-code { margin: 4px 0 0 0; font-size: 11px; color: #ff6b35; font-family: monospace; font-weight: 600; }
+
+        .voucher-desc { margin: 0; font-size: 12px; color: #666; line-height: 1.5; }
+
+        .voucher-footer { display: flex; gap: 8px; font-size: 11px; flex-wrap: wrap; align-items: center; }
+        .category { background: white; color: #ff6b35; padding: 3px 8px; border-radius: 3px; font-weight: 600; border: 1px solid #ffb88c; }
+        .badge-active { background: white; color: #27b55d; padding: 3px 8px; border-radius: 3px; font-weight: 600; border: 1px solid #d4f0e9; }
+        .redeemed-count { color: #888; margin-left: auto; }
 
         .no-results { text-align: center; padding: 40px; color: #888; }
 
