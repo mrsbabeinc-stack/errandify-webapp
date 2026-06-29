@@ -9,30 +9,10 @@ export default function RoleToggle({ currentRole, onRoleChange }: RoleToggleProp
   const navigate = useNavigate();
   const isAdmin = currentRole === 'admin' || currentRole === 'support_l2' || currentRole === 'support_l3';
 
-  const handleAdminClick = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/auth/switch-role', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ role: 'admin' })
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        localStorage.setItem('current_role', 'admin');
-        // Instantly navigate to admin dashboard - no dropdown needed!
-        navigate('/admin/dashboard');
-      } else {
-        alert(data.error || 'Failed to access admin mode');
-      }
-    } catch (error) {
-      console.error('Admin mode error:', error);
-      alert('Failed to access admin mode');
-    }
+  const handleAdminClick = () => {
+    // Admin user is already logged in - just navigate directly to admin dashboard
+    localStorage.setItem('current_role', 'admin');
+    navigate('/admin/dashboard');
   };
 
   return (
