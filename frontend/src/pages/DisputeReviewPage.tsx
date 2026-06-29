@@ -4,6 +4,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../services/api';
+import PhotoUploadWidget from '../components/PhotoUploadWidget';
+import type { PhotoMetadata } from '../utils/photoUpload';
 import './DisputeReviewPage.css';
 
 interface DisputeDetails {
@@ -34,6 +36,7 @@ const DisputeReviewPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [decision, setDecision] = useState<Decision>(null);
   const [reasoning, setReasoning] = useState('');
+  const [photos, setPhotos] = useState<PhotoMetadata[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -62,9 +65,14 @@ const DisputeReviewPage: React.FC = () => {
 
     try {
       setSubmitting(true);
+
+      // Convert photos to data URLs for submission
+      const photoDataUrls = photos.map((p) => p.dataUrl);
+
       await api.post(`/disputes/${disputeId}/resolve-l2`, {
         decision,
         reasoning,
+        evidencePhotos: photoDataUrls,
       });
 
       // Show success and redirect
@@ -231,6 +239,14 @@ const DisputeReviewPage: React.FC = () => {
               />
               <div className="char-count">{reasoning.length} / 500</div>
             </div>
+
+            {/* Evidence Photos */}
+            <PhotoUploadWidget
+              onPhotoAdded={() => {}}
+              onPhotosChange={setPhotos}
+              maxPhotos={3}
+              context="dispute_evidence"
+            />
 
             {/* Error Message */}
             {error && <div className="error-message">{error}</div>}

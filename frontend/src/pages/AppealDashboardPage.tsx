@@ -3,6 +3,8 @@
 
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import PhotoUploadWidget from '../components/PhotoUploadWidget';
+import type { PhotoMetadata } from '../utils/photoUpload';
 import './AppealDashboardPage.css';
 
 interface Appeal {
@@ -29,6 +31,7 @@ const AppealDashboardPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [decision, setDecision] = useState<Decision>(null);
   const [reasoning, setReasoning] = useState('');
+  const [photos, setPhotos] = useState<PhotoMetadata[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -60,10 +63,15 @@ const AppealDashboardPage: React.FC = () => {
 
     try {
       setSubmitting(true);
+
+      // Convert photos to data URLs for submission
+      const photoDataUrls = photos.map((p) => p.dataUrl);
+
       await api.post(`/disputes/${selectedAppeal.dispute_id}/resolve-appeal`, {
         appealId: selectedAppeal.appeal_id,
         decision,
         reasoning,
+        evidencePhotos: photoDataUrls,
       });
 
       // Update appeals list
@@ -71,6 +79,7 @@ const AppealDashboardPage: React.FC = () => {
       setSelectedAppeal(appeals.find((a) => a.appeal_id !== selectedAppeal.appeal_id) || null);
       setDecision(null);
       setReasoning('');
+      setPhotos([]);
       alert('Appeal resolved successfully');
     } catch (err: any) {
       console.error('Failed to resolve appeal:', err);
@@ -223,6 +232,14 @@ const AppealDashboardPage: React.FC = () => {
                 />
                 <div className="char-count">{reasoning.length} / 500</div>
               </div>
+
+              {/* Evidence Photos */}
+              <PhotoUploadWidget
+                onPhotoAdded={() => {}}
+                onPhotosChange={setPhotos}
+                maxPhotos={3}
+                context="dispute_evidence"
+              />
 
               {error && <div className="error-message">{error}</div>}
 
