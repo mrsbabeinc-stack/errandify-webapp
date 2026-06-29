@@ -4,8 +4,8 @@ import AdminLayout from '../../components/admin/AdminLayout';
 export const PointEarningRulesPage: React.FC = () => {
   const [selectedRule, setSelectedRule] = useState<any>(null);
   const [editMode, setEditMode] = useState(false);
-
-  const [rules] = useState([
+  const [editedRule, setEditedRule] = useState<any>(null);
+  const [rules, setRules] = useState([
     {
       id: 1,
       name: 'High Rating Bonus',
@@ -99,6 +99,37 @@ export const PointEarningRulesPage: React.FC = () => {
     }
   ]);
 
+  const handleEditRule = (rule: any) => {
+    setEditedRule(JSON.parse(JSON.stringify(rule)));
+    setEditMode(true);
+  };
+
+  const handleUpdatePoints = (field: string, value: string) => {
+    if (!editedRule) return;
+
+    setEditedRule({
+      ...editedRule,
+      pointsAwarded: {
+        ...editedRule.pointsAwarded,
+        [field]: value
+      }
+    });
+  };
+
+  const handleSaveRule = () => {
+    if (!editedRule) return;
+
+    setRules(rules.map(r => r.id === editedRule.id ? editedRule : r));
+    setSelectedRule(editedRule);
+    setEditMode(false);
+    alert('✅ Rule updated successfully!');
+  };
+
+  const handleCancelEdit = () => {
+    setEditMode(false);
+    setEditedRule(null);
+  };
+
   const renderRuleDetails = (rule: any) => {
     return (
       <div className="rule-detail-modal">
@@ -122,13 +153,31 @@ export const PointEarningRulesPage: React.FC = () => {
             </div>
 
             <div className="detail-section">
-              <h3>Points Awarded</h3>
-              {rule.pointsAwarded && (
+              <div className="section-header">
+                <h3>Points Awarded</h3>
+                {!editMode && (
+                  <button className="btn-edit-header" onClick={() => handleEditRule(rule)}>
+                    ✏️ Edit Points
+                  </button>
+                )}
+              </div>
+              {(editMode ? editedRule : rule).pointsAwarded && (
                 <div className="points-grid">
-                  {Object.entries(rule.pointsAwarded).map(([key, value]: [string, any]) => (
-                    <div key={key} className="point-row">
+                  {Object.entries((editMode ? editedRule : rule).pointsAwarded).map(([key, value]: [string, any]) => (
+                    <div key={key} className={`point-row ${editMode ? 'editable' : ''}`}>
                       <span className="point-label">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
-                      <span className="point-value">{value}</span>
+                      {editMode ? (
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="point-input"
+                          value={value}
+                          onChange={(e) => handleUpdatePoints(key, e.target.value)}
+                          placeholder="Enter points"
+                        />
+                      ) : (
+                        <span className="point-value">{value}</span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -184,16 +233,60 @@ export const PointEarningRulesPage: React.FC = () => {
               )}
             </div>
 
-            {rule.auditTrail && (
+            <div className="detail-section">
+              <div className="section-header">
+                <h3>Rule Status</h3>
+              </div>
+              <div className="status-row">
+                <div className="status-label">Rule Active</div>
+                {editMode ? (
+                  <div className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      id="rule-active"
+                      checked={editedRule?.ruleActive}
+                      onChange={(e) => setEditedRule({ ...editedRule, ruleActive: e.target.checked })}
+                      className="toggle-input"
+                    />
+                    <label htmlFor="rule-active" className="toggle-label">
+                      <span className={`toggle-indicator ${editedRule?.ruleActive ? 'active' : ''}`}></span>
+                    </label>
+                    <span className="toggle-text">{editedRule?.ruleActive ? 'Active' : 'Inactive'}</span>
+                  </div>
+                ) : (
+                  <span className={`status-badge ${rule.ruleActive ? 'active' : 'inactive'}`}>
+                    {rule.ruleActive ? '✓ Active' : '○ Inactive'}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {(editMode ? editedRule : rule).auditTrail && (
               <div className="detail-section">
                 <h3>Audit Trail</h3>
-                <div className="audit-info">{rule.auditTrail}</div>
+                <div className="audit-info">
+                  <div className="audit-item">{(editMode ? editedRule : rule).auditTrail}</div>
+                  {editMode && (
+                    <div className="audit-item new">
+                      📝 Pending changes... Will be saved to audit trail
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
             <div className="modal-actions">
-              <button className="btn-edit">✏️ Edit Rule</button>
-              <button className="btn-close-modal" onClick={() => setSelectedRule(null)}>Close</button>
+              {editMode ? (
+                <>
+                  <button className="btn-save" onClick={handleSaveRule}>💾 Save Changes</button>
+                  <button className="btn-cancel" onClick={handleCancelEdit}>Cancel</button>
+                </>
+              ) : (
+                <>
+                  <button className="btn-edit" onClick={() => handleEditRule(rule)}>✏️ Edit Rule</button>
+                  <button className="btn-close-modal" onClick={() => setSelectedRule(null)}>Close</button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -660,6 +753,174 @@ export const PointEarningRulesPage: React.FC = () => {
 
         .btn-close-modal:hover {
           background: #e0e0e0;
+        }
+
+        .btn-save {
+          padding: 10px 16px;
+          background: #27b55d;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 13px;
+          transition: all 0.2s;
+        }
+
+        .btn-save:hover {
+          background: #229a4a;
+          box-shadow: 0 2px 8px rgba(39, 181, 93, 0.3);
+        }
+
+        .btn-cancel {
+          padding: 10px 16px;
+          background: #f0f0f0;
+          color: #333;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 13px;
+          transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+          background: #e0e0e0;
+        }
+
+        .btn-edit-header {
+          padding: 6px 12px;
+          background: #ff6b35;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 600;
+          transition: all 0.2s;
+        }
+
+        .btn-edit-header:hover {
+          background: #ff5722;
+        }
+
+        .section-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+        }
+
+        .section-header h3 {
+          margin: 0;
+        }
+
+        .point-row.editable {
+          background: #fffbf8;
+          border: 1px solid #ffb88c;
+        }
+
+        .point-input {
+          width: 100%;
+          padding: 8px;
+          border: 1px solid #ff6b35;
+          border-radius: 4px;
+          font-size: 13px;
+          font-weight: 700;
+          color: #ff6b35;
+          text-align: right;
+        }
+
+        .point-input:focus {
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .point-input::placeholder {
+          color: #ccc;
+        }
+
+        /* Toggle Switch */
+        .status-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px;
+          background: #f9f9f9;
+          border-radius: 4px;
+        }
+
+        .status-label {
+          font-weight: 600;
+          color: #333;
+          font-size: 13px;
+        }
+
+        .toggle-switch {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .toggle-input {
+          display: none;
+        }
+
+        .toggle-label {
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          width: 44px;
+          height: 24px;
+          background: #ddd;
+          border-radius: 12px;
+          padding: 2px;
+          transition: background 0.3s;
+        }
+
+        .toggle-input:checked + .toggle-label {
+          background: #27b55d;
+        }
+
+        .toggle-indicator {
+          width: 20px;
+          height: 20px;
+          background: white;
+          border-radius: 50%;
+          transition: transform 0.3s;
+        }
+
+        .toggle-input:checked + .toggle-label .toggle-indicator {
+          transform: translateX(20px);
+        }
+
+        .toggle-text {
+          font-size: 12px;
+          font-weight: 600;
+          color: #333;
+          min-width: 60px;
+        }
+
+        .audit-info {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .audit-item {
+          padding: 10px 12px;
+          background: #f0f0f0;
+          border-left: 3px solid #ff6b35;
+          border-radius: 4px;
+          font-size: 12px;
+          color: #666;
+          line-height: 1.5;
+        }
+
+        .audit-item.new {
+          background: #fffbf8;
+          border-left-color: #27b55d;
+          color: #27b55d;
         }
 
         @media (max-width: 768px) {
