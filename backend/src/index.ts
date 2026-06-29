@@ -38,6 +38,7 @@ import uploadRoutes from './routes/uploads.js';
 import categoryPreferencesRoutes from './routes/categoryPreferences.js';
 import safetyRoutes from './routes/safety.js';
 import disputesL2L3Routes from './routes/disputes_l2_l3.js';
+import casesRoutes from './routes/cases.js';
 import { startCrons } from './cron.js';
 
 const app = express();
@@ -69,6 +70,7 @@ app.use('/api/jobs', jobsRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/disputes', disputesRoutes);
 app.use('/api/disputes', disputesL2L3Routes); // L2+L3 resolution routes
+app.use('/api/cases', casesRoutes); // Admin case management
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/chas', chasRoutes);
 app.use('/api/push', pushRoutes);
