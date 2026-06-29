@@ -755,10 +755,40 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           console.log(`[Extract] OneMap no results, defaulting to Singapore`);
         }
       } catch (err) {
-        // OneMap failed - default safely, don't use hardcoded which could be wrong
+        // OneMap failed - use postal code mapping table as fallback
         console.warn(`[Extract] OneMap API failed: ${err instanceof Error ? err.message : String(err)}`);
-        area = 'Singapore';
+
+        // Fallback to postal code mapping
+        const postalPrefix = postalCode.substring(0, 2);
+        const postalCodeAreas: Record<string, string> = {
+          '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar',
+          '05': 'Outram', '06': 'People\'s Park', '07': 'Chinatown', '08': 'Tanjong Pagar',
+          '09': 'Tanjong Pagar', '10': 'Orchard', '11': 'Pasir Panjang', '12': 'Novena',
+          '13': 'Newton', '14': 'Farrer Park', '15': 'Henderson', '16': 'Henderson',
+          '17': 'Balestier', '18': 'Macpherson', '19': 'Paya Lebar', '20': 'Paya Lebar',
+          '21': 'Geylang', '22': 'Geylang', '23': 'Geylang', '24': 'Eunos',
+          '25': 'Bedok', '26': 'Bedok', '27': 'Bedok', '28': 'Tampines',
+          '29': 'Tampines', '30': 'Tampines', '31': 'Pasir Ris', '32': 'Pasir Ris',
+          '33': 'Punggol', '34': 'Punggol', '35': 'Hougang', '36': 'Hougang',
+          '37': 'Sengkang', '38': 'Sengkang', '39': 'Sengkang', '40': 'Jurong West',
+          '41': 'Jurong West', '42': 'Jurong', '43': 'Jurong East', '44': 'Clementi',
+          '45': 'Clementi', '46': 'Clementi', '47': 'Bukit Merah', '48': 'Bukit Merah',
+          '49': 'Tiong Bahru', '50': 'Tiong Bahru', '51': 'Queenstown', '52': 'Queenstown',
+          '53': 'Pasir Panjang', '54': 'Pasir Panjang', '55': 'Bukit Timah',
+          '56': 'Bukit Timah', '57': 'Bukit Timah', '58': 'Ang Mo Kio', '59': 'Ang Mo Kio',
+          '60': 'Ang Mo Kio', '61': 'Bishan', '62': 'Bishan', '63': 'Bishan',
+          '64': 'Toa Payoh', '65': 'Toa Payoh', '66': 'Toa Payoh', '67': 'Serangoon',
+          '68': 'Choa Chu Kang', '69': 'Serangoon', '70': 'Hougang', '71': 'Hougang',
+          '72': 'Hougang', '73': 'Punggol', '74': 'Punggol', '75': 'Punggol',
+          '76': 'Sengkang', '77': 'Sengkang', '78': 'Sengkang', '79': 'Sengkang',
+          '80': 'Yishun', '81': 'Yishun', '82': 'Yishun', '83': 'Sembawang',
+          '84': 'Sembawang', '85': 'Yishun', '86': 'Yishun', '87': 'Kranji',
+          '88': 'Woodlands', '89': 'Woodlands', '90': 'Woodlands', '91': 'Woodlands',
+        };
+
+        area = postalCodeAreas[postalPrefix] || 'Singapore';
         fullAddress = `Singapore ${postalCode}`;
+        console.log(`[Extract] 📍 Fallback to postal code mapping: ${area}`);
       }
     } else {
       console.log('[Extract] No postal code provided');
