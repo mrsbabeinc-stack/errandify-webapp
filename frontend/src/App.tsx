@@ -53,6 +53,13 @@ import CategoriesPage from './pages/admin/Categories';
 import VouchersPage from './pages/admin/Vouchers';
 import ReportsPage from './pages/admin/Reports';
 import UsersSafetyPage from './pages/admin/UsersSafety';
+import OverviewPage from './pages/admin/Overview';
+import DisputesPage from './pages/admin/Disputes';
+import OperationsPage from './pages/admin/Operations';
+import RegionalPage from './pages/admin/Regional';
+import DiscountCodesPage from './pages/admin/DiscountCodes';
+import AdminErrandifyPointsPage from './pages/admin/ErrandifyPoints';
+import EmailPage from './pages/admin/Email';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -281,11 +288,18 @@ export default function App() {
 
         {/* Admin Dashboard Routes */}
         <Route path="/admin/dashboard" element={isAuthenticated && isAdmin ? <AdminDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/dashboard/overview" element={isAuthenticated && isAdmin ? <OverviewPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/dashboard/users" element={isAuthenticated && isAdmin ? <UsersSafetyPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/dashboard/disputes" element={isAuthenticated && isAdmin ? <DisputesPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/dashboard/operations" element={isAuthenticated && isAdmin ? <OperationsPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/dashboard/regional" element={isAuthenticated && isAdmin ? <RegionalPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/cases" element={isAuthenticated && isAdmin ? <CasesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/categories" element={isAuthenticated && isAdmin ? <CategoriesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/vouchers" element={isAuthenticated && isAdmin ? <VouchersPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/manage/points" element={isAuthenticated && isAdmin ? <AdminErrandifyPointsPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/manage/discounts" element={isAuthenticated && isAdmin ? <DiscountCodesPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/comms/email" element={isAuthenticated && isAdmin ? <EmailPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/reports" element={isAuthenticated && isAdmin ? <ReportsPage /> : <Navigate to="/login" replace />} />
-        <Route path="/admin/dashboard/users" element={isAuthenticated && isAdmin ? <UsersSafetyPage /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout - for asker/doer AND admin users */}
         <Route
