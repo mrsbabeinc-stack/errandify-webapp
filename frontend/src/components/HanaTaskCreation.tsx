@@ -31,7 +31,6 @@ interface HanaTaskCreationProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (taskData: TaskData) => void;
-  onSkipToManual?: () => void;
   defaultCategory?: string | null;
 }
 
@@ -39,7 +38,6 @@ export default function HanaTaskCreation({
   isOpen,
   onClose,
   onComplete,
-  onSkipToManual,
   defaultCategory,
 }: HanaTaskCreationProps) {
   const [currentStep, setCurrentStep] = useState<CollectionStep>('input');
@@ -151,7 +149,6 @@ export default function HanaTaskCreation({
   };
 
   const initializeChat = () => {
-    // Use provided category or pick a random one for inspiration
     const categoryToUse = defaultCategory || getRandomCategory();
     const example = getExampleByCategory(categoryToUse);
     setHanaMessage(`Hi! What errand do you need help with?\n\nExample:\n'${example}'`);
@@ -519,21 +516,12 @@ export default function HanaTaskCreation({
             <h1 className="text-xl font-bold text-white">Hana (Your AI Sister)</h1>
             <p className="text-orange-100 text-xs">Chat With Hana</p>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={onSkipToManual}
-              className="text-sm text-white hover:text-orange-100 underline font-medium"
-              title="Skip to manual form"
-            >
-              Manual Input
-            </button>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-orange-100 text-2xl font-light"
-            >
-              ✕
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="text-white hover:text-orange-100 text-2xl font-light"
+          >
+            ✕
+          </button>
         </div>
 
         {/* Main Content - Bubble Renders First (Loads First), Hana Below (Visual Order) */}
