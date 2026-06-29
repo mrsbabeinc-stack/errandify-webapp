@@ -118,11 +118,11 @@ export default function HanaChatMode({
   const processTitle = async (input: string) => {
     onTaskUpdate({ title: input, description: input });
 
-    // Detect category using AI
+    // Detect category using extraction endpoint
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/detect-category`,
-        { title: input, description: input }
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
+        { input }
       );
       if (response.data.data?.category) {
         onTaskUpdate({ category: response.data.data.category });
