@@ -2846,14 +2846,18 @@ export default function MyAccountPage() {
                 <div className="grid grid-cols-4 gap-2">
                   {ALL_16_CATEGORIES.map(category => (
                     !selectedCategoriesHelp.includes(category.id) && (
-                      <button
-                        key={category.id}
-                        onClick={() => toggleCategoryHelp(category.id)}
-                        className="text-5xl p-2 hover:scale-110 transition active:scale-95 rounded-lg hover:bg-green-200"
-                        title={category.name}
-                      >
-                        {category.icon}
-                      </button>
+                      <div key={category.id} className="relative group">
+                        <button
+                          onClick={() => toggleCategoryHelp(category.id)}
+                          className="text-5xl p-2 hover:scale-110 transition active:scale-95 rounded-lg hover:bg-green-200 w-full"
+                        >
+                          {category.icon}
+                        </button>
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                          {category.name}
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                        </div>
+                      </div>
                     )
                   ))}
                 </div>
@@ -2883,14 +2887,18 @@ export default function MyAccountPage() {
                 <div className="grid grid-cols-4 gap-2">
                   {ALL_16_CATEGORIES.map(category => (
                     !selectedCategoriesNeed.includes(category.id) && (
-                      <button
-                        key={category.id}
-                        onClick={() => toggleCategoryNeed(category.id)}
-                        className="text-5xl p-2 hover:scale-110 transition active:scale-95 rounded-lg hover:bg-blue-200"
-                        title={category.name}
-                      >
-                        {category.icon}
-                      </button>
+                      <div key={category.id} className="relative group">
+                        <button
+                          onClick={() => toggleCategoryNeed(category.id)}
+                          className="text-5xl p-2 hover:scale-110 transition active:scale-95 rounded-lg hover:bg-blue-200 w-full"
+                        >
+                          {category.icon}
+                        </button>
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                          {category.name}
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                        </div>
+                      </div>
                     )
                   ))}
                 </div>
