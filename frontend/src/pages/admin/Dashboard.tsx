@@ -29,7 +29,7 @@ export const AdminDashboard: React.FC = () => {
           <p>Here's what's happening on the platform today</p>
         </div>
 
-        {/* KPI Grid - Compact and Happy */}
+        {/* KPI Grid - Errandify Orange */}
         <div className="kpi-grid">
           {kpis.map((kpi) => (
             <div key={kpi.title} className="kpi-card">
@@ -89,20 +89,18 @@ export const AdminDashboard: React.FC = () => {
           font-size: 28px;
           font-weight: 700;
           margin: 0 0 4px 0;
-          color: #fff;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          color: #ff6b35;
+          text-shadow: 0 2px 4px rgba(255, 107, 53, 0.1);
         }
 
         .dashboard-header p {
           font-size: 14px;
-          color: #a0aec0;
+          color: #888;
           margin: 0;
+          font-weight: 500;
         }
 
-        /* KPI Grid - Compact 2x2 or 4x1 */
+        /* KPI Grid - Errandify Orange Theme */
         .kpi-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -110,20 +108,20 @@ export const AdminDashboard: React.FC = () => {
         }
 
         .kpi-card {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
           border-radius: 12px;
           padding: 16px;
           display: flex;
           gap: 12px;
           align-items: center;
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
           transition: transform 0.2s, box-shadow 0.2s;
           cursor: pointer;
         }
 
         .kpi-card:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25);
+          box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);
         }
 
         .kpi-icon {
@@ -138,7 +136,7 @@ export const AdminDashboard: React.FC = () => {
         .kpi-label {
           font-size: 12px;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.8);
+          color: rgba(255, 255, 255, 0.85);
           text-transform: uppercase;
           letter-spacing: 0.5px;
           margin-bottom: 4px;
@@ -158,7 +156,7 @@ export const AdminDashboard: React.FC = () => {
         }
 
         .kpi-change.up {
-          color: #4ade80;
+          color: #ffd700;
         }
 
         /* Alerts - Compact */
@@ -172,7 +170,7 @@ export const AdminDashboard: React.FC = () => {
           font-size: 14px;
           font-weight: 600;
           margin: 0;
-          color: #fff;
+          color: #333;
         }
 
         .alerts-compact {
@@ -189,18 +187,19 @@ export const AdminDashboard: React.FC = () => {
           border-radius: 8px;
           font-size: 13px;
           font-weight: 500;
+          border-left: 3px solid;
         }
 
         .alert-warning {
-          background: rgba(251, 146, 60, 0.15);
-          color: #fed7aa;
-          border-left: 3px solid #fb923c;
+          background: #fff4e6;
+          color: #ff6b35;
+          border-left-color: #ff6b35;
         }
 
         .alert-success {
-          background: rgba(74, 222, 128, 0.15);
-          color: #bbf7d0;
-          border-left: 3px solid #4ade80;
+          background: #e6f9f0;
+          color: #27b55d;
+          border-left-color: #27b55d;
         }
 
         .alert-icon {
@@ -223,7 +222,7 @@ export const AdminDashboard: React.FC = () => {
           font-size: 14px;
           font-weight: 600;
           margin: 0;
-          color: #fff;
+          color: #333;
         }
 
         .activity-compact {
@@ -237,15 +236,16 @@ export const AdminDashboard: React.FC = () => {
           justify-content: space-between;
           align-items: center;
           padding: 10px 14px;
-          background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+          background: linear-gradient(135deg, rgba(255, 107, 53, 0.08) 0%, rgba(255, 140, 66, 0.06) 100%);
           border-radius: 8px;
-          border: 1px solid rgba(102, 126, 234, 0.2);
+          border: 1px solid rgba(255, 107, 53, 0.15);
           transition: all 0.2s;
         }
 
         .activity-row:hover {
-          background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
-          border-color: rgba(102, 126, 234, 0.4);
+          background: linear-gradient(135deg, rgba(255, 107, 53, 0.12) 0%, rgba(255, 140, 66, 0.1) 100%);
+          border-color: rgba(255, 107, 53, 0.3);
+          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.1);
         }
 
         .activity-left {
@@ -258,17 +258,17 @@ export const AdminDashboard: React.FC = () => {
         .activity-event {
           font-size: 13px;
           font-weight: 600;
-          color: #fff;
+          color: #333;
         }
 
         .activity-user {
           font-size: 12px;
-          color: #a0aec0;
+          color: #888;
         }
 
         .activity-time {
           font-size: 11px;
-          color: #718096;
+          color: #aaa;
           white-space: nowrap;
           margin-left: 12px;
         }
