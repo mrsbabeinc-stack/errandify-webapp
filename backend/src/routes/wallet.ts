@@ -662,4 +662,98 @@ router.delete('/rewards/:id', authMiddleware, async (req: AuthRequest, res: Resp
   }
 });
 
+// POST /api/wallet/award-ep - Award EP to both asker and doer on errand completion
+router.post('/award-ep', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { errandId, askerId, doerId } = req.body;
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Only asker or system can award EP
+    if (askerId && askerId !== userId) {
+      return res.status(403).json({ error: 'Only asker can award completion EP' });
+    }
+
+    const BASE_EP = 15;
+    const RATING_BONUS = 10;
+    const TOTAL_EP = BASE_EP + RATING_BONUS; // 25 EP per person
+
+    // Award to asker
+    if (askerId) {
+      await db.query(
+        `UPDATE users SET errandify_points = errandify_points + $1, updated_at = NOW() WHERE id = $2`,
+        [TOTAL_EP, askerId]
+      );
+
+      // Log transaction
+      await db.query(
+        `INSERT INTO wallet_transactions (user_id, type, amount, description, errand_id, created_at)
+         VALUES ($1, $2, $3, $4, $5, NOW())`,
+        [askerId, 'ep_earned', TOTAL_EP, `Errand completion + rating bonus`, errandId]
+      );
+    }
+
+    // Award to doer
+    if (doerId) {
+      await db.query(
+        `UPDATE users SET errandify_points = errandify_points + $1, updated_at = NOW() WHERE id = $2`,
+        [TOTAL_EP, doerId]
+      );
+
+      // Log transaction
+      await db.query(
+        `INSERT INTO wallet_transactions (user_id, type, amount, description, errand_id, created_at)
+         VALUES ($1, $2, $3, $4, $5, NOW())`,
+        [doerId, 'ep_earned', TOTAL_EP, `Errand completion + rating bonus`, errandId]
+      );
+    }
+
+    res.json({
+      success: true,
+      message: 'EP awarded to both users',
+      data: {
+        askerEP: TOTAL_EP,
+        doerEP: TOTAL_EP,
+      },
+    });
+  } catch (error) {
+    console.error('Award EP error:', error);
+    res.status(500).json({ error: 'Failed to award EP' });
+  }
+});
+
+// POST /api/wallet/award-ep-bonus - Award bonus EP to doer for rating back
+router.post('/award-ep-bonus', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { errandId, userId, bonus, reason } = req.body;
+    const requestUserId = parseInt(req.userId || '0', 10);
+
+    // User can only award themselves
+    if (userId !== requestUserId) {
+      return res.status(403).json({ error: 'Cannot award EP to another user' });
+    }
+
+    // Award bonus EP
+    await db.query(
+      `UPDATE users SET errandify_points = errandify_points + $1, updated_at = NOW() WHERE id = $2`,
+      [bonus, userId]
+    );
+
+    // Log transaction
+    await db.query(
+      `INSERT INTO wallet_transactions (user_id, type, amount, description, errand_id, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [userId, 'ep_earned', bonus, `${reason} bonus`, errandId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Bonus EP awarded',
+      data: { bonusEP: bonus },
+    });
+  } catch (error) {
+    console.error('Award bonus EP error:', error);
+    res.status(500).json({ error: 'Failed to award bonus EP' });
+  }
+});
+
 export default router;

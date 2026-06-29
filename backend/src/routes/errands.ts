@@ -1604,4 +1604,40 @@ router.get('/:id/recurring', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// POST /api/errands/:id/confirm-completion - Mark errand as completed (after asker rates)
+router.post('/:id/confirm-completion', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Get errand
+    const errandResult = await db.query('SELECT * FROM errands WHERE id = $1', [id]);
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    // Only asker can confirm completion
+    if (errand.asker_id !== userId) {
+      return res.status(403).json({ error: 'Only asker can confirm completion' });
+    }
+
+    // Update status from completed_unconfirmed to completed
+    await db.query(
+      'UPDATE errands SET status = $1, confirmed_at = NOW(), updated_at = NOW() WHERE id = $2',
+      ['completed', id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Errand marked as completed',
+      data: { id, status: 'completed' },
+    });
+  } catch (error) {
+    console.error('Error confirming completion:', error);
+    res.status(500).json({ error: 'Failed to confirm completion' });
+  }
+});
+
 export default router;
