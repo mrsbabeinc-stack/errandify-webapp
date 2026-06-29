@@ -221,6 +221,27 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
               >
                 👨 Demo: John (Asker/Doer)
               </button>
+              <button
+                onClick={() => handleDemoLogin('admin')}
+                disabled={loading}
+                className="w-full py-2 px-4 bg-red-50 border-2 border-red-300 text-red-700 rounded-lg font-semibold hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                👨‍💼 Demo: Admin (Support Dashboard)
+              </button>
+              <button
+                onClick={() => handleDemoLogin('support_l2')}
+                disabled={loading}
+                className="w-full py-2 px-4 bg-blue-50 border-2 border-blue-300 text-blue-700 rounded-lg font-semibold hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                👩‍💻 Demo: Support L2 (Dispute Review)
+              </button>
+              <button
+                onClick={() => handleDemoLogin('support_l3')}
+                disabled={loading}
+                className="w-full py-2 px-4 bg-purple-50 border-2 border-purple-300 text-purple-700 rounded-lg font-semibold hover:bg-purple-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                👨‍⚖️ Demo: Support L3 (Final Appeals)
+              </button>
             </div>
           </div>
         )}
