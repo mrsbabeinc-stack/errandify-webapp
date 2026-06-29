@@ -57,10 +57,10 @@ export const VouchersPage: React.FC = () => {
       maxAmount: 'None',
       image: '/images/Hana_Pose_1_4K.png',
       redemptions: [
-        { id: 1, username: 'Sarah Tan', date: '2 hours ago', pointsSpent: '100', status: 'redeemed' },
-        { id: 2, username: 'John Lee', date: '4 hours ago', pointsSpent: '100', status: 'redeemed' },
-        { id: 3, username: 'Alice Wong', date: '1 day ago', pointsSpent: '100', status: 'redeemed' },
-        { id: 4, username: 'Bob Chen', date: '2 days ago', pointsSpent: '100', status: 'redeemed' },
+        { id: 1, username: 'Sarah Tan', alias: '@sarahtan', date: '2 hours ago', timestamp: '2026-06-29 14:30', pointsSpent: '100', status: 'redeemed' },
+        { id: 2, username: 'John Lee', alias: '@johnlee88', date: '4 hours ago', timestamp: '2026-06-29 12:15', pointsSpent: '100', status: 'redeemed' },
+        { id: 3, username: 'Alice Wong', alias: '@alicew', date: '1 day ago', timestamp: '2026-06-28 18:45', pointsSpent: '100', status: 'redeemed' },
+        { id: 4, username: 'Bob Chen', alias: '@bobchen22', date: '2 days ago', timestamp: '2026-06-27 09:20', pointsSpent: '100', status: 'redeemed' },
       ],
     },
     {
@@ -83,9 +83,9 @@ export const VouchersPage: React.FC = () => {
       maxAmount: 'None',
       image: '/images/hana-avatar.png',
       redemptions: [
-        { id: 1, username: 'Eve Kumar', date: '30 mins ago', pointsSpent: '50', status: 'redeemed' },
-        { id: 2, username: 'Frank Zhou', date: '1 hour ago', pointsSpent: '50', status: 'redeemed' },
-        { id: 3, username: 'Grace Lim', date: '3 hours ago', pointsSpent: '50', status: 'redeemed' },
+        { id: 1, username: 'Eve Kumar', alias: '@evekumar', date: '30 mins ago', timestamp: '2026-06-29 16:45', pointsSpent: '50', status: 'redeemed' },
+        { id: 2, username: 'Frank Zhou', alias: '@frankz', date: '1 hour ago', timestamp: '2026-06-29 16:15', pointsSpent: '50', status: 'redeemed' },
+        { id: 3, username: 'Grace Lim', alias: '@graceLim99', date: '3 hours ago', timestamp: '2026-06-29 14:30', pointsSpent: '50', status: 'redeemed' },
       ],
     },
     {
@@ -108,8 +108,8 @@ export const VouchersPage: React.FC = () => {
       maxAmount: 'None',
       image: '/images/Sora_4K.png',
       redemptions: [
-        { id: 1, username: 'Henry Tang', date: '5 hours ago', pointsSpent: '75', status: 'redeemed' },
-        { id: 2, username: 'Iris Ng', date: '1 day ago', pointsSpent: '75', status: 'redeemed' },
+        { id: 1, username: 'Henry Tang', alias: '@henrytang', date: '5 hours ago', timestamp: '2026-06-29 11:30', pointsSpent: '75', status: 'redeemed' },
+        { id: 2, username: 'Iris Ng', alias: '@irisng88', date: '1 day ago', timestamp: '2026-06-28 15:20', pointsSpent: '75', status: 'redeemed' },
       ],
     },
   ]);
@@ -415,20 +415,33 @@ export const VouchersPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Redemption History - Compact */}
+                {/* Redemption History - Full Details Table */}
                 {selectedVoucher.redemptions && selectedVoucher.redemptions.length > 0 && (
-                  <div className="redemption-summary">
-                    <div className="summary-title">Recently Redeemed</div>
-                    <div className="redemption-list">
-                      {selectedVoucher.redemptions.slice(0, 3).map((r: any) => (
-                        <div key={r.id} className="redemption-item">
-                          <div className="redemption-user">{r.username}</div>
-                          <div className="redemption-time">{r.date}</div>
+                  <div className="redemption-section">
+                    <div className="redemption-header">
+                      <h3>Redemption History</h3>
+                      <span className="redemption-count">{selectedVoucher.redemptions.length} redeemed</span>
+                    </div>
+                    <div className="redemption-table">
+                      {selectedVoucher.redemptions.map((r: any) => (
+                        <div key={r.id} className="redemption-row">
+                          <div className="redemption-col alias">
+                            <div className="user-name">{r.username}</div>
+                            <div className="user-alias">{r.alias}</div>
+                          </div>
+                          <div className="redemption-col date">
+                            <div className="timestamp-label">Date & Time</div>
+                            <div className="timestamp">{r.timestamp}</div>
+                          </div>
+                          <div className="redemption-col points">
+                            <div className="points-label">Points</div>
+                            <div className="points-value">{r.pointsSpent}</div>
+                          </div>
+                          <div className="redemption-col status">
+                            <span className="status-badge">✓ {r.status}</span>
+                          </div>
                         </div>
                       ))}
-                      {selectedVoucher.redemptions.length > 3 && (
-                        <div className="redemption-more">+{selectedVoucher.redemptions.length - 3} more</div>
-                      )}
                     </div>
                   </div>
                 )}
@@ -566,15 +579,31 @@ export const VouchersPage: React.FC = () => {
         .info-label { font-size: 10px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
         .info-value { font-size: 14px; font-weight: 700; color: #ff6b35; }
 
-        .redemption-summary { background: #fff9f5; border-radius: 6px; padding: 10px; border: 1px solid #ffe6d9; }
-        .summary-title { font-size: 11px; font-weight: 700; color: #ff6b35; text-transform: uppercase; margin-bottom: 8px; }
+        .redemption-section { background: #fff9f5; border-radius: 6px; padding: 12px; border: 1px solid #ffe6d9; }
 
-        .redemption-list { display: flex; flex-direction: column; gap: 6px; }
-        .redemption-item { display: grid; grid-template-columns: 1fr auto; gap: 8px; font-size: 12px; padding: 6px 0; border-bottom: 1px solid #ffe6d9; align-items: center; }
-        .redemption-item:last-child { border-bottom: none; }
-        .redemption-user { font-weight: 600; color: #333; }
-        .redemption-time { font-size: 11px; color: #888; white-space: nowrap; }
-        .redemption-more { font-size: 11px; color: #ff6b35; font-weight: 600; text-align: center; padding: 6px 0; }
+        .redemption-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .redemption-header h3 { font-size: 12px; font-weight: 700; color: #333; text-transform: uppercase; margin: 0; }
+        .redemption-count { font-size: 11px; color: #ff6b35; font-weight: 600; background: white; padding: 2px 6px; border-radius: 3px; }
+
+        .redemption-table { display: flex; flex-direction: column; gap: 8px; }
+        .redemption-row { display: grid; grid-template-columns: 1.2fr 1.5fr 0.8fr 0.8fr; gap: 12px; padding: 8px; background: white; border-radius: 4px; border: 1px solid #ffe6d9; align-items: center; font-size: 12px; }
+        .redemption-row:hover { background: #fffbf8; }
+
+        .redemption-col { display: flex; flex-direction: column; gap: 2px; }
+        .redemption-col.alias { }
+        .user-name { font-weight: 600; color: #333; }
+        .user-alias { font-size: 11px; color: #888; }
+
+        .redemption-col.date { }
+        .timestamp-label { font-size: 10px; font-weight: 700; color: #888; text-transform: uppercase; }
+        .timestamp { font-size: 11px; color: #333; font-family: monospace; }
+
+        .redemption-col.points { }
+        .points-label { font-size: 10px; font-weight: 700; color: #888; text-transform: uppercase; }
+        .points-value { font-size: 14px; font-weight: 700; color: #27b55d; }
+
+        .redemption-col.status { text-align: center; }
+        .status-badge { display: inline-block; background: #e6f9f0; color: #27b55d; padding: 4px 8px; border-radius: 3px; font-weight: 600; font-size: 11px; white-space: nowrap; }
 
         @media (max-width: 768px) {
           .voucher-detail-card { grid-template-columns: 1fr; }
