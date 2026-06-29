@@ -4,83 +4,81 @@ import AdminLayout from '../../components/admin/AdminLayout';
 export const AdminDashboard: React.FC = () => {
   const [kpis] = useState([
     { title: 'Platform Health', value: '98.5%', change: '+2.3%', icon: '💚', trend: 'up' },
-    { title: 'Total Revenue', value: '$24.5K', change: '+15.2%', icon: '💰', trend: 'up' },
-    { title: 'Active Users', value: '2,847', change: '+8.1%', icon: '👥', trend: 'up' },
-    { title: 'Average Rating', value: '4.8★', change: '+0.1★', icon: '⭐', trend: 'up' },
+    { title: 'Revenue', value: '$24.5K', change: '+15.2%', icon: '💰', trend: 'up' },
+    { title: 'Active Users', value: '2.8K', change: '+8.1%', icon: '👥', trend: 'up' },
+    { title: 'Rating', value: '4.8★', change: '+0.1★', icon: '⭐', trend: 'up' },
   ]);
 
   const [alerts] = useState([
-    { id: 1, type: 'warning', message: '5 open disputes awaiting resolution', timestamp: '5 min ago' },
-    { id: 2, type: 'info', message: 'Weekly report available', timestamp: '1 hour ago' },
+    { id: 1, type: 'warning', message: '5 open disputes waiting', icon: '⚠️' },
+    { id: 2, type: 'success', message: 'Weekly report ready', icon: '✅' },
   ]);
 
   const [recentActivity] = useState([
-    { id: 1, event: '✅ Task Completed', user: 'Sarah Tan → John Lee', time: '2 min ago' },
-    { id: 2, event: '💬 Dispute Filed', user: 'Complaint: Incomplete work', time: '15 min ago' },
-    { id: 3, event: '👤 New User', user: 'Alice Wong registered', time: '1 hour ago' },
-    { id: 4, event: '🎯 Category Updated', user: 'Cleaning category GMV +12%', time: '2 hours ago' },
+    { id: 1, event: '✅ Task Completed', user: 'Sarah → John', time: '2m ago' },
+    { id: 2, event: '💬 Dispute Filed', user: 'Incomplete work', time: '15m ago' },
+    { id: 3, event: '👤 New User', user: 'Alice Wong joined', time: '1h ago' },
+    { id: 4, event: '🎯 Category Update', user: 'Cleaning +12%', time: '2h ago' },
   ]);
 
   return (
     <AdminLayout>
       <div className="dashboard">
-        <header className="dashboard-header">
-          <h1>Dashboard Overview</h1>
-          <p>Platform health & key metrics at a glance</p>
-        </header>
+        <div className="dashboard-header">
+          <h1>👋 Welcome Back!</h1>
+          <p>Here's what's happening on the platform today</p>
+        </div>
 
-        <section className="kpi-section">
-          <div className="kpi-grid">
-            {kpis.map((kpi) => (
-              <div key={kpi.title} className="kpi-card">
-                <div className="kpi-icon">{kpi.icon}</div>
-                <div className="kpi-content">
-                  <h3>{kpi.title}</h3>
-                  <div className="kpi-value">{kpi.value}</div>
-                  <div className={`kpi-change ${kpi.trend}`}>
-                    {kpi.trend === 'up' ? '↑' : '↓'} {kpi.change}
-                  </div>
-                </div>
+        {/* KPI Grid - Compact and Happy */}
+        <div className="kpi-grid">
+          {kpis.map((kpi) => (
+            <div key={kpi.title} className="kpi-card">
+              <div className="kpi-icon">{kpi.icon}</div>
+              <div className="kpi-info">
+                <div className="kpi-label">{kpi.title}</div>
+                <div className="kpi-value">{kpi.value}</div>
+                <div className="kpi-change up">↑ {kpi.change}</div>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+          ))}
+        </div>
 
-        <section className="alerts-section">
-          <h2>Safety Alerts</h2>
-          <div className="alerts-list">
+        {/* Alerts - Compact */}
+        <div className="alerts-box">
+          <h2>🔔 Quick Alerts</h2>
+          <div className="alerts-compact">
             {alerts.map((alert) => (
-              <div key={alert.id} className={`alert alert-${alert.type}`}>
-                <div className="alert-content">
-                  <p className="alert-message">{alert.message}</p>
-                  <span className="alert-time">{alert.timestamp}</span>
-                </div>
+              <div key={alert.id} className={`alert-row alert-${alert.type}`}>
+                <span className="alert-icon">{alert.icon}</span>
+                <span className="alert-text">{alert.message}</span>
               </div>
             ))}
           </div>
-        </section>
+        </div>
 
-        <section className="activity-section">
-          <h2>Recent Activity</h2>
-          <div className="activity-list">
+        {/* Activity Feed - Compact */}
+        <div className="activity-box">
+          <h2>📊 Recent Activity</h2>
+          <div className="activity-compact">
             {recentActivity.map((activity) => (
-              <div key={activity.id} className="activity-item">
-                <div className="activity-event">{activity.event}</div>
-                <div className="activity-details">
+              <div key={activity.id} className="activity-row">
+                <div className="activity-left">
+                  <span className="activity-event">{activity.event}</span>
                   <span className="activity-user">{activity.user}</span>
-                  <span className="activity-time">{activity.time}</span>
                 </div>
+                <span className="activity-time">{activity.time}</span>
               </div>
             ))}
           </div>
-        </section>
+        </div>
       </div>
 
       <style>{`
         .dashboard {
           display: flex;
           flex-direction: column;
-          gap: 32px;
+          gap: 20px;
+          padding: 0;
         }
 
         .dashboard-header {
@@ -90,8 +88,12 @@ export const AdminDashboard: React.FC = () => {
         .dashboard-header h1 {
           font-size: 28px;
           font-weight: 700;
-          margin: 0 0 8px 0;
-          color: #e2e8f0;
+          margin: 0 0 4px 0;
+          color: #fff;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .dashboard-header p {
@@ -100,189 +102,181 @@ export const AdminDashboard: React.FC = () => {
           margin: 0;
         }
 
-        .kpi-section {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
+        /* KPI Grid - Compact 2x2 or 4x1 */
         .kpi-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 16px;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 12px;
         }
 
         .kpi-card {
-          background: linear-gradient(135deg, #1a1f2e, #252d3d);
-          border: 1px solid #2d3748;
-          border-radius: 8px;
-          padding: 20px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 12px;
+          padding: 16px;
           display: flex;
-          gap: 16px;
-          align-items: flex-start;
-          transition: all 0.2s;
+          gap: 12px;
+          align-items: center;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+          transition: transform 0.2s, box-shadow 0.2s;
+          cursor: pointer;
         }
 
         .kpi-card:hover {
-          background: linear-gradient(135deg, #1f2535, #2a3245);
-          border-color: #4a5568;
-          box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25);
         }
 
         .kpi-icon {
-          font-size: 32px;
-          min-width: 40px;
+          font-size: 28px;
+          min-width: 28px;
         }
 
-        .kpi-content {
+        .kpi-info {
           flex: 1;
         }
 
-        .kpi-content h3 {
-          font-size: 13px;
+        .kpi-label {
+          font-size: 12px;
           font-weight: 600;
-          color: #cbd5e0;
-          margin: 0 0 8px 0;
+          color: rgba(255, 255, 255, 0.8);
           text-transform: uppercase;
           letter-spacing: 0.5px;
+          margin-bottom: 4px;
         }
 
         .kpi-value {
-          font-size: 24px;
+          font-size: 20px;
           font-weight: 700;
-          color: #e2e8f0;
-          margin-bottom: 4px;
+          color: #fff;
+          margin-bottom: 2px;
         }
 
         .kpi-change {
           font-size: 12px;
           font-weight: 600;
-          color: #a0aec0;
+          color: rgba(255, 255, 255, 0.9);
         }
 
         .kpi-change.up {
           color: #4ade80;
         }
 
-        .kpi-change.down {
-          color: #f87171;
-        }
-
-        .alerts-section {
+        /* Alerts - Compact */
+        .alerts-box {
           display: flex;
           flex-direction: column;
           gap: 12px;
         }
 
-        .alerts-section h2 {
-          font-size: 16px;
+        .alerts-box h2 {
+          font-size: 14px;
           font-weight: 600;
           margin: 0;
-          color: #e2e8f0;
+          color: #fff;
         }
 
-        .alerts-list {
+        .alerts-compact {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 8px;
         }
 
-        .alert {
-          padding: 12px 16px;
-          border-radius: 6px;
-          border-left: 3px solid;
+        .alert-row {
           display: flex;
           align-items: center;
           gap: 12px;
+          padding: 10px 14px;
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 500;
         }
 
         .alert-warning {
-          background: rgba(251, 146, 60, 0.1);
-          border-color: #fb923c;
+          background: rgba(251, 146, 60, 0.15);
+          color: #fed7aa;
+          border-left: 3px solid #fb923c;
         }
 
-        .alert-info {
-          background: rgba(59, 130, 246, 0.1);
-          border-color: #3b82f6;
+        .alert-success {
+          background: rgba(74, 222, 128, 0.15);
+          color: #bbf7d0;
+          border-left: 3px solid #4ade80;
         }
 
-        .alert-content {
+        .alert-icon {
+          font-size: 16px;
+          min-width: 16px;
+        }
+
+        .alert-text {
           flex: 1;
         }
 
-        .alert-message {
-          font-size: 13px;
-          color: #e2e8f0;
-          margin: 0;
-          font-weight: 500;
-        }
-
-        .alert-time {
-          font-size: 11px;
-          color: #718096;
-        }
-
-        .activity-section {
+        /* Activity Feed - Compact */
+        .activity-box {
           display: flex;
           flex-direction: column;
           gap: 12px;
         }
 
-        .activity-section h2 {
-          font-size: 16px;
+        .activity-box h2 {
+          font-size: 14px;
           font-weight: 600;
           margin: 0;
-          color: #e2e8f0;
+          color: #fff;
         }
 
-        .activity-list {
-          background: linear-gradient(135deg, #1a1f2e, #252d3d);
-          border: 1px solid #2d3748;
-          border-radius: 8px;
-          overflow: hidden;
+        .activity-compact {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
         }
 
-        .activity-item {
-          padding: 16px;
-          border-bottom: 1px solid #2d3748;
+        .activity-row {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          transition: background 0.2s;
+          padding: 10px 14px;
+          background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+          border-radius: 8px;
+          border: 1px solid rgba(102, 126, 234, 0.2);
+          transition: all 0.2s;
         }
 
-        .activity-item:last-child {
-          border-bottom: none;
+        .activity-row:hover {
+          background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+          border-color: rgba(102, 126, 234, 0.4);
         }
 
-        .activity-item:hover {
-          background: rgba(255,255,255,0.02);
+        .activity-left {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          flex: 1;
         }
 
         .activity-event {
-          font-size: 14px;
-          font-weight: 500;
-          color: #e2e8f0;
-        }
-
-        .activity-details {
-          display: flex;
-          gap: 16px;
-          align-items: center;
-          font-size: 12px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #fff;
         }
 
         .activity-user {
+          font-size: 12px;
           color: #a0aec0;
         }
 
         .activity-time {
+          font-size: 11px;
           color: #718096;
+          white-space: nowrap;
+          margin-left: 12px;
         }
 
+        /* Mobile - Stacked Layout */
         @media (max-width: 768px) {
           .dashboard {
-            gap: 24px;
+            gap: 16px;
           }
 
           .kpi-grid {
@@ -293,10 +287,14 @@ export const AdminDashboard: React.FC = () => {
             font-size: 22px;
           }
 
-          .activity-details {
+          .activity-row {
             flex-direction: column;
             align-items: flex-start;
-            gap: 4px;
+            gap: 6px;
+          }
+
+          .activity-time {
+            margin-left: 0;
           }
         }
       `}</style>
