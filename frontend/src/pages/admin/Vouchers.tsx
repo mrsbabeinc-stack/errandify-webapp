@@ -141,6 +141,22 @@ export const VouchersPage: React.FC = () => {
     setShowDescriptionSuggestions(false);
   };
 
+  const handleSuspendVoucher = (voucherId: number) => {
+    const voucher = vouchers.find(v => v.id === voucherId);
+    if (!voucher) return;
+
+    const newStatus = voucher.status === 'active' ? 'suspended' : 'active';
+    const action = newStatus === 'suspended' ? 'suspended' : 'reactivated';
+
+    if (confirm(`Are you sure you want to ${action} this voucher?`)) {
+      setVouchers(vouchers.map(v =>
+        v.id === voucherId ? { ...v, status: newStatus } : v
+      ));
+      setSelectedVoucher({ ...voucher, status: newStatus });
+      alert(`✅ Voucher has been ${action}!`);
+    }
+  };
+
   const handleCreateVoucher = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -361,6 +377,7 @@ export const VouchersPage: React.FC = () => {
               <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="filter-select">
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
+                <option value="suspended">Suspended</option>
                 <option value="expired">Expired</option>
               </select>
               <div className="results-count">Showing {filteredVouchers.length} of {vouchers.length}</div>
@@ -371,7 +388,15 @@ export const VouchersPage: React.FC = () => {
         {/* Voucher Details View - Professional Compact Card */}
         {selectedVoucher && (
           <div className="details-view">
-            <button className="btn-close" onClick={() => setSelectedVoucher(null)}>✕ Close</button>
+            <div className="details-header-row">
+              <button className="btn-close" onClick={() => setSelectedVoucher(null)}>✕ Close</button>
+              <button
+                className={`btn-suspend ${selectedVoucher.status === 'suspended' ? 'reactivate' : 'suspend'}`}
+                onClick={() => handleSuspendVoucher(selectedVoucher.id)}
+              >
+                {selectedVoucher.status === 'suspended' ? '✓ Reactivate' : '⏸ Suspend'}
+              </button>
+            </div>
 
             <div className="voucher-detail-card">
               {/* Info Section - Full Width */}
@@ -379,7 +404,15 @@ export const VouchersPage: React.FC = () => {
                 {/* Header */}
                 <div className="detail-header">
                   <div>
-                    <h2>{selectedVoucher.name}</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <h2>{selectedVoucher.name}</h2>
+                      {selectedVoucher.status === 'suspended' && (
+                        <span className="status-suspended">⏸ Suspended</span>
+                      )}
+                      {selectedVoucher.status === 'active' && (
+                        <span className="status-active">✓ Active</span>
+                      )}
+                    </div>
                     <p className="detail-code">Code: <code>{selectedVoucher.code}</code></p>
                   </div>
                   <div className="detail-discount">
@@ -417,6 +450,9 @@ export const VouchersPage: React.FC = () => {
                       <h3>Redemption History</h3>
                       <span className="redemption-count">{selectedVoucher.redemptions.length} redeemed</span>
                     </div>
+                    {selectedVoucher.status === 'suspended' && (
+                      <p className="redemption-note">💡 All past redemptions remain valid. Suspension only prevents new redemptions.</p>
+                    )}
                     <div className="redemption-table">
                       {selectedVoucher.redemptions.map((r: any) => (
                         <div key={r.id} className="redemption-row">
@@ -546,8 +582,19 @@ export const VouchersPage: React.FC = () => {
         .btn-submit:hover { background: #ff5722; }
 
         .details-view { background: white; border: 1px solid #ffb88c; border-radius: 8px; padding: 16px; position: relative; }
-        .btn-close { position: absolute; top: 12px; right: 12px; padding: 6px 10px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 13px; }
+
+        .details-header-row { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 12px; }
+        .btn-close { padding: 6px 10px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .btn-close:hover { background: #ff6b35; color: white; }
+
+        .btn-suspend { padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+        .btn-suspend.suspend { background: #fff3cd; color: #ff6b35; border-color: #ffb88c; }
+        .btn-suspend.suspend:hover { background: #ff6b35; color: white; }
+        .btn-suspend.reactivate { background: #d4edda; color: #27b55d; border-color: #c3e6cb; }
+        .btn-suspend.reactivate:hover { background: #27b55d; color: white; }
+
+        .status-active { display: inline-block; background: #e6f9f0; color: #27b55d; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .status-suspended { display: inline-block; background: #fff3cd; color: #ff6b35; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
 
         .voucher-detail-card { display: block; }
 
@@ -573,6 +620,8 @@ export const VouchersPage: React.FC = () => {
         .redemption-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .redemption-header h3 { font-size: 12px; font-weight: 700; color: #333; text-transform: uppercase; margin: 0; }
         .redemption-count { font-size: 11px; color: #ff6b35; font-weight: 600; background: white; padding: 2px 6px; border-radius: 3px; }
+
+        .redemption-note { margin: 0 0 10px 0; font-size: 12px; color: #ff6b35; background: #fff3cd; padding: 8px; border-radius: 4px; border-left: 3px solid #ff6b35; }
 
         .redemption-table { display: flex; flex-direction: column; gap: 8px; }
         .redemption-row { display: grid; grid-template-columns: 1.2fr 1.5fr 0.8fr 0.8fr; gap: 12px; padding: 8px; background: white; border-radius: 4px; border: 1px solid #ffe6d9; align-items: center; font-size: 12px; }
