@@ -374,12 +374,7 @@ export const VouchersPage: React.FC = () => {
             <button className="btn-close" onClick={() => setSelectedVoucher(null)}>✕ Close</button>
 
             <div className="voucher-detail-card">
-              {/* Left: Image */}
-              <div className="detail-image-section">
-                <img src={selectedVoucher.image} alt={selectedVoucher.name} className="detail-image" />
-              </div>
-
-              {/* Right: Info */}
+              {/* Info Section - Full Width */}
               <div className="detail-info-section">
                 {/* Header */}
                 <div className="detail-header">
@@ -557,10 +552,7 @@ export const VouchersPage: React.FC = () => {
         .btn-close { position: absolute; top: 12px; right: 12px; padding: 6px 10px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .btn-close:hover { background: #ff6b35; color: white; }
 
-        .voucher-detail-card { display: grid; grid-template-columns: 200px 1fr; gap: 20px; align-items: start; }
-
-        .detail-image-section { }
-        .detail-image { width: 200px; height: auto; aspect-ratio: 3/2; object-fit: contain; border-radius: 6px; background: #f9f9f9; padding: 8px; display: block; }
+        .voucher-detail-card { display: block; }
 
         .detail-info-section { display: flex; flex-direction: column; gap: 12px; }
 
@@ -606,8 +598,6 @@ export const VouchersPage: React.FC = () => {
         .status-badge { display: inline-block; background: #e6f9f0; color: #27b55d; padding: 4px 8px; border-radius: 3px; font-weight: 600; font-size: 11px; white-space: nowrap; }
 
         @media (max-width: 768px) {
-          .voucher-detail-card { grid-template-columns: 1fr; }
-          .detail-image { width: 100%; }
           .detail-info-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
