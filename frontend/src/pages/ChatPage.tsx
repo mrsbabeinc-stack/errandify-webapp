@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import TaskChatbox from '../components/TaskChatbox';
+import { initializeSocket, getSocket, isSocketConnected } from '../utils/socketClient';
 
 interface ChatPageProps {
   userRole: 'asker' | 'doer';
@@ -34,11 +35,21 @@ export default function ChatPage({ userRole }: ChatPageProps) {
   const [unreadCounts, setUnreadCounts] = useState<Map<number, number>>(new Map());
   const [notification, setNotification] = useState<{ message: string; type: 'info' | 'warning' } | null>(null);
   const [viewFilter, setViewFilter] = useState<'all' | 'asker' | 'doer'>('all');
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
 
   useEffect(() => {
+    // Initialize socket connection
+    const token = localStorage.getItem('token');
+    if (token) {
+      initializeSocket(token);
+    }
+
+    // Fetch conversations on mount
     fetchAllConversations();
-    // Poll for new messages every 3 seconds
-    const interval = setInterval(fetchAllConversations, 3000);
+
+    // Optional: Refresh conversations periodically (less frequent now - every 30s instead of 3s)
+    // This is a fallback if socket updates miss any changes
+    const interval = setInterval(fetchAllConversations, 30000);
     return () => clearInterval(interval);
   }, [userRole]);
 
@@ -115,6 +126,34 @@ export default function ChatPage({ userRole }: ChatPageProps) {
     filterConversations(allConversations);
   }, [viewFilter, allConversations]);
 
+  // Monitor socket connection status
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleConnect = () => {
+      setIsSocketConnected(true);
+      setNotification({ message: '✅ Connected to real-time messaging', type: 'info' });
+      setTimeout(() => setNotification(null), 3000);
+    };
+
+    const handleDisconnect = () => {
+      setIsSocketConnected(false);
+      setNotification({ message: '⏳ Reconnecting to messaging...', type: 'warning' });
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+
+    // Set initial status
+    setIsSocketConnected(isSocketConnected());
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+    };
+  }, []);
+
   const handleOpenChat = (errandId: number) => {
     setSelectedErrandId(errandId);
     setShowChatbox(true);
@@ -172,6 +211,14 @@ export default function ChatPage({ userRole }: ChatPageProps) {
 
   return (
     <div className="px-4 py-4 max-w-3xl mx-auto pb-24 relative">
+      {/* Socket Connection Status Indicator */}
+      <div className="mb-4 flex items-center gap-2">
+        <div className={`w-3 h-3 rounded-full ${isSocketConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+        <p className="text-xs font-medium text-gray-600">
+          {isSocketConnected ? '✅ Real-time messaging active' : '⏳ Connecting...'}
+        </p>
+      </div>
+
       {/* Notification Toast */}
       {notification && (
         <div className={`fixed top-4 left-4 right-4 p-3 rounded-lg shadow-lg text-sm font-semibold z-40 animate-bounce ${
