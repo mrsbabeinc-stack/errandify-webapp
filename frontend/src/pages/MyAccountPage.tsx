@@ -1140,12 +1140,12 @@ export default function MyAccountPage() {
           </div>
         </div>
 
-        {/* STICKY TABS - Below banner - COMPACT */}
-        <div className="sticky top-20 z-40 bg-white border-b border-gray-200 mb-4 -mx-4 px-2 py-0.5 overflow-x-auto">
-          <div className="flex gap-1 whitespace-nowrap">
+        {/* STICKY TABS - Below banner - ULTRA COMPACT */}
+        <div className="sticky top-20 z-40 bg-white border-b border-gray-200 mb-3 -mx-4 px-1 py-0 overflow-x-auto">
+          <div className="flex gap-0.5 whitespace-nowrap">
             <button
               onClick={() => setActiveSection('dashboard')}
-              className={`px-1.5 py-0.5 text-xs font-bold transition rounded ${
+              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
                 activeSection === 'dashboard'
                   ? 'bg-errandify-orange text-white'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
@@ -1155,7 +1155,7 @@ export default function MyAccountPage() {
             </button>
             <button
               onClick={() => setActiveSection('profile')}
-              className={`px-1.5 py-0.5 text-xs font-bold transition rounded ${
+              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
                 activeSection === 'profile'
                   ? 'bg-errandify-orange text-white'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
@@ -1165,7 +1165,7 @@ export default function MyAccountPage() {
             </button>
             <button
               onClick={() => setActiveSection('pocket')}
-              className={`px-1.5 py-0.5 text-xs font-bold transition rounded ${
+              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
                 activeSection === 'pocket'
                   ? 'bg-errandify-orange text-white'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
@@ -1175,7 +1175,7 @@ export default function MyAccountPage() {
             </button>
             <button
               onClick={() => setActiveSection('rewards')}
-              className={`px-1.5 py-0.5 text-xs font-bold transition rounded ${
+              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
                 activeSection === 'rewards'
                   ? 'bg-errandify-orange text-white'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
@@ -1185,7 +1185,7 @@ export default function MyAccountPage() {
             </button>
             <button
               onClick={() => setActiveSection('blocked')}
-              className={`px-1.5 py-0.5 text-xs font-bold transition rounded ${
+              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
                 activeSection === 'blocked'
                   ? 'bg-errandify-orange text-white'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
@@ -1195,7 +1195,7 @@ export default function MyAccountPage() {
             </button>
             <button
               onClick={() => setActiveSection('notify')}
-              className={`px-1.5 py-0.5 text-xs font-bold transition rounded ${
+              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
                 activeSection === 'notify'
                   ? 'bg-errandify-orange text-white'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
@@ -1205,7 +1205,7 @@ export default function MyAccountPage() {
             </button>
             <button
               onClick={() => setActiveSection('categories')}
-              className={`px-1.5 py-0.5 text-xs font-bold transition rounded ${
+              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
                 activeSection === 'categories'
                   ? 'bg-errandify-orange text-white'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
