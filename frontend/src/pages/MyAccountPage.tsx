@@ -2810,44 +2810,46 @@ export default function MyAccountPage() {
 
         {/* CATEGORIES SECTION */}
         {activeSection === 'categories' && (
-          <div className="bg-gradient-to-br from-purple-100 via-pink-100 to-orange-100 rounded-lg shadow-md p-3 space-y-2">
+          <div className="bg-gradient-to-br from-purple-100 via-pink-100 to-orange-100 rounded-lg shadow-md p-4 space-y-3">
             {/* Header with stats */}
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-purple-900">🎯 My Categories</h2>
-              <div className="flex gap-1 text-xs font-bold">
-                <span className="bg-green-500 text-white px-2 py-0.5 rounded-full">💪 {categoriesCanHelpCount}</span>
-                <span className="bg-blue-500 text-white px-2 py-0.5 rounded-full">🙋 {categoriesNeedHelpCount}</span>
+              <h2 className="text-xl font-bold text-purple-900">🎯 My Categories</h2>
+              <div className="flex gap-2 text-sm font-bold">
+                <span className="bg-green-500 text-white px-3 py-1 rounded-full">💪 {categoriesCanHelpCount}</span>
+                <span className="bg-blue-500 text-white px-3 py-1 rounded-full">🙋 {categoriesNeedHelpCount}</span>
               </div>
             </div>
 
-            {/* Two-column layout: Help & Need */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Two-column layout: Help & Need - BIG BUTTONS FOR ELDERLY */}
+            <div className="grid grid-cols-2 gap-3">
               {/* I CAN HELP COLUMN */}
-              <div className="bg-green-50 rounded-lg p-2 border-2 border-green-300">
-                <p className="text-xs font-bold text-green-700 mb-1.5">💪 I Can Help</p>
-                <div className="space-y-1">
+              <div className="bg-green-50 rounded-lg p-3 border-4 border-green-400">
+                <p className="text-lg font-bold text-green-700 mb-3">💪 I Can Help</p>
+                <div className="space-y-2 mb-3">
                   {ALL_16_CATEGORIES.map(category => (
                     selectedCategoriesHelp.includes(category.id) && (
                       <button
                         key={category.id}
                         onClick={() => toggleCategoryHelp(category.id)}
-                        className="w-full text-left text-xs bg-green-500 text-white px-2 py-1 rounded font-semibold hover:bg-green-600 transition flex items-center gap-1"
+                        className="w-full text-left text-base bg-green-500 text-white px-3 py-2 rounded-lg font-bold hover:bg-green-600 transition flex items-center gap-2 active:scale-95"
                       >
-                        {category.icon} {category.name}
+                        <span className="text-2xl">{category.icon}</span>
+                        <span>{category.name}</span>
                       </button>
                     )
                   ))}
-                  {selectedCategoriesHelp.length === 0 && (
-                    <p className="text-xs text-gray-500 italic px-1">Select categories...</p>
-                  )}
                 </div>
-                <div className="flex flex-wrap gap-1 mt-2">
+                {selectedCategoriesHelp.length === 0 && (
+                  <p className="text-base text-gray-600 font-semibold mb-3 px-2">👇 Tap emoji below to add</p>
+                )}
+                {/* Big emoji buttons for unselected */}
+                <div className="grid grid-cols-4 gap-2">
                   {ALL_16_CATEGORIES.map(category => (
                     !selectedCategoriesHelp.includes(category.id) && (
                       <button
                         key={category.id}
                         onClick={() => toggleCategoryHelp(category.id)}
-                        className="text-sm hover:scale-110 transition"
+                        className="text-5xl p-2 hover:scale-110 transition active:scale-95 rounded-lg hover:bg-green-200"
                         title={category.name}
                       >
                         {category.icon}
@@ -2858,31 +2860,33 @@ export default function MyAccountPage() {
               </div>
 
               {/* I NEED HELP COLUMN */}
-              <div className="bg-blue-50 rounded-lg p-2 border-2 border-blue-300">
-                <p className="text-xs font-bold text-blue-700 mb-1.5">🙋 I Need Help</p>
-                <div className="space-y-1">
+              <div className="bg-blue-50 rounded-lg p-3 border-4 border-blue-400">
+                <p className="text-lg font-bold text-blue-700 mb-3">🙋 I Need Help</p>
+                <div className="space-y-2 mb-3">
                   {ALL_16_CATEGORIES.map(category => (
                     selectedCategoriesNeed.includes(category.id) && (
                       <button
                         key={category.id}
                         onClick={() => toggleCategoryNeed(category.id)}
-                        className="w-full text-left text-xs bg-blue-500 text-white px-2 py-1 rounded font-semibold hover:bg-blue-600 transition flex items-center gap-1"
+                        className="w-full text-left text-base bg-blue-500 text-white px-3 py-2 rounded-lg font-bold hover:bg-blue-600 transition flex items-center gap-2 active:scale-95"
                       >
-                        {category.icon} {category.name}
+                        <span className="text-2xl">{category.icon}</span>
+                        <span>{category.name}</span>
                       </button>
                     )
                   ))}
-                  {selectedCategoriesNeed.length === 0 && (
-                    <p className="text-xs text-gray-500 italic px-1">Select categories...</p>
-                  )}
                 </div>
-                <div className="flex flex-wrap gap-1 mt-2">
+                {selectedCategoriesNeed.length === 0 && (
+                  <p className="text-base text-gray-600 font-semibold mb-3 px-2">👇 Tap emoji below to add</p>
+                )}
+                {/* Big emoji buttons for unselected */}
+                <div className="grid grid-cols-4 gap-2">
                   {ALL_16_CATEGORIES.map(category => (
                     !selectedCategoriesNeed.includes(category.id) && (
                       <button
                         key={category.id}
                         onClick={() => toggleCategoryNeed(category.id)}
-                        className="text-sm hover:scale-110 transition"
+                        className="text-5xl p-2 hover:scale-110 transition active:scale-95 rounded-lg hover:bg-blue-200"
                         title={category.name}
                       >
                         {category.icon}
@@ -2893,27 +2897,27 @@ export default function MyAccountPage() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-2 pt-1">
+            {/* BIG Action Buttons */}
+            <div className="grid grid-cols-2 gap-3 pt-2">
               <button
                 onClick={() => {
                   setSelectedCategoriesHelp([]);
                   setSelectedCategoriesNeed([]);
                 }}
-                className="py-1.5 rounded font-bold text-xs text-gray-700 border-2 border-gray-300 hover:bg-white transition"
+                className="py-3 rounded-lg font-bold text-lg text-gray-700 border-4 border-gray-400 hover:bg-gray-100 transition active:scale-95"
               >
-                🔄 Clear
+                🔄 Clear All
               </button>
               <button
                 onClick={saveMyCategories}
                 disabled={categoriesSaving || (categoriesCanHelpCount === 0 && categoriesNeedHelpCount === 0)}
-                className={`py-1.5 rounded font-bold text-white text-xs transition ${
+                className={`py-3 rounded-lg font-bold text-white text-lg transition active:scale-95 ${
                   categoriesSaving || (categoriesCanHelpCount === 0 && categoriesNeedHelpCount === 0)
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg'
+                    : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg border-4 border-orange-700'
                 }`}
               >
-                {categoriesSaving ? '⏳' : '✅ Save'}
+                {categoriesSaving ? '⏳ Saving...' : '✅ Save'}
               </button>
             </div>
           </div>
