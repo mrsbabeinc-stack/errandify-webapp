@@ -10,6 +10,7 @@ interface ChatPageProps {
 
 interface Conversation {
   id: number;
+  formattedId?: string;
   title: string;
   otherPartyName: string;
   status: string;
@@ -88,6 +89,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
 
       const allConversations = activeChats.map((errand: any) => ({
         id: errand.id,
+        formattedId: errand.formatted_id || `ER${errand.id}`,
         title: errand.title,
         otherPartyName: errand.askerName || errand.doerName || 'Unknown',
         status: errand.status,
@@ -363,7 +365,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-sm text-gray-800 line-clamp-1">{conversation.title}</h3>
-                    <span className="text-xs text-gray-500">🆔 #{conversation.id}</span>
+                    <span className="text-xs text-gray-500">🆔 {conversation.formattedId}</span>
                   </div>
                 </div>
                 <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${getStatusColor(conversation.status)}`}>
