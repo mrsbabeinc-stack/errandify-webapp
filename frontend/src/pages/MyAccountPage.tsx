@@ -2055,7 +2055,7 @@ export default function MyAccountPage() {
                   <div className="absolute bottom-1 left-1 text-2xl opacity-20">🎁</div>
                   <div className="relative z-10">
                     <p className="text-xs opacity-90 mb-1 font-semibold">💰 Your Available Points</p>
-                    <p className="text-4xl font-bold mb-2">{userBalance} EP</p>
+                    <p className="text-4xl font-bold mb-2">{profileData?.errandifyPoints ?? userBalance} EP</p>
                     <p className="text-xs opacity-80 bg-orange-600 bg-opacity-30 rounded p-2 font-semibold">
                       🌟 Expiring Soon: 25 pts will expire on 30/06/2027
                     </p>
@@ -2105,7 +2105,7 @@ export default function MyAccountPage() {
               <div className="space-y-2">
                 <div className="text-center py-2 bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg border-2 border-green-300">
                   <p className="text-sm font-bold text-green-600">🛍️ Shop Rewards 🛍️</p>
-                  <p className="text-xs text-gray-600 mt-1">Current Balance: <span className="font-bold text-green-600">{userBalance} EP</span></p>
+                  <p className="text-xs text-gray-600 mt-1">Current Balance: <span className="font-bold text-green-600">{profileData?.errandifyPoints ?? userBalance} EP</span></p>
                 </div>
 
                 {/* Available Rewards - Happy Cards */}
@@ -2122,7 +2122,8 @@ export default function MyAccountPage() {
                       </div>
                       <button
                         onClick={() => {
-                          if (userBalance >= 50) {
+                          const balance = profileData?.errandifyPoints ?? userBalance;
+                          if (balance >= 50) {
                             setConfirmRedeemData({ points: 50, code: 'ERRAND5', amount: 5, name: '$5 Discount' });
                           } else {
                             setModalMessage('❌ Not enough points! You need 50 EP');
@@ -2141,7 +2142,8 @@ export default function MyAccountPage() {
                       </div>
                       <button
                         onClick={() => {
-                          if (userBalance >= 100) {
+                          const balance = profileData?.errandifyPoints ?? userBalance;
+                          if (balance >= 100) {
                             setConfirmRedeemData({ points: 100, code: 'ERRAND10', amount: 10, name: '$10 Discount' });
                           } else {
                             setModalMessage('❌ Not enough points! You need 100 EP');
@@ -2160,21 +2162,22 @@ export default function MyAccountPage() {
                       </div>
                       <button
                         onClick={() => {
-                          if (userBalance >= 200) {
+                          const balance = profileData?.errandifyPoints ?? userBalance;
+                          if (balance >= 200) {
                             setConfirmRedeemData({ points: 200, code: 'ERRAND20', amount: 20, name: '$20 Discount' });
                           } else {
                             setModalMessage('❌ Not enough points! You need 200 EP');
                             setShowErrorModal(true);
                           }
                         }}
-                        disabled={userBalance < 200}
+                        disabled={(profileData?.errandifyPoints ?? userBalance) < 200}
                         className={`text-white px-3 py-2 rounded-lg text-xs font-bold transition ${
-                          userBalance >= 200
+                          (profileData?.errandifyPoints ?? userBalance) >= 200
                             ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg cursor-pointer'
                             : 'bg-gray-400 cursor-not-allowed opacity-50'
                         }`}
                       >
-                        {userBalance >= 200 ? '✨ Redeem' : '🎯 Need 200 EP'}
+                        {(profileData?.errandifyPoints ?? userBalance) >= 200 ? '✨ Redeem' : '🎯 Need 200 EP'}
                       </button>
                     </div>
                   </div>
@@ -2194,17 +2197,17 @@ export default function MyAccountPage() {
                 {/* Points Card */}
                 <div className="bg-gradient-to-br from-orange-100 to-orange-50 rounded-lg p-3 border-2 border-orange-300">
                   <p className="text-xs text-gray-600 mb-1">💰 Available Points</p>
-                  <p className="text-3xl font-bold text-orange-600">{userBalance} EP</p>
+                  <p className="text-3xl font-bold text-orange-600">{profileData?.errandifyPoints ?? userBalance} EP</p>
                 </div>
 
                 {/* Points to Send */}
                 <div>
                   <label className="text-sm font-bold text-gray-700">💰 Points to Send</label>
-                  <p className="text-xs text-gray-600 mb-2">Up to {userBalance} EP</p>
+                  <p className="text-xs text-gray-600 mb-2">Up to {profileData?.errandifyPoints ?? userBalance} EP</p>
                   <input
                     type="number"
                     min="1"
-                    max={userBalance}
+                    max={profileData?.errandifyPoints ?? userBalance}
                     value={giftForm.points}
                     onChange={(e) => setGiftForm({ ...giftForm, points: e.target.value })}
                     className="w-full px-3 py-2 border-2 border-orange-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange"
