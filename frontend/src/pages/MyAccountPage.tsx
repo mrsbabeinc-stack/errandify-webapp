@@ -39,7 +39,7 @@ interface Rating {
 
 export default function MyAccountPage() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | 'categories' | 'faq'>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | 'categories'>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [blockedTab, setBlockedTab] = useState<'blocked' | 'trusted'>('blocked');
   const [trustedUsers, setTrustedUsers] = useState<Array<{ id: string; name: string; alias?: string; avatar?: string; markedDate: string }>>([]);
@@ -1212,16 +1212,6 @@ export default function MyAccountPage() {
               }`}
             >
               🎯 Categories
-            </button>
-            <button
-              onClick={() => setActiveSection('faq')}
-              className={`px-2 py-1 text-xs font-bold transition rounded ${
-                activeSection === 'faq'
-                  ? 'bg-errandify-orange text-white'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              ❓ FAQ
             </button>
           </div>
         </div>
@@ -3105,65 +3095,6 @@ export default function MyAccountPage() {
         )}
 
         {/* FAQ SECTION */}
-        {activeSection === 'faq' && (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="bg-errandify-orange text-white p-3">
-              <h2 className="text-lg font-bold">❓ Frequently Asked Questions</h2>
-            </div>
-            <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
-              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
-                <p className="font-semibold text-sm mb-1 text-errandify-brown">What is Errandify?</p>
-                <p className="text-xs text-gray-600">Errandify is Singapore's AI-powered neighbourhood marketplace where neighbours help each other with daily tasks. Connect with trusted community members to post or complete errands.</p>
-              </div>
-
-              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
-                <p className="font-semibold text-sm mb-1 text-errandify-brown">How do I post an errand?</p>
-                <p className="text-xs text-gray-600">Click MyHome → Create Errand. Select a category, describe what you need, set your budget, and post. Doers will submit bids within hours. Review and pick the best fit!</p>
-              </div>
-
-              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
-                <p className="font-semibold text-sm mb-1 text-errandify-brown">How do I earn money as a doer?</p>
-                <p className="text-xs text-gray-600">Browse errands, submit bids at your chosen rate, get accepted, complete the work, and receive payment. Higher ratings build reputation and unlock better opportunities!</p>
-              </div>
-
-              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
-                <p className="font-semibold text-sm mb-1 text-errandify-brown">How much can I earn?</p>
-                <p className="text-xs text-gray-600">You set your own rates! Earnings depend on category, complexity, time, and location. Most doers earn SGD 20-100+ per errand. Top-rated doers get priority!</p>
-              </div>
-
-              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
-                <p className="font-semibold text-sm mb-1 text-errandify-brown">Can I cancel an errand?</p>
-                <p className="text-xs text-gray-600">Yes! Before a doer accepts, you can cancel free. After acceptance, a small cancellation fee applies. If the doer cancels, you get fully refunded.</p>
-              </div>
-
-              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
-                <p className="font-semibold text-sm mb-1 text-errandify-brown">What if I'm not happy with the work?</p>
-                <p className="text-xs text-gray-600">Payment is held until you mark work complete. If there are issues, raise a dispute with evidence. Our team reviews and resolves fairly.</p>
-              </div>
-
-              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
-                <p className="font-semibold text-sm mb-1 text-errandify-brown">How are fees calculated?</p>
-                <p className="text-xs text-gray-600">Doers pay 20% platform fee from earnings. Askers pay Stripe processing fees (2-3%). Example: SGD 100 errand = Doer earns SGD 80 (after 20%), Asker pays ~SGD 102-103.</p>
-              </div>
-
-              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
-                <p className="font-semibold text-sm mb-1 text-errandify-brown">What are Errandify Points?</p>
-                <p className="text-xs text-gray-600">EP are earned through task completion and ratings. Convert them to SGD and withdraw in 24-48 hours. Use them for rewards and discounts too!</p>
-              </div>
-
-              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
-                <p className="font-semibold text-sm mb-1 text-errandify-brown">Who can join Errandify?</p>
-                <p className="text-xs text-gray-600">Anyone 18+ can join! We verify users via SingPass (for Singapore citizens/residents). Some categories may require additional background checks.</p>
-              </div>
-
-              <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition">
-                <p className="font-semibold text-sm mb-1 text-errandify-brown">What's a Trusted User?</p>
-                <p className="text-xs text-gray-600">Users with 5-star ratings, completed multiple errands, and no disputes get marked as Trusted. It builds confidence in the community!</p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* BOTTOM QUICK LINKS - ONLY SHOW ON DASHBOARD */}
         {activeSection === 'dashboard' && (
           <div className="mt-4 pt-4 border-t-2 border-gray-200">
