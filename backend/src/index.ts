@@ -36,6 +36,7 @@ import mockAuthRoutes from './routes/mockAuth.js';
 import mockPaymentRoutes from './routes/mockPayment.js';
 import uploadRoutes from './routes/uploads.js';
 import categoryPreferencesRoutes from './routes/categoryPreferences.js';
+import safetyRoutes from './routes/safety.js';
 import { startCrons } from './cron.js';
 
 const app = express();
@@ -90,6 +91,7 @@ app.use('/api/questions', questionsRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/safety', safetyRoutes);
 app.use('/api', hanaRoutes);
 
 // Error handling
