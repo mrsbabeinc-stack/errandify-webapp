@@ -266,7 +266,8 @@ export default function MyAccountPage() {
   const filteredActivities = allActivities.filter(activity => {
     const matchesSearch = activity.title.toLowerCase().includes(activitySearch.toLowerCase());
     const matchesFilter = activityFilter === 'all' || activity.type === activityFilter;
-    return matchesSearch && matchesFilter;
+    const isNotGift = activity.type !== 'gift'; // Exclude gifts from MyPocket
+    return matchesSearch && matchesFilter && isNotGift;
   });
 
   useEffect(() => {
@@ -1728,7 +1729,7 @@ export default function MyAccountPage() {
 
               {/* Filter Buttons */}
               <div className="p-2 border-b border-gray-100 flex gap-1 flex-wrap">
-                {(['all', 'completed', 'posted', 'referral', 'rating', 'accepted', 'gift'] as const).map((filter) => (
+                {(['all', 'completed', 'posted', 'referral', 'rating', 'accepted'] as const).map((filter) => (
                   <button
                     key={filter}
                     onClick={() => setActivityFilter(filter)}
@@ -1738,7 +1739,7 @@ export default function MyAccountPage() {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {filter === 'all' ? '📋 All' : filter === 'completed' ? '✅ Completed' : filter === 'posted' ? '📝 Posted' : filter === 'referral' ? '🎁 Referral' : filter === 'rating' ? '⭐ Rating' : filter === 'accepted' ? '✅ Accepted' : '💝 Gift'}
+                    {filter === 'all' ? '📋 All' : filter === 'completed' ? '✅ Completed' : filter === 'posted' ? '📝 Posted' : filter === 'referral' ? '🎁 Referral' : filter === 'rating' ? '⭐ Rating' : '✅ Accepted'}
                   </button>
                 ))}
               </div>
