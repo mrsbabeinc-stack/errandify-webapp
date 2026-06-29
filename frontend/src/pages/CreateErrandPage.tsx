@@ -49,7 +49,21 @@ export default function CreateErrandPage() {
   const [showStartLocation, setShowStartLocation] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [paymentRequired, setPaymentRequired] = useState(false);
+  const [needsAreaConfirmation, setNeedsAreaConfirmation] = useState(false);
+  const [pendingPostalCode, setPendingPostalCode] = useState('');
+  const [selectedArea, setSelectedArea] = useState('');
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Singapore areas list for dropdown
+  const singaporeAreas = [
+    'Raffles Place', 'Cecil Street', 'Tanjong Pagar', 'Outram', 'People\'s Park',
+    'Chinatown', 'Orchard', 'Pasir Panjang', 'Novena', 'Newton', 'Farrer Park',
+    'Henderson', 'Balestier', 'Macpherson', 'Paya Lebar', 'Geylang', 'Eunos',
+    'Bedok', 'Tampines', 'Pasir Ris', 'Punggol', 'Hougang', 'Serangoon',
+    'Sengkang', 'Choa Chu Kang', 'Jurong West', 'Jurong', 'Jurong East',
+    'Clementi', 'Bukit Merah', 'Tiong Bahru', 'Queenstown', 'Bukit Timah',
+    'Ang Mo Kio', 'Bishan', 'Toa Payoh', 'Yishun', 'Sembawang', 'Kranji', 'Woodlands',
+  ].sort();
 
   // Load copied errand data on mount
   useEffect(() => {
@@ -147,14 +161,21 @@ export default function CreateErrandPage() {
             console.log('[CreateErrand] Postal code:', prefilledData.postalCode);
           }
 
-          // Use prefilled area directly (already correctly extracted by Hana/backend)
-          if (prefilledData.area) {
-            setArea(prefilledData.area);
-            setFormData((prev) => ({
-              ...prev,
-              location: prefilledData.area,
-            }));
-            console.log('[CreateErrand] Area set from prefilled data:', prefilledData.area);
+          // Check if area confirmation is needed
+          if (prefilledData.needsAreaConfirmation) {
+            console.log('[CreateErrand] ⚠️ Area confirmation needed for postal:', prefilledData.postalCode);
+            setNeedsAreaConfirmation(true);
+            setPendingPostalCode(prefilledData.postalCode);
+          } else {
+            // Use prefilled area directly (already correctly extracted by Hana/backend)
+            if (prefilledData.area) {
+              setArea(prefilledData.area);
+              setFormData((prev) => ({
+                ...prev,
+                location: prefilledData.area,
+              }));
+              console.log('[CreateErrand] Area set from prefilled data:', prefilledData.area);
+            }
           }
 
           if (prefilledData.fullAddress) {
@@ -1806,6 +1827,61 @@ export default function CreateErrandPage() {
                 className="flex-1 px-3 py-2 bg-errandify-orange text-white rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer pointer-events-auto transition-all shadow-sm"
               >
                 {loading ? 'Posting...' : 'Post'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Area Confirmation Modal */}
+      {needsAreaConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+            <h2 className="text-2xl font-bold text-errandify-brown mb-2">Confirm Location</h2>
+            <p className="text-gray-600 mb-4">
+              We couldn't auto-detect the area for postal code <strong>{pendingPostalCode}</strong>. Please select the correct area:
+            </p>
+
+            <select
+              value={selectedArea}
+              onChange={(e) => setSelectedArea(e.target.value)}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange mb-4"
+            >
+              <option value="">-- Select Area --</option>
+              {singaporeAreas.map((areaName) => (
+                <option key={areaName} value={areaName}>
+                  {areaName}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setNeedsAreaConfirmation(false);
+                  setSelectedArea('');
+                }}
+                className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedArea) {
+                    setArea(selectedArea);
+                    setFormData((prev) => ({
+                      ...prev,
+                      location: selectedArea,
+                    }));
+                    setNeedsAreaConfirmation(false);
+                    setSelectedArea('');
+                    console.log('[CreateErrand] Area confirmed by user:', selectedArea);
+                  }
+                }}
+                disabled={!selectedArea}
+                className="flex-1 px-4 py-2 bg-errandify-orange text-white rounded-lg font-semibold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Confirm
               </button>
             </div>
           </div>
