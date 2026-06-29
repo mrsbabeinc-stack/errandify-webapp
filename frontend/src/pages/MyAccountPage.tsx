@@ -44,6 +44,8 @@ export default function MyAccountPage() {
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [safetyTab, setSafetyTab] = useState<'blocked' | 'resources' | 'pause'>('resources');
   const [showAccountPauseModal, setShowAccountPauseModal] = useState(false);
+  const [safetySearchTerm, setSafetySearchTerm] = useState('');
+  const [safetyFilterCategory, setSafetyFilterCategory] = useState<'all' | 'trafficking' | 'abuse' | 'migrant' | 'elderly' | 'mental_health'>('all');
   const [trustedUsers, setTrustedUsers] = useState<Array<{ id: string; name: string; alias?: string; avatar?: string; markedDate: string }>>([]);
   const [rewardsTab, setRewardsTab] = useState<'overview' | 'shop' | 'gift' | 'myVoucher' | 'history'>('overview');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
@@ -2851,25 +2853,52 @@ export default function MyAccountPage() {
 
             {/* Safety & Support Resources Tab */}
             {safetyTab === 'resources' && (
-              <div className="p-4">
-                <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 border-2 border-blue-300 rounded-xl p-6 text-center">
-                  <div className="text-5xl mb-3">🛡️</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">We've Got Your Back</h3>
-                  <p className="text-sm text-gray-700 mb-4">
-                    You're never alone. We're here to support you with safety resources, account protection, and help when you need it.
-                  </p>
-
-                  <button
-                    onClick={() => window.location.href = '/safety-resources'}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-lg transition mb-3 flex items-center justify-center gap-2"
-                  >
-                    📚 View All Safety Resources
-                  </button>
-
-                  <p className="text-xs text-gray-600">
-                    Get help anytime. All services are 24/7, confidential, and free.
-                  </p>
+              <div className="p-4 space-y-4">
+                {/* Header */}
+                <div className="bg-gradient-to-br from-red-50 to-orange-50 border-l-4 border-red-500 rounded-lg p-4">
+                  <h3 className="font-bold text-red-900 mb-1">🆘 Get Help Anytime</h3>
+                  <p className="text-xs text-red-800">All services are 24/7, confidential, and free.</p>
                 </div>
+
+                {/* Search & Filter */}
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="🔍 Search resources (e.g., 'trafficking', 'abuse')..."
+                    value={safetySearchTerm}
+                    onChange={(e) => setSafetySearchTerm(e.target.value.toLowerCase())}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+
+                  <div className="flex gap-2 flex-wrap">
+                    {[
+                      { value: 'all', label: 'All Services' },
+                      { value: 'trafficking', label: '🚨 Trafficking' },
+                      { value: 'abuse', label: '💙 Abuse' },
+                      { value: 'migrant', label: '💼 Migrant' },
+                      { value: 'elderly', label: '👵 Elderly' },
+                      { value: 'mental_health', label: '🧠 Mental Health' },
+                    ].map((cat) => (
+                      <button
+                        key={cat.value}
+                        onClick={() => setSafetyFilterCategory(cat.value as any)}
+                        className={`px-3 py-1.5 text-xs font-bold rounded-full transition ${
+                          safetyFilterCategory === cat.value
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Resources List */}
+                <SafetyResourcesList
+                  searchTerm={safetySearchTerm}
+                  filterCategory={safetyFilterCategory}
+                />
               </div>
             )}
 
@@ -3996,6 +4025,195 @@ export default function MyAccountPage() {
 
       {/* Floating Hana */}
       <HanaCustomerService />
+    </div>
+  );
+}
+
+// Safety Resources Component
+interface SafetyResource {
+  id: string;
+  title: string;
+  category: 'trafficking' | 'abuse' | 'migrant' | 'elderly' | 'mental_health';
+  phone: string;
+  email?: string;
+  url?: string;
+  description: string;
+  hours: string;
+}
+
+const SAFETY_RESOURCES: SafetyResource[] = [
+  {
+    id: '1',
+    title: 'Singapore Anti-Trafficking Hotline',
+    category: 'trafficking',
+    phone: '+65 1800-838-8877',
+    description: 'Report trafficking, get emergency support',
+    hours: '24/7',
+  },
+  {
+    id: '2',
+    title: 'Ministry of Social & Family Development',
+    category: 'trafficking',
+    phone: '+65 6354-5303',
+    url: 'https://www.msf.gov.sg/',
+    description: 'Government support for trafficking victims',
+    hours: '9am-5pm',
+  },
+  {
+    id: '3',
+    title: 'HOME Singapore',
+    category: 'migrant',
+    phone: '+65 6297-9059',
+    email: 'contact@home.org.sg',
+    url: 'https://www.home.org.sg/',
+    description: 'Support for migrant workers in distress',
+    hours: '24/7',
+  },
+  {
+    id: '4',
+    title: 'Transient Workers Count Too (TWC2)',
+    category: 'migrant',
+    phone: '+65 6883-6800',
+    url: 'https://twc2.org.sg/',
+    description: 'Migrant worker advocacy and support',
+    hours: 'Business hours',
+  },
+  {
+    id: '5',
+    title: "Women's Crisis Centre",
+    category: 'abuse',
+    phone: '+65 6392-7650',
+    url: 'https://www.wcc.org.sg/',
+    description: 'Support for abuse survivors',
+    hours: '10am-6pm',
+  },
+  {
+    id: '6',
+    title: 'AWARE Singapore',
+    category: 'abuse',
+    phone: '+65 6778-0220',
+    url: 'https://www.aware.org.sg/',
+    description: "Gender equality and women's rights",
+    hours: '10am-6pm',
+  },
+  {
+    id: '7',
+    title: 'Elders Support Services',
+    category: 'elderly',
+    phone: '+65 6210-2888',
+    url: 'https://www.healthhub.sg/',
+    description: 'Support for elderly citizens',
+    hours: '8am-6pm',
+  },
+  {
+    id: '8',
+    title: 'Institute of Mental Health',
+    category: 'mental_health',
+    phone: '+65 6389-2222',
+    url: 'https://www.imh.com.sg/',
+    description: 'Mental health crisis support',
+    hours: '24/7',
+  },
+  {
+    id: '9',
+    title: 'Singapore Suicide Prevention Hotline',
+    category: 'mental_health',
+    phone: '+65 1800-221-4444',
+    description: 'Suicide prevention and mental health crisis',
+    hours: '24/7',
+  },
+  {
+    id: '10',
+    title: 'YMCA Sexual Harassment Hotline',
+    category: 'abuse',
+    phone: '+65 6338-3003',
+    description: 'Support for sexual harassment survivors',
+    hours: '24/7',
+  },
+];
+
+function SafetyResourcesList({
+  searchTerm,
+  filterCategory,
+}: {
+  searchTerm: string;
+  filterCategory: 'all' | 'trafficking' | 'abuse' | 'migrant' | 'elderly' | 'mental_health';
+}) {
+  const filtered = SAFETY_RESOURCES.filter((resource) => {
+    const matchesFilter = filterCategory === 'all' || resource.category === filterCategory;
+    const matchesSearch =
+      searchTerm === '' ||
+      resource.title.toLowerCase().includes(searchTerm) ||
+      resource.description.toLowerCase().includes(searchTerm) ||
+      resource.phone.includes(searchTerm);
+
+    return matchesFilter && matchesSearch;
+  });
+
+  return (
+    <div className="space-y-3">
+      {filtered.length > 0 ? (
+        filtered.map((resource) => (
+          <div key={resource.id} className="bg-white border-l-4 border-blue-400 rounded-lg p-4 hover:shadow-md transition">
+            <div className="flex justify-between items-start mb-2">
+              <h4 className="font-bold text-gray-900 text-sm">{resource.title}</h4>
+              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-semibold whitespace-nowrap ml-2">
+                {resource.hours}
+              </span>
+            </div>
+
+            <p className="text-xs text-gray-600 mb-3">{resource.description}</p>
+
+            <div className="space-y-2">
+              {/* Phone */}
+              <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                <div>
+                  <p className="text-xs text-gray-600">Phone</p>
+                  <p className="font-bold text-gray-900 text-sm">{resource.phone}</p>
+                </div>
+                <button
+                  onClick={() => navigator.clipboard.writeText(resource.phone)}
+                  className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded transition font-medium"
+                >
+                  Copy
+                </button>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 flex-wrap">
+                <a
+                  href={`tel:${resource.phone}`}
+                  className="flex-1 text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded transition font-medium text-center"
+                >
+                  📞 Call
+                </a>
+                {resource.email && (
+                  <a
+                    href={`mailto:${resource.email}`}
+                    className="flex-1 text-xs bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded transition font-medium text-center"
+                  >
+                    📧 Email
+                  </a>
+                )}
+                {resource.url && (
+                  <a
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded transition font-medium text-center"
+                  >
+                    🌐 Visit
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="text-center py-8 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-600">No resources found matching your search.</p>
+        </div>
+      )}
     </div>
   );
 }
