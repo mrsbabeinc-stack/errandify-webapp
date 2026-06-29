@@ -238,7 +238,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
       data: {
         id: errand.id,
         errandId: errand.errand_id,
-        formatted_id: errand.formatted_id,
+        formatted_id: errand.errand_id,
         title: errand.title,
         description: errand.description,
         notes: isConfirmedDoer ? errand.notes : null, // Only show to confirmed doer
