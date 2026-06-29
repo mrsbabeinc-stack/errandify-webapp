@@ -720,33 +720,37 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     <p className="text-xs font-bold text-errandify-orange">
                       {errand.status === 'confirmed' && '25%'}
                       {errand.status === 'in_progress' && '50%'}
-                      {errand.status === 'completed' && '75%'}
-                      {errand.status === 'completed_unconfirmed' && '90%'}
+                      {errand.status === 'completed_unconfirmed' && '75%'}
+                      {errand.status === 'completed' && '✅ 100% Complete!'}
                       {errand.status === 'disputed' && '⚠️ On Hold'}
                     </p>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-green-400 via-errandify-orange to-green-500 rounded-full transition-all duration-500 ease-out"
+                      className={`h-full rounded-full transition-all duration-500 ease-out ${
+                        errand.status === 'completed'
+                          ? 'bg-gradient-to-r from-green-400 via-green-500 to-green-600'
+                          : 'bg-gradient-to-r from-green-400 via-errandify-orange to-green-500'
+                      }`}
                       style={{
                         width:
                           errand.status === 'confirmed'
                             ? '25%'
                             : errand.status === 'in_progress'
                             ? '50%'
-                            : errand.status === 'completed'
-                            ? '75%'
                             : errand.status === 'completed_unconfirmed'
-                            ? '90%'
-                            : '100%',
+                            ? '75%'
+                            : errand.status === 'completed'
+                            ? '100%'
+                            : '0%',
                       }}
                     />
                   </div>
                   <div className="flex justify-between text-xs text-gray-500 mt-1 px-1">
                     <span>Accepted</span>
                     <span>In Progress</span>
-                    <span>Done</span>
-                    <span>Complete</span>
+                    <span>Work Done</span>
+                    <span>✅ Reviewed</span>
                   </div>
                 </div>
 
@@ -1116,24 +1120,49 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                 setRatingSubmitting(true);
                                 try {
                                   const token = localStorage.getItem('token');
-                                  // Backend will auto-lookup doer from bids if not provided
+
+                                  // Step 1: Submit rating
                                   await axios.post(
                                     `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings`,
                                     {
                                       taskId: errand.id,
-                                      ratedUserId: errand.doerId || undefined, // Let backend find if not available
+                                      ratedUserId: errand.doerId || undefined,
                                       rating,
                                       comment: ratingComment || null,
                                     },
                                     { headers: { Authorization: `Bearer ${token}` } }
                                   );
+
+                                  // Step 2: Mark errand as completed (from completed_unconfirmed to completed)
+                                  await axios.post(
+                                    `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/confirm-completion`,
+                                    {},
+                                    { headers: { Authorization: `Bearer ${token}` } }
+                                  );
+
+                                  // Step 3: Award EP to both asker and doer
+                                  await axios.post(
+                                    `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/award-ep`,
+                                    {
+                                      errandId: errand.id,
+                                      askerId: errand.askerId,
+                                      doerId: errand.doerId,
+                                      reason: 'task_completion',
+                                    },
+                                    { headers: { Authorization: `Bearer ${token}` } }
+                                  );
+
                                   setHasRated(true);
                                   setShowCelebratory(true);
                                   setRatingComment('');
 
-                                  // Trigger refresh for MyAccountPage (if user visits it later)
+                                  // Step 4: Update local errand status for immediate UI update
+                                  setErrand(prev => prev ? { ...prev, status: 'completed' } : null);
+
+                                  // Step 5: Trigger refresh for MyAccountPage and other pages
                                   window.dispatchEvent(new Event('ratingsUpdated'));
                                   window.dispatchEvent(new Event('profileDataUpdated'));
+                                  window.dispatchEvent(new Event('errandCompleted'));
 
                                   // Auto-hide celebratory message and navigate after 3 seconds
                                   setTimeout(() => {
@@ -1141,8 +1170,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                                     navigate('/errands');
                                   }, 3000);
                                 } catch (err: any) {
-                                  console.error('Rating submission error:', err);
-                                  alert('Error submitting rating: ' + (err.response?.data?.error || err.message));
+                                  console.error('Completion submission error:', err);
+                                  alert('Error completing errand: ' + (err.response?.data?.error || err.message));
                                 } finally {
                                   setRatingSubmitting(false);
                                 }
@@ -1150,7 +1179,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                               disabled={ratingSubmitting}
                               className="w-full mt-2 px-2 py-1 text-xs bg-gradient-to-r from-green-500 to-green-600 text-white rounded font-semibold hover:shadow disabled:opacity-50 transition"
                             >
-                            {ratingSubmitting ? '✨ Sending...' : '✓ Submit Review & Approve Completion'}
+                            {ratingSubmitting ? '✨ Completing errand...' : '✓ Confirm & Complete Errand'}
                           </button>
                           ) : (
                             <div className="w-full mt-2 px-2 py-1 text-xs bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded font-semibold text-center border border-green-300">
@@ -1167,23 +1196,57 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 {/* Doer Actions - Only show if current user is the doer */}
                 {currentUser && currentUser.id !== errand.askerId && (
                   <div className="space-y-2 pt-2 border-t border-green-200">
-                    <p className="font-semibold text-gray-700 text-xs">📌 Your Options:</p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setShowChat(true)}
-                        className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-xs transition-all"
-                      >
-                        💬 Chat
-                      </button>
-                      <button
-                        onClick={() => navigate(`/task/${id}/complete`)}
-                        className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 text-xs transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        disabled={errand.status === 'disputed'}
-                        title={errand.status === 'disputed' ? 'Cannot add files during dispute' : 'Submit additional files before 48 hours pass'}
-                      >
-                        📁 Add More Files
-                      </button>
-                    </div>
+                    {errand.status !== 'completed' && (
+                      <>
+                        <p className="font-semibold text-gray-700 text-xs">📌 Your Options:</p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setShowChat(true)}
+                            className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-xs transition-all"
+                          >
+                            💬 Chat
+                          </button>
+                          <button
+                            onClick={() => navigate(`/task/${id}/complete`)}
+                            className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 text-xs transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            disabled={errand.status === 'disputed'}
+                            title={errand.status === 'disputed' ? 'Cannot add files during dispute' : 'Submit additional files before 48 hours pass'}
+                          >
+                            📁 Add More Files
+                          </button>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Doer Incentive - After asker rates (errand completed) */}
+                    {errand.status === 'completed' && (
+                      <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 rounded-lg">
+                        <p className="text-xs font-bold text-blue-900 mb-2">🎉 Errand Complete!</p>
+                        <p className="text-xs text-blue-800 mb-3">
+                          <strong>{errand.askerName || 'Jane'}</strong> rated you 5 stars! ⭐
+                        </p>
+                        <div className="bg-white rounded p-2 mb-2 border border-blue-200">
+                          <p className="text-xs text-gray-700 font-semibold mb-1">💰 Rate {errand.askerName || 'Jane'} back to:</p>
+                          <ul className="text-xs text-gray-600 space-y-0.5">
+                            <li>✅ Earn +5 EP bonus</li>
+                            <li>🏆 Build their reputation</li>
+                            <li>❤️ Complete the exchange</li>
+                          </ul>
+                        </div>
+                        <button
+                          onClick={() => {
+                            // Scroll to rating form or show it if not visible
+                            const ratingForm = document.querySelector('[data-doer-rating-form]');
+                            if (ratingForm) {
+                              ratingForm.scrollIntoView({ behavior: 'smooth' });
+                            }
+                          }}
+                          className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-2 rounded-lg font-bold text-xs hover:shadow-lg transition"
+                        >
+                          ⭐ Rate {errand.askerName || 'Jane'} Back
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1229,6 +1292,104 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 {currentUser && currentUser.id === errand.askerId && hasRated && (
                   <div className="mt-2 p-2 bg-gradient-to-r from-green-100 to-emerald-100 border border-green-300 rounded text-center">
                     <p className="text-xs text-green-700 font-semibold">✨ All done! Errand marked complete</p>
+                  </div>
+                )}
+
+                {/* Doer Rating Form - Only show if doer and errand is completed but doer hasn't rated yet */}
+                {currentUser && currentUser.id !== errand.askerId && errand.status === 'completed' && !hasRated && (
+                  <div data-doer-rating-form className="mt-3 pt-3 border-t border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded">
+                    <p className="font-semibold text-xs text-purple-900 mb-2 text-center">Rate {errand.askerName || 'Jane'} & Earn +5 EP! ⭐</p>
+                    <div className="flex gap-1 mb-3 justify-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => !hasRated && setRating(star)}
+                          disabled={hasRated}
+                          className={`text-3xl transition-all hover:scale-110 ${
+                            star <= rating ? 'text-yellow-400 drop-shadow-md' : 'text-gray-300 hover:text-yellow-300'
+                          } ${hasRated ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-center text-purple-800 mb-3 font-semibold">
+                      {rating === 1 && 'Needs improvement'}
+                      {rating === 2 && 'Could be better'}
+                      {rating === 3 && 'Good work!'}
+                      {rating === 4 && 'Really good!'}
+                      {rating === 5 && 'Amazing! Wonderful work!'}
+                    </p>
+                    <textarea
+                      value={ratingComment}
+                      onChange={(e) => !hasRated && setRatingComment(e.target.value)}
+                      disabled={hasRated}
+                      placeholder="Share your experience (optional)..."
+                      maxLength={200}
+                      rows={2}
+                      className={`w-full text-xs px-2 py-1 border border-purple-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none ${hasRated ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+                    />
+                    {!hasRated ? (
+                      <button
+                        onClick={async () => {
+                          if (!currentUser || !errand) return;
+                          setRatingSubmitting(true);
+                          try {
+                            const token = localStorage.getItem('token');
+                            // Doer rates asker
+                            await axios.post(
+                              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings`,
+                              {
+                                taskId: errand.id,
+                                ratedUserId: errand.askerId,
+                                rating,
+                                comment: ratingComment || null,
+                              },
+                              { headers: { Authorization: `Bearer ${token}` } }
+                            );
+
+                            // Award +5 EP bonus for doer rating within timeframe
+                            await axios.post(
+                              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/award-ep-bonus`,
+                              {
+                                errandId: errand.id,
+                                userId: currentUser.id,
+                                bonus: 5,
+                                reason: 'doer_rating_bonus',
+                              },
+                              { headers: { Authorization: `Bearer ${token}` } }
+                            );
+
+                            setHasRated(true);
+                            setShowCelebratory(true);
+                            setRatingComment('');
+
+                            // Trigger refresh
+                            window.dispatchEvent(new Event('ratingsUpdated'));
+                            window.dispatchEvent(new Event('profileDataUpdated'));
+
+                            // Auto-hide and navigate
+                            setTimeout(() => {
+                              setShowCelebratory(false);
+                              navigate('/errands');
+                            }, 3000);
+                          } catch (err: any) {
+                            console.error('Doer rating submission error:', err);
+                            alert('Error submitting rating: ' + (err.response?.data?.error || err.message));
+                          } finally {
+                            setRatingSubmitting(false);
+                          }
+                        }}
+                        disabled={ratingSubmitting}
+                        className="w-full mt-2 px-2 py-2 text-xs bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded font-semibold hover:shadow disabled:opacity-50 transition"
+                      >
+                        {ratingSubmitting ? '✨ Submitting...' : '⭐ Submit Rating & Earn +5 EP'}
+                      </button>
+                    ) : (
+                      <div className="w-full mt-2 px-2 py-2 text-xs bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 rounded font-semibold text-center border border-purple-300">
+                        ✨ Thanks for rating! +5 EP bonus earned!
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
