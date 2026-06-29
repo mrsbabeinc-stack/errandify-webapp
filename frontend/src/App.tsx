@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { initPushNotifications } from './utils/pushNotifications';
 import Layout from './components/Layout';
 import FloatingHana from './components/FloatingHana';
 import LandingPage from './pages/LandingPage';
@@ -65,6 +66,11 @@ export default function App() {
     }
 
     setIsCheckingAuth(false);
+
+    // Initialize push notifications
+    initPushNotifications().catch((error) => {
+      console.error('Push notifications initialization failed:', error);
+    });
   }, []);
 
   const handleLogin = (role: 'asker' | 'doer') => {

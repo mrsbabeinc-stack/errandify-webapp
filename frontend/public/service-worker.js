@@ -1,20 +1,34 @@
 // Service Worker for Push Notifications
-const CACHE_NAME = 'errandify-v1';
+// Handles background sync, push events, and offline notifications
 
-// Install event - cache assets
+const CACHE_NAME = 'errandify-v1';
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+];
+
+// Install event - cache essential files
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing...');
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('Cache opened, adding files');
+      return cache.addAll(urlsToCache).catch((error) => {
+        console.warn('Some files failed to cache:', error);
+      });
+    })
+  );
   self.skipWaiting();
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
+            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -24,26 +38,39 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Push event - display notification
+// Push event - Handle incoming push notifications
 self.addEventListener('push', (event) => {
-  console.log('[Service Worker] Push received:', event);
+  console.log('Push event received:', event);
 
-  if (!event.data) {
-    console.log('[Service Worker] Push event but no data');
-    return;
+  let notificationData = {
+    title: 'Errandify',
+    body: 'New notification',
+    icon: '/errandify-icon-192.png',
+    badge: '/errandify-badge-72.png',
+    tag: 'errandify-notification',
+    data: {},
+  };
+
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      notificationData = {
+        ...notificationData,
+        ...data,
+      };
+    } catch (error) {
+      console.error('Failed to parse push data:', error);
+      notificationData.body = event.data.text();
+    }
   }
 
-  try {
-    const data = event.data.json();
-    console.log('[Service Worker] Push data:', data);
-
-    const options = {
-      body: data.body || 'New notification from Errandify',
-      icon: data.icon || '/errandify-icon.png',
-      badge: data.badge || '/errandify-badge.png',
-      tag: data.tag || 'notification',
-      data: data.data || {},
-      requireInteraction: data.requireInteraction || false,
+  event.waitUntil(
+    self.registration.showNotification(notificationData.title, {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: notificationData.badge,
+      tag: notificationData.tag,
+      data: notificationData.data,
       actions: [
         {
           action: 'open',
@@ -54,42 +81,141 @@ self.addEventListener('push', (event) => {
           title: 'Close',
         },
       ],
-    };
-
-    event.waitUntil(
-      self.registration.showNotification(data.title || 'Errandify', options)
-    );
-  } catch (error) {
-    console.error('[Service Worker] Error processing push:', error);
-  }
+      vibrate: [100, 50, 100],
+      requireInteraction: false,
+    })
+  );
 });
 
-// Notification click event - navigate to URL
+// Notification click event - Open app when notification is clicked
 self.addEventListener('notificationclick', (event) => {
-  console.log('[Service Worker] Notification clicked:', event);
+  console.log('Notification clicked:', event.notification.tag);
+
   event.notification.close();
 
-  const urlToOpen = event.notification.data?.url || '/';
+  if (event.action === 'close') {
+    return;
+  }
 
-  // Check if there's already a window open
+  // Build URL based on notification data
+  let url = '/';
+  if (event.notification.data && event.notification.data.url) {
+    url = event.notification.data.url;
+  }
+
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Look for a window that has the target URL
-      for (let i = 0; i < clientList.length; i++) {
-        const client = clientList[i];
-        if (client.url === urlToOpen && 'focus' in client) {
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      // Check if app is already open
+      for (let client of clientList) {
+        if (client.url === url && 'focus' in client) {
           return client.focus();
         }
       }
-      // If not found, open a new window
+      // Open app if not already open
       if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
+        return clients.openWindow(url);
       }
     })
   );
 });
 
-// Notification close event - optional cleanup
-self.addEventListener('notificationclose', (event) => {
-  console.log('[Service Worker] Notification closed:', event);
+// Background sync - Sync notifications when back online
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-notifications') {
+    event.waitUntil(syncQueuedNotifications());
+  }
 });
+
+async function syncQueuedNotifications() {
+  try {
+    const db = await openIndexedDB();
+    if (!db.objectStoreNames.contains('notificationQueue')) {
+      console.log('notificationQueue store does not exist yet');
+      return;
+    }
+
+    const transaction = db.transaction('notificationQueue', 'readonly');
+    const store = transaction.objectStore('notificationQueue');
+    const allNotifications = await getAllFromStore(store);
+
+    console.log('Syncing queued notifications:', allNotifications.length);
+
+    for (let notification of allNotifications) {
+      try {
+        await self.registration.showNotification(notification.title, {
+          body: notification.body,
+          icon: notification.options?.icon || '/errandify-icon-192.png',
+          badge: notification.options?.badge || '/errandify-badge-72.png',
+          tag: notification.options?.tag || 'errandify-notification',
+          data: notification.options?.data || {},
+        });
+
+        // Remove from queue after showing
+        const deleteTransaction = db.transaction('notificationQueue', 'readwrite');
+        const deleteStore = deleteTransaction.objectStore('notificationQueue');
+        deleteStore.delete(notification.id);
+      } catch (error) {
+        console.error('Failed to show queued notification:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Sync notifications failed:', error);
+    throw error; // Retry sync
+  }
+}
+
+function getAllFromStore(store) {
+  return new Promise((resolve, reject) => {
+    const request = store.getAll();
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+}
+
+function openIndexedDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('ErrandifyDB', 1);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains('notificationQueue')) {
+        db.createObjectStore('notificationQueue', { keyPath: 'id' });
+      }
+    };
+  });
+}
+
+// Fetch event - Network first strategy with fallback to cache
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (!response || response.status !== 200 || response.type === 'error') {
+          return response;
+        }
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request).then((response) => {
+          return response || new Response('Offline - page not cached', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: new Headers({
+              'Content-Type': 'text/plain',
+            }),
+          });
+        });
+      })
+  );
+});
+
+console.log('Service Worker loaded and ready');
