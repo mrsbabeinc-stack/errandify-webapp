@@ -121,7 +121,7 @@ export default function CreateErrandPage() {
           const newFormData = {
             title: prefilledData.title || '',
             description: prefilledData.description || '',
-            category: prefilledData.category || '',
+            category: mapHanaCategory(prefilledData.category) || '',
             location: prefilledData.location || '',
             startLocation: '',
             budget: prefilledData.budget ? String(prefilledData.budget) : '',
@@ -262,6 +262,45 @@ export default function CreateErrandPage() {
     'creative-arts': 'Creative & Arts',
     'admin-business': 'Admin & Business',
     'charity-community': 'Charity & Community',
+  };
+
+  // Map short category names from Hana extraction to full category names
+  const mapHanaCategory = (category: string): string => {
+    const mapping: Record<string, string> = {
+      'homehelp': 'home-maintenance',
+      'homehelp-maintenance': 'home-maintenance',
+      'cleaning': 'cleaning-household',
+      'cleaning-laundry': 'cleaning-household',
+      'food': 'food-beverage',
+      'food-beverage': 'food-beverage',
+      'furniture': 'furniture-assembly',
+      'furniture-assembly': 'furniture-assembly',
+      'shopping': 'shopping-errands',
+      'shopping-errands': 'shopping-errands',
+      'delivery': 'delivery-moving',
+      'delivery-moving': 'delivery-moving',
+      'travel': 'travel-mobility',
+      'travel-mobility': 'travel-mobility',
+      'eventhelp': 'event-planning',
+      'event-planning': 'event-planning',
+      'childcare': 'childcare-education',
+      'childcare-education': 'childcare-education',
+      'eldercare': 'eldercare-healthcare',
+      'eldercare-healthcare': 'eldercare-healthcare',
+      'petcare': 'pet-care',
+      'pet-care': 'pet-care',
+      'personal': 'personal-care',
+      'personal-care': 'personal-care',
+      'tech': 'tech-support',
+      'tech-support': 'tech-support',
+      'creative': 'creative-arts',
+      'creative-arts': 'creative-arts',
+      'admin': 'admin-business',
+      'admin-business': 'admin-business',
+      'donate': 'charity-community',
+      'charity-community': 'charity-community',
+    };
+    return mapping[category] || category;
   };
 
   const commonCertifications = [
