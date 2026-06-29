@@ -42,6 +42,7 @@ import HowItWorksPage from './pages/HowItWorksPage';
 import AboutErrandifyPage from './pages/AboutErrandifyPage';
 import NotificationPreferencesPage from './pages/NotificationPreferencesPage';
 import BeforeYouGetStartedPage from './pages/BeforeYouGetStartedPage';
+import SafetyResourcesPage from './pages/SafetyResourcesPage';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -248,6 +249,7 @@ export default function App() {
         <Route path="/my-account" element={isAuthenticated ? <MyAccountPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin" element={isAuthenticated ? <AdminPanel /> : <Navigate to="/login" replace />} />
         <Route path="/notification-preferences" element={isAuthenticated ? <NotificationPreferencesPage /> : <Navigate to="/login" replace />} />
+        <Route path="/safety-resources" element={<SafetyResourcesPage />} />
 
         {/* Main dashboard layout */}
         <Route

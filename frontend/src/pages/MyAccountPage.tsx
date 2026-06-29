@@ -8,6 +8,7 @@ import ErrorModal from '../components/ErrorModal';
 import ProfilePlaque from '../components/ProfilePlaque';
 import BottomNav from '../components/BottomNav';
 import HanaCustomerService from '../components/HanaCustomerService';
+import AccountPauseModal from '../components/AccountPauseModal';
 
 interface UserProfile {
   id?: number;
@@ -39,9 +40,10 @@ interface Rating {
 
 export default function MyAccountPage() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'blocked' | 'notify' | 'categories'>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'safety' | 'notify' | 'categories'>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
-  const [blockedTab, setBlockedTab] = useState<'blocked' | 'trusted'>('blocked');
+  const [safetyTab, setSafetyTab] = useState<'blocked' | 'resources' | 'pause'>('blocked');
+  const [showAccountPauseModal, setShowAccountPauseModal] = useState(false);
   const [trustedUsers, setTrustedUsers] = useState<Array<{ id: string; name: string; alias?: string; avatar?: string; markedDate: string }>>([]);
   const [rewardsTab, setRewardsTab] = useState<'overview' | 'shop' | 'gift' | 'myVoucher' | 'history'>('overview');
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
@@ -1203,14 +1205,14 @@ export default function MyAccountPage() {
               💎 MyRewardSpace
             </button>
             <button
-              onClick={() => setActiveSection('blocked')}
+              onClick={() => setActiveSection('safety')}
               className={`px-1 py-0.5 text-xs font-bold transition rounded ${
-                activeSection === 'blocked'
+                activeSection === 'safety'
                   ? 'bg-errandify-orange text-white'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >
-              🚫 Blocked/Trusted
+              🛡️ MySafetyCentre
             </button>
             <button
               onClick={() => setActiveSection('notify')}
@@ -2759,43 +2761,45 @@ export default function MyAccountPage() {
           </div>
         )}
 
-        {/* BLOCKED SECTION */}
-        {activeSection === 'blocked' && (
+        {/* SAFETY CENTRE SECTION */}
+        {activeSection === 'safety' && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            {/* Sub-tabs for Blocked & Trusted */}
-            <div className="flex gap-2 border-b border-gray-200 p-3">
+            {/* Sub-tabs for Safety Centre */}
+            <div className="flex gap-2 border-b border-gray-200 p-3 overflow-x-auto">
               <button
-                onClick={() => setBlockedTab('blocked')}
-                className={`px-3 py-1.5 text-xs font-bold transition rounded ${
-                  blockedTab === 'blocked' || !blockedTab
+                onClick={() => setSafetyTab('blocked')}
+                className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
+                  safetyTab === 'blocked'
                     ? 'bg-errandify-orange text-white'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                 }`}
               >
-                🚫 Blocked Users
+                👥 Blocked/Trusted
               </button>
               <button
-                onClick={() => setBlockedTab('trusted')}
-                className={`px-3 py-1.5 text-xs font-bold transition rounded ${
-                  blockedTab === 'trusted'
+                onClick={() => setSafetyTab('resources')}
+                className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
+                  safetyTab === 'resources'
                     ? 'bg-errandify-orange text-white'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                 }`}
               >
-                ❤️ Trusted Users
+                🆘 Safety & Support
+              </button>
+              <button
+                onClick={() => setSafetyTab('pause')}
+                className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
+                  safetyTab === 'pause'
+                    ? 'bg-errandify-orange text-white'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                🛡️ Account Pause
               </button>
             </div>
 
-            {/* Blocked Users Tab */}
-            {(!blockedTab || blockedTab === 'blocked') && (
-              <div className="text-center text-gray-600 py-6 px-4">
-                <p className="mb-2 text-sm">No blocked users yet</p>
-                <p className="text-xs">Users you block won't be able to contact you or see your profile</p>
-              </div>
-            )}
-
-            {/* Trusted Users Tab */}
-            {blockedTab === 'trusted' && (
+            {/* Blocked/Trusted Users Tab */}
+            {safetyTab === 'blocked' && (
               <div className="space-y-3">
                 <div className="text-center py-2 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg border-2 border-blue-300">
                   <p className="text-sm font-bold text-blue-600">❤️ Your Trusted Network ❤️</p>
@@ -2842,6 +2846,75 @@ export default function MyAccountPage() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Safety & Support Resources Tab */}
+            {safetyTab === 'resources' && (
+              <div className="p-4 space-y-4">
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                  <h3 className="font-bold text-red-900 mb-2">🆘 In Danger Right Now?</h3>
+                  <p className="text-sm text-red-800 mb-3">Call emergency services or the Anti-Trafficking Hotline immediately (24/7, free, anonymous)</p>
+                  <a href="tel:+6518008388877" className="inline-block text-2xl font-bold text-red-600 hover:text-red-700 mb-2">
+                    +65 1800-838-8877
+                  </a>
+                  <p className="text-xs text-red-700">Text option available | Interpreters available</p>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-sm font-bold text-gray-900">Other Resources Available:</p>
+                  <button
+                    onClick={() => window.location.href = '/safety-resources'}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
+                  >
+                    📚 View All Safety Resources
+                  </button>
+                  <p className="text-xs text-gray-600">Access hotlines for domestic abuse, migrant support, mental health, elderly protection, and more</p>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h4 className="font-bold text-yellow-900 mb-2">💡 Safe Calling Tips:</h4>
+                  <ul className="text-xs text-yellow-800 space-y-1">
+                    <li>✓ Use a phone the other person doesn't know about</li>
+                    <li>✓ Call from a public place where you feel safe</li>
+                    <li>✓ They can arrange safe transportation</li>
+                    <li>✓ All calls are confidential and anonymous</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* Account Pause Tab */}
+            {safetyTab === 'pause' && (
+              <div className="p-4 space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-bold text-blue-900 mb-2">🛡️ Account Pause - Safety Feature</h3>
+                  <p className="text-sm text-blue-800 mb-3">Temporarily hide your profile when you need to stay safe. No one will know you paused.</p>
+
+                  <div className="space-y-2 text-sm text-blue-800 mb-4">
+                    <p className="font-semibold">When you pause:</p>
+                    <ul className="space-y-1 ml-2">
+                      <li>✓ People can't message you</li>
+                      <li>✓ Your jobs disappear from browse</li>
+                      <li>✓ Your profile is hidden</li>
+                      <li>✓ You keep all your data</li>
+                      <li>✓ You can resume anytime</li>
+                    </ul>
+                  </div>
+
+                  <button
+                    onClick={() => setShowAccountPauseModal(true)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition"
+                  >
+                    🛡️ Manage Account Pause
+                  </button>
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-sm text-green-800">
+                    <strong>✓ Privacy Protected:</strong> Pausing your account is completely private. It won't show anywhere on your profile.
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -3926,6 +3999,12 @@ export default function MyAccountPage() {
           </div>
         </div>
       )}
+
+      {/* Account Pause Modal */}
+      <AccountPauseModal
+        isOpen={showAccountPauseModal}
+        onClose={() => setShowAccountPauseModal(false)}
+      />
 
       {/* Bottom Navigation Footer */}
       <BottomNav />
