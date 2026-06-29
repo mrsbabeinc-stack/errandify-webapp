@@ -2447,8 +2447,10 @@ export default function MyAccountPage() {
                 <button
                   onClick={() => {
                     const pointsToSend = parseInt(giftForm.points || '0') || 0;
+                    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                    const currentUserId = currentUser?.id?.toString();
                     const sendingToSelf = giftForm.recipients?.some(
-                      (id) => id === userId
+                      (id) => id === currentUserId
                     );
                     if (!giftForm.points || pointsToSend <= 0) {
                       setModalMessage('❌ Please enter a valid amount of EP to send\n\nHint: How many points do you want to give each friend?');
