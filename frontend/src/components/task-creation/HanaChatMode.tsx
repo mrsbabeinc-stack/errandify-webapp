@@ -124,7 +124,7 @@ export default function HanaChatMode({
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/detect-category`,
         { title: input, description: input }
       );
-      if (response.data.data.category) {
+      if (response.data.data?.category) {
         onTaskUpdate({ category: response.data.data.category });
       }
     } catch (err) {
@@ -137,6 +137,24 @@ export default function HanaChatMode({
 
   const processLocation = async (input: string) => {
     onTaskUpdate({ location: input });
+
+    // Extract area and postal code from location
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
+        { input }
+      );
+      if (response.data.data) {
+        onTaskUpdate({
+          area: response.data.data.area,
+          fullAddress: response.data.data.fullAddress,
+          postalCode: response.data.data.postalCode,
+        });
+      }
+    } catch (err) {
+      console.log('Location extraction failed');
+    }
+
     addHanaMessage("Thanks! When do you need it done? (e.g., Tomorrow at 2pm, Saturday, Next week)");
     setCurrentStep('date');
   };
