@@ -576,17 +576,17 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     // Title is already cleaned up above - skip additional Qwen polishing (too slow)
     console.log('[Extract] Final title:', title);
 
-    // Parse date - look for "tomorrow", "today", "later" (=today), "N days later", day names, or dates
+    // Parse date - look for "tomorrow", "today", "later" (=today), "N days later/in", day names, or dates
     let date = '';
 
-    // Check for "N days later" pattern first
-    const daysLaterMatch = input.match(/(\d+)\s*days?\s+later/i);
-    if (daysLaterMatch) {
-      const daysToAdd = parseInt(daysLaterMatch[1]);
+    // Check for "N days later" or "in N days" pattern first
+    const daysMatch = input.match(/(?:in|after)\s+(\d+)\s*days?(?:\s+later)?/i);
+    if (daysMatch) {
+      const daysToAdd = parseInt(daysMatch[1]);
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + daysToAdd);
       date = futureDate.toISOString().split('T')[0];
-      console.log('[Extract] Date from "N days later":', date);
+      console.log('[Extract] Date from "in/after N days":', date);
     } else if (/tomorrow/i.test(input)) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -718,7 +718,23 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
         if (omResponse.data?.results?.[0]) {
           const addr = omResponse.data.results[0];
           fullAddress = addr.ADDRESS || `Singapore ${postalCode}`;
-          area = addr.BUILDING_NAME?.trim() || detectedArea || 'Singapore';
+
+          // Extract area from address string (e.g., "433 CHOA CHU KANG AVENUE 4 SINGAPORE 680433" → "CHOA CHU KANG")
+          let extractedArea = detectedArea || 'Singapore';
+          if (fullAddress) {
+            // Remove postal code, "SINGAPORE", and street descriptors to get area name
+            let areaMatch = fullAddress.replace(postalCode, '').replace(/SINGAPORE/i, '').trim();
+            // Remove street descriptors (AVENUE, ROAD, STREET, LANE, CLOSE, DRIVE, etc.) and numbers
+            areaMatch = areaMatch.replace(/\s*(AVENUE|ROAD|STREET|LANE|CLOSE|DRIVE|PARK|WAY|COURT|PLACE|CRESCENT|HILL|VIEW|LINK|RISE|GROVE|SQUARE|TERRACE|BEND|LOOP|WALK).*$/i, '').trim();
+            // Remove leading/trailing numbers
+            areaMatch = areaMatch.replace(/^\d+\s+/, '').replace(/\s+\d+$/, '').trim();
+
+            if (areaMatch.length > 0 && areaMatch !== 'Singapore') {
+              extractedArea = areaMatch;
+            }
+          }
+
+          area = extractedArea;
           console.log(`[Extract] ✅ OneMap API success: ${area}, ${fullAddress}`);
         } else {
           // No OneMap results - ask user to confirm area
