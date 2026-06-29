@@ -65,6 +65,10 @@ const INAPPROPRIATE_WORDS = [
   'escort',
   'prostitut',
   'explicit',
+  'orgy',
+  '3some',
+  'threesome',
+  'foursome',
   // Illegal activities
   'drug',
   'cocaine',
