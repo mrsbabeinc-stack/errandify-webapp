@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 
 export const VouchersPage: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showDescriptionSuggestions, setShowDescriptionSuggestions] = useState(false);
   const [selectedVoucher, setSelectedVoucher] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+
   const [formData, setFormData] = useState({
     code: '',
     name: '',
@@ -41,6 +45,12 @@ export const VouchersPage: React.FC = () => {
       firstTimeOnly: false,
       maxAmount: 'None',
       image: generateHappyVoucherImage('SUMMER20', '20%', 'Summer Sale', '☀️'),
+      redemptions: [
+        { id: 1, username: 'Sarah Tan', date: '2 hours ago', pointsSpent: '100', status: 'redeemed' },
+        { id: 2, username: 'John Lee', date: '4 hours ago', pointsSpent: '100', status: 'redeemed' },
+        { id: 3, username: 'Alice Wong', date: '1 day ago', pointsSpent: '100', status: 'redeemed' },
+        { id: 4, username: 'Bob Chen', date: '2 days ago', pointsSpent: '100', status: 'redeemed' },
+      ],
     },
     {
       id: 2,
@@ -61,6 +71,11 @@ export const VouchersPage: React.FC = () => {
       firstTimeOnly: true,
       maxAmount: 'None',
       image: generateHappyVoucherImage('WELCOME50', '$5 OFF', 'Welcome Gift', '🎁'),
+      redemptions: [
+        { id: 1, username: 'Eve Kumar', date: '30 mins ago', pointsSpent: '50', status: 'redeemed' },
+        { id: 2, username: 'Frank Zhou', date: '1 hour ago', pointsSpent: '50', status: 'redeemed' },
+        { id: 3, username: 'Grace Lim', date: '3 hours ago', pointsSpent: '50', status: 'redeemed' },
+      ],
     },
     {
       id: 3,
@@ -81,54 +96,48 @@ export const VouchersPage: React.FC = () => {
       firstTimeOnly: false,
       maxAmount: 'None',
       image: generateHappyVoucherImage('REFER30', '30%', 'Referral Bonus', '👥'),
+      redemptions: [
+        { id: 1, username: 'Henry Tang', date: '5 hours ago', pointsSpent: '75', status: 'redeemed' },
+        { id: 2, username: 'Iris Ng', date: '1 day ago', pointsSpent: '75', status: 'redeemed' },
+      ],
     },
   ]);
 
   function generateHappyVoucherImage(code: string, discount: string, name: string, emoji: string): string {
     const svg = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280">
-        <!-- Gradient Background -->
         <defs>
           <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#ff6b35;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#ff8c42;stop-opacity:1" />
           </linearGradient>
-          <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#fff9f5;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#fffbf7;stop-opacity:1" />
-          </linearGradient>
         </defs>
-
-        <!-- Background -->
         <rect fill="url(#bg1)" width="400" height="280" rx="12"/>
-
-        <!-- Decorative Elements -->
         <circle cx="380" cy="20" r="35" fill="white" opacity="0.15"/>
         <circle cx="30" cy="250" r="45" fill="white" opacity="0.1"/>
-
-        <!-- Errandify Logo Area -->
         <rect x="15" y="15" width="50" height="50" fill="white" opacity="0.2" rx="8"/>
         <text x="40" y="50" font-size="28" fill="white" text-anchor="middle" font-weight="bold">🏘️</text>
-
-        <!-- Main Emoji -->
         <text x="200" y="90" font-size="56" text-anchor="middle">${emoji}</text>
-
-        <!-- Code (Top) -->
         <text x="200" y="130" font-size="26" font-weight="bold" fill="white" text-anchor="middle" font-family="Arial">${code}</text>
-
-        <!-- Discount Value (Center) -->
         <rect x="80" y="145" width="240" height="60" fill="white" rx="8"/>
         <text x="200" y="190" font-size="48" font-weight="bold" fill="#ff6b35" text-anchor="middle" font-family="Arial">${discount}</text>
-
-        <!-- Voucher Name (Bottom) -->
         <text x="200" y="230" font-size="16" font-weight="600" fill="white" text-anchor="middle" font-family="Arial">${name}</text>
-
-        <!-- Footer decoration -->
         <text x="200" y="265" font-size="12" fill="white" text-anchor="middle" opacity="0.85">✨ Exclusive Errandify Offer ✨</text>
       </svg>
     `;
     return `data:image/svg+xml;base64,${btoa(svg)}`;
   }
+
+  // Filter and search vouchers
+  const filteredVouchers = useMemo(() => {
+    return vouchers.filter(v => {
+      const matchesSearch = v.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          v.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = filterCategory === 'all' || v.category === filterCategory;
+      const matchesStatus = filterStatus === 'all' || v.status === filterStatus;
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+  }, [vouchers, searchTerm, filterCategory, filterStatus]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type: inputType } = e.target as any;
@@ -178,6 +187,7 @@ export const VouchersPage: React.FC = () => {
         formData.name,
         '🎉'
       ),
+      redemptions: [],
     };
 
     setVouchers([newVoucher, ...vouchers]);
@@ -377,6 +387,38 @@ export const VouchersPage: React.FC = () => {
           </div>
         )}
 
+        {/* Search & Filter */}
+        {!selectedVoucher && (
+          <div className="search-filter-section">
+            <div className="search-box">
+              <input
+                type="text"
+                placeholder="🔍 Search by code or name (e.g., SUMMER20)"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+            </div>
+            <div className="filter-row">
+              <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="filter-select">
+                <option value="all">All Categories</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Food & Dining">Food & Dining</option>
+                <option value="Referral">Referral Bonus</option>
+                <option value="General">General</option>
+              </select>
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="filter-select">
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="expired">Expired</option>
+              </select>
+              <div className="results-count">
+                Showing {filteredVouchers.length} of {vouchers.length} vouchers
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Voucher Details View */}
         {selectedVoucher && (
           <div className="details-view">
@@ -428,8 +470,27 @@ export const VouchersPage: React.FC = () => {
                 </div>
 
                 <div className="details-section">
-                  <h3>Active Redemptions</h3>
-                  <p style={{ textAlign: 'center', color: '#999' }}>No active redemptions</p>
+                  <h3>Active Redemptions ({selectedVoucher.redemptions?.length || 0})</h3>
+                  {selectedVoucher.redemptions && selectedVoucher.redemptions.length > 0 ? (
+                    <div className="redemptions-table">
+                      <div className="table-header">
+                        <div className="col-username">Username</div>
+                        <div className="col-date">Redeemed Date</div>
+                        <div className="col-points">Points Spent</div>
+                        <div className="col-status">Status</div>
+                      </div>
+                      {selectedVoucher.redemptions.map((r: any) => (
+                        <div key={r.id} className="table-row">
+                          <div className="col-username"><strong>{r.username}</strong></div>
+                          <div className="col-date">{r.date}</div>
+                          <div className="col-points">{r.pointsSpent}</div>
+                          <div className="col-status"><span className="badge-redeemed">✓ {r.status}</span></div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ textAlign: 'center', color: '#999' }}>No active redemptions yet</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -441,33 +502,40 @@ export const VouchersPage: React.FC = () => {
           <>
             <div className="stats-row">
               <div className="stat-card">
-                <div className="stat-number">{vouchers.length}</div>
+                <div className="stat-number">{filteredVouchers.length}</div>
                 <div className="stat-label">Active Vouchers</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">{vouchers.reduce((a, v) => a + v.used, 0).toLocaleString()}</div>
+                <div className="stat-number">{filteredVouchers.reduce((a, v) => a + v.used, 0).toLocaleString()}</div>
                 <div className="stat-label">Total Redeemed</div>
               </div>
             </div>
 
             <div className="vouchers-section">
               <h2>🎪 Your Voucher Gallery</h2>
-              <div className="voucher-grid">
-                {vouchers.map((v) => (
-                  <div key={v.id} className="voucher-card-display" onClick={() => setSelectedVoucher(v)}>
-                    <img src={v.image} alt={v.name} className="voucher-image" />
-                    <div className="voucher-info">
-                      <h3>{v.name}</h3>
-                      <p>{v.description}</p>
-                      <div className="meta">
-                        <span className="category">{v.category}</span>
-                        <span className="badge-active">active</span>
+              {filteredVouchers.length > 0 ? (
+                <div className="voucher-grid">
+                  {filteredVouchers.map((v) => (
+                    <div key={v.id} className="voucher-card-display" onClick={() => setSelectedVoucher(v)}>
+                      <img src={v.image} alt={v.name} className="voucher-image" />
+                      <div className="voucher-info">
+                        <h3>{v.name}</h3>
+                        <p>{v.description}</p>
+                        <div className="meta">
+                          <span className="category">{v.category}</span>
+                          <span className="badge-active">active</span>
+                        </div>
+                        <small>{v.used} / {v.quantityAvailable || '∞'} used</small>
                       </div>
-                      <small>{v.used} / {v.quantityAvailable || '∞'} used</small>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="no-results">
+                  <p>😕 No vouchers found matching your search.</p>
+                  <p>Try adjusting your filters!</p>
+                </div>
+              )}
             </div>
           </>
         )}
@@ -477,9 +545,10 @@ export const VouchersPage: React.FC = () => {
           <h3>💡 Pro Tips</h3>
           <ul>
             <li>✨ Voucher images include Errandify logo & happy design</li>
+            <li>🔍 Use search to quickly find vouchers by code or name</li>
+            <li>📊 Click any voucher to see redemption history</li>
             <li>🔄 Users see vouchers INSTANTLY in MyRewardSpace</li>
             <li>💬 Warm descriptions = Higher redemption rates</li>
-            <li>🎯 Click any voucher to see full details</li>
           </ul>
         </div>
       </div>
@@ -497,6 +566,16 @@ export const VouchersPage: React.FC = () => {
 
         .btn-primary { padding: 10px 16px; background: #ff6b35; color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap; }
         .btn-primary:hover { background: #ff5722; box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3); }
+
+        /* Search & Filter */
+        .search-filter-section { background: white; border: 1px solid #ffb88c; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+        .search-box { display: flex; }
+        .search-input { flex: 1; padding: 10px 12px; border: 1px solid #ffb88c; border-radius: 6px; font-size: 13px; }
+        .search-input:focus { outline: none; border-color: #ff6b35; box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1); }
+        .filter-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .filter-select { padding: 10px; border: 1px solid #ffb88c; border-radius: 6px; font-size: 13px; background: white; cursor: pointer; }
+        .filter-select:focus { outline: none; border-color: #ff6b35; }
+        .results-count { font-size: 12px; color: #888; white-space: nowrap; }
 
         .create-form-card { background: white; border: 2px solid #ff6b35; border-radius: 8px; padding: 20px; box-shadow: 0 4px 12px rgba(255, 107, 53, 0.1); }
         .create-form-card h2 { font-size: 16px; font-weight: 700; margin: 0 0 16px 0; color: #ff6b35; }
@@ -546,6 +625,17 @@ export const VouchersPage: React.FC = () => {
         .btn-copy { padding: 4px 8px; background: #ff6b35; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; margin-left: 8px; }
         .details-content p { margin: 0; font-size: 13px; color: #666; line-height: 1.6; }
 
+        /* Redemptions Table */
+        .redemptions-table { display: flex; flex-direction: column; gap: 0; border: 1px solid #ffb88c; border-radius: 6px; overflow: hidden; }
+        .table-header { display: grid; grid-template-columns: 1fr 1.2fr 1fr 1fr; gap: 0; background: linear-gradient(to right, #fff5f0, #fffbf7); border-bottom: 2px solid #ffb88c; padding: 8px; font-size: 11px; font-weight: 700; color: #ff6b35; text-transform: uppercase; }
+        .table-row { display: grid; grid-template-columns: 1fr 1.2fr 1fr 1fr; gap: 0; border-bottom: 1px solid #ffe6d9; padding: 10px 8px; font-size: 12px; align-items: center; }
+        .table-row:hover { background: #fff9f5; }
+        .col-username { font-weight: 600; }
+        .col-date { color: #888; font-size: 11px; }
+        .col-points { font-weight: 600; color: #27b55d; }
+        .col-status { text-align: center; }
+        .badge-redeemed { display: inline-block; background: #e6f9f0; color: #27b55d; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 10px; }
+
         .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
         .stat-card { background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); color: white; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 2px 8px rgba(255, 107, 53, 0.15); }
         .stat-number { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
@@ -567,6 +657,9 @@ export const VouchersPage: React.FC = () => {
         .badge-active { background: #e6f9f0; color: #27b55d; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
         .voucher-info small { color: #888; font-size: 10px; }
 
+        .no-results { text-align: center; padding: 40px; color: #888; }
+        .no-results p { margin: 8px 0; font-size: 13px; }
+
         .info-box { background: linear-gradient(135deg, #fff9f5 0%, #fffbf7 100%); border-left: 4px solid #ff6b35; border-radius: 8px; padding: 14px; }
         .info-box h3 { font-size: 13px; font-weight: 700; margin: 0 0 10px 0; color: #ff6b35; }
         .info-box ul { margin: 0; padding-left: 20px; font-size: 12px; color: #666; line-height: 1.6; }
@@ -576,6 +669,9 @@ export const VouchersPage: React.FC = () => {
           .details-grid { grid-template-columns: 1fr; }
           .form-row { grid-template-columns: 1fr; }
           .voucher-grid { grid-template-columns: 1fr; }
+          .filter-row { flex-wrap: wrap; }
+          .table-header, .table-row { grid-template-columns: 1fr !important; gap: 8px; }
+          .col-date, .col-points, .col-status { display: none; }
         }
       `}</style>
     </AdminLayout>
