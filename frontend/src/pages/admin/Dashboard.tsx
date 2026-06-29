@@ -2,71 +2,104 @@ import React, { useState } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 
 export const AdminDashboard: React.FC = () => {
-  const [kpis] = useState([
-    { title: 'Platform Health', value: '98.5%', change: '+2.3%', icon: '💚', trend: 'up' },
-    { title: 'Revenue', value: '$24.5K', change: '+15.2%', icon: '💰', trend: 'up' },
-    { title: 'Active Users', value: '2.8K', change: '+8.1%', icon: '👥', trend: 'up' },
-    { title: 'Rating', value: '4.8★', change: '+0.1★', icon: '⭐', trend: 'up' },
+  const [actionItems] = useState([
+    { id: 1, priority: 'critical', title: '5 Disputes Need Review', desc: 'Urgent action required', icon: '🚨', action: 'Review Now' },
+    { id: 2, priority: 'high', title: '12 New User Reports', desc: 'Safety issues flagged', icon: '👁️', action: 'Check Now' },
+    { id: 3, priority: 'high', title: 'Payment Processing Failed', desc: '3 transactions stuck', icon: '💳', action: 'Resolve' },
   ]);
 
-  const [alerts] = useState([
-    { id: 1, type: 'warning', message: '5 open disputes waiting', icon: '⚠️' },
-    { id: 2, type: 'success', message: 'Weekly report ready', icon: '✅' },
+  const [kpis] = useState([
+    { title: 'Health', value: '98.5%', icon: '💚', sparkline: [95, 96, 97, 98, 98.5] },
+    { title: 'Revenue', value: '$24.5K', icon: '💰', sparkline: [20, 21, 22, 23, 24.5] },
+    { title: 'Users', value: '2.8K', icon: '👥', sparkline: [2.5, 2.6, 2.65, 2.7, 2.8] },
+    { title: 'Rating', value: '4.8★', icon: '⭐', sparkline: [4.6, 4.65, 4.7, 4.75, 4.8] },
   ]);
 
   const [recentActivity] = useState([
-    { id: 1, event: '✅ Task Completed', user: 'Sarah → John', time: '2m ago' },
-    { id: 2, event: '💬 Dispute Filed', user: 'Incomplete work', time: '15m ago' },
-    { id: 3, event: '👤 New User', user: 'Alice Wong joined', time: '1h ago' },
-    { id: 4, event: '🎯 Category Update', user: 'Cleaning +12%', time: '2h ago' },
+    { id: 1, event: '✅ Task Completed', user: 'Sarah → John', time: '2m' },
+    { id: 2, event: '💬 Dispute Filed', user: 'Incomplete work', time: '15m' },
+    { id: 3, event: '👤 New User', user: 'Alice joined', time: '1h' },
   ]);
+
+  // Simple sparkline SVG generator
+  const Sparkline = ({ data }: { data: number[] }) => {
+    const minVal = Math.min(...data);
+    const maxVal = Math.max(...data);
+    const range = maxVal - minVal || 1;
+    const width = 60;
+    const height = 24;
+    const padding = 2;
+    const pointWidth = (width - padding * 2) / (data.length - 1);
+
+    const points = data.map((val, i) => {
+      const x = padding + i * pointWidth;
+      const y = height - padding - ((val - minVal) / range) * (height - padding * 2);
+      return `${x},${y}`;
+    }).join(' ');
+
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="sparkline">
+        <polyline points={points} fill="none" stroke="#ff6b35" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
+  };
 
   return (
     <AdminLayout>
       <div className="dashboard">
         <div className="dashboard-header">
-          <h1>👋 Welcome Back!</h1>
-          <p>Here's what's happening on the platform today</p>
+          <h1>🎯 Action Center</h1>
+          <p>Focus on what matters most right now</p>
         </div>
 
-        {/* KPI Grid - Errandify Orange */}
-        <div className="kpi-grid">
-          {kpis.map((kpi) => (
-            <div key={kpi.title} className="kpi-card">
-              <div className="kpi-icon">{kpi.icon}</div>
-              <div className="kpi-info">
-                <div className="kpi-label">{kpi.title}</div>
-                <div className="kpi-value">{kpi.value}</div>
-                <div className="kpi-change up">↑ {kpi.change}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Alerts - Compact */}
-        <div className="alerts-box">
-          <h2>🔔 Quick Alerts</h2>
-          <div className="alerts-compact">
-            {alerts.map((alert) => (
-              <div key={alert.id} className={`alert-row alert-${alert.type}`}>
-                <span className="alert-icon">{alert.icon}</span>
-                <span className="alert-text">{alert.message}</span>
+        {/* CRITICAL ACTIONS - Top Priority */}
+        <div className="actions-box">
+          <h2>⚡ Urgent Actions</h2>
+          <div className="actions-list">
+            {actionItems.map((item) => (
+              <div key={item.id} className={`action-card priority-${item.priority}`}>
+                <div className="action-icon">{item.icon}</div>
+                <div className="action-content">
+                  <div className="action-title">{item.title}</div>
+                  <div className="action-desc">{item.desc}</div>
+                </div>
+                <button className="action-btn">{item.action}</button>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Activity Feed - Compact */}
-        <div className="activity-box">
-          <h2>📊 Recent Activity</h2>
-          <div className="activity-compact">
-            {recentActivity.map((activity) => (
-              <div key={activity.id} className="activity-row">
-                <div className="activity-left">
-                  <span className="activity-event">{activity.event}</span>
-                  <span className="activity-user">{activity.user}</span>
+        {/* COMPACT KPI SECTION WITH SPARKLINES */}
+        <div className="kpi-compact-section">
+          <h2>📊 Key Metrics</h2>
+          <div className="kpi-compact-grid">
+            {kpis.map((kpi) => (
+              <div key={kpi.title} className="kpi-compact-card">
+                <div className="kpi-header">
+                  <span className="kpi-icon">{kpi.icon}</span>
+                  <span className="kpi-title">{kpi.title}</span>
                 </div>
-                <span className="activity-time">{activity.time}</span>
+                <div className="kpi-body">
+                  <div className="kpi-value-big">{kpi.value}</div>
+                  <Sparkline data={kpi.sparkline} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* QUICK ACTIVITY - Ultra Compact */}
+        <div className="quick-activity">
+          <h2>📈 Recent</h2>
+          <div className="activity-list">
+            {recentActivity.map((item) => (
+              <div key={item.id} className="activity-compact-row">
+                <span className="activity-emoji">{item.event.split(' ')[0]}</span>
+                <div className="activity-text">
+                  <span className="activity-title">{item.event}</span>
+                  <span className="activity-sub">{item.user}</span>
+                </div>
+                <span className="activity-time">{item.time}</span>
               </div>
             ))}
           </div>
@@ -77,224 +110,272 @@ export const AdminDashboard: React.FC = () => {
         .dashboard {
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 16px;
           padding: 0;
         }
 
         .dashboard-header {
-          margin-bottom: 8px;
-        }
-
-        .dashboard-header h1 {
-          font-size: 28px;
-          font-weight: 700;
-          margin: 0 0 4px 0;
-          color: #ff6b35;
-          text-shadow: 0 2px 4px rgba(255, 107, 53, 0.1);
-        }
-
-        .dashboard-header p {
-          font-size: 14px;
-          color: #888;
-          margin: 0;
-          font-weight: 500;
-        }
-
-        /* KPI Grid - Errandify Orange Theme */
-        .kpi-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          gap: 12px;
-        }
-
-        .kpi-card {
-          background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
-          border-radius: 12px;
-          padding: 16px;
-          display: flex;
-          gap: 12px;
-          align-items: center;
-          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
-          transition: transform 0.2s, box-shadow 0.2s;
-          cursor: pointer;
-        }
-
-        .kpi-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);
-        }
-
-        .kpi-icon {
-          font-size: 28px;
-          min-width: 28px;
-        }
-
-        .kpi-info {
-          flex: 1;
-        }
-
-        .kpi-label {
-          font-size: 12px;
-          font-weight: 600;
-          color: rgba(255, 255, 255, 0.85);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
           margin-bottom: 4px;
         }
 
-        .kpi-value {
-          font-size: 20px;
+        .dashboard-header h1 {
+          font-size: 26px;
           font-weight: 700;
-          color: #fff;
-          margin-bottom: 2px;
-        }
-
-        .kpi-change {
-          font-size: 12px;
-          font-weight: 600;
-          color: rgba(255, 255, 255, 0.9);
-        }
-
-        .kpi-change.up {
-          color: #ffd700;
-        }
-
-        /* Alerts - Compact */
-        .alerts-box {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .alerts-box h2 {
-          font-size: 14px;
-          font-weight: 600;
-          margin: 0;
-          color: #333;
-        }
-
-        .alerts-compact {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .alert-row {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 10px 14px;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 500;
-          border-left: 3px solid;
-        }
-
-        .alert-warning {
-          background: #fff4e6;
+          margin: 0 0 2px 0;
           color: #ff6b35;
-          border-left-color: #ff6b35;
         }
 
-        .alert-success {
-          background: #e6f9f0;
-          color: #27b55d;
-          border-left-color: #27b55d;
+        .dashboard-header p {
+          font-size: 13px;
+          color: #888;
+          margin: 0;
         }
 
-        .alert-icon {
-          font-size: 16px;
-          min-width: 16px;
-        }
-
-        .alert-text {
-          flex: 1;
-        }
-
-        /* Activity Feed - Compact */
-        .activity-box {
+        /* ACTION ITEMS - URGENT */
+        .actions-box {
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 10px;
         }
 
-        .activity-box h2 {
-          font-size: 14px;
-          font-weight: 600;
+        .actions-box h2 {
+          font-size: 13px;
+          font-weight: 700;
           margin: 0;
-          color: #333;
+          color: #ff6b35;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
 
-        .activity-compact {
+        .actions-list {
           display: flex;
           flex-direction: column;
           gap: 8px;
         }
 
-        .activity-row {
+        .action-card {
           display: flex;
-          justify-content: space-between;
           align-items: center;
-          padding: 10px 14px;
-          background: linear-gradient(135deg, rgba(255, 107, 53, 0.08) 0%, rgba(255, 140, 66, 0.06) 100%);
+          gap: 12px;
+          padding: 12px;
           border-radius: 8px;
-          border: 1px solid rgba(255, 107, 53, 0.15);
+          border-left: 4px solid;
           transition: all 0.2s;
         }
 
-        .activity-row:hover {
-          background: linear-gradient(135deg, rgba(255, 107, 53, 0.12) 0%, rgba(255, 140, 66, 0.1) 100%);
-          border-color: rgba(255, 107, 53, 0.3);
-          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.1);
+        .action-card.priority-critical {
+          background: #fff4f0;
+          border-left-color: #ff3333;
         }
 
-        .activity-left {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
+        .action-card.priority-critical:hover {
+          background: #ffebeb;
+          box-shadow: 0 2px 8px rgba(255, 51, 51, 0.15);
+        }
+
+        .action-card.priority-high {
+          background: #fff9f5;
+          border-left-color: #ff6b35;
+        }
+
+        .action-card.priority-high:hover {
+          background: #fff0e6;
+          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.15);
+        }
+
+        .action-icon {
+          font-size: 20px;
+          min-width: 20px;
+        }
+
+        .action-content {
           flex: 1;
+          min-width: 0;
         }
 
-        .activity-event {
+        .action-title {
           font-size: 13px;
           font-weight: 600;
           color: #333;
+          margin-bottom: 2px;
         }
 
-        .activity-user {
+        .action-desc {
+          font-size: 11px;
+          color: #999;
+        }
+
+        .action-btn {
+          padding: 6px 12px;
+          background: #ff6b35;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+          background: #ff5722;
+          box-shadow: 0 2px 6px rgba(255, 107, 53, 0.3);
+        }
+
+        /* COMPACT KPI SECTION */
+        .kpi-compact-section {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .kpi-compact-section h2 {
+          font-size: 13px;
+          font-weight: 700;
+          margin: 0;
+          color: #333;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .kpi-compact-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 8px;
+        }
+
+        .kpi-compact-card {
+          background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+          border-radius: 8px;
+          padding: 12px;
+          color: white;
+          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.15);
+          transition: all 0.2s;
+        }
+
+        .kpi-compact-card:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);
+        }
+
+        .kpi-header {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 8px;
+        }
+
+        .kpi-icon {
+          font-size: 16px;
+        }
+
+        .kpi-title {
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+          opacity: 0.9;
+        }
+
+        .kpi-body {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
+
+        .kpi-value-big {
+          font-size: 18px;
+          font-weight: 700;
+        }
+
+        .sparkline {
+          filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.2));
+        }
+
+        /* QUICK ACTIVITY */
+        .quick-activity {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .quick-activity h2 {
+          font-size: 13px;
+          font-weight: 700;
+          margin: 0;
+          color: #333;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .activity-list {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .activity-compact-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px;
+          background: linear-gradient(135deg, rgba(255, 107, 53, 0.06), rgba(255, 140, 66, 0.04));
+          border-radius: 6px;
+          border: 1px solid rgba(255, 107, 53, 0.1);
           font-size: 12px;
+        }
+
+        .activity-emoji {
+          font-size: 14px;
+          min-width: 14px;
+        }
+
+        .activity-text {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+        }
+
+        .activity-title {
+          font-weight: 600;
+          color: #333;
+          font-size: 12px;
+        }
+
+        .activity-sub {
+          font-size: 11px;
           color: #888;
         }
 
         .activity-time {
-          font-size: 11px;
+          font-size: 10px;
           color: #aaa;
           white-space: nowrap;
-          margin-left: 12px;
         }
 
-        /* Mobile - Stacked Layout */
+        /* Mobile - Stack vertically */
         @media (max-width: 768px) {
           .dashboard {
-            gap: 16px;
+            gap: 12px;
           }
 
-          .kpi-grid {
-            grid-template-columns: 1fr;
+          .kpi-compact-grid {
+            grid-template-columns: repeat(2, 1fr);
           }
 
           .dashboard-header h1 {
-            font-size: 22px;
+            font-size: 20px;
           }
 
-          .activity-row {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 6px;
+          .action-card {
+            flex-wrap: wrap;
           }
 
-          .activity-time {
-            margin-left: 0;
+          .action-btn {
+            width: 100%;
           }
         }
       `}</style>
