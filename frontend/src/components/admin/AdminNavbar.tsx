@@ -87,8 +87,8 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
       <style>{`
         .admin-navbar {
           height: 60px;
-          background: linear-gradient(to right, #0f1419, #1a1f2e);
-          border-bottom: 1px solid #2d3748;
+          background: linear-gradient(to right, #ff6b35, #ff8c42);
+          border-bottom: 2px solid #ff5722;
           position: fixed;
           top: 0;
           left: 0;
@@ -97,6 +97,7 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
           display: flex;
           align-items: center;
           padding: 0 20px;
+          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
         }
 
         .navbar-content {
@@ -117,9 +118,9 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
         .menu-toggle {
           width: 36px;
           height: 36px;
-          border: 1px solid #2d3748;
-          background: transparent;
-          color: #cbd5e0;
+          border: 1px solid rgba(255,255,255,0.3);
+          background: rgba(255,255,255,0.1);
+          color: #fff;
           border-radius: 6px;
           cursor: pointer;
           font-size: 16px;
@@ -130,8 +131,8 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
         }
 
         .menu-toggle:hover {
-          background: rgba(255,255,255,0.1);
-          border-color: #4a5568;
+          background: rgba(255,255,255,0.2);
+          border-color: rgba(255,255,255,0.5);
         }
 
         .navbar-brand {
@@ -148,7 +149,7 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
         .brand-name {
           font-size: 16px;
           font-weight: 600;
-          color: #e2e8f0;
+          color: #fff;
           white-space: nowrap;
         }
 
@@ -160,7 +161,7 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
 
         .breadcrumb {
           font-size: 13px;
-          color: #a0aec0;
+          color: rgba(255,255,255,0.8);
         }
 
         .navbar-right {
@@ -180,9 +181,9 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
           align-items: center;
           gap: 8px;
           padding: 8px 12px;
-          border: 1px solid #2d3748;
-          background: rgba(255,255,255,0.05);
-          color: #cbd5e0;
+          border: 1px solid rgba(255,255,255,0.3);
+          background: rgba(255,255,255,0.15);
+          color: #fff;
           border-radius: 6px;
           cursor: pointer;
           font-size: 13px;
@@ -192,8 +193,8 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
         }
 
         .user-button:hover {
-          background: rgba(255,255,255,0.1);
-          border-color: #4a5568;
+          background: rgba(255,255,255,0.25);
+          border-color: rgba(255,255,255,0.5);
         }
 
         .user-avatar {
@@ -215,10 +216,10 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
           position: absolute;
           top: 100%;
           right: 0;
-          background: #1a1f2e;
-          border: 1px solid #2d3748;
+          background: #fff;
+          border: 1px solid #ffb88c;
           border-radius: 6px;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+          box-shadow: 0 8px 24px rgba(255, 107, 53, 0.15);
           min-width: 180px;
           margin-top: 4px;
           z-index: 1000;
@@ -231,7 +232,7 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
           padding: 12px 16px;
           border: none;
           background: none;
-          color: #cbd5e0;
+          color: #333;
           text-align: left;
           cursor: pointer;
           font-size: 13px;
@@ -239,21 +240,21 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
         }
 
         .dropdown-item:hover {
-          background: rgba(255,255,255,0.05);
-          color: #e2e8f0;
+          background: #fff5f0;
+          color: #ff6b35;
         }
 
         .dropdown-item.logout {
-          color: #f87171;
+          color: #ff6b35;
         }
 
         .dropdown-item.logout:hover {
-          background: rgba(248, 113, 113, 0.1);
+          background: #ffe6d9;
         }
 
         .dropdown-divider {
           height: 1px;
-          background: #2d3748;
+          background: #ffb88c;
           margin: 4px 0;
         }
 
