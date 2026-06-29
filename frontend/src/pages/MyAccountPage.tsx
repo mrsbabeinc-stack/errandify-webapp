@@ -42,7 +42,7 @@ export default function MyAccountPage() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'safety' | 'notify' | 'categories'>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
-  const [safetyTab, setSafetyTab] = useState<'blocked' | 'resources' | 'pause'>('blocked');
+  const [safetyTab, setSafetyTab] = useState<'blocked' | 'resources' | 'pause'>('resources');
   const [showAccountPauseModal, setShowAccountPauseModal] = useState(false);
   const [trustedUsers, setTrustedUsers] = useState<Array<{ id: string; name: string; alias?: string; avatar?: string; markedDate: string }>>([]);
   const [rewardsTab, setRewardsTab] = useState<'overview' | 'shop' | 'gift' | 'myVoucher' | 'history'>('overview');
@@ -2767,16 +2767,6 @@ export default function MyAccountPage() {
             {/* Sub-tabs for Safety Centre */}
             <div className="flex gap-2 border-b border-gray-200 p-3 overflow-x-auto">
               <button
-                onClick={() => setSafetyTab('blocked')}
-                className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
-                  safetyTab === 'blocked'
-                    ? 'bg-errandify-orange text-white'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                }`}
-              >
-                👥 Blocked/Trusted
-              </button>
-              <button
                 onClick={() => setSafetyTab('resources')}
                 className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
                   safetyTab === 'resources'
@@ -2795,6 +2785,16 @@ export default function MyAccountPage() {
                 }`}
               >
                 🛡️ Account Pause
+              </button>
+              <button
+                onClick={() => setSafetyTab('blocked')}
+                className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
+                  safetyTab === 'blocked'
+                    ? 'bg-errandify-orange text-white'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                👥 Blocked/Trusted
               </button>
             </div>
 
