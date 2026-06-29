@@ -361,7 +361,10 @@ export default function ChatPage({ userRole }: ChatPageProps) {
               )}
               <div className="flex justify-between items-start gap-2 mb-1">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-sm text-gray-800 line-clamp-1">{conversation.title}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm text-gray-800 line-clamp-1">{conversation.title}</h3>
+                    <span className="text-xs text-gray-500">🆔 #{conversation.id}</span>
+                  </div>
                 </div>
                 <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${getStatusColor(conversation.status)}`}>
                   {getStatusLabel(conversation.status)}
