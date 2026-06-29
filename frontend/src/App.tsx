@@ -44,10 +44,15 @@ import AboutErrandifyPage from './pages/AboutErrandifyPage';
 import NotificationPreferencesPage from './pages/NotificationPreferencesPage';
 import BeforeYouGetStartedPage from './pages/BeforeYouGetStartedPage';
 import SafetyResourcesPage from './pages/SafetyResourcesPage';
+import SupportDashboardPage from './pages/SupportDashboardPage';
+import DisputeReviewPage from './pages/DisputeReviewPage';
+import AppealDashboardPage from './pages/AppealDashboardPage';
+
+type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState<'asker' | 'doer'>('asker');
+  const [userRole, setUserRole] = useState<UserRole>('asker');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
@@ -73,7 +78,7 @@ export default function App() {
     });
   }, []);
 
-  const handleLogin = (role: 'asker' | 'doer') => {
+  const handleLogin = (role: UserRole) => {
     setIsAuthenticated(true);
     setUserRole(role);
     // Update localStorage with the selected role
@@ -85,7 +90,7 @@ export default function App() {
     }
   };
 
-  const handleRoleChange = (role: 'asker' | 'doer') => {
+  const handleRoleChange = (role: UserRole) => {
     setUserRole(role);
     // Update localStorage with the selected role
     const user = localStorage.getItem('user');
@@ -95,6 +100,11 @@ export default function App() {
       localStorage.setItem('user', JSON.stringify(userData));
     }
   };
+
+  // Check if user is admin or support staff
+  const isAdmin = userRole === 'admin';
+  const isSupport = ['support_l2', 'support_l3'].includes(userRole);
+  const isStaff = isAdmin || isSupport;
 
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -110,14 +120,14 @@ export default function App() {
 
   return (
     <Router>
-      {isAuthenticated && <FloatingHana />}
+      {isAuthenticated && !isStaff && <FloatingHana />}
       <Routes>
         {/* Home/Auth page - shown first to unauthenticated users */}
         <Route
           path="/"
           element={
             isAuthenticated ? (
-              <Navigate to="/home" replace />
+              isStaff ? <Navigate to="/support/dashboard" replace /> : <Navigate to="/home" replace />
             ) : (
               <AuthPage onLogin={handleLogin} />
             )
@@ -253,7 +263,13 @@ export default function App() {
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/about" element={<AboutErrandifyPage />} />
         <Route path="/my-account" element={isAuthenticated ? <MyAccountPage /> : <Navigate to="/login" replace />} />
-        <Route path="/admin" element={isAuthenticated ? <AdminPanel /> : <Navigate to="/login" replace />} />
+        <Route path="/admin" element={isAuthenticated && isAdmin ? <AdminPanel /> : <Navigate to="/login" replace />} />
+
+        {/* Support Dashboard - L2/L3 Dispute Resolution */}
+        <Route path="/support/dashboard" element={isAuthenticated && isSupport ? <SupportDashboardPage /> : <Navigate to="/login" replace />} />
+        <Route path="/disputes/:disputeId/review" element={isAuthenticated && isSupport ? <DisputeReviewPage /> : <Navigate to="/login" replace />} />
+        <Route path="/support/appeals" element={isAuthenticated && isSupport ? <AppealDashboardPage /> : <Navigate to="/login" replace />} />
+
         <Route path="/notification-preferences" element={isAuthenticated ? <NotificationPreferencesPage /> : <Navigate to="/login" replace />} />
         <Route path="/safety-resources" element={<SafetyResourcesPage />} />
 
