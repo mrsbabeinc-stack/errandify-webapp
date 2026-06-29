@@ -5,7 +5,7 @@ import RoleToggle from './RoleToggle';
 import HanaCustomerService from './HanaCustomerService';
 
 interface LayoutProps {
-  userRole: 'asker' | 'doer';
+  userRole: 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
   onRoleChange: (role: 'asker' | 'doer') => void;
   onLogout: () => void;
 }
