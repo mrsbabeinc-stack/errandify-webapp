@@ -1,0 +1,382 @@
+.appeal-dashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.appeal-dashboard h1 {
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0 0 32px 0;
+  color: #1a1a1a;
+}
+
+.appeals-content {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 24px;
+}
+
+/* Appeals List */
+.appeals-list-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  max-height: 70vh;
+}
+
+.appeals-list-section h2 {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.appeals-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.appeal-item {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.appeal-item:hover {
+  background: #f9f9f9;
+}
+
+.appeal-item.selected {
+  background: #fff5f5;
+  border-left: 4px solid #ff6b6b;
+  padding-left: 16px;
+}
+
+.appeal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.appeal-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.appeal-status {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #e3f2fd;
+  color: #1565c0;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.appeal-info {
+  font-size: 12px;
+  color: #999;
+  margin: 4px 0;
+}
+
+.appeal-reason {
+  font-size: 12px;
+  color: #666;
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+.appeal-date {
+  font-size: 11px;
+  color: #999;
+  margin: 0;
+}
+
+.empty-state,
+.no-selection {
+  padding: 40px 20px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}
+
+.appeals-loading {
+  padding: 40px 24px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Appeal Details Section */
+.appeal-detail-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.appeal-detail-section h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 24px 0;
+  color: #1a1a1a;
+}
+
+/* Detail Sections */
+.detail-section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.detail-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.detail-section h3 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #666;
+  margin: 0 0 12px 0;
+}
+
+.detail-list {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 16px;
+}
+
+.detail-list dt {
+  font-weight: 600;
+  font-size: 13px;
+  color: #666;
+  text-align: right;
+}
+
+.detail-list dd {
+  margin: 0;
+  font-size: 13px;
+  color: #1a1a1a;
+}
+
+.appeal-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #1a1a1a;
+  margin: 0;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 6px;
+}
+
+/* Evidence Section */
+.evidence-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.evidence-section h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+}
+
+.evidence-link {
+  color: #ff6b6b;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.evidence-link:hover {
+  text-decoration: underline;
+}
+
+/* Decision Form */
+.decision-form {
+  border-bottom: none;
+}
+
+.decision-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.decision-option {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.decision-option:hover {
+  border-color: #ccc;
+  background: #f9f9f9;
+}
+
+.decision-option input[type='radio'] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.decision-option.selected {
+  border-color: #ff6b6b;
+  background: #fff5f5;
+}
+
+.option-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+/* Reasoning Group */
+.reasoning-group {
+  margin-bottom: 20px;
+}
+
+.reasoning-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.reasoning-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.reasoning-group textarea:focus {
+  outline: none;
+  border-color: #ff6b6b;
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
+.char-count {
+  font-size: 11px;
+  color: #999;
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* Buttons */
+.btn-finalize {
+  width: 100%;
+  padding: 12px;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 16px;
+}
+
+.btn-finalize:hover:not(:disabled) {
+  background: #e63946;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.btn-finalize:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Info Box */
+.info-box {
+  background: #fce4ec;
+  border: 1px solid #f48fb1;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.info-box p {
+  font-size: 12px;
+  color: #c2185b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Error Message */
+.error-message {
+  background: #ffebee;
+  border: 1px solid #ef5350;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 13px;
+  color: #c62828;
+  margin-bottom: 16px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .appeals-content {
+    grid-template-columns: 1fr;
+  }
+
+  .appeals-list-section {
+    max-height: none;
+  }
+
+  .decision-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .appeal-dashboard {
+    padding: 16px;
+  }
+
+  .appeal-dashboard h1 {
+    font-size: 22px;
+  }
+
+  .detail-list {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-list dt {
+    text-align: left;
+    margin-bottom: 4px;
+  }
+
+  .decision-options {
+    grid-template-columns: 1fr;
+  }
+}
