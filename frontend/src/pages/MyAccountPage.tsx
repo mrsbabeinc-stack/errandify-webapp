@@ -130,7 +130,85 @@ export default function MyAccountPage() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [historySearch, setHistorySearch] = useState('');
   const [historyFilter, setHistoryFilter] = useState<'all' | 'gifts' | 'redemptions'>('all');
-  const [giftCardTemplates] = useState([
+  // Category preferences state
+  const [selectedCategoriesHelp, setSelectedCategoriesHelp] = useState<string[]>([]);
+  const [selectedCategoriesNeed, setSelectedCategoriesNeed] = useState<string[]>([]);
+  const [categoriesSaving, setCategoriesSaving] = useState(false);
+  const [categoriesAiInsight, setCategoriesAiInsight] = useState('');
+  const categoriesCanHelpCount = selectedCategoriesHelp.length;
+  const categoriesNeedHelpCount = selectedCategoriesNeed.length;
+
+  const ALL_16_CATEGORIES = [
+    { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠' },
+    { id: 'cleaning-household', name: 'Cleaning & Laundry', icon: '🧹' },
+    { id: 'food-beverage', name: 'Food & Beverage', icon: '🍕' },
+    { id: 'furniture-assembly', name: 'Furniture Assembly', icon: '🛋️' },
+    { id: 'shopping-errands', name: 'Shopping & Errands', icon: '🛍️' },
+    { id: 'delivery-moving', name: 'Delivery & Moving', icon: '📦' },
+    { id: 'travel-mobility', name: 'Travel & Mobility', icon: '✈️' },
+    { id: 'event-planning', name: 'Event Planning & Setup', icon: '🎉' },
+    { id: 'childcare-education', name: 'Childcare & Education', icon: '👶' },
+    { id: 'eldercare-healthcare', name: 'Eldercare & Healthcare', icon: '🏥' },
+    { id: 'pet-care', name: 'Pet Care', icon: '🐕' },
+    { id: 'personal-care', name: 'Personal Care', icon: '💆' },
+    { id: 'tech-support', name: 'Tech Support', icon: '💻' },
+    { id: 'creative-arts', name: 'Creative & Arts', icon: '🎨' },
+    { id: 'admin-business', name: 'Admin & Business', icon: '📊' },
+    { id: 'charity-community', name: 'Charity & Community', icon: '❤️' },
+  ];
+
+  const toggleCategoryHelp = (categoryId: string) => {
+    if (selectedCategoriesHelp.includes(categoryId)) {
+      setSelectedCategoriesHelp(selectedCategoriesHelp.filter(id => id !== categoryId));
+    } else {
+      setSelectedCategoriesHelp([...selectedCategoriesHelp, categoryId]);
+    }
+  };
+
+  const toggleCategoryNeed = (categoryId: string) => {
+    if (selectedCategoriesNeed.includes(categoryId)) {
+      setSelectedCategoriesNeed(selectedCategoriesNeed.filter(id => id !== categoryId));
+    } else {
+      setSelectedCategoriesNeed([...selectedCategoriesNeed, categoryId]);
+    }
+  };
+
+  const saveMyCategories = async () => {
+    try {
+      setCategoriesSaving(true);
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+
+      if (!user) {
+        alert('❌ Please log in first');
+        return;
+      }
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/preferences`,
+        {
+          canHelp: selectedCategoriesHelp,
+          needHelp: selectedCategoriesNeed,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        window.dispatchEvent(new Event('preferencesUpdated'));
+        setShowSuccessModal(true);
+        setModalMessage('✅ Category preferences saved! Better matches coming your way!');
+      }
+    } catch (error) {
+      console.error('Failed to save categories:', error);
+      setShowErrorModal(true);
+      setModalMessage('❌ Failed to save preferences. Please try again.');
+    } finally {
+      setCategoriesSaving(false);
+    }
+  };
+
+  const giftCardTemplates] = useState([
     '🎂 Happy Birthday! Wishing you an amazing day!',
     '💍 Happy Anniversary! Celebrating your special love!',
     '🤝 Thank you for being a friend! You mean so much!',
@@ -250,6 +328,35 @@ export default function MyAccountPage() {
     window.addEventListener('ratingsUpdated', handleRatingsUpdated);
     return () => window.removeEventListener('ratingsUpdated', handleRatingsUpdated);
   }, []);
+
+  useEffect(() => {
+    // Load saved category preferences
+    const loadCategories = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+
+        if (!user) return;
+
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/preferences`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.data.success && response.data.data) {
+          setSelectedCategoriesHelp(response.data.data.canHelp || []);
+          setSelectedCategoriesNeed(response.data.data.needHelp || []);
+        }
+      } catch (error) {
+        console.warn('Failed to load category preferences:', error);
+      }
+    };
+
+    if (activeSection === 'categories') {
+      loadCategories();
+    }
+  }, [activeSection]);
 
   useEffect(() => {
     // Fetch AI-generated alerts
@@ -2706,53 +2813,103 @@ export default function MyAccountPage() {
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4">
               <h2 className="text-lg font-bold mb-1">🎯 My Categories</h2>
-              <p className="text-xs text-purple-100">Smart AI-powered category preferences for better matches</p>
+              <p className="text-xs text-purple-100">All 16 categories - toggle what you can help with & what you need help with</p>
             </div>
-            <div className="p-6 space-y-6">
+            <div className="p-6 max-h-[70vh] overflow-y-auto space-y-6">
+              {/* Toggle Stats */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-green-50 rounded-lg p-4 border-2 border-green-200">
+                  <p className="text-lg font-bold text-green-700">💪 I Can Help</p>
+                  <p className="text-sm text-green-600">{categoriesCanHelpCount} selected</p>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                  <p className="text-lg font-bold text-blue-700">🙋 I Need Help</p>
+                  <p className="text-sm text-blue-600">{categoriesNeedHelpCount} selected</p>
+                </div>
+              </div>
+
+              {/* 16 Categories Grid */}
+              <div className="space-y-3">
+                {ALL_16_CATEGORIES.map(category => (
+                  <div
+                    key={category.id}
+                    className={`bg-white rounded-lg p-4 border-2 transition-all ${
+                      selectedCategoriesHelp.includes(category.id) || selectedCategoriesNeed.includes(category.id)
+                        ? 'border-orange-300 bg-orange-50'
+                        : 'border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 flex-1">
+                        <span className="text-2xl">{category.icon}</span>
+                        <p className="font-semibold text-gray-800">{category.name}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => toggleCategoryHelp(category.id)}
+                          className={`px-3 py-1 rounded font-semibold text-xs transition-all ${
+                            selectedCategoriesHelp.includes(category.id)
+                              ? 'bg-green-500 text-white'
+                              : 'bg-gray-100 text-gray-600 hover:bg-green-100'
+                          }`}
+                        >
+                          {selectedCategoriesHelp.includes(category.id) ? '✓ Help' : '○ Help'}
+                        </button>
+                        <button
+                          onClick={() => toggleCategoryNeed(category.id)}
+                          className={`px-3 py-1 rounded font-semibold text-xs transition-all ${
+                            selectedCategoriesNeed.includes(category.id)
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-gray-100 text-gray-600 hover:bg-blue-100'
+                          }`}
+                        >
+                          {selectedCategoriesNeed.includes(category.id) ? '✓ Need' : '○ Need'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {/* Info Box */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4">
-                <p className="text-sm font-semibold text-blue-900 mb-2">🤖 AI-Powered Matching</p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sticky bottom-0">
+                <p className="text-sm font-semibold text-blue-900 mb-2">💡 How this works:</p>
                 <ul className="text-xs text-blue-800 space-y-1">
-                  <li>✓ <strong>I Can Help:</strong> Mark categories you specialize in as a doer</li>
-                  <li>✓ <strong>I Need Help:</strong> Mark categories you need help with as an asker</li>
-                  <li>✓ <strong>Smart Suggestions:</strong> AI learns from your job history and suggests specializations</li>
-                  <li>✓ <strong>Better Matches:</strong> Get paired with doers who specialize in what you need!</li>
+                  <li>✓ <strong>Help:</strong> You can help with this (as a doer)</li>
+                  <li>✓ <strong>Need:</strong> You need help with this (as an asker)</li>
+                  <li>✓ AI learns from your work and improves recommendations!</li>
                 </ul>
               </div>
 
-              {/* Features */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 text-center">
-                  <p className="text-3xl mb-2">💚</p>
-                  <p className="font-bold text-green-900 text-sm">All 16 Categories</p>
-                  <p className="text-xs text-green-700 mt-1">Complete coverage from Home Maintenance to Charity</p>
-                </div>
-                <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4 text-center">
-                  <p className="text-3xl mb-2">🧠</p>
-                  <p className="font-bold text-purple-900 text-sm">AI Detection</p>
-                  <p className="text-xs text-purple-700 mt-1">System learns from your completed tasks</p>
-                </div>
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-3 sticky bottom-24">
+                <button
+                  onClick={() => {
+                    setSelectedCategoriesHelp([]);
+                    setSelectedCategoriesNeed([]);
+                  }}
+                  className="py-3 rounded-lg font-bold text-gray-700 border-2 border-gray-300 hover:bg-gray-50 transition text-sm"
+                >
+                  🔄 Clear
+                </button>
+                <button
+                  onClick={saveMyCategories}
+                  disabled={categoriesSaving || (categoriesCanHelpCount === 0 && categoriesNeedHelpCount === 0)}
+                  className={`py-3 rounded-lg font-bold text-white transition text-sm ${
+                    categoriesSaving || (categoriesCanHelpCount === 0 && categoriesNeedHelpCount === 0)
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg'
+                  }`}
+                >
+                  {categoriesSaving ? '💭...' : '✅ Save'}
+                </button>
               </div>
 
-              {/* Call to Action */}
-              <button
-                onClick={() => navigate('/category-preferences')}
-                className="w-full py-4 rounded-lg font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:shadow-lg transition-all transform hover:scale-105 flex items-center justify-center gap-2"
-              >
-                <span>✨</span>
-                <span>Manage My Preferences (All 16 Categories)</span>
-                <span>→</span>
-              </button>
-
-              {/* Tips */}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <p className="text-xs font-semibold text-amber-900 mb-2">💡 Smart Tips</p>
-                <ul className="text-xs text-amber-800 space-y-1">
-                  <li>🎯 The more you complete, the better AI suggestions get</li>
-                  <li>⭐ Specialize in what you're good at = higher earnings</li>
-                  <li>🚀 Let askers find you faster with clear specializations</li>
-                </ul>
-              </div>
+              {categoriesCanHelpCount === 0 && categoriesNeedHelpCount === 0 && (
+                <p className="text-center text-orange-600 font-semibold text-sm bg-orange-50 p-2 rounded">
+                  ⚠️ Select at least one category
+                </p>
+              )}
             </div>
           </div>
         )}
