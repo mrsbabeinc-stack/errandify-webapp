@@ -826,10 +826,10 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       { pattern: /(\d+)\s+(?:weeks?|days?|months?|times?|sessions?|occurrences?)$/i },
     ];
 
-    const lowerInput = input.toLowerCase();
+    const lowerInputForRecurring = input.toLowerCase();
 
     for (const rec of recurringPatterns) {
-      const match = lowerInput.match(rec.pattern);
+      const match = lowerInputForRecurring.match(rec.pattern);
       if (match) {
         isRecurring = true;
         repeatUnit = rec.unit;
@@ -841,7 +841,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     if (isRecurring) {
       for (const occ of occurrencePatterns) {
-        const match = lowerInput.match(occ.pattern);
+        const match = lowerInputForRecurring.match(occ.pattern);
         if (match) {
           occurrences = parseInt(match[1], 10);
           console.log(`[Extract] Detected occurrences: ${occurrences}`);
