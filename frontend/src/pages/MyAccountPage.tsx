@@ -208,7 +208,7 @@ export default function MyAccountPage() {
     }
   };
 
-  const giftCardTemplates] = useState([
+  const [giftCardTemplates] = useState([
     '🎂 Happy Birthday! Wishing you an amazing day!',
     '💍 Happy Anniversary! Celebrating your special love!',
     '🤝 Thank you for being a friend! You mean so much!',
