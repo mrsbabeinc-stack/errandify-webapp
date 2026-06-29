@@ -2851,69 +2851,54 @@ export default function MyAccountPage() {
 
             {/* Safety & Support Resources Tab */}
             {safetyTab === 'resources' && (
-              <div className="p-4 space-y-4">
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                  <h3 className="font-bold text-red-900 mb-2">🆘 In Danger Right Now?</h3>
-                  <p className="text-sm text-red-800 mb-3">Call emergency services or the Anti-Trafficking Hotline immediately (24/7, free, anonymous)</p>
-                  <a href="tel:+6518008388877" className="inline-block text-2xl font-bold text-red-600 hover:text-red-700 mb-2">
-                    +65 1800-838-8877
-                  </a>
-                  <p className="text-xs text-red-700">Text option available | Interpreters available</p>
-                </div>
+              <div className="p-4">
+                <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 border-2 border-blue-300 rounded-xl p-6 text-center">
+                  <div className="text-5xl mb-3">🛡️</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">We've Got Your Back</h3>
+                  <p className="text-sm text-gray-700 mb-4">
+                    You're never alone. We're here to support you with safety resources, account protection, and help when you need it.
+                  </p>
 
-                <div className="space-y-3">
-                  <p className="text-sm font-bold text-gray-900">Other Resources Available:</p>
                   <button
                     onClick={() => window.location.href = '/safety-resources'}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-lg transition mb-3 flex items-center justify-center gap-2"
                   >
                     📚 View All Safety Resources
                   </button>
-                  <p className="text-xs text-gray-600">Access hotlines for domestic abuse, migrant support, mental health, elderly protection, and more</p>
-                </div>
 
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <h4 className="font-bold text-yellow-900 mb-2">💡 Safe Calling Tips:</h4>
-                  <ul className="text-xs text-yellow-800 space-y-1">
-                    <li>✓ Use a phone the other person doesn't know about</li>
-                    <li>✓ Call from a public place where you feel safe</li>
-                    <li>✓ They can arrange safe transportation</li>
-                    <li>✓ All calls are confidential and anonymous</li>
-                  </ul>
+                  <p className="text-xs text-gray-600">
+                    Get help anytime. All services are 24/7, confidential, and free.
+                  </p>
                 </div>
               </div>
             )}
 
             {/* Account Pause Tab */}
             {safetyTab === 'pause' && (
-              <div className="p-4 space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="font-bold text-blue-900 mb-2">🛡️ Account Pause - Safety Feature</h3>
-                  <p className="text-sm text-blue-800 mb-3">Temporarily hide your profile when you need to stay safe. No one will know you paused.</p>
+              <div className="p-4">
+                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl p-6">
+                  <div className="text-4xl text-center mb-3">🛡️</div>
+                  <h3 className="font-bold text-blue-900 text-center mb-2">Pause Your Account</h3>
+                  <p className="text-sm text-blue-800 text-center mb-4">
+                    Hide your profile instantly. No one will know you paused.
+                  </p>
 
-                  <div className="space-y-2 text-sm text-blue-800 mb-4">
-                    <p className="font-semibold">When you pause:</p>
-                    <ul className="space-y-1 ml-2">
-                      <li>✓ People can't message you</li>
-                      <li>✓ Your jobs disappear from browse</li>
-                      <li>✓ Your profile is hidden</li>
-                      <li>✓ You keep all your data</li>
-                      <li>✓ You can resume anytime</li>
-                    </ul>
+                  <div className="bg-white rounded-lg p-3 mb-4 space-y-2">
+                    <p className="text-xs font-semibold text-gray-700 mb-2">What happens:</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="text-xs text-gray-700">✓ Profile hidden</div>
+                      <div className="text-xs text-gray-700">✓ No messages</div>
+                      <div className="text-xs text-gray-700">✓ Jobs disappear</div>
+                      <div className="text-xs text-gray-700">✓ Data stays safe</div>
+                    </div>
                   </div>
 
                   <button
                     onClick={() => setShowAccountPauseModal(true)}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition"
                   >
-                    🛡️ Manage Account Pause
+                    Manage Pause
                   </button>
-                </div>
-
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-sm text-green-800">
-                    <strong>✓ Privacy Protected:</strong> Pausing your account is completely private. It won't show anywhere on your profile.
-                  </p>
                 </div>
               </div>
             )}
