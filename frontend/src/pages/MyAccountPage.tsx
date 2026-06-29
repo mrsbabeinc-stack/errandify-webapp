@@ -1151,7 +1151,7 @@ export default function MyAccountPage() {
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >
-              📊 Hub
+              📊 MyHub
             </button>
             <button
               onClick={() => setActiveSection('profile')}
@@ -1161,7 +1161,7 @@ export default function MyAccountPage() {
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >
-              👤 Profile
+              👤 MyProfile
             </button>
             <button
               onClick={() => setActiveSection('pocket')}
@@ -1171,7 +1171,7 @@ export default function MyAccountPage() {
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >
-              💰 Pocket
+              💰 MyPocket
             </button>
             <button
               onClick={() => setActiveSection('rewards')}
@@ -1181,7 +1181,7 @@ export default function MyAccountPage() {
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >
-              💎 Rewards
+              💎 MyRewardSpace
             </button>
             <button
               onClick={() => setActiveSection('blocked')}
