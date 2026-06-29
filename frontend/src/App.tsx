@@ -60,6 +60,7 @@ import RegionalPage from './pages/admin/Regional';
 import DiscountCodesPage from './pages/admin/DiscountCodes';
 import AdminErrandifyPointsPage from './pages/admin/ErrandifyPoints';
 import EmailPage from './pages/admin/Email';
+import GrantPointsPage from './pages/admin/GrantPoints';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -297,6 +298,7 @@ export default function App() {
         <Route path="/admin/manage/categories" element={isAuthenticated && isAdmin ? <CategoriesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/vouchers" element={isAuthenticated && isAdmin ? <VouchersPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/points" element={isAuthenticated && isAdmin ? <AdminErrandifyPointsPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/manage/grant-points" element={isAuthenticated && isAdmin ? <GrantPointsPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/discounts" element={isAuthenticated && isAdmin ? <DiscountCodesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/comms/email" element={isAuthenticated && isAdmin ? <EmailPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/reports" element={isAuthenticated && isAdmin ? <ReportsPage /> : <Navigate to="/login" replace />} />
