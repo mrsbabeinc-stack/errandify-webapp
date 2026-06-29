@@ -124,11 +124,13 @@ export default function HanaChatMode({
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
         { input }
       );
+      console.log('[Hana] Title extraction response:', response.data.data);
       if (response.data.data?.category) {
+        console.log('[Hana] Updating category to:', response.data.data.category);
         onTaskUpdate({ category: response.data.data.category });
       }
     } catch (err) {
-      console.log('Category detection failed');
+      console.log('Category detection failed', err);
     }
 
     addHanaMessage("Got it! Now, where do you need this done?");
@@ -144,7 +146,9 @@ export default function HanaChatMode({
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
         { input }
       );
+      console.log('[Hana] Location extraction response:', response.data.data);
       if (response.data.data) {
+        console.log('[Hana] Updating location data - area:', response.data.data.area, 'postal:', response.data.data.postalCode);
         onTaskUpdate({
           area: response.data.data.area,
           fullAddress: response.data.data.fullAddress,
@@ -152,7 +156,7 @@ export default function HanaChatMode({
         });
       }
     } catch (err) {
-      console.log('Location extraction failed');
+      console.log('Location extraction failed', err);
     }
 
     addHanaMessage("Thanks! When do you need it done? (e.g., Tomorrow at 2pm, Saturday, Next week)");
