@@ -22,7 +22,7 @@ export default function HanaManualMode({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [descriptionTips, setDescriptionTips] = useState<string>('');
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const categoryMap: Record<string, string> = {
     'eldercare': '👴 Caregiving & Elder Companionship',
@@ -90,9 +90,8 @@ export default function HanaManualMode({
 
     debounceTimer.current = setTimeout(async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
         const response = await axios.post(
-          `${apiUrl}/api/ai/suggest-completion`,
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggest-completion`,
           { title: taskData.title }
         );
 
@@ -127,7 +126,6 @@ export default function HanaManualMode({
     }
     setDescriptionTips(getTaskSpecificTips(taskData.title, taskData.category));
   }, [taskData.title, taskData.category]);
-
 
   const handleSuggestionClick = (suggestion: string) => {
     onTaskUpdate({ title: suggestion });
