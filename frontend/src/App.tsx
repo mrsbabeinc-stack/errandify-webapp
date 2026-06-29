@@ -279,10 +279,10 @@ export default function App() {
         <Route path="/admin/dashboard" element={isAuthenticated && isAdmin ? <AdminDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/cases" element={isAuthenticated && isAdmin ? <CasesPage /> : <Navigate to="/login" replace />} />
 
-        {/* Main dashboard layout */}
+        {/* Main dashboard layout - for asker/doer AND admin users */}
         <Route
           element={
-            isAuthenticated && (userRole === 'asker' || userRole === 'doer') ? (
+            isAuthenticated ? (
               <Layout userRole={userRole} onRoleChange={handleRoleChange} onLogout={handleLogout} />
             ) : (
               <Navigate to="/" replace />
