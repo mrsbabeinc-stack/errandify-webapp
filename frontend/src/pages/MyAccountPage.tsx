@@ -2810,106 +2810,84 @@ export default function MyAccountPage() {
 
         {/* CATEGORIES SECTION */}
         {activeSection === 'categories' && (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4">
-              <h2 className="text-lg font-bold mb-1">🎯 My Categories</h2>
-              <p className="text-xs text-purple-100">All 16 categories - toggle what you can help with & what you need help with</p>
+          <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg shadow-md p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-purple-900">🎯 My Categories</h2>
+              <div className="flex gap-2 text-xs font-bold">
+                <span className="bg-green-500 text-white px-2 py-1 rounded-full">💪 {categoriesCanHelpCount}</span>
+                <span className="bg-blue-500 text-white px-2 py-1 rounded-full">🙋 {categoriesNeedHelpCount}</span>
+              </div>
             </div>
-            <div className="p-6 max-h-[70vh] overflow-y-auto space-y-6">
-              {/* Toggle Stats */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-green-50 rounded-lg p-4 border-2 border-green-200">
-                  <p className="text-lg font-bold text-green-700">💪 I Can Help</p>
-                  <p className="text-sm text-green-600">{categoriesCanHelpCount} selected</p>
-                </div>
-                <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
-                  <p className="text-lg font-bold text-blue-700">🙋 I Need Help</p>
-                  <p className="text-sm text-blue-600">{categoriesNeedHelpCount} selected</p>
-                </div>
-              </div>
 
-              {/* 16 Categories Grid */}
-              <div className="space-y-3">
-                {ALL_16_CATEGORIES.map(category => (
-                  <div
-                    key={category.id}
-                    className={`bg-white rounded-lg p-4 border-2 transition-all ${
-                      selectedCategoriesHelp.includes(category.id) || selectedCategoriesNeed.includes(category.id)
-                        ? 'border-orange-300 bg-orange-50'
-                        : 'border-gray-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 flex-1">
-                        <span className="text-2xl">{category.icon}</span>
-                        <p className="font-semibold text-gray-800">{category.name}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => toggleCategoryHelp(category.id)}
-                          className={`px-3 py-1 rounded font-semibold text-xs transition-all ${
-                            selectedCategoriesHelp.includes(category.id)
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-100 text-gray-600 hover:bg-green-100'
-                          }`}
-                        >
-                          {selectedCategoriesHelp.includes(category.id) ? '✓ Help' : '○ Help'}
-                        </button>
-                        <button
-                          onClick={() => toggleCategoryNeed(category.id)}
-                          className={`px-3 py-1 rounded font-semibold text-xs transition-all ${
-                            selectedCategoriesNeed.includes(category.id)
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-gray-100 text-gray-600 hover:bg-blue-100'
-                          }`}
-                        >
-                          {selectedCategoriesNeed.includes(category.id) ? '✓ Need' : '○ Need'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Info Box */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sticky bottom-0">
-                <p className="text-sm font-semibold text-blue-900 mb-2">💡 How this works:</p>
-                <ul className="text-xs text-blue-800 space-y-1">
-                  <li>✓ <strong>Help:</strong> You can help with this (as a doer)</li>
-                  <li>✓ <strong>Need:</strong> You need help with this (as an asker)</li>
-                  <li>✓ AI learns from your work and improves recommendations!</li>
-                </ul>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-3 sticky bottom-24">
-                <button
-                  onClick={() => {
-                    setSelectedCategoriesHelp([]);
-                    setSelectedCategoriesNeed([]);
-                  }}
-                  className="py-3 rounded-lg font-bold text-gray-700 border-2 border-gray-300 hover:bg-gray-50 transition text-sm"
-                >
-                  🔄 Clear
-                </button>
-                <button
-                  onClick={saveMyCategories}
-                  disabled={categoriesSaving || (categoriesCanHelpCount === 0 && categoriesNeedHelpCount === 0)}
-                  className={`py-3 rounded-lg font-bold text-white transition text-sm ${
-                    categoriesSaving || (categoriesCanHelpCount === 0 && categoriesNeedHelpCount === 0)
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg'
+            {/* Compact Grid - 4 columns */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-[50vh] overflow-y-auto">
+              {ALL_16_CATEGORIES.map(category => (
+                <div
+                  key={category.id}
+                  className={`rounded-lg p-3 text-center border-2 transition-all cursor-pointer ${
+                    selectedCategoriesHelp.includes(category.id) || selectedCategoriesNeed.includes(category.id)
+                      ? 'border-orange-400 bg-orange-200'
+                      : 'border-white bg-white hover:shadow-md'
                   }`}
                 >
-                  {categoriesSaving ? '💭...' : '✅ Save'}
-                </button>
-              </div>
+                  <p className="text-2xl mb-1">{category.icon}</p>
+                  <p className="text-xs font-semibold text-gray-800 mb-2 line-clamp-2">{category.name}</p>
+                  <div className="flex gap-1 justify-center">
+                    <button
+                      onClick={() => toggleCategoryHelp(category.id)}
+                      className={`w-5 h-5 rounded text-xs font-bold transition-all flex items-center justify-center ${
+                        selectedCategoriesHelp.includes(category.id)
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-200 text-gray-600 hover:bg-green-200'
+                      }`}
+                      title="I Can Help"
+                    >
+                      {selectedCategoriesHelp.includes(category.id) ? '✓' : ''}
+                    </button>
+                    <button
+                      onClick={() => toggleCategoryNeed(category.id)}
+                      className={`w-5 h-5 rounded text-xs font-bold transition-all flex items-center justify-center ${
+                        selectedCategoriesNeed.includes(category.id)
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 text-gray-600 hover:bg-blue-200'
+                      }`}
+                      title="I Need Help"
+                    >
+                      {selectedCategoriesNeed.includes(category.id) ? '✓' : ''}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-              {categoriesCanHelpCount === 0 && categoriesNeedHelpCount === 0 && (
-                <p className="text-center text-orange-600 font-semibold text-sm bg-orange-50 p-2 rounded">
-                  ⚠️ Select at least one category
-                </p>
-              )}
+            {/* Quick Info */}
+            <div className="text-xs text-gray-700 bg-white bg-opacity-70 rounded p-2">
+              <span className="font-semibold">💚 Green:</span> I can help |
+              <span className="font-semibold"> 💙 Blue:</span> I need help
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  setSelectedCategoriesHelp([]);
+                  setSelectedCategoriesNeed([]);
+                }}
+                className="py-2 rounded font-bold text-sm text-gray-700 border-2 border-gray-300 hover:bg-white transition"
+              >
+                🔄 Clear
+              </button>
+              <button
+                onClick={saveMyCategories}
+                disabled={categoriesSaving || (categoriesCanHelpCount === 0 && categoriesNeedHelpCount === 0)}
+                className={`py-2 rounded font-bold text-white text-sm transition ${
+                  categoriesSaving || (categoriesCanHelpCount === 0 && categoriesNeedHelpCount === 0)
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg'
+                }`}
+              >
+                {categoriesSaving ? '⏳' : '✅ Save'}
+              </button>
             </div>
           </div>
         )}
