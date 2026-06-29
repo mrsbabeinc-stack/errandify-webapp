@@ -35,7 +35,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           display: flex;
           flex-direction: column;
           min-height: 100vh;
-          background: #0f1419;
+          background: linear-gradient(135deg, #fff9f5 0%, #fffbf7 100%);
         }
 
         .admin-container {
@@ -50,6 +50,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           transition: margin-left 0.3s ease;
           margin-left: 280px;
           overflow-y: auto;
+          background: linear-gradient(135deg, #fff9f5 0%, #fffbf7 100%);
         }
 
         .admin-main.full-width {
@@ -75,12 +76,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         }
 
         .admin-main::-webkit-scrollbar-thumb {
-          background: #4a5568;
+          background: #ffb88c;
           border-radius: 4px;
         }
 
         .admin-main::-webkit-scrollbar-thumb:hover {
-          background: #718096;
+          background: #ff8c42;
         }
 
         /* Mobile responsiveness */
@@ -109,14 +110,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           }
         }
 
-        /* Dark theme for the entire app */
+        /* Light theme for the entire app */
         .admin-layout {
-          color: #e2e8f0;
+          color: #333;
         }
 
         .admin-layout a {
-          color: #60a5fa;
+          color: #ff6b35;
           text-decoration: none;
+          font-weight: 600;
         }
 
         .admin-layout a:hover {
@@ -130,9 +132,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         .admin-layout input,
         .admin-layout select,
         .admin-layout textarea {
-          background: #1a1f2e;
-          color: #e2e8f0;
-          border: 1px solid #2d3748;
+          background: #fff;
+          color: #333;
+          border: 1px solid #ffb88c;
           border-radius: 6px;
           padding: 8px 12px;
           font-family: inherit;
@@ -143,12 +145,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         .admin-layout select:focus,
         .admin-layout textarea:focus {
           outline: none;
-          border-color: #2563eb;
-          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+          border-color: #ff6b35;
+          box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
         }
 
         .admin-layout input::placeholder {
-          color: #718096;
+          color: #ccc;
         }
       `}</style>
     </div>

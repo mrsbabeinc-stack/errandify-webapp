@@ -146,15 +146,16 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
         .admin-sidebar {
           width: 280px;
           height: 100vh;
-          background: #1a1f2e;
-          color: #ffffff;
-          border-right: 1px solid #2d3748;
+          background: linear-gradient(180deg, #fff5f0 0%, #fffbf7 100%);
+          color: #333;
+          border-right: 2px solid #ffb88c;
           overflow-y: auto;
           transition: width 0.3s ease;
           position: fixed;
           left: 0;
           top: 60px;
           z-index: 100;
+          box-shadow: 2px 0 8px rgba(255, 107, 53, 0.08);
         }
 
         .admin-sidebar.closed {
@@ -185,17 +186,17 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
           padding: 12px 20px;
           border: none;
           background: none;
-          color: #cbd5e0;
+          color: #ff6b35;
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 700;
           cursor: pointer;
           transition: all 0.2s;
           text-align: left;
         }
 
         .menu-header:hover {
-          background: rgba(255,255,255,0.1);
-          color: #e2e8f0;
+          background: rgba(255, 107, 53, 0.08);
+          color: #ff6b35;
         }
 
         .menu-header .icon {
@@ -221,8 +222,8 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
         .submenu {
           display: flex;
           flex-direction: column;
-          background: rgba(0,0,0,0.2);
-          border-left: 2px solid #2563eb;
+          background: rgba(255, 107, 53, 0.04);
+          border-left: 2px solid #ff6b35;
         }
 
         .menu-item {
@@ -233,7 +234,7 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
           padding: 10px 20px 10px 28px;
           border: none;
           background: none;
-          color: #a0aec0;
+          color: #666;
           font-size: 13px;
           font-weight: 500;
           cursor: pointer;
@@ -242,15 +243,16 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
         }
 
         .menu-item:hover {
-          background: rgba(255,255,255,0.05);
-          color: #cbd5e0;
+          background: rgba(255, 107, 53, 0.1);
+          color: #ff6b35;
         }
 
         .menu-item.active {
-          background: rgba(37, 99, 235, 0.2);
-          color: #60a5fa;
-          border-left: 3px solid #2563eb;
+          background: rgba(255, 107, 53, 0.15);
+          color: #ff6b35;
+          border-left: 3px solid #ff6b35;
           padding-left: 25px;
+          font-weight: 600;
         }
 
         .menu-item .icon {
@@ -276,12 +278,12 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
         }
 
         .admin-sidebar::-webkit-scrollbar-thumb {
-          background: #4a5568;
+          background: #ffb88c;
           border-radius: 3px;
         }
 
         .admin-sidebar::-webkit-scrollbar-thumb:hover {
-          background: #718096;
+          background: #ff8c42;
         }
       `}</style>
     </aside>
