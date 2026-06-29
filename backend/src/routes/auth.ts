@@ -570,4 +570,58 @@ router.post('/singpass/login', (req: any, res: Response) => {
   res.status(501).json({ error: 'SingPass integration not yet implemented' });
 });
 
+// Switch user role (admin toggle)
+router.post('/switch-role', async (req: Request, res: Response) => {
+  try {
+    // Get user ID from auth header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded: any = jwt.verify(token, config.jwtSecret);
+    const userId = decoded.userId;
+
+    const { role } = req.body;
+    const validRoles = ['asker', 'doer', 'admin'];
+
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+
+    // Get user and check if they have this role
+    const userResult = await db.query(
+      'SELECT id, role FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = userResult.rows[0];
+
+    // For now, allow admin role for demo accounts
+    if (role === 'admin' && user.role !== 'admin' && user.role !== 'support_l2' && user.role !== 'support_l3') {
+      return res.status(403).json({ error: `You don't have the ${role} role` });
+    }
+
+    // Determine redirect URL based on role
+    const redirectUrl = role === 'admin' ? '/admin/dashboard' :
+                        role === 'doer' ? '/mydoer' :
+                        '/myerrand';
+
+    res.json({
+      success: true,
+      current_role: role,
+      redirect_url: redirectUrl,
+      message: `Switched to ${role} mode`
+    });
+  } catch (error) {
+    console.error('Role switch error:', error);
+    res.status(500).json({ error: 'Failed to switch role' });
+  }
+});
+
 export default router;
