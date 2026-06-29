@@ -10,9 +10,12 @@ export default function RoleToggle({ currentRole, onRoleChange }: RoleToggleProp
   const isAdmin = currentRole === 'admin' || currentRole === 'support_l2' || currentRole === 'support_l3';
 
   const handleAdminClick = () => {
+    console.log('[RoleToggle] Admin button clicked, navigating to /admin/dashboard');
     // Admin user is already logged in - just navigate directly to admin dashboard
     localStorage.setItem('current_role', 'admin');
+    console.log('[RoleToggle] About to navigate...');
     navigate('/admin/dashboard');
+    console.log('[RoleToggle] Navigation called');
   };
 
   return (
