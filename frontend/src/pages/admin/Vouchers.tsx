@@ -564,12 +564,12 @@ export const VouchersPage: React.FC = () => {
         .voucher-card-display { background: white; border: 1px solid #ffb88c; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
         .voucher-card-display:hover { border-color: #ff6b35; box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15); transform: translateY(-2px); }
 
-        .voucher-image-container { position: relative; overflow: hidden; background: #f5f5f5; }
-        .voucher-image { width: 100%; height: 140px; object-fit: cover; display: block; object-position: center; }
+        .voucher-image-container { position: relative; overflow: hidden; background: #f5f5f5; aspect-ratio: 3/2; }
+        .voucher-image { width: 100%; height: 100%; object-fit: contain; display: block; padding: 8px; background: white; }
 
-        .discount-badge { position: absolute; top: 8px; right: 8px; background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border: 2px solid white; }
-        .discount-value { font-size: 16px; font-weight: 700; line-height: 1; }
-        .discount-label { font-size: 9px; font-weight: 700; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.5px; }
+        .discount-badge { position: absolute; top: 6px; right: 6px; background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); color: white; border-radius: 50%; width: 54px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 3px 10px rgba(0,0,0,0.25); border: 3px solid white; z-index: 10; }
+        .discount-value { font-size: 14px; font-weight: 800; line-height: 1; }
+        .discount-label { font-size: 8px; font-weight: 700; text-transform: uppercase; margin-top: 1px; letter-spacing: 0.5px; }
         .voucher-info { padding: 12px; }
         .voucher-info h3 { margin: 0; font-size: 13px; font-weight: 700; color: #333; }
         .voucher-info p { margin: 4px 0 0 0; font-size: 11px; color: #666; line-height: 1.4; }
