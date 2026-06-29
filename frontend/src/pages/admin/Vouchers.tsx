@@ -445,7 +445,13 @@ export const VouchersPage: React.FC = () => {
                 <div className="voucher-grid">
                   {filteredVouchers.map((v) => (
                     <div key={v.id} className="voucher-card-display" onClick={() => setSelectedVoucher(v)}>
-                      <img src={v.image} alt={v.name} className="voucher-image" />
+                      <div className="voucher-image-container">
+                        <img src={v.image} alt={v.name} className="voucher-image" />
+                        <div className="discount-badge">
+                          <div className="discount-value">{v.discount}</div>
+                          <div className="discount-label">SAVE</div>
+                        </div>
+                      </div>
                       <div className="voucher-info">
                         <h3>{v.name}</h3>
                         <p>{v.description}</p>
@@ -558,7 +564,12 @@ export const VouchersPage: React.FC = () => {
         .voucher-card-display { background: white; border: 1px solid #ffb88c; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
         .voucher-card-display:hover { border-color: #ff6b35; box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15); transform: translateY(-2px); }
 
-        .voucher-image { width: 100%; height: 160px; object-fit: cover; display: block; }
+        .voucher-image-container { position: relative; overflow: hidden; background: #f5f5f5; }
+        .voucher-image { width: 100%; height: 140px; object-fit: cover; display: block; object-position: center; }
+
+        .discount-badge { position: absolute; top: 8px; right: 8px; background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border: 2px solid white; }
+        .discount-value { font-size: 16px; font-weight: 700; line-height: 1; }
+        .discount-label { font-size: 9px; font-weight: 700; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.5px; }
         .voucher-info { padding: 12px; }
         .voucher-info h3 { margin: 0; font-size: 13px; font-weight: 700; color: #333; }
         .voucher-info p { margin: 4px 0 0 0; font-size: 11px; color: #666; line-height: 1.4; }
