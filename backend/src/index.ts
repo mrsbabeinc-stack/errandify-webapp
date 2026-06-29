@@ -57,6 +57,8 @@ app.use('/api/mock-payment', mockPaymentRoutes);
 // REAL ROUTES
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
+// Mount category preferences BEFORE general user routes (more specific first)
+app.use('/api/users', categoryPreferencesRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/bids', bidsRoutes);
@@ -88,7 +90,6 @@ app.use('/api/questions', questionsRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/uploads', uploadRoutes);
-app.use('/api/users', categoryPreferencesRoutes);
 app.use('/api', hanaRoutes);
 
 // Error handling
