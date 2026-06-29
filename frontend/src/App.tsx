@@ -52,6 +52,7 @@ import CasesPage from './pages/admin/Cases';
 import CategoriesPage from './pages/admin/Categories';
 import VouchersPage from './pages/admin/Vouchers';
 import ReportsPage from './pages/admin/Reports';
+import UsersSafetyPage from './pages/admin/UsersSafety';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -284,6 +285,7 @@ export default function App() {
         <Route path="/admin/manage/categories" element={isAuthenticated && isAdmin ? <CategoriesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/vouchers" element={isAuthenticated && isAdmin ? <VouchersPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/reports" element={isAuthenticated && isAdmin ? <ReportsPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/dashboard/users" element={isAuthenticated && isAdmin ? <UsersSafetyPage /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout - for asker/doer AND admin users */}
         <Route
