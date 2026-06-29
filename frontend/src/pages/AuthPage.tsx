@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 interface AuthPageProps {
-  onLogin: (role: 'asker' | 'doer') => void;
+  onLogin: (role: 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3') => void;
 }
 
 export default function AuthPage({ onLogin }: AuthPageProps) {

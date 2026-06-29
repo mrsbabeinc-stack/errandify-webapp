@@ -47,6 +47,8 @@ import SafetyResourcesPage from './pages/SafetyResourcesPage';
 import SupportDashboardPage from './pages/SupportDashboardPage';
 import DisputeReviewPage from './pages/DisputeReviewPage';
 import AppealDashboardPage from './pages/AppealDashboardPage';
+import AdminDashboard from './pages/admin/Dashboard';
+import CasesPage from './pages/admin/Cases';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -90,7 +92,7 @@ export default function App() {
     }
   };
 
-  const handleRoleChange = (role: UserRole) => {
+  const handleRoleChange = (role: 'asker' | 'doer') => {
     setUserRole(role);
     // Update localStorage with the selected role
     const user = localStorage.getItem('user');
@@ -199,7 +201,7 @@ export default function App() {
         <Route
           path="/category"
           element={
-            isAuthenticated ? (
+            isAuthenticated && (userRole === 'asker' || userRole === 'doer') ? (
               <CategorySelectionPage userRole={userRole} />
             ) : (
               <Navigate to="/login" replace />
@@ -211,7 +213,7 @@ export default function App() {
         <Route
           path="/category-preferences"
           element={
-            isAuthenticated ? (
+            isAuthenticated && (userRole === 'asker' || userRole === 'doer') ? (
               <CategoryPreferencePage userRole={userRole} />
             ) : (
               <Navigate to="/login" replace />
@@ -273,21 +275,25 @@ export default function App() {
         <Route path="/notification-preferences" element={isAuthenticated ? <NotificationPreferencesPage /> : <Navigate to="/login" replace />} />
         <Route path="/safety-resources" element={<SafetyResourcesPage />} />
 
+        {/* Admin Dashboard Routes */}
+        <Route path="/admin/dashboard" element={isAuthenticated && isAdmin ? <AdminDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/cases" element={isAuthenticated && isAdmin ? <CasesPage /> : <Navigate to="/login" replace />} />
+
         {/* Main dashboard layout */}
         <Route
           element={
-            isAuthenticated ? (
+            isAuthenticated && (userRole === 'asker' || userRole === 'doer') ? (
               <Layout userRole={userRole} onRoleChange={handleRoleChange} onLogout={handleLogout} />
             ) : (
               <Navigate to="/" replace />
             )
           }
         >
-          <Route path="/home" element={<HomePage userRole={userRole} />} />
-          <Route path="/errands" element={<ErrandsPage userRole={userRole} />} />
-          <Route path="/errand/:id" element={<ErrandDetailPage userRole={userRole} />} />
-          <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole} />} />
-          <Route path="/chat" element={<ChatPage userRole={userRole} />} />
+          <Route path="/home" element={<HomePage userRole={userRole as 'asker' | 'doer'} />} />
+          <Route path="/errands" element={<ErrandsPage userRole={userRole as 'asker' | 'doer'} />} />
+          <Route path="/errand/:id" element={<ErrandDetailPage userRole={userRole as 'asker' | 'doer'} />} />
+          <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole as 'asker' | 'doer'} />} />
+          <Route path="/chat" element={<ChatPage userRole={userRole as 'asker' | 'doer'} />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/my-kampung" element={<MyKampungPage />} />
           <Route path="/my-pocket" element={<MyPocketPage />} />
