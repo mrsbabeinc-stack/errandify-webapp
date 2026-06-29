@@ -30,7 +30,15 @@ const menuItems: MenuItem[] = [
     children: [
       { id: 'categories', label: 'Categories', icon: '🏷️', path: '/admin/manage/categories' },
       { id: 'vouchers', label: 'Vouchers', icon: '🎟️', path: '/admin/manage/vouchers' },
-      { id: 'points', label: 'Errandify Points', icon: '💰', path: '/admin/manage/points' },
+      {
+        id: 'points-section',
+        label: 'Errandify Points',
+        icon: '💰',
+        children: [
+          { id: 'points', label: 'Points Ledger', icon: '📊', path: '/admin/manage/points' },
+          { id: 'grant-points', label: 'Grant Points', icon: '✨', path: '/admin/manage/grant-points' },
+        ]
+      },
       { id: 'discounts', label: 'Discount Codes', icon: '🏷️', path: '/admin/manage/discounts' },
     ]
   },
@@ -116,14 +124,42 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
                   {expandedSections.has(item.id) && (
                     <div className="submenu">
                       {item.children.map((child) => (
-                        <button
-                          key={child.id}
-                          className={`menu-item ${isActive(child.path) ? 'active' : ''}`}
-                          onClick={() => child.path && navigate(child.path)}
-                        >
-                          <span className="icon">{child.icon}</span>
-                          <span className="label">{child.label}</span>
-                        </button>
+                        <div key={child.id}>
+                          {child.children ? (
+                            <>
+                              <button
+                                className={`menu-item has-submenu ${expandedSections.has(child.id) ? 'open' : ''}`}
+                                onClick={() => toggleSection(child.id)}
+                              >
+                                <span className="icon">{child.icon}</span>
+                                <span className="label">{child.label}</span>
+                                <span className={`arrow ${expandedSections.has(child.id) ? 'open' : ''}`}>▶</span>
+                              </button>
+                              {expandedSections.has(child.id) && (
+                                <div className="submenu level-2">
+                                  {child.children.map((grandchild) => (
+                                    <button
+                                      key={grandchild.id}
+                                      className={`menu-item ${isActive(grandchild.path) ? 'active' : ''}`}
+                                      onClick={() => grandchild.path && navigate(grandchild.path)}
+                                    >
+                                      <span className="icon">{grandchild.icon}</span>
+                                      <span className="label">{grandchild.label}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <button
+                              className={`menu-item ${isActive(child.path) ? 'active' : ''}`}
+                              onClick={() => child.path && navigate(child.path)}
+                            >
+                              <span className="icon">{child.icon}</span>
+                              <span className="label">{child.label}</span>
+                            </button>
+                          )}
+                        </div>
                       ))}
                     </div>
                   )}
@@ -226,6 +262,12 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
           border-left: 2px solid #ff6b35;
         }
 
+        .submenu.level-2 {
+          background: rgba(255, 107, 53, 0.08);
+          border-left: none;
+          padding-left: 12px;
+        }
+
         .menu-item {
           display: flex;
           align-items: center;
@@ -242,6 +284,26 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
           text-align: left;
         }
 
+        .menu-item.has-submenu {
+          padding: 10px 20px 10px 28px;
+          font-weight: 600;
+          color: #ff6b35;
+        }
+
+        .menu-item.has-submenu:hover {
+          background: rgba(255, 107, 53, 0.15);
+        }
+
+        .menu-item.has-submenu .arrow {
+          font-size: 10px;
+          margin-left: auto;
+          transition: transform 0.2s;
+        }
+
+        .menu-item.has-submenu .arrow.open {
+          transform: rotate(90deg);
+        }
+
         .menu-item:hover {
           background: rgba(255, 107, 53, 0.1);
           color: #ff6b35;
@@ -253,6 +315,14 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
           border-left: 3px solid #ff6b35;
           padding-left: 25px;
           font-weight: 600;
+        }
+
+        .submenu.level-2 .menu-item {
+          padding-left: 40px;
+        }
+
+        .submenu.level-2 .menu-item.active {
+          padding-left: 37px;
         }
 
         .menu-item .icon {
