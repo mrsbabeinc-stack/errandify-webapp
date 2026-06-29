@@ -50,9 +50,9 @@ export function getDefaultPreferences(): NotificationPreferences {
     newOffer: true,
     messageReceived: true,
     errandDone: true,
-    profileViewed: false,
-    referralActivity: false,
-    platformUpdates: false,
+    profileViewed: true,
+    referralActivity: true,
+    platformUpdates: true,
   };
 }
 

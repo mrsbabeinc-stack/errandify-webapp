@@ -149,9 +149,9 @@ export default function MyAccountPage() {
         newOffer: true,
         messageReceived: true,
         errandDone: true,
-        profileViewed: false,
-        referralActivity: false,
-        platformUpdates: false,
+        profileViewed: true,
+        referralActivity: true,
+        platformUpdates: true,
       };
     } catch {
       return {
@@ -161,9 +161,9 @@ export default function MyAccountPage() {
         newOffer: true,
         messageReceived: true,
         errandDone: true,
-        profileViewed: false,
-        referralActivity: false,
-        platformUpdates: false,
+        profileViewed: true,
+        referralActivity: true,
+        platformUpdates: true,
       };
     }
   });
