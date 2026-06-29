@@ -445,6 +445,33 @@ router.post('/demo-login', async (req: Request, res: Response) => {
           { title: 'Licensed Plumber - BCA Singapore' }
         ]
       },
+      admin: {
+        mobile: '+6581234567',
+        email: 'admin@errandify.test',
+        name: 'Admin User',
+        nric: 'admin_test_hash_9999999999999999999999999999999999999999',
+        defaultRole: 'admin',
+        gender: 'M',
+        bio: 'System Administrator'
+      },
+      'support_l2': {
+        mobile: '+6582234567',
+        email: 'support-l2@errandify.test',
+        name: 'Support L2 Agent',
+        nric: 'support_l2_test_hash_88888888888888888888888888888888888888',
+        defaultRole: 'support_l2',
+        gender: 'F',
+        bio: 'L2 Support Agent - Dispute Resolution'
+      },
+      'support_l3': {
+        mobile: '+6583234567',
+        email: 'support-l3@errandify.test',
+        name: 'Support L3 Senior',
+        nric: 'support_l3_test_hash_77777777777777777777777777777777777777',
+        defaultRole: 'support_l3',
+        gender: 'M',
+        bio: 'L3 Senior Staff - Final Appeals'
+      },
     };
 
     const demoUser = demoAccounts[account.toLowerCase()];
