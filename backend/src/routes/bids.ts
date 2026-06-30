@@ -229,8 +229,19 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Log activity: Bid placed
-    await activityLogService.logBidPlaced(task_id, doerName, doerId, parseFloat(amount));
+    // Log activity: Bid placed - get doer alias for activity log
+    let doerAlias = doerName;
+    try {
+      const doerResult = await db.query(
+        'SELECT alias FROM users WHERE id = $1',
+        [doerId]
+      );
+      doerAlias = doerResult.rows[0]?.alias || doerName;
+    } catch (err) {
+      console.error('[Bids] Failed to get doer alias:', err);
+    }
+
+    await activityLogService.logBidPlaced(task_id, doerName, doerId, parseFloat(amount), bid.offer_id, doerAlias);
 
     res.status(201).json({
       success: true,

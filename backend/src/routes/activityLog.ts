@@ -147,29 +147,36 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
 // Helper function to generate display text for activities
 function getActivityDisplayText(type: string, actorName: string, details: any, formattedId: string): string {
   const prefix = `${formattedId}: `;
+  // Use alias if available, fallback to name
+  const displayName = details?.alias || actorName;
+
   switch (type) {
     case 'posted':
-      return `${prefix}${actorName} posted this task`;
+      return `${prefix}${displayName} posted this task`;
     case 'bid_placed':
-      return `${prefix}${actorName} submitted an offer`;
+      // Include offer ID and amount if available
+      if (details?.offerId && details?.amount) {
+        return `${prefix}${displayName} submitted an offer (${details.offerId} - SGD $${details.amount})`;
+      }
+      return `${prefix}${displayName} submitted an offer`;
     case 'bid_rejected':
-      return `${prefix}${actorName}'s offer was not selected`;
+      return `${prefix}${displayName}'s offer was not selected`;
     case 'bid_accepted':
-      return `${prefix}${actorName}'s offer was selected`;
+      return `${prefix}${displayName}'s offer was selected`;
     case 'confirmed':
       return `${prefix}Offer confirmed - ready to start`;
     case 'started':
-      return `${prefix}${actorName} started the job`;
+      return `${prefix}${displayName} started the job`;
     case 'completed':
-      return `${prefix}${actorName} submitted completion evidence`;
+      return `${prefix}${displayName} submitted completion evidence`;
     case 'completion_evidence_viewed':
-      return `${prefix}${actorName} viewed the completion evidence`;
+      return `${prefix}${displayName} viewed the completion evidence`;
     case 'review_submitted':
-      return `${prefix}${actorName} submitted a review`;
+      return `${prefix}${displayName} submitted a review`;
     case 'rating_submitted':
-      return `${prefix}${actorName} rated the work`;
+      return `${prefix}${displayName} rated the work`;
     case 'changes_requested':
-      return `${prefix}${actorName} requested changes: ${details?.reason || 'see details'}`;
+      return `${prefix}${displayName} requested changes: ${details?.reason || 'see details'}`;
     case 'dispute_raised':
       return `${prefix}A dispute was raised`;
     case 'dispute_resolved':
