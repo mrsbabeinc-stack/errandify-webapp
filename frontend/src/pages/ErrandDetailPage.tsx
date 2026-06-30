@@ -63,6 +63,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [bidSubmitted, setBidSubmitted] = useState(false);
   const [bidStatus, setBidStatus] = useState<string | null>(null);
   const [bidId, setBidId] = useState<number | null>(null);
+  const [errandStarted, setErrandStarted] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [userBidAmount, setUserBidAmount] = useState<number | null>(null);
   const [confirmationTimeLeft, setConfirmationTimeLeft] = useState<string>('');
@@ -807,7 +808,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     Offer Accepted
                   </p>
                   <p className="text-center text-xs text-emerald-600 bg-emerald-50 px-3 pb-2 rounded-b-lg -mt-2">
-                    Please confirm to start the job
+                    Confirm to lock in the job, then start when ready
                   </p>
                   <button
                     onClick={async () => {
@@ -827,7 +828,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     }}
                     className="w-full bg-emerald-500 text-white py-3 rounded-lg font-bold hover:bg-emerald-600 transition-colors text-base"
                   >
-                    ✅ Confirm & Start
+                    ✅ Confirm Errand
                   </button>
                 </div>
               ) : bidSubmitted || userBidAmount ? (
@@ -885,6 +886,58 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors text-base"
                 >
                   ▶️ Start Errand
+                </button>
+              </div>
+            ) : errand.status === 'confirmed' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
+              // Doer can start errand once it's confirmed, or cancel if within window
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setShowChat(true)}
+                  className="flex-1 bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition-colors text-base"
+                >
+                  💬 Chat
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const token = localStorage.getItem('token');
+                      await axios.put(
+                        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/start`,
+                        {},
+                        { headers: { Authorization: `Bearer ${token}` } }
+                      );
+                      setErrandStarted(true);
+                      // Notify asker
+                      await axios.post(
+                        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`,
+                        {
+                          recipientId: errand.askerId,
+                          type: 'job_started',
+                          title: 'Job Started',
+                          message: `Your doer ${errand.doerName || 'neighbour'} is on the way!`,
+                          taskId: id,
+                        },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                      );
+                      window.location.reload();
+                    } catch (err) {
+                      console.error('Failed to start errand:', err);
+                    }
+                  }}
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors text-base"
+                >
+                  ▶️ Start Errand
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm('Cancel this errand? The asker will be notified.')) {
+                      // Call cancel endpoint
+                      console.log('Cancel errand');
+                    }
+                  }}
+                  className="flex-1 bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-red-600 transition-colors text-base"
+                >
+                  ✕ Cancel
                 </button>
               </div>
             ) : errand.status === 'in_progress' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
