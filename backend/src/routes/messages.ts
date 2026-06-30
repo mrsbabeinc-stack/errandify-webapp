@@ -227,7 +227,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
 
     // Verify user is involved in task
     const taskResult = await db.query(
-      `SELECT e.*, asker.display_name as asker_name
+      `SELECT e.*, asker.display_name as asker_name, asker.alias as asker_alias
        FROM errands e
        LEFT JOIN users asker ON e.asker_id = asker.id
        WHERE e.id = $1`,
@@ -242,9 +242,10 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
 
     // Get the doer name from the accepted/confirmed bid
     let doerName = 'Unknown';
+    let doerAlias = 'Unknown';
     let doerId = null;
     const bidResult = await db.query(
-      `SELECT b.doer_id, u.display_name
+      `SELECT b.doer_id, u.display_name, u.alias
        FROM bids b
        LEFT JOIN users u ON b.doer_id = u.id
        WHERE b.errand_id = $1 AND b.status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress')
@@ -255,6 +256,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
     if (bidResult.rows.length > 0) {
       doerId = bidResult.rows[0].doer_id;
       doerName = bidResult.rows[0].display_name || 'Unknown';
+      doerAlias = bidResult.rows[0].alias || bidResult.rows[0].display_name || 'Unknown';
     }
     const isAsker = task.asker_id === userId;
     const isDoer = task.doer_id === userId;
@@ -357,9 +359,11 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
         participantStatus: {
           askerId: task.asker_id,
           askerName: task.asker_name || 'Unknown',
+          askerAlias: task.asker_alias || task.asker_name || 'Unknown',
           askerOnline: userStatusMap[task.asker_id] || false,
           doerId: doerId,
           doerName: doerName,
+          doerAlias: doerAlias,
           doerOnline: doerId ? userStatusMap[doerId] || false : false,
         },
         chatStatus: {
@@ -369,6 +373,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
         },
         errandDetails: {
           id: task.id,
+          formattedId: task.errand_id,
           title: task.title,
           location: task.location,
           postal_code: task.postal_code,
