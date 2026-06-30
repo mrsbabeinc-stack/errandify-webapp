@@ -989,9 +989,12 @@ router.post('/:id/start', authMiddleware, async (req: AuthRequest, res: Response
     );
 
     // Log activity: Job started
-    const doerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [req.userId]);
+    const doerResult = await db.query('SELECT display_name, alias FROM users WHERE id = $1', [req.userId]);
     const doerName = doerResult.rows[0]?.display_name || 'Unknown User';
-    await activityLogService.logStarted(errandDatabaseId, doerName, parseInt(req.userId || '0', 10));
+    const doerAlias = doerResult.rows[0]?.alias || undefined;
+    const errandDataForLog = await db.query('SELECT errand_id FROM errands WHERE id = $1', [errandDatabaseId]);
+    const errandFormattedId = errandDataForLog.rows[0]?.errand_id || undefined;
+    await activityLogService.logStarted(errandDatabaseId, doerName, parseInt(req.userId || '0', 10), doerAlias, errandFormattedId);
 
     res.json({
       success: true,

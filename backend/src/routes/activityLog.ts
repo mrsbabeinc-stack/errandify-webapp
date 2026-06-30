@@ -160,6 +160,8 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
 function getActivityDisplayText(type: string, actorName: string, details: any): string {
   // Use alias if available, fallback to name
   const displayName = details?.alias || actorName;
+  // Format errand ID if available
+  const errandIdDisplay = details?.errandId ? ` (${details.errandId})` : '';
 
   switch (type) {
     case 'posted':
@@ -177,9 +179,9 @@ function getActivityDisplayText(type: string, actorName: string, details: any): 
     case 'confirmed':
       return `Offer confirmed - ready to start`;
     case 'started':
-      return `${displayName} started the job`;
+      return `${displayName} started the job${errandIdDisplay}`;
     case 'completed':
-      return `${displayName} submitted completion evidence`;
+      return `${displayName} submitted completion evidence${errandIdDisplay}`;
     case 'completion_evidence_viewed':
       return `${displayName} viewed the completion evidence`;
     case 'review_submitted':
