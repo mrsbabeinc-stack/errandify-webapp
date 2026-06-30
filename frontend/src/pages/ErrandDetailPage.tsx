@@ -575,7 +575,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     ? 'bg-emerald-100 text-emerald-700'
                     : 'bg-white text-errandify-orange'
                 }`}>
-                  {bidStatus === 'accepted' ? '✅ Offer Accepted' : '✓ Your offer submitted'}
+                  {bidStatus === 'accepted' ? '✅ Offer Accepted' : '✓ Offer Submitted'}
                 </span>
               )}
             </div>
