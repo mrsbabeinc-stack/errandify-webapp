@@ -823,16 +823,22 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                           {},
                           { headers: { Authorization: `Bearer ${token}` } }
                         );
-                        // Refresh errand data to show updated status
+                        // Refresh errand data and bid status to show updated state
                         await fetchErrandDetail();
-                        // Also refresh bid check
-                        if (id && currentUser && currentUser.role === 'doer') {
-                          const response = await axios.get(
-                            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/check/${id}`,
-                            { headers: { Authorization: `Bearer ${token}` } }
-                          );
-                          if (response.data.hasBid) {
-                            setBidStatus(response.data.bidStatus);
+                        // Refresh bid status to update button state
+                        if (id && currentUser) {
+                          try {
+                            const bidResponse = await axios.get(
+                              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/check/${id}`,
+                              { headers: { Authorization: `Bearer ${token}` } }
+                            );
+                            if (bidResponse.data.hasBid) {
+                              setBidStatus(bidResponse.data.bidStatus);
+                              setBidId(bidResponse.data.bidId);
+                              setUserBidAmount(bidResponse.data.bidAmount);
+                            }
+                          } catch (bidErr) {
+                            console.error('Failed to refresh bid status:', bidErr);
                           }
                         }
                       } catch (err) {
