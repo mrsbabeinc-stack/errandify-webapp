@@ -648,12 +648,34 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
   }
 });
 
-// GET /api/bids/check/:errandId - Check if current user has a bid on this errand
+// GET /api/bids/check/:errandId - Check if current user has a bid on this errand (accepts database ID or formatted errand ID)
 router.get('/check/:errandId', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { errandId } = req.params;
     const doerId = parseInt(req.userId || '0', 10);
-    const parsedErrandId = parseInt(errandId, 10);
+
+    // Resolve errand ID (accepts both database ID and formatted errand ID)
+    let parsedErrandId: number | null = null;
+    if (/^\d+$/.test(errandId)) {
+      // If numeric, use as database ID
+      parsedErrandId = parseInt(errandId, 10);
+    } else {
+      // Otherwise, query by formatted errand ID
+      const errandResult = await db.query(
+        'SELECT id FROM errands WHERE errand_id = $1',
+        [errandId]
+      );
+      if (errandResult.rows.length > 0) {
+        parsedErrandId = errandResult.rows[0].id;
+      }
+    }
+
+    if (!parsedErrandId) {
+      return res.json({
+        success: true,
+        hasBid: false,
+      });
+    }
 
     const result = await db.query(
       `SELECT id, amount, status, note FROM bids
