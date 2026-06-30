@@ -356,10 +356,10 @@ export default function MyOfferPage() {
 
                   {bid.status === 'completed_unconfirmed' && (
                     <button
-                      disabled
-                      className="flex-1 px-2 py-1 bg-gray-300 text-white rounded font-semibold text-xs cursor-not-allowed"
+                      onClick={() => navigate(`/errand/${bid.errand_id}`)}
+                      className="flex-1 px-2 py-1 bg-amber-400 text-white rounded font-semibold text-xs hover:bg-amber-500 transition-colors"
                     >
-                      ⏳ Awaiting Review
+                      ⭐ Rate to Earn +5 EP
                     </button>
                   )}
                 </div>
