@@ -64,6 +64,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [bidStatus, setBidStatus] = useState<string | null>(null);
   const [bidId, setBidId] = useState<number | null>(null);
   const [errandStarted, setErrandStarted] = useState(false);
+  const [showStartConfirm, setShowStartConfirm] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [userBidAmount, setUserBidAmount] = useState<number | null>(null);
   const [confirmationTimeLeft, setConfirmationTimeLeft] = useState<string>('');
@@ -399,12 +400,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   };
 
   const handleStartJob = async () => {
-    const confirmMessage = `Ready to Make a Difference?\n\n"${errand.title}"\n\nYou're about to help someone in your community. Your efforts will brighten their day and create positive impact.\n\nLet's get started!`;
+    setShowStartConfirm(true);
+  };
 
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
-
+  const confirmStartJob = async () => {
+    setShowStartConfirm(false);
     try {
       const token = localStorage.getItem('token');
       await axios.post(
@@ -414,11 +414,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      alert('Amazing! You\'ve started the errand.\n\nYou\'re making a real difference in someone\'s life. Thank you for being an awesome community doer!');
-      fetchErrandDetail();
+      setShowCelebratory(true);
+      setTimeout(() => {
+        setShowCelebratory(false);
+        fetchErrandDetail();
+      }, 3000);
     } catch (error: any) {
       console.error('Failed to start job:', error);
-      alert(error.response?.data?.error || 'Failed to start job. Please try again.');
     }
   };
 
@@ -1783,6 +1785,41 @@ Let's help each other! 🤝`}
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Start Job Confirmation Modal */}
+      {showStartConfirm && errand && (
+        <div className="fixed inset-0 bg-slate-900 bg-opacity-40 flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl max-w-sm w-full p-8 text-center shadow-2xl border-l-4 border-l-emerald-500">
+            <div className="text-5xl mb-4">🤝</div>
+            <h2 className="text-2xl font-bold text-emerald-700 mb-3">
+              Ready to Make a Difference?
+            </h2>
+            <p className="text-lg font-semibold text-slate-900 mb-4">
+              "{errand.title}"
+            </p>
+            <p className="text-slate-700 text-base mb-6 leading-relaxed">
+              You're about to help someone in your community. Your efforts will brighten their day and create positive impact.
+            </p>
+            <p className="text-emerald-600 font-semibold mb-6">
+              Let's get started!
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowStartConfirm(false)}
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition"
+              >
+                Not yet
+              </button>
+              <button
+                onClick={confirmStartJob}
+                className="flex-1 px-4 py-3 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-600 transition"
+              >
+                Let's Go! 🚀
+              </button>
+            </div>
           </div>
         </div>
       )}
