@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { activityLogService } from '../services/activityLogService.js';
+import { sendCriticalEmail } from '../services/emailNotifications.js';
 import { generateRecurringInstances } from '../services/recurringService.js';
 
 const router = Router();
@@ -636,6 +637,14 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
                 JSON.stringify({ referrer_id: referrerId, referred_user_id: doerId, bonus_amount: firstJobBonus })
               ]
             );
+
+            // Send email notification to referrer
+            sendCriticalEmail(referrerId, 'first_job_bonus', {
+              referredUserName: doerName,
+              pointsAwarded: firstJobBonus
+            }).catch(err => {
+              console.error('[Email] Failed to send first_job_bonus email:', err);
+            });
           } catch (notifError) {
             console.error('Failed to create referral notification:', notifError);
           }
