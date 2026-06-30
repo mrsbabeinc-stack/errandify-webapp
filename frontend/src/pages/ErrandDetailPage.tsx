@@ -152,7 +152,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         const currentUserData = localStorage.getItem('user');
         if (currentUserData && id) {
           const user = JSON.parse(currentUserData);
-          await checkIfAlreadyRated(user.id, parseInt(id));
+          await checkIfAlreadyRated(user.id, id);
         }
       } else {
         setError('Invalid response from server');
@@ -166,7 +166,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     }
   };
 
-  const checkIfAlreadyRated = async (userId: number, errandId: number) => {
+  const checkIfAlreadyRated = async (userId: number, errandId: string | number) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
