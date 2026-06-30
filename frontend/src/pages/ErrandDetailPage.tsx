@@ -1081,15 +1081,15 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   </div>
                 </div>
 
-                {/* Asker: Show Doer's Completion Evidence */}
-                {currentUser && currentUser.id === errand.askerId && (
+                {/* Show Completion Evidence - Asker reviews, Doer can view their own submission */}
+                {currentUser && (currentUser.id === errand.askerId || (currentUser.id !== errand.askerId && userRole === 'doer')) && (
                   <div className="space-y-1 pt-2 border-t border-green-200">
                     <p className="font-semibold text-gray-700 text-xs">📸 Completion Evidence:</p>
                     <button
                       onClick={toggleCompletionEvidence}
                       className="w-full px-2 py-1.5 bg-blue-50 border border-blue-300 text-blue-700 text-xs rounded font-medium hover:bg-blue-100 transition-all"
                     >
-                      {showCompletionEvidence ? '▼ Hide' : '▶ View & Complete'}
+                      {showCompletionEvidence ? '▼ Hide' : `▶ ${currentUser?.id === errand.askerId ? 'View & Complete' : 'View My Submission'}`}
                     </button>
 
                     {/* Completion Evidence Expanded View */}
