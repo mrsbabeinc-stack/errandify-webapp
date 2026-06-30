@@ -299,9 +299,14 @@ export default function MyOfferPage() {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-1">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-errandify-brown text-sm">
-                      {bid.errand?.title || 'Errand #' + bid.errand_id}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-errandify-brown text-sm">
+                        {bid.errand?.title || 'Errand #' + bid.errand_id}
+                      </h3>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                        #{bid.errand_id}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-1">
                       <p className="text-xs text-gray-600">by {bid.errand?.asker_display_name || bid.errand?.asker_name || 'Unknown'}</p>
                       {bid.errand?.category && (
