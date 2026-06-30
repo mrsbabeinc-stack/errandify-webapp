@@ -724,6 +724,7 @@ router.put('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respons
   try {
     const bidId = parseInt(req.params.id, 10);
     const doerId = parseInt(req.userId || '0', 10);
+    console.log('[Bids] PUT /api/bids/:id/confirm called:', { bidId, doerId });
 
     // Get the bid
     const bidResult = await db.query(
