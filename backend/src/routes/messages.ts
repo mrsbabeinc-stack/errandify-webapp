@@ -259,7 +259,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
       doerAlias = bidResult.rows[0].alias || bidResult.rows[0].display_name || 'Unknown';
     }
     const isAsker = task.asker_id === userId;
-    const isDoer = task.doer_id === userId;
+    const isDoer = doerId === userId;
 
     if (!isAsker && !isDoer) {
       return res.status(403).json({ error: 'Only asker and doer can view messages' });
