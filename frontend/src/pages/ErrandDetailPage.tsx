@@ -119,9 +119,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   }, [id, currentUser]);
 
   // Load completion evidence for an errand
-  const loadCompletionEvidence = async (errandId?: string | number) => {
+  const loadCompletionEvidence = async (errandId?: string | number, autoShow: boolean = false) => {
     const targetId = errandId || id;
-    console.log('[ErrandDetail] loadCompletionEvidence called with targetId:', targetId);
+    console.log('[ErrandDetail] loadCompletionEvidence called with targetId:', targetId, 'autoShow:', autoShow);
     try {
       const token = localStorage.getItem('token');
       const url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${targetId}/submissions`;
@@ -140,10 +140,14 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           });
           setCompletionNotes(latestSubmission.completion_notes || '');
           setCompletionPhotos(latestSubmission.files || []);
+          // Auto-show the evidence if requested (e.g., on initial page load)
+          if (autoShow) {
+            setShowCompletionEvidence(true);
+          }
         }
 
-        // Log that asker viewed the evidence (only if already showing)
-        if (showCompletionEvidence) {
+        // Log that asker viewed the evidence
+        if (autoShow || showCompletionEvidence) {
           await axios.post(
             `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${targetId}/log-viewed-evidence`,
             {},
@@ -190,7 +194,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         // Auto-load completion evidence if errand is in any completed state
         if (response.data.data.status && response.data.data.status.includes('completed')) {
           console.log('[ErrandDetail] Status includes completed, loading evidence...');
-          await loadCompletionEvidence(id);
+          await loadCompletionEvidence(id, true);
         }
 
         // Check if current user has already rated this errand
