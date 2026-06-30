@@ -867,7 +867,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 <div className="space-y-1 pt-2">
                   <p className="font-semibold text-gray-700 text-xs">📸 Your Submission:</p>
                   <button
-                    onClick={() => setShowCompletionEvidence(!showCompletionEvidence)}
+                    onClick={() => {
+                      if (!showCompletionEvidence) {
+                        loadCompletionEvidence(id, true);
+                      }
+                      setShowCompletionEvidence(!showCompletionEvidence);
+                    }}
                     className="w-full px-2 py-1.5 bg-blue-50 border border-blue-300 text-blue-700 text-xs rounded font-medium hover:bg-blue-100 transition-all"
                   >
                     {showCompletionEvidence ? '▼ Hide' : '▶ View My Submission'}
@@ -881,7 +886,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                             {completionPhotos.map((photo, idx) => (
                               <button
                                 key={idx}
-                                onClick={() => window.open(photo, '_blank')}
+                                onClick={() => window.open(typeof photo === 'string' ? photo : photo.file_url, '_blank')}
                                 className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200"
                               >
                                 Photo {idx + 1}
