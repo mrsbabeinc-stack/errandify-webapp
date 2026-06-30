@@ -573,7 +573,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               >
                 {capitalizeStatus(errand.status)}
               </span>
-              {userBidAmount && (
+              {userBidAmount && errand.status !== 'open' && (
                 <span className={`text-xs px-2 py-1 rounded font-bold ${
                   errand.status === 'in_progress'
                     ? 'bg-blue-100 text-blue-700'
@@ -1082,14 +1082,14 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 </div>
 
                 {/* Show Completion Evidence - Asker reviews, Doer can view their own submission */}
-                {currentUser && (currentUser.id === errand.askerId || (currentUser.id !== errand.askerId && userRole === 'doer')) && (
+                {currentUser && (currentUser.id === errand.askerId || userRole === 'doer') && (
                   <div className="space-y-1 pt-2 border-t border-green-200">
                     <p className="font-semibold text-gray-700 text-xs">📸 Completion Evidence:</p>
                     <button
                       onClick={toggleCompletionEvidence}
                       className="w-full px-2 py-1.5 bg-blue-50 border border-blue-300 text-blue-700 text-xs rounded font-medium hover:bg-blue-100 transition-all"
                     >
-                      {showCompletionEvidence ? '▼ Hide' : `▶ ${currentUser?.id === errand.askerId ? 'View & Complete' : 'View My Submission'}`}
+                      {showCompletionEvidence ? '▼ Hide' : `▶ ${currentUser.id === errand.askerId ? 'View & Rate' : 'View My Submission'}`}
                     </button>
 
                     {/* Completion Evidence Expanded View */}
