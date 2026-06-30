@@ -84,7 +84,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         const moderationResult = await contentMod.checkContentWithQwen('', '', note);
         if (!moderationResult.is_safe) {
           return res.status(400).json({
-            error: 'Offer note contains inappropriate content',
+            error: 'Please keep your offer note friendly and respectful',
+            message: 'We want to keep Errandify a safe and welcoming community. Let us know why you\'re a good fit for this task instead!',
             details: moderationResult.flags
           });
         }
