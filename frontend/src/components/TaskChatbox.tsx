@@ -50,6 +50,9 @@ export default function TaskChatbox({
   const [doerId, setDoerId] = useState<number | null>(null);
   const [askerName, setAskerName] = useState<string>('Asker');
   const [doerName, setDoerName] = useState<string>('Doer');
+  const [askerAlias, setAskerAlias] = useState<string>('Asker');
+  const [doerAlias, setDoerAlias] = useState<string>('Doer');
+  const [errandFormattedId, setErrandFormattedId] = useState<string>('');
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [showImageMenu, setShowImageMenu] = useState(false);
@@ -113,12 +116,19 @@ export default function TaskChatbox({
           setDoerId(status.doerId);
           setAskerName(status.askerName || 'Asker');
           setDoerName(status.doerName || 'Doer');
+          setAskerAlias(status.askerAlias || status.askerName || 'Asker');
+          setDoerAlias(status.doerAlias || status.doerName || 'Doer');
           const isAsker = user.id === status.askerId;
           const onlineStatus = isAsker
             ? status.doerOnline
             : status.askerOnline;
           setOtherUserOnline(onlineStatus);
         }
+      }
+
+      // Set errand formatted ID
+      if (response.data.data.errandDetails) {
+        setErrandFormattedId(response.data.data.errandDetails.formattedId || `ER${taskId}`);
       }
     } catch (err: any) {
       console.error('Failed to fetch messages:', err);
@@ -385,7 +395,7 @@ Your message doesn't meet our community standards. Please keep messages:
           <div className="flex-1">
             <h3 className="font-bold text-sm">💬 {taskTitle}</h3>
             <p className="text-xs text-orange-100">
-              👥 {currentUserId === askerId ? `Chatting with: ${doerName}` : `Chatting with: ${askerName}`} • ID: ER{taskId}
+              👥 {currentUserId === askerId ? `Chatting with: ${doerAlias}` : `Chatting with: ${askerAlias}`} • ID: {errandFormattedId}
             </p>
           </div>
           <button
