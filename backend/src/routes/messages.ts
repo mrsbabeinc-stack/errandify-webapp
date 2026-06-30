@@ -239,6 +239,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
     }
 
     const task = taskResult.rows[0];
+    console.log('[Messages GET] Task from DB:', { id: task.id, location: task.location, postal_code: task.postal_code });
 
     // Get the doer name from the accepted/confirmed bid
     let doerName = 'Unknown';
