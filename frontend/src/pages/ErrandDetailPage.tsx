@@ -118,6 +118,38 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     }
   }, [id, currentUser]);
 
+  // Load completion evidence for an errand
+  const loadCompletionEvidence = async (errandId?: string | number) => {
+    const targetId = errandId || id;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${targetId}/submissions`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success && response.data.data) {
+        const submissions = response.data.data.submissions || [];
+        const latestSubmission = submissions[submissions.length - 1];
+        if (latestSubmission) {
+          setCompletionNotes(latestSubmission.completion_notes || '');
+          setCompletionPhotos(latestSubmission.files || []);
+        }
+
+        // Log that asker viewed the evidence (only if already showing)
+        if (showCompletionEvidence) {
+          await axios.post(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${targetId}/log-viewed-evidence`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          ).catch(err => console.error('Failed to log evidence viewed:', err));
+        }
+      }
+    } catch (err: any) {
+      console.error('Failed to load completion evidence:', err);
+    }
+  };
+
   useEffect(() => {
     fetchErrandDetail();
   }, [id]);
@@ -147,6 +179,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
       if (response.data.success && response.data.data) {
         setErrand(response.data.data);
+
+        // Auto-load completion evidence if errand is completed
+        if (response.data.data.status === 'completed') {
+          await loadCompletionEvidence(id);
+        }
 
         // Check if current user has already rated this errand
         const currentUserData = localStorage.getItem('user');
@@ -188,32 +225,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       return;
     }
 
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${id}/submissions`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (response.data.success && response.data.data) {
-        const submissions = response.data.data.submissions || [];
-        const latestSubmission = submissions[submissions.length - 1];
-        if (latestSubmission) {
-          setCompletionNotes(latestSubmission.completion_notes || '');
-          setCompletionPhotos(latestSubmission.files || []);
-        }
-        setShowCompletionEvidence(true);
-
-        // Log that asker viewed the evidence
-        await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/log-viewed-evidence`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        ).catch(err => console.error('Failed to log evidence viewed:', err));
-      }
-    } catch (err: any) {
-      console.error('Failed to load completion evidence:', err);
+    // Load the data if not already loaded
+    if (completionPhotos.length === 0 && !completionNotes) {
+      await loadCompletionEvidence();
     }
+
+    setShowCompletionEvidence(true);
   };
 
   const getCategoryColor = (category: string) => {
