@@ -43,6 +43,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
   const [doerConfidence, setDoerConfidence] = useState<Record<number, DoerConfidence>>({});
   const [sortBy, setSortBy] = useState<'price' | 'rating' | 'confidence' | 'newest'>('newest');
   const [filterMinRating, setFilterMinRating] = useState<number>(0);
+  const [favorites, setFavorites] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchBids();
@@ -61,6 +62,19 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
       );
       setBids(response.data.data);
       setError('');
+
+      // Fetch favorites list
+      try {
+        const favResponse = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/favorites`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setFavorites(new Set(favResponse.data.data || []));
+      } catch (e) {
+        console.warn('Failed to fetch favorites:', e);
+      }
 
       // Fetch confidence scores for each doer
       const bidsData = response.data.data;
@@ -148,6 +162,38 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
     }
   };
 
+  const handleToggleFavorite = async (doerId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (favorites.has(doerId)) {
+        // Remove from favorites
+        await axios.delete(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/favorites/${doerId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setFavorites(prev => {
+          const next = new Set(prev);
+          next.delete(doerId);
+          return next;
+        });
+      } else {
+        // Add to favorites
+        await axios.post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/favorites/${doerId}`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setFavorites(prev => new Set(prev).add(doerId));
+      }
+    } catch (err) {
+      console.error('Failed to toggle favorite:', err);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
@@ -174,8 +220,15 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
     return confidence.avg_rating >= filterMinRating;
   });
 
-  // Sort bids
+  // Sort bids - favorites first, then by selected criterion
   pendingBids = [...pendingBids].sort((a, b) => {
+    // Always prioritize favorites first
+    const aIsFav = favorites.has(a.doerId);
+    const bIsFav = favorites.has(b.doerId);
+    if (aIsFav && !bIsFav) return -1;
+    if (!aIsFav && bIsFav) return 1;
+
+    // Then sort by selected criterion
     switch (sortBy) {
       case 'price':
         return a.amount - b.amount;
@@ -257,48 +310,56 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
 
         <div className="space-y-3">
           {pendingBids.map(bid => (
-            <div key={bid.id} className="bg-white border border-orange-200 rounded-xl p-3 shadow-sm">
+            <div key={bid.id} className="bg-white border border-orange-200 rounded-xl p-4 shadow-sm">
+              {/* Header: Profile Photo, Name, OFFERID, Price, Favorite */}
               <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3 flex-1">
+                <div className="flex items-start gap-3 flex-1">
                   {bid.doerAvatar && (
                     <img
                       src={bid.doerAvatar}
                       alt={bid.doerName}
-                      className="w-8 h-8 rounded-full"
+                      className="w-10 h-10 rounded-full object-cover"
                     />
                   )}
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <p className="font-semibold text-gray-900">{bid.doerName}</p>
+                    {/* Doer Name + OFFERID Badge */}
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-bold text-gray-900">{bid.doerName}</p>
                       {bid.offerId && (
-                        <span className="text-xs text-white bg-errandify-orange rounded px-2 py-1 font-semibold">
+                        <span className="text-xs text-white bg-errandify-orange rounded px-2 py-0.5 font-semibold">
                           {bid.offerId}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-gray-500">
-                        Offer placed {bid.createdAt ? new Date(bid.createdAt).toLocaleDateString() : 'Recently'}
-                      </p>
+
+                    {/* Rating + Review Count + Offer Date/Time */}
+                    <div className="flex items-center gap-3 text-xs text-gray-600">
                       {doerConfidence[bid.doerId]?.avg_rating && (
-                        <span className="text-xs text-yellow-600 font-semibold">
-                          ⭐ {doerConfidence[bid.doerId].avg_rating.toFixed(1)}
+                        <span className="text-yellow-600 font-semibold">
+                          ⭐ {doerConfidence[bid.doerId].avg_rating.toFixed(1)} ({doerConfidence[bid.doerId].review_count} reviews)
+                        </span>
+                      )}
+                      {bid.createdAt && (
+                        <span className="text-gray-500">
+                          {new Date(bid.createdAt).toLocaleDateString()} {new Date(bid.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
+
+                {/* Price + Favorite */}
                 <div className="flex flex-col items-end gap-2">
                   <p className="font-bold text-errandify-orange text-lg">${bid.amount}</p>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      // TODO: Add to favorites
+                      handleToggleFavorite(bid.doerId);
                     }}
                     className="text-xl hover:scale-110 transition-transform"
-                    title="Add to favorites"
+                    title={favorites.has(bid.doerId) ? 'Remove from favorites' : 'Add to favorites'}
                   >
-                    🤍
+                    {favorites.has(bid.doerId) ? '❤️' : '🤍'}
                   </button>
                 </div>
               </div>
@@ -337,7 +398,9 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
               )}
 
               {taskBudget && bid.amount > taskBudget && (
-                <p className="text-xs text-orange-600 mb-2">⚠️ Offer exceeds budget</p>
+                <p className="text-xs text-orange-600 mb-2 bg-orange-50 p-2 rounded">
+                  💡 This offer is slightly above your budget of ${taskBudget}. Would you consider it for the extra quality?
+                </p>
               )}
 
               <div className="flex gap-2">
