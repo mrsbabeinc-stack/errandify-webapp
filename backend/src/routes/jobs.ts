@@ -135,6 +135,13 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
       [taskId, currentSubmissionNumber, completionNotes || '', doerId, 'pending']
     );
 
+    // Log completion
+    const doerUserResult = await db.query('SELECT display_name, alias FROM users WHERE id = $1', [doerId]);
+    const doerName = doerUserResult.rows[0]?.display_name || 'Unknown';
+    const doerAlias = doerUserResult.rows[0]?.alias;
+    const errandFormatted = task.errand_id_formatted;
+    await activityLogService.logCompleted(taskId, doerName, doerId, { alias: doerAlias, errandId: errandFormatted }).catch(console.error);
+
     // Store files organized by submission with Errand ID format naming
     if (photoUrls && photoUrls.length > 0) {
       const errandIdFormatted = task.errand_id_formatted;
