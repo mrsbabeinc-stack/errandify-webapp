@@ -217,7 +217,8 @@ export default function ChatPage({ userRole }: ChatPageProps) {
     }
   };
 
-  const selectedConversation = conversations.find(c => c.id === selectedErrandId);
+  // Use allConversations when looking up from URL param, since viewFilter might exclude it
+  const selectedConversation = allConversations.find(c => c.id === selectedErrandId) || conversations.find(c => c.id === selectedErrandId);
 
   // Filter conversations
   const filteredConversations = conversations.filter((conversation) => {
