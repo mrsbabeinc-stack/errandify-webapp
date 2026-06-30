@@ -165,7 +165,7 @@ export default function BrowseErrandsPage() {
       );
 
       if (response.data.success) {
-        alert(`✅ Bid placed for ${sessions.length} session(s) at $${amount}!`);
+        alert(`✅ Offer placed for ${sessions.length} session(s) at $${amount}!`);
         // Reset selection
         setSelectedSessions(prev => ({
           ...prev,

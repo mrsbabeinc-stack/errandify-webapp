@@ -139,8 +139,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           [
             errand.asker_id,
             'bid_placed',
-            'New Bid Placed',
-            `${formattedErrandId}: ${doerName} has offered to help with "${errandTitle}" for $${parseFloat(amount)}`,
+            'New Offer Placed',
+            `${formattedErrandId}: ${doerName} has placed an offer to help with "${errandTitle}" for $${parseFloat(amount)}`,
             task_id,
           ]
         );

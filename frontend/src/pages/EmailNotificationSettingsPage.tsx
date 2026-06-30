@@ -191,7 +191,7 @@ export default function EmailNotificationSettingsPage() {
               <div className="space-y-3">
                 {[
                   { key: 'task_completed', label: 'Task Completed', icon: '🏁' },
-                  { key: 'new_bid_received', label: 'New Bid Received', icon: '💪' },
+                  { key: 'new_bid_received', label: 'New Offer Received', icon: '💪' },
                   { key: 'review_received', label: 'Review Received', icon: '⭐' },
                   { key: 'task_cancelled', label: 'Task Cancelled', icon: '❌' },
                 ].map(item => (
