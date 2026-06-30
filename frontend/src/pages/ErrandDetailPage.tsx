@@ -574,12 +574,22 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 {capitalizeStatus(errand.status)}
               </span>
               {userBidAmount && (
-                <span className={`text-xs px-1 py-0.5 rounded font-bold ${
-                  bidStatus === 'accepted'
+                <span className={`text-xs px-2 py-1 rounded font-bold ${
+                  errand.status === 'in_progress'
+                    ? 'bg-blue-100 text-blue-700'
+                    : errand.status === 'confirmed' || errand.status === 'confirmed_awaiting_start'
                     ? 'bg-emerald-100 text-emerald-700'
+                    : errand.status === 'completed'
+                    ? 'bg-green-100 text-green-700'
                     : 'bg-white text-errandify-orange'
                 }`}>
-                  {bidStatus === 'accepted' ? '✅ Offer Accepted' : '✓ Offer Submitted'}
+                  {errand.status === 'in_progress'
+                    ? '⚡ In Progress'
+                    : errand.status === 'confirmed' || errand.status === 'confirmed_awaiting_start'
+                    ? '🟢 Confirmed'
+                    : errand.status === 'completed'
+                    ? '✓ Completed'
+                    : '✓ Offer Submitted'}
                 </span>
               )}
             </div>
