@@ -800,8 +800,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </div>
             )}
 
-            {/* Errand Completion Progress */}
-            {errand.status !== 'open' && (
+            {/* Errand Completion Progress - Only show to confirmed doer or asker */}
+            {errand.status !== 'open' && currentUser && (currentUser.id === errand.askerId || currentUser.id === errand.doerId) && (
               <div className="border-t border-orange-200 pt-1.5 mt-1.5">
                 {/* Fun Progress Bar */}
                 <div className="mb-2">
@@ -858,8 +858,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </div>
             )}
 
-            {/* Completion Evidence Button - Show for all doers on completed errands */}
-            {errand.status?.includes('completed') && currentUser && currentUser.id !== errand.askerId && (
+            {/* Completion Evidence Button - Show only for confirmed doer on completed errands */}
+            {errand.status?.includes('completed') && currentUser && currentUser.id === errand.doerId && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2 space-y-2">
                 <div className="text-center pb-2 border-b border-green-200">
                   <p className="text-green-800 font-bold text-base">✓ Errand Completed</p>
