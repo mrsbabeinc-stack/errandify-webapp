@@ -87,10 +87,24 @@ export default function BidSubmissionModal({
         }, 2500);
       }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'We encountered an issue. Please try again.';
-      const errorTitle = err.response?.data?.error || 'Unable to submit offer';
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'We encountered a small hiccup. Please try again.';
+      let warmTitle = 'Just a moment';
+
+      // Map error messages to warm titles
+      if (errorMsg.includes('friendly') || errorMsg.includes('respectful')) {
+        warmTitle = 'Let us keep things neighbourly';
+      } else if (errorMsg.includes('SGD 8') || errorMsg.includes('minimum')) {
+        warmTitle = 'Just checking the minimum';
+      } else if (errorMsg.includes('neighbour')) {
+        warmTitle = 'That one is taken';
+      } else if (errorMsg.includes('moved on') || errorMsg.includes('longer')) {
+        warmTitle = 'Things have changed';
+      } else if (errorMsg.includes('hiccup') || errorMsg.includes('trouble')) {
+        warmTitle = 'We are sorting this out';
+      }
+
       setError(errorMsg);
-      setErrorTitle(errorTitle);
+      setErrorTitle(warmTitle);
     } finally {
       setIsSubmitting(false);
     }
