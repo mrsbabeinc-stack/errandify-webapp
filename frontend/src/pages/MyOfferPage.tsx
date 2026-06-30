@@ -36,9 +36,11 @@ export default function MyOfferPage() {
   const [showChatbox, setShowChatbox] = useState(false);
 
   useEffect(() => {
+    // Fetch immediately on mount
     fetchMyBids();
-    // Poll for updates every 3 seconds
-    const interval = setInterval(fetchMyBids, 3000);
+
+    // Poll for updates every 2 seconds (faster updates)
+    const interval = setInterval(fetchMyBids, 2000);
 
     // Listen for real-time bid confirmation events
     const socket = getSocket();
@@ -77,20 +79,21 @@ export default function MyOfferPage() {
 
   const handleConfirmBid = async (bidId: number) => {
     try {
+      console.log('[MyOfferPage] Confirming bid:', bidId);
       const token = localStorage.getItem('token');
-      await axios.put(
+      const response = await axios.put(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${bidId}/confirm`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      // Update local state immediately
-      setBids(bids.map(b =>
-        b.id === bidId ? { ...b, status: 'confirmed' as const } : b
-      ));
+      console.log('[MyOfferPage] Bid confirmed successfully:', response.data);
+      // Refresh bids immediately to get updated status from server
+      await fetchMyBids();
       setError('');
     } catch (err: any) {
+      console.error('[MyOfferPage] Failed to confirm bid:', err);
       setError(err.response?.data?.error || 'Failed to confirm offer');
     }
   };
