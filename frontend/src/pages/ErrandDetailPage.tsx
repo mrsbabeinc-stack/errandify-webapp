@@ -1110,7 +1110,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 </div>
 
                 {/* Show Completion Evidence - Asker reviews, Doer can view their own submission */}
-                {currentUser && (currentUser.id === errand.askerId || userRole === 'doer') && (
+                {currentUser && (currentUser.id === errand.askerId || currentUser.id === errand.doerId) && (
                   <div className="space-y-1 pt-2 border-t border-green-200">
                     <p className="font-semibold text-gray-700 text-xs">📸 Completion Evidence:</p>
                     <button
