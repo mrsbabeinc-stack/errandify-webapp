@@ -35,7 +35,7 @@ function generateOfferId(category: string): string {
   for (let i = 0; i < 4; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `OF${year}${categoryCode}-${code}`;
+  return `OF${year}${categoryCode}-${code}`.toUpperCase();
 }
 
 // POST /api/bids - Submit a bid (single errand or multiple sessions for recurring tasks)
