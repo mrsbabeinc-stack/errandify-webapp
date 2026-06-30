@@ -243,10 +243,10 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
     let doerId = null;
     let isConfirmedDoer = false;
 
-    // Find any confirmed bid for this errand
+    // Find any confirmed bid for this errand (include all accepted/confirmed statuses)
     const bidResult = await db.query(
       `SELECT doer_id FROM bids
-       WHERE errand_id = $1 AND status IN ('confirmed', 'confirmed_awaiting_start', 'in_progress')
+       WHERE errand_id = $1 AND status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress', 'completed')
        LIMIT 1`,
       [errand.id]
     );
