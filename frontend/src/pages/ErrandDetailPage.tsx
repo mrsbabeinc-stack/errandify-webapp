@@ -400,6 +400,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   };
 
   const handleStartJob = async () => {
+    console.log('[ErrandDetailPage] handleStartJob clicked, setting showStartConfirm=true');
     setShowStartConfirm(true);
   };
 
