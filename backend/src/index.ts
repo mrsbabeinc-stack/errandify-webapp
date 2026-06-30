@@ -40,8 +40,23 @@ import safetyRoutes from './routes/safety.js';
 import disputesL2L3Routes from './routes/disputes_l2_l3.js';
 import casesRoutes from './routes/cases.js';
 import { startCrons } from './cron.js';
+import db from './db.js';
 
 const app = express();
+
+// Run migrations on startup
+(async () => {
+  try {
+    // Add photo_urls column to completion_submissions if it doesn't exist
+    await db.query(`
+      ALTER TABLE completion_submissions
+      ADD COLUMN IF NOT EXISTS photo_urls TEXT DEFAULT '[]';
+    `);
+    console.log('Migration: photo_urls column checked/added');
+  } catch (error) {
+    console.log('Migration: photo_urls column already exists or not needed');
+  }
+})();
 
 // Middleware
 app.use(cors());
