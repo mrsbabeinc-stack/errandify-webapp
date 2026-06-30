@@ -68,6 +68,15 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
     { id: 'charity-community', name: 'Charity & Community', icon: '❤️', color: 'from-red-100 to-red-50', group: '💡 Skills & Services' },
   ];
 
+  // Group categories by their group field - same as HomePage
+  const groupedCategories = categories.reduce((acc, cat) => {
+    if (!acc[cat.group]) {
+      acc[cat.group] = [];
+    }
+    acc[cat.group].push(cat);
+    return acc;
+  }, {} as Record<string, typeof categories>);
+
   const categoryNames: Record<string, string> = {
     // New category names
     'home-maintenance': 'Home Maintenance',
@@ -289,31 +298,41 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
           </div>
         )}
 
-        {/* Category Selection Card - Warm & Compact */}
+        {/* Category Selection Card - Warm & Compact - Grouped by Category Groups */}
         {userRole === 'doer' && (
           <div className="bg-white rounded-xl p-2 border border-orange-100 shadow-sm mb-2">
           <h3 className="text-xs font-bold text-errandify-brown mb-1.5 uppercase tracking-wide">
             🎯 Categories <span className="text-gray-500 font-normal">(Click to Select)</span>
           </h3>
-          <div className="grid grid-cols-4 gap-1 mb-2">
-            {categories.map((category) => {
-              const isSelected = selectedCategories.includes(category.id);
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategoryToggle(category.id)}
-                  className={`px-1.5 py-1 rounded text-xs font-medium transition-all hover:shadow-md ${
-                    isSelected
-                      ? 'bg-errandify-orange text-white shadow-md ring-1 ring-orange-300'
-                      : `bg-gradient-to-r ${category.color}`
-                  }`}
-                >
-                  <div className="text-sm mb-0.5">{category.icon}</div>
-                  <div className="text-xs leading-tight">{category.name.split(' ')[0]}</div>
-                </button>
-              );
-            })}
+
+          {/* Group Categories by their group field */}
+          <div className="space-y-1.5 mb-2">
+            {Object.entries(groupedCategories).map(([groupName, cats]) => (
+              <div key={groupName}>
+                <h4 className="text-xs font-bold text-gray-600 mb-0.5 pl-1">{groupName}</h4>
+                <div className="grid grid-cols-4 gap-1 mb-1">
+                  {cats.map((category) => {
+                    const isSelected = selectedCategories.includes(category.id);
+                    return (
+                      <button
+                        key={category.id}
+                        onClick={() => handleCategoryToggle(category.id)}
+                        className={`px-1.5 py-1 rounded text-xs font-medium transition-all hover:shadow-md ${
+                          isSelected
+                            ? 'bg-errandify-orange text-white shadow-md ring-1 ring-orange-300'
+                            : `bg-gradient-to-r ${category.color}`
+                        }`}
+                      >
+                        <div className="text-sm mb-0.5">{category.icon}</div>
+                        <div className="text-xs leading-tight">{category.name.split(' ')[0]}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
+
           <div className="flex gap-2">
             <button
               onClick={() => setSelectedCategories([])}
