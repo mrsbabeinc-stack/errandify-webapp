@@ -81,13 +81,25 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       const user = JSON.parse(userStr);
       setCurrentUser(user);
     }
+  }, []);
 
-    // Load user bids from localStorage
-    if (id) {
-      const bids = JSON.parse(localStorage.getItem('userBids') || '{}');
-      setUserBidAmount(bids[id] || null);
+  // Fetch user's own bid for this errand (if they're a doer)
+  useEffect(() => {
+    if (id && currentUser && currentUser.role === 'doer') {
+      const fetchUserBid = async () => {
+        try {
+          const response = await axios.get(`/api/bids?errandId=${id}&checkUserBid=true`);
+          if (response.data.userBidAmount) {
+            setUserBidAmount(response.data.userBidAmount);
+          }
+        } catch (err) {
+          // User doesn't have a bid, that's okay
+          setUserBidAmount(null);
+        }
+      };
+      fetchUserBid();
     }
-  }, [id]);
+  }, [id, currentUser]);
 
   useEffect(() => {
     fetchErrandDetail();
