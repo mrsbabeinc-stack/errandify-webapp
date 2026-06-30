@@ -914,7 +914,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 >
                   Submit an Offer
                 </button>
-              ) : bidSubmitted || userBidAmount ? (
+              ) : errand.status === 'open' && (bidSubmitted || userBidAmount) ? (
+                // Only show Update Offer if errand is still OPEN
                 <button
                   onClick={() => setShowBidModal(true)}
                   className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
