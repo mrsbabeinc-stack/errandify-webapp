@@ -139,7 +139,7 @@ export default function TaskCompleteEvidencePage() {
 
       // Create a warm, engaging toast notification
       const toastDiv = document.createElement('div');
-      toastDiv.className = 'fixed top-4 left-4 right-4 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600 text-white p-5 rounded-lg shadow-2xl z-50 text-center animate-bounce';
+      toastDiv.className = 'fixed top-4 left-4 right-4 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600 text-white p-5 rounded-lg shadow-2xl z-50 text-center';
       toastDiv.innerHTML = `
         <p style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;">Wonderful! You've shared it all</p>
         <p style="font-size: 0.95rem; opacity: 0.95; margin-bottom: 0.75rem; font-weight: 500; line-height: 1.5;">
