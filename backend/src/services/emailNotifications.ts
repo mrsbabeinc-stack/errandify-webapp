@@ -6,12 +6,15 @@ import {
   templatePaymentReleased,
   templateDailyDigest,
   templatePaymentReminder,
+  templateReferralJoin,
+  templateFirstJobBonus,
+  templateRatingReceived,
 } from '../templates/emailTemplates.js';
 
 // Send email for critical events (immediate)
 export async function sendCriticalEmail(
   userId: number,
-  emailType: 'bid_accepted' | 'task_reopened' | 'payment_released',
+  emailType: 'bid_accepted' | 'task_reopened' | 'payment_released' | 'referral_join' | 'first_job_bonus' | 'rating_received',
   data: any
 ): Promise<boolean> {
   try {
@@ -80,6 +83,21 @@ export async function sendCriticalEmail(
       case 'payment_released':
         subject = `💰 Payment Released! $${data.amount} in your wallet`;
         html = templatePaymentReleased(user.display_name, data.amount, data.taskTitle);
+        break;
+
+      case 'referral_join':
+        subject = `👤 New Referral Joined! +${data.pointsAwarded} Errandify Points`;
+        html = templateReferralJoin(user.display_name, data.newUserName, data.pointsAwarded);
+        break;
+
+      case 'first_job_bonus':
+        subject = `🌟 First Job Milestone! +${data.pointsAwarded} Activation Bonus`;
+        html = templateFirstJobBonus(user.display_name, data.referredUserName, data.pointsAwarded);
+        break;
+
+      case 'rating_received':
+        subject = `✨ New Review! ${data.rating} stars - You earned +${data.pointsAwarded} EP`;
+        html = templateRatingReceived(user.display_name, data.raterName, data.rating, data.taskTitle, data.pointsAwarded);
         break;
     }
 
