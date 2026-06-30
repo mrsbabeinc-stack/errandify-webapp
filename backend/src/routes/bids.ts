@@ -3,6 +3,7 @@ import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import axios from 'axios';
 import { activityLogService } from '../services/activityLogService.js';
+import * as contentMod from '../modules/content-moderation.js';
 
 const router = Router();
 
@@ -75,6 +76,22 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     // Prevent asker from bidding on their own errand
     if (errand.asker_id === doerId) {
       return res.status(403).json({ error: 'You cannot bid on your own errand' });
+    }
+
+    // Moderate offer note content if provided
+    if (note) {
+      try {
+        const moderationResult = await contentMod.checkContentWithQwen('', '', note);
+        if (!moderationResult.is_safe) {
+          return res.status(400).json({
+            error: 'Offer note contains inappropriate content',
+            details: moderationResult.flags
+          });
+        }
+      } catch (modError) {
+        console.error('[Bids] Content moderation error:', modError);
+        // Don't block the bid if moderation fails, just log it
+      }
     }
 
     // Get doer info
