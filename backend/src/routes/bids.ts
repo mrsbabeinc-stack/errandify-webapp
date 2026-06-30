@@ -238,12 +238,15 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 router.get('/task/:taskId', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { taskId } = req.params;
+    const parsedTaskId = parseInt(taskId, 10);
     const currentUserId = parseInt(req.userId || '0', 10);
+
+    console.log('[Bids GET] Fetching bids for task:', parsedTaskId, 'User:', currentUserId);
 
     // Verify user is the asker of this task
     const errandResult = await db.query(
       'SELECT asker_id FROM errands WHERE id = $1',
-      [taskId]
+      [parsedTaskId]
     );
 
     if (errandResult.rows.length === 0) {
@@ -251,6 +254,7 @@ router.get('/task/:taskId', authMiddleware, async (req: AuthRequest, res: Respon
     }
 
     if (errandResult.rows[0].asker_id !== currentUserId) {
+      console.log('[Bids GET] Access denied. Errand asker:', errandResult.rows[0].asker_id, 'Current user:', currentUserId);
       return res.status(403).json({ error: 'Only the asker can view bids' });
     }
 
@@ -262,9 +266,10 @@ router.get('/task/:taskId', authMiddleware, async (req: AuthRequest, res: Respon
        JOIN users u ON b.doer_id = u.id
        WHERE b.errand_id = $1
        ORDER BY b.created_at DESC`,
-      [taskId]
+      [parsedTaskId]
     );
 
+    console.log('[Bids GET] Found', bidsResult.rows.length, 'bids');
     res.json({ success: true, data: bidsResult.rows });
   } catch (error) {
     console.error('[Bids] Error fetching bids:', error);
