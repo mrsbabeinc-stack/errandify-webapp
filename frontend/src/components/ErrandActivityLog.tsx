@@ -111,7 +111,7 @@ const ErrandActivityLog = forwardRef<ErrandActivityLogHandle, ErrandActivityLogP
 
   return (
     <div className="space-y-2">
-      {activities.map((activity, index) => (
+      {[...activities].reverse().map((activity, index) => (
         <div key={activity.id} className="flex gap-2">
           {/* Timeline dot and line */}
           <div className="flex flex-col items-center">
