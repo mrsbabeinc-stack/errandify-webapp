@@ -112,17 +112,29 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
     }
 
     // Format the response with readable activity descriptions
-    const activities = activitiesResult.rows.map((activity: any) => ({
-      id: activity.id,
-      type: activity.activity_type,
-      actor: {
-        name: activity.actor_name,
-        role: activity.actor_role,
-      },
-      timestamp: activity.created_at,
-      details: activity.details,
-      displayText: getActivityDisplayText(activity.activity_type, activity.actor_name, activity.details, formattedId),
-    }));
+    const activities = activitiesResult.rows.map((activity: any) => {
+      // Ensure details is parsed as object (JSONB from PostgreSQL)
+      let parsedDetails = activity.details;
+      if (typeof parsedDetails === 'string') {
+        try {
+          parsedDetails = JSON.parse(parsedDetails);
+        } catch (e) {
+          parsedDetails = {};
+        }
+      }
+
+      return {
+        id: activity.id,
+        type: activity.activity_type,
+        actor: {
+          name: activity.actor_name,
+          role: activity.actor_role,
+        },
+        timestamp: activity.created_at,
+        details: parsedDetails,
+        displayText: getActivityDisplayText(activity.activity_type, activity.actor_name, parsedDetails, formattedId),
+      };
+    });
 
     res.json({
       success: true,
