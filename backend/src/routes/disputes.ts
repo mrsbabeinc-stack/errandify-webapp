@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { createNotification } from './notifications.js';
+import { activityLogService } from '../services/activityLogService.js';
 
 const router = Router();
 
@@ -66,6 +67,11 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // Determine other party (asker or doer)
     const otherUserId = isAsker ? isDoerResult.rows[0].doer_id : task.asker_id;
+
+    // Log dispute raised
+    const userName = isAsker ? task.asker_name : isDoerResult.rows[0].doer_name;
+    const userRole = isAsker ? 'asker' : 'doer';
+    await activityLogService.logDisputeRaised(taskId, userName, userId, userRole, reason).catch(console.error);
 
     // Notify other party
     await createNotification(
@@ -620,6 +626,10 @@ router.post('/:id/resolve', authMiddleware, async (req: AuthRequest, res: Respon
       `UPDATE errands SET dispute_status = $1 WHERE id = $2`,
       ['resolved', dispute.task_id]
     );
+
+    // Log dispute resolved
+    const resolutionText = `${decision}: Doer SGD $${doerPayout}, Asker SGD $${askerPayout}`;
+    await activityLogService.logDisputeResolved(dispute.task_id, resolutionText).catch(console.error);
 
     // TODO: Send resolution emails to both parties
 
