@@ -1366,6 +1366,11 @@ export default function MyAccountPage() {
                   <p className="text-base font-bold text-purple-800">{profileData.errandifyPoints || 0}</p>
                   <p className="text-xs text-purple-700 font-semibold">EP</p>
                 </div>
+                <div className="bg-gradient-to-b from-red-300 to-red-100 rounded-lg p-2 text-center border-2 border-red-400 hover:shadow-md transition transform hover:scale-105">
+                  <p className="text-lg">❤️</p>
+                  <p className="text-base font-bold text-red-800">{(profileData as any).timesFavorited || 0}</p>
+                  <p className="text-xs text-red-700 font-semibold">Trusted</p>
+                </div>
               </div>
 
               {/* REFERRAL BUTTON - CELEBRATORY */}

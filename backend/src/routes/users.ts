@@ -43,6 +43,13 @@ router.get('/profile', authMiddleware, async (req, res) => {
     const completedTasks = parseInt(tasksResult.rows[0]?.completed_count || 0);
     const totalEarnings = parseInt(tasksResult.rows[0]?.doer_earnings || 0);
 
+    // Get times favorited count
+    const favoritedResult = await db.query(
+      `SELECT COUNT(*) as favorite_count FROM user_favorites WHERE favorite_user_id = $1`,
+      [req.userId]
+    );
+    const timesFavorited = parseInt(favoritedResult.rows[0]?.favorite_count || 0);
+
     res.json({
       success: true,
       data: {
@@ -64,6 +71,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
         errandifyPoints: user.errandify_points || 0,
         completedTasks: completedTasks,
         totalEarnings: totalEarnings,
+        timesFavorited: timesFavorited,
         categories: [],
       },
     });
