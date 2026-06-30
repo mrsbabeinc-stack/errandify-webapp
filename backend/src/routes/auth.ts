@@ -6,6 +6,7 @@ import db from '../db.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.js';
 import { generateFormattedUserId } from '../utils/idFormatter.js';
 import { singpassService } from '../services/singpass.js';
+import { sendCriticalEmail } from '../services/emailNotifications.js';
 
 const router = Router();
 
@@ -227,6 +228,15 @@ router.post('/signup', async (req: Request, res: Response) => {
           );
 
           console.log(`[Referral] User ${newUserId} signed up via code ${ref}. Referrer ${referrerId} awarded ${joinBonus} EP`);
+
+          // Send referral join email to referrer
+          sendCriticalEmail(referrerId, 'referral_join', {
+            newUserName: displayName,
+            pointsAwarded: joinBonus
+          }).catch(err => {
+            console.error('[Email] Failed to send referral_join email:', err);
+            // Don't fail the signup if email fails
+          });
         }
       } catch (refError) {
         // Don't fail signup if referral tracking fails - log and continue

@@ -4,6 +4,7 @@ import db from '../db.js';
 import { createNotification } from './notifications.js';
 import { awardEp, getRatingBonus } from '../services/gamificationService.js';
 import { activityLogService } from '../services/activityLogService.js';
+import { sendCriticalEmail } from '../services/emailNotifications.js';
 
 const router = Router();
 
@@ -187,6 +188,16 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         notificationBody,
         null
       ).catch(console.error);
+
+      // Send email notification to rated user
+      sendCriticalEmail(ratedUserId, 'rating_received', {
+        raterName: raterName,
+        rating: rating,
+        taskTitle: task.title || 'Your errand',
+        pointsAwarded: totalEpAwarded
+      }).catch(err => {
+        console.error('[Email] Failed to send rating_received email:', err);
+      });
     } catch (epError) {
       console.error('Error awarding EP:', epError);
       // Don't fail the rating submission if EP awarding fails
