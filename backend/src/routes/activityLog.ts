@@ -162,13 +162,18 @@ function getActivityDisplayText(type: string, actorName: string, details: any, f
   // Use alias if available, fallback to name
   const displayName = details?.alias || actorName;
 
+  console.log(`[ActivityLog] displayText - type=${type}, actorName=${actorName}, details=${JSON.stringify(details)}, displayName=${displayName}`);
+
   switch (type) {
     case 'posted':
       return `${prefix}${displayName} posted this task`;
     case 'bid_placed':
       // Include offer ID and amount if available
+      console.log(`[ActivityLog] bid_placed check - offerId=${details?.offerId}, amount=${details?.amount}`);
       if (details?.offerId && details?.amount) {
-        return `${prefix}${displayName} submitted an offer (${details.offerId} - SGD $${details.amount})`;
+        const text = `${prefix}${displayName} submitted an offer (${details.offerId} - SGD $${details.amount})`;
+        console.log(`[ActivityLog] bid_placed text=${text}`);
+        return text;
       }
       return `${prefix}${displayName} submitted an offer`;
     case 'bid_rejected':
