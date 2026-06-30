@@ -179,15 +179,15 @@ function getActivityDisplayText(type: string, actorName: string, details: any): 
     case 'confirmed':
       return `Offer confirmed - ready to start`;
     case 'started':
-      return `${displayName} started the job${errandIdDisplay}`;
+      return `${displayName} got started on this${errandIdDisplay}`;
     case 'completed':
-      return `${displayName} submitted completion evidence${errandIdDisplay}`;
+      return `${displayName} finished & shared their work${errandIdDisplay}`;
     case 'completion_evidence_viewed':
-      return `${displayName} viewed the completion evidence`;
+      return `${displayName} reviewed the completed work`;
     case 'review_submitted':
-      return `${displayName} submitted a review`;
+      return `${displayName} left feedback`;
     case 'rating_submitted':
-      return `${displayName} rated the work`;
+      return `${displayName} shared a rating`;
     case 'changes_requested':
       return `${displayName} requested changes: ${details?.reason || 'see details'}`;
     case 'dispute_raised':
