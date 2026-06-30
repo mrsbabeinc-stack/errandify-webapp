@@ -364,6 +364,19 @@ export default function MyOfferPage() {
                   )}
                 </div>
 
+                {/* Photo Preview Section - Show when bid is completed */}
+                {(bid.status === 'completed_unconfirmed' || bid.status === 'completed_confirmed') && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <p className="text-xs font-semibold text-gray-700 mb-2">Your submitted photos:</p>
+                    <button
+                      onClick={() => navigate(`/errand/${bid.errand_id}`)}
+                      className="text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                    >
+                      View all photos & details
+                    </button>
+                  </div>
+                )}
+
                 {/* Timestamp */}
                 <p className="text-xs text-gray-500 mt-1">
                   Offer placed {new Date(bid.created_at).toLocaleDateString()}
