@@ -199,7 +199,7 @@ export async function notifyBidAccepted(doerId: number, errandTitle: string, amo
   await createNotification(
     doerId,
     'errand_bid_accepted',
-    'Bid Accepted',
+    'Offer Accepted',
     `Awesome! You're hired for "${errandTitle}". Get ready to start!`,
     null
   );

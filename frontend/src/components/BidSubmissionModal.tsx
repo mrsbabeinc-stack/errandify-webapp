@@ -65,7 +65,7 @@ export default function BidSubmissionModal({
               {
                 recipientId: askerId,
                 type: 'bid_placed',
-                title: isUpdating ? 'Bid Updated' : 'New Bid Received',
+                title: isUpdating ? 'Offer Updated' : 'New Offer Received',
                 message: `A ${isUpdating ? 'updated' : 'new'} bid of $${bidAmount} was placed on "${taskTitle}"`,
                 taskId,
               },
