@@ -53,6 +53,7 @@ export default function TaskChatbox({
   const [askerAlias, setAskerAlias] = useState<string>('Asker');
   const [doerAlias, setDoerAlias] = useState<string>('Doer');
   const [errandFormattedId, setErrandFormattedId] = useState<string>('');
+  const [apiErrandDetails, setApiErrandDetails] = useState<any | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [showImageMenu, setShowImageMenu] = useState(false);
@@ -126,9 +127,11 @@ export default function TaskChatbox({
         }
       }
 
-      // Set errand formatted ID
+      // Set errand details from API (includes full postal code)
       if (response.data.data.errandDetails) {
-        setErrandFormattedId(response.data.data.errandDetails.formattedId || `ER${taskId}`);
+        const apiDetails = response.data.data.errandDetails;
+        setErrandFormattedId(apiDetails.formattedId || `ER${taskId}`);
+        setApiErrandDetails(apiDetails);
       }
     } catch (err: any) {
       console.error('Failed to fetch messages:', err);
@@ -733,7 +736,7 @@ Your message doesn't meet our community standards. Please keep messages:
                 <div>
                   <p className="text-xs text-gray-500">💰 Budget</p>
                   <p className="text-xs text-errandify-orange">
-                    {errandDetails.budget ? `SGD $${errandDetails.budget}` : 'Not specified'}
+                    {(apiErrandDetails?.budget || errandDetails?.budget) ? `SGD $${apiErrandDetails?.budget || errandDetails?.budget}` : 'Not specified'}
                   </p>
                 </div>
 
@@ -742,8 +745,8 @@ Your message doesn't meet our community standards. Please keep messages:
                   <p className="text-xs text-gray-500">📍 Location</p>
                   <p className="text-xs text-gray-700 font-semibold break-words">
                     {(() => {
-                      const location = errandDetails.location || 'Not specified';
-                      const postalCode = errandDetails.postal_code;
+                      const location = apiErrandDetails?.location || errandDetails?.location || 'Not specified';
+                      const postalCode = apiErrandDetails?.postal_code || errandDetails?.postal_code;
 
                       // If we have postal code, format with S prefix
                       if (postalCode) {
@@ -768,13 +771,13 @@ Your message doesn't meet our community standards. Please keep messages:
                 {/* Date & Time */}
                 <div>
                   <p className="text-xs text-gray-500">🕐 Date & Time</p>
-                  {errandDetails.deadline ? (
+                  {(apiErrandDetails?.deadline || errandDetails?.deadline) ? (
                     <>
                       <p className="text-xs text-gray-700">
-                        {new Date(errandDetails.deadline).toLocaleDateString('en-SG')}
+                        {new Date(apiErrandDetails?.deadline || errandDetails?.deadline || '').toLocaleDateString('en-SG')}
                       </p>
                       <p className="text-xs text-gray-700">
-                        {new Date(errandDetails.deadline).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(apiErrandDetails?.deadline || errandDetails?.deadline || '').toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </>
                   ) : (
@@ -786,7 +789,7 @@ Your message doesn't meet our community standards. Please keep messages:
                 <div className="border-t pt-3">
                   <p className="text-xs text-gray-500">📝 Description</p>
                   <p className="text-xs text-gray-700 leading-relaxed line-clamp-6">
-                    {errandDetails.description || 'No description provided'}
+                    {apiErrandDetails?.description || errandDetails?.description || 'No description provided'}
                   </p>
                 </div>
               </div>
