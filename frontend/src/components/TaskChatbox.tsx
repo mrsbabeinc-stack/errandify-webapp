@@ -480,16 +480,6 @@ Your message doesn't meet our community standards. Please keep messages:
                       msg.content
                     )}
                   </div>
-                  {!msg.flagged && (
-                    <button
-                      onClick={() => handlePlayAudio(msg)}
-                      disabled={isGeneratingAudio || playingMessageId === msg.id}
-                      className="text-xs mt-1.5 text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Play message as audio"
-                    >
-                      {playingMessageId === msg.id ? '🔊 Playing...' : '🔊 Listen'}
-                    </button>
-                  )}
                 </div>
               </div>
             ))
@@ -721,10 +711,6 @@ Your message doesn't meet our community standards. Please keep messages:
                       >
                         {isFavorited ? '❤️' : '🤍'}
                       </button>
-                    </div>
-                    <div className="flex items-center gap-2 justify-between text-xs text-gray-600">
-                      <span>📌 You (Doer)</span>
-                      <span>{doerName || 'Doer'}</span>
                     </div>
                   </>
                 )}
