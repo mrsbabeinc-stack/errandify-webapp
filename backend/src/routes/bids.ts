@@ -656,6 +656,7 @@ router.get('/check/:errandId', authMiddleware, async (req: AuthRequest, res: Res
       return res.json({
         success: true,
         hasBid: true,
+        bidId: bid.id,
         bidAmount: bid.amount,
         bidStatus: bid.status,
         bidNote: bid.note,

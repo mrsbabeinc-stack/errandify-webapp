@@ -61,6 +61,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [showBidModal, setShowBidModal] = useState(false);
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [bidSubmitted, setBidSubmitted] = useState(false);
+  const [bidStatus, setBidStatus] = useState<string | null>(null);
+  const [bidId, setBidId] = useState<number | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [userBidAmount, setUserBidAmount] = useState<number | null>(null);
   const [confirmationTimeLeft, setConfirmationTimeLeft] = useState<string>('');
@@ -98,8 +100,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           );
           if (response.data.hasBid) {
             setUserBidAmount(response.data.bidAmount);
+            setBidStatus(response.data.bidStatus);
+            setBidId(response.data.bidId);
           } else {
             setUserBidAmount(null);
+            setBidStatus(null);
+            setBidId(null);
           }
         } catch (err) {
           console.error('Failed to check user bid:', err);
@@ -791,7 +797,33 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
             {/* Action Button */}
             {errand.status === 'open' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
-              bidSubmitted || userBidAmount ? (
+              bidStatus === 'accepted' ? (
+                <div className="space-y-3 mt-2">
+                  <p className="text-center text-sm font-semibold text-emerald-600 bg-emerald-50 p-3 rounded-lg">
+                    ✅ Offer Accepted. Please Confirm.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      if (!bidId) return;
+                      try {
+                        const token = localStorage.getItem('token');
+                        await axios.put(
+                          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${bidId}/confirm`,
+                          {},
+                          { headers: { Authorization: `Bearer ${token}` } }
+                        );
+                        // Refresh the page to show updated status
+                        window.location.reload();
+                      } catch (err) {
+                        console.error('Failed to confirm offer:', err);
+                      }
+                    }}
+                    className="w-full bg-emerald-500 text-white py-3 rounded-lg font-bold hover:bg-emerald-600 transition-colors text-base"
+                  >
+                    ✅ Confirm & Start
+                  </button>
+                </div>
+              ) : bidSubmitted || userBidAmount ? (
                 <button
                   onClick={() => setShowBidModal(true)}
                   className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
