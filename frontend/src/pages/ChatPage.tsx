@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import TaskChatbox from '../components/TaskChatbox';
 import { initializeSocket, getSocket, isSocketConnected as checkSocketConnected } from '../utils/socketClient';
@@ -25,6 +25,7 @@ interface Conversation {
 
 export default function ChatPage({ userRole }: ChatPageProps) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [allConversations, setAllConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +38,16 @@ export default function ChatPage({ userRole }: ChatPageProps) {
   const [notification, setNotification] = useState<{ message: string; type: 'info' | 'warning' } | null>(null);
   const [viewFilter, setViewFilter] = useState<'all' | 'asker' | 'doer'>('all');
   const [isSocketConnected, setIsSocketConnected] = useState(false);
+
+  useEffect(() => {
+    // Check if errandId is in URL query params (from notification click)
+    const errandIdParam = searchParams.get('errandId');
+    if (errandIdParam) {
+      const errandId = parseInt(errandIdParam, 10);
+      setSelectedErrandId(errandId);
+      setShowChatbox(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     // Initialize socket connection

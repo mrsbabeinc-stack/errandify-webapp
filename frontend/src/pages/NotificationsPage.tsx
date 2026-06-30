@@ -18,10 +18,12 @@ interface BackendNotification {
   createdAt: string;
   read: boolean;
   related_errand_id?: number;
+  related_bid_id?: number;
 }
 
 interface FormattedNotification extends Notification {
   errandId?: number;
+  offerId?: number;
   actions?: Array<{ label: string; url: string; type: string }>;
 }
 
@@ -77,15 +79,16 @@ export default function NotificationsPage() {
             timestamp: n.createdAt,
             read: n.read,
             errandId: n.related_errand_id,
+            offerId: n.related_bid_id,
             actions: [
               n.related_errand_id ? {
                 label: '📋 Errand Details',
                 url: `/errand/${n.related_errand_id}`,
                 type: 'errand'
               } : null,
-              n.related_errand_id ? {
+              n.type === 'message_received' && n.related_errand_id ? {
                 label: '💬 Chat',
-                url: `/errand/${n.related_errand_id}?showChat=true`,
+                url: `/my-chat?errandId=${n.related_errand_id}`,
                 type: 'chat'
               } : null,
             ].filter(Boolean),
@@ -266,9 +269,16 @@ export default function NotificationsPage() {
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline justify-between gap-1 mb-1">
-                      <h3 className={`font-semibold line-clamp-1 ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
-                        {notification.title}
-                      </h3>
+                      <div className="flex items-center gap-1 flex-1 min-w-0">
+                        <h3 className={`font-semibold line-clamp-1 ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
+                          {notification.title}
+                        </h3>
+                        {notification.offerId && (
+                          <span className="text-xs text-gray-500 bg-gray-100 px-1 rounded flex-shrink-0">
+                            Offer #{notification.offerId}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-xs text-gray-400 flex-shrink-0">
                         {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
