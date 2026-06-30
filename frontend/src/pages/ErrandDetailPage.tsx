@@ -564,15 +564,6 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               >
                 {errand.category}
               </span>
-              <span
-                className={`px-1 py-0.5 rounded-full text-xs font-semibold ${
-                  errand.status === 'open'
-                    ? 'bg-green-400 text-white'
-                    : 'bg-gray-400 text-white'
-                }`}
-              >
-                {capitalizeStatus(errand.status)}
-              </span>
               {userBidAmount && errand.status !== 'open' && (
                 <span className={`text-xs px-2 py-1 rounded font-bold ${
                   errand.status === 'in_progress'
