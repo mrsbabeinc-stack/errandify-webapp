@@ -195,13 +195,14 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     // Update user's average rating
     await updateUserRating(ratedUserId);
 
-    // Update errand status to 'rated' after rating is submitted
+    // Update errand status to 'completed' after rating is submitted
+    // The presence of a rating indicates it's been reviewed and closed
     try {
       await db.query(
         'UPDATE errands SET status = $1 WHERE id = $2',
-        ['rated', taskId]
+        ['completed', taskId]
       );
-      console.log('[Rating] Updated errand status to rated:', taskId);
+      console.log('[Rating] Updated errand status to completed (rated):', taskId);
 
       // Log rating submission
       const raterUserResult = await db.query('SELECT display_name FROM users WHERE id = $1', [req.userId]);

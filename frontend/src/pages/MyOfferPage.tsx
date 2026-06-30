@@ -129,7 +129,7 @@ export default function MyOfferPage() {
       confirmed: '🟢 Confirmed - Start',
       confirmed_awaiting_start: '🟢 Confirmed - Start',
       in_progress: '🔄 In Progress',
-      completed: '⏳ Completed - Pending Review',
+      completed: '✅ Rated & Closed',
       completed_unconfirmed: '✔️ Awaiting Review',
       completed_confirmed: '🎉 Completed',
       rejected: '❌ Rejected',
