@@ -1,6 +1,6 @@
 interface WarmMessageProps {
   isOpen: boolean;
-  title: string;
+  title?: string;
   message?: string;
   onClose: () => void;
   buttonLabel?: string;
@@ -51,14 +51,16 @@ export default function WarmMessage({
       <div className={`${config.bg} ${config.borderLeft} rounded-xl shadow-lg max-w-xs w-full`}>
         {/* Compact Content */}
         <div className="p-4 sm:p-5">
-          {/* Bold Title */}
-          <h3 className={`${config.textColor} text-sm sm:text-base font-bold mb-2`}>
-            {title}
-          </h3>
+          {/* Bold Title - No Punctuation */}
+          {title && (
+            <h3 className={`${config.textColor} text-sm sm:text-base font-bold mb-2`}>
+              {title}
+            </h3>
+          )}
 
-          {/* Message Text */}
+          {/* Message Text - With Punctuation */}
           {message && (
-            <p className={`${config.textColor} text-sm leading-relaxed opacity-90`}>
+            <p className={`${config.textColor} text-sm leading-relaxed ${title ? 'opacity-90' : ''}`}>
               {message.endsWith('.') ? message : `${message}.`}
             </p>
           )}

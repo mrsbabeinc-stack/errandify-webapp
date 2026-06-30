@@ -221,7 +221,7 @@ export default function BidSubmissionModal({
       <WarmMessage
         isOpen={!!error}
         type="error"
-        title="Just a moment"
+        title="Hold on"
         message={error}
         onClose={() => setError('')}
         buttonLabel="Got it"
