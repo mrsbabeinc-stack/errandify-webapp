@@ -44,10 +44,20 @@ export default function ChatPage({ userRole }: ChatPageProps) {
     const errandIdParam = searchParams.get('errandId');
     if (errandIdParam) {
       const errandId = parseInt(errandIdParam, 10);
+      console.log('[ChatPage] Setting errandId from URL param:', errandId);
       setSelectedErrandId(errandId);
       setShowChatbox(true);
     }
   }, [searchParams]);
+
+  // Auto-open chat when conversations load and we have a selectedErrandId from URL
+  useEffect(() => {
+    if (selectedErrandId && allConversations.length > 0 && !loading) {
+      console.log('[ChatPage] Conversations loaded, selectedErrandId:', selectedErrandId);
+      // The conversation should already be selected, just make sure chatbox is visible
+      setShowChatbox(true);
+    }
+  }, [allConversations, selectedErrandId, loading]);
 
   useEffect(() => {
     // Initialize socket connection
