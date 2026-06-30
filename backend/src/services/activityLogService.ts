@@ -33,8 +33,12 @@ export const activityLogService = {
     await this.logActivity(errandId, 'posted', askerId, askerName, 'asker');
   },
 
-  async logBidPlaced(errandId: number, doerName: string, doerId: number, amount: number) {
-    await this.logActivity(errandId, 'bid_placed', doerId, doerName, 'doer', { amount });
+  async logBidPlaced(errandId: number, doerName: string, doerId: number, amount: number, offerId?: string, alias?: string) {
+    await this.logActivity(errandId, 'bid_placed', doerId, doerName, 'doer', {
+      amount,
+      offerId: offerId || undefined,
+      alias: alias || undefined
+    });
   },
 
   async logBidAccepted(errandId: number, askerName: string, askerId: number) {
