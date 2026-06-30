@@ -914,8 +914,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => {
-                      setSelectedErrandId(errand.id);
-                      setShowChatbox(true);
+                      setShowChat(true);
                     }}
                     className="flex-1 bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition-colors text-base"
                   >
