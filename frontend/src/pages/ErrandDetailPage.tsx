@@ -564,7 +564,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               >
                 {errand.category}
               </span>
-              {userBidAmount && errand.status !== 'open' && (
+              {(userBidAmount || errand.status === 'completed') && errand.status !== 'open' && (
                 <span className={`text-xs px-2 py-1 rounded font-bold ${
                   errand.status === 'in_progress'
                     ? 'bg-blue-100 text-blue-700'
