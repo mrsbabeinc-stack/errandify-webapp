@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import WarmMessage from './WarmMessage';
 
 interface BidSubmissionModalProps {
   taskId: number;
@@ -27,6 +28,7 @@ export default function BidSubmissionModal({
   const [bidNote, setBidNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [errorTitle, setErrorTitle] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [successAmount, setSuccessAmount] = useState<string>('');
 
@@ -85,7 +87,10 @@ export default function BidSubmissionModal({
         }, 2500);
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to submit bid');
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'We encountered an issue. Please try again.';
+      const errorTitle = err.response?.data?.error || 'Unable to submit offer';
+      setError(errorMsg);
+      setErrorTitle(errorTitle);
     } finally {
       setIsSubmitting(false);
     }
@@ -172,11 +177,6 @@ export default function BidSubmissionModal({
             </div>
           </div>
 
-          {error && (
-            <div className="p-2 bg-red-100 border border-red-300 text-red-800 text-xs rounded-lg font-medium">
-              {error}
-            </div>
-          )}
 
           <div className="flex gap-3">
             <button
@@ -197,23 +197,30 @@ export default function BidSubmissionModal({
         </form>
       </div>
 
+      {/* Error Message - Warm & Friendly */}
+      <WarmMessage
+        isOpen={!!error}
+        type="error"
+        title={errorTitle || 'Let us know what happened'}
+        message={error}
+        onClose={() => setError('')}
+        buttonLabel="Got it"
+      />
+
       {/* Success Modal - Happy & Warm */}
       {showSuccess && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-b from-white to-orange-50 rounded-2xl max-w-sm w-full p-8 text-center shadow-2xl">
-            <div className="text-5xl mb-4">
-              {isUpdating ? '💚' : '🎉'}
-            </div>
-            <h2 className="text-2xl font-bold text-errandify-brown mb-2">
-              {isUpdating ? 'Bid Updated!' : 'Bid Submitted!'}
+          <div className="bg-white rounded-lg max-w-sm w-full p-6 text-center shadow-md border-l-4 border-l-emerald-500">
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+              {isUpdating ? 'Offer updated' : 'Offer submitted'}
             </h2>
-            <p className="text-gray-700 mb-1 font-medium">
+            <p className="text-slate-700 mb-1">
               {isUpdating
-                ? `Your bid updated to $${successAmount}`
-                : `Your offer for $${successAmount} is in!`}
+                ? `Updated to $${successAmount}`
+                : `$${successAmount} offer is in`}
             </p>
-            <p className="text-gray-600 text-sm">
-              We've got you, neighbor!
+            <p className="text-slate-600 text-sm">
+              We've got you, neighbor
             </p>
           </div>
         </div>
