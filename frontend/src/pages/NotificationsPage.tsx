@@ -17,11 +17,17 @@ interface BackendNotification {
   actionUrl: string;
   createdAt: string;
   read: boolean;
+  related_errand_id?: number;
+}
+
+interface FormattedNotification extends Notification {
+  errandId?: number;
+  actions?: Array<{ label: string; url: string; type: string }>;
 }
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<(Notification | BackendNotification)[]>([]);
+  const [notifications, setNotifications] = useState<FormattedNotification[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [searchText, setSearchText] = useState('');
@@ -53,15 +59,38 @@ export default function NotificationsPage() {
 
       if (response.data.success && response.data.data.notifications) {
         // Convert backend notifications to display format
-        const formattedNotifications = response.data.data.notifications.map((n: BackendNotification) => ({
-          id: n.id.toString(),
-          type: n.type === 'bid_placed' ? 'offer' : n.type === 'message_received' ? 'message' : 'status',
-          title: n.title,
-          message: n.body || n.message,
-          timestamp: n.createdAt,
-          read: n.read,
-          action: n.actionUrl ? { label: 'View', url: n.actionUrl } : undefined,
-        }));
+        const formattedNotifications = response.data.data.notifications.map((n: BackendNotification) => {
+          // Replace "bid" with "offer" and "job" with "errand"
+          let title = n.title
+            .replace(/bid/gi, 'offer')
+            .replace(/job/gi, 'errand');
+
+          let body = (n.body || '')
+            .replace(/bid/gi, 'offer')
+            .replace(/job/gi, 'errand');
+
+          return {
+            id: n.id.toString(),
+            type: n.type === 'bid_placed' ? 'offer' : n.type === 'message_received' ? 'message' : 'status',
+            title: title,
+            message: body,
+            timestamp: n.createdAt,
+            read: n.read,
+            errandId: n.related_errand_id,
+            actions: [
+              n.related_errand_id ? {
+                label: '📋 Errand Details',
+                url: `/errand/${n.related_errand_id}`,
+                type: 'errand'
+              } : null,
+              n.related_errand_id ? {
+                label: '💬 Chat',
+                url: `/errand/${n.related_errand_id}?showChat=true`,
+                type: 'chat'
+              } : null,
+            ].filter(Boolean),
+          };
+        });
         console.log('[Notifications] Formatted:', formattedNotifications);
         setNotifications(formattedNotifications);
       } else {
@@ -221,14 +250,11 @@ export default function NotificationsPage() {
                   if (!notification.read) {
                     handleRead(notification.id);
                   }
-                  if (notification.action) {
-                    navigate(notification.action.url);
-                  }
                 }}
-                className={`p-2 rounded border text-xs transition cursor-pointer hover:shadow-md ${
+                className={`p-2 rounded border text-xs transition ${
                   notification.read
-                    ? 'bg-white border-gray-200 hover:bg-gray-50'
-                    : 'bg-orange-50 border-orange-300 font-semibold hover:bg-orange-100'
+                    ? 'bg-white border-gray-200'
+                    : 'bg-orange-50 border-orange-300'
                 }`}
               >
                 <div className="flex gap-1.5 items-start">
@@ -239,13 +265,44 @@ export default function NotificationsPage() {
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline justify-between gap-1">
-                      <h3 className="text-gray-900 font-semibold line-clamp-1">{notification.title}</h3>
+                    <div className="flex items-baseline justify-between gap-1 mb-1">
+                      <h3 className={`font-semibold line-clamp-1 ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
+                        {notification.title}
+                      </h3>
                       <span className="text-xs text-gray-400 flex-shrink-0">
                         {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <p className="text-gray-600 text-xs mt-0 line-clamp-2">{notification.message}</p>
+                    <p className="text-gray-600 text-xs line-clamp-2 mb-2">{notification.message}</p>
+
+                    {/* Errand ID */}
+                    {notification.errandId && (
+                      <p className="text-xs text-gray-500 mb-2">
+                        Errand ID: <span className="font-mono bg-gray-100 px-1 rounded">ER{notification.errandId}</span>
+                      </p>
+                    )}
+
+                    {/* Action Buttons */}
+                    {notification.actions && notification.actions.length > 0 && (
+                      <div className="flex gap-1 flex-wrap">
+                        {notification.actions.map((action, idx) => (
+                          <button
+                            key={idx}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(action.url);
+                            }}
+                            className={`px-2 py-1 rounded text-xs font-semibold transition ${
+                              action.type === 'chat'
+                                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                            }`}
+                          >
+                            {action.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
