@@ -173,6 +173,20 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     fetchErrandDetail();
   }, [id]);
 
+  // Log button visibility for debugging
+  useEffect(() => {
+    if (errand && currentUser) {
+      const canSeeButton = currentUser.id === errand.askerId || currentUser.id === errand.doerId;
+      console.log('[ErrandDetail] Button visibility check:', {
+        currentUserId: currentUser.id,
+        askerId: errand.askerId,
+        doerId: errand.doerId,
+        canSeeButton,
+        showCompletionEvidence
+      });
+    }
+  }, [errand, currentUser, showCompletionEvidence]);
+
   // Redirect askers to their own errands page if they try to browse others' posts
   useEffect(() => {
     if (errand && userRole === 'asker' && currentUser && currentUser.id !== errand.askerId) {
@@ -198,13 +212,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
       if (response.data.success && response.data.data) {
         setErrand(response.data.data);
-        console.log('[ErrandDetail] Errand loaded:', {
-          status: response.data.data.status,
-          askerId: response.data.data.askerId,
-          doerId: response.data.data.doerId,
-          acceptedBidId: response.data.data.acceptedBidId,
-          confirmed_doer_id: response.data.data.confirmed_doer_id
-        });
+        console.log('[ErrandDetail] Errand loaded:', response.data.data);
+        console.log('[ErrandDetail] doerId from API:', response.data.data.doerId);
 
         // Auto-load completion evidence if errand is in any completed state
         if (response.data.data.status && response.data.data.status.includes('completed')) {
