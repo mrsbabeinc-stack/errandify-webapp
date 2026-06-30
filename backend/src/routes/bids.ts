@@ -167,9 +167,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       );
       bid = result.rows[0];
 
-      // Send notification to asker about new bid
+      // Send notification to asker about new bid with OFFERID
       try {
-
         await db.query(
           `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
            VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
@@ -177,7 +176,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
             errand.asker_id,
             'bid_placed',
             'New Offer Placed',
-            `${formattedErrandId}: ${doerName} has placed an offer to help with "${errandTitle}" for $${parseFloat(amount)}`,
+            `${formattedErrandId} • ${offerId}: ${doerName} has placed an offer to help with "${errandTitle}" for $${parseFloat(amount)}`,
             task_id,
           ]
         );
@@ -258,7 +257,7 @@ router.get('/task/:taskId', authMiddleware, async (req: AuthRequest, res: Respon
     // Get bids from database
     const bidsResult = await db.query(
       `SELECT b.id, b.errand_id as taskId, b.doer_id as doerId, u.display_name as doerName,
-              b.amount, b.note, b.status, b.created_at as createdAt
+              b.amount, b.note, b.status, b.created_at as createdAt, b.offer_id as offerId
        FROM bids b
        JOIN users u ON b.doer_id = u.id
        WHERE b.errand_id = $1

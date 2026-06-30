@@ -14,6 +14,7 @@ interface Bid {
   doerRating?: number;
   doerReviewCount?: number;
   confidenceScore?: number;
+  offerId?: string;
 }
 
 interface DoerConfidence {
@@ -267,7 +268,10 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
                     />
                   )}
                   <div className="flex-1">
-                    <p className="text-xs text-gray-600 font-medium">Alias:</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-xs text-gray-600 font-medium">Alias:</p>
+                      {bid.offerId && <span className="text-xs text-errandify-orange font-semibold">{bid.offerId}</span>}
+                    </div>
                     <p className="font-semibold text-gray-900">{bid.doerName}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <p className="text-xs text-gray-500">
