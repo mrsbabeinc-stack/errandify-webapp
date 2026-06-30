@@ -982,9 +982,9 @@ router.post('/:id/start', authMiddleware, async (req: AuthRequest, res: Response
       return res.status(400).json({ error: 'Can only start job from confirmed status' });
     }
 
-    // Update status and set start time
+    // Update status to in_progress
     await db.query(
-      'UPDATE errands SET status = $1, job_started_at = NOW() WHERE id = $2',
+      'UPDATE errands SET status = $1 WHERE id = $2',
       ['in_progress', errandDatabaseId]
     );
 
