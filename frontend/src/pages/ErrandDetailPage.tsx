@@ -50,6 +50,7 @@ interface Props {
 }
 
 export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
+  console.log('[ErrandDetail] Component mounted with userRole:', userRole);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const activityTimelineRef = useRef<any>(null);
@@ -134,17 +135,24 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         console.log('[ErrandDetail] Found submissions:', submissions.length);
         const latestSubmission = submissions[submissions.length - 1];
         if (latestSubmission) {
+          const notes = latestSubmission.completion_notes || '';
+          const files = latestSubmission.files || [];
           console.log('[ErrandDetail] Setting completion data:', {
-            notes: latestSubmission.completion_notes,
-            files: latestSubmission.files?.length
+            notes,
+            files: files.length
           });
-          setCompletionNotes(latestSubmission.completion_notes || '');
-          setCompletionPhotos(latestSubmission.files || []);
+          setCompletionNotes(notes);
+          setCompletionPhotos(files);
           // Auto-show the evidence if requested (e.g., on initial page load)
           if (autoShow) {
+            console.log('[ErrandDetail] Auto-showing completion evidence');
             setShowCompletionEvidence(true);
           }
+        } else {
+          console.log('[ErrandDetail] No latest submission found');
         }
+      } else {
+        console.log('[ErrandDetail] Response not successful or missing data');
 
         // Log that asker viewed the evidence
         if (autoShow || showCompletionEvidence) {
