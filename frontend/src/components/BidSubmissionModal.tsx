@@ -106,7 +106,7 @@ export default function BidSubmissionModal({
         setTimeout(() => {
           setShowSuccess(false);
           onSuccess();
-        }, 2500);
+        }, 3500);
       }
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || err.response?.data?.message || 'We encountered a small hiccup. Please try again.';
