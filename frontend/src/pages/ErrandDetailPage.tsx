@@ -88,12 +88,20 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     if (id && currentUser && currentUser.role === 'doer') {
       const fetchUserBid = async () => {
         try {
-          const response = await axios.get(`/api/bids?errandId=${id}&checkUserBid=true`);
-          if (response.data.userBidAmount) {
-            setUserBidAmount(response.data.userBidAmount);
+          const token = localStorage.getItem('token');
+          const response = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/check/${id}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          if (response.data.hasBid) {
+            setUserBidAmount(response.data.bidAmount);
+          } else {
+            setUserBidAmount(null);
           }
         } catch (err) {
-          // User doesn't have a bid, that's okay
+          console.error('Failed to check user bid:', err);
           setUserBidAmount(null);
         }
       };

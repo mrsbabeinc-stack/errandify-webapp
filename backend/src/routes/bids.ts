@@ -261,7 +261,8 @@ router.get('/task/:taskId', authMiddleware, async (req: AuthRequest, res: Respon
     // Get bids from database
     const bidsResult = await db.query(
       `SELECT b.id, b.errand_id as taskId, b.doer_id as doerId, u.display_name as doerName,
-              b.amount, b.note, b.status, b.created_at as createdAt, b.offer_id as offerId
+              u.alias as doerAlias, b.amount, b.note, b.status, b.created_at as createdAt,
+              b.offer_id as offerId, u.profile_image_url as doerAvatar
        FROM bids b
        JOIN users u ON b.doer_id = u.id
        WHERE b.errand_id = $1
@@ -615,6 +616,40 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
   } catch (error) {
     console.error('Get my bids error:', error);
     res.status(500).json({ error: 'Failed to fetch bids' });
+  }
+});
+
+// GET /api/bids/check/:errandId - Check if current user has a bid on this errand
+router.get('/check/:errandId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { errandId } = req.params;
+    const doerId = parseInt(req.userId || '0', 10);
+    const parsedErrandId = parseInt(errandId, 10);
+
+    const result = await db.query(
+      `SELECT id, amount, status FROM bids
+       WHERE errand_id = $1 AND doer_id = $2
+       LIMIT 1`,
+      [parsedErrandId, doerId]
+    );
+
+    if (result.rows.length > 0) {
+      const bid = result.rows[0];
+      return res.json({
+        success: true,
+        hasBid: true,
+        bidAmount: bid.amount,
+        bidStatus: bid.status,
+      });
+    }
+
+    res.json({
+      success: true,
+      hasBid: false,
+    });
+  } catch (error) {
+    console.error('[Bids] Error checking user bid:', error);
+    res.status(500).json({ error: 'Failed to check bid' });
   }
 });
 
