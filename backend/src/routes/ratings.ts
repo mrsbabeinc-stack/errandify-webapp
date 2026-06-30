@@ -6,7 +6,7 @@ import { awardEp, getRatingBonus } from '../services/gamificationService.js';
 
 const router = Router();
 
-// GET /api/ratings/check - Check if user has already rated an errand
+// GET /api/ratings/check - Check if user has already rated an errand (accepts database ID or formatted errand ID)
 router.get('/check', async (req, res) => {
   try {
     const { errandId, userId } = req.query;
@@ -15,9 +15,35 @@ router.get('/check', async (req, res) => {
       return res.status(400).json({ error: 'errandId and userId required' });
     }
 
+    // Resolve errand ID (accepts both database ID and formatted errand ID)
+    let parsedErrandId: number | null = null;
+    const errandIdStr = errandId as string;
+    if (/^\d+$/.test(errandIdStr)) {
+      // If numeric, use as database ID
+      parsedErrandId = parseInt(errandIdStr, 10);
+    } else {
+      // Otherwise, query by formatted errand ID
+      const errandResult = await db.query(
+        'SELECT id FROM errands WHERE errand_id = $1',
+        [errandIdStr]
+      );
+      if (errandResult.rows.length > 0) {
+        parsedErrandId = errandResult.rows[0].id;
+      }
+    }
+
+    if (!parsedErrandId) {
+      return res.json({
+        success: true,
+        data: {
+          hasRated: false
+        }
+      });
+    }
+
     const result = await db.query(
       'SELECT id FROM ratings WHERE errand_id = $1 AND rater_id = $2 LIMIT 1',
-      [parseInt(errandId as string), parseInt(userId as string)]
+      [parsedErrandId, parseInt(userId as string)]
     );
 
     res.json({
