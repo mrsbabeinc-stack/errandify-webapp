@@ -321,8 +321,8 @@ export default function MyOfferPage() {
                     </button>
                   )}
 
-                  {/* Show Chat if errand is in_progress, regardless of bid status */}
-                  {bid.errand?.status === 'in_progress' && (
+                  {/* Show Chat if errand is in_progress or pending review, regardless of bid status */}
+                  {(bid.errand?.status === 'in_progress' || bid.status === 'completed_unconfirmed') && (
                     <button
                       onClick={() => {
                         setSelectedErrandId(bid.errand_id);
