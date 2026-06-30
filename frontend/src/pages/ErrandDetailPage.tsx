@@ -922,20 +922,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 >
                   ✏️ Update Offer
                 </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    if (errand.isRecurring) {
-                      setShowSessionSelector(true);
-                    } else {
-                      setShowBidModal(true);
-                    }
-                  }}
-                  className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
-                >
-                  {errand.isRecurring ? 'Select Sessions' : 'Submit an Offer'}
-                </button>
-              )
+              ) : null
             ) : errand.status === 'open' && currentUser && currentUser.id === errand.askerId && !errand.acceptedBidId ? (
               <div className="flex gap-2 mt-2">
                 {!errand.bidCount ? (
