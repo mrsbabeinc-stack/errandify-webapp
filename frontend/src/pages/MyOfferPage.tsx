@@ -23,6 +23,7 @@ interface Bid {
     postal_code?: string;
     deadline?: string;
     description?: string;
+    formatted_id?: string;
   };
 }
 
@@ -303,8 +304,8 @@ export default function MyOfferPage() {
                       <h3 className="font-semibold text-errandify-brown text-sm">
                         {bid.errand?.title || 'Errand #' + bid.errand_id}
                       </h3>
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                        #{bid.errand_id}
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded font-mono">
+                        {bid.errand?.formatted_id || `ER${bid.errand_id}`}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
