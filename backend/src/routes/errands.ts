@@ -293,7 +293,9 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     console.log('[DEBUG] POST /api/errands called:', {
       userId: askerId,
       title,
+      description,
       category,
+      location,
       budget,
       deadline,
       postal_code,
@@ -394,6 +396,14 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       );
 
       const errand = errandResult.rows[0];
+
+      // Log all fields being stored
+      const allFieldsLog = await db.query(
+        'SELECT id, errand_id, title, description, location, postal_code, category, budget, deadline, status, is_recurring FROM errands WHERE id = $1',
+        [errand.id]
+      );
+      console.log('[DEBUG] ERRAND STORED IN DATABASE:', allFieldsLog.rows[0]);
+
       console.log('[DEBUG] Errand created successfully:', {
         id: errand.id,
         askerId: askerId,
