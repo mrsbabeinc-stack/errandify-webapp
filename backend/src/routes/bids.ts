@@ -500,11 +500,16 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Respons
 router.get('/user/:userId/confidence', async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req.params;
+    const parsedUserId = parseInt(userId, 10);
+
+    if (isNaN(parsedUserId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
 
     // Get user info
     const userResult = await db.query(
       'SELECT id, display_name FROM users WHERE id = $1',
-      [userId]
+      [parsedUserId]
     );
 
     if (userResult.rows.length === 0) {
@@ -524,7 +529,7 @@ router.get('/user/:userId/confidence', async (req: AuthRequest, res: Response) =
        LEFT JOIN errands e ON b.errand_id = e.id AND b.status = 'accepted'
        LEFT JOIN user_reviews ur ON e.doer_id = ur.reviewed_user_id
        WHERE b.doer_id = $1`,
-      [userId]
+      [parsedUserId]
     );
 
     const metrics = metricsResult.rows[0];
