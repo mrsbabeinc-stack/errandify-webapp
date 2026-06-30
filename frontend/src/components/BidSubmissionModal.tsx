@@ -30,6 +30,33 @@ export default function BidSubmissionModal({
   const [error, setError] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [successAmount, setSuccessAmount] = useState<string>('');
+  const [isLoadingNote, setIsLoadingNote] = useState(false);
+
+  // Load existing note when updating
+  React.useEffect(() => {
+    if (isUpdating && taskId) {
+      const loadExistingNote = async () => {
+        try {
+          setIsLoadingNote(true);
+          const token = localStorage.getItem('token');
+          const response = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/check/${taskId}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          if (response.data.hasBid && response.data.bidNote) {
+            setBidNote(response.data.bidNote);
+          }
+        } catch (err) {
+          console.error('Failed to load existing note:', err);
+        } finally {
+          setIsLoadingNote(false);
+        }
+      };
+      loadExistingNote();
+    }
+  }, [isUpdating, taskId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
