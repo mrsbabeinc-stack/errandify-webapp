@@ -570,8 +570,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 {capitalizeStatus(errand.status)}
               </span>
               {userBidAmount && (
-                <span className="text-xs bg-white text-errandify-orange px-1 py-0.5 rounded font-bold">
-                  ✓ Your offer submitted
+                <span className={`text-xs px-1 py-0.5 rounded font-bold ${
+                  bidStatus === 'accepted'
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-white text-errandify-orange'
+                }`}>
+                  {bidStatus === 'accepted' ? '✅ Offer Accepted' : '✓ Your offer submitted'}
                 </span>
               )}
             </div>
