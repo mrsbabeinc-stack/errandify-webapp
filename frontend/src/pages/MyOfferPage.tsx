@@ -141,30 +141,33 @@ export default function MyOfferPage() {
   // Get active job (confirmed or in_progress)
   const activeBid = bids.find(b => b.status === 'confirmed' || b.status === 'confirmed_awaiting_start' || b.status === 'in_progress');
 
-  // Define priority order for sorting (lower number = higher priority, shown first)
+  // Define priority order for sorting by ERRAND STATUS (lower number = higher priority, shown first)
   const priorityOrder: Record<string, number> = {
     'in_progress': 1,        // 🔄 Actively working - HIGHEST PRIORITY
     'confirmed_awaiting_start': 2,  // 🟢 Confirmed, ready to start
     'confirmed': 3,          // 🟢 Confirmed
-    'accepted': 4,           // ✅ Selected, awaiting confirmation
-    'pending': 5,            // ⏳ Bids submitted
-    'completed_unconfirmed': 6,  // ✔️ Work done, awaiting review
-    'completed_confirmed': 7,  // 🎉 Completed
-    'completed': 8,          // ✅ Rated & Closed - LOWEST PRIORITY
-    'rejected': 9,           // ❌ Rejected
-    'withdrawn': 10,         // ↩️ Withdrawn
+    'open': 4,               // 🔓 Open (bids submitted)
+    'completed_unconfirmed': 5,  // ✔️ Work done, awaiting review
+    'completed': 6,          // ✅ Rated & Closed
+    'rejected': 7,           // ❌ Rejected
+    'withdrawn': 8,          // ↩️ Withdrawn
   };
 
   const filteredBids = (filterStatus === 'all' ? bids : bids.filter(b => b.status === filterStatus))
     .sort((a, b) => {
-      const priorityA = priorityOrder[a.status] ?? 99;
-      const priorityB = priorityOrder[b.status] ?? 99;
+      // Sort by ERRAND STATUS, not bid status
+      const errandStatusA = a.errand?.status || 'unknown';
+      const errandStatusB = b.errand?.status || 'unknown';
+      const priorityA = priorityOrder[errandStatusA] ?? 99;
+      const priorityB = priorityOrder[errandStatusB] ?? 99;
       return priorityA - priorityB;
     });
 
   console.log('[MyOffer] filterStatus:', filterStatus);
   console.log('[MyOffer] filteredBids count:', filteredBids.length);
-  console.log('[MyOffer] filteredBids order:', filteredBids.map(b => ({ title: b.errand?.title, status: b.status })));
+  filteredBids.forEach((bid, idx) => {
+    console.log(`[MyOffer] Bid ${idx + 1}: "${bid.errand?.title}" - Bid Status: ${bid.status}, Errand Status: ${bid.errand?.status}`);
+  });
 
   if (loading) {
     return (
