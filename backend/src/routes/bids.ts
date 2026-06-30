@@ -623,7 +623,7 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
 
     // Get all bids for this doer with errand details
     const bidsResult = await db.query(
-      `SELECT b.*, e.title, e.budget, e.category, e.status as errand_status, e.location, e.postal_code, e.deadline, e.description, u.display_name as asker_display_name
+      `SELECT b.*, e.title, e.budget, e.category, e.status as errand_status, e.location, e.postal_code, e.deadline, e.description, e.formatted_id, u.display_name as asker_display_name
        FROM bids b
        JOIN errands e ON b.errand_id = e.id
        JOIN users u ON e.asker_id = u.id
@@ -652,6 +652,7 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
           postal_code: bid.postal_code,
           deadline: bid.deadline,
           description: bid.description,
+          formatted_id: bid.formatted_id,
         },
       })),
     });
