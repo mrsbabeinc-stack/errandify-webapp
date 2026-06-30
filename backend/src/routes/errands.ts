@@ -938,8 +938,8 @@ router.post('/:id/start', authMiddleware, async (req: AuthRequest, res: Response
       return res.status(404).json({ error: 'Errand not found' });
     }
 
-    if (errandResult.rows[0].status !== 'confirmed_awaiting_start') {
-      return res.status(400).json({ error: 'Can only start job from awaiting_start status' });
+    if (errandResult.rows[0].status !== 'confirmed') {
+      return res.status(400).json({ error: 'Can only start job from confirmed status' });
     }
 
     // Update status and set start time
