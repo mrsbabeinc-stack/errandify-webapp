@@ -774,4 +774,70 @@ router.delete('/certificates/:title', authMiddleware, async (req: AuthRequest, r
   }
 });
 
+// POST /api/users/favorites/:userId - Add user to favorites
+router.post('/favorites/:userId', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const currentUserId = parseInt(req.userId || '0', 10);
+    const favoriteUserId = parseInt(req.params.userId, 10);
+
+    // Prevent favoriting yourself
+    if (currentUserId === favoriteUserId) {
+      return res.status(400).json({ error: 'You cannot favorite yourself.' });
+    }
+
+    // Check if already favorited
+    const existing = await db.query(
+      `SELECT id FROM user_favorites
+       WHERE user_id = $1 AND favorite_user_id = $2`,
+      [currentUserId, favoriteUserId]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: 'Already favorited.' });
+    }
+
+    // Add to favorites
+    await db.query(
+      `INSERT INTO user_favorites (user_id, favorite_user_id, added_at)
+       VALUES ($1, $2, NOW())`,
+      [currentUserId, favoriteUserId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Added to favorites.',
+    });
+  } catch (error: any) {
+    console.error('Add favorite error:', error);
+    res.status(500).json({ error: 'Failed to add favorite.' });
+  }
+});
+
+// DELETE /api/users/favorites/:userId - Remove user from favorites
+router.delete('/favorites/:userId', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const currentUserId = parseInt(req.userId || '0', 10);
+    const favoriteUserId = parseInt(req.params.userId, 10);
+
+    // Remove from favorites
+    const result = await db.query(
+      `DELETE FROM user_favorites
+       WHERE user_id = $1 AND favorite_user_id = $2`,
+      [currentUserId, favoriteUserId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Not in favorites.' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Removed from favorites.',
+    });
+  } catch (error: any) {
+    console.error('Remove favorite error:', error);
+    res.status(500).json({ error: 'Failed to remove favorite.' });
+  }
+});
+
 export default router;
