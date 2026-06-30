@@ -30,14 +30,12 @@ export default function BidSubmissionModal({
   const [error, setError] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [successAmount, setSuccessAmount] = useState<string>('');
-  const [isLoadingNote, setIsLoadingNote] = useState(false);
 
   // Load existing note when updating
   useEffect(() => {
     if (isUpdating && taskId) {
       const loadExistingNote = async () => {
         try {
-          setIsLoadingNote(true);
           const token = localStorage.getItem('token');
           const response = await axios.get(
             `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/check/${taskId}`,
@@ -50,8 +48,6 @@ export default function BidSubmissionModal({
           }
         } catch (err) {
           console.error('Failed to load existing note:', err);
-        } finally {
-          setIsLoadingNote(false);
         }
       };
       loadExistingNote();
@@ -231,19 +227,25 @@ export default function BidSubmissionModal({
         buttonLabel="Got it"
       />
 
-      {/* Success Modal - Happy & Warm */}
+      {/* Success Modal - Fun & Engaging */}
       {showSuccess && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-sm w-full p-6 text-center shadow-md border-l-4 border-l-emerald-500">
-            <h2 className="text-lg font-semibold text-slate-900 mb-3">
-              {isUpdating ? 'Offer updated' : 'Offer submitted'}
+          <div className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl max-w-sm w-full p-8 text-center shadow-2xl border-l-4 border-l-emerald-500 transform animate-bounce">
+            <div className="text-5xl mb-4">
+              {isUpdating ? '💚' : '🎉'}
+            </div>
+            <h2 className="text-2xl font-bold text-emerald-600 mb-2">
+              {isUpdating ? 'Offer updated' : 'Offer in'}
             </h2>
-            <p className="text-slate-700 text-sm">
-              {isUpdating
-                ? `Updated to SGD ${successAmount}`
-                : `SGD ${successAmount} offer is in`}
+            <p className="text-lg font-semibold text-slate-900 mb-4">
+              SGD {successAmount}
             </p>
-            <p className="text-slate-600 text-xs mt-2">
+            <p className="text-slate-700 text-base mb-4 leading-relaxed">
+              {isUpdating
+                ? 'Your neighbour will see the update right away'
+                : 'Your neighbour will see this right away. Good luck getting picked'}
+            </p>
+            <p className="text-emerald-600 font-medium text-sm">
               We have got you, neighbour
             </p>
           </div>
