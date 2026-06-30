@@ -212,8 +212,6 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
       if (response.data.success && response.data.data) {
         setErrand(response.data.data);
-        console.log('[ErrandDetail] Errand loaded:', response.data.data);
-        console.log('[ErrandDetail] doerId from API:', response.data.data.doerId);
 
         // Auto-load completion evidence if errand is in any completed state
         if (response.data.data.status && response.data.data.status.includes('completed')) {
