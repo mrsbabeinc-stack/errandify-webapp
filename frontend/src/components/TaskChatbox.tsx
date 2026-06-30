@@ -786,7 +786,10 @@ Your message doesn't meet our community standards. Please keep messages:
 
               {/* Action Button */}
               <button
-                onClick={() => navigate(`/errand/${taskId}`)}
+                onClick={() => {
+                  console.log('[TaskChatbox] Navigate to errand:', errandFormattedId || taskId);
+                  navigate(`/errand/${errandFormattedId || taskId}`);
+                }}
                 className="mt-6 w-full py-2 bg-errandify-orange text-white rounded-lg text-sm font-semibold hover:bg-opacity-90 transition-colors"
               >
                 📌 View & Update Status
