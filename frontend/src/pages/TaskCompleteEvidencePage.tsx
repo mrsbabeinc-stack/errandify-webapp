@@ -139,13 +139,13 @@ export default function TaskCompleteEvidencePage() {
 
       // Create a warm, engaging toast notification
       const toastDiv = document.createElement('div');
-      toastDiv.className = 'fixed top-4 left-4 right-4 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600 text-white p-4 rounded-lg shadow-2xl z-50 font-bold text-center animate-bounce';
+      toastDiv.className = 'fixed top-4 left-4 right-4 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600 text-white p-5 rounded-lg shadow-2xl z-50 text-center animate-bounce';
       toastDiv.innerHTML = `
-        <p className="text-base">🎉 Sempurna! Your work is submitted!</p>
-        <p style="font-size: 0.9rem; opacity: 0.95; margin-top: 0.5rem; font-weight: 500;">
-          ${task.asker?.display_name || 'The asker'} will review soon. You're doing great! 👏
+        <p style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;">Wonderful! You've shared it all</p>
+        <p style="font-size: 0.95rem; opacity: 0.95; margin-bottom: 0.75rem; font-weight: 500; line-height: 1.5;">
+          ${task.asker?.display_name || 'The person'} will take a look at everything soon. Thank you for giving your best - your effort really makes a difference!
         </p>
-        <p style="font-size: 0.8rem; opacity: 0.9; margin-top: 0.3rem;">💰 Payment coming in 48 hours</p>
+        <p style="font-size: 0.9rem; opacity: 0.9; font-weight: 500;">Payment will arrive in 48 hours. You've earned it, friend!</p>
       `;
       document.body.appendChild(toastDiv);
 
