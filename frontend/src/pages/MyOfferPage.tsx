@@ -141,7 +141,25 @@ export default function MyOfferPage() {
   // Get active job (confirmed or in_progress)
   const activeBid = bids.find(b => b.status === 'confirmed' || b.status === 'confirmed_awaiting_start' || b.status === 'in_progress');
 
-  const filteredBids = filterStatus === 'all' ? bids : bids.filter(b => b.status === filterStatus);
+  // Define priority order for sorting
+  const priorityOrder: Record<string, number> = {
+    'in_progress': 1,        // 🔄 Actively working - highest priority
+    'confirmed_awaiting_start': 2,  // 🟢 Confirmed, ready to start
+    'confirmed': 3,          // 🟢 Confirmed
+    'accepted': 4,           // ✅ Selected, awaiting confirmation
+    'pending': 5,            // ⏳ Bids submitted
+    'completed_unconfirmed': 6,  // ✔️ Work done, awaiting review
+    'completed': 7,          // ✅ Rated & Closed
+    'rejected': 8,           // ❌ Rejected
+    'withdrawn': 9,          // ↩️ Withdrawn
+  };
+
+  const filteredBids = (filterStatus === 'all' ? bids : bids.filter(b => b.status === filterStatus))
+    .sort((a, b) => {
+      const priorityA = priorityOrder[a.status] ?? 99;
+      const priorityB = priorityOrder[b.status] ?? 99;
+      return priorityA - priorityB;
+    });
 
   if (loading) {
     return (
