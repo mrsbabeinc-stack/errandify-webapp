@@ -81,15 +81,17 @@ export default function NotificationsPage() {
             errandId: n.related_errand_id,
             offerId: n.related_bid_id,
             actions: [
-              n.related_errand_id ? {
-                label: '📋 Errand Details',
-                url: `/errand/${n.related_errand_id}`,
-                type: 'errand'
-              } : null,
+              // For message notifications, show Chat button
               n.type === 'message_received' && n.related_errand_id ? {
                 label: '💬 Chat',
                 url: `/my-chat?errandId=${n.related_errand_id}`,
                 type: 'chat'
+              } : null,
+              // For new offer notifications, show Errand Details
+              n.type === 'bid_placed' && n.related_errand_id ? {
+                label: '📋 View Errand',
+                url: `/errand/${n.related_errand_id}`,
+                type: 'errand'
               } : null,
             ].filter(Boolean),
           };
@@ -253,11 +255,15 @@ export default function NotificationsPage() {
                   if (!notification.read) {
                     handleRead(notification.id);
                   }
+                  // Navigate to errand details when clicking notification
+                  if (notification.errandId) {
+                    navigate(`/errand/${notification.errandId}`);
+                  }
                 }}
-                className={`p-2 rounded border text-xs transition ${
+                className={`p-2 rounded border text-xs transition cursor-pointer hover:shadow-md ${
                   notification.read
-                    ? 'bg-white border-gray-200'
-                    : 'bg-orange-50 border-orange-300'
+                    ? 'bg-white border-gray-200 hover:bg-gray-50'
+                    : 'bg-orange-50 border-orange-300 hover:bg-orange-100'
                 }`}
               >
                 <div className="flex gap-1.5 items-start">
