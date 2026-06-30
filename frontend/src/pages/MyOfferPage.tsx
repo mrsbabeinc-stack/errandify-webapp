@@ -321,7 +321,21 @@ export default function MyOfferPage() {
                     </button>
                   )}
 
-                  {bid.status === 'accepted' && (
+                  {/* Show Chat if errand is in_progress, regardless of bid status */}
+                  {bid.errand?.status === 'in_progress' && (
+                    <button
+                      onClick={() => {
+                        setSelectedErrandId(bid.errand_id);
+                        setShowChatbox(true);
+                      }}
+                      className="flex-1 px-2 py-1 border-2 border-blue-400 text-blue-600 rounded font-semibold text-xs hover:bg-blue-50"
+                    >
+                      💬 Chat
+                    </button>
+                  )}
+
+                  {/* Show Confirm only if bid is accepted AND errand is still open */}
+                  {bid.status === 'accepted' && bid.errand?.status === 'open' && (
                     <button
                       onClick={() => handleConfirmBid(bid.id)}
                       className="flex-1 px-2 py-1 bg-green-600 text-white rounded font-semibold text-xs hover:bg-green-700"
@@ -330,12 +344,13 @@ export default function MyOfferPage() {
                     </button>
                   )}
 
-                  {bid.status === 'in_progress' && (
+                  {/* Show Start if errand is confirmed */}
+                  {(bid.errand?.status === 'confirmed' || bid.errand?.status === 'confirmed_awaiting_start') && (
                     <button
-                      onClick={() => navigate(`/task/${bid.errand_id}/complete`)}
-                      className="flex-1 px-2 py-1 bg-blue-600 text-white rounded font-semibold text-xs hover:bg-blue-700"
+                      onClick={() => navigate(`/errand/${bid.errand_id}`)}
+                      className="flex-1 px-2 py-1 bg-emerald-600 text-white rounded font-semibold text-xs hover:bg-emerald-700"
                     >
-                      ✓ Mark Complete
+                      ▶️ Start
                     </button>
                   )}
 

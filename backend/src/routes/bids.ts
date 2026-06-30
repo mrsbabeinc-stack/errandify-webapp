@@ -724,13 +724,14 @@ router.put('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respons
   try {
     const bidId = parseInt(req.params.id, 10);
     const doerId = parseInt(req.userId || '0', 10);
-    console.log('[Bids] PUT /api/bids/:id/confirm called:', { bidId, doerId });
+    console.log('[Bids] PUT /api/bids/:id/confirm START:', { bidId, doerId });
 
     // Get the bid
     const bidResult = await db.query(
       'SELECT id, doer_id, errand_id, status FROM bids WHERE id = $1',
       [bidId]
     );
+    console.log('[Bids] Bid found:', bidResult.rows.length > 0 ? bidResult.rows[0] : 'NOT FOUND');
 
     if (bidResult.rows.length === 0) {
       return res.status(404).json({ error: 'This offer is no longer around. Looks like things moved on.' });
@@ -740,19 +741,23 @@ router.put('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respons
 
     // Verify the bid belongs to the current doer
     if (bid.doer_id !== doerId) {
+      console.log('[Bids] Auth check failed:', { bidDoerId: bid.doer_id, currentDoerId: doerId });
       return res.status(403).json({ error: 'Not authorized to confirm this bid' });
     }
 
     // Check if bid is in accepted status
     if (bid.status !== 'accepted') {
+      console.log('[Bids] Status check failed. Expected accepted, got:', bid.status);
       return res.status(400).json({ error: 'Bid must be in accepted status to confirm' });
     }
 
+    console.log('[Bids] Updating bid to confirmed:', { bidId });
     // Update bid status to confirmed
     await db.query(
       'UPDATE bids SET status = $1 WHERE id = $2',
       ['confirmed', bidId]
     );
+    console.log('[Bids] Bid updated to confirmed');
 
     // Close all other bids for this errand (set status to 'closed')
     await db.query(
