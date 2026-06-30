@@ -365,12 +365,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       // Show stage-specific success message
       const stage = response.data.stage;
       const stageMessages = {
-        open: '✓ Errand cancelled. All bidders have been notified. No doer was selected yet.',
+        open: '✓ Errand cancelled. All doers with offers have been notified. No doer was selected yet.',
         confirmed: '⚠️ Errand cancelled after confirmation. The confirmed doer has been notified.',
         in_progress: '⚠️ Errand cancelled while in progress. A dispute has been initiated and all parties notified.',
       };
 
-      const successMsg = stageMessages[stage] || '✓ Errand cancelled. All bids and offers have been cancelled.';
+      const successMsg = stageMessages[stage] || '✓ Errand cancelled. All offers have been cancelled.';
       alert(successMsg);
       navigate('/errands');
     } catch (error: any) {

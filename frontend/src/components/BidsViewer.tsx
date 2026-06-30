@@ -386,7 +386,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
 
               {bid.note && (
                 <div className="mb-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
-                  <p className="text-xs font-semibold text-blue-900 mb-1">💬 Why they're a good fit:</p>
+                  <p className="text-xs font-semibold text-blue-900 mb-1">💬 Why I'm a good fit:</p>
                   <p className="text-sm text-gray-700">{bid.note}</p>
                 </div>
               )}
