@@ -130,6 +130,9 @@ export default function TaskChatbox({
       // Set errand details from API (includes full postal code)
       if (response.data.data.errandDetails) {
         const apiDetails = response.data.data.errandDetails;
+        console.log('[TaskChatbox] API Errand Details:', apiDetails);
+        console.log('[TaskChatbox] Location:', apiDetails.location);
+        console.log('[TaskChatbox] Postal Code:', apiDetails.postal_code);
         setErrandFormattedId(apiDetails.formattedId || `ER${taskId}`);
         setApiErrandDetails(apiDetails);
       }
@@ -747,12 +750,15 @@ Your message doesn't meet our community standards. Please keep messages:
                     {(() => {
                       const location = apiErrandDetails?.location || errandDetails?.location || 'Not specified';
                       const postalCode = apiErrandDetails?.postal_code || errandDetails?.postal_code;
+                      console.log('[TaskChatbox] Display - location:', location, 'postal:', postalCode, 'apiDetails:', apiErrandDetails);
 
                       // If we have postal code, format with S prefix
                       if (postalCode) {
                         // Remove any existing postal code from location to avoid duplication
                         const cleanLocation = location.replace(/\s*S?\d{6}\s*$/, '').trim();
-                        return `${cleanLocation} S${postalCode}`;
+                        const result = `${cleanLocation} S${postalCode}`;
+                        console.log('[TaskChatbox] Display - result:', result);
+                        return result;
                       }
 
                       // Try to extract postal code from location string
