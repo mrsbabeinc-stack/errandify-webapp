@@ -737,22 +737,51 @@ export default function MyAccountPage() {
     console.log('✅ Saved to localStorage:', localStorage.getItem('errandify_saved_groups'));
   }, [savedGroups, isInitialized]);
 
-  // Load trusted users from localStorage on mount
+  // Load trusted users (favorites) from API on mount
   useEffect(() => {
-    const loadedTrusted = localStorage.getItem('errandify_trusted_users');
-    if (loadedTrusted) {
+    const loadTrustedUsers = async () => {
       try {
-        setTrustedUsers(JSON.parse(loadedTrusted));
-      } catch (error) {
-        console.error('Failed to load trusted users:', error);
-      }
-    }
-  }, []);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/favorites`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
-  // Save trusted users to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('errandify_trusted_users', JSON.stringify(trustedUsers));
-  }, [trustedUsers]);
+        if (response.data.success && response.data.data) {
+          // Fetch user details for each favorite user ID
+          const favoriteIds = response.data.data;
+          const trustedUsersData = await Promise.all(
+            favoriteIds.map(async (userId: number) => {
+              try {
+                const userRes = await axios.get(
+                  `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${userId}/public-profile`,
+                  { headers: { Authorization: `Bearer ${token}` } }
+                );
+                const user = userRes.data.data;
+                return {
+                  id: user.id?.toString(),
+                  name: user.displayName || user.display_name || 'Unknown',
+                  alias: user.alias,
+                  avatar: user.profileImage || user.profile_image_url,
+                  markedDate: new Date().toLocaleDateString(),
+                };
+              } catch (err) {
+                console.error('Failed to fetch user details:', err);
+                return null;
+              }
+            })
+          );
+          setTrustedUsers(trustedUsersData.filter(Boolean));
+        }
+      } catch (error) {
+        console.error('Failed to load favorite users:', error);
+      }
+    };
+
+    loadTrustedUsers();
+  }, []);
 
   // Save balance to localStorage whenever it changes
   useEffect(() => {
