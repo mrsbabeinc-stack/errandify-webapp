@@ -25,6 +25,7 @@ interface ErrandDetail {
   postal_code?: string;
   postalCode?: string;
   askerId?: number;
+  doerId?: number;
   askerName?: string;
   asker?: { name: string; mobile: string; display_name?: string };
   doerName?: string;
@@ -197,7 +198,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
       if (response.data.success && response.data.data) {
         setErrand(response.data.data);
-        console.log('[ErrandDetail] Errand loaded, status:', response.data.data.status);
+        console.log('[ErrandDetail] Errand loaded:', {
+          status: response.data.data.status,
+          askerId: response.data.data.askerId,
+          doerId: response.data.data.doerId,
+          acceptedBidId: response.data.data.acceptedBidId,
+          confirmed_doer_id: response.data.data.confirmed_doer_id
+        });
 
         // Auto-load completion evidence if errand is in any completed state
         if (response.data.data.status && response.data.data.status.includes('completed')) {
