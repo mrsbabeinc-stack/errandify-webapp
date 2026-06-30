@@ -300,18 +300,6 @@ export default function MyOfferPage() {
                     View Details
                   </button>
 
-                  {(bid.status === 'confirmed' || bid.status === 'confirmed_awaiting_start' || bid.status === 'in_progress') && (
-                    <button
-                      onClick={() => {
-                        setSelectedErrandId(bid.errand_id);
-                        setShowChatbox(true);
-                      }}
-                      className="flex-1 px-2 py-1 border-2 border-blue-400 text-blue-600 rounded font-semibold text-xs hover:bg-blue-50 min-w-16"
-                    >
-                      💬 Chat
-                    </button>
-                  )}
-
                   {bid.status === 'pending' && (
                     <button
                       onClick={() => navigate(`/errand/${bid.errand_id}`)}
