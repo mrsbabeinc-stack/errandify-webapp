@@ -60,7 +60,9 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setBids(response.data.data);
+      const bidsData = response.data.data;
+      console.log('[BidsViewer] Fetched bids:', bidsData);
+      setBids(bidsData);
       setError('');
 
       // Fetch favorites list
@@ -77,7 +79,6 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
       }
 
       // Fetch confidence scores for each doer
-      const bidsData = response.data.data;
       for (const bid of bidsData) {
         try {
           const confidenceRes = await axios.get(

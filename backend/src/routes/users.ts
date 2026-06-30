@@ -602,18 +602,19 @@ router.get('/favorites', authMiddleware, async (req: AuthRequest, res) => {
     const currentUserId = parseInt(req.userId || '0', 10);
 
     const result = await db.query(
-      `SELECT u.id, u.display_name, u.profile_image_url, u.location, uf.added_at
-       FROM users u
-       INNER JOIN user_favorites uf ON u.id = uf.favorite_user_id
-       WHERE uf.user_id = $1
-       ORDER BY uf.added_at DESC`,
+      `SELECT favorite_user_id
+       FROM user_favorites
+       WHERE user_id = $1
+       ORDER BY added_at DESC`,
       [currentUserId]
     );
 
+    // Return just the IDs for quick lookup
+    const favoriteIds = result.rows.map(row => row.favorite_user_id);
+
     res.json({
       success: true,
-      data: result.rows,
-      count: result.rows.length,
+      data: favoriteIds,
     });
   } catch (error: any) {
     console.error('Get favorites endpoint error:', error);
