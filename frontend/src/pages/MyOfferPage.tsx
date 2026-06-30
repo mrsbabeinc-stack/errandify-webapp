@@ -357,9 +357,9 @@ export default function MyOfferPage() {
                   {bid.status === 'completed_unconfirmed' && (
                     <button
                       onClick={() => navigate(`/errand/${bid.errand_id}`)}
-                      className="flex-1 px-2 py-1 bg-amber-400 text-white rounded font-semibold text-xs hover:bg-amber-500 transition-colors"
+                      className="flex-1 px-2 py-1 bg-gradient-to-r from-amber-400 to-yellow-500 text-white rounded font-semibold text-xs hover:from-amber-500 hover:to-yellow-600 hover:shadow-md transition-all transform hover:scale-105"
                     >
-                      ⭐ Rate to Earn +5 EP
+                      ⭐ Show Some Love! +5 EP
                     </button>
                   )}
                 </div>

@@ -137,21 +137,24 @@ export default function TaskCompleteEvidencePage() {
       // Show success message and redirect
       setError(''); // Clear any errors
 
-      // Display success toast and redirect
-      const successMsg = '🎉 Great job! Your work has been submitted.\n\nThe asker will review your completion and confirm soon.';
-
-      // Create a toast notification instead of alert
+      // Create a warm, engaging toast notification
       const toastDiv = document.createElement('div');
-      toastDiv.className = 'fixed top-4 left-4 right-4 bg-gradient-to-r from-green-400 to-emerald-500 text-white p-4 rounded-lg shadow-lg z-50 font-bold text-center animate-bounce';
-      toastDiv.innerHTML = '<p>✨ Work submitted! 🎉</p><p style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.5rem;">Payment releases after 48 hours if approved</p>';
+      toastDiv.className = 'fixed top-4 left-4 right-4 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600 text-white p-4 rounded-lg shadow-2xl z-50 font-bold text-center animate-bounce';
+      toastDiv.innerHTML = `
+        <p className="text-base">🎉 Sempurna! Your work is submitted!</p>
+        <p style="font-size: 0.9rem; opacity: 0.95; margin-top: 0.5rem; font-weight: 500;">
+          ${task.asker?.display_name || 'The asker'} will review soon. You're doing great! 👏
+        </p>
+        <p style="font-size: 0.8rem; opacity: 0.9; margin-top: 0.3rem;">💰 Payment coming in 48 hours</p>
+      `;
       document.body.appendChild(toastDiv);
 
-      // Auto-close toast after 5 seconds with fade-out
+      // Auto-close toast after 6 seconds with fade-out
       setTimeout(() => {
         toastDiv.style.transition = 'opacity 0.5s ease-out';
         toastDiv.style.opacity = '0';
         setTimeout(() => toastDiv.remove(), 500);
-      }, 5000);
+      }, 6000);
 
       // Redirect after 5 seconds
       setTimeout(() => {
@@ -208,8 +211,9 @@ export default function TaskCompleteEvidencePage() {
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Header Section - Compact */}
           <div className="bg-gradient-to-r from-green-400 via-emerald-500 to-teal-600 text-white p-3">
-            <h1 className="text-lg font-bold mb-1">✨ Show Your Work!</h1>
-            <p className="text-xs opacity-95">{task.title}</p>
+            <h1 className="text-lg font-bold mb-1">🎉 Great Job! Share Your Work</h1>
+            <p className="text-xs opacity-95">Let's show {task.asker?.display_name || 'them'} what you've done!</p>
+            <p className="text-xs opacity-85 mt-1 font-semibold">{task.title}</p>
           </div>
 
           {/* Content */}
@@ -275,11 +279,11 @@ export default function TaskCompleteEvidencePage() {
 
             {/* Completion Notes */}
             <div>
-              <h3 className="font-semibold text-errandify-brown mb-1 text-sm">📝 Notes</h3>
+              <h3 className="font-semibold text-errandify-brown mb-1 text-sm">📝 Share the Details</h3>
               <textarea
                 value={completionNotes}
                 onChange={(e) => setCompletionNotes(e.target.value)}
-                placeholder="What did you complete?"
+                placeholder="Tell them what you did and how it went! They'd love to know 😊"
                 rows={3}
                 className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange focus:border-transparent text-xs"
               />
@@ -303,21 +307,24 @@ export default function TaskCompleteEvidencePage() {
             <button
               onClick={handleSubmitCompletion}
               disabled={submitting}
-              className={`w-full py-3 rounded-lg font-bold text-white transition-all shadow-lg active:scale-95 ${
+              className={`w-full py-3 rounded-lg font-bold text-white transition-all shadow-lg active:scale-95 text-base ${
                 submitting
                   ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-xl'
+                  : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-xl hover:scale-105'
               }`}
             >
-              {submitting ? (uploadProgress > 0 ? `⏳ ${uploadProgress}%` : '⏳ Submitting...') : '🎉 Submit'}
+              {submitting ? (uploadProgress > 0 ? `⏳ ${uploadProgress}%` : '⏳ Submitting...') : '✨ Submit & Get Paid'}
             </button>
 
-            {/* Info - Compact Timeline */}
-            <div className="bg-gradient-to-r from-blue-100 to-cyan-100 border-2 border-blue-300 rounded-lg p-3">
-              <p className="text-xs font-semibold text-blue-900 mb-1">💡 Payment Timeline</p>
-              <p className="text-xs text-blue-800 leading-relaxed">
-                ✓ Submit now → 📋 Asker reviews (48h) → 💰 Auto payment → 🏦 Your account
-              </p>
+            {/* Info - Warm Timeline */}
+            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border-2 border-emerald-300 rounded-lg p-3">
+              <p className="text-xs font-semibold text-emerald-900 mb-2">🎊 What Happens Next</p>
+              <div className="text-xs text-emerald-800 space-y-1.5 leading-relaxed">
+                <p>✅ <span className="font-semibold">You submit</span> your amazing work</p>
+                <p>👀 <span className="font-semibold">Asker reviews</span> within 48 hours</p>
+                <p>⭐ <span className="font-semibold">Rate each other</span> & earn +5 bonus points</p>
+                <p>💰 <span className="font-semibold">Payment settled</span> to your account</p>
+              </div>
             </div>
           </div>
         </div>
