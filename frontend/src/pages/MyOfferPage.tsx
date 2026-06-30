@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import TaskChatbox from '../components/TaskChatbox';
+import { getSocket } from '../utils/socketClient';
 
 interface Bid {
   id: number;
@@ -38,7 +39,22 @@ export default function MyOfferPage() {
     fetchMyBids();
     // Poll for updates every 3 seconds
     const interval = setInterval(fetchMyBids, 3000);
-    return () => clearInterval(interval);
+
+    // Listen for real-time bid confirmation events
+    const socket = getSocket();
+    if (socket) {
+      socket.on('bid_confirmed', () => {
+        console.log('[MyOfferPage] Received bid_confirmed event, refreshing...');
+        fetchMyBids();
+      });
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (socket) {
+        socket.off('bid_confirmed');
+      }
+    };
   }, []);
 
   const fetchMyBids = async () => {
