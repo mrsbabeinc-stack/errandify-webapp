@@ -40,6 +40,27 @@ function generateErrandId(category: string): string {
   return `ER${year}${categoryCode}-${code}`;
 }
 
+// Resolve errand ID - accepts either database ID (numeric) or formatted errand ID (ER...)
+// Returns the database ID
+async function resolveErrandId(idParam: string): Promise<number | null> {
+  // If it's a number, assume it's the database ID
+  if (/^\d+$/.test(idParam)) {
+    return parseInt(idParam, 10);
+  }
+
+  // Otherwise, query by formatted errand ID
+  try {
+    const result = await db.query(
+      'SELECT id FROM errands WHERE errand_id = $1',
+      [idParam]
+    );
+    return result.rows.length > 0 ? result.rows[0].id : null;
+  } catch (error) {
+    console.error('[Errands] Error resolving errand ID:', error);
+    return null;
+  }
+}
+
 // Get all errands (with filters)
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -197,12 +218,13 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Only handle numeric IDs
-    if (!/^\d+$/.test(id)) {
-      return res.status(404).json({ error: 'Not found' });
+    // Resolve errand ID (accepts both database ID and formatted errand ID)
+    const errandDatabaseId = await resolveErrandId(id);
+    if (!errandDatabaseId) {
+      return res.status(404).json({ error: 'Errand not found' });
     }
 
-    const result = await db.query('SELECT * FROM errands WHERE id = $1', [id]);
+    const result = await db.query('SELECT * FROM errands WHERE id = $1', [errandDatabaseId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Errand not found' });
@@ -924,14 +946,20 @@ router.post('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respon
   }
 });
 
-// POST /api/errands/:id/start - Doer starts job
+// POST /api/errands/:id/start - Doer starts job (accepts database ID or errand ID)
 router.post('/:id/start', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
+    // Resolve errand ID
+    const errandDatabaseId = await resolveErrandId(id);
+    if (!errandDatabaseId) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
     const errandResult = await db.query(
       'SELECT id, status FROM errands WHERE id = $1',
-      [id]
+      [errandDatabaseId]
     );
 
     if (errandResult.rows.length === 0) {
@@ -945,13 +973,13 @@ router.post('/:id/start', authMiddleware, async (req: AuthRequest, res: Response
     // Update status and set start time
     await db.query(
       'UPDATE errands SET status = $1, job_started_at = NOW() WHERE id = $2',
-      ['in_progress', id]
+      ['in_progress', errandDatabaseId]
     );
 
     // Log activity: Job started
     const doerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [req.userId]);
     const doerName = doerResult.rows[0]?.display_name || 'Unknown User';
-    await activityLogService.logStarted(id, doerName, parseInt(req.userId || '0', 10));
+    await activityLogService.logStarted(errandDatabaseId, doerName, parseInt(req.userId || '0', 10));
 
     res.json({
       success: true,
