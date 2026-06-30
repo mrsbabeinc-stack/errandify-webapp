@@ -814,15 +814,20 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     Confirm to lock in the job, then start when ready
                   </p>
                   <button
+                    disabled={!bidId}
                     onClick={async () => {
-                      if (!bidId) return;
+                      if (!bidId) {
+                        alert('Unable to confirm - bid ID not found. Please refresh the page.');
+                        return;
+                      }
                       try {
                         const token = localStorage.getItem('token');
-                        await axios.put(
+                        const response = await axios.put(
                           `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${bidId}/confirm`,
                           {},
                           { headers: { Authorization: `Bearer ${token}` } }
                         );
+                        console.log('[ErrandDetailPage] Bid confirmed:', response.data);
                         // Refresh errand data and bid status to show updated state
                         await fetchErrandDetail();
                         // Refresh bid status to update button state
@@ -841,11 +846,16 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                             console.error('Failed to refresh bid status:', bidErr);
                           }
                         }
-                      } catch (err) {
-                        console.error('Failed to confirm offer:', err);
+                      } catch (err: any) {
+                        console.error('[ErrandDetailPage] Failed to confirm offer:', err);
+                        alert(err.response?.data?.error || 'Failed to confirm offer. Please try again.');
                       }
                     }}
-                    className="w-full bg-emerald-500 text-white py-3 rounded-lg font-bold hover:bg-emerald-600 transition-colors text-base"
+                    className={`w-full py-3 rounded-lg font-bold transition-colors text-base ${
+                      bidId
+                        ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
                   >
                     ✅ Confirm Errand
                   </button>
