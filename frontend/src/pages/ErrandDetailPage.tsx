@@ -179,9 +179,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
       if (response.data.success && response.data.data) {
         setErrand(response.data.data);
+        console.log('[ErrandDetail] Errand loaded, status:', response.data.data.status);
 
-        // Auto-load completion evidence if errand is completed
-        if (response.data.data.status === 'completed') {
+        // Auto-load completion evidence if errand is in any completed state
+        if (response.data.data.status && response.data.data.status.includes('completed')) {
+          console.log('[ErrandDetail] Status includes completed, loading evidence...');
           await loadCompletionEvidence(id);
         }
 
