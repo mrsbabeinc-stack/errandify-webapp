@@ -400,9 +400,6 @@ Your message doesn't meet our community standards. Please keep messages:
         <div className="bg-errandify-brown text-white p-3 flex items-start justify-between gap-2">
           <div className="flex-1">
             <h3 className="font-bold text-sm">💬 {taskTitle}</h3>
-            <p className="text-xs text-orange-100">
-              👥 {currentUserId === askerId ? `Chatting with: ${doerAlias}` : `Chatting with: ${askerAlias}`} • ID: {errandFormattedId}
-            </p>
           </div>
           <button
             onClick={onClose}
