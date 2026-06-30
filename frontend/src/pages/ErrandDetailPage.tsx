@@ -121,17 +121,23 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   // Load completion evidence for an errand
   const loadCompletionEvidence = async (errandId?: string | number) => {
     const targetId = errandId || id;
+    console.log('[ErrandDetail] loadCompletionEvidence called with targetId:', targetId);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${targetId}/submissions`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${targetId}/submissions`;
+      console.log('[ErrandDetail] Fetching from:', url);
+      const response = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
 
+      console.log('[ErrandDetail] Response:', response.data);
       if (response.data.success && response.data.data) {
         const submissions = response.data.data.submissions || [];
+        console.log('[ErrandDetail] Found submissions:', submissions.length);
         const latestSubmission = submissions[submissions.length - 1];
         if (latestSubmission) {
+          console.log('[ErrandDetail] Setting completion data:', {
+            notes: latestSubmission.completion_notes,
+            files: latestSubmission.files?.length
+          });
           setCompletionNotes(latestSubmission.completion_notes || '');
           setCompletionPhotos(latestSubmission.files || []);
         }
@@ -146,7 +152,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         }
       }
     } catch (err: any) {
-      console.error('Failed to load completion evidence:', err);
+      console.error('[ErrandDetail] Failed to load completion evidence:', err?.response?.data || err.message);
     }
   };
 
