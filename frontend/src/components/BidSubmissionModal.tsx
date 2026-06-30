@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import WarmMessage from './WarmMessage';
 
@@ -33,7 +33,7 @@ export default function BidSubmissionModal({
   const [isLoadingNote, setIsLoadingNote] = useState(false);
 
   // Load existing note when updating
-  React.useEffect(() => {
+  useEffect(() => {
     if (isUpdating && taskId) {
       const loadExistingNote = async () => {
         try {
