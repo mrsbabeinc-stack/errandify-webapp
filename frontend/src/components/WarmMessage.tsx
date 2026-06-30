@@ -64,9 +64,11 @@ export default function WarmMessage({
       <div className={`${config.bg} ${config.borderLeft} rounded-lg shadow-md max-w-sm w-full`}>
         {/* Content */}
         <div className="p-5">
-          <h2 className={`${config.titleColor} font-semibold text-base mb-2`}>{title}</h2>
+          <h2 className={`${config.titleColor} font-semibold text-base mb-3`}>{title}</h2>
           {message && (
-            <p className={`${config.messageColor} text-sm leading-relaxed`}>{message}</p>
+            <p className={`${config.messageColor} text-sm leading-relaxed`}>
+              {message.endsWith('.') ? message : `${message}.`}
+            </p>
           )}
         </div>
 
