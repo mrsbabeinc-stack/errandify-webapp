@@ -132,7 +132,7 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
         },
         timestamp: activity.created_at,
         details: parsedDetails,
-        displayText: getActivityDisplayText(activity.activity_type, activity.actor_name, parsedDetails, formattedId),
+        displayText: getActivityDisplayText(activity.activity_type, activity.actor_name, parsedDetails),
       };
     });
 
@@ -157,49 +157,43 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
 });
 
 // Helper function to generate display text for activities
-function getActivityDisplayText(type: string, actorName: string, details: any, formattedId: string): string {
-  const prefix = `${formattedId}: `;
+function getActivityDisplayText(type: string, actorName: string, details: any): string {
   // Use alias if available, fallback to name
   const displayName = details?.alias || actorName;
 
-  console.log(`[ActivityLog] displayText - type=${type}, actorName=${actorName}, details=${JSON.stringify(details)}, displayName=${displayName}`);
-
   switch (type) {
     case 'posted':
-      return `${prefix}${displayName} posted this task`;
+      return `${displayName} posted this task`;
     case 'bid_placed':
       // Include offer ID and amount if available
-      console.log(`[ActivityLog] bid_placed check - offerId=${details?.offerId}, amount=${details?.amount}`);
       if (details?.offerId && details?.amount) {
-        const text = `${prefix}${displayName} submitted an offer (${details.offerId} - SGD $${details.amount})`;
-        console.log(`[ActivityLog] bid_placed text=${text}`);
-        return text;
+        return `${displayName} submitted an offer (${details.offerId} - SGD $${details.amount})`;
       }
-      return `${prefix}${displayName} submitted an offer`;
+      return `${displayName} submitted an offer`;
     case 'bid_rejected':
-      return `${prefix}${displayName}'s offer was not selected`;
+      return `${displayName}'s offer was not selected`;
     case 'bid_accepted':
-      return `${prefix}${displayName}'s offer was selected`;
+      return `${displayName}'s offer was selected`;
     case 'confirmed':
-      return `${prefix}Offer confirmed - ready to start`;
+      return `Offer confirmed - ready to start`;
     case 'started':
-      return `${prefix}${displayName} started the job`;
+      return `${displayName} started the job`;
     case 'completed':
-      return `${prefix}${displayName} submitted completion evidence`;
+      return `${displayName} submitted completion evidence`;
     case 'completion_evidence_viewed':
-      return `${prefix}${displayName} viewed the completion evidence`;
+      return `${displayName} viewed the completion evidence`;
     case 'review_submitted':
-      return `${prefix}${displayName} submitted a review`;
+      return `${displayName} submitted a review`;
     case 'rating_submitted':
-      return `${prefix}${displayName} rated the work`;
+      return `${displayName} rated the work`;
     case 'changes_requested':
-      return `${prefix}${displayName} requested changes: ${details?.reason || 'see details'}`;
+      return `${displayName} requested changes: ${details?.reason || 'see details'}`;
     case 'dispute_raised':
-      return `${prefix}A dispute was raised`;
+      return `A dispute was raised`;
     case 'dispute_resolved':
-      return `${prefix}Dispute resolved`;
+      return `Dispute resolved`;
     default:
-      return `${prefix}${type}`;
+      return `${type}`;
   }
 }
 
