@@ -89,6 +89,36 @@ router.get('/:errandId/activity-log', authMiddleware, async (req: AuthRequest, r
     );
     const formattedId = errandDetailsResult.rows[0]?.formatted_id || `ER${errandId}`;
 
+    // Backfill missing completion event if errand is completed but has no completion log
+    if (errand.status && errand.status.includes('completed')) {
+      const completionLogCheck = await db.query(
+        `SELECT id FROM errand_activity_log WHERE errand_id = $1 AND activity_type = 'completed' LIMIT 1`,
+        [errandId]
+      );
+
+      if (completionLogCheck.rows.length === 0) {
+        // Check if there are completion submissions
+        const completionCheck = await db.query(
+          `SELECT submitted_by, completion_notes, created_at FROM completion_submissions WHERE errand_id = $1 ORDER BY created_at DESC LIMIT 1`,
+          [errandId]
+        );
+
+        if (completionCheck.rows.length > 0) {
+          const submission = completionCheck.rows[0];
+          const doerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [submission.submitted_by]);
+          const doerName = doerResult.rows[0]?.display_name || 'Doer';
+
+          // Create the missing completion log entry
+          await db.query(
+            `INSERT INTO errand_activity_log (errand_id, activity_type, actor_id, actor_name, actor_role, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [errandId, 'completed', submission.submitted_by, doerName, 'doer', submission.created_at]
+          );
+          console.log(`[ActivityLog] Backfilled missing completion event for errand ${errandId}`);
+        }
+      }
+    }
+
     // Fetch activity log
     let activitiesResult;
     try {
