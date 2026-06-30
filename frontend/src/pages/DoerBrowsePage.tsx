@@ -317,14 +317,15 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                       <button
                         key={category.id}
                         onClick={() => handleCategoryToggle(category.id)}
-                        className={`px-1.5 py-1 rounded text-xs font-medium transition-all hover:shadow-md ${
+                        className={`px-1 py-1 rounded text-xs font-medium transition-all hover:shadow-md ${
                           isSelected
                             ? 'bg-errandify-orange text-white shadow-md ring-1 ring-orange-300'
                             : `bg-gradient-to-r ${category.color}`
                         }`}
+                        title={category.name}
                       >
-                        <div className="text-sm mb-0.5">{category.icon}</div>
-                        <div className="text-xs leading-tight">{category.name.split(' ')[0]}</div>
+                        <div className="text-xs">{category.icon}</div>
+                        <div className="line-clamp-1 text-xs">{category.name}</div>
                       </button>
                     );
                   })}
