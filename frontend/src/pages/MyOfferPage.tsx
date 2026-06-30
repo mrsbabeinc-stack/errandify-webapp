@@ -141,17 +141,18 @@ export default function MyOfferPage() {
   // Get active job (confirmed or in_progress)
   const activeBid = bids.find(b => b.status === 'confirmed' || b.status === 'confirmed_awaiting_start' || b.status === 'in_progress');
 
-  // Define priority order for sorting
+  // Define priority order for sorting (lower number = higher priority, shown first)
   const priorityOrder: Record<string, number> = {
-    'in_progress': 1,        // 🔄 Actively working - highest priority
+    'in_progress': 1,        // 🔄 Actively working - HIGHEST PRIORITY
     'confirmed_awaiting_start': 2,  // 🟢 Confirmed, ready to start
     'confirmed': 3,          // 🟢 Confirmed
     'accepted': 4,           // ✅ Selected, awaiting confirmation
     'pending': 5,            // ⏳ Bids submitted
     'completed_unconfirmed': 6,  // ✔️ Work done, awaiting review
-    'completed': 7,          // ✅ Rated & Closed
-    'rejected': 8,           // ❌ Rejected
-    'withdrawn': 9,          // ↩️ Withdrawn
+    'completed_confirmed': 7,  // 🎉 Completed
+    'completed': 8,          // ✅ Rated & Closed - LOWEST PRIORITY
+    'rejected': 9,           // ❌ Rejected
+    'withdrawn': 10,         // ↩️ Withdrawn
   };
 
   const filteredBids = (filterStatus === 'all' ? bids : bids.filter(b => b.status === filterStatus))
@@ -160,6 +161,10 @@ export default function MyOfferPage() {
       const priorityB = priorityOrder[b.status] ?? 99;
       return priorityA - priorityB;
     });
+
+  console.log('[MyOffer] filterStatus:', filterStatus);
+  console.log('[MyOffer] filteredBids count:', filteredBids.length);
+  console.log('[MyOffer] filteredBids order:', filteredBids.map(b => ({ title: b.errand?.title, status: b.status })));
 
   if (loading) {
     return (
@@ -222,10 +227,22 @@ export default function MyOfferPage() {
           </div>
         )}
 
-        {/* Filter Tabs */}
+        {/* Filter Tabs - Organized by priority */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-          {['all', 'pending', 'accepted', 'confirmed', 'in_progress', 'completed_unconfirmed', 'completed_confirmed', 'rejected'].map((status) => {
+          {['all', 'in_progress', 'confirmed', 'accepted', 'pending', 'completed_unconfirmed', 'completed'].map((status) => {
             const count = bids.filter(b => b.status === status).length;
+            if (count === 0 && status !== 'all') return null; // Hide empty tabs except 'All'
+
+            const labels: Record<string, string> = {
+              all: '📋 All',
+              in_progress: '🔄 In progress',
+              confirmed: '🟢 Confirmed',
+              accepted: '✅ Accepted',
+              pending: '⏳ Pending',
+              completed_unconfirmed: '✔️ Awaiting Review',
+              completed: '✅ Closed',
+            };
+
             return (
               <button
                 key={status}
@@ -236,7 +253,7 @@ export default function MyOfferPage() {
                     : 'bg-white border border-gray-300 text-gray-700 hover:border-errandify-orange'
                 }`}
               >
-                {status === 'all' ? '📋 All' : `${status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ')} ${count > 0 ? `(${count})` : ''}`}
+                {labels[status]} {count > 0 ? `(${count})` : ''}
               </button>
             );
           })}
