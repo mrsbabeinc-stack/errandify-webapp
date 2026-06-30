@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import WarmMessage from './WarmMessage';
 
 interface AccountPauseModalProps {
   isOpen: boolean;
@@ -104,11 +105,14 @@ export default function AccountPauseModal({ isOpen, onClose, onStatusChange }: A
 
         {/* Content */}
         <div className="px-8 py-8">
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800 mb-6">
-              {error}
-            </div>
-          )}
+          <WarmMessage
+            isOpen={!!error}
+            type="error"
+            title="Something went wrong"
+            message={error}
+            onClose={() => setError('')}
+            buttonLabel="Dismiss"
+          />
 
           {success && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
