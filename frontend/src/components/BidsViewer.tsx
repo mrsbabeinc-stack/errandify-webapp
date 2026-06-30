@@ -47,6 +47,8 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
   const [sortBy, setSortBy] = useState<'price' | 'rating' | 'confidence' | 'newest'>('newest');
   const [filterMinRating, setFilterMinRating] = useState<number>(0);
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Expose refreshBids function to parent component
   useImperativeHandle(ref, () => ({
@@ -147,7 +149,8 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
           }
         );
 
-        alert('Your offer is confirmed! Payment is held safely.');
+        setSuccessMessage('Your offer is confirmed. Payment is held safely.');
+        setShowSuccessMessage(true);
       }
 
       onBidAccepted();
@@ -510,6 +513,15 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
           </div>
         </div>
       )}
+
+      {/* Success Message */}
+      <WarmMessage
+        isOpen={showSuccessMessage}
+        type="success"
+        message={successMessage}
+        onClose={() => setShowSuccessMessage(false)}
+        buttonLabel="Great!"
+      />
     </div>
   );
   },
