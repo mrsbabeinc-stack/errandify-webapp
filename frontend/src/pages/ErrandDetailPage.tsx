@@ -805,7 +805,18 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
             {/* Action Button */}
             {currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
-              errand.status === 'confirmed' || errand.status === 'confirmed_awaiting_start' ? (
+              errand.status === 'in_progress' ? (
+                // Errand is in progress - show chat button
+                <button
+                  onClick={() => {
+                    setSelectedErrandId(errand.id);
+                    setShowChatbox(true);
+                  }}
+                  className="w-full px-4 py-3 border-2 border-blue-400 text-blue-600 rounded-lg font-bold text-base hover:bg-blue-50 transition-colors"
+                >
+                  💬 Chat with {errand.askerName || 'Asker'}
+                </button>
+              ) : errand.status === 'confirmed' || errand.status === 'confirmed_awaiting_start' ? (
                 // Errand is confirmed - show start button
                 <div className="space-y-3 mt-2">
                   <p className="text-center text-sm font-semibold text-emerald-600 bg-emerald-50 p-3 rounded-lg">
