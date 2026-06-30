@@ -60,8 +60,20 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      const bidsData = response.data.data;
+      let bidsData = response.data.data;
       console.log('[BidsViewer] Fetched bids:', bidsData);
+      if (bidsData.length > 0) {
+        console.log('[BidsViewer] First bid structure:', JSON.stringify(bidsData[0], null, 2));
+        // Fix field name casing if needed
+        bidsData = bidsData.map(bid => ({
+          ...bid,
+          doerId: bid.doerId || bid.doerid,  // Handle lowercase variant
+          doerName: bid.doerName || bid.doername,
+          offerId: bid.offerId || bid.offerid,
+          createdAt: bid.createdAt || bid.createdat,
+          taskId: bid.taskId || bid.taskid,
+        }));
+      }
       setBids(bidsData);
       setError('');
 
