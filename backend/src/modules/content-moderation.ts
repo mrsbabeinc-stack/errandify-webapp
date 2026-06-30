@@ -55,7 +55,7 @@ const INAPPROPRIATE_WORDS = [
   'abuse',
   'threat',
   'violence',
-  // Sexual content
+  // Sexual content (explicit sex work, hookups, sexual acts)
   'sex',
   'porn',
   'xxx',
