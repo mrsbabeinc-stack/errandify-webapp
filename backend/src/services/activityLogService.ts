@@ -53,12 +53,20 @@ export const activityLogService = {
     await this.logActivity(errandId, 'confirmed', null, 'System', 'asker');
   },
 
-  async logStarted(errandId: number, doerName: string, doerId: number) {
-    await this.logActivity(errandId, 'started', doerId, doerName, 'doer');
+  async logStarted(errandId: number, doerName: string, doerId: number, doerAlias?: string, errandFormattedId?: string) {
+    await this.logActivity(errandId, 'started', doerId, doerName, 'doer', {
+      alias: doerAlias || undefined,
+      errandId: errandFormattedId || undefined
+    });
   },
 
   async logCompleted(errandId: number, doerName: string, doerId: number, details?: Record<string, any>) {
-    await this.logActivity(errandId, 'completed', doerId, doerName, 'doer', details);
+    // Include errandId in details if not already present
+    const completeDetails = {
+      ...details,
+      errandId: details?.errandId || undefined
+    };
+    await this.logActivity(errandId, 'completed', doerId, doerName, 'doer', completeDetails);
   },
 
   async logReviewSubmitted(errandId: number, askerName: string, askerId: number, review: string) {
