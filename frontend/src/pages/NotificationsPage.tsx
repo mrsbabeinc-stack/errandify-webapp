@@ -14,10 +14,11 @@ interface BackendNotification {
   type: string;
   title: string;
   body: string;
-  actionUrl: string;
+  message?: string;
+  actionUrl?: string;
   createdAt: string;
   read: boolean;
-  related_errand_id?: number;
+  relatedErrandId?: number;
   related_bid_id?: number;
 }
 
@@ -78,25 +79,26 @@ export default function NotificationsPage() {
             message: body,
             timestamp: n.createdAt,
             read: n.read,
-            errandId: n.related_errand_id,
+            errandId: n.relatedErrandId,
             offerId: n.related_bid_id,
             actions: [
               // For message notifications, show Chat button
-              n.type === 'message_received' && n.related_errand_id ? {
+              n.type === 'message_received' && n.relatedErrandId ? {
                 label: '💬 Chat',
-                url: `/my-chat?errandId=${n.related_errand_id}`,
+                url: `/my-chat?errandId=${n.relatedErrandId}`,
                 type: 'chat'
               } : null,
               // For new offer notifications, show Errand Details
-              n.type === 'bid_placed' && n.related_errand_id ? {
+              n.type === 'bid_placed' && n.relatedErrandId ? {
                 label: '📋 View Errand',
-                url: `/errand/${n.related_errand_id}`,
+                url: `/errand/${n.relatedErrandId}`,
                 type: 'errand'
               } : null,
             ].filter(Boolean),
           };
         });
         console.log('[Notifications] Formatted:', formattedNotifications);
+        console.log('[Notifications] Raw data sample:', response.data.data.notifications[0]);
         setNotifications(formattedNotifications);
       } else {
         console.warn('[Notifications] No notifications in response:', response.data);
@@ -252,11 +254,13 @@ export default function NotificationsPage() {
               <div
                 key={notification.id}
                 onClick={() => {
+                  console.log('[Notification] Clicked notification:', notification.id, 'errandId:', notification.errandId);
                   if (!notification.read) {
                     handleRead(notification.id);
                   }
                   // Navigate to errand details when clicking notification
                   if (notification.errandId) {
+                    console.log('[Notification] Navigating to /errand/' + notification.errandId);
                     navigate(`/errand/${notification.errandId}`);
                   }
                 }}
