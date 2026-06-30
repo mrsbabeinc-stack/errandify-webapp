@@ -130,9 +130,9 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
 
     // Create completion submission record
     await db.query(
-      `INSERT INTO completion_submissions (errand_id, submission_number, completion_notes, submitted_by, status)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [taskId, currentSubmissionNumber, completionNotes || '', doerId, 'pending']
+      `INSERT INTO completion_submissions (errand_id, submission_number, completion_notes, photo_urls, submitted_by, status)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [taskId, currentSubmissionNumber, completionNotes || '', JSON.stringify(photoUrls || []), doerId, 'pending']
     );
 
     // Log completion
@@ -453,6 +453,7 @@ router.get('/:taskId/submissions', authMiddleware, async (req: AuthRequest, res:
         cs.errand_id,
         cs.submission_number,
         cs.completion_notes,
+        cs.photo_urls,
         cs.submitted_by,
         cs.created_at as submitted_at,
         cs.status,
@@ -493,6 +494,7 @@ router.get('/:taskId/submissions', authMiddleware, async (req: AuthRequest, res:
     // Add files to submissions
     const submissions = submissionsResult.rows.map(sub => ({
       ...sub,
+      photo_urls: sub.photo_urls ? JSON.parse(sub.photo_urls) : [],
       files: filesBySubmission[sub.submission_number] || []
     }));
 

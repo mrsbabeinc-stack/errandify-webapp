@@ -137,13 +137,16 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         const latestSubmission = submissions[submissions.length - 1];
         if (latestSubmission) {
           const notes = latestSubmission.completion_notes || '';
+          const photos = latestSubmission.photo_urls || [];
           const files = latestSubmission.files || [];
           console.log('[ErrandDetail] Setting completion data:', {
             notes,
+            photos: photos.length,
             files: files.length
           });
           setCompletionNotes(notes);
-          setCompletionPhotos(files);
+          // Use photo_urls first, then fall back to files
+          setCompletionPhotos(photos.length > 0 ? photos : files);
           // Auto-show the evidence if requested (e.g., on initial page load)
           if (autoShow) {
             console.log('[ErrandDetail] Auto-showing completion evidence');
