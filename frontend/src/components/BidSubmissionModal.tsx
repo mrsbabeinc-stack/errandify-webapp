@@ -235,16 +235,16 @@ export default function BidSubmissionModal({
       {showSuccess && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-sm w-full p-6 text-center shadow-md border-l-4 border-l-emerald-500">
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+            <h2 className="text-lg font-semibold text-slate-900 mb-3">
               {isUpdating ? 'Offer updated' : 'Offer submitted'}
             </h2>
-            <p className="text-slate-700 mb-1">
+            <p className="text-slate-700 text-sm">
               {isUpdating
-                ? `Updated to $${successAmount}`
-                : `$${successAmount} offer is in`}
+                ? `Updated to SGD ${successAmount}`
+                : `SGD ${successAmount} offer is in`}
             </p>
-            <p className="text-slate-600 text-sm">
-              We've got you, neighbor
+            <p className="text-slate-600 text-xs mt-2">
+              We have got you, neighbour
             </p>
           </div>
         </div>
