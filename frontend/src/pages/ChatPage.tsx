@@ -408,6 +408,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
             budget: selectedConversation.budget,
             deadline: selectedConversation.deadline,
             location: selectedConversation.location,
+            postal_code: selectedConversation.postal,
             description: selectedConversation.description,
           }}
         />
