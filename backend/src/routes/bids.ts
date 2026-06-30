@@ -645,7 +645,7 @@ router.get('/check/:errandId', authMiddleware, async (req: AuthRequest, res: Res
     const parsedErrandId = parseInt(errandId, 10);
 
     const result = await db.query(
-      `SELECT id, amount, status FROM bids
+      `SELECT id, amount, status, note FROM bids
        WHERE errand_id = $1 AND doer_id = $2
        LIMIT 1`,
       [parsedErrandId, doerId]
@@ -658,6 +658,7 @@ router.get('/check/:errandId', authMiddleware, async (req: AuthRequest, res: Res
         hasBid: true,
         bidAmount: bid.amount,
         bidStatus: bid.status,
+        bidNote: bid.note,
       });
     }
 
