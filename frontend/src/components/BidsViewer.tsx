@@ -418,7 +418,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
                 </div>
               )}
 
-              {taskBudget && bid.amount > taskBudget && (
+              {taskBudget && parseFloat(bid.amount as any) > parseFloat(taskBudget as any) && (
                 <p className="text-xs text-orange-600 mb-2 bg-orange-50 p-2 rounded">
                   💡 This offer (${bid.amount}) exceeds your budget of ${taskBudget}
                 </p>
