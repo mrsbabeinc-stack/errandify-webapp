@@ -787,13 +787,12 @@ Your message doesn't meet our community standards. Please keep messages:
               {/* Action Button */}
               <button
                 onClick={() => {
-                  console.log('[TaskChatbox] Navigate to errand:', errandFormattedId || taskId);
+                  const errandId = errandFormattedId || taskId;
+                  console.log('[TaskChatbox] Clicked View & Update Status, navigating to:', errandId);
                   onClose();
-                  setTimeout(() => {
-                    navigate(`/errand/${errandFormattedId || taskId}`);
-                  }, 100);
+                  navigate(`/errand/${errandId}`);
                 }}
-                className="mt-6 w-full py-2 bg-errandify-orange text-white rounded-lg text-sm font-semibold hover:bg-opacity-90 transition-colors"
+                className="mt-6 w-full py-2 bg-errandify-orange text-white rounded-lg text-sm font-semibold hover:bg-opacity-90 transition-colors cursor-pointer"
               >
                 📌 View & Update Status
               </button>
