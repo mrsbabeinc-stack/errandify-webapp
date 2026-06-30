@@ -53,6 +53,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const activityTimelineRef = useRef<any>(null);
+  const bidsViewerRef = useRef<any>(null);
   const [errand, setErrand] = useState<ErrandDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -1498,6 +1499,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               />
             ) : (
               <BidsViewer
+                ref={bidsViewerRef}
                 taskId={errand?.id || 0}
                 taskBudget={errand?.budget || 0}
                 onBidAccepted={() => fetchErrandDetail()}
@@ -1528,6 +1530,10 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             // Reload bid amount
             const bids = JSON.parse(localStorage.getItem('userBids') || '{}');
             setUserBidAmount(bids[errand.id] || null);
+            // Refresh bids viewer to show updated offers immediately
+            if (bidsViewerRef.current?.refreshBids) {
+              bidsViewerRef.current.refreshBids();
+            }
             // Refresh activity timeline to show new bid
             if (activityTimelineRef.current?.refreshActivity) {
               activityTimelineRef.current.refreshActivity();

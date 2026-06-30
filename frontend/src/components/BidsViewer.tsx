@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useImperativeHandle, forwardRef } from 'react';
 import axios from 'axios';
 
 interface Bid {
@@ -34,7 +34,8 @@ interface BidsViewerProps {
   onBidAccepted: () => void;
 }
 
-export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsViewerProps) {
+const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, BidsViewerProps>(
+  ({ taskId, taskBudget, onBidAccepted }, ref) => {
   const [bids, setBids] = useState<Bid[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -45,6 +46,11 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
   const [sortBy, setSortBy] = useState<'price' | 'rating' | 'confidence' | 'newest'>('newest');
   const [filterMinRating, setFilterMinRating] = useState<number>(0);
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
+
+  // Expose refreshBids function to parent component
+  useImperativeHandle(ref, () => ({
+    refreshBids: fetchBids,
+  }));
 
   useEffect(() => {
     fetchBids();
@@ -502,4 +508,8 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
       )}
     </div>
   );
-}
+  },
+);
+
+BidsViewerComponent.displayName = 'BidsViewer';
+export default BidsViewerComponent;
