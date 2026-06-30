@@ -60,31 +60,31 @@ export default function WarmMessage({
   const config = typeConfig[type];
 
   return (
-    <div className="fixed inset-0 bg-slate-900 bg-opacity-20 flex items-center justify-center z-50 p-4">
-      <div className={`${config.bg} ${config.borderLeft} rounded-lg shadow-md max-w-sm w-full`}>
+    <div className="fixed inset-0 bg-slate-900 bg-opacity-25 flex items-center justify-center z-50 p-4">
+      <div className={`${config.bg} ${config.borderLeft} rounded-2xl shadow-2xl max-w-sm w-full transform transition-all`}>
         {/* Content */}
-        <div className="p-5">
-          <h2 className={`${config.titleColor} font-semibold text-base mb-3`}>{title}</h2>
+        <div className="p-6 sm:p-8">
+          <h2 className={`${config.titleColor} font-bold text-lg sm:text-xl mb-4 leading-snug`}>{title}</h2>
           {message && (
-            <p className={`${config.messageColor} text-sm leading-relaxed`}>
+            <p className={`${config.messageColor} text-sm sm:text-base leading-relaxed mb-6`}>
               {message.endsWith('.') ? message : `${message}.`}
             </p>
           )}
         </div>
 
         {/* Actions */}
-        <div className="px-5 pb-4 flex gap-2">
+        <div className="px-6 sm:px-8 pb-6 sm:pb-8 flex gap-3">
           {action && (
             <button
               onClick={action.onClick}
-              className={`flex-1 ${config.buttonColor} font-medium py-2 rounded text-sm transition-colors`}
+              className={`flex-1 ${config.buttonColor} font-semibold py-3 rounded-lg text-sm sm:text-base transition-all hover:shadow-md`}
             >
               {action.label}
             </button>
           )}
           <button
             onClick={onClose}
-            className={`flex-1 ${config.buttonColor} font-medium py-2 rounded text-sm transition-colors`}
+            className={`flex-1 ${config.buttonColor} font-semibold py-3 rounded-lg text-sm sm:text-base transition-all hover:shadow-md`}
           >
             {buttonLabel}
           </button>
