@@ -4,6 +4,7 @@ import db from '../db.js';
 import axios from 'axios';
 import { activityLogService } from '../services/activityLogService.js';
 import * as contentMod from '../modules/content-moderation.js';
+import { notifyUser } from '../socket.js';
 
 const router = Router();
 
@@ -440,6 +441,18 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
     const askerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [bid.asker_id]);
     const askerName = askerResult.rows[0]?.display_name || 'Unknown User';
     await activityLogService.logBidAccepted(bid.errand_id, askerName, bid.asker_id);
+
+    // Notify doer in real-time that their bid was confirmed
+    try {
+      notifyUser(bid.doer_id, 'bid_confirmed', {
+        bidId: bid.id,
+        errandId: bid.errand_id,
+        message: 'Your offer has been confirmed!',
+      });
+      console.log('[Bids] Notified doer of bid confirmation:', { doerId: bid.doer_id, bidId: bid.id });
+    } catch (notifyErr) {
+      console.warn('[Bids] Failed to notify doer of confirmation:', notifyErr);
+    }
 
     res.json({
       success: true,
