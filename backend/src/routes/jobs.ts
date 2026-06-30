@@ -3,6 +3,7 @@ import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { stripeService } from '../services/stripe.js';
 import { createNotification } from './notifications.js';
+import { activityLogService } from '../services/activityLogService.js';
 
 const router = Router();
 

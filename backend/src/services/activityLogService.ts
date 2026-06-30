@@ -81,11 +81,38 @@ export const activityLogService = {
     await this.logActivity(errandId, 'changes_requested', askerId, askerName, 'asker', { reason });
   },
 
-  async logDisputeRaised(errandId: number, raisedByName: string, raisedById: number, raisedByRole: 'asker' | 'doer') {
-    await this.logActivity(errandId, 'dispute_raised', raisedById, raisedByName, raisedByRole);
+  async logDisputeRaised(errandId: number, raisedByName: string, raisedById: number, raisedByRole: 'asker' | 'doer', reason?: string) {
+    await this.logActivity(errandId, 'dispute_raised', raisedById, raisedByName, raisedByRole, { reason });
   },
 
   async logDisputeResolved(errandId: number, resolution: string) {
     await this.logActivity(errandId, 'dispute_resolved', null, 'Admin', 'asker', { resolution });
+  },
+
+  async logResubmitted(errandId: number, doerName: string, doerId: number, doerAlias?: string, errandFormattedId?: string) {
+    await this.logActivity(errandId, 'resubmitted', doerId, doerName, 'doer', {
+      alias: doerAlias || undefined,
+      errandId: errandFormattedId || undefined
+    });
+  },
+
+  async logClosed(errandId: number) {
+    await this.logActivity(errandId, 'closed', null, 'System', 'asker');
+  },
+
+  async logPaymentReleased(errandId: number, doerName: string, doerId: number, amount?: number) {
+    await this.logActivity(errandId, 'payment_released', doerId, doerName, 'doer', { amount });
+  },
+
+  async logRefunded(errandId: number, askerName: string, askerId: number, amount?: number) {
+    await this.logActivity(errandId, 'refunded', askerId, askerName, 'asker', { amount });
+  },
+
+  async logCancelled(errandId: number, cancelledByName: string, cancelledById: number, cancelledByRole: 'asker' | 'doer', reason?: string) {
+    await this.logActivity(errandId, 'cancelled', cancelledById, cancelledByName, cancelledByRole, { reason });
+  },
+
+  async logReopened(errandId: number, reopenedByName: string, reopenedById: number, reopenedByRole: 'asker' | 'doer') {
+    await this.logActivity(errandId, 'reopened', reopenedById, reopenedByName, reopenedByRole);
   },
 };

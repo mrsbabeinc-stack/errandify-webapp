@@ -1087,7 +1087,7 @@ router.post('/:id/reopen', authMiddleware, async (req: AuthRequest, res: Respons
     const userResult = await db.query('SELECT display_name FROM users WHERE id = $1', [userId]);
     const userName = userResult.rows[0]?.display_name || 'Unknown User';
     const userRole = isAsker ? 'asker' : 'doer';
-    await activityLogService.logActivity(id, 'reopened', userId, userName, userRole, { reason });
+    await activityLogService.logReopened(id, userName, userId, userRole).catch(console.error);
 
     res.json({
       success: true,
@@ -1273,6 +1273,17 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
       'UPDATE errands SET status = $1, cancelled_by = $2, cancellation_reason = $3 WHERE id = $4',
       ['cancelled', userId, reason || null, id]
     );
+
+    // Get canceller name for logging
+    const cancellerResult = await db.query(
+      'SELECT display_name FROM users WHERE id = $1',
+      [userId]
+    );
+    const cancellerName = cancellerResult.rows[0]?.display_name || 'Unknown';
+    const cancellerRole = isAsker ? 'asker' : 'doer';
+
+    // Log cancellation
+    await activityLogService.logCancelled(id, cancellerName, userId, cancellerRole, reason).catch(console.error);
 
     // Cancel all bids associated with this errand with stage-specific messages
     try {

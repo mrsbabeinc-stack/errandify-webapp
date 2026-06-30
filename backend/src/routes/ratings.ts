@@ -3,6 +3,7 @@ import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { createNotification } from './notifications.js';
 import { awardEp, getRatingBonus } from '../services/gamificationService.js';
+import { activityLogService } from '../services/activityLogService.js';
 
 const router = Router();
 
@@ -201,6 +202,12 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         ['rated', taskId]
       );
       console.log('[Rating] Updated errand status to rated:', taskId);
+
+      // Log rating submission
+      const raterUserResult = await db.query('SELECT display_name FROM users WHERE id = $1', [req.userId]);
+      const raterName = raterUserResult.rows[0]?.display_name || 'Unknown';
+      const raterRole = isAsker ? 'asker' : 'doer';
+      await activityLogService.logRatingSubmitted(taskId, raterName, parseInt(req.userId || '0', 10), raterRole, rating).catch(console.error);
     } catch (statusError) {
       console.error('Failed to update errand status:', statusError);
       // Don't fail the rating submission if status update fails
