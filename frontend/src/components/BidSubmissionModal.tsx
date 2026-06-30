@@ -28,7 +28,6 @@ export default function BidSubmissionModal({
   const [bidNote, setBidNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [errorTitle, setErrorTitle] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [successAmount, setSuccessAmount] = useState<string>('');
 
@@ -88,23 +87,7 @@ export default function BidSubmissionModal({
       }
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || err.response?.data?.message || 'We encountered a small hiccup. Please try again.';
-      let warmTitle = 'Just a moment';
-
-      // Map error messages to warm titles
-      if (errorMsg.includes('friendly') || errorMsg.includes('respectful')) {
-        warmTitle = 'Let us keep things neighbourly';
-      } else if (errorMsg.includes('SGD 8') || errorMsg.includes('minimum')) {
-        warmTitle = 'Just checking the minimum';
-      } else if (errorMsg.includes('neighbour')) {
-        warmTitle = 'That one is taken';
-      } else if (errorMsg.includes('moved on') || errorMsg.includes('longer')) {
-        warmTitle = 'Things have changed';
-      } else if (errorMsg.includes('hiccup') || errorMsg.includes('trouble')) {
-        warmTitle = 'We are sorting this out';
-      }
-
       setError(errorMsg);
-      setErrorTitle(warmTitle);
     } finally {
       setIsSubmitting(false);
     }
@@ -215,7 +198,7 @@ export default function BidSubmissionModal({
       <WarmMessage
         isOpen={!!error}
         type="error"
-        title={errorTitle || 'Let us know what happened'}
+        title="Just a moment"
         message={error}
         onClose={() => setError('')}
         buttonLabel="Got it"
