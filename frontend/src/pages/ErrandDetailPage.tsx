@@ -820,8 +820,18 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                           {},
                           { headers: { Authorization: `Bearer ${token}` } }
                         );
-                        // Refresh the page to show updated status
-                        window.location.reload();
+                        // Refresh errand data to show updated status
+                        await fetchErrandDetail();
+                        // Also refresh bid check
+                        if (id && currentUser && currentUser.role === 'doer') {
+                          const response = await axios.get(
+                            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/check/${id}`,
+                            { headers: { Authorization: `Bearer ${token}` } }
+                          );
+                          if (response.data.hasBid) {
+                            setBidStatus(response.data.bidStatus);
+                          }
+                        }
                       } catch (err) {
                         console.error('Failed to confirm offer:', err);
                       }
@@ -919,7 +929,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                         },
                         { headers: { Authorization: `Bearer ${token}` } }
                       );
-                      window.location.reload();
+                      // Refresh errand data to show updated status
+                      await fetchErrandDetail();
                     } catch (err) {
                       console.error('Failed to start errand:', err);
                     }
