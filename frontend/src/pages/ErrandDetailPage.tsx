@@ -800,7 +800,10 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               bidStatus === 'accepted' ? (
                 <div className="space-y-3 mt-2">
                   <p className="text-center text-sm font-semibold text-emerald-600 bg-emerald-50 p-3 rounded-lg">
-                    ✅ Offer Accepted. Please Confirm.
+                    Offer Accepted
+                  </p>
+                  <p className="text-center text-xs text-emerald-600 bg-emerald-50 px-3 pb-2 rounded-b-lg -mt-2">
+                    Please confirm to start the job
                   </p>
                   <button
                     onClick={async () => {
