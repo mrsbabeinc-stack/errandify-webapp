@@ -217,15 +217,23 @@ export default function NotificationsPage() {
             {filteredNotifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-2 rounded border text-xs transition ${
+                onClick={() => {
+                  if (!notification.read) {
+                    handleRead(notification.id);
+                  }
+                  if (notification.action) {
+                    navigate(notification.action.url);
+                  }
+                }}
+                className={`p-2 rounded border text-xs transition cursor-pointer hover:shadow-md ${
                   notification.read
-                    ? 'bg-white border-gray-200'
-                    : 'bg-blue-50 border-blue-300 font-semibold'
+                    ? 'bg-white border-gray-200 hover:bg-gray-50'
+                    : 'bg-orange-50 border-orange-300 font-semibold hover:bg-orange-100'
                 }`}
               >
                 <div className="flex gap-1.5 items-start">
                   {/* Icon Badge */}
-                  <div className={`${getTypeColor(notification.type)} text-white w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs`}>
+                  <div className={`${getTypeColor(notification.type)} text-white w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs flex-shrink-0`}>
                     {getTypeIcon(notification.type)}
                   </div>
 
@@ -237,29 +245,7 @@ export default function NotificationsPage() {
                         {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <p className="text-gray-600 text-xs mt-0 line-clamp-1">{notification.message}</p>
-
-                    {/* Actions */}
-                    <div className="flex gap-1 mt-1 items-center flex-wrap text-xs">
-                      {notification.action && (
-                        <button
-                          onClick={() => navigate(notification.action!.url)}
-                          className="text-errandify-orange hover:underline font-bold"
-                        >
-                          → View
-                        </button>
-                      )}
-
-                      {!notification.read && (
-                        <button
-                          onClick={() => handleRead(notification.id)}
-                          className="text-blue-600 hover:text-blue-700 font-semibold hover:bg-blue-100 px-1.5 py-0.5 rounded transition"
-                          title="Mark as read"
-                        >
-                          ✓ Read
-                        </button>
-                      )}
-                    </div>
+                    <p className="text-gray-600 text-xs mt-0 line-clamp-2">{notification.message}</p>
                   </div>
                 </div>
               </div>
