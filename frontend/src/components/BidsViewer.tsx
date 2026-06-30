@@ -1,5 +1,6 @@
 import { useEffect, useState, useImperativeHandle, forwardRef } from 'react';
 import axios from 'axios';
+import WarmMessage from './WarmMessage';
 
 interface Bid {
   id: number;
@@ -270,11 +271,14 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
 
   return (
     <div className="space-y-4">
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-          {error}
-        </div>
-      )}
+      <WarmMessage
+        isOpen={!!error}
+        type="error"
+        title="Could not load offers"
+        message={error}
+        onClose={() => setError('')}
+        buttonLabel="Try again"
+      />
 
       {acceptedBid && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
