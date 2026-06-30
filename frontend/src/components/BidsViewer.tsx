@@ -6,6 +6,7 @@ interface Bid {
   taskId: number;
   doerId: number;
   doerName: string;
+  doerAlias?: string;
   doerAvatar?: string;
   amount: number;
   note?: string;
@@ -67,8 +68,10 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
         // Fix field name casing if needed
         bidsData = bidsData.map(bid => ({
           ...bid,
-          doerId: bid.doerId || bid.doerid,  // Handle lowercase variant
+          doerId: bid.doerId || bid.doerid,
           doerName: bid.doerName || bid.doername,
+          doerAlias: bid.doerAlias || bid.doeralias,
+          doerAvatar: bid.doerAvatar || bid.doeravatar,
           offerId: bid.offerId || bid.offerid,
           createdAt: bid.createdAt || bid.createdat,
           taskId: bid.taskId || bid.taskid,
@@ -335,9 +338,9 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
                     />
                   )}
                   <div className="flex-1">
-                    {/* Doer Name + OFFERID Badge */}
+                    {/* Doer Alias (or Name) + OFFERID Badge */}
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="font-bold text-gray-900">{bid.doerName}</p>
+                      <p className="font-bold text-gray-900">{bid.doerAlias || bid.doerName}</p>
                       {bid.offerId && (
                         <span className="text-xs text-white bg-errandify-orange rounded px-2 py-0.5 font-semibold">
                           {bid.offerId}
@@ -345,19 +348,23 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
                       )}
                     </div>
 
-                    {/* Rating + Review Count + Offer Date/Time */}
-                    <div className="flex items-center gap-3 text-xs text-gray-600">
-                      {doerConfidence[bid.doerId]?.avg_rating && (
+                    {/* Rating + Review Count */}
+                    <div className="flex items-center gap-2 text-xs mb-1">
+                      {doerConfidence[bid.doerId]?.avg_rating ? (
                         <span className="text-yellow-600 font-semibold">
-                          ⭐ {doerConfidence[bid.doerId].avg_rating.toFixed(1)} ({doerConfidence[bid.doerId].review_count} reviews)
+                          ⭐ {doerConfidence[bid.doerId].avg_rating.toFixed(1)} ({doerConfidence[bid.doerId].review_count} review{doerConfidence[bid.doerId].review_count !== 1 ? 's' : ''})
                         </span>
-                      )}
-                      {bid.createdAt && (
-                        <span className="text-gray-500">
-                          {new Date(bid.createdAt).toLocaleDateString()} {new Date(bid.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
+                      ) : (
+                        <span className="text-gray-500 text-xs">No reviews yet</span>
                       )}
                     </div>
+
+                    {/* Offer Date/Time */}
+                    {bid.createdAt && (
+                      <span className="text-gray-500 text-xs">
+                        {new Date(bid.createdAt).toLocaleDateString()} {new Date(bid.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -378,9 +385,10 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
               </div>
 
               {bid.note && (
-                <p className="text-sm text-gray-600 mb-3 bg-gray-50 p-2 rounded">
-                  {bid.note}
-                </p>
+                <div className="mb-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+                  <p className="text-xs font-semibold text-blue-900 mb-1">💬 Why they're a good fit:</p>
+                  <p className="text-sm text-gray-700">{bid.note}</p>
+                </div>
               )}
 
               {/* Confidence Signals */}
