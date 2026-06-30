@@ -268,12 +268,15 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
                     />
                   )}
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-xs text-gray-600 font-medium">Alias:</p>
-                      {bid.offerId && <span className="text-xs text-errandify-orange font-semibold">{bid.offerId}</span>}
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className="font-semibold text-gray-900">{bid.doerName}</p>
+                      {bid.offerId && (
+                        <span className="text-xs text-white bg-errandify-orange rounded px-2 py-1 font-semibold">
+                          {bid.offerId}
+                        </span>
+                      )}
                     </div>
-                    <p className="font-semibold text-gray-900">{bid.doerName}</p>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2">
                       <p className="text-xs text-gray-500">
                         Offer placed {bid.createdAt ? new Date(bid.createdAt).toLocaleDateString() : 'Recently'}
                       </p>
