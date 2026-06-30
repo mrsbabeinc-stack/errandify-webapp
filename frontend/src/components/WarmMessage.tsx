@@ -5,10 +5,6 @@ interface WarmMessageProps {
   onClose: () => void;
   buttonLabel?: string;
   type?: 'success' | 'error' | 'info' | 'warning';
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
 }
 
 export default function WarmMessage({
@@ -18,7 +14,6 @@ export default function WarmMessage({
   onClose,
   buttonLabel = 'Got it',
   type = 'info',
-  action,
 }: WarmMessageProps) {
   if (!isOpen) return null;
 
@@ -51,17 +46,22 @@ export default function WarmMessage({
 
   const config = typeConfig[type];
 
-  // Combine title and message into single text block if message exists
-  const fullText = message ? `${title}. ${message.endsWith('.') ? message.slice(0, -1) : message}.` : `${title}.`;
-
   return (
     <div className="fixed inset-0 bg-slate-900 bg-opacity-25 flex items-center justify-center z-50 p-4">
       <div className={`${config.bg} ${config.borderLeft} rounded-xl shadow-lg max-w-xs w-full`}>
         {/* Compact Content */}
         <div className="p-4 sm:p-5">
-          <p className={`${config.textColor} text-sm sm:text-base leading-relaxed font-medium`}>
-            {fullText}
-          </p>
+          {/* Bold Title */}
+          <h3 className={`${config.textColor} text-sm sm:text-base font-bold mb-2`}>
+            {title}
+          </h3>
+
+          {/* Message Text */}
+          {message && (
+            <p className={`${config.textColor} text-sm leading-relaxed opacity-90`}>
+              {message.endsWith('.') ? message : `${message}.`}
+            </p>
+          )}
         </div>
 
         {/* Single Button */}
