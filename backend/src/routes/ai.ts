@@ -559,7 +559,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       category = 'childcare';
     } else if (lowerInput.includes('elderly') || lowerInput.includes('elder') || lowerInput.includes('grandmother') || lowerInput.includes('grandfather') || lowerInput.includes('senior')) {
       category = 'eldercare';
-    } else if (lowerInput.includes('deliver') || lowerInput.includes('move') || lowerInput.includes('moving') || lowerInput.includes('moving boxes') || lowerInput.includes('transport')) {
+    } else if (lowerInput.includes('deliver') || lowerInput.includes('move') || lowerInput.includes('moving') || lowerInput.includes('moving boxes') || lowerInput.includes('transport') || lowerInput.includes('drive') || lowerInput.includes('airport') || lowerInput.includes('taxi') || lowerInput.includes('ride')) {
       category = 'delivery';
     } else if (lowerInput.includes('clean') || lowerInput.includes('laundry') || lowerInput.includes('house') || lowerInput.includes('kitchen')) {
       category = 'homehelp';
