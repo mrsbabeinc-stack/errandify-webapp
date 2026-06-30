@@ -855,6 +855,50 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </div>
             )}
 
+            {/* Completion Evidence Button - Show for all doers on completed errands */}
+            {errand.status?.includes('completed') && currentUser && currentUser.id !== errand.askerId && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2 space-y-2">
+                <div className="text-center pb-2 border-b border-green-200">
+                  <p className="text-green-800 font-bold text-base">✓ Errand Completed</p>
+                </div>
+                <div className="space-y-1 pt-2">
+                  <p className="font-semibold text-gray-700 text-xs">📸 Your Submission:</p>
+                  <button
+                    onClick={() => setShowCompletionEvidence(!showCompletionEvidence)}
+                    className="w-full px-2 py-1.5 bg-blue-50 border border-blue-300 text-blue-700 text-xs rounded font-medium hover:bg-blue-100 transition-all"
+                  >
+                    {showCompletionEvidence ? '▼ Hide' : '▶ View My Submission'}
+                  </button>
+                  {showCompletionEvidence && (
+                    <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200 space-y-2">
+                      {completionPhotos.length > 0 && (
+                        <div>
+                          <p className="font-semibold text-xs text-gray-700 mb-1">📷 Photos:</p>
+                          <div className="flex gap-2 flex-wrap">
+                            {completionPhotos.map((photo, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => window.open(photo, '_blank')}
+                                className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200"
+                              >
+                                Photo {idx + 1}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {completionNotes && (
+                        <div>
+                          <p className="font-semibold text-xs text-gray-700 mb-1">📝 Notes:</p>
+                          <p className="text-xs text-gray-700 p-2 rounded bg-white border">{completionNotes}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Action Button */}
             {currentUser && currentUser.id !== errand.askerId ? (
               errand.status === 'in_progress' ? (
