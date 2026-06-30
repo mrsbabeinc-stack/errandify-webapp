@@ -45,7 +45,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     const doerId = parseInt(req.userId || '0', 10);
 
     if (!task_id || !amount) {
-      return res.status(400).json({ error: 'Let us know your offer amount so the neighbour knows what to expect' });
+      return res.status(400).json({ error: 'Let us know your offer amount so the neighbour knows what to expect.' });
     }
 
     // sessions is optional array of instance numbers for recurring tasks
@@ -54,7 +54,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     // Validate minimum bid amount
     const bidAmount = parseFloat(amount);
     if (bidAmount < 8) {
-      return res.status(400).json({ error: 'Offers start at SGD 8. This helps our community stay healthy' });
+      return res.status(400).json({ error: 'Offers start at SGD 8. This helps our community stay healthy.' });
     }
 
     // Check if errand exists and is open
@@ -64,18 +64,18 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     );
 
     if (errandResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Looks like this errand got taken care of or the neighbour changed their mind' });
+      return res.status(404).json({ error: 'Looks like this errand got taken care of or the neighbour changed their mind.' });
     }
 
     const errand = errandResult.rows[0];
 
     if (errand.status !== 'open' && errand.status !== 'confirmed') {
-      return res.status(400).json({ error: 'This errand has moved on. But there are plenty more neighbours who need help' });
+      return res.status(400).json({ error: 'This errand has moved on. But there are plenty more neighbours who need help!' });
     }
 
     // Prevent asker from bidding on their own errand
     if (errand.asker_id === doerId) {
-      return res.status(403).json({ error: 'You posted this one yourself. Gotta help other neighbours instead' });
+      return res.status(403).json({ error: 'You posted this one yourself. Gotta help other neighbours instead!' });
     }
 
     // Moderate offer note content if provided
@@ -84,7 +84,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         const moderationResult = await contentMod.checkContentWithQwen('', '', note);
         if (!moderationResult.is_safe) {
           return res.status(400).json({
-            error: 'Please keep your offer note friendly and respectful',
+            error: 'Please keep your offer note friendly and respectful.',
             message: 'We want to keep Errandify a safe and welcoming community. Let us know why you\'re a good fit for this task instead!',
             details: moderationResult.flags
           });
@@ -115,7 +115,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       // Prevent updating a rejected bid
       if (existingBid.status === 'rejected') {
         return res.status(403).json({
-          error: 'This neighbour picked someone else. No worries, there are more errands to help with',
+          error: 'This neighbour picked someone else. No worries, there are more errands to help with!',
           message: 'Your offer was not selected for this errand. You cannot submit another offer for this errand.'
         });
       }
@@ -123,7 +123,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       // Prevent updating a closed bid (another doer confirmed the job)
       if (existingBid.status === 'closed') {
         return res.status(403).json({
-          error: 'This errand already started with another neighbour. Good luck next time',
+          error: 'This errand already started with another neighbour. Good luck next time!',
           message: 'The job has started with another doer. Your offer is closed.'
         });
       }
@@ -131,7 +131,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       // Prevent updating a cancelled bid (job was cancelled)
       if (existingBid.status === 'cancelled') {
         return res.status(403).json({
-          error: 'This errand was cancelled. The neighbour no longer needs help',
+          error: 'This errand was cancelled. The neighbour no longer needs help.',
           message: 'The job has been cancelled. Your offer is no longer valid.'
         });
       }
@@ -139,7 +139,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       // Prevent updating a confirmed bid (job already confirmed)
       if (existingBid.status === 'confirmed') {
         return res.status(403).json({
-          error: 'Great news, your offer was accepted. Head to your tasks to get started',
+          error: 'Great news, your offer was accepted. Head to your tasks to get started!',
           message: 'This offer is confirmed and the job has started. You cannot modify it anymore.'
         });
       }
@@ -161,7 +161,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
       if (rejectedBidResult.rows.length > 0) {
         return res.status(403).json({
-          error: 'You already offered to help with this one. Wait to see if the neighbour picks you',
+          error: 'You already offered to help with this one. Wait to see if the neighbour picks you!',
           message: 'Your previous offer was not selected. You cannot submit another offer for this errand.'
         });
       }
@@ -248,7 +248,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('[Bids] Error creating bid:', error);
-    res.status(500).json({ error: 'Oops, we had a hiccup saving your offer. Give it another go' });
+    res.status(500).json({ error: 'Oops, we had a hiccup saving your offer. Give it another go!' });
   }
 });
 
@@ -268,12 +268,12 @@ router.get('/task/:taskId', authMiddleware, async (req: AuthRequest, res: Respon
     );
 
     if (errandResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Looks like this errand got taken care of or the neighbour changed their mind' });
+      return res.status(404).json({ error: 'Looks like this errand got taken care of or the neighbour changed their mind.' });
     }
 
     if (errandResult.rows[0].asker_id !== currentUserId) {
       console.log('[Bids GET] Access denied. Errand asker:', errandResult.rows[0].asker_id, 'Current user:', currentUserId);
-      return res.status(403).json({ error: 'Only the neighbour who asked can see the offers' });
+      return res.status(403).json({ error: 'Only the neighbour who asked can see the offers.' });
     }
 
     // Get bids from database
@@ -292,7 +292,7 @@ router.get('/task/:taskId', authMiddleware, async (req: AuthRequest, res: Respon
     res.json({ success: true, data: bidsResult.rows });
   } catch (error) {
     console.error('[Bids] Error fetching bids:', error);
-    res.status(500).json({ error: 'We are having trouble loading the offers. Just refresh and we will sort it' });
+    res.status(500).json({ error: 'We are having trouble loading the offers. Just refresh and we will sort it!' });
   }
 });
 
@@ -311,7 +311,7 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
     );
 
     if (bidResult.rows.length === 0) {
-      return res.status(404).json({ error: 'This offer is no longer around. Looks like things moved on' });
+      return res.status(404).json({ error: 'This offer is no longer around. Looks like things moved on.' });
     }
 
     const bid = bidResult.rows[0];
@@ -444,7 +444,7 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
     });
   } catch (error) {
     console.error('[Bids] Error accepting bid:', error);
-    res.status(500).json({ error: 'Oops, we had a hiccup confirming this offer. Give it another shot' });
+    res.status(500).json({ error: 'Oops, we had a hiccup confirming this offer. Give it another shot!' });
   }
 });
 
@@ -464,7 +464,7 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Respons
     );
 
     if (bidResult.rows.length === 0) {
-      return res.status(404).json({ error: 'This offer is no longer around. Looks like things moved on' });
+      return res.status(404).json({ error: 'This offer is no longer around. Looks like things moved on.' });
     }
 
     const bid = bidResult.rows[0];
@@ -516,7 +516,7 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Respons
     res.json({ success: true, data: updatedBid });
   } catch (error) {
     console.error('[Bids] Error rejecting bid:', error);
-    res.status(500).json({ error: 'We had a hiccup declining this offer. Give it another try' });
+    res.status(500).json({ error: 'We had a hiccup declining this offer. Give it another try!' });
   }
 });
 
@@ -588,7 +588,7 @@ router.get('/user/:userId/confidence', async (req: AuthRequest, res: Response) =
     });
   } catch (error) {
     console.error('Error calculating confidence:', error);
-    res.status(500).json({ error: 'We are having trouble loading the doer info. Just refresh and try again' });
+    res.status(500).json({ error: 'We are having trouble loading the doer info. Just refresh and try again!' });
   }
 });
 
@@ -633,7 +633,7 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
     });
   } catch (error) {
     console.error('Get my bids error:', error);
-    res.status(500).json({ error: 'We are having trouble loading the offers. Just refresh and we will sort it' });
+    res.status(500).json({ error: 'We are having trouble loading the offers. Just refresh and we will sort it!' });
   }
 });
 
@@ -668,7 +668,7 @@ router.get('/check/:errandId', authMiddleware, async (req: AuthRequest, res: Res
     });
   } catch (error) {
     console.error('[Bids] Error checking user bid:', error);
-    res.status(500).json({ error: 'We are having trouble checking your offer. Just refresh and we will sort it' });
+    res.status(500).json({ error: 'We are having trouble checking your offer. Just refresh and we will sort it!' });
   }
 });
 
@@ -685,7 +685,7 @@ router.put('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respons
     );
 
     if (bidResult.rows.length === 0) {
-      return res.status(404).json({ error: 'This offer is no longer around. Looks like things moved on' });
+      return res.status(404).json({ error: 'This offer is no longer around. Looks like things moved on.' });
     }
 
     const bid = bidResult.rows[0];
@@ -762,7 +762,7 @@ router.put('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respons
     });
   } catch (error) {
     console.error('Bid confirm error:', error);
-    res.status(500).json({ error: 'Oops, we had a hiccup confirming your offer. Give it another go' });
+    res.status(500).json({ error: 'Oops, we had a hiccup confirming your offer. Give it another go!' });
   }
 });
 
@@ -789,7 +789,7 @@ router.put('/:id/accept-sessions', authMiddleware, async (req: AuthRequest, res:
     );
 
     if (bidResult.rows.length === 0) {
-      return res.status(404).json({ error: 'This offer is no longer around. Looks like things moved on' });
+      return res.status(404).json({ error: 'This offer is no longer around. Looks like things moved on.' });
     }
 
     const bid = bidResult.rows[0];
@@ -851,7 +851,7 @@ router.put('/:id/accept-sessions', authMiddleware, async (req: AuthRequest, res:
     });
   } catch (error) {
     console.error('Error accepting bid sessions:', error);
-    res.status(500).json({ error: 'Oops, we had a hiccup confirming this offer. Give it another shot' });
+    res.status(500).json({ error: 'Oops, we had a hiccup confirming this offer. Give it another shot!' });
   }
 });
 
@@ -868,7 +868,7 @@ router.get('/recurring/:errandId', authMiddleware, async (req: AuthRequest, res:
     );
 
     if (errandResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Looks like this errand got taken care of or the neighbour changed their mind' });
+      return res.status(404).json({ error: 'Looks like this errand got taken care of or the neighbour changed their mind.' });
     }
 
     const errand = errandResult.rows[0];
@@ -955,7 +955,7 @@ router.get('/recurring/:errandId', authMiddleware, async (req: AuthRequest, res:
     });
   } catch (error) {
     console.error('Error fetching recurring bids:', error);
-    res.status(500).json({ error: 'We are having trouble loading the offers. Just refresh and we will sort it' });
+    res.status(500).json({ error: 'We are having trouble loading the offers. Just refresh and we will sort it!' });
   }
 });
 
