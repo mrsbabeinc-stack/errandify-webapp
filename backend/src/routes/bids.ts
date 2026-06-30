@@ -652,7 +652,7 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
           postal_code: bid.postal_code,
           deadline: bid.deadline,
           description: bid.description,
-          formatted_id: bid.formatted_id,
+          formatted_id: bid.formatted_id || `ER${bid.errand_id}`,
         },
       })),
     });
