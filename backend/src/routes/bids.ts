@@ -724,10 +724,10 @@ router.put('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respons
       ['closed', bid.errand_id, bidId]
     );
 
-    // Update errand status to 'in_progress' (doer confirmed start)
+    // Update errand status to 'confirmed' (awaiting doer to start)
     await db.query(
       'UPDATE errands SET status = $1 WHERE id = $2',
-      ['in_progress', bid.errand_id]
+      ['confirmed', bid.errand_id]
     );
 
     // Notify other bidders that the job has started and their offers are closed
