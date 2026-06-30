@@ -6,6 +6,37 @@ import { activityLogService } from '../services/activityLogService.js';
 
 const router = Router();
 
+// Category code mapping for OFFERID
+const categoryCodeMap: Record<string, string> = {
+  'home-maintenance': 'HM',
+  'cleaning-household': 'CL',
+  'food-beverage': 'FB',
+  'furniture-assembly': 'FA',
+  'shopping-errands': 'SH',
+  'delivery-moving': 'DE',
+  'travel-mobility': 'TR',
+  'event-planning': 'EV',
+  'childcare-education': 'CH',
+  'eldercare-healthcare': 'EH',
+  'pet-care': 'PC',
+  'personal-care': 'PE',
+  'tech-support': 'TE',
+  'creative-arts': 'CR',
+  'admin-business': 'AB',
+};
+
+// Generate unique OFFERID: OF[YY][CATEGORY][4-RANDOM-CHARS]
+function generateOfferId(category: string): string {
+  const year = new Date().getFullYear().toString().slice(-2); // 26
+  const categoryCode = categoryCodeMap[category.toLowerCase()] || 'XX';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `OF${year}${categoryCode}-${code}`;
+}
+
 // POST /api/bids - Submit a bid (single errand or multiple sessions for recurring tasks)
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -117,21 +148,27 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         });
       }
 
-      // Create new bid
+      // Get errand category for OFFERID
+      const errandCategoryResult = await db.query(
+        'SELECT title, errand_id, category FROM errands WHERE id = $1',
+        [task_id]
+      );
+      const errandTitle = errandCategoryResult.rows[0]?.title || 'Your errand';
+      const formattedErrandId = errandCategoryResult.rows[0]?.errand_id || `ER26-${task_id}`;
+      const errandCategory = errandCategoryResult.rows[0]?.category || 'admin-business';
+
+      // Generate unique OFFERID
+      const offerId = generateOfferId(errandCategory);
+
+      // Create new bid with offer_id
       const result = await db.query(
-        'INSERT INTO bids (errand_id, doer_id, amount, note, status) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [task_id, doerId, parseFloat(amount), note || null, 'pending']
+        'INSERT INTO bids (errand_id, doer_id, amount, note, status, offer_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+        [task_id, doerId, parseFloat(amount), note || null, 'pending', offerId]
       );
       bid = result.rows[0];
 
       // Send notification to asker about new bid
       try {
-        const errandData = await db.query(
-          'SELECT title, errand_id FROM errands WHERE id = $1',
-          [task_id]
-        );
-        const errandTitle = errandData.rows[0]?.title || 'Your errand';
-        const formattedErrandId = errandData.rows[0]?.errand_id || `ER26-${task_id}`;
 
         await db.query(
           `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
