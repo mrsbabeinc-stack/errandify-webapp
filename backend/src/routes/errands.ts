@@ -960,9 +960,11 @@ router.post('/:id/confirm', authMiddleware, async (req: AuthRequest, res: Respon
 router.post('/:id/start', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    console.log('[Errands] POST /api/errands/:id/start called with id:', id);
 
     // Resolve errand ID
     const errandDatabaseId = await resolveErrandId(id);
+    console.log('[Errands] Resolved errand database ID:', errandDatabaseId);
     if (!errandDatabaseId) {
       return res.status(404).json({ error: 'Errand not found' });
     }
