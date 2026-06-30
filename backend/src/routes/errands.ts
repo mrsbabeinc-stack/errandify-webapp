@@ -998,8 +998,9 @@ router.post('/:id/start', authMiddleware, async (req: AuthRequest, res: Response
       message: 'Job started! Timer is running.',
     });
   } catch (error) {
-    console.error('Error starting job:', error);
-    res.status(500).json({ error: 'Failed to start job' });
+    console.error('[Errands] Error starting job:', error);
+    console.error('[Errands] Error details:', JSON.stringify(error));
+    res.status(500).json({ error: 'Failed to start job', details: String(error) });
   }
 });
 
