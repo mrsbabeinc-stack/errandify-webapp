@@ -21,10 +21,12 @@ export default function TaskCompleteEvidencePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [completionNotes, setCompletionNotes] = useState('');
+  const [completionNotes, setCompletionNotes] = useState('I completed the task on time. Everything went smoothly and the client was very happy with the results. The work has been done to the highest standard.');
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadingPhotoIndex, setUploadingPhotoIndex] = useState<number | null>(null);
+  const [showPhotosPreview, setShowPhotosPreview] = useState(true);
+  const [showNotesPreview, setShowNotesPreview] = useState(true);
 
   useEffect(() => {
     fetchTaskDetail();
@@ -277,13 +279,52 @@ export default function TaskCompleteEvidencePage() {
               )}
             </div>
 
-            {/* Completion Notes */}
+            {/* Photos & Notes Preview Section */}
+            <div className="space-y-2">
+              {/* Photos Preview */}
+              <div className="border border-gray-200 rounded-lg">
+                <button
+                  onClick={() => setShowPhotosPreview(!showPhotosPreview)}
+                  className="w-full px-3 py-2 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors rounded-lg"
+                >
+                  <span className="font-semibold text-errandify-brown text-sm">📸 Photos ({uploadedFiles.length})</span>
+                  <span className="text-lg">{showPhotosPreview ? '▼' : '▶'}</span>
+                </button>
+                {showPhotosPreview && uploadedFiles.length > 0 && (
+                  <div className="p-2 space-y-1 border-t border-gray-200">
+                    {uploadedFiles.map((file, idx) => (
+                      <p key={idx} className="text-xs text-gray-600">
+                        {file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Notes Preview */}
+              <div className="border border-gray-200 rounded-lg">
+                <button
+                  onClick={() => setShowNotesPreview(!showNotesPreview)}
+                  className="w-full px-3 py-2 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors rounded-lg"
+                >
+                  <span className="font-semibold text-errandify-brown text-sm">📝 Notes ({completionNotes.length} chars)</span>
+                  <span className="text-lg">{showNotesPreview ? '▼' : '▶'}</span>
+                </button>
+                {showNotesPreview && (
+                  <div className="p-2 border-t border-gray-200">
+                    <p className="text-xs text-gray-700 bg-gray-50 p-2 rounded line-clamp-3">{completionNotes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Completion Notes Editor */}
             <div>
-              <h3 className="font-semibold text-errandify-brown mb-1 text-sm">📝 Share the Details</h3>
+              <h3 className="font-semibold text-errandify-brown mb-1 text-sm">📝 Share the Details (Edit)</h3>
               <textarea
                 value={completionNotes}
                 onChange={(e) => setCompletionNotes(e.target.value)}
-                placeholder="Tell them what you did and how it went! They'd love to know 😊"
+                placeholder="Tell them what you did and how it went! They'd love to know"
                 rows={3}
                 className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange focus:border-transparent text-xs"
               />
