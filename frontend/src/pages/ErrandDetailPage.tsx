@@ -1081,7 +1081,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 <p className="text-red-800 font-semibold">⚠️ Under Admin Review</p>
                 <p className="text-xs text-red-600">Dispute is being reviewed. Payment is held.</p>
               </div>
-            ) : errand.status === 'completed' ? (
+            ) : errand.status?.includes('completed') ? (
               <>
                 {/* Reminder banner if evidence viewed but not rated */}
                 {showCompletionEvidence && !hasRated && (
