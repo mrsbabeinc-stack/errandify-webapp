@@ -167,7 +167,6 @@ function getActivityDisplayText(type: string, actorName: string, details: any): 
     case 'posted':
       return `${displayName} posted this task`;
     case 'bid_placed':
-      // Include offer ID and amount if available
       if (details?.offerId && details?.amount) {
         return `${displayName} submitted an offer (${details.offerId} - SGD $${details.amount})`;
       }
@@ -179,21 +178,37 @@ function getActivityDisplayText(type: string, actorName: string, details: any): 
     case 'confirmed':
       return `Offer confirmed - ready to start`;
     case 'started':
-      return `${displayName} got started on this${errandIdDisplay}`;
+      return `${displayName} started the errand${errandIdDisplay}`;
     case 'completed':
-      return `${displayName} finished & shared their work${errandIdDisplay}`;
+      return `${displayName} submitted completion evidence${errandIdDisplay}`;
     case 'completion_evidence_viewed':
-      return `${displayName} reviewed the completed work`;
+      return `${displayName} reviewed the work`;
     case 'review_submitted':
       return `${displayName} left feedback`;
     case 'rating_submitted':
-      return `${displayName} shared a rating`;
+      return `${displayName} rated the work`;
     case 'changes_requested':
       return `${displayName} requested changes: ${details?.reason || 'see details'}`;
+    case 'resubmitted':
+      return `${displayName} resubmitted revised work${errandIdDisplay}`;
     case 'dispute_raised':
-      return `A dispute was raised`;
+      const reason = details?.reason ? ` - ${details.reason}` : '';
+      return `${displayName} raised a dispute${reason}`;
     case 'dispute_resolved':
-      return `Dispute resolved`;
+      const resolution = details?.resolution ? ` - ${details.resolution}` : '';
+      return `Dispute resolved${resolution}`;
+    case 'closed':
+      return `Errand closed & payment settled`;
+    case 'cancelled':
+      const cancelReason = details?.reason ? ` - ${details.reason}` : '';
+      return `${displayName} cancelled the errand${cancelReason}`;
+    case 'reopened':
+      return `${displayName} reopened this errand`;
+    case 'payment_released':
+      return `Payment released to ${displayName}`;
+    case 'refunded':
+      const refundAmount = details?.amount ? ` - SGD $${details.amount}` : '';
+      return `Asker refunded${refundAmount}`;
     default:
       return `${type}`;
   }
