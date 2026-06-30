@@ -399,7 +399,7 @@ export default function BidsViewer({ taskId, taskBudget, onBidAccepted }: BidsVi
 
               {taskBudget && bid.amount > taskBudget && (
                 <p className="text-xs text-orange-600 mb-2 bg-orange-50 p-2 rounded">
-                  💡 This offer is slightly above your budget of ${taskBudget}. Would you consider it for the extra quality?
+                  💡 This offer (${bid.amount}) exceeds your budget of ${taskBudget}
                 </p>
               )}
 
