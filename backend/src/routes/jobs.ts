@@ -445,6 +445,28 @@ async function releasePayment(taskId: string, task: any, reason: 'early_confirm'
 router.get('/:taskId/submissions', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { taskId } = req.params;
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Verify user is asker or confirmed doer - cannot view submission details otherwise
+    const authCheckResult = await db.query(
+      `SELECT e.asker_id, e.id,
+        (SELECT doer_id FROM bids WHERE errand_id = e.id AND status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress', 'completed') LIMIT 1) as confirmed_doer_id
+       FROM errands e
+       WHERE e.id = $1`,
+      [taskId]
+    );
+
+    if (authCheckResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const errand = authCheckResult.rows[0];
+    const isAsker = errand.asker_id === userId;
+    const isConfirmedDoer = errand.confirmed_doer_id === userId;
+
+    if (!isAsker && !isConfirmedDoer) {
+      return res.status(403).json({ error: 'Not authorized to view submission details' });
+    }
 
     // Get all submissions for this task
     const submissionsResult = await db.query(
