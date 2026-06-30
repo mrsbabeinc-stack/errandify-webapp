@@ -583,3 +583,126 @@ export function templatePaymentReminder(userName: string, taskTitle: string, hou
     </html>
   `;
 }
+
+export function templateReferralJoin(referrerName: string, newUserName: string, pointsAwarded: number): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #FF7A29; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
+        .points { background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; }
+        .button { background-color: #FF7A29; color: white; padding: 12px 24px; border-radius: 24px; text-decoration: none; display: inline-block; margin: 20px 0; }
+        .footer { color: #999; font-size: 12px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1 style="margin: 0;">👤 New Referral Joined!</h1>
+        </div>
+        <div class="content">
+          <p>Hi ${referrerName},</p>
+          <p>Great news! <strong>${newUserName}</strong> just signed up on Errandify using your referral link!</p>
+          <div class="points">
+            <p style="margin: 0; color: #155724;"><strong>You earned +${pointsAwarded} Errandify Points! 🎉</strong></p>
+            <p style="margin: 10px 0 0 0; color: #155724; font-size: 14px;">Earn +150 EP more when ${newUserName} completes their first job</p>
+          </div>
+          <a href="http://localhost:5173/my-referrals" class="button">View Your Referrals</a>
+          <p style="color: #666; font-size: 14px;">Keep sharing your referral link to earn more points and help your friends earn money on Errandify!</p>
+        </div>
+        <div class="footer">
+          <p>© 2026 Errandify. All rights reserved.</p>
+          <p><a href="http://localhost:5173/settings/notifications" style="color: #999; text-decoration: none;">Manage notification preferences</a></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+export function templateFirstJobBonus(referrerName: string, newUserName: string, pointsAwarded: number): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #28a745; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
+        .milestone { background-color: #ffeaa7; border-left: 4px solid #fdcb6e; padding: 15px; margin: 20px 0; }
+        .button { background-color: #28a745; color: white; padding: 12px 24px; border-radius: 24px; text-decoration: none; display: inline-block; margin: 20px 0; }
+        .footer { color: #999; font-size: 12px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1 style="margin: 0;">🌟 First Job Milestone!</h1>
+        </div>
+        <div class="content">
+          <p>Hi ${referrerName},</p>
+          <p><strong>${newUserName}</strong> just completed their first job on Errandify! 🎉</p>
+          <div class="milestone">
+            <p style="margin: 0; color: #2d3436;"><strong>Activation Bonus: +${pointsAwarded} Errandify Points!</strong></p>
+            <p style="margin: 10px 0 0 0; color: #2d3436; font-size: 14px;">Earn +100 EP more when they reach 10 completed jobs</p>
+          </div>
+          <p style="color: #666; font-size: 14px;">Your referral is on their way to becoming a trusted community member. Keep supporting them by referring more friends!</p>
+          <a href="http://localhost:5173/my-referrals" class="button">View Your Referrals</a>
+        </div>
+        <div class="footer">
+          <p>© 2026 Errandify. All rights reserved.</p>
+          <p><a href="http://localhost:5173/settings/notifications" style="color: #999; text-decoration: none;">Manage notification preferences</a></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+export function templateRatingReceived(doerName: string, raterName: string, rating: number, taskTitle: string, pointsAwarded: number): string {
+  const ratingStars = '⭐'.repeat(Math.round(rating));
+  const celebration = rating === 5 ? '🎉' : rating >= 4 ? '👍' : '✨';
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #FF7A29; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
+        .rating { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }
+        .button { background-color: #FF7A29; color: white; padding: 12px 24px; border-radius: 24px; text-decoration: none; display: inline-block; margin: 20px 0; }
+        .footer { color: #999; font-size: 12px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1 style="margin: 0;">${celebration} New Review!</h1>
+        </div>
+        <div class="content">
+          <p>Hi ${doerName},</p>
+          <p><strong>${raterName}</strong> just rated your work on <strong>"${taskTitle}"</strong>!</p>
+          <div class="rating">
+            <p style="margin: 0; color: #856404;"><strong>Rating: ${ratingStars} (${Math.round(rating)}/5)</strong></p>
+            <p style="margin: 10px 0 0 0; color: #856404; font-weight: bold;">You earned +${pointsAwarded} Errandify Points!</p>
+          </div>
+          <p style="color: #666; font-size: 14px;">Every great review helps build your reputation. Keep up the excellent work!</p>
+          <a href="http://localhost:5173/my-account" class="button">View Your Profile</a>
+        </div>
+        <div class="footer">
+          <p>© 2026 Errandify. All rights reserved.</p>
+          <p><a href="http://localhost:5173/settings/notifications" style="color: #999; text-decoration: none;">Manage notification preferences</a></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
