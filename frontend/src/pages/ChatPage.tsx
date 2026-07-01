@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import TaskChatbox from '../components/TaskChatbox';
 import { initializeSocket, getSocket, isSocketConnected as checkSocketConnected } from '../utils/socketClient';
@@ -25,6 +25,7 @@ interface Conversation {
 
 export default function ChatPage({ userRole }: ChatPageProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [allConversations, setAllConversations] = useState<Conversation[]>([]);
@@ -40,21 +41,31 @@ export default function ChatPage({ userRole }: ChatPageProps) {
   const [isSocketConnected, setIsSocketConnected] = useState(false);
 
   useEffect(() => {
-    // Check if errandId is in URL query params (from notification click)
-    const errandIdParam = searchParams.get('errandId');
+    // Check if errandId is in location state (from notification click) or URL query params
+    const stateErrandId = (location.state as any)?.errandId;
+    const urlErrandId = searchParams.get('errandId');
+    const errandIdParam = stateErrandId || urlErrandId;
+
+    console.log('[ChatPage] Full location.state:', location.state);
+    console.log('[ChatPage] stateErrandId:', stateErrandId);
+    console.log('[ChatPage] urlErrandId:', urlErrandId);
+    console.log('[ChatPage] Final errandIdParam:', errandIdParam);
+
     if (errandIdParam) {
-      const errandId = parseInt(errandIdParam, 10);
-      console.log('[ChatPage] Setting errandId from URL param:', errandId);
+      const errandId = typeof errandIdParam === 'string' ? parseInt(errandIdParam, 10) : errandIdParam;
+      console.log('[ChatPage] Parsed errandId:', errandId, 'type:', typeof errandId);
       setSelectedErrandId(errandId);
       setShowChatbox(true);
     }
-  }, [searchParams]);
+  }, [location, searchParams]);
 
   // Auto-open chat when conversations load and we have a selectedErrandId from URL
   useEffect(() => {
-    if (selectedErrandId && allConversations.length > 0 && !loading) {
-      console.log('[ChatPage] Conversations loaded, selectedErrandId:', selectedErrandId);
-      // The conversation should already be selected, just make sure chatbox is visible
+    console.log('[ChatPage] selectedErrandId:', selectedErrandId, 'allConversations.length:', allConversations.length, 'loading:', loading);
+    if (selectedErrandId && !loading) {
+      const conversation = allConversations.find(c => c.id === selectedErrandId);
+      console.log('[ChatPage] Auto-opening chat for errandId:', selectedErrandId, 'conversation found:', !!conversation);
+      // Open chatbox regardless of whether conversation is in list (TaskChatbox will fetch it)
       setShowChatbox(true);
     }
   }, [allConversations, selectedErrandId, loading]);
@@ -101,27 +112,51 @@ export default function ChatPage({ userRole }: ChatPageProps) {
         ...(doerResponse.data.success && Array.isArray(doerResponse.data.data) ? doerResponse.data.data : []),
       ];
 
+      console.log('[ChatPage] askerResponse:', askerResponse.data);
+      console.log('[ChatPage] doerResponse:', doerResponse.data);
+      console.log('[ChatPage] allData (before dedup):', allData);
+
       // Remove duplicates based on ID
       const uniqueData = Array.from(new Map(allData.map(item => [item.id, item])).values());
 
-      const activeChats = uniqueData.filter((errand: any) =>
-        ['confirmed', 'in_progress', 'completed_unconfirmed', 'completed_confirmed', 'completed'].includes(errand.status)
-      );
+      console.log('[ChatPage] uniqueData (after dedup):', uniqueData);
 
-      const allConversations = activeChats.map((errand: any) => ({
-        id: errand.id,
-        formattedId: errand.formatted_id || `ER${errand.id}`,
-        title: errand.title,
-        otherPartyName: errand.askerName || errand.doerName || 'Unknown',
-        status: errand.status,
-        lastMessageAt: errand.updatedAt,
-        deadline: errand.deadline,
-        location: errand.location,
-        postal: errand.postal_code,
-        budget: errand.budget,
-        description: errand.description,
-        role: errand.askerName ? 'asker' : 'doer', // Mark which role this conversation is from
-      }));
+      const activeChats = uniqueData.filter((errand: any) => {
+        // Only show chats when offer is confirmed, in_progress, or completed
+        // Open status means no bid accepted yet - no chat until doer is selected
+        const chatableStatuses = ['confirmed', 'in_progress', 'completed_unconfirmed', 'completed_confirmed', 'completed'];
+        return chatableStatuses.includes(errand.status);
+      });
+
+      console.log('[ChatPage] activeChats:', activeChats);
+      console.log('[ChatPage] Sample errand data:', activeChats[0]);
+
+      // Get current user ID for role determination
+      const currentUserStr = localStorage.getItem('user');
+      const currentUserId = currentUserStr ? JSON.parse(currentUserStr).id : null;
+
+      const allConversations = activeChats.map((errand: any) => {
+        // Determine user's role: if current user is asker_id, they're the asker; otherwise they're the doer
+        const userRole = errand.asker_id === currentUserId ? 'asker' : 'doer';
+        const otherPartyName = userRole === 'asker'
+          ? (errand.doerName || 'Doer')
+          : (errand.askerName || 'Asker');
+
+        return {
+          id: errand.id,
+          formattedId: errand.errandId || errand.formatted_id || `ER${errand.id}`,
+          title: errand.title,
+          otherPartyName,
+          status: errand.status,
+          lastMessageAt: errand.updatedAt,
+          deadline: errand.deadline,
+          location: errand.location,
+          postal: errand.postal_code,
+          budget: errand.budget,
+          description: errand.description,
+          role: userRole,
+        };
+      });
 
       setAllConversations(allConversations);
       filterConversations(allConversations);
@@ -141,6 +176,26 @@ export default function ChatPage({ userRole }: ChatPageProps) {
     } else if (viewFilter === 'doer') {
       filtered = convos.filter(c => c.role === 'doer');
     }
+
+    // Sort by status priority: in_progress > confirmed > confirmed_awaiting_start > completed
+    const statusPriority: Record<string, number> = {
+      'in_progress': 0,
+      'confirmed': 1,
+      'confirmed_awaiting_start': 2,
+      'completed': 3,
+    };
+
+    filtered = filtered.sort((a, b) => {
+      const priorityA = statusPriority[a.status] ?? 999;
+      const priorityB = statusPriority[b.status] ?? 999;
+
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+
+      // If same priority, sort by last message time (newest first)
+      return new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime();
+    });
 
     setConversations(filtered);
   };
@@ -208,9 +263,12 @@ export default function ChatPage({ userRole }: ChatPageProps) {
         return 'Confirmed';
       case 'in_progress':
         return 'In Progress';
+      case 'confirmed_awaiting_start':
+        return 'Awaiting Start';
       case 'completed_unconfirmed':
         return 'Awaiting Confirmation';
       case 'completed_confirmed':
+      case 'completed':
         return 'Completed';
       default:
         return status;
@@ -384,10 +442,10 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 </div>
               )}
               <div className="flex justify-between items-start gap-2 mb-1">
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-sm text-gray-800 line-clamp-1">{conversation.title}</h3>
-                    <span className="text-xs text-gray-500">🆔 {conversation.formattedId}</span>
+                    <span className="text-xs font-bold text-errandify-orange bg-orange-50 px-1.5 py-0.5 rounded flex-shrink-0">{conversation.formattedId}</span>
                   </div>
                 </div>
                 <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${getStatusColor(conversation.status)}`}>
@@ -420,19 +478,19 @@ export default function ChatPage({ userRole }: ChatPageProps) {
         </div>
       )}
 
-      {showChatbox && selectedConversation && selectedErrandId && (
+      {showChatbox && selectedErrandId && (
         <TaskChatbox
           taskId={selectedErrandId}
-          taskTitle={selectedConversation.title}
+          taskTitle={selectedConversation?.title || 'Chat'}
           isOpen={showChatbox}
           onClose={handleCloseChat}
-          errandDetails={{
+          errandDetails={selectedConversation ? {
             budget: selectedConversation.budget,
             deadline: selectedConversation.deadline,
             location: selectedConversation.location,
             postal_code: selectedConversation.postal,
             description: selectedConversation.description,
-          }}
+          } : undefined}
         />
       )}
     </div>

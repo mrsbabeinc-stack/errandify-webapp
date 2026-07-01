@@ -618,7 +618,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               >
                 {errand.category}
               </span>
-              {(userBidAmount || errand.status === 'completed') && errand.status !== 'open' && (
+              {(userBidAmount || errand.status !== 'open') && (
                 <span className={`text-xs px-2 py-1 rounded font-bold ${
                   errand.status === 'in_progress'
                     ? 'bg-blue-100 text-blue-700'
@@ -705,29 +705,14 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </>
             )}
 
-            {/* Full Address (when confirmed) */}
-            {errand.location && errand.status === 'confirmed' && (
+            {/* Full Address (shown to asker always, and confirmed doer after confirmation) */}
+            {errand.location && currentUser &&
+             (currentUser.id === errand.askerId ||
+              (errand.status === 'confirmed' && currentUser.id === errand.doerId)) && (
               <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-1.5 rounded-lg border border-orange-200">
                 <p className="text-xs text-gray-600 font-semibold mb-0.5">📍 Full Address</p>
                 <p className="text-xs text-gray-800 font-medium break-words">
-                  {(() => {
-                    const location = errand.location || 'Not specified';
-                    let postalCode = errand.postal_code;
-
-                    if (!postalCode) {
-                      const postalMatch = location.match(/(\d{6})/);
-                      if (postalMatch) {
-                        postalCode = postalMatch[1];
-                      }
-                    }
-
-                    if (postalCode) {
-                      const cleanLocation = location.replace(/\s*S?\d{6}\s*$/, '').trim();
-                      return `${cleanLocation} S${postalCode}`;
-                    }
-
-                    return location;
-                  })()}
+                  {errand.location}
                 </p>
               </div>
             )}
@@ -1037,7 +1022,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   Cancel Errand
                 </button>
               </div>
-            ) : errand.status === 'confirmed' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
+            ) : errand.status === 'confirmed' && currentUser && currentUser.id === errand.askerId ? (
+              // Asker viewing confirmed errand - show Chat and Cancel buttons
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => setShowChat(true)}
@@ -1046,10 +1032,10 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   💬 Chat
                 </button>
                 <button
-                  onClick={handleStartJob}
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors text-base"
+                  onClick={handleCancelErrand}
+                  className="flex-1 bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
                 >
-                  ▶️ Start Errand
+                  ✕ Cancel
                 </button>
               </div>
             ) : errand.status === 'confirmed' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
@@ -1127,6 +1113,22 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               >
                 👁️ Review Completion
               </button>
+            ) : errand.status === 'confirmed' && currentUser && currentUser.id === errand.askerId ? (
+              // Asker viewing confirmed errand - show Chat, Unassign, Cancel buttons
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setShowChat(true)}
+                  className="flex-1 bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition-colors text-base"
+                >
+                  💬 Chat
+                </button>
+                <button
+                  onClick={handleCancelErrand}
+                  className="flex-1 bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
+                >
+                  ✕ Cancel
+                </button>
+              </div>
             ) : errand.status === 'disputed' ? (
               <div className="w-full bg-red-50 border border-red-200 rounded-lg p-3 mt-2 text-center">
                 <p className="text-red-800 font-semibold">⚠️ Under Admin Review</p>

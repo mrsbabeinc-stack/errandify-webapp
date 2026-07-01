@@ -13,7 +13,7 @@ export function initializeSocket(token: string): Socket {
     return socket;
   }
 
-  const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+  const socketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
   socket = io(socketUrl, {
     auth: { token },
@@ -44,8 +44,14 @@ export function initializeSocket(token: string): Socket {
   });
 
   // Connection error
-  socket.on('connect_error', (error) => {
+  socket.on('connect_error', (error: any) => {
     console.error('Socket connection error:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      type: error?.type,
+      data: error?.data,
+    });
   });
 
   return socket;

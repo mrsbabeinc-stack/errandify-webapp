@@ -552,9 +552,9 @@ Your message doesn't meet our community standards. Please keep messages:
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange"
-              disabled={isLoading}
+              placeholder={chatDisabled ? "Chat is closed" : "Type a message..."}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange disabled:bg-gray-100"
+              disabled={isLoading || chatDisabled}
             />
             <div className="relative">
               <button

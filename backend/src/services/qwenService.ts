@@ -160,3 +160,8 @@ export const qwenService = {
     }
   },
 };
+
+// Export as QwenAI for compatibility
+export const QwenAI = {
+  call: qwenService.chat,
+};

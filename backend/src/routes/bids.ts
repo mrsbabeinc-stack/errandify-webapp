@@ -187,7 +187,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       );
       bid = result.rows[0];
 
-      // Send notification to asker about new bid with OFFERID (showing doer alias)
+      // Send notification to asker about new bid with OFFERID in title (showing doer alias)
       try {
         await db.query(
           `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
@@ -195,8 +195,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           [
             errand.asker_id,
             'bid_placed',
-            'New Offer Place',
-            `${formattedErrandId} • ${offerId}: ${doerAlias} has placed an offer for $\${parseFloat(amount)}`,
+            `New Offer Placed • ${offerId}`,
+            `${formattedErrandId}: ${doerAlias} has placed an offer for $\${parseFloat(amount)}`,
             task_id,
           ]
         );
@@ -231,17 +231,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Log activity: Bid placed - get doer alias for activity log
-    let doerAlias = doerName;
-    try {
-      const doerResult = await db.query(
-        'SELECT alias FROM users WHERE id = $1',
-        [doerId]
-      );
-      doerAlias = doerResult.rows[0]?.alias || doerName;
-    } catch (err) {
-      console.error('[Bids] Failed to get doer alias:', err);
-    }
+    // Log activity: Bid placed
+    // Note: doerAlias is already set from lines 100-105 above
 
     await activityLogService.logBidPlaced(task_id, doerName, doerId, parseFloat(amount), bid.offer_id, doerAlias);
 
@@ -378,22 +369,16 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
     }
 
     // Update errand status to 'confirmed' and set 24h confirmation deadline
-    await db.query(
+    console.log('[Bids] Updating errand status to confirmed:', { bidId: id, errandId: bid.errand_id, status: 'confirmed' });
+    const updateResult = await db.query(
       'UPDATE errands SET status = $1, accepted_bid_id = $2, confirmation_expires_at = NOW() + INTERVAL \'24 hours\' WHERE id = $3',
       ['confirmed', id, bid.errand_id]
     );
+    console.log('[Bids] Errand update result:', { rowCount: updateResult.rowCount, errandId: bid.errand_id });
 
     // Log activity for confirmation
     try {
-      const askerResult = await db.query('SELECT name FROM users WHERE id = $1', [bid.asker_id]);
-      const askerName = askerResult.rows[0]?.name || 'Asker';
-      await activityLogService.logActivity(
-        bid.errand_id,
-        'confirmed',
-        bid.asker_id,
-        askerName,
-        'asker'
-      );
+      await activityLogService.logConfirmed(bid.errand_id);
     } catch (activityErr) {
       console.warn('[Bids] Failed to log confirmation activity:', activityErr);
     }
@@ -439,9 +424,10 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
     }
 
     // Log activity: Bid accepted
-    const askerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [bid.asker_id]);
+    const askerResult = await db.query('SELECT display_name, alias FROM users WHERE id = $1', [bid.asker_id]);
     const askerName = askerResult.rows[0]?.display_name || 'Unknown User';
-    await activityLogService.logBidAccepted(bid.errand_id, askerName, bid.asker_id);
+    const askerAlias = askerResult.rows[0]?.alias || undefined;
+    await activityLogService.logBidAccepted(bid.errand_id, askerName, bid.asker_id, askerAlias);
 
     // Notify doer in real-time that their bid was confirmed
     try {

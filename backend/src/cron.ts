@@ -1,5 +1,6 @@
 import db from './db.js';
 import { sendDailyDigests, sendPaymentReminders } from './services/emailNotifications.js';
+import { offlineNotificationService } from './services/offlineNotificationService.js';
 import axios from 'axios';
 
 /**
@@ -261,6 +262,10 @@ export function startCrons() {
   setInterval(checkDisputeAutoResolution, 6 * 60 * 60 * 1000);
   console.log('[CRON] Dispute auto-resolution scheduled to run every 6 hours');
 
+  // Offline notification cleanup - run every hour
+  setInterval(cleanupOfflineNotifications, 60 * 60 * 1000);
+  console.log('[CRON] Offline notification cleanup scheduled to run every hour');
+
   console.log('[CRON] All cron jobs started successfully');
 }
 
@@ -479,5 +484,15 @@ export async function checkEventRemindersDayOf() {
     }
   } catch (error) {
     console.error('[CRON] Event day-of reminder check failed:', error);
+  }
+}
+
+// Run hourly: Clean up old offline notifications
+export async function cleanupOfflineNotifications() {
+  try {
+    console.log('[CRON] Cleaning up old offline notifications...');
+    await offlineNotificationService.cleanupOldNotifications();
+  } catch (error) {
+    console.error('[CRON] Offline notification cleanup failed:', error);
   }
 }

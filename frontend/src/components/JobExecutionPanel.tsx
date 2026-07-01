@@ -26,6 +26,11 @@ export default function JobExecutionPanel({
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [gpsEnabled, setGpsEnabled] = useState(false);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [disputeType, setDisputeType] = useState<'work_not_completed' | 'low_quality' | 'other'>('work_not_completed');
+  const [disputeDescription, setDisputeDescription] = useState('');
+  const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
+  const [disputeError, setDisputeError] = useState('');
 
   const handleStartJob = async () => {
     if (!isDoer) return;
@@ -101,6 +106,41 @@ export default function JobExecutionPanel({
       setError(err.response?.data?.error || 'Failed to complete job');
     } finally {
       setIsCompleting(false);
+    }
+  };
+
+  const handleRaiseDispute = async () => {
+    if (!disputeDescription.trim()) {
+      setDisputeError('Please describe the issue');
+      return;
+    }
+
+    setIsSubmittingDispute(true);
+    setDisputeError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/disputes`,
+        {
+          errandId: taskId,
+          type: disputeType,
+          description: disputeDescription,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      alert('✅ Dispute raised successfully. Payment is held. Admin will review within 24 hours.');
+      setShowDisputeModal(false);
+      setDisputeDescription('');
+      setDisputeType('work_not_completed');
+      onStatusChange();
+    } catch (err: any) {
+      setDisputeError(err.response?.data?.error || 'Failed to raise dispute');
+    } finally {
+      setIsSubmittingDispute(false);
     }
   };
 
@@ -220,14 +260,110 @@ export default function JobExecutionPanel({
             ✓ Confirm Work
           </button>
           <button
-            onClick={() => {
-              // TODO: Implement dispute
-              alert('TODO: Raise dispute flow');
-            }}
+            onClick={() => setShowDisputeModal(true)}
             className="flex-1 border border-yellow-300 text-yellow-900 py-2 rounded font-semibold text-sm hover:bg-yellow-100"
           >
             ⚠️ Raise Dispute
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Dispute Modal
+  if (showDisputeModal) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          {/* Modal Header */}
+          <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white p-6 flex justify-between items-center">
+            <h2 className="text-xl font-bold">Raise a Dispute</h2>
+            <button
+              onClick={() => {
+                setShowDisputeModal(false);
+                setDisputeDescription('');
+                setDisputeError('');
+              }}
+              className="text-2xl hover:opacity-80"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Modal Content */}
+          <div className="p-6 space-y-4">
+            <div>
+              <h3 className="font-semibold text-gray-800 mb-2">Task: {taskTitle}</h3>
+              <p className="text-sm text-gray-600">Budget: SGD ${budget}</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">
+                What's the issue? *
+              </label>
+              <select
+                value={disputeType}
+                onChange={(e) => setDisputeType(e.target.value as any)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+              >
+                <option value="work_not_completed">Work Not Completed</option>
+                <option value="low_quality">Poor Quality Work</option>
+                <option value="other">Other Issue</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">
+                Describe the problem in detail *
+              </label>
+              <textarea
+                value={disputeDescription}
+                onChange={(e) => {
+                  setDisputeDescription(e.target.value);
+                  setDisputeError('');
+                }}
+                placeholder="Explain what went wrong and include any relevant details..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                rows={5}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Min 20 characters. Include specific details about the issue.
+              </p>
+            </div>
+
+            {disputeError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-700">❌ {disputeError}</p>
+              </div>
+            )}
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-700">
+                <strong>ℹ️ What happens next:</strong> Your dispute will be reviewed by our team within 24 hours. Both parties can provide evidence in the chat. Payment is held until resolved.
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <button
+                onClick={() => {
+                  setShowDisputeModal(false);
+                  setDisputeDescription('');
+                  setDisputeError('');
+                }}
+                disabled={isSubmittingDispute}
+                className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRaiseDispute}
+                disabled={isSubmittingDispute}
+                className="flex-1 bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 text-sm"
+              >
+                {isSubmittingDispute ? '⏳ Submitting...' : '🚨 Raise Dispute'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );

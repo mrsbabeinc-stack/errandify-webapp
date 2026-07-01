@@ -10,7 +10,8 @@ interface TaskDetail {
   status: string;
   budget: number;
   asker_id: number;
-  asker?: { display_name: string };
+  asker?: { display_name: string; alias?: string };
+  asker_alias?: string;
 }
 
 export default function TaskCompleteEvidencePage() {
@@ -21,12 +22,41 @@ export default function TaskCompleteEvidencePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [completionNotes, setCompletionNotes] = useState('I completed the task on time. Everything went smoothly and the client was very happy with the results. The work has been done to the highest standard.');
-  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [completionNotes, setCompletionNotes] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadingPhotoIndex, setUploadingPhotoIndex] = useState<number | null>(null);
-  const [showPhotosPreview, setShowPhotosPreview] = useState(true);
-  const [showNotesPreview, setShowNotesPreview] = useState(true);
+
+  const generateSuggestedText = () => {
+    if (!task) return '';
+
+    const title = task.title.toLowerCase();
+
+    // Generate contextual suggestions based on task title keywords (max 150 chars)
+    if (title.includes('clean')) {
+      return `I've completed the cleaning. Everything is fresh and well-organized!`;
+    } else if (title.includes('repair') || title.includes('fix')) {
+      return `I've completed the repair. Everything is working properly now!`;
+    } else if (title.includes('deliver') || title.includes('send')) {
+      return `I've completed the delivery as requested. It was safely delivered on time!`;
+    } else if (title.includes('design') || title.includes('create')) {
+      return `I've finished the design work. The result looks great and is ready for use!`;
+    } else if (title.includes('teach') || title.includes('tutor') || title.includes('lesson')) {
+      return `I've completed the tutoring session. Your student made good progress!`;
+    } else if (title.includes('cook') || title.includes('food') || title.includes('meal')) {
+      return `I've prepared the meal perfectly. Everything is fresh and ready to serve!`;
+    } else if (title.includes('move') || title.includes('transport')) {
+      return `I've completed the moving task. All items were handled with care safely!`;
+    } else if (title.includes('photography') || title.includes('photo')) {
+      return `I've completed the photography session. Great shots captured and ready!`;
+    } else if (title.includes('garden') || title.includes('landscape') || title.includes('plant')) {
+      return `I've completed the gardening. Your space looks beautiful and maintained!`;
+    } else if (title.includes('babysit') || title.includes('childcare')) {
+      return `I've completed the childcare session. The children had a great time!`;
+    } else {
+      return `I've completed the task successfully. Everything went smoothly!`;
+    }
+  };
+
+  const suggestedText = generateSuggestedText();
 
   useEffect(() => {
     fetchTaskDetail();
@@ -41,6 +71,7 @@ export default function TaskCompleteEvidencePage() {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      console.log('[TaskComplete] Fetched task data:', response.data.data);
       setTask(response.data.data);
       setError('');
     } catch (err: any) {
@@ -140,12 +171,13 @@ export default function TaskCompleteEvidencePage() {
       setError(''); // Clear any errors
 
       // Create a warm, engaging toast notification
+      const askerName = task?.asker_alias || task?.asker?.alias || task?.asker?.display_name || 'The person';
       const toastDiv = document.createElement('div');
       toastDiv.className = 'fixed top-4 left-4 right-4 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600 text-white p-5 rounded-lg shadow-2xl z-50 text-center';
       toastDiv.innerHTML = `
         <p style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;">Wonderful! You've shared it all</p>
         <p style="font-size: 0.95rem; opacity: 0.95; margin-bottom: 0.75rem; font-weight: 500; line-height: 1.5;">
-          ${task.asker?.display_name || 'The person'} will take a look at everything soon. Thank you for giving your best - your effort really makes a difference!
+          ${askerName} will take a look at everything soon. Thank you for giving your best - your effort really makes a difference!
         </p>
         <p style="font-size: 0.9rem; opacity: 0.9; font-weight: 500;">Payment will arrive in 48 hours. You've earned it, friend!</p>
       `;
@@ -214,8 +246,8 @@ export default function TaskCompleteEvidencePage() {
           {/* Header Section - Compact */}
           <div className="bg-gradient-to-r from-green-400 via-emerald-500 to-teal-600 text-white p-3">
             <h1 className="text-lg font-bold mb-1">🎉 Great Job! Share Your Work</h1>
-            <p className="text-xs opacity-95">Let's show {task.asker?.display_name || 'them'} what you've done!</p>
-            <p className="text-xs opacity-85 mt-1 font-semibold">{task.title}</p>
+            <p className="text-xs opacity-95">Let's show {task?.asker?.alias || task?.asker?.display_name || 'them'} what you've done!</p>
+            <p className="text-xs opacity-85 mt-1 font-semibold">{task?.title}</p>
           </div>
 
           {/* Content */}
@@ -279,55 +311,35 @@ export default function TaskCompleteEvidencePage() {
               )}
             </div>
 
-            {/* Photos & Notes Preview Section */}
-            <div className="space-y-2">
-              {/* Photos Preview */}
-              <div className="border border-gray-200 rounded-lg">
-                <button
-                  onClick={() => setShowPhotosPreview(!showPhotosPreview)}
-                  className="w-full px-3 py-2 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors rounded-lg"
-                >
-                  <span className="font-semibold text-errandify-brown text-sm">📸 Photos ({uploadedFiles.length})</span>
-                  <span className="text-lg">{showPhotosPreview ? '▼' : '▶'}</span>
-                </button>
-                {showPhotosPreview && uploadedFiles.length > 0 && (
-                  <div className="p-2 space-y-1 border-t border-gray-200">
-                    {uploadedFiles.map((file, idx) => (
-                      <p key={idx} className="text-xs text-gray-600">
-                        {file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Notes Preview */}
-              <div className="border border-gray-200 rounded-lg">
-                <button
-                  onClick={() => setShowNotesPreview(!showNotesPreview)}
-                  className="w-full px-3 py-2 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors rounded-lg"
-                >
-                  <span className="font-semibold text-errandify-brown text-sm">📝 Notes ({completionNotes.length} chars)</span>
-                  <span className="text-lg">{showNotesPreview ? '▼' : '▶'}</span>
-                </button>
-                {showNotesPreview && (
-                  <div className="p-2 border-t border-gray-200">
-                    <p className="text-xs text-gray-700 bg-gray-50 p-2 rounded line-clamp-3">{completionNotes}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Completion Notes Editor */}
             <div>
-              <h3 className="font-semibold text-errandify-brown mb-1 text-sm">📝 Share the Details (Edit)</h3>
+              <h3 className="font-semibold text-errandify-brown mb-2 text-sm">📝 Share the Details</h3>
+
+              {/* AI Suggested Text */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <p className="text-xs text-blue-900 font-semibold mb-2">🤖 AI Suggestion:</p>
+                    <p className="text-xs text-blue-800 leading-relaxed">{suggestedText}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setCompletionNotes(suggestedText)}
+                  className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                >
+                  Use this text
+                </button>
+              </div>
+
+              {/* Editable Textbox */}
               <textarea
                 value={completionNotes}
                 onChange={(e) => setCompletionNotes(e.target.value)}
-                placeholder="Tell them what you did and how it went! They'd love to know"
-                rows={3}
-                className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange focus:border-transparent text-xs"
+                placeholder="Tell them what you did and how it went! You can use the suggestion above or write your own"
+                rows={4}
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange focus:border-orange-300 text-xs font-medium bg-white"
               />
+              <p className="text-xs text-gray-500 mt-1">{completionNotes.length} characters</p>
             </div>
 
             {/* Upload Progress */}

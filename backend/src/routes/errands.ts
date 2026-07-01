@@ -185,8 +185,23 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           'SELECT display_name FROM users WHERE id = $1',
           [errand.asker_id]
         );
+
+        // Get doer name from confirmed bid if exists
+        let doerName = 'Doer';
+        const bidResult = await db.query(
+          `SELECT u.display_name FROM bids b
+           LEFT JOIN users u ON b.doer_id = u.id
+           WHERE b.errand_id = $1 AND b.status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress')
+           LIMIT 1`,
+          [errand.id]
+        );
+        if (bidResult.rows.length > 0) {
+          doerName = bidResult.rows[0]?.display_name || 'Doer';
+        }
+
         return {
           id: errand.id,
+          asker_id: errand.asker_id,
           errandId: errand.errand_id,
           title: errand.title,
           description: errand.description,
@@ -194,11 +209,14 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           status: errand.status,
           budget: errand.budget,
           location: errand.location,
+          postal_code: errand.postal_code,
           deadline: errand.deadline,
           isRecurring: errand.is_recurring || false,
           askerName: askerResult.rows[0]?.display_name || 'Anonymous',
+          doerName: doerName,
           askerRating: 4.8, // TODO: Calculate from ratings table
           createdAt: errand.created_at,
+          updatedAt: errand.updated_at,
         };
       })
     );
@@ -235,7 +253,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // Get asker info
     const askerResult = await db.query(
-      'SELECT display_name, mobile FROM users WHERE id = $1',
+      'SELECT display_name, alias, mobile FROM users WHERE id = $1',
       [errand.asker_id]
     );
 
@@ -251,11 +269,20 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
        LIMIT 1`,
       [errand.id]
     );
+    let doerData = null;
     if (bidResult.rows[0]) {
       doerId = bidResult.rows[0].doer_id;
       isConfirmedDoer = doerId === userId;
+
+      // Get doer info
+      const doerResult = await db.query(
+        'SELECT display_name, alias FROM users WHERE id = $1',
+        [doerId]
+      );
+      doerData = doerResult.rows[0];
     }
 
+    const askerData = askerResult.rows[0];
     res.json({
       success: true,
       data: {
@@ -274,8 +301,12 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         deadline: errand.deadline,
         isRecurring: errand.is_recurring,
         askerId: errand.asker_id,
+        asker_alias: askerData?.alias || null,
         doerId: doerId,
-        asker: askerResult.rows[0],
+        doer_alias: doerData?.alias || null,
+        acceptedBidId: errand.accepted_bid_id,
+        asker: askerData,
+        doer: doerData,
         createdAt: errand.created_at,
       },
     });
@@ -489,9 +520,10 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       }
 
       // Log activity: Errand posted
-      const askerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [askerId]);
+      const askerResult = await db.query('SELECT display_name, alias FROM users WHERE id = $1', [askerId]);
       const askerName = askerResult.rows[0]?.display_name || 'Unknown User';
-      await activityLogService.logPosted(errand.id, askerName, askerId);
+      const askerAlias = askerResult.rows[0]?.alias || undefined;
+      await activityLogService.logPosted(errand.id, askerName, askerId, askerAlias);
 
       res.status(201).json({
         success: true,

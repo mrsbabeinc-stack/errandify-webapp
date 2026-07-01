@@ -75,36 +75,38 @@ const ErrandActivityTimeline = forwardRef<ErrandActivityTimelineHandle, ErrandAc
 
   const getActivityLabel = (type: string, actor: string, actorRole: string, details: any) => {
     const role = actorRole === 'asker' ? '(Asker)' : '(Doer)';
+    // Use alias for doers when available
+    const displayName = actorRole === 'doer' && details?.alias ? details.alias : actor;
 
     switch (type) {
       case 'posted':
-        return `${actor} ${role} posted the errand`;
+        return `${displayName} ${role} posted the errand`;
       case 'bid_placed':
-        return `${actor} ${role} placed bid of $${details?.amount || '?'}`;
+        return `${displayName} ${role} submitted an offer (${details?.offerId || '?'} - SGD $${details?.amount || '?'})`;
       case 'bid_accepted':
-        return `${actor} ${role} accepted the offer`;
+        return `${displayName} ${role} accepted the offer`;
       case 'bid_rejected':
-        return `${actor} ${role} rejected the offer`;
+        return `${displayName} ${role} rejected the offer`;
       case 'started':
-        return `${actor} ${role} started the job`;
+        return `${displayName} ${role} started the job`;
       case 'completed':
-        return `${actor} ${role} completed the work`;
+        return `${displayName} ${role} completed the work`;
       case 'rating_submitted':
-        return `${actor} ${role} rated with ${details?.rating}⭐`;
+        return `${displayName} ${role} rated with ${details?.rating}⭐`;
       case 'dispute_raised':
-        return `${actor} ${role} raised a dispute`;
+        return `${displayName} ${role} raised a dispute`;
       case 'reopened':
-        return `${actor} ${role} reopened the job`;
+        return `${displayName} ${role} reopened the job`;
       case 'cancelled':
-        return `${actor} ${role} cancelled the errand`;
+        return `${displayName} ${role} cancelled the errand`;
       case 'changes_requested':
-        return `${actor} ${role} requested changes`;
+        return `${displayName} ${role} requested changes`;
       case 'dispute_resolved':
         return `Admin resolved the dispute`;
       case 'payment_made':
         return `Payment of $${details?.amount || '?'} was released`;
       default:
-        return `${actor} ${role} ${type.replace('_', ' ')}`;
+        return `${displayName} ${role} ${type.replace('_', ' ')}`;
     }
   };
 

@@ -239,16 +239,29 @@ function authenticateSocket(socket: Socket): number | null {
       return null;
     }
 
-    // Decode token - in production use JWT
-    // For now, assume token contains user ID (mock)
-    const userId = parseInt(token.split(':')[0], 10);
-
-    if (isNaN(userId)) {
-      console.warn('Invalid token format');
+    // Decode JWT token - extract payload and parse user ID
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.warn('Invalid JWT token format');
       return null;
     }
 
-    return userId;
+    try {
+      // Decode the payload (second part of JWT)
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+      const userId = payload.userId || payload.sub;
+
+      if (!userId || isNaN(parseInt(userId, 10))) {
+        console.warn('No userId found in token payload');
+        return null;
+      }
+
+      console.log(`Socket authenticated for user ${userId}`);
+      return parseInt(userId, 10);
+    } catch (parseError) {
+      console.warn('Failed to parse JWT payload:', parseError);
+      return null;
+    }
   } catch (error) {
     console.error('Socket authentication error:', error);
     return null;
