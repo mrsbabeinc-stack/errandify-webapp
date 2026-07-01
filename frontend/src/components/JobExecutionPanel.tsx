@@ -274,10 +274,13 @@ export default function JobExecutionPanel({
   if (showDisputeModal) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           {/* Modal Header */}
-          <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white p-6 flex justify-between items-center">
-            <h2 className="text-xl font-bold">Raise a Dispute</h2>
+          <div className="bg-gradient-to-r from-amber-600 to-orange-600 text-white p-6 flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-bold">🤝 Let's Resolve This Together</h2>
+              <p className="text-xs text-amber-100 mt-1">We're sorry there's an issue. Our community works best when we understand both sides.</p>
+            </div>
             <button
               onClick={() => {
                 setShowDisputeModal(false);
@@ -291,30 +294,61 @@ export default function JobExecutionPanel({
           </div>
 
           {/* Modal Content */}
-          <div className="p-6 space-y-4">
-            <div>
-              <h3 className="font-semibold text-gray-800 mb-2">Task: {taskTitle}</h3>
-              <p className="text-sm text-gray-600">Budget: SGD ${budget}</p>
+          <div className="p-6 space-y-5">
+            {/* Task Info */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <h3 className="font-semibold text-gray-800 mb-1">Task: {taskTitle}</h3>
+              <p className="text-sm text-gray-600">Budget: SGD ${budget} | Doer: {doerName}</p>
             </div>
 
+            {/* Warm Intro */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm text-amber-900 leading-relaxed">
+                <strong>We've got this 💪</strong> Payment is protected for both of you. We'll review everything fairly
+                within 24 hours. Your job is to explain what went wrong—be specific and honest.
+              </p>
+            </div>
+
+            {/* Issue Category */}
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                What's the issue? *
+              <label className="block text-sm font-semibold text-gray-800 mb-3">
+                Help us understand what happened *
               </label>
-              <select
-                value={disputeType}
-                onChange={(e) => setDisputeType(e.target.value as any)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-              >
-                <option value="work_not_completed">Work Not Completed</option>
-                <option value="low_quality">Poor Quality Work</option>
-                <option value="other">Other Issue</option>
-              </select>
+              <div className="space-y-2">
+                {[
+                  { value: 'work_not_completed', label: '❌ Work Wasn\'t Completed', desc: 'Parts of the task weren\'t done' },
+                  { value: 'low_quality', label: '⚠️ Quality Issues', desc: 'Work was done but doesn\'t match what was promised' },
+                  { value: 'other', label: '❓ Other Issue', desc: 'Communication breakdown, safety, or other concern' },
+                ].map((option) => (
+                  <label
+                    key={option.value}
+                    className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition ${
+                      disputeType === option.value
+                        ? 'bg-amber-50 border-amber-400'
+                        : 'bg-white border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="dispute-type"
+                      value={option.value}
+                      checked={disputeType === option.value}
+                      onChange={(e) => setDisputeType(e.target.value as any)}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-semibold text-sm text-gray-800">{option.label}</div>
+                      <div className="text-xs text-gray-600">{option.desc}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
             </div>
 
+            {/* Description */}
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Describe the problem in detail *
+                Tell us what happened (be specific) *
               </label>
               <textarea
                 value={disputeDescription}
@@ -322,28 +356,41 @@ export default function JobExecutionPanel({
                   setDisputeDescription(e.target.value);
                   setDisputeError('');
                 }}
-                placeholder="Explain what went wrong and include any relevant details..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                rows={5}
+                placeholder={`Example: "${doerName} was supposed to paint both bedrooms but only did the master bedroom. I have photos."`}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm resize-none"
+                rows={4}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Min 20 characters. Include specific details about the issue.
-              </p>
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-xs text-gray-500">
+                  ✓ Specific details help us decide fairly
+                </p>
+                <p className="text-xs text-gray-400">
+                  {disputeDescription.length} chars
+                </p>
+              </div>
             </div>
 
+            {/* Error */}
             {disputeError && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <p className="text-sm text-red-700">❌ {disputeError}</p>
               </div>
             )}
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-xs text-blue-700">
-                <strong>ℹ️ What happens next:</strong> Your dispute will be reviewed by our team within 24 hours. Both parties can provide evidence in the chat. Payment is held until resolved.
-              </p>
+            {/* Safety & Protection */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-semibold text-green-900">🛡️ Your Protection</p>
+              <ul className="text-xs text-green-800 space-y-1">
+                <li>✓ Payment is locked—{doerName} can't access it yet</li>
+                <li>✓ We review within 24 hours</li>
+                <li>✓ {doerName} gets to share their side too</li>
+                <li>✓ Our team looks for fair solutions</li>
+                <li>✓ All decisions are final and documented</li>
+              </ul>
             </div>
 
-            <div className="flex gap-2 pt-4">
+            {/* Buttons */}
+            <div className="flex gap-2 pt-2">
               <button
                 onClick={() => {
                   setShowDisputeModal(false);
@@ -351,16 +398,16 @@ export default function JobExecutionPanel({
                   setDisputeError('');
                 }}
                 disabled={isSubmittingDispute}
-                className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 text-sm"
+                className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 transition text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleRaiseDispute}
-                disabled={isSubmittingDispute}
-                className="flex-1 bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 text-sm"
+                disabled={isSubmittingDispute || !disputeDescription.trim()}
+                className="flex-1 bg-amber-600 text-white py-3 rounded-lg font-semibold hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm"
               >
-                {isSubmittingDispute ? '⏳ Submitting...' : '🚨 Raise Dispute'}
+                {isSubmittingDispute ? '⏳ Submitting...' : '✅ Submit for Review'}
               </button>
             </div>
           </div>

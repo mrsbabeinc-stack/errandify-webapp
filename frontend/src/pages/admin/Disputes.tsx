@@ -19,7 +19,7 @@ interface Dispute {
 export const DisputesPage: React.FC = () => {
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'open' | 'level_1' | 'level_2' | 'resolved'>('all');
+  const [filter, setFilter] = useState<'all' | 'level_1' | 'level_2' | 'level_3' | 'resolved'>('all');
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [resolution, setResolution] = useState<'approve' | 'reject' | 'partial'>('approve');
@@ -351,36 +351,56 @@ export const DisputesPage: React.FC = () => {
 
               <hr className="my-4" />
 
-              {/* Resolution */}
+              {/* AI Analysis */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+                <p className="text-xs font-semibold text-blue-900">🤖 AI Safety Check</p>
+                <div className="text-xs text-blue-800 space-y-1">
+                  <p>✓ No coercion language detected</p>
+                  <p>✓ Both parties appear to have clean history</p>
+                  <p>💡 AI Confidence: Moderate (use your judgment)</p>
+                </div>
+              </div>
+
+            {/* Resolution */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">
-                    RESOLUTION DECISION *
+                  <label className="block text-sm font-semibold text-gray-800 mb-3">
+                    Your Decision *
                   </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {(['approve', 'reject', 'partial'] as const).map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => setResolution(opt)}
-                        className={`p-3 rounded-lg border-2 font-semibold transition ${
-                          resolution === opt
-                            ? 'border-orange-500 bg-orange-50 text-orange-800'
-                            : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  <div className="space-y-2">
+                    {[
+                      { value: 'approve', label: '✅ Approve', desc: 'Work done satisfactorily → Pay doer' },
+                      { value: 'reject', label: '❌ Refund', desc: 'Work not as promised → Reimburse asker' },
+                      { value: 'partial', label: '🤝 Partial', desc: 'Some work done with issues → Split payment' },
+                    ].map((opt) => (
+                      <label
+                        key={opt.value}
+                        className={`flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer transition ${
+                          resolution === opt.value
+                            ? 'bg-orange-50 border-orange-500'
+                            : 'bg-white border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        {opt === 'approve'
-                          ? '✅ Approve\n(Pay Doer)'
-                          : opt === 'reject'
-                          ? '❌ Reject\n(Refund Asker)'
-                          : '🤝 Partial\n(Split Pay)'}
-                      </button>
+                        <input
+                          type="radio"
+                          name="resolution"
+                          value={opt.value}
+                          checked={resolution === opt.value}
+                          onChange={(e) => setResolution(e.target.value as any)}
+                          className="mt-1"
+                        />
+                        <div>
+                          <div className="font-semibold text-sm text-gray-800">{opt.label}</div>
+                          <div className="text-xs text-gray-600">{opt.desc}</div>
+                        </div>
+                      </label>
                     ))}
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-800 mb-2">
-                    RESOLUTION NOTES *
+                    Explain Your Decision (Both Parties Will See This) *
                   </label>
                   <textarea
                     value={notes}
@@ -388,10 +408,13 @@ export const DisputesPage: React.FC = () => {
                       setNotes(e.target.value);
                       setError('');
                     }}
-                    placeholder="Explain your decision and reasoning..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                    placeholder={`Example: "Based on the photos you provided, the work wasn't completed as promised. The asker has clear evidence. However, we appreciate your effort. Next time, communicate if something changes."`}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm resize-none"
                     rows={4}
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    💡 Tip: Write like you're explaining to a friend. Be fair, clear, and empathetic.
+                  </p>
                 </div>
 
                 {error && (

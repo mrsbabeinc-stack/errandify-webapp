@@ -8,6 +8,107 @@ export interface DisputeAnalysis {
   evidenceScore: number; // How compelling is the evidence?
 }
 
+export interface SafetyAnalysis {
+  hasConcern: boolean;
+  concernType?: 'coercion' | 'abuse' | 'threats' | 'exploitation' | 'none';
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+  flaggedPhrases?: string[];
+  recommendation: 'escalate_immediately' | 'monitor' | 'proceed_normally';
+}
+
+// Safety Monitoring: Detect coercion, threats, abuse
+export async function analyzeDisputeSafety(description: string): Promise<SafetyAnalysis> {
+  try {
+    // Red flag keywords - organized by severity
+    const criticalFlags = [
+      'i\'ll destroy', 'i\'ll hurt', 'i\'ll sue', 'blackmail', 'unless you pay more',
+      'threatened', 'threatened you', 'will report you', 'will expose', 'do what i say',
+      'or else', 'or i\'ll', 'coerce', 'extort'
+    ];
+
+    const highFlags = [
+      'refuse to pay', 'never pay', 'demanding refund', 'threatening legal',
+      'ruined', 'useless', 'scam', 'fraud', 'criminal'
+    ];
+
+    const mediumFlags = [
+      'unacceptable', 'disgusting', 'horrible', 'worst', 'never again',
+      'reported to', 'warned everyone', 'told my friends'
+    ];
+
+    const description_lower = description.toLowerCase();
+    const flaggedPhrases: string[] = [];
+    let severity: SafetyAnalysis['severity'] = 'low';
+
+    // Check for critical flags
+    for (const flag of criticalFlags) {
+      if (description_lower.includes(flag)) {
+        flaggedPhrases.push(flag);
+        severity = 'critical';
+      }
+    }
+
+    // Check for high severity flags
+    if (severity !== 'critical') {
+      for (const flag of highFlags) {
+        if (description_lower.includes(flag)) {
+          flaggedPhrases.push(flag);
+          severity = 'high';
+        }
+      }
+    }
+
+    // Check for medium severity flags
+    if (severity === 'low') {
+      for (const flag of mediumFlags) {
+        if (description_lower.includes(flag)) {
+          flaggedPhrases.push(flag);
+          severity = 'medium';
+        }
+      }
+    }
+
+    if (flaggedPhrases.length === 0) {
+      return {
+        hasConcern: false,
+        concernType: 'none',
+        severity: 'low',
+        recommendation: 'proceed_normally',
+      };
+    }
+
+    // Determine concern type
+    let concernType: SafetyAnalysis['concernType'] = 'none';
+    if (flaggedPhrases.some(p => ['threatened', 'will hurt', 'destroy'].includes(p))) {
+      concernType = 'threats';
+    } else if (flaggedPhrases.some(p => ['unless you pay', 'blackmail', 'extort'].includes(p))) {
+      concernType = 'coercion';
+    } else if (flaggedPhrases.some(p => ['useless', 'scam', 'fraud'].includes(p))) {
+      concernType = 'abuse';
+    } else if (flaggedPhrases.some(p => ['unreasonable demands', 'demanding'].includes(p))) {
+      concernType = 'exploitation';
+    }
+
+    const recommendation: SafetyAnalysis['recommendation'] =
+      severity === 'critical' || severity === 'high' ? 'escalate_immediately' : 'monitor';
+
+    return {
+      hasConcern: true,
+      concernType,
+      severity,
+      flaggedPhrases,
+      recommendation,
+    };
+  } catch (error) {
+    console.error('[Disputes] Safety analysis error:', error);
+    return {
+      hasConcern: false,
+      severity: 'low',
+      recommendation: 'proceed_normally',
+    };
+  }
+}
+
 // Level 1: Auto-resolution based on hard rules
 export async function autoResolveDispute(disputeId: number): Promise<{ resolved: boolean; reason: string }> {
   try {
@@ -166,26 +267,47 @@ export async function createDispute(params: {
   evidence?: string;
 }) {
   try {
-    const result = await db.query(
-      `INSERT INTO disputes (errand_id, filed_by_user_id, dispute_type, description, evidence, status)
-       VALUES ($1, $2, $3, $4, $5, 'level_1')
-       RETURNING id, status, created_at`,
-      [params.errandId, params.filedByUserId, params.type, params.description, params.evidence || null]
-    );
+    // Check for safety concerns first
+    const safetyAnalysis = await analyzeDisputeSafety(params.description);
 
-    console.log(`[Disputes] Dispute created: ${result.rows[0].id}`);
+    // Determine if this needs priority escalation
+    let priority = 'normal';
+    let status = 'level_1';
 
-    // Try to auto-resolve
-    const autoResolve = await autoResolveDispute(result.rows[0].id);
-    if (!autoResolve.resolved) {
-      // Move to Level 2 (AI analysis)
-      await db.query(
-        `UPDATE disputes SET status = 'level_2' WHERE id = $1`,
-        [result.rows[0].id]
-      );
+    if (safetyAnalysis.recommendation === 'escalate_immediately') {
+      priority = 'high';
+      status = 'level_2'; // Jump to human review
+      console.warn(`[Disputes] SAFETY ALERT: ${safetyAnalysis.concernType} detected. Flagged phrases: ${safetyAnalysis.flaggedPhrases?.join(', ')}`);
     }
 
-    return { success: true, disputeId: result.rows[0].id };
+    const result = await db.query(
+      `INSERT INTO disputes (errand_id, filed_by_user_id, dispute_type, description, evidence, status, priority)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, status, created_at`,
+      [params.errandId, params.filedByUserId, params.type, params.description, params.evidence || null, status, priority]
+    );
+
+    const disputeId = result.rows[0].id;
+    console.log(`[Disputes] Dispute created: ${disputeId} (Priority: ${priority}, Status: ${status})`);
+
+    // Only attempt auto-resolve if not escalated for safety
+    if (status === 'level_1') {
+      const autoResolve = await autoResolveDispute(disputeId);
+      if (!autoResolve.resolved) {
+        // Move to Level 2 (AI analysis)
+        await db.query(
+          `UPDATE disputes SET status = 'level_2' WHERE id = $1`,
+          [disputeId]
+        );
+      }
+    }
+
+    return {
+      success: true,
+      disputeId,
+      safetyFlaggedForReview: safetyAnalysis.hasConcern,
+      safetyAnalysis: safetyAnalysis.hasConcern ? safetyAnalysis : undefined
+    };
   } catch (error) {
     console.error('[Disputes] Create error:', error);
     return { success: false };
