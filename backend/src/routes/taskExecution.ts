@@ -57,7 +57,7 @@ router.post('/:id/start', authMiddleware, async (req: AuthRequest, res: Response
       errand.asker_id,
       'task_started',
       'Errand Started',
-      `${errand.errand_id}: "${errand.title}" has been started`,
+      `${errand.errand_id}: Started`,
       null
     ).catch(console.error);
 

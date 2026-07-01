@@ -96,12 +96,13 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Get doer info
+    // Get doer info (use alias for notifications)
     const doerResult = await db.query(
-      'SELECT display_name FROM users WHERE id = $1',
+      'SELECT display_name, alias FROM users WHERE id = $1',
       [doerId]
     );
     const doerName = doerResult.rows[0]?.display_name || 'Anonymous';
+    const doerAlias = doerResult.rows[0]?.alias || doerName;
 
     // Check if bid already exists (update or insert)
     const existingBidResult = await db.query(
@@ -186,7 +187,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       );
       bid = result.rows[0];
 
-      // Send notification to asker about new bid with OFFERID
+      // Send notification to asker about new bid with OFFERID (showing doer alias)
       try {
         await db.query(
           `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
@@ -195,7 +196,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
             errand.asker_id,
             'bid_placed',
             'New Offer Placed',
-            `${formattedErrandId} • ${offerId}: ${doerName} has placed an offer to help with "${errandTitle}" for $${parseFloat(amount)}`,
+            `${formattedErrandId} • ${offerId}: ${doerAlias} has placed an offer for $${parseFloat(amount)}`,
             task_id,
           ]
         );
@@ -366,7 +367,7 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
             otherBid.doer_id,
             'bid_rejected',
             'Offer Not Selected',
-            `${formattedErrandId}: Your offer for "${errandTitle}" was not selected. Don't worry, more errands are coming!`,
+            `${formattedErrandId}: Your offer was not selected. Don't worry, more errands coming!`,
             bid.errand_id,
           ]
         );
@@ -523,7 +524,7 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Respons
           bid.doer_id,
           'bid_rejected',
           'Offer Not Selected',
-          `Your offer for "${errandTitle}" was not selected.${reasonText ? ` Feedback: ${reasonText}` : ''}`,
+          `${formattedErrandId}: Your offer wasn't selected.${reasonText ? ` Feedback: ${reasonText}` : ''}`,
           bid.errand_id,
         ]
       );
