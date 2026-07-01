@@ -101,8 +101,8 @@ export default function DisputeReviewPanel({
       {/* Header */}
       <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-5 flex justify-between items-center">
         <div>
-          <h2 className="text-lg font-bold">Review Case</h2>
-          <p className="text-xs text-orange-100 mt-0.5">#{disputeId}</p>
+          <h2 className="text-lg font-bold">Help Settle This</h2>
+          <p className="text-xs text-orange-100 mt-0.5">Case #{disputeId}</p>
         </div>
         {onClose && (
           <button
@@ -246,10 +246,10 @@ export default function DisputeReviewPanel({
           {/* Decision Options */}
           <div className="space-y-1.5">
             {[
-              { value: 'full_payment', label: '✅ Full Payment', desc: 'Pay doer in full' },
-              { value: 'partial_payment', label: '💰 Custom Amount', desc: 'Enter $ or %' },
-              { value: 'refund', label: '💵 Refund Asker', desc: 'Reimburse asker' },
-              { value: 'escalate', label: '🚨 Escalate', desc: 'Senior review' },
+              { value: 'full_payment', label: '✅ Pay Doer Full', desc: 'They did the work' },
+              { value: 'partial_payment', label: '💰 Share Fairly', desc: 'Enter amount to split' },
+              { value: 'refund', label: '💵 Refund Asker', desc: 'Give money back' },
+              { value: 'escalate', label: '🚨 Ask Senior Help', desc: 'Send to expert' },
             ].map((opt) => (
               <div key={opt.value}>
                 <label

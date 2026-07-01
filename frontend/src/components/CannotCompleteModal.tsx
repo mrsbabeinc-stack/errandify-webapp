@@ -30,43 +30,43 @@ export default function CannotCompleteModal({
   const reasons = [
     {
       value: 'asker_unavailable',
-      label: 'Asker Unavailable/Ghosted',
-      description: 'Asker wasn\'t home or didn\'t respond',
+      label: '🚪 Asker Not Home',
+      description: 'No one answered. Waited but had to go.',
     },
     {
       value: 'asker_changed_scope',
-      label: 'Asker Changed Scope',
-      description: 'Job requirements changed mid-work',
+      label: '🔄 Job Changed',
+      description: 'What we agreed became different',
     },
     {
       value: 'access_denied',
-      label: 'Access Denied',
-      description: 'Couldn\'t access location or materials',
+      label: '🔐 Can\'t Get In',
+      description: 'Door locked or can\'t access materials',
     },
     {
       value: 'materials_not_provided',
-      label: 'Materials Not Provided',
-      description: 'Asker didn\'t provide required materials',
+      label: '📦 Missing Supplies',
+      description: 'Things needed weren\'t ready',
     },
     {
       value: 'asker_unresponsive',
-      label: 'Asker Unresponsive',
-      description: 'Asker wouldn\'t answer calls/messages',
+      label: '📵 Can\'t Reach Them',
+      description: 'They don\'t answer calls or messages',
     },
     {
       value: 'accident',
-      label: '⚠️ Accident/Injury',
-      description: 'I got injured or accident occurred',
+      label: '⚠️ I Got Hurt',
+      description: 'Accident or injury happened to me',
     },
     {
       value: 'quarrel',
-      label: '🚨 Quarrel/Conflict',
-      description: 'Disagreement or hostile behavior',
+      label: '😠 We Had Conflict',
+      description: 'Disagreement or fighting happened',
     },
     {
       value: 'other',
-      label: 'Other',
-      description: 'Something else prevented completion',
+      label: '❓ Something Else',
+      description: 'Other reason prevented completion',
     },
   ];
 
@@ -191,9 +191,9 @@ export default function CannotCompleteModal({
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-5 flex justify-between items-center sticky top-0">
           <div>
-            <h2 className="text-lg font-bold">Unable to Complete</h2>
+            <h2 className="text-lg font-bold">Cannot Complete This</h2>
             <p className="text-xs text-orange-100 mt-0.5">
-              Help us understand what happened
+              Tell us what stopped you
             </p>
           </div>
           <button
@@ -217,7 +217,7 @@ export default function CannotCompleteModal({
 
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                  What stopped you?
+                  What happened?
                 </label>
                 <div className="space-y-1.5">
                   {reasons.map((reason) => (
@@ -277,7 +277,7 @@ export default function CannotCompleteModal({
                 }}
                 className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2.5 rounded-lg font-bold hover:from-orange-600 hover:to-orange-700 transition text-sm"
               >
-                Next: Proof →
+                Next: Show Proof →
               </button>
             </>
           )}
