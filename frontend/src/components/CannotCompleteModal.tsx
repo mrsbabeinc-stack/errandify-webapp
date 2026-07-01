@@ -30,43 +30,43 @@ export default function CannotCompleteModal({
   const reasons = [
     {
       value: 'asker_unavailable',
-      label: '🚪 Can\'t Reach Asker',
-      description: 'No one available to meet',
+      label: '❌ Can\'t Start/Access',
+      description: '🚪 Can\'t access or asker unavailable',
     },
     {
       value: 'asker_changed_scope',
-      label: '🔄 Job Plan Changed',
-      description: 'Plan changed from agreement',
-    },
-    {
-      value: 'access_denied',
-      label: '🔐 Can\'t Access Location',
-      description: 'Door locked or no access',
+      label: '🔄 Job Changed',
+      description: '🔄 Requirements changed mid-work',
     },
     {
       value: 'materials_not_provided',
       label: '📦 Supplies Missing',
-      description: 'Materials not ready',
+      description: '📦 Required materials not provided',
     },
     {
       value: 'asker_unresponsive',
-      label: '📵 Can\'t Communicate',
-      description: 'No response to messages',
+      label: '📵 No Communication',
+      description: '📵 Cannot reach asker for help',
     },
     {
       value: 'accident',
-      label: '⚠️ I Got Injured',
-      description: 'Safety issue occurred',
+      label: '⚠️ Damage/Injury',
+      description: '⚠️ Safety issue or accident',
     },
     {
       value: 'quarrel',
       label: '😠 Serious Disagreement',
-      description: 'Conflict happened',
+      description: '😠 Major conflict or misunderstanding',
+    },
+    {
+      value: 'safety_issue',
+      label: '🔴 Safety Concern',
+      description: '🔴 Cannot work safely',
     },
     {
       value: 'other',
       label: '❓ Something Else',
-      description: 'Other reason',
+      description: '❓ Other reason completion not possible',
     },
   ];
 
