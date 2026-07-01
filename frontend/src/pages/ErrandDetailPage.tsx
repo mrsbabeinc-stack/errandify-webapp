@@ -5,6 +5,7 @@ import BidSubmissionModal from '../components/BidSubmissionModal';
 import BidsViewer from '../components/BidsViewer';
 import RecurringBidsViewer from '../components/RecurringBidsViewer';
 import TaskChatbox from '../components/TaskChatbox';
+import JobExecutionPanel from '../components/JobExecutionPanel';
 import RecurringErrandSessionSelector from '../components/RecurringErrandSessionSelector';
 import TaskQA from '../components/TaskQA';
 import ErrandActivityLog from '../components/ErrandActivityLog';
@@ -1211,6 +1212,22 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                             <p className="font-semibold text-xs text-gray-700 mb-1">📝 Notes from doer:</p>
                             <p className="text-xs text-gray-700 p-2 rounded">{completionNotes}</p>
                           </div>
+                        )}
+
+                        {/* Dispute Option - Show if asker and hasn't rated yet */}
+                        {currentUser && currentUser.id === errand.askerId && !hasRated && (
+                          <JobExecutionPanel
+                            taskId={errand.id}
+                            taskTitle={errand.title || 'Task'}
+                            status="completed_unconfirmed"
+                            budget={errand.budget || 0}
+                            doerName={errand.doerName || 'Doer'}
+                            isDoer={false}
+                            onStatusChange={() => {
+                              fetchErrandDetail();
+                              setShowCompletionEvidence(true);
+                            }}
+                          />
                         )}
 
                         {/* Quick Rating Form - Hidden after rating submitted */}

@@ -414,6 +414,32 @@ Your message doesn't meet our community standards. Please keep messages:
           {/* Chat Column */}
           <div className="flex-1 flex flex-col">
 
+        {/* Chat Disabled Banner */}
+        {chatDisabled && (
+          <div className="sticky top-0 z-20 bg-gradient-to-r from-red-500 to-orange-500 text-white p-4 rounded-b-lg shadow-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl flex-shrink-0">⛔</span>
+              <div className="flex-1">
+                <p className="font-bold text-sm mb-1">
+                  {chatDisabledReason.includes('dispute')
+                    ? '⚖️ Dispute Active - Chat Disabled'
+                    : '⏰ Chat Window Closed'}
+                </p>
+                <p className="text-xs leading-relaxed mb-2">
+                  {chatDisabledReason.includes('dispute')
+                    ? 'A dispute has been opened for this task. Both parties should not communicate here. Submit evidence or responses through the dispute resolution system instead. This helps ensure fair review.'
+                    : 'The 48-hour chat window has closed. Any disputes must be raised immediately through the dispute system.'}
+                </p>
+                <button
+                  onClick={() => navigate(`/disputes?errand=${taskId}`)}
+                  className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-md transition font-semibold"
+                >
+                  Go to Dispute →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-2 space-y-1.5 bg-gradient-to-b from-orange-50 to-orange-100">
