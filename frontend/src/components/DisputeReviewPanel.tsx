@@ -46,6 +46,7 @@ export default function DisputeReviewPanel({
   const [adminNotes, setAdminNotes] = useState('');
   const [customAmount, setCustomAmount] = useState('');
   const [amountType, setAmountType] = useState<'$' | '%'>('$');
+  const [adminPhotos, setAdminPhotos] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmitDecision = async () => {
@@ -87,7 +88,10 @@ export default function DisputeReviewPanel({
 
   const getDecisionLabel = (rec: string) => {
     if (rec === 'full_payment') return '✅ Full Payment to Doer';
-    if (rec === 'partial_payment') return '💰 Partial Payment (50/50)';
+    if (rec === 'partial_payment') {
+      if (customAmount) return `💰 Custom: ${customAmount}${amountType}`;
+      return '💰 Partial Payment (50/50)';
+    }
     if (rec === 'refund') return '💵 Refund to Asker';
     return '🚨 Escalate to Senior Review';
   };
@@ -329,6 +333,53 @@ export default function DisputeReviewPanel({
             <p className="text-xs text-gray-500 mt-0.5">
               {adminNotes.length} / 50 chars
             </p>
+          </div>
+
+          {/* Admin Evidence Upload */}
+          <div>
+            <label className="block text-xs font-bold text-gray-800 mb-1.5 uppercase tracking-wide">
+              📎 Attach Evidence (optional)
+            </label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-2.5 text-center">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files) {
+                    const newPhotos = Array.from(e.target.files);
+                    if (adminPhotos.length + newPhotos.length > 5) {
+                      alert('Maximum 5 photos allowed');
+                      return;
+                    }
+                    setAdminPhotos([...adminPhotos, ...newPhotos]);
+                  }
+                }}
+                className="hidden"
+                id="admin-photo-upload"
+              />
+              <label htmlFor="admin-photo-upload" className="cursor-pointer">
+                <p className="text-xs font-semibold text-gray-700">
+                  Tap to upload evidence
+                </p>
+              </label>
+            </div>
+
+            {adminPhotos.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {adminPhotos.map((photo, idx) => (
+                  <div key={idx} className="flex items-center justify-between bg-gray-50 p-1.5 rounded text-xs">
+                    <span className="text-gray-700 truncate">{photo.name}</span>
+                    <button
+                      onClick={() => setAdminPhotos(adminPhotos.filter((_, i) => i !== idx))}
+                      className="text-red-600 hover:text-red-800 font-semibold ml-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}
