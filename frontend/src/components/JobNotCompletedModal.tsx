@@ -27,43 +27,43 @@ export default function JobNotCompletedModal({
   const reasons = [
     {
       value: 'not_completed',
-      label: 'Job Not Completed',
-      description: 'Doer didn\'t finish the work',
+      label: '❌ Work Not Finished',
+      description: 'They didn\'t complete what we agreed',
     },
     {
       value: 'poor_quality',
-      label: 'Poor Quality Work',
-      description: 'Work done but below standard',
+      label: '⚠️ Not Good Quality',
+      description: 'Work done but not well enough',
     },
     {
       value: 'partially_done',
-      label: 'Only Partially Done',
-      description: 'Incomplete work delivered',
+      label: '📋 Only Half Done',
+      description: 'Left it incomplete halfway',
     },
     {
       value: 'materials_wasted',
-      label: 'Materials Wasted',
-      description: 'Doer wasted materials/resources',
+      label: '🗑️ Wasted Things',
+      description: 'Wasted materials or made mess',
     },
     {
       value: 'accident',
-      label: '⚠️ Accident/Damage',
-      description: 'Doer caused damage or injury',
+      label: '⚠️ They Broke Something',
+      description: 'Damaged property or hurt someone',
     },
     {
       value: 'quarrel',
-      label: '🚨 Quarrel/Conflict',
-      description: 'Disagreement or hostile behavior',
+      label: '😠 We Had Conflict',
+      description: 'Argument or bad behavior',
     },
     {
       value: 'safety_issue',
-      label: 'Safety Issue',
-      description: 'Work created safety problems',
+      label: '🔴 Unsafe Work',
+      description: 'Made things dangerous or risky',
     },
     {
       value: 'other',
-      label: 'Other',
-      description: 'Something else went wrong',
+      label: '❓ Something Else',
+      description: 'Other reason for the problem',
     },
   ];
 
@@ -133,9 +133,9 @@ export default function JobNotCompletedModal({
         {/* Header */}
         <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-5 flex justify-between items-center sticky top-0">
           <div>
-            <h2 className="text-lg font-bold">Work Not Completed</h2>
+            <h2 className="text-lg font-bold">Work Wasn't Done Right</h2>
             <p className="text-xs text-red-100 mt-0.5">
-              Report the issue and request a refund
+              Tell us what went wrong
             </p>
           </div>
           <button
@@ -158,7 +158,7 @@ export default function JobNotCompletedModal({
 
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                  What went wrong?
+                  What happened?
                 </label>
                 <div className="space-y-1.5">
                   {reasons.map((reason) => (
@@ -218,7 +218,7 @@ export default function JobNotCompletedModal({
                 }}
                 className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-2.5 rounded-lg font-bold hover:from-red-600 hover:to-red-700 transition text-sm"
               >
-                Next: Proof →
+                Next: Show Proof →
               </button>
             </>
           )}
