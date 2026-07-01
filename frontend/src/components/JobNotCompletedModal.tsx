@@ -46,6 +46,16 @@ export default function JobNotCompletedModal({
       description: 'Doer wasted materials/resources',
     },
     {
+      value: 'accident',
+      label: '⚠️ Accident/Damage',
+      description: 'Doer caused damage or injury',
+    },
+    {
+      value: 'quarrel',
+      label: '🚨 Quarrel/Conflict',
+      description: 'Disagreement or hostile behavior',
+    },
+    {
       value: 'safety_issue',
       label: 'Safety Issue',
       description: 'Work created safety problems',
