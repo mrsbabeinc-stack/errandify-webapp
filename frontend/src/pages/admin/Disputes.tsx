@@ -16,6 +16,14 @@ interface Dispute {
   resolution?: string;
 }
 
+interface SafetyAnalysis {
+  hasConcern: boolean;
+  concernType?: string;
+  severity?: string;
+  flaggedPhrases?: string[];
+  recommendation?: string;
+}
+
 export const DisputesPage: React.FC = () => {
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +34,7 @@ export const DisputesPage: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [safetyAnalysis, setSafetyAnalysis] = useState<SafetyAnalysis | null>(null);
 
   useEffect(() => {
     fetchDisputes();
@@ -65,6 +74,23 @@ export const DisputesPage: React.FC = () => {
     }
   };
 
+  const fetchSafetyAnalysis = async (disputeId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/disputes/${disputeId}/analysis`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setSafetyAnalysis(response.data.analysis || null);
+    } catch (err) {
+      console.error('Failed to fetch safety analysis:', err);
+      setSafetyAnalysis(null);
+    }
+  };
+
   const handleResolveDispute = async () => {
     if (!selectedDispute || !notes.trim()) {
       setError('Please provide resolution notes');
@@ -93,6 +119,7 @@ export const DisputesPage: React.FC = () => {
       setSelectedDispute(null);
       setResolution('approve');
       setNotes('');
+      setSafetyAnalysis(null);
       fetchDisputes();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to resolve dispute');
@@ -264,6 +291,7 @@ export const DisputesPage: React.FC = () => {
                             onClick={() => {
                               setSelectedDispute(dispute);
                               setShowReviewModal(true);
+                              fetchSafetyAnalysis(dispute.id);
                             }}
                             className="text-orange-600 hover:text-orange-800 font-semibold text-sm"
                           >
@@ -352,14 +380,30 @@ export const DisputesPage: React.FC = () => {
               <hr className="my-4" />
 
               {/* AI Analysis */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-                <p className="text-xs font-semibold text-blue-900">🤖 AI Safety Check</p>
-                <div className="text-xs text-blue-800 space-y-1">
-                  <p>✓ No coercion language detected</p>
-                  <p>✓ Both parties appear to have clean history</p>
-                  <p>💡 AI Confidence: Moderate (use your judgment)</p>
+              {safetyAnalysis && safetyAnalysis.hasConcern ? (
+                <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 space-y-2">
+                  <p className="text-sm font-bold text-red-900">🚨 Safety Alert</p>
+                  <div className="text-xs text-red-800 space-y-1">
+                    <p><strong>Type:</strong> {safetyAnalysis.concernType || 'Unknown concern'}</p>
+                    <p><strong>Severity:</strong> {safetyAnalysis.severity?.toUpperCase() || 'UNKNOWN'}</p>
+                    {safetyAnalysis.flaggedPhrases && safetyAnalysis.flaggedPhrases.length > 0 && (
+                      <p><strong>Flagged:</strong> "{safetyAnalysis.flaggedPhrases[0]}"</p>
+                    )}
+                  </div>
+                  <div className="bg-red-100 rounded p-2 text-xs text-red-700 mt-2">
+                    ⚠️ {safetyAnalysis.recommendation || 'Recommend careful review of this dispute'}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+                  <p className="text-xs font-semibold text-blue-900">🤖 AI Safety Check</p>
+                  <div className="text-xs text-blue-800 space-y-1">
+                    <p>✓ No coercion language detected</p>
+                    <p>✓ Both parties appear to have clean history</p>
+                    <p>💡 AI Confidence: Moderate (use your judgment)</p>
+                  </div>
+                </div>
+              )}
 
             {/* Resolution */}
               <div className="space-y-4">
