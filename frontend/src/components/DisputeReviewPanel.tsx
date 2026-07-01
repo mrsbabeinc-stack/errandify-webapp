@@ -44,7 +44,7 @@ export default function DisputeReviewPanel({
 }: DisputeReviewPanelProps) {
   const [decision, setDecision] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
-  const [customAmount, setCustomAmount] = useState('');
+  const [doerAmount, setDoerAmount] = useState('');
   const [amountType, setAmountType] = useState<'$' | '%'>('$');
   const [adminPhotos, setAdminPhotos] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,16 +55,16 @@ export default function DisputeReviewPanel({
       return;
     }
 
-    // For custom amounts, validate input
-    if ((decision === 'partial_payment' || decision === 'full_payment') && !customAmount) {
-      alert('Please enter an amount');
+    // For split payment, validate doer amount
+    if (decision === 'partial_payment' && !doerAmount) {
+      alert('Please enter doer amount');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const decisionWithAmount = customAmount
-        ? `${decision}|${customAmount}${amountType}`
+      const decisionWithAmount = doerAmount
+        ? `${decision}|${doerAmount}${amountType}`
         : decision;
       onDecision?.(decisionWithAmount, adminNotes);
     } finally {
@@ -89,7 +89,7 @@ export default function DisputeReviewPanel({
   const getDecisionLabel = (rec: string) => {
     if (rec === 'full_payment') return '✅ Full Payment to Doer';
     if (rec === 'partial_payment') {
-      if (customAmount) return `💰 Custom: ${customAmount}${amountType}`;
+      if (doerAmount) return `💰 Custom: ${doerAmount}${amountType}`;
       return '💰 Partial Payment (50/50)';
     }
     if (rec === 'refund') return '💵 Refund to Asker';
@@ -267,7 +267,7 @@ export default function DisputeReviewPanel({
                     onChange={(e) => {
                       setDecision(e.target.value);
                       if (e.target.value !== 'partial_payment' && e.target.value !== 'full_payment') {
-                        setCustomAmount('');
+                        setDoerAmount('');
                       }
                     }}
                     className="mt-0.5"
@@ -283,8 +283,8 @@ export default function DisputeReviewPanel({
                   <div className="mt-2 ml-7 flex gap-2">
                     <input
                       type="number"
-                      value={customAmount}
-                      onChange={(e) => setCustomAmount(e.target.value)}
+                      value={doerAmount}
+                      onChange={(e) => setDoerAmount(e.target.value)}
                       placeholder="0"
                       className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs"
                       min="0"
