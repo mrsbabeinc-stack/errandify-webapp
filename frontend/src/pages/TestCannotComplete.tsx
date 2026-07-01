@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import CannotCompleteModal from '../components/CannotCompleteModal';
 import DisputeReviewPanel from '../components/DisputeReviewPanel';
 
@@ -35,88 +35,83 @@ Disputes (30d): 0`,
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-screen bg-errandify-bg p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Dispute Resolution V2 - Full UI Test</h1>
-          <p className="text-gray-600">Test the complete flow from doer dispute creation to admin review</p>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Dispute Resolution Test</h1>
+          <p className="text-xs text-gray-600">Test the complete doer dispute → admin review flow</p>
         </div>
 
         {/* View Selector */}
-        <div className="flex gap-4 mb-8">
+        <div className="flex gap-2 mb-6">
           <button
             onClick={() => {
               setViewMode('doer');
               setShowCannotCompleteModal(true);
             }}
-            className={`px-6 py-3 rounded-lg font-bold transition ${
+            className={`px-4 py-2.5 rounded-lg font-bold text-sm transition ${
               viewMode === 'doer'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-orange-500 text-white'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
-            👤 Doer View (Create Dispute)
+            👤 Doer
           </button>
           <button
             onClick={() => setViewMode('admin')}
-            className={`px-6 py-3 rounded-lg font-bold transition ${
+            className={`px-4 py-2.5 rounded-lg font-bold text-sm transition ${
               viewMode === 'admin'
-                ? 'bg-orange-600 text-white'
+                ? 'bg-orange-500 text-white'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
-            👨‍⚖️ Admin View (Review Dispute)
+            👨‍⚖️ Admin
           </button>
         </div>
 
         {/* Doer View */}
         {viewMode === 'doer' && (
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="max-w-2xl mx-auto space-y-6">
-              <div className="border-l-4 border-blue-500 bg-blue-50 p-4 rounded">
-                <h3 className="font-bold text-blue-900 mb-2">Doer Perspective</h3>
-                <p className="text-sm text-blue-800">
-                  You arrived at a job but the asker wasn't available. Use the form below to create a
-                  dispute and request payment for your time and effort.
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="max-w-2xl mx-auto space-y-4">
+              <div className="border-l-4 border-orange-500 bg-orange-50 p-3 rounded-lg">
+                <h3 className="font-bold text-orange-900 text-sm mb-1">You're the doer</h3>
+                <p className="text-xs text-orange-800">
+                  You arrived but the asker wasn't available. Report it and request fair compensation.
                 </p>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-semibold text-gray-600">Job:</span>
-                  <span className="text-sm text-gray-900">Fix Wifi Router</span>
+              <div className="bg-gray-50 rounded-xl p-3 space-y-1.5">
+                <div className="flex justify-between text-xs">
+                  <span className="font-semibold text-gray-600">Job:</span>
+                  <span className="text-gray-900">Fix Wifi Router</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-semibold text-gray-600">Asker:</span>
-                  <span className="text-sm text-gray-900">John Tan</span>
+                <div className="flex justify-between text-xs">
+                  <span className="font-semibold text-gray-600">Asker:</span>
+                  <span className="text-gray-900">John Tan</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-semibold text-gray-600">Budget:</span>
-                  <span className="text-sm text-gray-900">SGD $50</span>
+                <div className="flex justify-between text-xs">
+                  <span className="font-semibold text-gray-600">Budget:</span>
+                  <span className="text-gray-900">SGD $50</span>
                 </div>
               </div>
 
               <button
                 onClick={() => setShowCannotCompleteModal(true)}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2.5 rounded-lg font-bold hover:from-orange-600 hover:to-orange-700 transition text-sm"
               >
-                🚨 I Cannot Complete This Job
+                📝 Cannot Complete
               </button>
 
-              <div className="text-xs text-gray-500 p-3 bg-gray-50 rounded">
-                This will open a form where you can explain what prevented you from completing the job,
-                provide GPS location proof, upload photos, and submit evidence.
+              <div className="text-xs text-gray-600 p-2.5 bg-gray-50 rounded-lg">
+                Complete the 4-step form: reason → evidence → review → submit
               </div>
 
               {submittedDispute && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-sm font-bold text-green-900">✅ Dispute Submitted!</p>
-                  <p className="text-xs text-green-800 mt-2">
-                    Dispute ID: #{submittedDispute.id}
-                  </p>
-                  <p className="text-xs text-green-700 mt-1">
-                    Click "Admin View" to see how this dispute looks for admin review.
+                <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+                  <p className="text-xs font-bold text-green-900">✅ Submitted!</p>
+                  <p className="text-xs text-green-800 mt-1">
+                    ID: #{submittedDispute.id} → Switch to Admin View
                   </p>
                 </div>
               )}
@@ -145,13 +140,13 @@ Disputes (30d): 0`,
                 onClose={() => setViewMode('doer')}
               />
             ) : (
-              <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-                <p className="text-gray-600 mb-4">No dispute submitted yet.</p>
+              <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+                <p className="text-sm text-gray-600 mb-3">No dispute to review yet.</p>
                 <button
                   onClick={() => setViewMode('doer')}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition"
+                  className="bg-orange-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-orange-600 transition text-sm"
                 >
-                  ← Go to Doer View & Create Dispute
+                  Create one first
                 </button>
               </div>
             )}
@@ -159,23 +154,15 @@ Disputes (30d): 0`,
         )}
 
         {/* Test Instructions */}
-        <div className="mt-8 bg-amber-50 border border-amber-200 rounded-lg p-6">
-          <h3 className="font-bold text-amber-900 mb-3">Testing Guide:</h3>
-          <ol className="text-sm text-amber-800 space-y-2 list-decimal list-inside">
-            <li>Start in <strong>Doer View</strong> and click "I Cannot Complete This Job"</li>
-            <li>Fill out the 4-step form:
-              <ul className="list-disc list-inside ml-6 mt-1 space-y-1">
-                <li>Select a reason for not completing</li>
-                <li>Enter description (50+ words)</li>
-                <li>Capture GPS location & photos</li>
-                <li>Review & submit</li>
-              </ul>
-            </li>
-            <li>After submission, switch to <strong>Admin View</strong></li>
-            <li>Review the submitted dispute with AI analysis</li>
-            <li>Make a decision (Approve/Partial/Reject/Escalate)</li>
-            <li>Add admin notes visible to both parties</li>
-            <li>Submit your decision</li>
+        <div className="mt-6 bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4">
+          <h3 className="font-bold text-amber-900 text-sm mb-2">Steps:</h3>
+          <ol className="text-xs text-amber-800 space-y-1.5 list-decimal list-inside">
+            <li><strong>Doer View</strong> → Click "Cannot Complete"</li>
+            <li>Fill: reason, description, GPS, photos, wait time</li>
+            <li><strong>Admin View</strong> → Review & decide</li>
+            <li>Options: Full Pay / Split 50/50 / Refund / Escalate</li>
+            <li>Add warm, fair notes visible to both</li>
+            <li>Submit decision</li>
           </ol>
         </div>
       </div>
