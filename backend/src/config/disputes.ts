@@ -1,0 +1,350 @@
+/**
+ * Dispute Resolution Configuration
+ * All values are configurable and can be updated later
+ */
+
+export const disputeConfig = {
+  // ============================================
+  // TIMING CONFIGURATION (in seconds)
+  // ============================================
+  timing: {
+    // 48-hour window for disputes after completion
+    disputeWindow: 48 * 60 * 60,
+
+    // 7-day appeal window
+    appealWindow: 7 * 24 * 60 * 60,
+
+    // Admin must review within 24 hours
+    adminReviewTimeout: 24 * 60 * 60,
+
+    // Payment auto-releases after 48h if no dispute
+    autoReleaseTimeout: 48 * 60 * 60,
+  },
+
+  // ============================================
+  // AI CONFIDENCE THRESHOLDS
+  // ============================================
+  aiThresholds: {
+    // >80% confidence = auto-resolve (no human needed)
+    autoResolveThreshold: 0.80,
+
+    // 50-80% confidence = human review (AI recommends)
+    humanReviewThreshold: 0.50,
+
+    // Safety concerns always escalate immediately
+    safetyEscalateThreshold: 0.95,
+  },
+
+  // ============================================
+  // CANCELLATION PENALTIES (Configurable Later)
+  // ============================================
+  cancellationPenalties: {
+    // More than 4 hours before job start
+    moreThan4Hours: {
+      percentage: 0,
+      description: 'free',
+      label: 'No penalty',
+    },
+    // Between 2-4 hours
+    between2And4Hours: {
+      percentage: 20,
+      description: '20%',
+      label: '20% cancellation fee',
+    },
+    // Less than 2 hours
+    lessThan2Hours: {
+      percentage: 50,
+      description: '50%',
+      label: '50% cancellation fee',
+    },
+    // After job already started
+    afterStarted: {
+      percentage: 100,
+      description: '100%',
+      label: 'Full payment penalty',
+    },
+  },
+
+  // ============================================
+  // PAYMENT SPLIT CONFIGURATION
+  // ============================================
+  paymentSplit: {
+    // Default partial payment split (50/50)
+    defaultPartialSplitPercentage: 0.5,
+
+    // Minimum payment to doer (prevents $0 payments)
+    minimumDoerPayment: 5,
+
+    // Maximum payment to doer
+    maximumDoerPayment: 9999,
+  },
+
+  // ============================================
+  // STRIPE FEE HANDLING (Configurable Later)
+  // ============================================
+  stripeFeeLogic: {
+    // Options: 'asker' | 'doer' | 'platform'
+    // 'asker': Asker always pays fee
+    // 'doer': Doer responsible for fee if they cancel
+    // 'platform': Platform absorbs all Stripe fees
+    bearerLogic: 'asker', // DEFAULT: asker bears fee (can change later)
+
+    // Stripe fee percentage (2.9% + $0.30)
+    stripeFeePercentage: 0.029,
+    stripeFeeFixed: 0.30,
+
+    // Calculate total fee for amount
+    calculateStripeFee: (amount: number): number => {
+      const percentage = amount * 0.029;
+      const fixed = 0.30;
+      return Math.round((percentage + fixed) * 100) / 100;
+    },
+  },
+
+  // ============================================
+  // DISPUTE TYPES & OPTIONS
+  // ============================================
+  disputeTypes: {
+    doer: [
+      {
+        value: 'payment_issue',
+        label: '💰 Payment Issue',
+        description: 'Payment not released or dispute about payment',
+      },
+      {
+        value: 'safety_concern',
+        label: '🚨 Safety/Accident',
+        description: 'Injury, damage, or safety violation occurred',
+      },
+      {
+        value: 'asker_prevented',
+        label: '⛔ Asker Prevented',
+        description: 'Asker prevented me from completing the job',
+      },
+      {
+        value: 'other',
+        label: '❓ Other Dispute',
+        description: 'Communication breakdown or other concern',
+      },
+    ],
+    asker: [
+      {
+        value: 'work_not_completed',
+        label: '❌ Work Wasn\'t Completed',
+        description: 'Parts of the task weren\'t done',
+      },
+      {
+        value: 'low_quality',
+        label: '⚠️ Quality Issues',
+        description: 'Work was done but doesn\'t match what was promised',
+      },
+      {
+        value: 'safety_concern',
+        label: '🚨 Safety/Accident',
+        description: 'Property damage, injury, or safety violation',
+      },
+      {
+        value: 'other',
+        label: '❓ Other Issue',
+        description: 'Communication breakdown or other concern',
+      },
+    ],
+  },
+
+  // ============================================
+  // AI SAFETY KEYWORDS & PATTERNS
+  // ============================================
+  safetyKeywords: {
+    critical: [
+      'i\'ll destroy', 'i\'ll hurt', 'i\'ll sue', 'blackmail', 'unless you pay more',
+      'threatened', 'threatened you', 'will report you', 'will expose', 'do what i say',
+      'or else', 'or i\'ll', 'coerce', 'extort',
+    ],
+    high: [
+      'refuse to pay', 'never pay', 'demanding refund', 'threatening legal',
+      'ruined', 'useless', 'scam', 'fraud', 'criminal',
+    ],
+    medium: [
+      'unacceptable', 'disgusting', 'horrible', 'worst', 'never again',
+      'reported to', 'warned everyone', 'told my friends',
+    ],
+  },
+
+  // ============================================
+  // DECISION RECOMMENDATIONS
+  // ============================================
+  decisions: {
+    FULL_PAYMENT: 'full_payment',
+    PARTIAL_PAYMENT: 'partial_payment',
+    REFUND: 'refund',
+    ESCALATE: 'escalate',
+  },
+
+  // ============================================
+  // ROUTING RULES
+  // ============================================
+  routing: {
+    // Safety alert = immediate escalation (no auto-resolve)
+    safetyEscalateImmediately: true,
+
+    // High confidence cases can auto-resolve
+    autoResolveHighConfidence: true,
+
+    // Medium confidence needs human review
+    requireHumanForMediumConfidence: true,
+
+    // Low confidence always needs human
+    requireHumanForLowConfidence: true,
+  },
+
+  // ============================================
+  // EVIDENCE REQUIREMENTS
+  // ============================================
+  evidenceRequirements: {
+    // For "Asker Prevented Completion" disputes
+    askerPrevented: {
+      gpsRequired: true,
+      photosRequired: true,
+      photosMinimum: 1,
+      chatHistoryRequired: true,
+      waitTimeRequired: true,
+      descriptionMinimumWords: 50,
+    },
+
+    // For quality disputes
+    qualityIssue: {
+      gpsRequired: false,
+      photosRequired: true,
+      photosMinimum: 1,
+      chatHistoryRequired: false,
+      waitTimeRequired: false,
+      descriptionMinimumWords: 30,
+    },
+
+    // For safety concerns
+    safetyConcern: {
+      gpsRequired: false,
+      photosRequired: true,
+      photosMinimum: 1,
+      chatHistoryRequired: false,
+      waitTimeRequired: false,
+      descriptionMinimumWords: 50,
+    },
+  },
+
+  // ============================================
+  // NOTIFICATION SETTINGS
+  // ============================================
+  notifications: {
+    // Send to both parties
+    notifyBothParties: true,
+
+    // Channels
+    channels: {
+      inApp: true,
+      email: true,
+      sms: false, // Can enable later
+      push: false, // Can enable later
+    },
+
+    // Timing
+    sendImmediately: true,
+    batchNotifications: false,
+  },
+
+  // ============================================
+  // REPUTATION & RESTRICTIONS
+  // ============================================
+  reputation: {
+    // Track disputes per user
+    trackDisputeHistory: true,
+
+    // Restrict repeat cancellers
+    restrictRepeatCancellers: true,
+    cancelRestrictionThreshold: 3, // After 3 cancellations
+    cancelRestrictionDuration: 7 * 24 * 60 * 60, // 7 days
+
+    // Restrict repeat disputants
+    restrictRepeatDisputers: true,
+    disputeRestrictionThreshold: 5, // After 5 disputes
+    disputeRestrictionDuration: 30 * 24 * 60 * 60, // 30 days
+
+    // Impact on ratings
+    negativeDisputeImpact: true,
+    disputeRatingPenalty: 0.1, // 0.1 star deduction
+  },
+
+  // ============================================
+  // ADMIN WORKFLOW
+  // ============================================
+  admin: {
+    // Show AI recommendation
+    showAIRecommendation: true,
+
+    // Require notes for override
+    requireNotesForOverride: true,
+
+    // Auto-generate messages
+    autoGenerateMessages: true,
+
+    // Request more info capability
+    canRequestMoreInfo: true,
+    moreInfoTimeout: 24 * 60 * 60, // 24 hours to respond
+  },
+};
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+export function getTimeRemaining(
+  startTime: Date,
+  windowSeconds: number
+): number {
+  const elapsed = (Date.now() - startTime.getTime()) / 1000;
+  const remaining = windowSeconds - elapsed;
+  return Math.max(0, remaining);
+}
+
+export function isHighConfidence(score: number): boolean {
+  return score >= disputeConfig.aiThresholds.autoResolveThreshold;
+}
+
+export function isMediumConfidence(score: number): boolean {
+  return (
+    score >= disputeConfig.aiThresholds.humanReviewThreshold &&
+    score < disputeConfig.aiThresholds.autoResolveThreshold
+  );
+}
+
+export function isLowConfidence(score: number): boolean {
+  return score < disputeConfig.aiThresholds.humanReviewThreshold;
+}
+
+export function shouldAutoResolve(score: number, hasSafetyConcern: boolean): boolean {
+  if (hasSafetyConcern) return false; // Safety always escalates
+  return isHighConfidence(score) && disputeConfig.routing.autoResolveHighConfidence;
+}
+
+export function shouldEscalateImmediately(hasSafetyConcern: boolean, severity?: string): boolean {
+  if (!hasSafetyConcern) return false;
+  return severity === 'critical' || severity === 'high';
+}
+
+export function getCancellationPenalty(minutesBeforeStart: number): {
+  percentage: number;
+  description: string;
+  label: string;
+} {
+  const hoursBeforeStart = minutesBeforeStart / 60;
+
+  if (hoursBeforeStart > 4) {
+    return disputeConfig.cancellationPenalties.moreThan4Hours;
+  } else if (hoursBeforeStart >= 2) {
+    return disputeConfig.cancellationPenalties.between2And4Hours;
+  } else if (hoursBeforeStart > 0) {
+    return disputeConfig.cancellationPenalties.lessThan2Hours;
+  } else {
+    return disputeConfig.cancellationPenalties.afterStarted;
+  }
+}
