@@ -101,8 +101,8 @@ export default function DisputeReviewPanel({
       {/* Header */}
       <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-5 flex justify-between items-center">
         <div>
-          <h2 className="text-lg font-bold">Help Settle This</h2>
-          <p className="text-xs text-orange-100 mt-0.5">Case #{disputeId}</p>
+          <h2 className="text-lg font-bold">Let's Make It Fair</h2>
+          <p className="text-xs text-orange-100 mt-0.5">Case #{disputeId} - Review & Decide</p>
         </div>
         {onClose && (
           <button
@@ -246,10 +246,10 @@ export default function DisputeReviewPanel({
           {/* Decision Options */}
           <div className="space-y-1.5">
             {[
-              { value: 'full_payment', label: '✅ Pay Doer Full', desc: 'They did the work' },
-              { value: 'partial_payment', label: '💰 Share Fairly', desc: 'Enter amount to split' },
-              { value: 'refund', label: '💵 Refund Asker', desc: 'Give money back' },
-              { value: 'escalate', label: '🚨 Ask Senior Help', desc: 'Send to expert' },
+              { value: 'full_payment', label: '✅ Pay Doer Full Amount', desc: 'They deserve full pay' },
+              { value: 'partial_payment', label: '💰 Split Payment Fairly', desc: 'Both did some work' },
+              { value: 'refund', label: '💵 Refund to Asker', desc: 'Work wasn\'t done right' },
+              { value: 'escalate', label: '🚨 Get Expert Opinion', desc: 'Too complicated. Need help.' },
             ].map((opt) => (
               <div key={opt.value}>
                 <label
