@@ -1135,6 +1135,33 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 <p className="text-red-800 font-semibold">⚠️ Under Admin Review</p>
                 <p className="text-xs text-red-600">Dispute is being reviewed. Payment is held.</p>
               </div>
+            ) : errand.payment_held ? (
+              <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-4 rounded mt-2">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">💰</span>
+                  <div>
+                    <p className="font-bold text-amber-900">Payment on Hold</p>
+                    <p className="text-sm text-amber-700 mt-1">
+                      SGD ${errand.budget} is securely held while dispute is reviewed
+                    </p>
+                    <p className="text-xs text-amber-600 mt-2">
+                      Status: {errand.payment_status || 'Awaiting admin decision'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : errand.payment_released_at && !errand.payment_held ? (
+              <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-4 rounded mt-2">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">✅</span>
+                  <div>
+                    <p className="font-bold text-green-900">Payment Released</p>
+                    <p className="text-sm text-green-700 mt-1">
+                      SGD ${errand.budget} was released {new Date(errand.payment_released_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
             ) : errand.status?.includes('completed') ? (
               <>
                 {/* Reminder banner if evidence viewed but not rated */}
