@@ -10,6 +10,10 @@ import {
   releaseHeldPayment,
   getDisputeStatus,
 } from '../services/disputeResolutionService.js';
+import {
+  notifyDisputeRaised,
+  notifyDisputeResolved,
+} from './notifications.js';
 
 const router = Router();
 
@@ -22,6 +26,18 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     if (!errandId || !type || !description) {
       return res.status(400).json({ error: 'errandId, type, description required' });
     }
+
+    // Get errand details for notifications
+    const errandResult = await db.query(
+      `SELECT id, title, asker_id, doer_id FROM errands WHERE id = $1`,
+      [parseInt(errandId)]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
 
     // Create dispute
     const result = await createDispute({
@@ -38,6 +54,42 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // Hold payment during dispute
     await holdPayment(parseInt(errandId), `Dispute #${result.disputeId} filed`);
+
+    // Determine who filed the dispute and who should be notified
+    const isAskerFiling = userId === errand.asker_id;
+    const otherPartyId = isAskerFiling ? errand.doer_id : errand.asker_id;
+
+    // Get other party's name for notification
+    const userResult = await db.query(
+      `SELECT name FROM users WHERE id = $1`,
+      [userId]
+    );
+    const userName = userResult.rows[0]?.name || 'A user';
+
+    // Notify the other party
+    try {
+      await notifyDisputeRaised(
+        otherPartyId,
+        userName,
+        `#${result.disputeId}`,
+        errand.title
+      );
+    } catch (notifyErr) {
+      console.warn('[Disputes] Failed to notify other party:', notifyErr);
+      // Don't fail the dispute creation if notification fails
+    }
+
+    // Notify the filing party (confirmation)
+    try {
+      await notifyDisputeRaised(
+        userId,
+        'Errandify Team',
+        `#${result.disputeId}`,
+        errand.title
+      );
+    } catch (notifyErr) {
+      console.warn('[Disputes] Failed to notify filing party:', notifyErr);
+    }
 
     res.status(201).json({
       success: true,
@@ -106,6 +158,21 @@ router.post('/:id/resolve', authMiddleware, async (req: AuthRequest, res: Respon
     const { id } = req.params;
     const { resolution, notes, releasePayment: shouldRelease } = req.body;
 
+    // Get dispute and errand details before updating
+    const disputeResult = await db.query(
+      `SELECT d.id, d.errand_id, e.title, e.asker_id, e.doer_id
+       FROM disputes d
+       JOIN errands e ON d.errand_id = e.id
+       WHERE d.id = $1`,
+      [parseInt(id)]
+    );
+
+    if (disputeResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Dispute not found' });
+    }
+
+    const dispute = disputeResult.rows[0];
+
     // Update dispute
     const result = await db.query(
       `UPDATE disputes
@@ -119,14 +186,41 @@ router.post('/:id/resolve', authMiddleware, async (req: AuthRequest, res: Respon
       return res.status(404).json({ error: 'Dispute not found' });
     }
 
-    const dispute = result.rows[0];
-
     // Release payment if approved
     if (shouldRelease && resolution === 'approved') {
       await releaseHeldPayment(dispute.errand_id);
     }
 
-    res.json({ success: true, dispute });
+    // Map resolution to user-friendly decision message
+    const decisionMap: { [key: string]: string } = {
+      'approved': 'Payment released to doer',
+      'rejected': 'Refund issued to asker',
+      'partial': 'Payment split between parties',
+    };
+
+    const decisionMessage = decisionMap[resolution] || 'Dispute resolved';
+
+    // Notify both parties
+    try {
+      await notifyDisputeResolved(
+        dispute.asker_id,
+        dispute.title,
+        decisionMessage,
+        `#${dispute.id}`
+      );
+
+      await notifyDisputeResolved(
+        dispute.doer_id,
+        dispute.title,
+        decisionMessage,
+        `#${dispute.id}`
+      );
+    } catch (notifyErr) {
+      console.warn('[Disputes] Failed to send resolution notifications:', notifyErr);
+      // Don't fail the resolution if notifications fail
+    }
+
+    res.json({ success: true, dispute: result.rows[0] });
   } catch (error) {
     console.error('[Disputes] Resolve error:', error);
     res.status(500).json({ error: 'Resolution failed' });
