@@ -101,8 +101,8 @@ export default function CannotCompleteModal({
       return;
     }
 
-    if (description.split(/\s+/).length < 50) {
-      setError('Description must be at least 50 words');
+    if (description.split(/\s+/).length < 15) {
+      setError('Description must be at least 15 words');
       return;
     }
 
@@ -229,7 +229,7 @@ export default function CannotCompleteModal({
 
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Tell us (50+ words)
+                  Tell us (15+ words)
                 </label>
                 <textarea
                   value={description}
@@ -239,7 +239,7 @@ export default function CannotCompleteModal({
                   rows={3}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {description.split(/\s+/).length} / 50 words
+                  {description.split(/\s+/).length} / 15 words
                 </p>
               </div>
 
@@ -247,7 +247,7 @@ export default function CannotCompleteModal({
 
               <button
                 onClick={() => {
-                  if (selectedReason && description.split(/\s+/).length >= 50) {
+                  if (selectedReason && description.split(/\s+/).length >= 15) {
                     setStep('evidence');
                     setError('');
                   } else {
@@ -366,7 +366,7 @@ export default function CannotCompleteModal({
                 </button>
                 <button
                   onClick={() => {
-                    if (gpsLocation && photos.length > 0) {
+                    if (gpsLocation && photos.length > 0 && description.split(/\s+/).length >= 15) {
                       setStep('review');
                       setError('');
                     } else {
