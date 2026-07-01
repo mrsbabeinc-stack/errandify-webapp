@@ -44,6 +44,8 @@ export default function DisputeReviewPanel({
 }: DisputeReviewPanelProps) {
   const [decision, setDecision] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
+  const [customAmount, setCustomAmount] = useState('');
+  const [amountType, setAmountType] = useState<'$' | '%'>('$');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmitDecision = async () => {
@@ -52,9 +54,18 @@ export default function DisputeReviewPanel({
       return;
     }
 
+    // For custom amounts, validate input
+    if ((decision === 'partial_payment' || decision === 'full_payment') && !customAmount) {
+      alert('Please enter an amount');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      onDecision?.(decision, adminNotes);
+      const decisionWithAmount = customAmount
+        ? `${decision}|${customAmount}${amountType}`
+        : decision;
+      onDecision?.(decisionWithAmount, adminNotes);
     } finally {
       setIsSubmitting(false);
     }
@@ -232,31 +243,74 @@ export default function DisputeReviewPanel({
           <div className="space-y-1.5">
             {[
               { value: 'full_payment', label: '✅ Full Payment', desc: 'Pay doer in full' },
-              { value: 'partial_payment', label: '💰 Split 50/50', desc: 'Fair split' },
+              { value: 'partial_payment', label: '💰 Custom Amount', desc: 'Enter $ or %' },
               { value: 'refund', label: '💵 Refund Asker', desc: 'Reimburse asker' },
               { value: 'escalate', label: '🚨 Escalate', desc: 'Senior review' },
             ].map((opt) => (
-              <label
-                key={opt.value}
-                className={`flex items-start gap-2.5 p-2.5 border-2 rounded-lg cursor-pointer transition ${
-                  decision === opt.value
-                    ? 'bg-orange-50 border-orange-400'
-                    : 'bg-white border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="decision"
-                  value={opt.value}
-                  checked={decision === opt.value}
-                  onChange={(e) => setDecision(e.target.value)}
-                  className="mt-0.5"
-                />
-                <div>
-                  <div className="font-bold text-xs text-gray-800">{opt.label}</div>
-                  <div className="text-xs text-gray-600">{opt.desc}</div>
-                </div>
-              </label>
+              <div key={opt.value}>
+                <label
+                  className={`flex items-start gap-2.5 p-2.5 border-2 rounded-lg cursor-pointer transition ${
+                    decision === opt.value
+                      ? 'bg-orange-50 border-orange-400'
+                      : 'bg-white border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="decision"
+                    value={opt.value}
+                    checked={decision === opt.value}
+                    onChange={(e) => {
+                      setDecision(e.target.value);
+                      if (e.target.value !== 'partial_payment' && e.target.value !== 'full_payment') {
+                        setCustomAmount('');
+                      }
+                    }}
+                    className="mt-0.5"
+                  />
+                  <div>
+                    <div className="font-bold text-xs text-gray-800">{opt.label}</div>
+                    <div className="text-xs text-gray-600">{opt.desc}</div>
+                  </div>
+                </label>
+
+                {/* Custom amount input for payment options */}
+                {(decision === 'full_payment' || decision === 'partial_payment') && opt.value === decision && (
+                  <div className="mt-2 ml-7 flex gap-2">
+                    <input
+                      type="number"
+                      value={customAmount}
+                      onChange={(e) => setCustomAmount(e.target.value)}
+                      placeholder="0"
+                      className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs"
+                      min="0"
+                      step="0.01"
+                    />
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setAmountType('$')}
+                        className={`px-2.5 py-1.5 rounded-lg font-bold text-xs transition ${
+                          amountType === '$'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        $
+                      </button>
+                      <button
+                        onClick={() => setAmountType('%')}
+                        className={`px-2.5 py-1.5 rounded-lg font-bold text-xs transition ${
+                          amountType === '%'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        %
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
 
