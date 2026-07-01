@@ -295,10 +295,19 @@ export default function NotificationsPage() {
                     </div>
                     <p className="text-gray-600 text-xs line-clamp-2 mb-2">{notification.message}</p>
 
-                    {/* Errand ID */}
+                    {/* Errand ID - Extract from message if available */}
                     {notification.errandId && (
                       <p className="text-xs text-gray-500 mb-2">
-                        Errand ID: <span className="font-mono bg-gray-100 px-1 rounded">ER{notification.errandId}</span>
+                        {(() => {
+                          // Extract formatted errand ID from message (e.g., "ER26HM-ABC1 •...")
+                          const match = notification.message?.match(/^(ER\d{2}[A-Z]{2}-[A-Z0-9]{4})/);
+                          const formattedId = match ? match[1] : `ER${notification.errandId}`;
+                          return (
+                            <>
+                              Errand ID: <span className="font-mono bg-gray-100 px-1 rounded">{formattedId}</span>
+                            </>
+                          );
+                        })()}
                       </p>
                     )}
 
