@@ -47,7 +47,7 @@ export default function JobNotCompletedModal({
     },
     {
       value: 'accident',
-      label: '⚠️ Damage Occurred',
+      label: '⚠️ Damage/Injury',
       description: 'Property damaged or someone hurt',
     },
     {
@@ -63,7 +63,7 @@ export default function JobNotCompletedModal({
     {
       value: 'other',
       label: '❓ Something Else',
-      description: 'Other concern with the work',
+      description: 'Other reason',
     },
   ];
 
