@@ -14,6 +14,10 @@ import {
   notifyDisputeRaised,
   notifyDisputeResolved,
 } from './notifications.js';
+import {
+  sendDisputeRaisedEmail,
+  sendDisputeResolvedEmail,
+} from '../services/email.js';
 
 const router = Router();
 
@@ -59,12 +63,28 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     const isAskerFiling = userId === errand.asker_id;
     const otherPartyId = isAskerFiling ? errand.doer_id : errand.asker_id;
 
-    // Get other party's name for notification
+    // Get user details for notifications and emails
     const userResult = await db.query(
-      `SELECT name FROM users WHERE id = $1`,
+      `SELECT name, email FROM users WHERE id = $1`,
       [userId]
     );
     const userName = userResult.rows[0]?.name || 'A user';
+    const userEmail = userResult.rows[0]?.email;
+
+    // Get other party details
+    const otherPartyResult = await db.query(
+      `SELECT name, email FROM users WHERE id = $1`,
+      [otherPartyId]
+    );
+    const otherPartyName = otherPartyResult.rows[0]?.name || 'A user';
+    const otherPartyEmail = otherPartyResult.rows[0]?.email;
+
+    // Get issue type label
+    const issueTypeLabel = type === 'work_not_completed' ? 'Work Not Completed'
+      : type === 'low_quality' ? 'Low Quality'
+      : type === 'payment_not_released' ? 'Payment Issue'
+      : type === 'safety_concern' ? 'Safety Concern'
+      : 'Other';
 
     // Notify the other party
     try {
@@ -76,7 +96,6 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       );
     } catch (notifyErr) {
       console.warn('[Disputes] Failed to notify other party:', notifyErr);
-      // Don't fail the dispute creation if notification fails
     }
 
     // Notify the filing party (confirmation)
@@ -89,6 +108,32 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       );
     } catch (notifyErr) {
       console.warn('[Disputes] Failed to notify filing party:', notifyErr);
+    }
+
+    // Send emails
+    try {
+      if (otherPartyEmail) {
+        await sendDisputeRaisedEmail(
+          otherPartyEmail,
+          otherPartyName,
+          errand.title,
+          issueTypeLabel,
+          result.disputeId
+        );
+      }
+
+      if (userEmail) {
+        await sendDisputeRaisedEmail(
+          userEmail,
+          userName,
+          errand.title,
+          issueTypeLabel,
+          result.disputeId
+        );
+      }
+    } catch (emailErr) {
+      console.warn('[Disputes] Failed to send emails:', emailErr);
+      // Don't fail the dispute creation if emails fail
     }
 
     res.status(201).json({
@@ -200,6 +245,21 @@ router.post('/:id/resolve', authMiddleware, async (req: AuthRequest, res: Respon
 
     const decisionMessage = decisionMap[resolution] || 'Dispute resolved';
 
+    // Get user details for emails
+    const askerResult = await db.query(
+      `SELECT name, email FROM users WHERE id = $1`,
+      [dispute.asker_id]
+    );
+    const askerName = askerResult.rows[0]?.name || 'A user';
+    const askerEmail = askerResult.rows[0]?.email;
+
+    const doerResult = await db.query(
+      `SELECT name, email FROM users WHERE id = $1`,
+      [dispute.doer_id]
+    );
+    const doerName = doerResult.rows[0]?.name || 'A user';
+    const doerEmail = doerResult.rows[0]?.email;
+
     // Notify both parties
     try {
       await notifyDisputeResolved(
@@ -217,7 +277,34 @@ router.post('/:id/resolve', authMiddleware, async (req: AuthRequest, res: Respon
       );
     } catch (notifyErr) {
       console.warn('[Disputes] Failed to send resolution notifications:', notifyErr);
-      // Don't fail the resolution if notifications fail
+    }
+
+    // Send resolution emails
+    try {
+      if (askerEmail) {
+        await sendDisputeResolvedEmail(
+          askerEmail,
+          askerName,
+          dispute.title,
+          resolution,
+          decisionMessage,
+          dispute.id
+        );
+      }
+
+      if (doerEmail) {
+        await sendDisputeResolvedEmail(
+          doerEmail,
+          doerName,
+          dispute.title,
+          resolution,
+          decisionMessage,
+          dispute.id
+        );
+      }
+    } catch (emailErr) {
+      console.warn('[Disputes] Failed to send resolution emails:', emailErr);
+      // Don't fail the resolution if emails fail
     }
 
     res.json({ success: true, dispute: result.rows[0] });
