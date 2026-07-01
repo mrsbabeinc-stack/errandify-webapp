@@ -195,8 +195,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           [
             errand.asker_id,
             'bid_placed',
-            'New Offer Placed',
-            `${formattedErrandId} • ${offerId}: ${doerAlias} has placed an offer for $${parseFloat(amount)}`,
+            'New Offer Place',
+            `${formattedErrandId} • ${offerId}: ${doerAlias} has placed an offer for $\${parseFloat(amount)}`,
             task_id,
           ]
         );
