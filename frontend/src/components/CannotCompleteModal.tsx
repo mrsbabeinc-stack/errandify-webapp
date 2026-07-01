@@ -374,6 +374,9 @@ export default function CannotCompleteModal({
                   min="0"
                   max="120"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  How long did you wait at location? Proves you made genuine effort.
+                </p>
               </div>
 
               {error && <div className="text-red-600 text-xs p-2.5 bg-red-50 rounded-lg font-semibold">{error}</div>}
@@ -426,12 +429,31 @@ export default function CannotCompleteModal({
                   <p className="text-sm text-gray-800 mt-0.5">{description}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-gray-600 uppercase">Proof</p>
-                  <ul className="text-sm text-gray-800 space-y-1 mt-0.5">
-                    <li className="text-green-700 font-semibold">✓ Location recorded</li>
-                    <li className="text-green-700 font-semibold">✓ {photos.length} photo{photos.length > 1 ? 's' : ''}</li>
-                    <li className="text-green-700 font-semibold">✓ Waited {waitTime} min</li>
-                  </ul>
+                  <p className="text-xs font-bold text-gray-600 uppercase">Location</p>
+                  <p className="text-sm text-gray-800 mt-0.5">
+                    📍 {gpsLocation ? `${gpsLocation.lat.toFixed(4)}, ${gpsLocation.lng.toFixed(4)}` : 'Not captured'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">GPS coordinates prove you were actually there</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-600 uppercase">Photos ({photos.length}/5)</p>
+                  {photos.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-1 mt-1.5">
+                      {photos.map((photo, idx) => (
+                        <div key={idx} className="bg-gray-100 rounded aspect-square flex items-center justify-center text-xs text-gray-600">
+                          📷 {idx + 1}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600 mt-0.5">No photos uploaded</p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">Proof of attempt at location</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-600 uppercase">Wait time</p>
+                  <p className="text-sm text-gray-800 mt-0.5">⏱ {waitTime} minutes</p>
+                  <p className="text-xs text-gray-500 mt-1">Shows genuine effort to complete</p>
                 </div>
               </div>
 
