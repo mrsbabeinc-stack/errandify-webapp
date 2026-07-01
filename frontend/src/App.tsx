@@ -32,6 +32,7 @@ import ErrandifyPointsPage from './pages/ErrandifyPointsPage';
 import MyRewardsPage from './pages/MyRewardsPage';
 import PointsHistoryPage from './pages/PointsHistoryPage';
 import TestPage from './pages/TestPage';
+import TestCannotComplete from './pages/TestCannotComplete';
 import MyOfferPage from './pages/MyOfferPage';
 import TaskCompleteEvidencePage from './pages/TaskCompleteEvidencePage';
 import ReviewCompletionPage from './pages/ReviewCompletionPage';
@@ -273,6 +274,7 @@ export default function App() {
 
         {/* TEST ROUTE - to verify routing works */}
         <Route path="/test" element={<TestPage />} />
+        <Route path="/test-cannot-complete" element={<TestCannotComplete />} />
 
         {/* Profile sub-pages (outside layout for simpler rendering) */}
         <Route path="/my-profile" element={isAuthenticated ? <MyProfilePage /> : <Navigate to="/login" replace />} />
