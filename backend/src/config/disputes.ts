@@ -107,46 +107,91 @@ export const disputeConfig = {
   disputeTypes: {
     doer: [
       {
-        value: 'payment_issue',
-        label: '💰 Payment Issue',
-        description: 'Payment not released or dispute about payment',
+        value: 'asker_unavailable',
+        label: '👻 Asker Unavailable',
+        description: 'Asker wasn\'t home or didn\'t respond',
       },
       {
-        value: 'safety_concern',
-        label: '🚨 Safety/Accident',
-        description: 'Injury, damage, or safety violation occurred',
+        value: 'asker_changed_scope',
+        label: '🔄 Scope Changed',
+        description: 'Job requirements changed mid-work',
       },
       {
-        value: 'asker_prevented',
-        label: '⛔ Asker Prevented',
-        description: 'Asker prevented me from completing the job',
+        value: 'access_denied',
+        label: '🔐 Access Denied',
+        description: 'Couldn\'t access location or materials',
+      },
+      {
+        value: 'materials_not_provided',
+        label: '📦 Materials Missing',
+        description: 'Asker didn\'t provide required materials',
+      },
+      {
+        value: 'asker_unresponsive',
+        label: '📵 Unresponsive',
+        description: 'Asker wouldn\'t answer calls/messages',
+      },
+      {
+        value: 'accident',
+        label: '⚠️ Accident/Injury',
+        description: 'I got injured or accident occurred',
+        escalate: true,
+      },
+      {
+        value: 'quarrel',
+        label: '🚨 Quarrel/Conflict',
+        description: 'Disagreement or hostile behavior',
+        escalate: true,
       },
       {
         value: 'other',
-        label: '❓ Other Dispute',
-        description: 'Communication breakdown or other concern',
+        label: '❓ Other',
+        description: 'Something else prevented completion',
       },
     ],
     asker: [
       {
-        value: 'work_not_completed',
-        label: '❌ Work Wasn\'t Completed',
-        description: 'Parts of the task weren\'t done',
+        value: 'not_completed',
+        label: '❌ Work Not Completed',
+        description: 'Doer didn\'t finish the work',
       },
       {
-        value: 'low_quality',
-        label: '⚠️ Quality Issues',
-        description: 'Work was done but doesn\'t match what was promised',
+        value: 'poor_quality',
+        label: '⚠️ Poor Quality',
+        description: 'Work done but below standard',
       },
       {
-        value: 'safety_concern',
-        label: '🚨 Safety/Accident',
-        description: 'Property damage, injury, or safety violation',
+        value: 'partially_done',
+        label: '📋 Partially Done',
+        description: 'Incomplete work delivered',
+      },
+      {
+        value: 'materials_wasted',
+        label: '🗑️ Materials Wasted',
+        description: 'Doer wasted materials/resources',
+      },
+      {
+        value: 'accident',
+        label: '⚠️ Accident/Damage',
+        description: 'Doer caused damage or injury',
+        escalate: true,
+      },
+      {
+        value: 'quarrel',
+        label: '🚨 Quarrel/Conflict',
+        description: 'Disagreement or hostile behavior',
+        escalate: true,
+      },
+      {
+        value: 'safety_issue',
+        label: '🔴 Safety Issue',
+        description: 'Work created safety problems',
+        escalate: true,
       },
       {
         value: 'other',
-        label: '❓ Other Issue',
-        description: 'Communication breakdown or other concern',
+        label: '❓ Other',
+        description: 'Something else went wrong',
       },
     ],
   },
@@ -156,17 +201,34 @@ export const disputeConfig = {
   // ============================================
   safetyKeywords: {
     critical: [
-      'i\'ll destroy', 'i\'ll hurt', 'i\'ll sue', 'blackmail', 'unless you pay more',
-      'threatened', 'threatened you', 'will report you', 'will expose', 'do what i say',
-      'or else', 'or i\'ll', 'coerce', 'extort',
+      // Threats
+      'i\'ll destroy', 'i\'ll hurt', 'i\'ll sue', 'i\'ll kill', 'i\'ll harm',
+      'blackmail', 'unless you pay more', 'extort',
+      'threatened', 'threatened you', 'will expose', 'do what i say',
+      'or else', 'or i\'ll', 'coerce',
+      // Rude/hostile
+      'you piece of', 'you\'re garbage', 'you\'re worthless', 'f*** you',
+      'i\'ll beat', 'i\'ll fight', 'let\'s fight', 'come fight me',
+      // Quarrel/conflict indicators
+      'we fought', 'we quarreled', 'we had a fight', 'got into a fight',
+      'attacked me', 'hit me', 'pushed me', 'grabbed me',
     ],
     high: [
+      // Demanding/aggressive
       'refuse to pay', 'never pay', 'demanding refund', 'threatening legal',
-      'ruined', 'useless', 'scam', 'fraud', 'criminal',
+      'i demand', 'you must', 'you will',
+      // Hostile language
+      'ruined', 'useless', 'scam', 'fraud', 'criminal', 'liar',
+      'disrespectful', 'rude', 'insulting', 'humiliated', 'degraded',
+      'accident happened', 'got injured', 'was hurt', 'injured me',
+      'damaged my', 'broke my', 'destroyed my',
     ],
     medium: [
+      // Conflict
       'unacceptable', 'disgusting', 'horrible', 'worst', 'never again',
       'reported to', 'warned everyone', 'told my friends',
+      'angry', 'upset', 'frustrated', 'disappointed',
+      'argument', 'disagreed', 'didn\'t agree',
     ],
   },
 

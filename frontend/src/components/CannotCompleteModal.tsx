@@ -54,6 +54,16 @@ export default function CannotCompleteModal({
       description: 'Asker wouldn\'t answer calls/messages',
     },
     {
+      value: 'accident',
+      label: '⚠️ Accident/Injury',
+      description: 'I got injured or accident occurred',
+    },
+    {
+      value: 'quarrel',
+      label: '🚨 Quarrel/Conflict',
+      description: 'Disagreement or hostile behavior',
+    },
+    {
       value: 'other',
       label: 'Other',
       description: 'Something else prevented completion',
