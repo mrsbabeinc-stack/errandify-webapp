@@ -30,43 +30,43 @@ export default function CannotCompleteModal({
   const reasons = [
     {
       value: 'asker_unavailable',
-      label: '🚪 Asker Not Home',
-      description: 'No one answered. Waited but had to go.',
+      label: '🚪 Can\'t Reach Asker',
+      description: 'No one available to meet',
     },
     {
       value: 'asker_changed_scope',
-      label: '🔄 Job Changed',
-      description: 'What we agreed became different',
+      label: '🔄 Job Plan Changed',
+      description: 'Plan changed from agreement',
     },
     {
       value: 'access_denied',
-      label: '🔐 Can\'t Get In',
-      description: 'Door locked or can\'t access materials',
+      label: '🔐 Can\'t Access Location',
+      description: 'Door locked or no access',
     },
     {
       value: 'materials_not_provided',
-      label: '📦 Missing Supplies',
-      description: 'Things needed weren\'t ready',
+      label: '📦 Supplies Missing',
+      description: 'Materials not ready',
     },
     {
       value: 'asker_unresponsive',
-      label: '📵 Can\'t Reach Them',
-      description: 'They don\'t answer calls or messages',
+      label: '📵 Can\'t Communicate',
+      description: 'No response to messages',
     },
     {
       value: 'accident',
-      label: '⚠️ I Got Hurt',
-      description: 'Accident or injury happened to me',
+      label: '⚠️ I Got Injured',
+      description: 'Safety issue occurred',
     },
     {
       value: 'quarrel',
-      label: '😠 We Had Conflict',
-      description: 'Disagreement or fighting happened',
+      label: '😠 Serious Disagreement',
+      description: 'Conflict happened',
     },
     {
       value: 'other',
       label: '❓ Something Else',
-      description: 'Other reason prevented completion',
+      description: 'Other reason',
     },
   ];
 
@@ -191,9 +191,9 @@ export default function CannotCompleteModal({
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-5 flex justify-between items-center sticky top-0">
           <div>
-            <h2 className="text-lg font-bold">Cannot Complete This</h2>
+            <h2 className="text-lg font-bold">I Can't Finish This Job</h2>
             <p className="text-xs text-orange-100 mt-0.5">
-              Tell us what stopped you
+              Tell us clearly what happened
             </p>
           </div>
           <button

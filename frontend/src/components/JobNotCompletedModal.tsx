@@ -27,43 +27,43 @@ export default function JobNotCompletedModal({
   const reasons = [
     {
       value: 'not_completed',
-      label: '❌ Work Not Finished',
-      description: 'They didn\'t complete what we agreed',
+      label: '❌ Work Incomplete',
+      description: 'Job wasn\'t finished as agreed',
     },
     {
       value: 'poor_quality',
-      label: '⚠️ Not Good Quality',
-      description: 'Work done but not well enough',
+      label: '⚠️ Quality Issue',
+      description: 'Work quality below expectations',
     },
     {
       value: 'partially_done',
-      label: '📋 Only Half Done',
-      description: 'Left it incomplete halfway',
+      label: '📋 Only Partial Work',
+      description: 'Some work left undone',
     },
     {
       value: 'materials_wasted',
-      label: '🗑️ Wasted Things',
-      description: 'Wasted materials or made mess',
+      label: '🗑️ Materials Concern',
+      description: 'Materials handled improperly',
     },
     {
       value: 'accident',
-      label: '⚠️ They Broke Something',
-      description: 'Damaged property or hurt someone',
+      label: '⚠️ Damage Occurred',
+      description: 'Property damaged or someone hurt',
     },
     {
       value: 'quarrel',
-      label: '😠 We Had Conflict',
-      description: 'Argument or bad behavior',
+      label: '😠 Serious Disagreement',
+      description: 'Major conflict or misunderstanding',
     },
     {
       value: 'safety_issue',
-      label: '🔴 Unsafe Work',
-      description: 'Made things dangerous or risky',
+      label: '🔴 Safety Concern',
+      description: 'Work created unsafe conditions',
     },
     {
       value: 'other',
       label: '❓ Something Else',
-      description: 'Other reason for the problem',
+      description: 'Other concern with the work',
     },
   ];
 
@@ -133,9 +133,9 @@ export default function JobNotCompletedModal({
         {/* Header */}
         <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-5 flex justify-between items-center sticky top-0">
           <div>
-            <h2 className="text-lg font-bold">Work Wasn't Done Right</h2>
+            <h2 className="text-lg font-bold">Work Didn't Go Well</h2>
             <p className="text-xs text-red-100 mt-0.5">
-              Tell us what went wrong
+              Tell us clearly what happened
             </p>
           </div>
           <button
