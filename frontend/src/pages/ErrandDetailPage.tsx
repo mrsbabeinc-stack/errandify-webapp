@@ -1241,15 +1241,15 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                           </div>
                         )}
 
-                        {/* Dispute Option - Show if asker and hasn't rated yet */}
-                        {currentUser && currentUser.id === errand.askerId && !hasRated && (
+                        {/* Dispute Option - Show if either party and work is unconfirmed */}
+                        {currentUser && (currentUser.id === errand.askerId || currentUser.id === errand.doerId) && errand.status === 'completed_unconfirmed' && (
                           <JobExecutionPanel
                             taskId={errand.id}
                             taskTitle={errand.title || 'Task'}
                             status="completed_unconfirmed"
                             budget={errand.budget || 0}
                             doerName={errand.doerName || 'Doer'}
-                            isDoer={false}
+                            isDoer={currentUser.id === errand.doerId}
                             onStatusChange={() => {
                               fetchErrandDetail();
                               setShowCompletionEvidence(true);

@@ -27,7 +27,7 @@ export default function JobExecutionPanel({
   const [error, setError] = useState('');
   const [gpsEnabled, setGpsEnabled] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
-  const [disputeType, setDisputeType] = useState<'work_not_completed' | 'low_quality' | 'other'>('work_not_completed');
+  const [disputeType, setDisputeType] = useState<'work_not_completed' | 'low_quality' | 'safety_concern' | 'payment_issue' | 'other'>('work_not_completed');
   const [disputeDescription, setDisputeDescription] = useState('');
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
   const [disputeError, setDisputeError] = useState('');
@@ -238,6 +238,26 @@ export default function JobExecutionPanel({
     );
   }
 
+  // Doer view: Job completed, awaiting asker confirmation
+  if (isDoer && status === 'completed_unconfirmed') {
+    return (
+      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 space-y-3">
+        <p className="text-sm text-blue-900">
+          ⏳ You've submitted completion evidence. Waiting for asker to review within 48 hours.
+        </p>
+        <p className="text-xs text-blue-800">
+          If you believe there's an issue, you can raise a dispute (safety concerns, payment issues, etc).
+        </p>
+        <button
+          onClick={() => setShowDisputeModal(true)}
+          className="w-full border border-blue-300 text-blue-900 py-2 rounded font-semibold text-sm hover:bg-blue-100"
+        >
+          🚨 Raise a Dispute
+        </button>
+      </div>
+    );
+  }
+
   // Asker view: Job completed, awaiting confirmation
   if (!isDoer && status === 'completed_unconfirmed') {
     return (
@@ -315,11 +335,19 @@ export default function JobExecutionPanel({
                 Help us understand what happened *
               </label>
               <div className="space-y-2">
-                {[
-                  { value: 'work_not_completed', label: '❌ Work Wasn\'t Completed', desc: 'Parts of the task weren\'t done' },
-                  { value: 'low_quality', label: '⚠️ Quality Issues', desc: 'Work was done but doesn\'t match what was promised' },
-                  { value: 'other', label: '❓ Other Issue', desc: 'Communication breakdown, safety, or other concern' },
-                ].map((option) => (
+                {(isDoer
+                  ? [
+                      { value: 'payment_issue', label: '💰 Payment Issue', desc: 'Payment not released or dispute about payment' },
+                      { value: 'safety_concern', label: '🚨 Safety/Accident', desc: 'Injury, damage, or safety violation occurred' },
+                      { value: 'other', label: '❓ Other Dispute', desc: 'Communication breakdown or other concern' },
+                    ]
+                  : [
+                      { value: 'work_not_completed', label: '❌ Work Wasn\'t Completed', desc: 'Parts of the task weren\'t done' },
+                      { value: 'low_quality', label: '⚠️ Quality Issues', desc: 'Work was done but doesn\'t match what was promised' },
+                      { value: 'safety_concern', label: '🚨 Safety/Accident', desc: 'Property damage, injury, or safety violation' },
+                      { value: 'other', label: '❓ Other Issue', desc: 'Communication breakdown or other concern' },
+                    ]
+                ).map((option) => (
                   <label
                     key={option.value}
                     className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition ${
