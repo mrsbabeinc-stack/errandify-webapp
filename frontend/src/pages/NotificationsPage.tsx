@@ -85,7 +85,7 @@ export default function NotificationsPage() {
               // For message notifications, show Chat button
               n.type === 'message_received' && n.relatedErrandId ? {
                 label: '💬 Chat',
-                url: `/my-chat?errandId=${n.relatedErrandId}`,
+                url: `/chat?errandId=${n.relatedErrandId}`,
                 type: 'chat'
               } : null,
               // For new offer notifications, show Errand Details
@@ -254,12 +254,12 @@ export default function NotificationsPage() {
               <div
                 key={notification.id}
                 onClick={() => {
-                  console.log('[Notification] Clicked notification:', notification.id, 'errandId:', notification.errandId);
+                  console.log('[Notification] Clicked notification:', notification.id, 'type:', notification.type);
                   if (!notification.read) {
                     handleRead(notification.id);
                   }
-                  // Navigate to errand details when clicking notification
-                  if (notification.errandId) {
+                  // Only navigate to errand details for offer notifications, not chat
+                  if (notification.type === 'offer' && notification.errandId) {
                     console.log('[Notification] Navigating to /errand/' + notification.errandId);
                     navigate(`/errand/${notification.errandId}`);
                   }
@@ -295,22 +295,6 @@ export default function NotificationsPage() {
                     </div>
                     <p className="text-gray-600 text-xs line-clamp-2 mb-2">{notification.message}</p>
 
-                    {/* Errand ID - Extract from message if available */}
-                    {notification.errandId && (
-                      <p className="text-xs text-gray-500 mb-2">
-                        {(() => {
-                          // Extract formatted errand ID from message (e.g., "ER26HM-ABC1 •...")
-                          const match = notification.message?.match(/^(ER\d{2}[A-Z]{2}-[A-Z0-9]{4})/);
-                          const formattedId = match ? match[1] : `ER${notification.errandId}`;
-                          return (
-                            <>
-                              Errand ID: <span className="font-mono bg-gray-100 px-1 rounded">{formattedId}</span>
-                            </>
-                          );
-                        })()}
-                      </p>
-                    )}
-
                     {/* Action Buttons */}
                     {notification.actions && notification.actions.length > 0 && (
                       <div className="flex gap-1 flex-wrap">
@@ -319,7 +303,13 @@ export default function NotificationsPage() {
                             key={idx}
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(action.url);
+                              // For chat links, pass errandId in URL (state is lost on refresh)
+                              if (action.type === 'chat' && notification.errandId) {
+                                console.log('[NotificationsPage] Navigating to chat with errandId:', notification.errandId);
+                                navigate(`/chat?errandId=${notification.errandId}`);
+                              } else {
+                                navigate(action.url);
+                              }
                             }}
                             className={`px-2 py-1 rounded text-xs font-semibold transition ${
                               action.type === 'chat'

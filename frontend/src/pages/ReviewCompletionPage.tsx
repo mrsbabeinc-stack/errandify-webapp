@@ -10,7 +10,8 @@ interface TaskDetail {
   budget: number;
   doer_id?: number;
   asker_id?: number;
-  doer?: { display_name: string };
+  doer?: { display_name: string; alias?: string };
+  doer_alias?: string;
   description?: string;
   completion_notes?: string;
   accepted_bid_id?: number;
@@ -232,7 +233,7 @@ export default function ReviewCompletionPage() {
               <div className="space-y-2 text-sm">
                 <div><span className="text-gray-600">Title:</span> <span className="font-medium">{task.title}</span></div>
                 <div><span className="text-gray-600">Category:</span> <span className="font-medium">{task.category}</span></div>
-                <div><span className="text-gray-600">Doer:</span> <span className="font-medium">{task.doer?.display_name || 'Unknown'}</span></div>
+                <div><span className="text-gray-600">Doer:</span> <span className="font-medium">{task.doer?.alias || task.doer?.display_name || 'Unknown'}</span></div>
                 <div><span className="text-gray-600">Budget:</span> <span className="font-bold text-errandify-orange">SGD ${task.budget.toFixed(2)}</span></div>
               </div>
             </div>
@@ -313,7 +314,7 @@ export default function ReviewCompletionPage() {
                 <div>
                   <p className="font-semibold text-errandify-brown">🌟 Nominate as Star of the Month</p>
                   <p className="text-xs text-gray-600 mt-1">
-                    Recognize {task?.doer?.display_name || 'this doer'} for exceptional work and add them to the Hall of Stars
+                    Recognize {task?.doer?.alias || task?.doer?.display_name || 'this doer'} for exceptional work and add them to the Hall of Stars
                   </p>
                 </div>
               </label>

@@ -3,6 +3,7 @@ import { AuthRequest, authMiddleware, isUserOnline } from '../middleware/auth.js
 import db from '../db.js';
 import axios from 'axios';
 import { sendEmail } from '../services/email.js';
+import { offlineNotificationService } from '../services/offlineNotificationService.js';
 
 const router = Router();
 
@@ -19,11 +20,13 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
 
     // Verify user is involved in task
     const taskResult = await db.query(
-      `SELECT e.*, b.doer_id, u.display_name as asker_name FROM errands e
+      `SELECT e.*, b.doer_id, u.display_name as asker_name, sender.alias as sender_alias, sender.display_name as sender_name
+       FROM errands e
        LEFT JOIN bids b ON e.id = b.errand_id AND b.status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress')
        LEFT JOIN users u ON e.asker_id = u.id
+       LEFT JOIN users sender ON sender.id = $2
        WHERE e.id = $1`,
-      [taskId]
+      [taskId, senderId]
     );
 
     if (taskResult.rows.length === 0) {
@@ -42,12 +45,19 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
     const moderationResult = await moderateMessage(content);
     const isFlagged = moderationResult.status === 'FLAG';
 
-    // Store message
+    // Reject flagged messages immediately
+    if (isFlagged) {
+      return res.status(400).json({
+        error: 'Your message contains inappropriate content. Please revise and try again.'
+      });
+    }
+
+    // Store message (only if it passed moderation)
     const messageResult = await db.query(
       `INSERT INTO task_messages (task_id, sender_id, content, flagged, created_at)
        VALUES ($1, $2, $3, $4, NOW())
        RETURNING id, task_id, sender_id, content, flagged, created_at`,
-      [taskId, senderId, content, isFlagged]
+      [taskId, senderId, content, false]
     );
 
     const message = messageResult.rows[0];
@@ -55,7 +65,10 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
     // Create in-app notification for recipient
     try {
       const recipientId = isAsker ? task.doer_id : task.asker_id;
-      const senderName = task.asker_id === senderId ? task.asker_name || 'Asker' : 'Doer';
+      const senderAlias = task.sender_alias || task.sender_name || 'Neighbor';
+      const errandId = task.errand_id || `ER26-${taskId}`;
+      const taskTitle = task.title || 'Task';
+      const messagePreview = `${content.substring(0, 80)}${content.length > 80 ? '...' : ''}`;
 
       await db.query(
         `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
@@ -63,8 +76,8 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
         [
           recipientId,
           'message_received',
-          `💬 New Message from ${senderName}`,
-          `${content.substring(0, 50)}${content.length > 50 ? '...' : ''}`,
+          `💬 New Message from ${senderAlias}`,
+          `${errandId} • ${taskTitle}: ${messagePreview}`,
           taskId,
         ]
       );
@@ -76,7 +89,7 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
     // Send email notification to the other user
     try {
       const recipientId = isAsker ? task.doer_id : task.asker_id;
-      const senderName = task.asker_id === senderId ? task.asker_name || 'Asker' : 'Doer';
+      const senderName = task.sender_alias || task.sender_name || 'Neighbor';
 
       // Get recipient email
       const recipientResult = await db.query(
@@ -121,82 +134,22 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
         });
 
         console.log(`[Email] Sent chat notification to ${recipientEmail}`);
+
+        // Queue offline notification for batching (if user is offline)
+        const senderAlias = task.sender_alias || senderName || 'Neighbor';
+        await offlineNotificationService.queueOfflineNotification(
+          recipientId,
+          recipientEmail,
+          senderId,
+          senderAlias,
+          taskId,
+          task.title,
+          content
+        );
       }
     } catch (emailErr) {
       console.warn('[Email] Failed to send chat notification:', emailErr);
       // Don't fail the message if email fails
-    }
-
-    if (isFlagged) {
-      // Track flag count
-      const userFlagCount = await getRecentFlagCount(senderId, taskId);
-
-      // Get sender info for admin notification
-      const senderResult = await db.query(
-        `SELECT id, display_name, email FROM users WHERE id = $1`,
-        [senderId]
-      );
-      const sender = senderResult.rows[0];
-
-      // Create admin notification for flagged message
-      try {
-        await db.query(
-          `INSERT INTO admin_notifications (type, severity, user_id, message, details, created_at)
-           VALUES ($1, $2, $3, $4, $5, NOW())`,
-          [
-            'flagged_message',
-            'medium',
-            senderId,
-            `Message flagged from ${sender?.display_name || 'User ' + senderId}`,
-            JSON.stringify({
-              messageId: message.id,
-              taskId: taskId,
-              taskTitle: task.title,
-              userId: senderId,
-              userName: sender?.display_name,
-              userEmail: sender?.email,
-              content: content.substring(0, 200),
-              flagCount: userFlagCount,
-            }),
-          ]
-        );
-        console.log(`[Moderation] Flagged message #${message.id} from user ${senderId} (flag count: ${userFlagCount})`);
-      } catch (notifErr) {
-        console.warn('[Moderation] Failed to create admin notification:', notifErr);
-      }
-
-      if (userFlagCount >= 3) {
-        // Auto-suspend user for 24 hours
-        await db.query(
-          `UPDATE users SET suspended_until = NOW() + INTERVAL '24 hours' WHERE id = $1`,
-          [senderId]
-        );
-
-        // Create admin notification for auto-suspension
-        try {
-          await db.query(
-            `INSERT INTO admin_notifications (type, severity, user_id, message, details, created_at)
-             VALUES ($1, $2, $3, $4, $5, NOW())`,
-            [
-              'user_suspended',
-              'high',
-              senderId,
-              `User ${sender?.display_name || 'User ' + senderId} auto-suspended (3+ flagged messages)`,
-              JSON.stringify({
-                userId: senderId,
-                userName: sender?.display_name,
-                userEmail: sender?.email,
-                reason: '3 or more flagged messages',
-                suspendedUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-                flagCount: userFlagCount,
-              }),
-            ]
-          );
-          console.log(`[Moderation] User ${senderId} auto-suspended for 24 hours (${userFlagCount} flags)`);
-        } catch (notifErr) {
-          console.warn('[Moderation] Failed to create suspension notification:', notifErr);
-        }
-      }
     }
 
     // TODO: Emit socket.io event for real-time update
@@ -227,7 +180,9 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
 
     // Verify user is involved in task
     const taskResult = await db.query(
-      `SELECT e.*, asker.display_name as asker_name, asker.alias as asker_alias
+      `SELECT e.id, e.errand_id, e.title, e.description, e.category, e.budget, e.deadline,
+              e.location, e.postal_code, e.status, e.asker_id, e.updated_at,
+              asker.display_name as asker_name, asker.alias as asker_alias
        FROM errands e
        LEFT JOIN users asker ON e.asker_id = asker.id
        WHERE e.id = $1`,

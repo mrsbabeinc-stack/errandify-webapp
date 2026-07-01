@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react';
 import { initPushNotifications } from './utils/pushNotifications';
 import Layout from './components/Layout';
 import FloatingHana from './components/FloatingHana';
+import NotificationListener from './components/NotificationListener';
+import { NotificationProvider } from './context/NotificationContext';
+import NotificationToastContainer from './components/NotificationToastContainer';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import SingPassSimulator from './pages/SingPassSimulator';
@@ -125,6 +128,12 @@ export default function App() {
     setIsAuthenticated(false);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    // Clear SingPass auth state to prevent login issues
+    localStorage.removeItem('singpass_state');
+    localStorage.removeItem('singpass_nonce');
+    localStorage.removeItem('singpass_mode');
+    // Redirect to SingPass login page
+    window.location.href = '/';
   };
 
   if (isCheckingAuth) {
@@ -134,21 +143,25 @@ export default function App() {
   }
 
   return (
-    <Router>
-      {isAuthenticated && !isStaff && <FloatingHana />}
-      <Routes>
-        {/* Home/Auth page - shown first to unauthenticated users */}
+    <NotificationProvider>
+      <Router>
+        {isAuthenticated && !isStaff && <FloatingHana />}
+        {isAuthenticated && <NotificationListener />}
+        <NotificationToastContainer />
+        <Routes>
+        {/* Landing/Home page - shown first to unauthenticated users */}
         <Route
           path="/"
           element={
             isAuthenticated ? (
               isStaff ? <Navigate to="/support/dashboard" replace /> : <Navigate to="/home" replace />
             ) : (
-              <AuthPage onLogin={handleLogin} />
+              <LandingPage />
             )
           }
         />
 
+        {/* Auth/Login page */}
         <Route
           path="/auth"
           element={
@@ -328,6 +341,7 @@ export default function App() {
           <Route path="/review/:jobId" element={<ReviewPage />} />
         </Route>
       </Routes>
-    </Router>
+      </Router>
+    </NotificationProvider>
   );
 }

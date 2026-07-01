@@ -287,7 +287,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <p className="font-semibold text-green-900 mb-2">✓ Offer Confirmed</p>
           <p className="text-sm text-green-800">
-            {acceptedBid.doerName} has been chosen for ${acceptedBid.amount}
+            {acceptedBid.doerAlias || acceptedBid.doerName} has been chosen for ${acceptedBid.amount}
           </p>
         </div>
       )}

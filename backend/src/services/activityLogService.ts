@@ -29,8 +29,10 @@ export const activityLogService = {
     }
   },
 
-  async logPosted(errandId: number, askerName: string, askerId: number) {
-    await this.logActivity(errandId, 'posted', askerId, askerName, 'asker');
+  async logPosted(errandId: number, askerName: string, askerId: number, askerAlias?: string) {
+    await this.logActivity(errandId, 'posted', askerId, askerName, 'asker', {
+      alias: askerAlias || undefined
+    });
   },
 
   async logBidPlaced(errandId: number, doerName: string, doerId: number, amount: number, offerId?: string, alias?: string) {
@@ -41,12 +43,16 @@ export const activityLogService = {
     });
   },
 
-  async logBidAccepted(errandId: number, askerName: string, askerId: number) {
-    await this.logActivity(errandId, 'bid_accepted', askerId, askerName, 'asker');
+  async logBidAccepted(errandId: number, askerName: string, askerId: number, askerAlias?: string) {
+    await this.logActivity(errandId, 'bid_accepted', askerId, askerName, 'asker', {
+      alias: askerAlias || undefined
+    });
   },
 
-  async logBidRejected(errandId: number, doerName: string, doerId: number) {
-    await this.logActivity(errandId, 'bid_rejected', doerId, doerName, 'doer');
+  async logBidRejected(errandId: number, doerName: string, doerId: number, doerAlias?: string) {
+    await this.logActivity(errandId, 'bid_rejected', doerId, doerName, 'doer', {
+      alias: doerAlias || undefined
+    });
   },
 
   async logConfirmed(errandId: number) {

@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
+import http from 'http';
 import { config } from './config.js';
+import { initializeSocket } from './socket.js';
 import authRoutes from './routes/auth.js';
 import errandRoutes from './routes/errands.js';
 import chatRoutes from './routes/chat.js';
@@ -55,6 +57,17 @@ const app = express();
     console.log('Migration: photo_urls column checked/added');
   } catch (error) {
     console.log('Migration: photo_urls column already exists or not needed');
+  }
+
+  try {
+    // Add accepted_bid_id column to errands if it doesn't exist
+    await db.query(`
+      ALTER TABLE errands
+      ADD COLUMN IF NOT EXISTS accepted_bid_id INTEGER REFERENCES bids(id) ON DELETE SET NULL;
+    `);
+    console.log('Migration: accepted_bid_id column checked/added');
+  } catch (error) {
+    console.log('Migration: accepted_bid_id column already exists or not needed');
   }
 })();
 
@@ -119,12 +132,18 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start server
+// Start server with Socket.io
 const PORT = config.port;
-app.listen(PORT, () => {
+const httpServer = http.createServer(app);
+
+// Initialize Socket.io
+initializeSocket(httpServer);
+
+httpServer.listen(PORT, () => {
   console.log(`Errandify API running on port ${PORT}`);
   console.log(`Environment: ${config.nodeEnv}`);
   console.log(`SingPass enabled: ${config.singpass.useSingpass}`);
+  console.log(`Socket.io enabled on ws://localhost:${PORT}`);
 
   // Start background cron jobs (wrapped in try-catch to prevent startup crash)
   try {

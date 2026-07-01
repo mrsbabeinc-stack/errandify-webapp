@@ -76,7 +76,7 @@ export const speechService = {
 
       // Step 2: Process through chat model (Qwen 3.7 Plus)
       // Import here to avoid circular dependency
-      const { qwenService } = await import('./qwen.js');
+      const { qwenService } = await import('./qwenService.js');
       const contextMessage = context ? `Context: ${context}\n` : '';
       const botResponse = await qwenService.chat([
         {

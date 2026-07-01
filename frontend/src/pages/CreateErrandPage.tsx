@@ -459,9 +459,16 @@ export default function CreateErrandPage() {
           console.log('[EXTRACT] Setting area:', extracted.area);
           setArea(extracted.area);
         }
-        if (extracted.fullAddress) {
-          console.log('[EXTRACT] Setting full address:', extracted.fullAddress);
-          setFullAddress(extracted.fullAddress);
+
+        // Auto-fill full address with area + postal code
+        let autoFullAddress = extracted.fullAddress;
+        if (!autoFullAddress && extracted.area && extracted.postalCode) {
+          autoFullAddress = `${extracted.area} S${extracted.postalCode}`;
+          console.log('[EXTRACT] Auto-filled full address:', autoFullAddress);
+        }
+        if (autoFullAddress) {
+          console.log('[EXTRACT] Setting full address:', autoFullAddress);
+          setFullAddress(autoFullAddress);
         }
       }
     } catch (err) {
