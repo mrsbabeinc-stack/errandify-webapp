@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { getAreaFromPostalCode } from '../data/singaporePostalCodes';
 
 export default function CreateErrandPage() {
   console.log('===== CreateErrandPage LOADED =====');
@@ -62,7 +63,7 @@ export default function CreateErrandPage() {
     'Bedok', 'Tampines', 'Pasir Ris', 'Punggol', 'Hougang', 'Serangoon',
     'Sengkang', 'Choa Chu Kang', 'Jurong West', 'Jurong', 'Jurong East',
     'Clementi', 'Bukit Merah', 'Tiong Bahru', 'Queenstown', 'Bukit Timah',
-    'Ang Mo Kio', 'Bishan', 'Toa Payoh', 'Yishun', 'Sembawang', 'Kranji', 'Woodlands',
+    'Ang Mo Kio', 'Bishan', 'Toa Payoh', 'Yishun', 'Sembawang', 'Kranji', 'Woodlands', 'Simei',
   ].sort();
 
   // Load copied errand data on mount
@@ -167,14 +168,18 @@ export default function CreateErrandPage() {
             setNeedsAreaConfirmation(true);
             setPendingPostalCode(prefilledData.postalCode);
           } else {
-            // Use prefilled area directly (already correctly extracted by Hana/backend)
+            // Use prefilled area, normalize to title case
             if (prefilledData.area) {
-              setArea(prefilledData.area);
+              const normalizedArea = prefilledData.area
+                .split(' ')
+                .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+              setArea(normalizedArea);
               setFormData((prev) => ({
                 ...prev,
-                location: prefilledData.area,
+                location: normalizedArea,
               }));
-              console.log('[CreateErrand] Area set from prefilled data:', prefilledData.area);
+              console.log('[CreateErrand] Area set from prefilled data:', normalizedArea);
             }
           }
 
@@ -316,6 +321,7 @@ export default function CreateErrandPage() {
   const postalCodeCorrections: Record<string, string> = {
     '629652': 'Jurong/Tuas',
     '507565': 'Loyang/Pasir Ris',
+    '489223': 'Simei',
   };
 
   // Extract area name from full address string
@@ -416,6 +422,7 @@ export default function CreateErrandPage() {
     '80': { area: 'Sengkang', building: 'Sengkang' },
     '81': { area: 'Sengkang', building: 'Sengkang' },
     '82': { area: 'Sengkang', building: 'Sengkang' },
+    '83': { area: 'Simei', building: 'Simei' },
   };
 
   const extractFieldsFromTitle = async (title: string) => {
@@ -437,7 +444,7 @@ export default function CreateErrandPage() {
         console.log('[EXTRACT] Area from extraction:', extracted.area);
         console.log('[EXTRACT] FullAddress from extraction:', extracted.fullAddress);
 
-        // Set main form fields
+        // Set main form fields (but NOT description - user should write it manually)
         setFormData((prev) => ({
           ...prev,
           ...(extracted.category && { category: extracted.category }),
@@ -447,7 +454,6 @@ export default function CreateErrandPage() {
           ...(extracted.budget && { budget: extracted.budget }),
           ...(extracted.location && { location: extracted.location }),
           ...(extracted.date && { deadline: extracted.date }),
-          ...(extracted.description && { description: extracted.description }),
         }));
 
         // Set separate state fields
@@ -716,18 +722,21 @@ export default function CreateErrandPage() {
 
     // 5. Date and time validation
     console.log('[DEBUG] Validating deadline:', formData.deadline, 'time:', formData.time);
-    if (!formData.deadline || !formData.time) {
-      console.log('[DEBUG] VALIDATION FAILED: No deadline or time');
-      setError('Please enter the date and time. When do you need help? ⏰');
+    if (!formData.deadline) {
+      console.log('[DEBUG] VALIDATION FAILED: No deadline');
+      setError('Please enter the date. When do you need help? 📅');
       setLoading(false);
       return;
     }
 
+    // Use provided time or default to 09:00 if not specified
+    const timeToUse = formData.time || '09:00';
+
     // Parse the deadline date
-    const errandDateTime = new Date(`${formData.deadline}T${formData.time}`);
+    const errandDateTime = new Date(`${formData.deadline}T${timeToUse}`);
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const errandDate = new Date(formData.deadline);
+    const errandDate = new Date(`${formData.deadline}T00:00:00`);
 
     if (isNaN(errandDateTime.getTime())) {
       setError('Invalid date or time format. Please check again 🤨');
@@ -740,12 +749,16 @@ export default function CreateErrandPage() {
       return;
     }
 
-    // Check if date/time is at least 30 minutes from now
-    const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60 * 1000);
+    // Check if date/time is at least 30 minutes from now (only if scheduling for TODAY)
+    const isToday = errandDate.getTime() === today.getTime();
 
-    if (errandDateTime < thirtyMinutesFromNow) {
-      setError('Please schedule at least 30 minutes from now to give doers time to respond ⏳');
-      return;
+    if (isToday) {
+      // For today's errands, require 30 minutes from now
+      const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60 * 1000);
+      if (errandDateTime < thirtyMinutesFromNow) {
+        setError('Please schedule at least 30 minutes from now to give doers time to respond ⏳');
+        return;
+      }
     }
 
     // 6. Duration validation (if specified)
@@ -857,7 +870,8 @@ export default function CreateErrandPage() {
         title: formData.title,
         description: formData.description,
         category: formData.category,
-        location: fullAddress || formData.location || null,
+        location: formData.location || null,
+        full_address: fullAddress || null,
         postal_code: postalCode || null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
         deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
@@ -918,12 +932,16 @@ export default function CreateErrandPage() {
         }
 
         // Show success modal with errand ID
-        if (response.data.data?.errandId) {
-          setSuccessErrandId(response.data.data.errandId);
+        console.log('[DEBUG] response.data.data:', response.data.data);
+        const errandId = response.data.data?.errandId || response.data.errandId;
+        console.log('[DEBUG] Extracted errandId:', errandId);
+
+        if (errandId) {
+          setSuccessErrandId(errandId);
           setShowSuccess(true);
         } else {
-          alert('🎉 Your errand is live! Doers are already interested! ⚡');
-          navigate('/home');
+          console.log('[DEBUG] No errandId found, redirecting to home');
+          navigate('/my-errands');
         }
       } else {
         console.error('[DEBUG] *** API RETURNED success:false ***:', response.data);
@@ -1002,9 +1020,7 @@ export default function CreateErrandPage() {
                   debouncedFetchAiSuggestions(e.target.value, formData.description);
                 }}
                 placeholder="e.g., help move boxes, tutoring, cleaning..."
-                className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium ${
-                  formData.title ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
-                }`}
+                className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown placeholder:text-gray-400"
               />
             </div>
 
@@ -1021,9 +1037,7 @@ export default function CreateErrandPage() {
                   placeholder="Add details about your task above"
                   rows={2}
                   maxLength={150}
-                  className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium ${
-                    formData.description ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
-                  }`}
+                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium text-errandify-brown placeholder:text-gray-400"
                 />
                 <span className="absolute bottom-2 right-3 text-xs text-gray-400">{formData.description.length}/150</span>
               </div>
@@ -1072,9 +1086,7 @@ export default function CreateErrandPage() {
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium appearance-none cursor-pointer ${
-                  formData.category ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900'
-                }`}
+                className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm appearance-none cursor-pointer text-errandify-brown"
               >
                 <option value="">Pick a category</option>
                 {Object.entries(categoryNames).map(([key, name]) => (
@@ -1101,13 +1113,7 @@ export default function CreateErrandPage() {
                   value={formData.budget}
                   onChange={handleChange}
                   placeholder="$"
-                  className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium ${
-                    formData.budget
-                      ? 'border-errandify-orange text-errandify-brown'
-                      : aiSuggestions.suggestedBudget
-                      ? 'border-gray-200 text-gray-500'
-                      : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
-                  }`}
+                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown placeholder:text-gray-400"
                 />
               </div>
               <div>
@@ -1120,9 +1126,7 @@ export default function CreateErrandPage() {
                   value={formData.deadline}
                   onChange={handleChange}
                   min={new Date().toISOString().split('T')[0]}
-                  className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium ${
-                    formData.deadline ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900'
-                  }`}
+                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown"
                 />
               </div>
               <div className="relative">
@@ -1142,9 +1146,7 @@ export default function CreateErrandPage() {
                   onFocus={() => setShowTimePicker(true)}
                   onBlur={() => setTimeout(() => setShowTimePicker(false), 200)}
                   placeholder="HH:MM"
-                  className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm placeholder:text-gray-400 cursor-pointer font-medium ${
-                    formData.time ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900'
-                  }`}
+                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm placeholder:text-gray-400 cursor-pointer font-medium text-errandify-brown"
                 />
               </div>
             </div>
@@ -1316,35 +1318,41 @@ export default function CreateErrandPage() {
 
                       // Only look up postal code if exactly 6 digits
                       if (code.length === 6 && /^\d+$/.test(code)) {
-                        // Call OneMap API to get accurate area/address for this postal code
-                        fetch(`https://www.onemap.sg/api/common/searchaddress?searchval=${code}&returnGeom=Y&getAddrDetails=Y`)
+                        // Get area from comprehensive postal code database
+                        const areaName = getAreaFromPostalCode(code);
+
+                        // Set area immediately (no waiting for OneMap)
+                        if (areaName) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            location: areaName,
+                          }));
+                          setArea(areaName);
+                          console.log('[PostalCode] Area auto-set to:', areaName);
+                        }
+
+                        // Call backend to lookup address via OneMap (which has auth token)
+                        const token = localStorage.getItem('token');
+                        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({ input: code }), // Just send postal code
+                        })
                           .then(res => res.json())
                           .then(data => {
-                            if (data.results && data.results.length > 0) {
-                              const result = data.results[0];
-                              // Extract area from BUILDING_NAME or ADDRESS
-                              const address = result.ADDRESS || '';
-                              const buildingName = result.BUILDING_NAME || '';
-
-                              // Try to extract area from address (e.g., "8 GUL AVENUE SINGAPORE 629652" -> extract area intelligently)
-                              let extractedArea = extractAreaFromAddress(address || buildingName);
-
-                              // Apply corrections for postal codes where OneMap data is inaccurate
-                              if (postalCodeCorrections[code]) {
-                                extractedArea = postalCodeCorrections[code];
-                              }
-
-                              setFormData((prev) => ({
-                                ...prev,
-                                location: extractedArea,
-                              }));
-                              setArea(extractedArea);
-                              setFullAddress(address);
+                            console.log('[Extract] Response:', data);
+                            if (data.success && data.data.fullAddress && data.data.fullAddress !== `Singapore ${code}`) {
+                              console.log('[Extract] Setting full address to:', data.data.fullAddress);
+                              setFullAddress(data.data.fullAddress);
+                            } else {
+                              console.log('[Extract] No address found or default fallback');
                             }
                           })
                           .catch(err => {
-                            console.warn('OneMap lookup failed for postal code:', err);
-                            // Keep existing location/area if lookup fails
+                            console.warn('Address lookup failed:', err);
                           });
                       } else if (code.length === 0) {
                         // Clear addresses only if postal code is completely cleared
@@ -1357,9 +1365,7 @@ export default function CreateErrandPage() {
                       }
                       // Otherwise: don't update location (partial postal codes won't modify anything)
                     }}
-                    className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium ${
-                      postalCode ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
-                    }`}
+                    className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown placeholder:text-gray-400"
                   />
                 </div>
 
@@ -1368,11 +1374,22 @@ export default function CreateErrandPage() {
                   <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
                     Area <span className="text-xs font-normal text-gray-500">(Shown to All)</span>
                   </label>
-                  <div className={`w-full px-3 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-                    area ? 'border-errandify-orange bg-orange-100 text-errandify-brown' : 'border-gray-200 bg-gray-100 text-gray-500'
-                  }`}>
-                    {area || 'Auto-filled'}
-                  </div>
+                  <select
+                    value={area}
+                    onChange={(e) => {
+                      setArea(e.target.value);
+                      setFormData((prev) => ({
+                        ...prev,
+                        location: e.target.value,
+                      }));
+                    }}
+                    className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown appearance-none cursor-pointer"
+                  >
+                    <option value="">Select Area</option>
+                    {Array.from(new Set(Object.values(postalCodeAreas).map(x => x.area))).sort().map((areaName) => (
+                      <option key={areaName} value={areaName}>{areaName}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             )}
@@ -1388,9 +1405,7 @@ export default function CreateErrandPage() {
                     onChange={(e) => setFullAddress(e.target.value)}
                     placeholder="e.g., Block 1, Unit #5-10"
                     rows={2}
-                    className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium ${
-                      fullAddress ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
-                    }`}
+                    className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium text-errandify-brown placeholder:text-gray-400"
                   />
 
                   {/* GPS Location Notice */}

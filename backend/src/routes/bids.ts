@@ -608,6 +608,15 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
   try {
     const doerId = parseInt(req.userId || '0', 10);
 
+    // First, mark any open errands with passed deadlines as expired
+    const now = new Date();
+    await db.query(
+      `UPDATE errands
+       SET status = 'expired'
+       WHERE status = 'open' AND deadline < $1`,
+      [now]
+    );
+
     // Get all bids for this doer with errand details
     const bidsResult = await db.query(
       `SELECT b.*, e.title, e.budget, e.category, e.status as errand_status, e.location, e.postal_code, e.deadline, e.description, e.formatted_id, u.display_name as asker_display_name

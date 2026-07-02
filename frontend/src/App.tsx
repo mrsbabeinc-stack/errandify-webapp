@@ -129,12 +129,15 @@ export default function App() {
     setIsAuthenticated(false);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('current_role');
     // Clear SingPass auth state to prevent login issues
     localStorage.removeItem('singpass_state');
     localStorage.removeItem('singpass_nonce');
     localStorage.removeItem('singpass_mode');
-    // Redirect to SingPass login page
-    window.location.href = '/';
+    // Redirect directly to SingPass login page
+    window.location.href = '/auth';
   };
 
   if (isCheckingAuth) {
@@ -292,7 +295,7 @@ export default function App() {
         <Route path="/faq" element={<FAQPage />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/about" element={<AboutErrandifyPage />} />
-        <Route path="/my-account" element={isAuthenticated ? <MyAccountPage /> : <Navigate to="/login" replace />} />
+        <Route path="/my-account" element={isAuthenticated ? <MyAccountPage onLogout={handleLogout} /> : <Navigate to="/login" replace />} />
         <Route path="/admin" element={isAuthenticated && isAdmin ? <AdminPanel /> : <Navigate to="/login" replace />} />
 
         {/* Support Dashboard - L2/L3 Dispute Resolution */}

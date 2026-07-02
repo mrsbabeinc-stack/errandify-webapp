@@ -69,6 +69,32 @@ const app = express();
   } catch (error) {
     console.log('Migration: accepted_bid_id column already exists or not needed');
   }
+
+  try {
+    // Add full_address column to errands if it doesn't exist
+    await db.query(`
+      ALTER TABLE errands
+      ADD COLUMN IF NOT EXISTS full_address VARCHAR(500);
+    `);
+    console.log('Migration: full_address column checked/added');
+  } catch (error) {
+    console.log('Migration: full_address column already exists or not needed');
+  }
+
+  try {
+    // Update status constraint to include 'expired' status
+    // This allows marking errands as expired when deadline passes
+    await db.query(`
+      ALTER TABLE errands DROP CONSTRAINT IF EXISTS errands_status_check;
+    `);
+    await db.query(`
+      ALTER TABLE errands ADD CONSTRAINT errands_status_check
+      CHECK (status IN ('open', 'assigned', 'confirmed', 'in_progress', 'completed', 'cancelled', 'expired'));
+    `);
+    console.log('Migration: status constraint updated to include "expired"');
+  } catch (error) {
+    console.log('Migration: status constraint already includes "expired"');
+  }
 })();
 
 // Middleware

@@ -257,6 +257,40 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     }
   };
 
+  const isErrandExpired = (): boolean => {
+    // Check if status is already marked as 'expired' in database
+    if (errand?.status === 'expired') return true;
+    // Or check if deadline has passed while status is still 'open'
+    if (!errand?.deadline) return false;
+    const deadlineDate = new Date(errand.deadline);
+    const now = new Date();
+    return now > deadlineDate && errand.status === 'open';
+  };
+
+  const isAsker = currentUser?.id === errand?.askerId;
+  const isDoer = currentUser?.id === errand?.doerId;
+  const expired = isErrandExpired();
+
+  // If errand is expired and user is not the asker, show access denied
+  if (expired && !isAsker && !isDoer) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-errandify-bg pb-20">
+        <div className="max-w-2xl mx-auto px-2 py-1">
+          <button
+            onClick={() => navigate(-1)}
+            className="text-errandify-orange font-bold mb-1 text-xs hover:text-orange-600 transition"
+          >
+            ← Back
+          </button>
+          <div className="bg-white rounded-xl shadow-lg p-6 text-center">
+            <p className="text-lg font-bold text-errandify-brown mb-2">🕐 Errand Expired</p>
+            <p className="text-sm text-gray-600">This errand's deadline has passed and is no longer available for new bids.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const toggleCompletionEvidence = async () => {
     if (showCompletionEvidence) {
       setShowCompletionEvidence(false);
@@ -707,13 +741,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             )}
 
             {/* Full Address (shown to asker always, and confirmed doer after confirmation) */}
-            {errand.location && currentUser &&
-             (currentUser.id === errand.askerId ||
-              (errand.status === 'confirmed' && currentUser.id === errand.doerId)) && (
+            {(errand as any).full_address && (
               <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-1.5 rounded-lg border border-orange-200">
                 <p className="text-xs text-gray-600 font-semibold mb-0.5">📍 Full Address</p>
                 <p className="text-xs text-gray-800 font-medium break-words">
-                  {errand.location}
+                  {(errand as any).full_address}
                 </p>
               </div>
             )}
@@ -985,26 +1017,35 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     ✅ Confirm Errand
                   </button>
                 </div>
-              ) : errand.status === 'open' && (bidStatus === 'pending' || !bidStatus) ? (
-                // No bid or pending bid - show submit offer
+              ) : errand.status === 'open' && !expired && (bidStatus === 'pending' || !bidStatus) ? (
+                // No bid or pending bid - show submit offer (only if not expired)
                 <button
                   onClick={() => setShowBidModal(true)}
                   className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
                 >
                   Submit an Offer
                 </button>
-              ) : errand.status === 'open' && (bidSubmitted || userBidAmount) ? (
-                // Only show Update Offer if errand is still OPEN
+              ) : errand.status === 'open' && !expired && (bidSubmitted || userBidAmount) ? (
+                // Only show Update Offer if errand is still OPEN and not expired
                 <button
                   onClick={() => setShowBidModal(true)}
                   className="w-full bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base mt-2"
                 >
                   ✏️ Update Offer
                 </button>
+              ) : errand.status === 'open' && expired && (bidSubmitted || userBidAmount) ? (
+                // Show View Only for expired errand if doer has made an offer
+                <div className="w-full bg-gray-400 text-white py-3 rounded-lg font-bold text-center text-base cursor-not-allowed opacity-60 mt-2">
+                  Expired (View Only)
+                </div>
               ) : null
             ) : errand.status === 'open' && currentUser && currentUser.id === errand.askerId && !errand.acceptedBidId ? (
               <div className="flex gap-2 mt-2">
-                {!errand.bidCount ? (
+                {expired ? (
+                  <div className="flex-1 bg-gray-400 text-white py-3 rounded-lg font-bold text-center text-base cursor-not-allowed opacity-60">
+                    Expired (View Only)
+                  </div>
+                ) : !errand.bidCount ? (
                   <button
                     onClick={() => navigate(`/errand/${id}/edit`)}
                     className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
@@ -1016,12 +1057,14 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     Locked (Has Offers)
                   </div>
                 )}
-                <button
-                  onClick={handleCancelErrand}
-                  className="flex-1 bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
-                >
-                  Cancel Errand
-                </button>
+                {!expired && (
+                  <button
+                    onClick={handleCancelErrand}
+                    className="flex-1 bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors text-base"
+                  >
+                    Cancel Errand
+                  </button>
+                )}
               </div>
             ) : errand.status === 'confirmed' && currentUser && currentUser.id === errand.askerId ? (
               // Asker viewing confirmed errand - show Chat and Cancel buttons

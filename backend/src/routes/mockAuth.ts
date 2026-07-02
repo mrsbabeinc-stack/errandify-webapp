@@ -17,10 +17,10 @@ router.post('/mock-singpass-login', (req: Request, res: Response) => {
     // Simulate SingPass returning user data
     const mockUsers: Record<string, any> = {
       'asker@test.com': {
-        id: 1,
+        id: 2,
         nric: '1234567890ABC',
-        displayName: 'John Lee',
-        email: 'asker@test.com',
+        displayName: 'Sarah Tan',
+        email: 'abc@gmail.com',
         phone: '+6581234567',
         role: 'asker',
       },
@@ -28,13 +28,13 @@ router.post('/mock-singpass-login', (req: Request, res: Response) => {
         id: 2,
         nric: '0987654321XYZ',
         displayName: 'Sarah Tan',
-        email: 'doer@test.com',
+        email: 'abc@gmail.com',
         phone: '+6587654321',
         role: 'doer',
       },
     };
 
-    const user = mockUsers[email];
+    const user = mockUsers[email] || mockUsers['asker@test.com'];
 
     if (!user) {
       // Create new user on first login
@@ -52,7 +52,7 @@ router.post('/mock-singpass-login', (req: Request, res: Response) => {
 
       const token = jwt.sign(
         { userId: newUser.id, email: newUser.email },
-        process.env.JWT_SECRET || 'test-secret',
+        config.jwtSecret,
         { expiresIn: '7d' }
       );
 
@@ -69,7 +69,7 @@ router.post('/mock-singpass-login', (req: Request, res: Response) => {
     // Existing user login
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      process.env.JWT_SECRET || 'test-secret',
+      config.jwtSecret,
       { expiresIn: '7d' }
     );
 

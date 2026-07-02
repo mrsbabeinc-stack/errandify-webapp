@@ -118,6 +118,8 @@ export default function MyOfferPage() {
         return 'bg-red-100 text-red-800 border-red-300';
       case 'withdrawn':
         return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'expired':
+        return 'bg-gray-200 text-gray-500 border-gray-400';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -135,6 +137,7 @@ export default function MyOfferPage() {
       completed_confirmed: '🎉 Completed',
       rejected: '❌ Rejected',
       withdrawn: '↩️ Withdrawn',
+      expired: '⏰ Expired',
     };
     return labels[status] || status;
   };
@@ -152,6 +155,7 @@ export default function MyOfferPage() {
     'completed': 6,          // ✅ Rated & Closed
     'rejected': 7,           // ❌ Rejected
     'withdrawn': 8,          // ↩️ Withdrawn
+    'expired': 99,           // ⏰ Expired - LOWEST PRIORITY (shown at bottom, greyed out)
   };
 
   const filteredBids = (filterStatus === 'all' ? bids : bids.filter(b => b.status === filterStatus))
@@ -337,14 +341,16 @@ export default function MyOfferPage() {
 
                 {/* Actions */}
                 <div className="flex gap-1 flex-wrap">
-                  <button
-                    onClick={() => navigate(`/errand/${bid.errand_id}`)}
-                    className="flex-1 px-2 py-1 border border-gray-300 text-gray-700 rounded font-semibold text-xs hover:bg-gray-50 min-w-20"
-                  >
-                    View Details
-                  </button>
+                  {bid.errand?.status !== 'expired' && (
+                    <button
+                      onClick={() => navigate(`/errand/${bid.errand_id}`)}
+                      className="flex-1 px-2 py-1 border border-gray-300 text-gray-700 rounded font-semibold text-xs hover:bg-gray-50 min-w-20"
+                    >
+                      View Details
+                    </button>
+                  )}
 
-                  {bid.status === 'pending' && (
+                  {bid.status === 'pending' && bid.errand?.status !== 'expired' && (
                     <button
                       onClick={() => navigate(`/errand/${bid.errand_id}`)}
                       className="flex-1 px-2 py-1 bg-errandify-orange text-white rounded font-semibold text-xs hover:bg-opacity-90"

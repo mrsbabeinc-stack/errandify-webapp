@@ -44,10 +44,16 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('current_role');
+    localStorage.removeItem('singpass_state');
+    localStorage.removeItem('singpass_nonce');
+    localStorage.removeItem('singpass_mode');
     if (onLogout) {
       onLogout();
     } else {
-      navigate('/login');
+      navigate('/auth');
     }
   };
 

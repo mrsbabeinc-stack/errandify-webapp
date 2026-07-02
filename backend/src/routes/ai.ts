@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
+import { getAreaFromPostalCode } from '../data/singaporePostalCodes.js';
+import { getAddressFromPostalCode } from '../data/postalCodeAddresses.js';
 import axios from 'axios';
 import https from 'https';
 import * as biasDetector from '../modules/bias-detector.js';
@@ -474,17 +476,45 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     let cleanedTitle = title;
     const qwenApiKey = process.env.QWEN_API_KEY;
 
+    console.log('[Extract] Qwen API Key available:', !!qwenApiKey);
+
     if (qwenApiKey) {
       try {
-        console.log('[Extract] Using Qwen to clean title...');
+        console.log('[Extract] ✓ Using Qwen to clean title...');
         const titleCleanResponse = await axios.post(
-          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
           {
             model: 'qwen-max',
             messages: [
               {
                 role: 'system',
-                content: 'You are a task title extractor. Your ONLY job is to extract the core task description from user input. Remove ALL metadata: dates, times, deadlines, locations, addresses, postal codes, budgets, prices, durations. Return ONLY the task title (3-10 words, no punctuation except periods). Examples: Input "Fix my leaky tap on Saturday at 2pm" → Output "Fix leaky tap". Input "Deliver groceries tomorrow" → Output "Deliver groceries".',
+                content: `You are a task title extractor. Extract ONLY the core action + what needs to be done.
+
+RULES:
+1. Keep it SHORT and MEANINGFUL (3-8 words max)
+2. Include ONLY the ACTION and WHAT (verb + object)
+3. Keep important context like: AMOUNTS ($500), TYPE (ringgit), SKILL (fade)
+4. REMOVE EVERYTHING ELSE: dates, times, days, locations, addresses, postal codes, durations, budget, explanations
+5. Start with action verb (Change, Fix, Deliver, Clean, Walk, Tutor, Cut, etc)
+6. NO metadata like "I need to", "Can you", "Please", "on Saturday", "at salon", "for 1 hour"
+
+EXAMPLES:
+- Input: "i need to change 500 dollars sgd to ringgit. i am flying off tomorrow. i need this to be done today"
+  Output: Change $500 SGD To Ringgit
+
+- Input: "walk my dog every friday. 1 hour at 32 flora drive. budget $150"
+  Output: Walk My Dog
+
+- Input: "Fix my leaky tap on Saturday at 2pm near the kitchen. It's dripping"
+  Output: Fix Leaky Kitchen Tap
+
+- Input: "Tutor My Daughter P6 In Math. 489223. 7-9pm. monday. budget 70"
+  Output: Tutor My Daughter P6 In Math
+
+- Input: "Cut my hair at salon. Need fade haircut"
+  Output: Cut Hair With Fade
+
+OUTPUT ONLY THE TITLE, nothing else.`,
               },
               {
                 role: 'user',
@@ -495,17 +525,18 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           {
             headers: {
               'Authorization': `Bearer ${qwenApiKey}`,
-            'X-DashScope-AsyncRequest': 'false',
               'Content-Type': 'application/json',
             },
             timeout: 5000,
           }
         );
 
-        const qwenTitle = titleCleanResponse.data?.output?.text?.trim();
-        if (qwenTitle && qwenTitle.length > 0 && qwenTitle.length < 100) {
+        const qwenTitle = titleCleanResponse.data?.choices?.[0]?.message?.content?.trim();
+        if (qwenTitle && qwenTitle.length > 0 && qwenTitle.length < 80) {
           cleanedTitle = qwenTitle;
           console.log('[Extract] ✅ Qwen cleaned title:', cleanedTitle);
+        } else {
+          console.warn('[Extract] Qwen title too long or empty:', qwenTitle);
         }
       } catch (error) {
         console.warn('[Extract] Qwen title cleaning failed, using fallback:', error instanceof Error ? error.message : error);
@@ -514,20 +545,28 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     // Fallback: basic cleanup if Qwen not available
     if (cleanedTitle === title) {
-      cleanedTitle = title
-        .replace(/\s*\(\d{6}\)\s*/g, ' ') // Remove postal codes in parens
-        .replace(/\s*,?\s*deadline.*$/i, '') // Remove "deadline..." (case-insensitive)
-        .replace(/\s*,?\s*at\s+\d{6}\b.*$/i, '') // Remove "at [postal code]..." and everything after
-        // Remove common Singapore area names (at [area] or just [area] if at end)
-        .replace(/\s*,?\s*at\s+\b(?:clementi|bedok|tampines|jurong|bukit|pasir ris|yishun|hougang|serangoon|punggol|ang mo kio|bishan|toa payoh|novena|newton|tiong bahru|outram|queenstown|tanjong pagar|orchard|dhoby ghaut|chinatown|marina|raffles|sentosa|changi|kranji|woodlands|sembawang)\b.*$/i, '') // Remove area names
-        .replace(/\s*,?\s*(?:on\s+)?\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\b.*$/i, '') // Remove day names and anything after (with or without "on")
-        .replace(/\s+at\s+\d{1,2}[ap]m.*$/i, '') // Remove "at 2pm, 10am, etc..."
-        .replace(/\s*,?\s*\d{1,2}(:\d{2})?\s*[ap]m.*$/i, '') // Remove time patterns like "10am", "2:30pm"
-        .replace(/\s+for\s+[\d.]+\s*(?:hours?|hrs?|h|mins?|m).*$/i, '') // Remove "for [duration]..."
-        .replace(/\s*,?\s*budget.*$/i, '') // Remove "budget..."
-        .replace(/\s*,?\s*postal.*$/i, '') // Remove "postal code..."
-        .replace(/\s*,?\s*\$.*$/i, '') // Remove "$..."
-        .replace(/\s+\d{6}\s*$/i, '') // Remove trailing 6-digit postal code at end
+      // Strategy: Take only the first sentence, then clean up any metadata within it
+      let firstSentence = title.split(/[\.\!\?]/)[0]; // Get text before first punctuation mark
+
+      cleanedTitle = firstSentence
+        // Remove metadata at the end of the sentence (order matters!)
+        .replace(/\s*,?\s*budget\s*[\d.$]*$/i, '') // Remove budget
+        .replace(/\s*,?\s*\$\s*\d+$/i, '') // Remove $ amounts
+        .replace(/\s+for\s+[\d.]+\s*(?:hours?|hrs?|h|mins?|m)$/i, '') // Remove "for X hours/minutes"
+        // Remove time + location patterns like "on Saturday 2pm at Clementi"
+        .replace(/\s+(?:on|every)\s+\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\b(?:\s+\d{1,2})?(?::\d{2})?\s*(?:am|pm)?(?:\s+at\s+[\w\s]+)?$/i, '')
+        // Remove just time patterns "at 2pm" or "at 2:30pm"
+        .replace(/\s+(?:at)\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)(?:\s+at\s+[\w\s]+)?$/i, '')
+        // Remove street addresses like "at 32 Flora Drive"
+        .replace(/\s+at\s+\d+\s+[\w\s]+(?:drive|street|road|avenue|lane|court|place|crescent|close).*$/i, '')
+        // Remove area names like "at Clementi" or "at salon"
+        .replace(/\s+at\s+\b(?:clementi|bedok|tampines|jurong|bukit|pasir ris|yishun|hougang|serangoon|punggol|ang mo kio|bishan|toa payoh|novena|newton|tiong bahru|outram|queenstown|tanjong pagar|orchard|dhoby ghaut|chinatown|marina|raffles|sentosa|changi|kranji|woodlands|sembawang|salon|home|office|workplace)\b.*$/i, '')
+        .replace(/\s+\d{6}\b$/g, '') // Remove postal codes at end
+        // Remove leading filler phrases
+        .replace(/^(?:i\s+need\s+to|can\s+you|please|could\s+you|would\s+you|i\s+need|need\s+to)\s+/i, '')
+        // Final cleanup
+        .replace(/\s+/g, ' ')
+        .replace(/[.,\s]+$/g, '')
         .trim();
     }
 
@@ -538,12 +577,12 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     cleanedTitle = cleanedTitle && cleanedTitle.length > 1 ? cleanedTitle : 'Task';
 
-    // Title case
+    // Title case (allow up to 150 chars for full task description)
     cleanedTitle = cleanedTitle
       .split(/\s+/)
       .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
       .join(' ')
-      .substring(0, 50);
+      .substring(0, 150);
 
     title = cleanedTitle;
     console.log('[Extract] Final title:', title);
@@ -552,9 +591,14 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     let category = 'homehelp'; // Default fallback
     const lowerInput = input.toLowerCase();
 
-    // Map keywords to categories
-    if (lowerInput.includes('walk') || lowerInput.includes('dog') || lowerInput.includes('pet') || lowerInput.includes('cat')) {
+    // Map keywords to categories (order matters - check specific before general)
+    // Check creative-arts FIRST before other generic keywords like "post", "write", "design"
+    if (lowerInput.includes('social media') || lowerInput.includes('content') || lowerInput.includes('graphic') || lowerInput.includes('video') || lowerInput.includes('photo') || lowerInput.includes('photography') || lowerInput.includes('art') || lowerInput.includes('illustration') || lowerInput.includes('creative') || lowerInput.includes('design')) {
+      category = 'creative-arts';
+    } else if (lowerInput.includes('walk') || lowerInput.includes('dog') || lowerInput.includes('pet') || lowerInput.includes('cat')) {
       category = 'petcare';
+    } else if (lowerInput.includes('cook') || lowerInput.includes('cooking') || lowerInput.includes('meal') || lowerInput.includes('lunch') || lowerInput.includes('dinner') || lowerInput.includes('breakfast') || lowerInput.includes('food') || lowerInput.includes('recipe') || lowerInput.includes('prepare')) {
+      category = 'food-beverage';
     } else if (lowerInput.includes('babysit') || lowerInput.includes('childcare') || lowerInput.includes('tutor') || lowerInput.includes('child')) {
       category = 'childcare';
     } else if (lowerInput.includes('elderly') || lowerInput.includes('elder') || lowerInput.includes('grandmother') || lowerInput.includes('grandfather') || lowerInput.includes('senior')) {
@@ -563,7 +607,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       category = 'travel-mobility';
     } else if (lowerInput.includes('deliver') || lowerInput.includes('move') || lowerInput.includes('moving') || lowerInput.includes('moving boxes') || lowerInput.includes('transport')) {
       category = 'delivery-moving';
-    } else if (lowerInput.includes('clean') || lowerInput.includes('laundry') || lowerInput.includes('house') || lowerInput.includes('kitchen')) {
+    } else if (lowerInput.includes('clean') || lowerInput.includes('laundry') || lowerInput.includes('house') || lowerInput.includes('wash') || lowerInput.includes('dishes') || lowerInput.includes('scrub') || lowerInput.includes('sweep') || lowerInput.includes('mop') || lowerInput.includes('vacuum') || lowerInput.includes('dust') || lowerInput.includes('tidy') || lowerInput.includes('organize')) {
       category = 'homehelp';
     } else if (lowerInput.includes('grocery') || lowerInput.includes('shopping') || lowerInput.includes('shop')) {
       category = 'shopping-errands';
@@ -571,34 +615,129 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       category = 'tech-support';
     } else if (lowerInput.includes('data entry') || lowerInput.includes('spreadsheet') || lowerInput.includes('excel')) {
       category = 'data-entry';
+    } else if (lowerInput.includes('makeup') || lowerInput.includes('hair') || lowerInput.includes('salon') || lowerInput.includes('beauty') || lowerInput.includes('massage') || lowerInput.includes('spa') || lowerInput.includes('manicure') || lowerInput.includes('pedicure')) {
+      category = 'personal-care';
     }
 
     console.log('[Extract] Category detected (keyword-based):', category);
 
+    // If keyword matching gave default "homehelp", try Qwen AI for better detection
+    if (category === 'homehelp' && process.env.QWEN_API_KEY) {
+      try {
+        console.log('[Extract] ✓ Using Qwen to detect category...');
+        const categoryResponse = await axios.post(
+          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+          {
+            model: 'qwen-max',
+            messages: [
+              {
+                role: 'system',
+                content: `You are a task category classifier. Classify the task into ONE category.
+
+CATEGORIES:
+- petcare: dog walking, pet care, cat care
+- food-beverage: cooking, meal prep, food delivery
+- childcare: babysitting, tutoring, childcare
+- eldercare: caring for elderly, bringing to hospital/doctor, senior care
+- travel-mobility: driving, taxi, airport, travel
+- delivery-moving: moving boxes, delivery, transport
+- homehelp: cleaning, laundry, housekeeping
+- shopping-errands: grocery shopping, shopping
+- tech-support: computer help, wifi, tech
+- data-entry: spreadsheet, data entry, excel
+- personal-care: makeup, hair, salon, beauty, massage
+- creative-arts: social media, design, video, photography, writing
+
+OUTPUT ONLY the category name, nothing else.`,
+              },
+              {
+                role: 'user',
+                content: input,
+              },
+            ],
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${process.env.QWEN_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 3000,
+          }
+        );
+
+        const qwenCategory = categoryResponse.data?.choices?.[0]?.message?.content?.trim().toLowerCase();
+        if (qwenCategory && qwenCategory.length < 30) {
+          category = qwenCategory;
+          console.log('[Extract] ✅ Qwen detected category:', category);
+        }
+      } catch (error) {
+        console.warn('[Extract] Qwen category detection failed, using keyword fallback:', error instanceof Error ? error.message : error);
+      }
+    }
+
     // Title is already cleaned up above - skip additional Qwen polishing (too slow)
     console.log('[Extract] Final title:', title);
 
-    // Parse date - look for "tomorrow", "today", "later" (=today), "N days later/in", day names, or dates
+    // Parse date - look for "tomorrow", "today", "later" (=today), "N days later/in", day names, explicit dates, or dates
     let date = '';
 
-    // Check for "N days later" or "in N days" pattern first
-    const daysMatch = input.match(/(?:in|after)\s+(\d+)\s*days?(?:\s+later)?/i);
-    if (daysMatch) {
-      const daysToAdd = parseInt(daysMatch[1]);
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + daysToAdd);
-      date = futureDate.toISOString().split('T')[0];
-      console.log('[Extract] Date from "in/after N days":', date);
-    } else if (/tomorrow/i.test(input)) {
+    // Month mapping for date parsing
+    const monthMap: Record<string, number> = {
+      january: 1, jan: 1,
+      february: 2, feb: 2,
+      march: 3, mar: 3,
+      april: 4, apr: 4,
+      may: 5,
+      june: 6, jun: 6,
+      july: 7, jul: 7,
+      august: 8, aug: 8,
+      september: 9, sep: 9,
+      october: 10, oct: 10,
+      november: 11, nov: 11,
+      december: 12, dec: 12
+    };
+
+    // Check for explicit dates first: "8 july", "8 july 2026", "july 8", "july 8 2026"
+    const explicitDateMatch = input.match(/(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(?:\s+(\d{4}))?/i);
+    if (explicitDateMatch) {
+      const day = parseInt(explicitDateMatch[1]);
+      const monthStr = explicitDateMatch[2].toLowerCase();
+      const year = explicitDateMatch[3] ? parseInt(explicitDateMatch[3]) : new Date().getFullYear();
+      const month = monthMap[monthStr];
+      if (month && day >= 1 && day <= 31) {
+        // Use local date without timezone conversion
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        date = dateStr;
+        console.log('[Extract] Date from explicit date pattern:', day, monthStr, year, 'parsed to:', date);
+      }
+    }
+
+    // Check for "N days later" or "in N days" pattern
+    if (!date) {
+      const daysMatch = input.match(/(?:in|after)\s+(\d+)\s*days?(?:\s+later)?/i);
+      if (daysMatch) {
+        const daysToAdd = parseInt(daysMatch[1]);
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + daysToAdd);
+        date = futureDate.toISOString().split('T')[0];
+        console.log('[Extract] Date from "in/after N days":', date);
+      }
+    }
+
+    if (!date && /tomorrow/i.test(input)) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       date = tomorrow.toISOString().split('T')[0];
       console.log('[Extract] Date from "tomorrow":', date);
-    } else if (/today|later/i.test(input)) {
+    }
+
+    if (!date && /today|later/i.test(input)) {
       // "later" also means today
       date = new Date().toISOString().split('T')[0];
       console.log('[Extract] Date from "today/later":', date);
-    } else {
+    }
+
+    if (!date) {
       // Match full day names (sunday, monday, etc) OR short names (sun, mon, etc)
       const dayMatch = input.match(/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)\b/i);
       if (dayMatch) {
@@ -624,13 +763,15 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           date = result.toISOString().split('T')[0];
           console.log('[Extract] Date from day name:', dayStr, 'date:', date);
         }
-      } else {
-        console.log('[Extract] No date pattern matched in:', input);
-        // If no explicit date mentioned, check if it's today or use today as default
-        // Don't auto-default - let user decide in form if truly no date given
-        date = '';
-        console.log('[Extract] No date pattern found, leaving empty for user to fill');
       }
+    }
+
+    if (!date) {
+      console.log('[Extract] No date pattern matched in:', input);
+      // If no explicit date mentioned, check if it's today or use today as default
+      // Don't auto-default - let user decide in form if truly no date given
+      date = '';
+      console.log('[Extract] No date pattern found, leaving empty for user to fill');
     }
 
     // Parse time - look for patterns like "3pm", "7pm", "15:00", "3:00pm"
@@ -705,14 +846,20 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       }
     }
 
-    // Use OneMap API to get real address from postal code
+    // Use postal code database to get area (reliable, no API dependency)
     let area = detectedArea || '';
+    if (postalCode && postalCode.length === 6 && !area) {
+      area = getAreaFromPostalCode(postalCode);
+    }
     console.log('[Extract] Area set to:', area, '(detected:', detectedArea, ')');
     let fullAddress = `Singapore ${postalCode}`;
     let needsAreaConfirmation = false;
 
     if (postalCode && postalCode.length === 6) {
-      // Use OneMap API ONLY - Singapore's official source of truth
+      // Address resolution strategy (guarantees full_address is never empty):
+      // Step 1: Try OneMap API (if available and authenticated)
+      // Step 2: Fallback to hardcoded database of common Singapore postal codes
+      // Step 3: Last resort: return "Singapore {code}" and request user confirmation
       try {
         const oneMapUrl = `https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=Y&getAddrDetails=Y`;
         const omResponse = await axios.get(oneMapUrl, { timeout: 3000 });
@@ -721,14 +868,10 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           const addr = omResponse.data.results[0];
           fullAddress = addr.ADDRESS || `Singapore ${postalCode}`;
 
-          // Extract area from address string (e.g., "433 CHOA CHU KANG AVENUE 4 SINGAPORE 680433" → "CHOA CHU KANG")
-          let extractedArea = detectedArea || 'Singapore';
-          if (fullAddress) {
-            // Remove postal code, "SINGAPORE", and street descriptors to get area name
+          let extractedArea = area || detectedArea || 'Singapore';
+          if (!area && fullAddress) {
             let areaMatch = fullAddress.replace(postalCode, '').replace(/SINGAPORE/i, '').trim();
-            // Remove street descriptors (AVENUE, ROAD, STREET, LANE, CLOSE, DRIVE, etc.) and numbers
             areaMatch = areaMatch.replace(/\s*(AVENUE|ROAD|STREET|LANE|CLOSE|DRIVE|PARK|WAY|COURT|PLACE|CRESCENT|HILL|VIEW|LINK|RISE|GROVE|SQUARE|TERRACE|BEND|LOOP|WALK).*$/i, '').trim();
-            // Remove leading/trailing numbers
             areaMatch = areaMatch.replace(/^\d+\s+/, '').replace(/\s+\d+$/, '').trim();
 
             if (areaMatch.length > 0 && areaMatch !== 'Singapore') {
@@ -739,17 +882,31 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
           area = extractedArea;
           console.log(`[Extract] ✅ OneMap API success: ${area}, ${fullAddress}`);
         } else {
-          // No OneMap results - ask user to confirm area
-          fullAddress = `Singapore ${postalCode}`;
-          needsAreaConfirmation = true;
-          console.log(`[Extract] ⚠️ OneMap no results, requesting user confirmation`);
+          // Step 2: OneMap returned no results, check fallback database
+          const fallbackAddress = getAddressFromPostalCode(postalCode);
+          if (fallbackAddress) {
+            fullAddress = fallbackAddress;
+            console.log(`[Extract] ✅ Fallback database: ${fullAddress}`);
+          } else {
+            // Step 3: No fallback, ask user to confirm
+            fullAddress = `Singapore ${postalCode}`;
+            needsAreaConfirmation = true;
+            console.log(`[Extract] ⚠️ No data found for postal ${postalCode}, user confirmation needed`);
+          }
         }
       } catch (err) {
-        // OneMap failed - ask user to confirm area for 100% accuracy
-        console.warn(`[Extract] OneMap API failed: ${err instanceof Error ? err.message : String(err)}`);
-        fullAddress = `Singapore ${postalCode}`;
-        needsAreaConfirmation = true;
-        console.log(`[Extract] ⚠️ OneMap failed, requesting user confirmation`);
+        // Step 2: OneMap API call failed (auth, network, timeout), try fallback
+        console.warn(`[Extract] OneMap failed: ${err instanceof Error ? err.message : String(err)}`);
+        const fallbackAddress = getAddressFromPostalCode(postalCode);
+        if (fallbackAddress) {
+          fullAddress = fallbackAddress;
+          console.log(`[Extract] ✅ Fallback database: ${fullAddress}`);
+        } else {
+          // Step 3: No fallback entry, ask user to confirm
+          fullAddress = `Singapore ${postalCode}`;
+          needsAreaConfirmation = true;
+          console.log(`[Extract] ⚠️ OneMap error AND no fallback for ${postalCode}`);
+        }
       }
     } else if (!detectedArea) {
       console.log('[Extract] No postal code or area detected');
