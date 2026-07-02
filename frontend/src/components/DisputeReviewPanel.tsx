@@ -193,14 +193,22 @@ export default function DisputeReviewPanel({
 
             {/* Evidence Summary */}
             {evidence && (
-              <div className="bg-green-50 rounded-xl p-3 border border-green-200">
-                <p className="text-xs font-bold text-green-900 uppercase tracking-wide mb-2">Evidence</p>
-                <ul className="text-xs text-green-800 space-y-0.5">
-                  <li className={evidence.hasGps ? 'text-green-700 font-semibold' : 'text-gray-500'}>{evidence.hasGps ? '✓' : '✗'} GPS</li>
-                  <li className={evidence.photoCount > 0 ? 'text-green-700 font-semibold' : 'text-gray-500'}>{evidence.photoCount > 0 ? '✓' : '✗'} {evidence.photoCount} photo{evidence.photoCount !== 1 ? 's' : ''}</li>
-                  <li className={evidence.hasChat ? 'text-green-700 font-semibold' : 'text-gray-500'}>{evidence.hasChat ? '✓' : '✗'} Chat</li>
-                  <li className={evidence.waitTime ? 'text-green-700 font-semibold' : 'text-gray-500'}>{evidence.waitTime ? '✓' : '✗'} {evidence.waitTime || '—'} min</li>
-                </ul>
+              <div className="bg-green-50 rounded-xl p-3 border border-green-200 space-y-2">
+                <div>
+                  <p className="text-xs font-bold text-green-900 uppercase tracking-wide mb-2">Evidence</p>
+                  <ul className="text-xs text-green-800 space-y-0.5">
+                    <li className={evidence.hasGps ? 'text-green-700 font-semibold' : 'text-gray-500'}>{evidence.hasGps ? '✓' : '✗'} GPS</li>
+                    <li className={evidence.photoCount > 0 ? 'text-green-700 font-semibold' : 'text-gray-500'}>{evidence.photoCount > 0 ? '✓' : '✗'} {evidence.photoCount} photo{evidence.photoCount !== 1 ? 's' : ''}</li>
+                    <li className={evidence.hasChat ? 'text-green-700 font-semibold' : 'text-gray-500'}>{evidence.hasChat ? '✓' : '✗'} Chat</li>
+                    <li className={evidence.waitTime ? 'text-green-700 font-semibold' : 'text-gray-500'}>{evidence.waitTime ? '✓' : '✗'} {evidence.waitTime || '—'} min</li>
+                  </ul>
+                </div>
+                {evidence.hasGps && evidence.gpsLocation && (
+                  <div className="pt-2 border-t border-green-200">
+                    <p className="text-xs font-semibold text-green-900 mb-1">📍 Location</p>
+                    <p className="text-xs text-green-800">{evidence.gpsLocation}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

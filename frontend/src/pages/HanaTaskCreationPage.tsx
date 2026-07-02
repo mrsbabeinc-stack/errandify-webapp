@@ -88,6 +88,8 @@ export default function HanaTaskCreationPage({ userRole }: HanaTaskCreationPageP
           description: taskData.description,
           category: taskData.category,
           location: taskData.location,
+          full_address: taskData.fullAddress || taskData.location,
+          postal_code: taskData.postalCode || '',
           budget: parseFloat(taskData.budget) || 0,
           deadline: new Date(`${taskData.date}T${taskData.time}`).toISOString(),
           specialNote: taskData.notes,

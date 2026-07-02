@@ -19,8 +19,12 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('userId');
+    localStorage.removeItem('userRole');
     localStorage.removeItem('current_role');
-    navigate('/login');
+    localStorage.removeItem('singpass_state');
+    localStorage.removeItem('singpass_nonce');
+    localStorage.removeItem('singpass_mode');
+    navigate('/auth');
   };
 
   const handleBackToUser = () => {

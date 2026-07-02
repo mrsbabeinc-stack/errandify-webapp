@@ -196,7 +196,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
     const task = taskResult.rows[0];
     console.log('[Messages GET] Task from DB:', { id: task.id, location: task.location, postal_code: task.postal_code });
 
-    // Get the doer name from the accepted/confirmed bid
+    // Get the doer name from any bid (active or completed)
     let doerName = 'Unknown';
     let doerAlias = 'Unknown';
     let doerId = null;
@@ -204,7 +204,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
       `SELECT b.doer_id, u.display_name, u.alias
        FROM bids b
        LEFT JOIN users u ON b.doer_id = u.id
-       WHERE b.errand_id = $1 AND b.status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress')
+       WHERE b.errand_id = $1 AND b.status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress', 'completed_unconfirmed', 'completed_confirmed')
        ORDER BY b.updated_at DESC
        LIMIT 1`,
       [taskId]

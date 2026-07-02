@@ -1,6 +1,8 @@
 import db from '../db.js';
 import { QwenAI } from './qwenService.js';
 
+export type DisputeTier = 'auto' | 'statement_only' | 'full_investigation';
+
 export interface DisputeAnalysis {
   confidenceLevel: number; // 0-1
   recommendedResolution: 'approve' | 'reject' | 'partial' | 'escalate';
@@ -168,7 +170,7 @@ export async function autoResolveDispute(disputeId: number): Promise<{ resolved:
 export async function analyzeDisputeWithAI(disputeId: number): Promise<DisputeAnalysis> {
   try {
     const dispute = await db.query(
-      `SELECT id, errand_id, dispute_type, description, evidence FROM disputes WHERE id = $1`,
+      `SELECT id, errand_id, dispute_type, filed_by, description, evidence, defendant_response, defendant_response_evidence, response_status FROM disputes WHERE id = $1`,
       [disputeId]
     );
 
@@ -182,24 +184,55 @@ export async function analyzeDisputeWithAI(disputeId: number): Promise<DisputeAn
     }
 
     const d = dispute.rows[0];
+    const isDoerFiled = d.filed_by === 'doer';
+    const perspective = isDoerFiled
+      ? 'DOER CLAIM: Did asker prevent completion?'
+      : 'ASKER CLAIM: Did doer deliver quality work?';
 
-    const prompt = `Analyze job dispute and recommend resolution:
+    // Build prompt with both sides if defendant responded
+    let analysisPrompt = `You are a fair dispute resolver. Analyze both perspectives fairly:
 
-Dispute Type: ${d.dispute_type}
-Description: ${d.description}
-Evidence Provided: ${d.evidence ? d.evidence.substring(0, 500) : 'None'}
+${perspective}
+
+CLAIMANT'S STATEMENT:
+${d.description}
+
+CLAIMANT'S EVIDENCE: ${d.evidence ? d.evidence.substring(0, 300) : 'None'}`;
+
+    if (d.response_status === 'received' && d.defendant_response) {
+      analysisPrompt += `
+
+DEFENDANT'S RESPONSE (Submitted on time):
+${d.defendant_response}
+
+DEFENDANT'S EVIDENCE: ${d.defendant_response_evidence ? d.defendant_response_evidence.substring(0, 300) : 'None'}`;
+    } else if (d.response_status === 'forfeited') {
+      analysisPrompt += `
+
+NOTE: Defendant was given 24 hours to respond but did not submit a response. Defendant has forfeited right to defend.`;
+    }
+
+    analysisPrompt += `
+
+ANALYSIS INSTRUCTIONS:
+- If defendant forfeited: Strongly favor claimant (0.85+ confidence)
+- If both provided evidence: Analyze objectively which side has stronger proof
+- Only recommend "approve" for claimant if evidence strongly supports their claim
+- If unclear: Recommend escalation for human judgment
 
 Return JSON: {
   "confidence": 0.0-1.0,
   "resolution": "approve|reject|partial|escalate",
-  "reasoning": "brief explanation",
+  "reasoning": "specific action for admin to take",
   "evidenceStrength": 0.0-1.0
 }`;
 
-    const response = await QwenAI.call({
-      model: 'qwen-turbo',
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const prompt = analysisPrompt;
+
+    const response = await QwenAI.call(
+      [{ role: 'user', content: prompt }],
+      { temperature: 0.3, maxTokens: 500 }
+    );
 
     let analysis: any = {
       confidence: 0.5,
@@ -290,8 +323,11 @@ export async function createDispute(params: {
     const disputeId = result.rows[0].id;
     console.log(`[Disputes] Dispute created: ${disputeId} (Priority: ${priority}, Status: ${status})`);
 
+    // Classify into tier: Auto / Statement-Only / Full Investigation
+    const tierClassification = await classifyDisputeTier(disputeId);
+
     // Only attempt auto-resolve if not escalated for safety
-    if (status === 'level_1') {
+    if (status === 'level_1' && tierClassification.tier === 'auto') {
       const autoResolve = await autoResolveDispute(disputeId);
       if (!autoResolve.resolved) {
         // Move to Level 2 (AI analysis)
@@ -300,17 +336,150 @@ export async function createDispute(params: {
           [disputeId]
         );
       }
+    } else if (status === 'level_1') {
+      // Move to Level 2 for AI analysis + defense response
+      await db.query(
+        `UPDATE disputes SET status = 'level_2' WHERE id = $1`,
+        [disputeId]
+      );
     }
 
     return {
       success: true,
       disputeId,
       safetyFlaggedForReview: safetyAnalysis.hasConcern,
-      safetyAnalysis: safetyAnalysis.hasConcern ? safetyAnalysis : undefined
+      safetyAnalysis: safetyAnalysis.hasConcern ? safetyAnalysis : undefined,
+      tier: tierClassification.tier,
+      tierReason: tierClassification.reason,
+      defendantNeedsResponse: tierClassification.defendantNeedsResponse,
+      responseDeadline: tierClassification.responseDeadline
     };
   } catch (error) {
     console.error('[Disputes] Create error:', error);
     return { success: false };
+  }
+}
+
+// Classify dispute into tier: Auto / Statement-Only / Full Investigation
+export async function classifyDisputeTier(disputeId: number): Promise<{
+  tier: 'auto' | 'statement_only' | 'full_investigation';
+  reason: string;
+  defendantNeedsResponse: boolean;
+  responseDeadline?: Date;
+}> {
+  try {
+    const dispute = await db.query(
+      `SELECT id, errand_id, filed_by_user_id, dispute_type, description, evidence FROM disputes WHERE id = $1`,
+      [disputeId]
+    );
+
+    if (dispute.rows.length === 0) {
+      return { tier: 'full_investigation', reason: 'Dispute not found', defendantNeedsResponse: true };
+    }
+
+    const d = dispute.rows[0];
+
+    // Score evidence strength
+    const evidence = d.evidence ? JSON.parse(d.evidence) : {};
+    let claimantScore = 0;
+
+    // GPS evidence (strong proof of location)
+    if (evidence.gpsLocation) claimantScore += 0.4;
+
+    // Multiple photos (strong visual evidence)
+    if (evidence.photos && evidence.photos.length >= 2) claimantScore += 0.3;
+    else if (evidence.photos && evidence.photos.length === 1) claimantScore += 0.15;
+
+    // Wait time (shows effort/attempt)
+    if (evidence.waitTime && evidence.waitTime >= 20) claimantScore += 0.15;
+    else if (evidence.waitTime) claimantScore += 0.05;
+
+    // Substantive description
+    const descriptionWords = d.description.split(/\s+/).length;
+    if (descriptionWords >= 50) claimantScore += 0.1;
+    else if (descriptionWords >= 30) claimantScore += 0.05;
+
+    // Normalize to 0-1
+    claimantScore = Math.min(1, claimantScore);
+
+    // Determine tier based on evidence strength
+    let tier: 'auto' | 'statement_only' | 'full_investigation' = 'full_investigation';
+    let reason = '';
+    let defendantNeedsResponse = true;
+
+    if (claimantScore >= 0.75) {
+      // Very strong evidence: Auto-resolve, no need for defendant to respond
+      tier = 'auto';
+      reason = 'Claimant has strong evidence (GPS + multiple photos or equivalent)';
+      defendantNeedsResponse = false;
+    } else if (claimantScore >= 0.45) {
+      // Moderate evidence: Ask defendant for statement only
+      tier = 'statement_only';
+      reason = 'Claimant has some evidence, defendant gets chance to respond';
+      defendantNeedsResponse = true;
+    } else {
+      // Weak evidence: Full investigation, need both sides
+      tier = 'full_investigation';
+      reason = 'Evidence unclear, need both parties to provide statements';
+      defendantNeedsResponse = true;
+    }
+
+    // Store classification
+    const responseDeadline = defendantNeedsResponse
+      ? new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+      : undefined;
+
+    await db.query(
+      `INSERT INTO dispute_tier_classification
+       (dispute_id, assigned_tier, tier_reason, claimant_evidence_score, evidence_clarity, can_skip_defendant_response, skip_reason, classified_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+       ON CONFLICT (dispute_id) DO UPDATE SET
+         assigned_tier = $2, tier_reason = $3, claimant_evidence_score = $4, updated_at = NOW()`,
+      [
+        disputeId,
+        tier,
+        reason,
+        claimantScore,
+        claimantScore >= 0.75 ? 'clear' : claimantScore >= 0.45 ? 'ambiguous' : 'unclear',
+        !defendantNeedsResponse,
+        !defendantNeedsResponse ? reason : null
+      ]
+    );
+
+    // If defendant needs to respond, create defense request
+    if (defendantNeedsResponse && responseDeadline) {
+      const errand = await db.query(
+        `SELECT doer_id, asker_id FROM errands WHERE id = $1`,
+        [d.errand_id]
+      );
+
+      if (errand.rows.length > 0) {
+        const isDoerFiled = d.filed_by_user_id === errand.rows[0].doer_id;
+        const defendantId = isDoerFiled ? errand.rows[0].asker_id : errand.rows[0].doer_id;
+
+        await db.query(
+          `INSERT INTO dispute_defense_requests (dispute_id, defendant_user_id, request_reason, deadline, notified_at)
+           VALUES ($1, $2, $3, $4, NOW())
+           ON CONFLICT (dispute_id) DO NOTHING`,
+          [disputeId, defendantId, tier === 'statement_only' ? 'asker_has_strong_evidence' : 'evidence_unclear', responseDeadline]
+        );
+
+        // Update disputes table with defendant info
+        await db.query(
+          `UPDATE disputes
+           SET defendant_user_id = $1, response_deadline = $2, defense_tier = $3, requires_defense = true
+           WHERE id = $4`,
+          [defendantId, responseDeadline, tier, disputeId]
+        );
+      }
+    }
+
+    console.log(`[Disputes] Tier classified: ${disputeId} -> ${tier} (Score: ${claimantScore.toFixed(2)})`);
+
+    return { tier, reason, defendantNeedsResponse, responseDeadline };
+  } catch (error) {
+    console.error('[Disputes] Tier classification error:', error);
+    return { tier: 'full_investigation', reason: 'Error during classification', defendantNeedsResponse: true };
   }
 }
 

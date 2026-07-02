@@ -5,7 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    allowedHosts: ['localhost', '127.0.0.1', '.ngrok-free.dev', '.ngrok.io'],
+    host: '0.0.0.0', // Listen on all network interfaces
+    allowedHosts: ['localhost', '127.0.0.1', '192.168.1.206', '.ngrok-free.dev', '.ngrok.io'],
   },
   build: {
     outDir: 'dist',

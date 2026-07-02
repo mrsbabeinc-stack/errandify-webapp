@@ -38,7 +38,11 @@ interface Rating {
   createdAt: string;
 }
 
-export default function MyAccountPage() {
+interface MyAccountPageProps {
+  onLogout?: () => void;
+}
+
+export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'safety' | 'notify' | 'categories'>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
@@ -818,9 +822,20 @@ export default function MyAccountPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
+    if (onLogout) {
+      onLogout();
+    } else {
+      // Fallback if onLogout not provided
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('current_role');
+      localStorage.removeItem('singpass_state');
+      localStorage.removeItem('singpass_nonce');
+      localStorage.removeItem('singpass_mode');
+      navigate('/auth');
+    }
   };
 
   const handleSaveProfile = async () => {

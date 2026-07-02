@@ -145,6 +145,16 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       paramIndex++;
     }
 
+    // Exclude expired errands for doers without bids (but show if they have a bid on it)
+    if (!isMyOnly) {
+      // For doers: exclude expired errands UNLESS they have made a bid on it
+      query += ` AND (status != 'expired' OR EXISTS (
+        SELECT 1 FROM bids WHERE bids.errand_id = errands.id AND bids.doer_id = $${paramIndex}
+      ))`;
+      params.push(currentUserId);
+      paramIndex++;
+    }
+
     // Sorting
     const tablePrefix = isAccepted ? 'e.' : '';
     if (sort === 'budget-high') {
@@ -283,6 +293,8 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
     }
 
     const askerData = askerResult.rows[0];
+    const isAsker = userId === errand.asker_id;
+
     res.json({
       success: true,
       data: {
@@ -296,6 +308,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         status: errand.status,
         budget: errand.budget,
         location: errand.location,
+        full_address: errand.full_address, // Show to all viewers
         postalCode: errand.postal_code,
         postal_code: errand.postal_code,
         deadline: errand.deadline,
@@ -319,7 +332,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
 // Create errand (asker only)
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, category, location, postal_code, budget, deadline, certifications, isRecurring, repeatEvery, repeatUnit, occurrences } = req.body;
+    const { title, description, category, location, full_address, postal_code, budget, deadline, certifications, isRecurring, repeatEvery, repeatUnit, occurrences } = req.body;
     const askerId = parseInt(req.userId || '0', 10);
 
     console.log('[DEBUG] POST /api/errands called:', {
@@ -328,6 +341,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       description,
       category,
       location,
+      full_address,
       budget,
       deadline,
       postal_code,
@@ -408,8 +422,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
       const errandId = generateErrandId(category);
       const errandResult = await db.query(
-        `INSERT INTO errands (asker_id, title, description, category, location, postal_code, budget, deadline, is_recurring, recurring_schedule, status, errand_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        `INSERT INTO errands (asker_id, title, description, category, location, full_address, postal_code, budget, deadline, is_recurring, recurring_schedule, status, errand_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
          RETURNING id, errand_id, title, description, category, status, budget, deadline, is_recurring, recurring_schedule, created_at`,
         [
           askerId,
@@ -417,6 +431,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           description || null,
           category,
           location || null,
+          full_address || null,
           postalCode || null,
           budget ? parseFloat(String(budget)) : null,
           deadline || null,

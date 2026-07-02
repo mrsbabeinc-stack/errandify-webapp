@@ -24,6 +24,7 @@ export default function CannotCompleteModal({
   const [waitTime, setWaitTime] = useState<number>(0);
   const [photos, setPhotos] = useState<File[]>([]);
   const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationAddress, setLocationAddress] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -70,7 +71,7 @@ export default function CannotCompleteModal({
     },
   ];
 
-  // Get GPS location
+  // Get GPS location and reverse geocode to postal code
   const handleGetGPSLocation = async () => {
     if (!navigator.geolocation) {
       setError('GPS not available on this device');
@@ -78,11 +79,43 @@ export default function CannotCompleteModal({
     }
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setGpsLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        setGpsLocation({ lat, lng });
+
+        // Reverse geocode to get postal code
+        try {
+          const response = await axios.get(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+          );
+
+          // Extract postal code and address
+          const addr = response.data.address || {};
+          const postalCode = addr.postcode || '';
+          const road = addr.road || '';
+          const suburb = addr.suburb || addr.neighbourhood || addr.town || '';
+          const city = addr.city || '';
+
+          // Format: "Singapore 576587, MacRitchie Nature Trail"
+          let displayAddress = '';
+          if (postalCode && city) {
+            displayAddress = `${city} ${postalCode}`;
+            if (road) displayAddress += `, ${road}`;
+          } else if (road) {
+            displayAddress = road;
+            if (suburb) displayAddress += `, ${suburb}`;
+          } else {
+            displayAddress = suburb || city || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+          }
+
+          setLocationAddress(displayAddress);
+        } catch (err) {
+          // Fallback: just show coordinates if reverse geocoding fails
+          setLocationAddress(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+        }
+
         setError('');
       },
       (error) => {
@@ -431,9 +464,9 @@ export default function CannotCompleteModal({
                 <div>
                   <p className="text-xs font-bold text-gray-600 uppercase">Location</p>
                   <p className="text-sm text-gray-800 mt-0.5">
-                    📍 {gpsLocation ? `${gpsLocation.lat.toFixed(4)}, ${gpsLocation.lng.toFixed(4)}` : 'Not captured'}
+                    📍 {locationAddress || 'Capturing location...'}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">GPS coordinates prove you were actually there</p>
+                  <p className="text-xs text-gray-500 mt-1">Postal code proves you were actually at the location</p>
                 </div>
                 <div>
                   <p className="text-xs font-bold text-gray-600 uppercase">Photos ({photos.length}/5)</p>

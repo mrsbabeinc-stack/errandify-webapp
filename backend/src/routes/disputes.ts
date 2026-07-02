@@ -6,10 +6,16 @@ import {
   analyzeDisputeWithAI,
   escalateDispute,
   createDispute,
+  classifyDisputeTier,
   holdPayment,
   releaseHeldPayment,
   getDisputeStatus,
 } from '../services/disputeResolutionService.js';
+import {
+  craftDisputeVerdict,
+  generateDisputeNotification,
+  saveDisputeVerdict
+} from '../services/disputeVerdictService.js';
 import {
   notifyDisputeRaised,
   notifyDisputeResolved,
@@ -17,6 +23,7 @@ import {
 import {
   sendDisputeRaisedEmail,
   sendDisputeResolvedEmail,
+  sendDisputeDecisionEmail,
 } from '../services/email.js';
 
 const router = Router();
@@ -311,6 +318,69 @@ router.post('/:id/resolve', authMiddleware, async (req: AuthRequest, res: Respon
   } catch (error) {
     console.error('[Disputes] Resolve error:', error);
     res.status(500).json({ error: 'Resolution failed' });
+  }
+});
+
+// POST /api/disputes/:id/defense - Defendant submits response
+router.post('/:id/defense', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = parseInt(req.params.id);
+    const userId = parseInt(req.userId || '0', 10);
+    const { response, evidence } = req.body;
+
+    if (!response || response.trim().length < 20) {
+      return res.status(400).json({ error: 'Response must be at least 20 characters' });
+    }
+
+    // Verify this user is the defendant
+    const dispute = await db.query(
+      `SELECT id, defendant_user_id, response_deadline, response_status FROM disputes WHERE id = $1`,
+      [disputeId]
+    );
+
+    if (dispute.rows.length === 0) {
+      return res.status(404).json({ error: 'Dispute not found' });
+    }
+
+    const d = dispute.rows[0];
+
+    if (d.defendant_user_id !== userId) {
+      return res.status(403).json({ error: 'Only the defendant can submit a defense' });
+    }
+
+    if (d.response_status !== 'pending') {
+      return res.status(400).json({ error: 'Defense response already submitted or forfeited' });
+    }
+
+    if (new Date() > new Date(d.response_deadline)) {
+      // Mark as forfeited
+      await db.query(
+        `UPDATE disputes SET response_status = 'forfeited', response_submitted_at = NOW() WHERE id = $1`,
+        [disputeId]
+      );
+      return res.status(400).json({ error: 'Response deadline has passed. Forfeited right to respond.' });
+    }
+
+    // Store defendant's response
+    await db.query(
+      `UPDATE disputes
+       SET defendant_response = $1, defendant_response_evidence = $2, response_status = 'received', response_submitted_at = NOW()
+       WHERE id = $3`,
+      [response, evidence ? JSON.stringify(evidence) : null, disputeId]
+    );
+
+    // Update defense request
+    await db.query(
+      `UPDATE dispute_defense_requests SET response_received = true, response_received_at = NOW() WHERE dispute_id = $1`,
+      [disputeId]
+    );
+
+    console.log(`[Disputes] Defense response submitted for dispute ${disputeId}`);
+
+    res.json({ success: true, message: 'Defense response submitted successfully' });
+  } catch (error) {
+    console.error('[Disputes] Defense submission error:', error);
+    res.status(500).json({ error: 'Failed to submit defense response' });
   }
 });
 
