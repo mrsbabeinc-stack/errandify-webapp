@@ -1,5 +1,4 @@
 import db from '../db.js';
-import { sendNotificationEmail } from './emailNotifications.js';
 
 export const ratingReminderService = {
   // Send reminders to doers who haven't rated their askers (48 hours after completion)
@@ -56,12 +55,12 @@ export const ratingReminderService = {
             ]
           );
 
-          // Send email reminder
-          await sendNotificationEmail(reminder.doer_id, 'rating_reminder', {
-            errandTitle: reminder.title,
-            otherPartyName: reminder.asker_name,
-            formattedErrandId: reminder.formatted_id,
-          });
+          // Send email reminder (TODO: implement rating_reminder email template)
+          // await sendCriticalEmail(reminder.doer_id, 'rating_reminder', {
+          //   errandTitle: reminder.title,
+          //   otherPartyName: reminder.asker_name,
+          //   formattedErrandId: reminder.formatted_id,
+          // });
 
           // Mark reminder as sent
           await db.query(
@@ -128,12 +127,12 @@ export const ratingReminderService = {
             ]
           );
 
-          // Send email reminder
-          await sendNotificationEmail(reminder.asker_id, 'rating_reminder', {
-            errandTitle: reminder.title,
-            otherPartyName: reminder.doer_name,
-            formattedErrandId: reminder.formatted_id,
-          });
+          // Send email reminder (TODO: implement rating_reminder email template)
+          // await sendCriticalEmail(reminder.asker_id, 'rating_reminder', {
+          //   errandTitle: reminder.title,
+          //   otherPartyName: reminder.doer_name,
+          //   formattedErrandId: reminder.formatted_id,
+          // });
 
           // Mark reminder as sent
           await db.query(
