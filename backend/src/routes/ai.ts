@@ -1,9 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
-import addressLookupService from '../services/addressLookupService.js';
-import { getAreaFromPostalCode } from '../data/singaporePostalCodes.js';
-import { getAddressFromPostalCode } from '../data/postalCodeAddresses.js';
+import { lookupAddress } from '../services/providers/addressProvider.js';
 import axios from 'axios';
 import https from 'https';
 import * as biasDetector from '../modules/bias-detector.js';
@@ -857,10 +855,9 @@ OUTPUT ONLY the category name, nothing else.`,
     let needsAreaConfirmation = false;
 
     if (postalCode && postalCode.length === 6) {
-      // Use address lookup service for proper address/area determination
-      // Priority: Google Geocoding > Mapbox > Manual entry
+      // Use Mapbox Geocoding + URA boundaries for address/area determination
       try {
-        const addressData = await addressLookupService.lookupAddress(postalCode);
+        const addressData = await lookupAddress(postalCode);
 
         if (addressData) {
           fullAddress = addressData.formatted_address || `Singapore ${postalCode}`;
