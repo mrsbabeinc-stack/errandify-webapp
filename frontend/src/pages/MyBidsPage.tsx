@@ -10,6 +10,7 @@ interface Bid {
   note?: string;
   status: 'pending' | 'accepted' | 'confirmed' | 'in_progress' | 'job_completed' | 'completed' | 'rejected' | 'withdrawn';
   created_at: string;
+  offer_id?: string;
   errand?: {
     title: string;
     budget: number | string;

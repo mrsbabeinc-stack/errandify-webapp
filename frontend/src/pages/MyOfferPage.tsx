@@ -12,6 +12,7 @@ interface Bid {
   note?: string;
   status: 'pending' | 'accepted' | 'confirmed' | 'confirmed_awaiting_start' | 'in_progress' | 'completed_unconfirmed' | 'completed_confirmed' | 'rejected' | 'withdrawn';
   created_at: string;
+  offer_id?: string;
   errand?: {
     title: string;
     budget: number | string;
