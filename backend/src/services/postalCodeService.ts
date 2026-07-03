@@ -1,6 +1,8 @@
 import db from '../db.js';
+import axios from 'axios';
+import { getPlanningAreaFromCoordinates } from './uraPlannningAreaLookup.js';
 
-interface PostalCodeData {
+export interface PostalCodeData {
   postal_code: string;
   block_number?: string;
   street_name?: string;
@@ -15,22 +17,39 @@ interface PostalCodeData {
 
 /**
  * Normalize postal code: trim, uppercase, remove leading S, validate 6 digits
+ * Input: "S680433" → Output: "680433"
+ * Input: " 680433 " → Output: "680433"
+ * Input: "invalid" → Output: null
  */
 export function normalizePostalCode(input: string): string | null {
-  const normalized = input.trim().toUpperCase().replace(/^S/, '').replace(/[^0-9]/g, '');
+  if (!input || typeof input !== 'string') {
+    return null;
+  }
+
+  // Trim spaces, uppercase, remove leading S, remove all non-digits
+  const normalized = input
+    .trim()
+    .toUpperCase()
+    .replace(/^S/, '')
+    .replace(/[^0-9]/g, '');
+
+  // Validate exactly 6 digits
   if (normalized.length === 6 && /^\d{6}$/.test(normalized)) {
     return normalized;
   }
+
   return null;
 }
 
 /**
- * Get postal code data from cache or external APIs
- * Returns null if unable to verify
+ * Get postal code data from cache or SingPost API
+ * Returns null if unable to verify (never guesses)
  */
 export async function lookupPostalCode(postalCode: string): Promise<PostalCodeData | null> {
   const normalized = normalizePostalCode(postalCode);
+
   if (!normalized) {
+    console.log('[PostalCodeService] Invalid postal code format:', postalCode);
     return null;
   }
 
@@ -43,6 +62,7 @@ export async function lookupPostalCode(postalCode: string): Promise<PostalCodeDa
 
     if (cached.rows.length > 0) {
       const row = cached.rows[0];
+      console.log('[PostalCodeService] Cache hit for', normalized);
       return {
         postal_code: row.postal_code,
         block_number: row.block_number,
@@ -57,32 +77,27 @@ export async function lookupPostalCode(postalCode: string): Promise<PostalCodeDa
       };
     }
 
-    // Try SingPost SGLocate API (primary source)
-    try {
-      const singpostResult = await querySingPostAPI(normalized);
-      if (singpostResult) {
-        // Cache the result
-        await cachePostalCodeData(singpostResult);
-        return singpostResult;
-      }
-    } catch (err) {
-      console.warn(`[PostalCodeService] SingPost API failed for ${normalized}:`, err);
+    console.log('[PostalCodeService] Cache miss for', normalized);
+
+    // Try SingPost SGLocate API (PRIMARY SOURCE)
+    const singpostResult = await querySingPostAPI(normalized);
+    if (singpostResult) {
+      await cachePostalCodeData(singpostResult);
+      return singpostResult;
     }
 
-    // Fallback to OneMap (secondary source)
-    try {
-      const oneMapResult = await queryOneMapAPI(normalized);
-      if (oneMapResult) {
-        // Cache the result
-        await cachePostalCodeData(oneMapResult);
-        return oneMapResult;
-      }
-    } catch (err) {
-      console.warn(`[PostalCodeService] OneMap API failed for ${normalized}:`, err);
+    console.log('[PostalCodeService] SingPost failed for', normalized);
+
+    // Fallback: Try OneMap API (SECONDARY SOURCE)
+    const oneMapResult = await queryOneMapAPI(normalized);
+    if (oneMapResult) {
+      await cachePostalCodeData(oneMapResult);
+      return oneMapResult;
     }
 
-    // Unable to verify
-    console.warn(`[PostalCodeService] Unable to verify postal code: ${normalized}`);
+    console.log('[PostalCodeService] OneMap failed for', normalized);
+
+    // Unable to verify - return null (don't guess)
     return null;
   } catch (err) {
     console.error('[PostalCodeService] Lookup error:', err);
@@ -91,104 +106,152 @@ export async function lookupPostalCode(postalCode: string): Promise<PostalCodeDa
 }
 
 /**
- * Query SingPost SGLocate API (primary source)
- * This API provides official Singapore address data
+ * Query SingPost SGLocate API (PRIMARY SOURCE)
+ * Requires: SINGPOST_API_KEY environment variable
+ *
+ * Returns official Singapore postal data with lat/lng for area classification
  */
 async function querySingPostAPI(postalCode: string): Promise<PostalCodeData | null> {
-  // SingPost SGLocate API endpoint
-  // Note: Requires API key from SingPost - configure in environment
   const apiKey = process.env.SINGPOST_API_KEY;
+
   if (!apiKey) {
-    console.warn('[PostalCodeService] SingPost API key not configured');
+    console.log('[PostalCodeService] SingPost API key not configured - skipping SingPost lookup');
     return null;
   }
 
   try {
-    const url = `https://www.singpost.com/api/sglocate/search?postalcode=${postalCode}&key=${apiKey}`;
-    const response = await fetch(url);
-    const data = await response.json();
+    console.log('[PostalCodeService] Querying SingPost for', postalCode);
 
-    if (data && data.address) {
-      const address = data.address;
-      const fullAddress = `${address.block_number} ${address.street_name}, Singapore ${postalCode}`;
+    // SingPost SGLocate API endpoint
+    // Documentation: https://www.singpost.com/developer-api
+    const url = `https://api.singpost.com/sglocate/search`;
 
-      // Get planning area from lat/long using URA boundary data
-      const planningArea = await getPlanningAreaFromCoords(address.latitude, address.longitude);
+    const response = await axios.post(
+      url,
+      { postalCode },
+      {
+        headers: { 'Authorization': `Bearer ${apiKey}` },
+        timeout: 5000,
+      }
+    );
 
-      return {
-        postal_code: postalCode,
-        block_number: address.block_number,
-        street_name: address.street_name,
-        building_name: address.building_name || undefined,
-        full_address: fullAddress,
-        latitude: parseFloat(address.latitude),
-        longitude: parseFloat(address.longitude),
-        planning_area: planningArea || 'Unable to classify',
-        subzone: address.subzone || undefined,
-        source: 'SingPost SGLocate',
-      };
+    if (!response.data || !response.data.address) {
+      console.log('[PostalCodeService] SingPost returned no address for', postalCode);
+      return null;
     }
-  } catch (err) {
-    console.warn('[PostalCodeService] SingPost API query failed:', err);
-  }
 
-  return null;
+    const addr = response.data.address;
+
+    // Construct full address
+    const fullAddress = `${addr.block_number || ''} ${addr.street_name || ''}`.trim() +
+      (addr.building_name ? `, ${addr.building_name}` : '') +
+      `, Singapore ${postalCode}`;
+
+    // Get planning area from lat/lng using URA boundaries
+    const planningArea = await getPlanningAreaFromCoords(addr.latitude, addr.longitude);
+
+    const result: PostalCodeData = {
+      postal_code: postalCode,
+      block_number: addr.block_number || undefined,
+      street_name: addr.street_name || undefined,
+      building_name: addr.building_name || undefined,
+      full_address: fullAddress,
+      latitude: addr.latitude ? parseFloat(addr.latitude) : undefined,
+      longitude: addr.longitude ? parseFloat(addr.longitude) : undefined,
+      planning_area: planningArea || undefined,
+      subzone: addr.subzone || undefined,
+      source: 'SingPost SGLocate',
+    };
+
+    console.log('[PostalCodeService] ✅ SingPost success:', result.planning_area, result.full_address);
+    return result;
+  } catch (err) {
+    console.warn('[PostalCodeService] SingPost API error:', err instanceof Error ? err.message : String(err));
+    return null;
+  }
 }
 
 /**
- * Query OneMap API (fallback source)
+ * Query OneMap API (FALLBACK SOURCE)
+ * Only used if SingPost fails or is unavailable
  */
 async function queryOneMapAPI(postalCode: string): Promise<PostalCodeData | null> {
   try {
+    console.log('[PostalCodeService] Querying OneMap for', postalCode);
+
     const url = `https://www.onemap.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=Y&getAddrDetails=Y`;
-    const response = await fetch(url);
-    const data = await response.json();
+    const response = await axios.get(url, { timeout: 5000 });
 
-    if (data.results && data.results.length > 0) {
-      const result = data.results[0];
-      const fullAddress = result.ADDRESS || `Singapore ${postalCode}`;
-
-      // Get planning area from lat/long
-      const planningArea = await getPlanningAreaFromCoords(result.LATITUDE, result.LONGITUDE);
-
-      return {
-        postal_code: postalCode,
-        full_address: fullAddress,
-        latitude: parseFloat(result.LATITUDE),
-        longitude: parseFloat(result.LONGITUDE),
-        planning_area: planningArea || 'Unable to classify',
-        source: 'OneMap',
-      };
+    if (!response.data.results || response.data.results.length === 0) {
+      console.log('[PostalCodeService] OneMap returned no results for', postalCode);
+      return null;
     }
-  } catch (err) {
-    console.warn('[PostalCodeService] OneMap API query failed:', err);
-  }
 
-  return null;
+    const result = response.data.results[0];
+
+    // Get planning area from lat/lng
+    const planningArea = await getPlanningAreaFromCoords(result.LATITUDE, result.LONGITUDE);
+
+    const fullAddress = result.ADDRESS || `Singapore ${postalCode}`;
+
+    const data: PostalCodeData = {
+      postal_code: postalCode,
+      full_address: fullAddress,
+      latitude: result.LATITUDE ? parseFloat(result.LATITUDE) : undefined,
+      longitude: result.LONGITUDE ? parseFloat(result.LONGITUDE) : undefined,
+      planning_area: planningArea || undefined,
+      source: 'OneMap (Fallback)',
+    };
+
+    console.log('[PostalCodeService] ✅ OneMap success:', data.planning_area, data.full_address);
+    return data;
+  } catch (err) {
+    console.warn('[PostalCodeService] OneMap error:', err instanceof Error ? err.message : String(err));
+    return null;
+  }
 }
 
 /**
- * Determine planning area using point-in-polygon lookup
- * Uses URA Planning Area Boundary GeoJSON from data.gov.sg
+ * Determine planning area using latitude/longitude
+ * Uses URA Planning Area Boundary lookup with bounding boxes
+ *
+ * Returns official planning area name or null if unable to classify (never guesses)
  */
-async function getPlanningAreaFromCoords(latitude: number | string, longitude: number | string): Promise<string | null> {
+async function getPlanningAreaFromCoords(latitude: number | string | undefined, longitude: number | string | undefined): Promise<string | null> {
+  if (!latitude || !longitude) {
+    console.log('[PostalCodeService] Missing latitude/longitude, cannot determine planning area');
+    return null;
+  }
+
   try {
     const lat = parseFloat(String(latitude));
     const lon = parseFloat(String(longitude));
 
-    // For now, return null as a placeholder
-    // In production, this would use a geospatial library or URA API
-    // to determine which planning area contains this lat/lon point
-    console.warn('[PostalCodeService] Planning area lookup not yet implemented');
-    return null;
+    if (isNaN(lat) || isNaN(lon)) {
+      console.log('[PostalCodeService] Invalid coordinates:', lat, lon);
+      return null;
+    }
+
+    // Use URA boundary lookup (bounding box approach)
+    // Returns null if not found (never guesses)
+    const area = getPlanningAreaFromCoordinates(lat, lon);
+
+    if (!area) {
+      console.log('[PostalCodeService] Unable to classify area for coordinates:', lat, lon);
+      return null;
+    }
+
+    console.log('[PostalCodeService] ✅ Planning area determined:', area);
+    return area;
   } catch (err) {
-    console.error('[PostalCodeService] Planning area lookup error:', err);
+    console.error('[PostalCodeService] Coordinate lookup error:', err);
     return null;
   }
 }
 
 /**
  * Cache postal code data to database
+ * Never overwrites existing data unless last_verified_at is old
  */
 async function cachePostalCodeData(data: PostalCodeData): Promise<void> {
   try {
@@ -211,6 +274,8 @@ async function cachePostalCodeData(data: PostalCodeData): Promise<void> {
         data.source,
       ]
     );
+
+    console.log('[PostalCodeService] Cached postal code:', data.postal_code);
   } catch (err) {
     console.error('[PostalCodeService] Cache error:', err);
   }
