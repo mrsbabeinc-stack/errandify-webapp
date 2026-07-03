@@ -468,7 +468,12 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 )}
                 {(conversation.location || conversation.postal) && (
                   <div className="flex justify-between items-center">
-                    <p>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</p>
+                    <p>
+                      📍 {conversation.status === 'completed_confirmed'
+                        ? (conversation.location ? conversation.location.split(',')[0] : 'Singapore')
+                        : `${conversation.postal}${conversation.location && conversation.postal ? ', ' : ''}${conversation.location}`
+                      }
+                    </p>
                     <p className="text-gray-600">Posted by {conversation.otherPartyName}</p>
                   </div>
                 )}
