@@ -870,7 +870,7 @@ export default function CreateErrandPage() {
         title: formData.title,
         description: formData.description,
         category: formData.category,
-        location: formData.location || null,
+        location: area || formData.location || null,  // Send area as location for rated errands to show
         full_address: fullAddress || null,
         postal_code: postalCode || null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
