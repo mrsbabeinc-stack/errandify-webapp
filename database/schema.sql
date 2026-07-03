@@ -50,6 +50,8 @@ CREATE TABLE errands (
   dispute_reason TEXT,
   reminder_24h_sent BOOLEAN DEFAULT FALSE,
   reminder_47h_sent BOOLEAN DEFAULT FALSE,
+  doer_rating_reminder_sent BOOLEAN DEFAULT FALSE,
+  asker_rating_reminder_sent BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

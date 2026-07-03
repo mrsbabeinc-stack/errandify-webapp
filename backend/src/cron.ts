@@ -1,6 +1,7 @@
 import db from './db.js';
 import { sendDailyDigests, sendPaymentReminders } from './services/emailNotifications.js';
 import { offlineNotificationService } from './services/offlineNotificationService.js';
+import { ratingReminderService } from './services/ratingReminderService.js';
 import axios from 'axios';
 
 /**
@@ -225,6 +226,18 @@ function getNextNineAM(): Date {
   return next9am;
 }
 
+// Check and send rating reminders to users who haven't rated
+export async function checkRatingReminders() {
+  try {
+    console.log('[CRON] Checking for rating reminders to send...');
+    await ratingReminderService.sendDoerRatingReminders();
+    await ratingReminderService.sendAskerRatingReminders();
+    console.log('[CRON] Rating reminders check completed');
+  } catch (error) {
+    console.error('[CRON] Rating reminder check failed:', error);
+  }
+}
+
 // Start all cron jobs
 export function startCrons() {
   console.log('[CRON] Starting all cron jobs...');
@@ -251,6 +264,10 @@ export function startCrons() {
   }, msUntilNextDigest);
 
   console.log(`[CRON] Daily digest scheduled for ${nextDigestTime.toISOString()}`);
+
+  // Rating reminders - run every 6 hours
+  setInterval(checkRatingReminders, 6 * 60 * 60 * 1000);
+  console.log('[CRON] Rating reminders scheduled to run every 6 hours');
 
   // Event reminders - run every hour
   setInterval(checkEventReminders7Days, 60 * 60 * 1000);
