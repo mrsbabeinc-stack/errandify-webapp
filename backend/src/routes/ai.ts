@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
-import postalCodeService from '../services/postalCodeService.js';
+import addressLookupService from '../services/addressLookupService.js';
 import { getAreaFromPostalCode } from '../data/singaporePostalCodes.js';
 import { getAddressFromPostalCode } from '../data/postalCodeAddresses.js';
 import axios from 'axios';
@@ -857,29 +857,31 @@ OUTPUT ONLY the category name, nothing else.`,
     let needsAreaConfirmation = false;
 
     if (postalCode && postalCode.length === 6) {
-      // Use new postal code service for proper address lookup
-      // Priority: SingPost SGLocate > OneMap > Unable to verify
+      // Use address lookup service for proper address/area determination
+      // Priority: Google Geocoding > Mapbox > Manual entry
       try {
-        const postalData = await postalCodeService.lookupPostalCode(postalCode);
+        const addressData = await addressLookupService.lookupAddress(postalCode);
 
-        if (postalData) {
-          fullAddress = postalData.full_address || `Singapore ${postalCode}`;
-          area = postalData.planning_area || detectedArea || 'Singapore';
-          console.log(`[Extract] ✅ Postal code service success: ${area}, ${fullAddress}`);
+        if (addressData) {
+          fullAddress = addressData.formatted_address || `Singapore ${postalCode}`;
+          area = addressData.area || 'Unable to classify';
+          console.log(`[Extract] ✅ Address lookup success via ${addressData.provider}: ${area}, ${fullAddress}`);
         } else {
-          // Unable to verify - show incomplete data and ask for confirmation
+          // Unable to verify - ask user to enter manually
           fullAddress = `Singapore ${postalCode}`;
+          area = 'Unable to verify';
           needsAreaConfirmation = true;
-          console.log(`[Extract] ⚠️ Unable to verify postal code ${postalCode}, user confirmation needed`);
+          console.log(`[Extract] ⚠️ Unable to verify postal code ${postalCode}, user manual entry needed`);
         }
       } catch (err) {
-        console.warn(`[Extract] Postal code lookup error: ${err instanceof Error ? err.message : String(err)}`);
+        console.warn(`[Extract] Address lookup error: ${err instanceof Error ? err.message : String(err)}`);
         fullAddress = `Singapore ${postalCode}`;
+        area = 'Unable to verify';
         needsAreaConfirmation = true;
       }
     } else if (!detectedArea) {
       console.log('[Extract] No postal code or area detected');
-      area = 'Singapore';
+      area = 'Unable to verify';
       fullAddress = 'Singapore';
     }
 
