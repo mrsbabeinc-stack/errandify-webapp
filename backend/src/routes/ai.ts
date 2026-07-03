@@ -845,17 +845,12 @@ OUTPUT ONLY the category name, nothing else.`,
       }
     }
 
-    // Use postal code database to get area (reliable, no API dependency)
+    // Use Mapbox Geocoding + URA boundaries for address/area determination
     let area = detectedArea || '';
-    if (postalCode && postalCode.length === 6 && !area) {
-      area = getAreaFromPostalCode(postalCode);
-    }
-    console.log('[Extract] Area set to:', area, '(detected:', detectedArea, ')');
-    let fullAddress = `Singapore ${postalCode}`;
+    let fullAddress = 'Singapore';
     let needsAreaConfirmation = false;
 
     if (postalCode && postalCode.length === 6) {
-      // Use Mapbox Geocoding + URA boundaries for address/area determination
       try {
         const addressData = await lookupAddress(postalCode);
 
@@ -873,14 +868,18 @@ OUTPUT ONLY the category name, nothing else.`,
       } catch (err) {
         console.warn(`[Extract] Address lookup error: ${err instanceof Error ? err.message : String(err)}`);
         fullAddress = `Singapore ${postalCode}`;
-        area = 'Unable to verify';
+        area = area || 'Unable to verify';
         needsAreaConfirmation = true;
       }
     } else if (!detectedArea) {
       console.log('[Extract] No postal code or area detected');
       area = 'Unable to verify';
       fullAddress = 'Singapore';
+    } else {
+      fullAddress = detectedArea;
     }
+
+    console.log('[Extract] Final - area:', area, 'fullAddress:', fullAddress);
 
 
     // Extract certification/skill keywords from title and remove them from title
@@ -1032,7 +1031,8 @@ OUTPUT ONLY the category name, nothing else.`,
       },
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to extract' });
+    console.error('[Extract] Fatal error:', error instanceof Error ? error.stack : String(error));
+    res.status(500).json({ error: 'Failed to extract', details: error instanceof Error ? error.message : String(error) });
   }
 });
 

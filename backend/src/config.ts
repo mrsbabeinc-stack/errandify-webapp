@@ -17,6 +17,9 @@ export const config = {
   qwen: {
     apiKey: process.env.QWEN_API_KEY || '',
   },
+  mapbox: {
+    apiKey: process.env.MAPBOX_API_KEY || '',
+  },
   singpass: {
     clientId: process.env.SINGPASS_CLIENT_ID || '',
     clientSecret: process.env.SINGPASS_CLIENT_SECRET || '',
