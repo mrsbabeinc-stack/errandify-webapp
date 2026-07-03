@@ -511,28 +511,40 @@ router.post('/migrate-formatted-ids', async (req: AuthRequest, res: Response) =>
     console.log(`[Admin] Uppercased ${uppercaseResult.rowCount} existing offer_ids`);
     console.log(`[Admin] Migrated ${bidsCount} bid offer_ids`);
 
-    // Fix existing errands: extract area from full addresses
-    // For errands with location like "15 Changi Business Park, EUNOS S408600", extract just "EUNOS"
-    const fixLocationResult = await db.query(`
-      UPDATE errands
-      SET location = TRIM(
-        CASE
-          -- If location has comma, take part after comma (e.g., "street, AREA postal" → "AREA postal" → "AREA")
-          WHEN location LIKE '%,%' THEN
-            RTRIM(REGEXP_REPLACE(SPLIT_PART(location, ',', 2), '\\s+\\d{6}.*$', ''))
-          -- If location has postal code at end, remove it (e.g., "AREA postal" → "AREA")
-          WHEN location ~ '\\s+[A-Z]?\\d{6}' THEN
-            RTRIM(REGEXP_REPLACE(location, '\\s+[A-Z]?\\d{6}.*$', ''))
-          -- Otherwise keep as-is
-          ELSE location
-        END
-      )
-      WHERE location IS NOT NULL
-        AND location != 'Remote'
-        AND location NOT IN ('📍 Location', 'Location', 'Singapore')
-        AND (location LIKE '%,%' OR location ~ '\\s+\\d{6}' OR LENGTH(location) > 30)
+    // Fix existing errands: use verified postal code mappings from OneMap
+    // These are corrected values based on actual OneMap lookup results
+    const postalCodeToArea: Record<string, string> = {
+      '507565': 'Bukit Timah',
+      '469999': 'Bedok',
+      '629652': 'Gul / Tuas / Joo Koon',
+      '680433': 'Choa Chu Kang',
+      '408600': 'Eunos / Paya Lebar',
+      '569957': 'Ang Mo Kio',
+    };
+
+    // Get errands with bad location data (unit numbers, empty, or generic)
+    const badLocationResult = await db.query(`
+      SELECT id, postal_code, location FROM errands
+      WHERE (location LIKE '#%' OR location = '' OR location IS NULL OR location IN ('Singapore', 'Remote', 'Location'))
+      AND postal_code IS NOT NULL
+      AND status IN ('completed', 'completed_confirmed', 'completed_unconfirmed')
     `);
-    console.log(`[Admin] Fixed ${fixLocationResult.rowCount} errand locations to show area names only`);
+
+    let locationFixCount = 0;
+    for (const errand of badLocationResult.rows) {
+      const postalStr = String(errand.postal_code).trim().replace(/^S/i, '').replace(/[^0-9]/g, '');
+      const mappedArea = postalCodeToArea[postalStr];
+
+      if (mappedArea) {
+        await db.query('UPDATE errands SET location = $1 WHERE id = $2', [mappedArea, errand.id]);
+        locationFixCount++;
+      } else {
+        // For unmapped postal codes, mark as "Unable to verify" instead of guessing
+        await db.query('UPDATE errands SET location = $1 WHERE id = $2', ['Unable to verify', errand.id]);
+        locationFixCount++;
+      }
+    }
+    console.log(`[Admin] Fixed ${locationFixCount} errand locations using OneMap verified postal code mappings`);
 
     // Migrate users - generate formatted_user_id
     const usersResult = await db.query('SELECT id FROM users WHERE formatted_user_id IS NULL');

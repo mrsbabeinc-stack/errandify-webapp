@@ -95,6 +95,63 @@ const app = express();
   } catch (error) {
     console.log('Migration: status constraint already includes "expired"');
   }
+
+  try {
+    // Add formatted_id column to errands if it doesn't exist
+    await db.query(`
+      ALTER TABLE errands
+      ADD COLUMN IF NOT EXISTS formatted_id VARCHAR(20) UNIQUE;
+    `);
+    console.log('Migration: formatted_id column checked/added to errands');
+  } catch (error) {
+    console.log('Migration: formatted_id column already exists');
+  }
+
+  try {
+    // Add offer_id column to bids if it doesn't exist
+    await db.query(`
+      ALTER TABLE bids
+      ADD COLUMN IF NOT EXISTS offer_id VARCHAR(20) UNIQUE;
+    `);
+    console.log('Migration: offer_id column checked/added to bids');
+  } catch (error) {
+    console.log('Migration: offer_id column already exists');
+  }
+
+  try {
+    // Add formatted_user_id column to users if it doesn't exist
+    await db.query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS formatted_user_id VARCHAR(20) UNIQUE;
+    `);
+    console.log('Migration: formatted_user_id column checked/added to users');
+  } catch (error) {
+    console.log('Migration: formatted_user_id column already exists');
+  }
+
+  try {
+    // Create postal_code_cache table if it doesn't exist
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS postal_code_cache (
+        id SERIAL PRIMARY KEY,
+        postal_code VARCHAR(6) UNIQUE NOT NULL,
+        block_number VARCHAR(50),
+        street_name VARCHAR(255),
+        building_name VARCHAR(255),
+        full_address VARCHAR(500),
+        latitude DECIMAL(10, 8),
+        longitude DECIMAL(11, 8),
+        planning_area VARCHAR(100),
+        subzone VARCHAR(100),
+        source VARCHAR(50),
+        last_verified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('Migration: postal_code_cache table checked/created');
+  } catch (error) {
+    console.log('Migration: postal_code_cache table already exists or creation failed');
+  }
 })();
 
 // Middleware
