@@ -35,6 +35,7 @@ CREATE TABLE errands (
   deadline TIMESTAMP,
   location VARCHAR(500),
   postal_code VARCHAR(6),
+  formatted_id VARCHAR(20) UNIQUE,
   certifications JSONB,
   is_recurring BOOLEAN DEFAULT FALSE,
   recurring_config JSONB,
@@ -61,6 +62,7 @@ CREATE TABLE bids (
   note TEXT,
   status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected', 'rejected_resubmitted')),
   resubmit_count INTEGER DEFAULT 0,
+  offer_id VARCHAR(20) UNIQUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
