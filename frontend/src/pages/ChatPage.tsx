@@ -129,7 +129,14 @@ export default function ChatPage({ userRole }: ChatPageProps) {
       });
 
       console.log('[ChatPage] activeChats:', activeChats);
-      console.log('[ChatPage] Sample errand data:', activeChats[0]);
+      if (activeChats.length > 0) {
+        console.log('[ChatPage] Sample errand status:', activeChats[0]?.status, 'Type:', typeof activeChats[0]?.status);
+        activeChats.forEach((chat, idx) => {
+          if (chat.status === 'completed') {
+            console.log(`[ChatPage] Chat ${idx} (${chat.title}) has completed status`);
+          }
+        });
+      }
 
       // Get current user ID for role determination
       const currentUserStr = localStorage.getItem('user');
