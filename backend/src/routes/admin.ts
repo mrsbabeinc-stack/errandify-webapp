@@ -438,4 +438,93 @@ router.post('/users/:userId/suspend', authMiddleware, adminMiddleware, async (re
   }
 });
 
+// POST /api/admin/migrate-formatted-ids - Run migration to populate formatted_id, offer_id, formatted_user_id
+router.post('/migrate-formatted-ids', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    console.log('[Admin] Starting formatted ID migration...');
+
+    // Category code mapping (same as generateErrandId)
+    const categoryCodeMap: { [key: string]: string } = {
+      'home-maintenance': 'HM',
+      'cleaning-household': 'CL',
+      'food-beverage': 'FD',
+      'furniture-assembly': 'FR',
+      'shopping-errands': 'SH',
+      'delivery-moving': 'DV',
+      'travel-mobility': 'TR',
+      'event-planning': 'EV',
+      'childcare-education': 'CH',
+      'eldercare-healthcare': 'EL',
+      'pet-care': 'PC',
+      'personal-care': 'PS',
+      'tech-support': 'TC',
+      'creative-arts': 'AR',
+      'admin-business': 'AD',
+      'charity-community': 'CC',
+    };
+
+    const year = new Date().getFullYear().toString().slice(-2); // '26' for 2026
+
+    // Helper to generate random hex suffix
+    const generateSuffix = (seed: string): string => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let suffix = '';
+      for (let i = 0; i < 4; i++) {
+        suffix += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return suffix;
+    };
+
+    // Migrate errands - generate formatted_id based on category
+    const errandsResult = await db.query('SELECT id, category FROM errands WHERE formatted_id IS NULL');
+    let errandsCount = 0;
+    for (const errand of errandsResult.rows) {
+      const catCode = categoryCodeMap[errand.category.toLowerCase()] || 'XX';
+      const suffix = generateSuffix(errand.id.toString());
+      const formattedId = `ER${year}${catCode}-${suffix}`;
+
+      await db.query('UPDATE errands SET formatted_id = $1 WHERE id = $2', [formattedId, errand.id]);
+      errandsCount++;
+    }
+    console.log(`[Admin] Migrated ${errandsCount} errand formatted_ids`);
+
+    // Migrate bids - generate offer_id
+    const bidsResult = await db.query('SELECT id FROM bids WHERE offer_id IS NULL');
+    let bidsCount = 0;
+    for (const bid of bidsResult.rows) {
+      const suffix = generateSuffix(bid.id.toString());
+      const offerId = `OF${year}${suffix}`;
+
+      await db.query('UPDATE bids SET offer_id = $1 WHERE id = $2', [offerId, bid.id]);
+      bidsCount++;
+    }
+    console.log(`[Admin] Migrated ${bidsCount} bid offer_ids`);
+
+    // Migrate users - generate formatted_user_id
+    const usersResult = await db.query('SELECT id FROM users WHERE formatted_user_id IS NULL');
+    let usersCount = 0;
+    for (const user of usersResult.rows) {
+      const suffix = generateSuffix(user.id.toString());
+      const userId = `SG${suffix}`;
+
+      await db.query('UPDATE users SET formatted_user_id = $1 WHERE id = $2', [userId, user.id]);
+      usersCount++;
+    }
+    console.log(`[Admin] Migrated ${usersCount} user formatted_user_ids`);
+
+    res.json({
+      success: true,
+      message: 'Migration completed successfully',
+      data: {
+        errandsCount,
+        bidsCount,
+        usersCount,
+      }
+    });
+  } catch (error) {
+    console.error('Migration error:', error);
+    res.status(500).json({ error: 'Failed to run migration' });
+  }
+});
+
 export default router;
