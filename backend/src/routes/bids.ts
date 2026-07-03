@@ -638,6 +638,7 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
         note: bid.note,
         status: bid.status,
         created_at: bid.created_at,
+        offer_id: bid.offer_id || `OF${bid.id}`,
         errand: {
           title: bid.title,
           budget: bid.budget,
