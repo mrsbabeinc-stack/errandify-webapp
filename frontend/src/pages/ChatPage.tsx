@@ -283,14 +283,21 @@ export default function ChatPage({ userRole }: ChatPageProps) {
   };
 
   const getAreaOnly = (location?: string) => {
-    if (!location) return 'Singapore';
-    if (location.toLowerCase() === 'remote') return 'Remote';
+    if (!location) return '📍 Location';
+    const loc = location.trim();
+    if (loc.toLowerCase() === 'remote') return 'Remote';
+    if (loc.toLowerCase() === 'singapore') return '📍 Location';
+
+    // If it's just a postal code (6 digits), return placeholder
+    if (/^\d{6}$/.test(loc)) {
+      return '📍 Location';
+    }
 
     // Handle full address format: "street, area postal" or "street area postal"
     // Extract ONLY the area part (last part before/after postal code)
 
     // Remove trailing postal code: "15 Changi Business Park, EUNOS S408600" → "15 Changi Business Park, EUNOS"
-    let cleaned = location.replace(/\s+\d{6}[\d\s]*$/, '').trim();
+    let cleaned = loc.replace(/\s+\d{6}[\d\s]*$/, '').trim();
 
     // If there's a comma, take the part after the comma (area part)
     // "15 Changi Business Park, EUNOS" → "EUNOS"
@@ -306,17 +313,13 @@ export default function ChatPage({ userRole }: ChatPageProps) {
       cleaned = parts[parts.length - 1];
     }
 
-    // Remove anything that looks like a unit/building number
-    if (/^#/.test(cleaned) || /^\d+[-\/]/.test(cleaned)) {
-      return 'Singapore';
+    // Remove anything that looks like a unit/building number or is empty
+    if (/^#/.test(cleaned) || /^\d+[-\/]/.test(cleaned) || !cleaned) {
+      return '📍 Location';
     }
 
     // Return the cleaned location if it has meaningful content
-    if (cleaned && cleaned.length > 0 && cleaned !== 'Singapore') {
-      return cleaned;
-    }
-
-    return 'Singapore';
+    return cleaned;
   };
 
   // Use allConversations when looking up from URL param, since viewFilter might exclude it
