@@ -499,7 +499,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                     </button>
                   </div>
                 )}
-                {(conversation.location || conversation.postal) && !['completed', 'completed_confirmed', 'completed_unconfirmed'].includes(conversation.status) && (
+                {(conversation.location || conversation.postal) && conversation.status !== 'completed' && conversation.status !== 'completed_confirmed' && conversation.status !== 'completed_unconfirmed' && (
                   <div className="flex justify-between items-center">
                     <p>
                       📍 {`${conversation.postal}${conversation.location && conversation.postal ? ', ' : ''}${conversation.location}`}
@@ -507,7 +507,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                     <p className="text-gray-600">Posted by {conversation.otherPartyName}</p>
                   </div>
                 )}
-                {(conversation.location || conversation.postal) && ['completed', 'completed_confirmed', 'completed_unconfirmed'].includes(conversation.status) && (
+                {(conversation.location || conversation.postal) && (conversation.status === 'completed' || conversation.status === 'completed_confirmed' || conversation.status === 'completed_unconfirmed') && (
                   <div className="flex justify-between items-center">
                     <p>
                       📍 {getAreaOnly(conversation.location)}
