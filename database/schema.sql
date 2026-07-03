@@ -9,6 +9,7 @@ CREATE TABLE users (
   profile_image_url VARCHAR(500),
   avatar_url VARCHAR(500),
   singpass_id VARCHAR(255) UNIQUE,
+  formatted_user_id VARCHAR(20) UNIQUE,
   font_size_pref INTEGER DEFAULT 16,
   language_pref VARCHAR(5) DEFAULT 'en',
   role VARCHAR(50) NOT NULL DEFAULT 'asker' CHECK (role IN ('asker', 'doer')),
