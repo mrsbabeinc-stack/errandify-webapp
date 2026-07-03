@@ -36,7 +36,7 @@ const PLANNING_AREAS: PlanningArea[] = [
   { name: 'Tampines', bbox: { minLat: 1.3524, maxLat: 1.3743, minLng: 103.9358, maxLng: 103.9657 } },
   { name: 'Clementi', bbox: { minLat: 1.3317, maxLat: 1.3549, minLng: 103.7613, maxLng: 103.7896 } },
   { name: 'Bukit Merah', bbox: { minLat: 1.2750, maxLat: 1.3041, minLng: 103.8241, maxLng: 103.8500 } },
-  { name: 'Bukit Timah', bbox: { minLat: 1.3449, maxLat: 1.3709, minLng: 103.7745, maxLng: 103.8079 } },
+  { name: 'Bukit Timah', bbox: { minLat: 1.3200, maxLat: 1.3750, minLng: 103.7600, maxLng: 103.8150 } },
   { name: 'Serangoon', bbox: { minLat: 1.3492, maxLat: 1.3719, minLng: 103.8615, maxLng: 103.8910 } },
   { name: 'Jurong East', bbox: { minLat: 1.3303, maxLat: 1.3418, minLng: 103.7402, maxLng: 103.7581 } },
   { name: 'Jurong West', bbox: { minLat: 1.3359, maxLat: 1.3627, minLng: 103.6873, maxLng: 103.7371 } },
