@@ -357,6 +357,7 @@ export default function MyOfferPage() {
                   <div className="text-right whitespace-nowrap">
                     <p className="text-gray-700 font-semibold">SGD ${Number(bid.amount).toFixed(2)}</p>
                     <p className="text-gray-500 font-mono text-xs">{bid.offer_id || `OF${bid.id}`}</p>
+                    <p className="text-xs text-gray-400">Offer placed {new Date(bid.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
 
@@ -453,11 +454,6 @@ export default function MyOfferPage() {
                     </button>
                   </div>
                 )}
-
-                {/* Timestamp */}
-                <p className="text-xs text-gray-500 mt-1">
-                  Offer placed {new Date(bid.created_at).toLocaleDateString()}
-                </p>
               </div>
             ))}
           </div>
