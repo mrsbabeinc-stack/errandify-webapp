@@ -66,8 +66,33 @@ export async function queryMapbox(postalCode: string): Promise<MapboxGeocodeResu
       return null;
     }
 
-    const formatted_address = feature.place_name || `Singapore ${postalCode}`;
+    let formatted_address = `Singapore ${postalCode}`; // Default fallback
     const confidence = feature.relevance || 0.5;
+
+    // Reverse geocode to get full street address (e.g., "433 Choa Chu Kang Avenue 4, Singapore 680433")
+    try {
+      const reverseUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json`;
+      const reverseResponse = await axios.get(reverseUrl, {
+        params: {
+          country: 'SG',
+          access_token: apiKey,
+          types: 'address', // Only get detailed addresses
+          limit: 1,
+        },
+        timeout: 5000,
+      });
+
+      if (reverseResponse.data.features && reverseResponse.data.features.length > 0) {
+        const addressFeature = reverseResponse.data.features[0];
+        if (addressFeature.place_name) {
+          formatted_address = addressFeature.place_name;
+          console.log('[MapboxProvider] Reverse geocoded full address:', formatted_address);
+        }
+      }
+    } catch (err) {
+      // If reverse geocoding fails, keep the default
+      console.warn('[MapboxProvider] Reverse geocoding failed, using fallback');
+    }
 
     const result: MapboxGeocodeResult = {
       postal_code: postalCode,
