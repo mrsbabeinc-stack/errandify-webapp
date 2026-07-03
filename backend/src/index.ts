@@ -135,15 +135,15 @@ const app = express();
       CREATE TABLE IF NOT EXISTS postal_code_cache (
         id SERIAL PRIMARY KEY,
         postal_code VARCHAR(6) UNIQUE NOT NULL,
-        block_number VARCHAR(50),
-        street_name VARCHAR(255),
-        building_name VARCHAR(255),
-        full_address VARCHAR(500),
+        formatted_address VARCHAR(500),
         latitude DECIMAL(10, 8),
         longitude DECIMAL(11, 8),
-        planning_area VARCHAR(100),
+        area VARCHAR(100),
         subzone VARCHAR(100),
-        source VARCHAR(50),
+        provider VARCHAR(50),
+        confidence NUMERIC(3, 2),
+        manually_corrected BOOLEAN DEFAULT FALSE,
+        corrected_by_user_id VARCHAR(50),
         last_verified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -151,6 +151,47 @@ const app = express();
     console.log('Migration: postal_code_cache table checked/created');
   } catch (error) {
     console.log('Migration: postal_code_cache table already exists or creation failed');
+  }
+
+  try {
+    // Add missing columns to postal_code_cache if they don't exist
+    await db.query(`
+      ALTER TABLE postal_code_cache
+      ADD COLUMN IF NOT EXISTS provider VARCHAR(50) DEFAULT 'mapbox';
+    `);
+    console.log('Migration: provider column checked/added to postal_code_cache');
+  } catch (error) {
+    console.log('Migration: provider column already exists');
+  }
+
+  try {
+    await db.query(`
+      ALTER TABLE postal_code_cache
+      ADD COLUMN IF NOT EXISTS confidence NUMERIC(3, 2) DEFAULT 0.5;
+    `);
+    console.log('Migration: confidence column checked/added to postal_code_cache');
+  } catch (error) {
+    console.log('Migration: confidence column already exists');
+  }
+
+  try {
+    await db.query(`
+      ALTER TABLE postal_code_cache
+      ADD COLUMN IF NOT EXISTS manually_corrected BOOLEAN DEFAULT FALSE;
+    `);
+    console.log('Migration: manually_corrected column checked/added to postal_code_cache');
+  } catch (error) {
+    console.log('Migration: manually_corrected column already exists');
+  }
+
+  try {
+    await db.query(`
+      ALTER TABLE postal_code_cache
+      ADD COLUMN IF NOT EXISTS corrected_by_user_id VARCHAR(50);
+    `);
+    console.log('Migration: corrected_by_user_id column checked/added to postal_code_cache');
+  } catch (error) {
+    console.log('Migration: corrected_by_user_id column already exists');
   }
 })();
 

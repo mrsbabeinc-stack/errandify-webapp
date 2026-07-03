@@ -1,0 +1,214 @@
+/**
+ * Address Provider Interface
+ * Adapter pattern for multiple address lookup providers
+ *
+ * Current providers:
+ * - Mapbox (primary)
+ * - Google Geocoding (future)
+ * - SingPost SGLocate (future)
+ *
+ * Allows switching providers without changing core lookup logic
+ */
+
+import db from '../../db.js';
+import { normalizePostalCode } from '../postalCodeNormalizer.js';
+import { getPlanningAreaFromCoordinates, getSubzoneFromCoordinates } from '../areaResolver.js';
+import { queryMapbox } from './mapboxProvider.js';
+
+export interface AddressLookupResult {
+  postal_code: string;
+  formatted_address: string;
+  latitude: number;
+  longitude: number;
+  area?: string;
+  subzone?: string;
+  provider: string;
+  confidence: number;
+  manually_corrected?: boolean;
+  corrected_by_user_id?: string;
+  last_verified_at?: Date;
+}
+
+/**
+ * Main address lookup - check cache first, then query provider
+ *
+ * @param postalCode - Input postal code (may have spaces, "S" prefix, etc)
+ * @returns Complete address data with area and coordinates, or null if unable to verify
+ */
+export async function lookupAddress(postalCode: string): Promise<AddressLookupResult | null> {
+  const normalized = normalizePostalCode(postalCode);
+
+  if (!normalized) {
+    console.log('[AddressProvider] Invalid postal code format:', postalCode);
+    return null;
+  }
+
+  try {
+    // Check cache first
+    const cached = await getCachedAddress(normalized);
+    if (cached) {
+      console.log('[AddressProvider] Cache hit for', normalized);
+      return cached;
+    }
+
+    console.log('[AddressProvider] Cache miss for', normalized);
+
+    // Query Mapbox (primary provider)
+    const mapboxResult = await queryMapbox(normalized);
+    if (mapboxResult) {
+      const addressData = await enrichWithAreaAndCache(mapboxResult);
+      return addressData;
+    }
+
+    console.log('[AddressProvider] All providers failed for', normalized);
+    return null;
+  } catch (err) {
+    console.error('[AddressProvider] Lookup error:', err);
+    return null;
+  }
+}
+
+/**
+ * Get cached address data
+ * Returns null if cache miss or address not found
+ */
+async function getCachedAddress(postalCode: string): Promise<AddressLookupResult | null> {
+  try {
+    const result = await db.query(
+      `SELECT * FROM postal_code_cache
+       WHERE postal_code = $1
+       AND last_verified_at > NOW() - INTERVAL '90 days'`,
+      [postalCode]
+    );
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    const row = result.rows[0];
+    return {
+      postal_code: row.postal_code,
+      formatted_address: row.formatted_address,
+      latitude: row.latitude,
+      longitude: row.longitude,
+      area: row.area,
+      subzone: row.subzone,
+      provider: row.provider,
+      confidence: row.confidence,
+      manually_corrected: row.manually_corrected,
+      corrected_by_user_id: row.corrected_by_user_id,
+      last_verified_at: row.last_verified_at,
+    };
+  } catch (err) {
+    console.error('[AddressProvider] Cache lookup error:', err);
+    return null;
+  }
+}
+
+/**
+ * Enrich address with area from coordinates and cache the result
+ */
+async function enrichWithAreaAndCache(
+  addressData: any
+): Promise<AddressLookupResult | null> {
+  try {
+    // Resolve area from coordinates
+    const area = addressData.latitude && addressData.longitude
+      ? getPlanningAreaFromCoordinates(addressData.latitude, addressData.longitude)
+      : null;
+
+    // Resolve subzone (currently returns null, future enhancement)
+    const subzone = addressData.latitude && addressData.longitude
+      ? getSubzoneFromCoordinates(addressData.latitude, addressData.longitude)
+      : null;
+
+    const result: AddressLookupResult = {
+      postal_code: addressData.postal_code,
+      formatted_address: addressData.formatted_address,
+      latitude: addressData.latitude,
+      longitude: addressData.longitude,
+      area: area || undefined,
+      subzone: subzone || undefined,
+      provider: addressData.provider,
+      confidence: addressData.confidence,
+      last_verified_at: new Date(),
+    };
+
+    // Cache the result
+    await cacheAddress(result);
+
+    console.log('[AddressProvider] ✅ Complete lookup for', addressData.postal_code, 'area:', area);
+    return result;
+  } catch (err) {
+    console.error('[AddressProvider] Enrichment error:', err);
+    return null;
+  }
+}
+
+/**
+ * Cache address data to database
+ */
+async function cacheAddress(data: AddressLookupResult): Promise<void> {
+  try {
+    await db.query(
+      `INSERT INTO postal_code_cache
+       (postal_code, formatted_address, latitude, longitude, area, subzone, provider, confidence, last_verified_at, manually_corrected)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9)
+       ON CONFLICT (postal_code) DO UPDATE SET
+       formatted_address = EXCLUDED.formatted_address,
+       latitude = EXCLUDED.latitude,
+       longitude = EXCLUDED.longitude,
+       area = EXCLUDED.area,
+       subzone = EXCLUDED.subzone,
+       provider = EXCLUDED.provider,
+       confidence = EXCLUDED.confidence,
+       last_verified_at = NOW()`,
+      [
+        data.postal_code,
+        data.formatted_address,
+        data.latitude,
+        data.longitude,
+        data.area || null,
+        data.subzone || null,
+        data.provider,
+        data.confidence,
+        data.manually_corrected || false,
+      ]
+    );
+
+    console.log('[AddressProvider] Cached:', data.postal_code);
+  } catch (err) {
+    console.error('[AddressProvider] Cache write error:', err);
+  }
+}
+
+/**
+ * Mark an address as manually corrected by user
+ * Updates the cache record to indicate user intervention
+ */
+export async function markManuallyCorrect(
+  postalCode: string,
+  userId: string,
+  correctedAddress?: string
+): Promise<void> {
+  try {
+    await db.query(
+      `UPDATE postal_code_cache
+       SET manually_corrected = TRUE,
+           corrected_by_user_id = $1,
+           formatted_address = COALESCE($2, formatted_address),
+           last_verified_at = NOW()
+       WHERE postal_code = $3`,
+      [userId, correctedAddress || null, postalCode]
+    );
+
+    console.log('[AddressProvider] Marked corrected:', postalCode, 'by', userId);
+  } catch (err) {
+    console.error('[AddressProvider] Mark corrected error:', err);
+  }
+}
+
+export default {
+  lookupAddress,
+  markManuallyCorrect,
+};
