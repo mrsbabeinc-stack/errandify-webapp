@@ -371,7 +371,7 @@ export default function MyOfferPage() {
                     )}
                     {bid.errand?.location && bid.errand?.status !== 'expired' && (
                       <span>
-                        📍 {bid.errand?.status === 'completed'
+                        📍 {(bid.errand?.status === 'completed' || bid.errand?.status === 'completed_confirmed' || bid.errand?.status === 'completed_unconfirmed')
                           ? getAreaOnly(bid.errand.location)
                           : `${bid.errand.location}${bid.errand?.postal_code ? ` ${bid.errand.postal_code}` : ''}`
                         }
