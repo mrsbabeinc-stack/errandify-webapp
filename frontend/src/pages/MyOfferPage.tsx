@@ -302,48 +302,48 @@ export default function MyOfferPage() {
                     : 'border-gray-200 hover:shadow-md'
                 }`}
               >
-                {/* Header */}
-                <div className="flex items-start justify-between mb-1">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-errandify-brown text-sm">
-                        {bid.errand?.title || 'Errand #' + bid.errand_id}
-                      </h3>
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded font-mono">
-                        {bid.errand?.formatted_id || `ER${bid.errand_id}`}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <p className="text-xs text-gray-600">by {bid.errand?.asker_display_name || bid.errand?.asker_name || 'Unknown'}</p>
-                      {bid.errand?.category && (
-                        <span className="px-2 py-0.5 bg-orange-100 text-errandify-orange rounded text-xs font-semibold">
-                          {bid.errand.category}
-                        </span>
-                      )}
-                    </div>
+                {/* Line 1: Title, Errand ID, Status */}
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <h3 className="font-semibold text-errandify-brown text-sm truncate">
+                      {bid.errand?.title || 'Errand #' + bid.errand_id}
+                    </h3>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded font-mono whitespace-nowrap">
+                      {bid.errand?.formatted_id || `ER${bid.errand_id}`}
+                    </span>
                   </div>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getStatusColor(bid.errand?.status || bid.status)}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border whitespace-nowrap ${getStatusColor(bid.errand?.status || bid.status)}`}>
                     {getStatusLabel(bid.errand?.status || bid.status)}
                   </span>
                 </div>
 
-                {/* Deadline, Location */}
-                <div className="flex items-center gap-2 mb-2 text-xs text-gray-600 flex-wrap">
+                {/* Line 2: Posted by, Location/Deadline, Offer with ID */}
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <p className="text-gray-600 whitespace-nowrap">by {bid.errand?.asker_display_name || bid.errand?.asker_name || 'Unknown'}</p>
+                    {bid.errand?.category && (
+                      <span className="px-2 py-0.5 bg-orange-100 text-errandify-orange rounded text-xs font-semibold whitespace-nowrap">
+                        {bid.errand.category}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-right whitespace-nowrap">
+                    <p className="text-gray-700 font-semibold">SGD ${Number(bid.amount).toFixed(2)}</p>
+                    <p className="text-gray-500 font-mono text-xs">{bid.offer_id || `OF${bid.id}`}</p>
+                  </div>
+                </div>
+
+                {/* Details Line: Deadline & Full Location */}
+                <div className="flex items-center gap-2 mt-1 text-xs text-gray-600 flex-wrap">
                   {bid.errand?.deadline && (
                     <span>📅 {new Date(bid.errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}</span>
                   )}
                   {bid.errand?.location && (
                     <span>
-                      📍 {bid.errand.location.split(',')[0]}
+                      📍 {bid.errand.location}
                       {bid.errand?.postal_code && ` ${bid.errand.postal_code}`}
                     </span>
                   )}
-                </div>
-
-                {/* Your Offer with Offer ID */}
-                <div className="mb-2 text-xs">
-                  <p className="text-gray-600">Your Offer: SGD ${Number(bid.amount).toFixed(2)}</p>
-                  <p className="text-gray-500 font-mono text-xs">{bid.offer_id || `OF${bid.id}`}</p>
                 </div>
 
                 {/* Actions */}
