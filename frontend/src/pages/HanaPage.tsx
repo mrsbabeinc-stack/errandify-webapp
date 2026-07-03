@@ -7,6 +7,7 @@ interface TaskData {
   description: string;
   category: string;
   location: string;
+  area: string;
   fullAddress: string;
   date: string;
   time: string;

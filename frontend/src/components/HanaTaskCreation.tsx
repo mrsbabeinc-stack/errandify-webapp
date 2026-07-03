@@ -8,6 +8,7 @@ interface TaskData {
   description: string;
   category: string;
   location: string;
+  area: string;
   fullAddress: string;
   date: string;
   time: string;
@@ -31,6 +32,7 @@ interface HanaTaskCreationProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (taskData: TaskData) => void;
+  onSkipToManual: () => void;
   defaultCategory?: string | null;
 }
 
@@ -46,6 +48,7 @@ export default function HanaTaskCreation({
     description: '',
     category: defaultCategory || '',
     location: '',
+    area: '',
     fullAddress: '',
     date: '',
     time: '',
