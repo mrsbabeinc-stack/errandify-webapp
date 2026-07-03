@@ -338,12 +338,10 @@ export default function MyOfferPage() {
                   {bid.errand?.deadline && (
                     <span>📅 {new Date(bid.errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}</span>
                   )}
-                  {bid.errand?.location && (
-                    <span>
-                      📍 {bid.errand.location}
-                      {bid.errand?.postal_code && ` ${bid.errand.postal_code}`}
-                    </span>
-                  )}
+                  <span>
+                    📍 {bid.errand?.description?.split('\n')[0] || bid.errand?.location}
+                    {bid.errand?.postal_code && ` ${bid.errand.postal_code}`}
+                  </span>
                 </div>
 
                 {/* Actions */}
