@@ -145,40 +145,40 @@ export default function MyOfferPage() {
   };
 
   const getAreaOnly = (location?: string) => {
-    if (!location) return null;
+    if (!location) return 'Singapore';
     if (location.toLowerCase() === 'remote') return 'Remote';
 
+    // Extract area from location string
+    // Format: "street address, area_name postal_code" or "street address, area_name"
+    // Examples: "15 Changi Business Park, EUNOS S408600" → "EUNOS"
+    //          "123 Ang Mo Kio Ave 1, #12-345 S569957" → partial match for Ang Mo Kio
+
     const parts = location.split(',').map(p => p.trim());
-    const isStreetOrUnit = (part: string) => {
-      return /avenue|street|road|lane|drive|boulevard|crescent|terrace|place|court|building|blk|block|^#\d+|\d+[-\/]\d+/i.test(part) ||
-             /^\d{6}$/.test(part) || /^\d+$/.test(part) || part.toLowerCase() === 'singapore';
-    };
 
-    const singaporeIdx = parts.findIndex(p => p.toLowerCase() === 'singapore');
-    if (singaporeIdx > 0) {
-      let areaCandidate = parts[singaporeIdx - 1];
-      if (areaCandidate && !isStreetOrUnit(areaCandidate)) return areaCandidate;
-      if (/^\d{6}$/.test(areaCandidate) && singaporeIdx >= 2) {
-        areaCandidate = parts[singaporeIdx - 2];
-        if (areaCandidate && !isStreetOrUnit(areaCandidate)) return areaCandidate;
+    // Usually the area is in the last part (after last comma)
+    if (parts.length > 0) {
+      const lastPart = parts[parts.length - 1];
+
+      // Remove postal codes from the end: "EUNOS S408600" → "EUNOS"
+      const withoutPostal = lastPart.replace(/\s+S?\d{6}\s*$/i, '').trim();
+
+      // If we got something meaningful, use it
+      if (withoutPostal && withoutPostal.length > 0 && withoutPostal !== 'Singapore') {
+        return withoutPostal;
       }
     }
 
-    for (let i = parts.length - 1; i >= 0; i--) {
-      if (!isStreetOrUnit(parts[i]) && parts[i].length > 0) return parts[i];
-    }
-
-    const firstPart = parts[0];
-    if (firstPart) {
-      const areaMatch = firstPart.match(/\b([A-Za-z\s]+?)\s+(Road|Street|Avenue|Lane|Drive|Boulevard|Crescent|Terrace|Place|Court|Building|Blk|Block)\b/i);
-      if (areaMatch && areaMatch[1]) {
-        const extracted = areaMatch[1].trim();
-        if (extracted.length > 0 && !/^\d+$/.test(extracted)) return extracted;
+    // Fallback: try to extract from second-to-last part if it exists
+    if (parts.length > 1) {
+      const secondLast = parts[parts.length - 2];
+      // Look for area names (words with capital letters, not just numbers)
+      const areaMatch = secondLast.match(/\b[A-Z][A-Za-z\s]+$/);
+      if (areaMatch) {
+        return areaMatch[0].trim();
       }
     }
 
-    if (parts.length > 0 && !isStreetOrUnit(parts[0])) return parts[0];
-    return location;
+    return 'Singapore';
   };
 
   // Get active job (confirmed or in_progress)
