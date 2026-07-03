@@ -506,7 +506,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 {(conversation.location || conversation.postal) && (
                   <div className="flex justify-between items-center">
                     <p>
-                      📍 {conversation.status === 'completed_confirmed'
+                      📍 {conversation.status === 'completed'
                         ? getAreaOnly(conversation.location)
                         : `${conversation.postal}${conversation.location && conversation.postal ? ', ' : ''}${conversation.location}`
                       }
