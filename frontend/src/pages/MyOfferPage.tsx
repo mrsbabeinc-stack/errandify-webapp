@@ -148,23 +148,34 @@ export default function MyOfferPage() {
     if (!location) return 'Singapore';
     if (location.toLowerCase() === 'remote') return 'Remote';
 
-    // Extract area name from location
-    // Hana stores area as: "Area Name" or "Area Name 123456" (postal)
-    // Examples: "Test Location" → "Test Location"
-    //          "WHOLESALE CENTRE 110001" → "WHOLESALE CENTRE"
-    //          "GUL 629652" → "GUL"
+    // Handle full address format: "street, area postal" or "street area postal"
+    // Extract ONLY the area part (last part before/after postal code)
 
-    // Remove trailing postal codes/numbers: "AREA 629652" → "AREA"
-    const withoutTrailingNumbers = location.replace(/\s+\d{6}[\d\s]*$/, '').trim();
+    // Remove trailing postal code: "15 Changi Business Park, EUNOS S408600" → "15 Changi Business Park, EUNOS"
+    let cleaned = location.replace(/\s+\d{6}[\d\s]*$/, '').trim();
 
-    // Remove anything that looks like a unit/building number: "#12-345" → empty
-    if (/^#/.test(withoutTrailingNumbers) || /^\d+[-\/]/.test(withoutTrailingNumbers)) {
+    // If there's a comma, take the part after the comma (area part)
+    // "15 Changi Business Park, EUNOS" → "EUNOS"
+    if (cleaned.includes(',')) {
+      cleaned = cleaned.split(',').pop()?.trim() || cleaned;
+    }
+
+    // If there are still multiple words and the last word looks like an area code, use it
+    // "15 Changi Business Park EUNOS" → just take "EUNOS" (last word)
+    const parts = cleaned.split(/\s+/);
+    if (parts.length > 1 && parts[parts.length - 1].length <= 10 && !/^\d/.test(parts[parts.length - 1])) {
+      // Last word looks like an area name (short, not starting with number)
+      cleaned = parts[parts.length - 1];
+    }
+
+    // Remove anything that looks like a unit/building number
+    if (/^#/.test(cleaned) || /^\d+[-\/]/.test(cleaned)) {
       return 'Singapore';
     }
 
     // Return the cleaned location if it has meaningful content
-    if (withoutTrailingNumbers && withoutTrailingNumbers.length > 0 && withoutTrailingNumbers !== 'Singapore') {
-      return withoutTrailingNumbers;
+    if (cleaned && cleaned.length > 0 && cleaned !== 'Singapore') {
+      return cleaned;
     }
 
     return 'Singapore';

@@ -489,16 +489,26 @@ router.post('/migrate-formatted-ids', async (req: AuthRequest, res: Response) =>
     }
     console.log(`[Admin] Migrated ${errandsCount} errand formatted_ids`);
 
-    // Migrate bids - generate offer_id
-    const bidsResult = await db.query('SELECT id FROM bids WHERE offer_id IS NULL');
+    // Migrate bids - generate offer_id (including fixing lowercase ones to uppercase)
+    const bidsResult = await db.query('SELECT id, offer_id FROM bids WHERE offer_id IS NULL OR offer_id LIKE \'%[a-z]%\'');
     let bidsCount = 0;
     for (const bid of bidsResult.rows) {
+      let offerId: string;
+      if (bid.offer_id && bid.offer_id.toUpperCase() === bid.offer_id) {
+        // Already uppercase, skip
+        continue;
+      }
+
       const suffix = generateSuffix(bid.id.toString());
-      const offerId = `OF${year}${suffix}`;
+      offerId = `OF${year}${suffix}`.toUpperCase();
 
       await db.query('UPDATE bids SET offer_id = $1 WHERE id = $2', [offerId, bid.id]);
       bidsCount++;
     }
+
+    // Uppercase ALL existing offer_ids (fix mixed case)
+    const uppercaseResult = await db.query('UPDATE bids SET offer_id = UPPER(offer_id) WHERE offer_id IS NOT NULL AND offer_id != UPPER(offer_id)');
+    console.log(`[Admin] Uppercased ${uppercaseResult.rowCount} existing offer_ids`);
     console.log(`[Admin] Migrated ${bidsCount} bid offer_ids`);
 
     // Migrate users - generate formatted_user_id
