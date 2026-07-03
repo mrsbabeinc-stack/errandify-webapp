@@ -310,7 +310,7 @@ export default function MyOfferPage() {
                       {bid.errand?.title || 'Errand #' + bid.errand_id}
                     </h3>
                     <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded font-mono whitespace-nowrap">
-                      {bid.errand?.formatted_id || `ER${bid.errand_id}`}
+                      {bid.errand?.formatted_id || `ER26${String(bid.errand_id).padStart(2, '0')}-${String(bid.id).slice(-4).toUpperCase().padEnd(4, '0')}`}
                     </span>
                   </div>
                   <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border whitespace-nowrap ${getStatusColor(bid.errand?.status || bid.status)}`}>
@@ -334,20 +334,16 @@ export default function MyOfferPage() {
                   </div>
                 </div>
 
-                {/* Line 3: Deadline, Time & Location */}
-                <div className="text-xs text-gray-600 space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {bid.errand?.deadline && (
-                      <>
-                        <span>📅 {new Date(bid.errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}</span>
-                        <span>⏰ {new Date(bid.errand.deadline).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}</span>
-                      </>
-                    )}
-                  </div>
+                {/* Line 3: Deadline, Time & Location (all on same line) */}
+                <div className="flex items-center gap-2 text-xs text-gray-600 flex-wrap">
+                  {bid.errand?.deadline && (
+                    <>
+                      <span>📅 {new Date(bid.errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}</span>
+                      <span>⏰ {new Date(bid.errand.deadline).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </>
+                  )}
                   {bid.errand?.location && (
-                    <div className="flex items-center gap-1">
-                      <span>📍 {bid.errand.location}{bid.errand?.postal_code && ` ${bid.errand.postal_code}`}</span>
-                    </div>
+                    <span>📍 {bid.errand.location}{bid.errand?.postal_code && ` ${bid.errand.postal_code}`}</span>
                   )}
                 </div>
 
