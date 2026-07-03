@@ -5,6 +5,7 @@ import { createNotification } from './notifications.js';
 import { awardEp, getRatingBonus } from '../services/gamificationService.js';
 import { activityLogService } from '../services/activityLogService.js';
 import { sendCriticalEmail } from '../services/emailNotifications.js';
+import { ratingReminderService } from '../services/ratingReminderService.js';
 
 const router = Router();
 
@@ -362,5 +363,23 @@ async function updateUserRating(userId: number) {
     console.error('Update user rating error:', error);
   }
 }
+
+// POST /api/ratings/send-reminders - Send rating reminders to users who haven't rated (admin/cron endpoint)
+router.post('/send-reminders', async (req: AuthRequest, res: Response) => {
+  try {
+    console.log('[Ratings] Sending rating reminders');
+
+    await ratingReminderService.sendDoerRatingReminders();
+    await ratingReminderService.sendAskerRatingReminders();
+
+    res.json({
+      success: true,
+      message: 'Rating reminders sent successfully'
+    });
+  } catch (error) {
+    console.error('Send rating reminders error:', error);
+    res.status(500).json({ error: 'Failed to send rating reminders' });
+  }
+});
 
 export default router;
