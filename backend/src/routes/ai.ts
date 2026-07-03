@@ -616,6 +616,8 @@ OUTPUT ONLY THE TITLE, nothing else.`,
       category = 'data-entry';
     } else if (lowerInput.includes('makeup') || lowerInput.includes('hair') || lowerInput.includes('salon') || lowerInput.includes('beauty') || lowerInput.includes('massage') || lowerInput.includes('spa') || lowerInput.includes('manicure') || lowerInput.includes('pedicure')) {
       category = 'personal-care';
+    } else if (lowerInput.includes('charity') || lowerInput.includes('donation') || lowerInput.includes('donate') || lowerInput.includes('volunteer') || lowerInput.includes('community') || lowerInput.includes('pack') || lowerInput.includes('box') || lowerInput.includes('boxes')) {
+      category = 'charity-community';
     }
 
     console.log('[Extract] Category detected (keyword-based):', category);
