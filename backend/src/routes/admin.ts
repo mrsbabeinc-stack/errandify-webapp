@@ -511,6 +511,29 @@ router.post('/migrate-formatted-ids', async (req: AuthRequest, res: Response) =>
     console.log(`[Admin] Uppercased ${uppercaseResult.rowCount} existing offer_ids`);
     console.log(`[Admin] Migrated ${bidsCount} bid offer_ids`);
 
+    // Fix existing errands: extract area from full addresses
+    // For errands with location like "15 Changi Business Park, EUNOS S408600", extract just "EUNOS"
+    const fixLocationResult = await db.query(`
+      UPDATE errands
+      SET location = TRIM(
+        CASE
+          -- If location has comma, take part after comma (e.g., "street, AREA postal" → "AREA postal" → "AREA")
+          WHEN location LIKE '%,%' THEN
+            RTRIM(REGEXP_REPLACE(SPLIT_PART(location, ',', 2), '\\s+\\d{6}.*$', ''))
+          -- If location has postal code at end, remove it (e.g., "AREA postal" → "AREA")
+          WHEN location ~ '\\s+[A-Z]?\\d{6}' THEN
+            RTRIM(REGEXP_REPLACE(location, '\\s+[A-Z]?\\d{6}.*$', ''))
+          -- Otherwise keep as-is
+          ELSE location
+        END
+      )
+      WHERE location IS NOT NULL
+        AND location != 'Remote'
+        AND location NOT IN ('📍 Location', 'Location', 'Singapore')
+        AND (location LIKE '%,%' OR location ~ '\\s+\\d{6}' OR LENGTH(location) > 30)
+    `);
+    console.log(`[Admin] Fixed ${fixLocationResult.rowCount} errand locations to show area names only`);
+
     // Migrate users - generate formatted_user_id
     const usersResult = await db.query('SELECT id FROM users WHERE formatted_user_id IS NULL');
     let usersCount = 0;
