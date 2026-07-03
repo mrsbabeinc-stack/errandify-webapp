@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
+import postalCodeService from '../services/postalCodeService.js';
 import { getAreaFromPostalCode } from '../data/singaporePostalCodes.js';
 import { getAddressFromPostalCode } from '../data/postalCodeAddresses.js';
 import axios from 'axios';
@@ -856,57 +857,25 @@ OUTPUT ONLY the category name, nothing else.`,
     let needsAreaConfirmation = false;
 
     if (postalCode && postalCode.length === 6) {
-      // Address resolution strategy (guarantees full_address is never empty):
-      // Step 1: Try OneMap API (if available and authenticated)
-      // Step 2: Fallback to hardcoded database of common Singapore postal codes
-      // Step 3: Last resort: return "Singapore {code}" and request user confirmation
+      // Use new postal code service for proper address lookup
+      // Priority: SingPost SGLocate > OneMap > Unable to verify
       try {
-        const oneMapUrl = `https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${postalCode}&returnGeom=Y&getAddrDetails=Y`;
-        const omResponse = await axios.get(oneMapUrl, { timeout: 3000 });
+        const postalData = await postalCodeService.lookupPostalCode(postalCode);
 
-        if (omResponse.data?.results?.[0]) {
-          const addr = omResponse.data.results[0];
-          fullAddress = addr.ADDRESS || `Singapore ${postalCode}`;
-
-          let extractedArea = area || detectedArea || 'Singapore';
-          if (!area && fullAddress) {
-            let areaMatch = fullAddress.replace(postalCode, '').replace(/SINGAPORE/i, '').trim();
-            areaMatch = areaMatch.replace(/\s*(AVENUE|ROAD|STREET|LANE|CLOSE|DRIVE|PARK|WAY|COURT|PLACE|CRESCENT|HILL|VIEW|LINK|RISE|GROVE|SQUARE|TERRACE|BEND|LOOP|WALK).*$/i, '').trim();
-            areaMatch = areaMatch.replace(/^\d+\s+/, '').replace(/\s+\d+$/, '').trim();
-
-            if (areaMatch.length > 0 && areaMatch !== 'Singapore') {
-              extractedArea = areaMatch;
-            }
-          }
-
-          area = extractedArea;
-          console.log(`[Extract] ✅ OneMap API success: ${area}, ${fullAddress}`);
+        if (postalData) {
+          fullAddress = postalData.full_address || `Singapore ${postalCode}`;
+          area = postalData.planning_area || detectedArea || 'Singapore';
+          console.log(`[Extract] ✅ Postal code service success: ${area}, ${fullAddress}`);
         } else {
-          // Step 2: OneMap returned no results, check fallback database
-          const fallbackAddress = getAddressFromPostalCode(postalCode);
-          if (fallbackAddress) {
-            fullAddress = fallbackAddress;
-            console.log(`[Extract] ✅ Fallback database: ${fullAddress}`);
-          } else {
-            // Step 3: No fallback, ask user to confirm
-            fullAddress = `Singapore ${postalCode}`;
-            needsAreaConfirmation = true;
-            console.log(`[Extract] ⚠️ No data found for postal ${postalCode}, user confirmation needed`);
-          }
-        }
-      } catch (err) {
-        // Step 2: OneMap API call failed (auth, network, timeout), try fallback
-        console.warn(`[Extract] OneMap failed: ${err instanceof Error ? err.message : String(err)}`);
-        const fallbackAddress = getAddressFromPostalCode(postalCode);
-        if (fallbackAddress) {
-          fullAddress = fallbackAddress;
-          console.log(`[Extract] ✅ Fallback database: ${fullAddress}`);
-        } else {
-          // Step 3: No fallback entry, ask user to confirm
+          // Unable to verify - show incomplete data and ask for confirmation
           fullAddress = `Singapore ${postalCode}`;
           needsAreaConfirmation = true;
-          console.log(`[Extract] ⚠️ OneMap error AND no fallback for ${postalCode}`);
+          console.log(`[Extract] ⚠️ Unable to verify postal code ${postalCode}, user confirmation needed`);
         }
+      } catch (err) {
+        console.warn(`[Extract] Postal code lookup error: ${err instanceof Error ? err.message : String(err)}`);
+        fullAddress = `Singapore ${postalCode}`;
+        needsAreaConfirmation = true;
       }
     } else if (!detectedArea) {
       console.log('[Extract] No postal code or area detected');
