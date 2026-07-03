@@ -340,6 +340,12 @@ export default function MyOfferPage() {
                   )}
                 </div>
 
+                {/* Your Offer with Offer ID */}
+                <div className="mb-2 text-xs">
+                  <p className="text-gray-600">Your Offer: SGD ${Number(bid.amount).toFixed(2)}</p>
+                  <p className="text-gray-500 font-mono text-xs">{bid.offer_id || `OF${bid.id}`}</p>
+                </div>
+
                 {/* Actions */}
                 <div className="flex gap-1 flex-wrap">
                   {bid.errand?.status !== 'expired' && (
