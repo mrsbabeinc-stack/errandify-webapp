@@ -212,7 +212,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         return {
           id: errand.id,
           asker_id: errand.asker_id,
-          errandId: errand.errand_id,
+          errandId: errand.formatted_id,
           title: errand.title,
           description: errand.description,
           category: categoryMap[errand.category] || errand.category, // Map to frontend category
@@ -299,8 +299,8 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
       success: true,
       data: {
         id: errand.id,
-        errandId: errand.errand_id,
-        formatted_id: errand.errand_id,
+        errandId: errand.formatted_id,
+        formatted_id: errand.formatted_id,
         title: errand.title,
         description: errand.description,
         notes: isConfirmedDoer ? errand.notes : null, // Only show to confirmed doer
@@ -420,11 +420,11 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         });
       }
 
-      const errandId = generateErrandId(category);
+      const formattedId = generateErrandId(category);
       const errandResult = await db.query(
-        `INSERT INTO errands (asker_id, title, description, category, location, full_address, postal_code, budget, deadline, is_recurring, recurring_schedule, status, errand_id)
+        `INSERT INTO errands (asker_id, title, description, category, location, full_address, postal_code, budget, deadline, is_recurring, recurring_schedule, status, formatted_id)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-         RETURNING id, errand_id, title, description, category, status, budget, deadline, is_recurring, recurring_schedule, created_at`,
+         RETURNING id, formatted_id, title, description, category, status, budget, deadline, is_recurring, recurring_schedule, created_at`,
         [
           askerId,
           title,
@@ -438,7 +438,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           isRecurring || false,
           recurringConfig,
           'open',
-          errandId
+          formattedId
         ]
       );
 
@@ -446,7 +446,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
       // Log all fields being stored
       const allFieldsLog = await db.query(
-        'SELECT id, errand_id, title, description, location, postal_code, category, budget, deadline, status, is_recurring FROM errands WHERE id = $1',
+        'SELECT id, formatted_id, title, description, location, postal_code, category, budget, deadline, status, is_recurring FROM errands WHERE id = $1',
         [errand.id]
       );
       console.log('[DEBUG] ERRAND STORED IN DATABASE:', allFieldsLog.rows[0]);
@@ -544,7 +544,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         success: true,
         data: {
           id: errand.id,
-          errandId: errand.errand_id,
+          errandId: errand.formatted_id,
           title: errand.title,
           description: errand.description,
           category: errand.category,
