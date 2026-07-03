@@ -6,15 +6,22 @@ interface Bid {
   id: number;
   errand_id: number;
   doer_id: number;
-  amount: number;
+  amount: number | string;
   note?: string;
   status: 'pending' | 'accepted' | 'confirmed' | 'in_progress' | 'job_completed' | 'completed' | 'rejected' | 'withdrawn';
   created_at: string;
   errand?: {
     title: string;
-    budget: number;
+    budget: number | string;
     category: string;
-    asker_name: string;
+    asker_name?: string;
+    asker_display_name?: string;
+    formatted_id?: string;
+    status?: string;
+    location?: string;
+    postal_code?: string;
+    deadline?: string;
+    description?: string;
   };
 }
 
@@ -128,7 +135,7 @@ export default function MyBidsPage() {
                   {activeBid.errand?.title}
                 </h3>
                 <p className="text-sm text-gray-700 mt-1">
-                  {activeBid.errand?.asker_name} • SGD ${activeBid.amount.toFixed(2)}
+                  {activeBid.errand?.asker_display_name || activeBid.errand?.asker_name} • SGD ${Number(activeBid.amount).toFixed(2)}
                 </p>
               </div>
               <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(activeBid.status)}`}>
@@ -221,11 +228,11 @@ export default function MyBidsPage() {
                 <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
                   <div>
                     <p className="text-gray-600">Your Offer</p>
-                    <p className="font-bold text-errandify-orange text-lg">SGD ${Math.round(bid.amount)}</p>
+                    <p className="font-bold text-errandify-orange text-lg">SGD ${Math.round(Number(bid.amount))}</p>
                   </div>
                   <div>
                     <p className="text-gray-600">Budget</p>
-                    <p className="font-semibold text-gray-800">SGD ${bid.errand?.budget ? Math.round(bid.errand.budget) : 'N/A'}</p>
+                    <p className="font-semibold text-gray-800">SGD ${bid.errand?.budget ? Math.round(Number(bid.errand.budget)) : 'N/A'}</p>
                   </div>
                 </div>
 

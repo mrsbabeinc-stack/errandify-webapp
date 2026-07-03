@@ -8,13 +8,13 @@ interface Bid {
   id: number;
   errand_id: number;
   doer_id: number;
-  amount: number;
+  amount: number | string;
   note?: string;
   status: 'pending' | 'accepted' | 'confirmed' | 'confirmed_awaiting_start' | 'in_progress' | 'completed_unconfirmed' | 'completed_confirmed' | 'rejected' | 'withdrawn';
   created_at: string;
   errand?: {
     title: string;
-    budget: number;
+    budget: number | string;
     category: string;
     status: string;
     asker_name: string;
@@ -213,7 +213,7 @@ export default function MyOfferPage() {
                   {activeBid.errand?.title}
                 </h3>
                 <p className="text-sm text-gray-700 mt-1">
-                  {activeBid.errand?.asker_display_name || activeBid.errand?.asker_name || 'Anonymous'} • SGD ${Math.round(activeBid.amount)}
+                  {activeBid.errand?.asker_display_name || activeBid.errand?.asker_name || 'Anonymous'} • SGD ${Math.round(Number(activeBid.amount))}
                 </p>
               </div>
               <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(activeBid.errand?.status || activeBid.status)}`}>
@@ -447,10 +447,10 @@ export default function MyOfferPage() {
                 setSelectedErrandId(null);
               }}
               errandDetails={{
-                budget: selectedBid?.errand?.budget,
+                budget: selectedBid?.errand?.budget ? Number(selectedBid.errand.budget) : undefined,
                 description: selectedBid?.errand?.description,
                 location: selectedBid?.errand?.location,
-                postal: selectedBid?.errand?.postal_code,
+                postal_code: selectedBid?.errand?.postal_code,
                 deadline: selectedBid?.errand?.deadline,
               }}
             />
