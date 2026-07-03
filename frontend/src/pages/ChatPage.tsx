@@ -279,34 +279,23 @@ export default function ChatPage({ userRole }: ChatPageProps) {
     if (!location) return 'Singapore';
     if (location.toLowerCase() === 'remote') return 'Remote';
 
-    // Extract area from location string
-    // Format: "street address, area_name postal_code" or "street address, area_name"
-    // Examples: "15 Changi Business Park, EUNOS S408600" → "EUNOS"
-    //          "123 Ang Mo Kio Ave 1, #12-345 S569957" → partial match for Ang Mo Kio
+    // Extract area name from location
+    // Hana stores area as: "Area Name" or "Area Name 123456" (postal)
+    // Examples: "Test Location" → "Test Location"
+    //          "WHOLESALE CENTRE 110001" → "WHOLESALE CENTRE"
+    //          "GUL 629652" → "GUL"
 
-    const parts = location.split(',').map(p => p.trim());
+    // Remove trailing postal codes/numbers: "AREA 629652" → "AREA"
+    const withoutTrailingNumbers = location.replace(/\s+\d{6}[\d\s]*$/, '').trim();
 
-    // Usually the area is in the last part (after last comma)
-    if (parts.length > 0) {
-      const lastPart = parts[parts.length - 1];
-
-      // Remove postal codes from the end: "EUNOS S408600" → "EUNOS"
-      const withoutPostal = lastPart.replace(/\s+S?\d{6}\s*$/i, '').trim();
-
-      // If we got something meaningful, use it
-      if (withoutPostal && withoutPostal.length > 0 && withoutPostal !== 'Singapore') {
-        return withoutPostal;
-      }
+    // Remove anything that looks like a unit/building number: "#12-345" → empty
+    if (/^#/.test(withoutTrailingNumbers) || /^\d+[-\/]/.test(withoutTrailingNumbers)) {
+      return 'Singapore';
     }
 
-    // Fallback: try to extract from second-to-last part if it exists
-    if (parts.length > 1) {
-      const secondLast = parts[parts.length - 2];
-      // Look for area names (words with capital letters, not just numbers)
-      const areaMatch = secondLast.match(/\b[A-Z][A-Za-z\s]+$/);
-      if (areaMatch) {
-        return areaMatch[0].trim();
-      }
+    // Return the cleaned location if it has meaningful content
+    if (withoutTrailingNumbers && withoutTrailingNumbers.length > 0 && withoutTrailingNumbers !== 'Singapore') {
+      return withoutTrailingNumbers;
     }
 
     return 'Singapore';
