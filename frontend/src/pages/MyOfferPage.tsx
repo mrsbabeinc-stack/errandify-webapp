@@ -144,6 +144,43 @@ export default function MyOfferPage() {
     return labels[status] || status;
   };
 
+  const getAreaOnly = (location?: string) => {
+    if (!location) return null;
+    if (location.toLowerCase() === 'remote') return 'Remote';
+
+    const parts = location.split(',').map(p => p.trim());
+    const isStreetOrUnit = (part: string) => {
+      return /avenue|street|road|lane|drive|boulevard|crescent|terrace|place|court|building|blk|block|^#\d+|\d+[-\/]\d+/i.test(part) ||
+             /^\d{6}$/.test(part) || /^\d+$/.test(part) || part.toLowerCase() === 'singapore';
+    };
+
+    const singaporeIdx = parts.findIndex(p => p.toLowerCase() === 'singapore');
+    if (singaporeIdx > 0) {
+      let areaCandidate = parts[singaporeIdx - 1];
+      if (areaCandidate && !isStreetOrUnit(areaCandidate)) return areaCandidate;
+      if (/^\d{6}$/.test(areaCandidate) && singaporeIdx >= 2) {
+        areaCandidate = parts[singaporeIdx - 2];
+        if (areaCandidate && !isStreetOrUnit(areaCandidate)) return areaCandidate;
+      }
+    }
+
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (!isStreetOrUnit(parts[i]) && parts[i].length > 0) return parts[i];
+    }
+
+    const firstPart = parts[0];
+    if (firstPart) {
+      const areaMatch = firstPart.match(/\b([A-Za-z\s]+?)\s+(Road|Street|Avenue|Lane|Drive|Boulevard|Crescent|Terrace|Place|Court|Building|Blk|Block)\b/i);
+      if (areaMatch && areaMatch[1]) {
+        const extracted = areaMatch[1].trim();
+        if (extracted.length > 0 && !/^\d+$/.test(extracted)) return extracted;
+      }
+    }
+
+    if (parts.length > 0 && !isStreetOrUnit(parts[0])) return parts[0];
+    return location;
+  };
+
   // Get active job (confirmed or in_progress)
   const activeBid = bids.find(b => b.status === 'confirmed' || b.status === 'confirmed_awaiting_start' || b.status === 'in_progress');
 
@@ -345,7 +382,7 @@ export default function MyOfferPage() {
                   {bid.errand?.location && (
                     <span>
                       📍 {bid.status === 'completed_confirmed'
-                        ? bid.errand.location.split(',')[0]
+                        ? getAreaOnly(bid.errand.location)
                         : `${bid.errand.location}${bid.errand?.postal_code ? ` ${bid.errand.postal_code}` : ''}`
                       }
                     </span>
