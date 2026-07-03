@@ -20,6 +20,7 @@ interface Bid {
     status: string;
     asker_name: string;
     asker_display_name?: string;
+    asker_alias?: string;
     location?: string;
     postal_code?: string;
     deadline?: string;
@@ -317,10 +318,10 @@ export default function MyOfferPage() {
                   </span>
                 </div>
 
-                {/* Line 2: Posted by, Location/Deadline, Offer with ID */}
-                <div className="flex items-center justify-between gap-2 text-xs">
+                {/* Line 2: Posted by, Category, Offer with ID */}
+                <div className="flex items-center justify-between gap-2 text-xs mb-1">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <p className="text-gray-600 whitespace-nowrap">by {bid.errand?.asker_display_name || bid.errand?.asker_name || 'Unknown'}</p>
+                    <p className="text-gray-600 whitespace-nowrap">by {bid.errand?.asker_alias || bid.errand?.asker_name || 'Unknown'}</p>
                     {bid.errand?.category && (
                       <span className="px-2 py-0.5 bg-orange-100 text-errandify-orange rounded text-xs font-semibold whitespace-nowrap">
                         {bid.errand.category}
@@ -333,19 +334,25 @@ export default function MyOfferPage() {
                   </div>
                 </div>
 
-                {/* Details Line: Deadline & Full Location */}
-                <div className="flex items-center gap-2 mt-1 text-xs text-gray-600 flex-wrap">
-                  {bid.errand?.deadline && (
-                    <span>📅 {new Date(bid.errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}</span>
+                {/* Line 3: Deadline, Time & Location */}
+                <div className="text-xs text-gray-600 space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {bid.errand?.deadline && (
+                      <>
+                        <span>📅 {new Date(bid.errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}</span>
+                        <span>⏰ {new Date(bid.errand.deadline).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}</span>
+                      </>
+                    )}
+                  </div>
+                  {bid.errand?.location && (
+                    <div className="flex items-center gap-1">
+                      <span>📍 {bid.errand.location}{bid.errand?.postal_code && ` ${bid.errand.postal_code}`}</span>
+                    </div>
                   )}
-                  <span>
-                    📍 {bid.errand?.description?.split('\n')[0] || bid.errand?.location}
-                    {bid.errand?.postal_code && ` ${bid.errand.postal_code}`}
-                  </span>
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-1 flex-wrap">
+                <div className="flex gap-1 flex-wrap mt-2">
                   {bid.errand?.status !== 'expired' && (
                     <button
                       onClick={() => navigate(`/errand/${bid.errand_id}`)}
