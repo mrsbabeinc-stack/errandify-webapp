@@ -492,13 +492,18 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                     </button>
                   </div>
                 )}
-                {(conversation.location || conversation.postal) && (
+                {(conversation.location || conversation.postal) && conversation.status !== 'completed' && (
                   <div className="flex justify-between items-center">
                     <p>
-                      📍 {conversation.status === 'completed'
-                        ? getAreaOnly(conversation.location)
-                        : `${conversation.postal}${conversation.location && conversation.postal ? ', ' : ''}${conversation.location}`
-                      }
+                      📍 {`${conversation.postal}${conversation.location && conversation.postal ? ', ' : ''}${conversation.location}`}
+                    </p>
+                    <p className="text-gray-600">Posted by {conversation.otherPartyName}</p>
+                  </div>
+                )}
+                {(conversation.location || conversation.postal) && conversation.status === 'completed' && (
+                  <div className="flex justify-between items-center">
+                    <p>
+                      📍 {getAreaOnly(conversation.location)}
                     </p>
                     <p className="text-gray-600">Posted by {conversation.otherPartyName}</p>
                   </div>

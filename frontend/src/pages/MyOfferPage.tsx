@@ -368,7 +368,7 @@ export default function MyOfferPage() {
                       <span>⏰ {new Date(bid.errand.deadline).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}</span>
                     </>
                   )}
-                  {bid.errand?.location && (
+                  {bid.errand?.location && bid.errand?.status !== 'expired' && (
                     <span>
                       📍 {bid.errand?.status === 'completed'
                         ? getAreaOnly(bid.errand.location)
