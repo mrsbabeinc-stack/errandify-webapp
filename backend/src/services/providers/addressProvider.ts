@@ -88,13 +88,13 @@ async function getCachedAddress(postalCode: string): Promise<AddressLookupResult
     const row = result.rows[0];
     return {
       postal_code: row.postal_code,
-      formatted_address: row.formatted_address,
+      formatted_address: row.full_address,
       latitude: row.latitude,
       longitude: row.longitude,
-      area: row.area,
+      area: row.planning_area,
       subzone: row.subzone,
       provider: row.provider,
-      confidence: row.confidence,
+      confidence: parseFloat(row.confidence),
       manually_corrected: row.manually_corrected,
       corrected_by_user_id: row.corrected_by_user_id,
       last_verified_at: row.last_verified_at,
@@ -152,13 +152,13 @@ async function cacheAddress(data: AddressLookupResult): Promise<void> {
   try {
     await db.query(
       `INSERT INTO postal_code_cache
-       (postal_code, formatted_address, latitude, longitude, area, subzone, provider, confidence, last_verified_at, manually_corrected)
+       (postal_code, full_address, latitude, longitude, planning_area, subzone, provider, confidence, last_verified_at, manually_corrected)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9)
        ON CONFLICT (postal_code) DO UPDATE SET
-       formatted_address = EXCLUDED.formatted_address,
+       full_address = EXCLUDED.full_address,
        latitude = EXCLUDED.latitude,
        longitude = EXCLUDED.longitude,
-       area = EXCLUDED.area,
+       planning_area = EXCLUDED.planning_area,
        subzone = EXCLUDED.subzone,
        provider = EXCLUDED.provider,
        confidence = EXCLUDED.confidence,
@@ -176,7 +176,7 @@ async function cacheAddress(data: AddressLookupResult): Promise<void> {
       ]
     );
 
-    console.log('[AddressProvider] Cached:', data.postal_code);
+    console.log('[AddressProvider] ✅ Cached:', data.postal_code);
   } catch (err) {
     console.error('[AddressProvider] Cache write error:', err);
   }
@@ -196,13 +196,13 @@ export async function markManuallyCorrect(
       `UPDATE postal_code_cache
        SET manually_corrected = TRUE,
            corrected_by_user_id = $1,
-           formatted_address = COALESCE($2, formatted_address),
+           full_address = COALESCE($2, full_address),
            last_verified_at = NOW()
        WHERE postal_code = $3`,
       [userId, correctedAddress || null, postalCode]
     );
 
-    console.log('[AddressProvider] Marked corrected:', postalCode, 'by', userId);
+    console.log('[AddressProvider] ✅ Marked corrected:', postalCode, 'by', userId);
   } catch (err) {
     console.error('[AddressProvider] Mark corrected error:', err);
   }
