@@ -343,7 +343,12 @@ export default function MyOfferPage() {
                     </>
                   )}
                   {bid.errand?.location && (
-                    <span>📍 {bid.errand.location}{bid.errand?.postal_code && ` ${bid.errand.postal_code}`}</span>
+                    <span>
+                      📍 {bid.status === 'completed_confirmed'
+                        ? (bid.errand?.postal_code ? `Singapore ${bid.errand.postal_code}` : 'Singapore')
+                        : `${bid.errand.location}${bid.errand?.postal_code ? ` ${bid.errand.postal_code}` : ''}`
+                      }
+                    </span>
                   )}
                 </div>
 
