@@ -22,6 +22,7 @@ interface Bid {
     asker_display_name?: string;
     asker_alias?: string;
     location?: string;
+    full_address?: string;
     postal_code?: string;
     deadline?: string;
     description?: string;
@@ -143,20 +144,6 @@ export default function MyOfferPage() {
     };
     return labels[status] || status;
   };
-
-  const getAreaOnly = (location?: string) => {
-    if (!location) return '📍 Location';
-    const loc = location.trim();
-    if (loc.toLowerCase() === 'remote') return 'Remote';
-    if (!loc || loc.toLowerCase() === 'location' || loc.toLowerCase() === 'singapore') return '📍 Location';
-
-    // If it's JUST a postal code, show placeholder
-    if (/^[A-Z]?\d{6}$/.test(loc)) return '📍 Location';
-
-    // Otherwise return the location as-is (area should be passed directly from form)
-    return loc;
-  };
-
   // Get active job (confirmed or in_progress)
   const activeBid = bids.find(b => b.status === 'confirmed' || b.status === 'confirmed_awaiting_start' || b.status === 'in_progress');
 
@@ -356,24 +343,41 @@ export default function MyOfferPage() {
                         <span>⏰ {new Date(bid.errand.deadline).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}</span>
                       </>
                     )}
-                    {(bid.errand?.location || bid.errand?.postal_code) && bid.errand?.status !== 'expired' && (
-                      <span>
-                        📍 {
-                          (() => {
-                            const isCompleted = bid.errand?.status === 'completed' || bid.errand?.status === 'completed_confirmed' || bid.errand?.status === 'completed_unconfirmed';
-                            if (isCompleted) {
-                              // For completed: show area only
-                              // Use location if it exists, fallback to postal_code
-                              const loc = bid.errand.location || bid.errand.postal_code || '';
-                              return getAreaOnly(loc);
-                            } else {
-                              // For active: show full location + postal
-                              return `${bid.errand.location || ''}${bid.errand?.postal_code ? ` ${bid.errand.postal_code}` : ''}`.trim();
-                            }
-                          })()
+                    {(() => {
+                      const isCompleted = bid.errand?.status === 'completed' || bid.errand?.status === 'completed_confirmed' || bid.errand?.status === 'completed_unconfirmed';
+                      const isExpired = bid.errand?.status === 'expired';
+
+                      // Don't show location for expired errands
+                      if (isExpired) return null;
+
+                      // For completed: only show if area is valid and not generic
+                      if (isCompleted) {
+                        const loc = bid.errand?.location?.trim() || '';
+                        if (!loc || loc.toLowerCase() === 'singapore' || loc.toLowerCase() === 'remote') {
+                          return null;
                         }
-                      </span>
-                    )}
+                        return (
+                          <span>
+                            📍 {loc}
+                          </span>
+                        );
+                      }
+
+                      // For active: show full address or location + postal
+                      if (bid.errand?.location || bid.errand?.postal_code) {
+                        const displayText = bid.errand.full_address
+                          ? bid.errand.full_address
+                          : `${bid.errand.location || ''}${bid.errand?.postal_code ? ` ${bid.errand.postal_code}` : ''}`.trim();
+
+                        return (
+                          <span>
+                            📍 {displayText}
+                          </span>
+                        );
+                      }
+
+                      return null;
+                    })()}
                   </div>
                   <p className="text-gray-400 whitespace-nowrap">Offer placed {new Date(bid.created_at).toLocaleDateString()}</p>
                 </div>

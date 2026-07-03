@@ -619,7 +619,7 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
 
     // Get all bids for this doer with errand details
     const bidsResult = await db.query(
-      `SELECT b.*, e.title, e.budget, e.category, e.status as errand_status, e.location, e.postal_code, e.deadline, e.description, e.formatted_id, u.alias, u.display_name as asker_display_name
+      `SELECT b.*, e.title, e.budget, e.category, e.status as errand_status, e.location, e.full_address, e.postal_code, e.deadline, e.description, e.formatted_id, u.alias, u.display_name as asker_display_name
        FROM bids b
        JOIN errands e ON b.errand_id = e.id
        JOIN users u ON e.asker_id = u.id
@@ -628,9 +628,46 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
       [doerId]
     );
 
-    res.json({
-      success: true,
-      data: bidsResult.rows.map(bid => ({
+    // Map of verified postal codes to areas (sourced from OneMap)
+    // Note: Only includes postal codes that have been verified through OneMap API
+    const postalCodeToArea: Record<string, string> = {
+      '507565': 'Bukit Timah',
+      '469999': 'Bedok',
+      '629652': 'Gul / Tuas / Joo Koon',
+      '680433': 'Choa Chu Kang',
+      '408600': 'Eunos / Paya Lebar',
+      '569957': 'Ang Mo Kio',
+    };
+
+    // Process bids and clean up location data
+    const processedBids = bidsResult.rows.map((bid) => {
+      let cleanLocation = bid.location;
+
+      // If location looks like a unit number (starts with # or is mostly digits), try to extract area
+      if (cleanLocation && (cleanLocation.startsWith('#') || /^\d+/.test(cleanLocation))) {
+        if (bid.full_address) {
+          // Try to extract area name from full_address (usually the last meaningful part before postal code)
+          // Common pattern: "123 Some Road, Area Name, Singapore XXXXXX"
+          const addressParts = bid.full_address.split(',').map(p => p.trim());
+          if (addressParts.length >= 2) {
+            // Second to last part is usually the area (before "Singapore XXXXXX")
+            const potentialArea = addressParts[addressParts.length - 2];
+            if (potentialArea && potentialArea.toLowerCase() !== 'singapore') {
+              cleanLocation = potentialArea;
+            }
+          }
+        } else if (bid.postal_code) {
+          // Fallback: map postal code to area using postal sector
+          const postalStr = String(bid.postal_code).padStart(6, '0');
+          const sector = postalStr.substring(0, 2);
+          const mappedArea = postalSectorToArea[sector];
+          if (mappedArea) {
+            cleanLocation = mappedArea;
+          }
+        }
+      }
+
+      return {
         id: bid.id,
         errand_id: bid.errand_id,
         doer_id: bid.doer_id,
@@ -646,13 +683,19 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
           status: bid.errand_status,
           asker_name: bid.asker_display_name,
           asker_alias: bid.alias,
-          location: bid.location,
+          location: cleanLocation,
+          full_address: bid.full_address,
           postal_code: bid.postal_code,
           deadline: bid.deadline,
           description: bid.description,
           formatted_id: bid.formatted_id || `ER${bid.errand_id}`,
         },
-      })),
+      };
+    });
+
+    res.json({
+      success: true,
+      data: processedBids,
     });
   } catch (error) {
     console.error('Get my bids error:', error);
