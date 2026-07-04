@@ -389,20 +389,26 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     }
 
     // Moderate errand title and description for contact info and inappropriate content
-    const titleModeration = await moderateContent(title, 'task_description');
-    if (titleModeration.status === 'blocked') {
-      return res.status(400).json({
-        error: `❌ Title blocked: ${titleModeration.reason}. Do not include contact information (phone, email, address, social profiles, business cards).`,
-      });
-    }
-
-    if (description) {
-      const descriptionModeration = await moderateContent(description, 'task_description');
-      if (descriptionModeration.status === 'blocked') {
+    try {
+      const titleModeration = await moderateContent(title, 'task_description');
+      if (titleModeration.status === 'blocked') {
         return res.status(400).json({
-          error: `❌ Description blocked: ${descriptionModeration.reason}. Do not include contact information (phone, email, address, social profiles, business cards).`,
+          error: `❌ Title blocked: ${titleModeration.reason}. Do not include contact information (phone, email, address, social profiles, business cards).`,
         });
       }
+
+      if (description) {
+        const descriptionModeration = await moderateContent(description, 'task_description');
+        if (descriptionModeration.status === 'blocked') {
+          return res.status(400).json({
+            error: `❌ Description blocked: ${descriptionModeration.reason}. Do not include contact information (phone, email, address, social profiles, business cards).`,
+          });
+        }
+      }
+    } catch (moderationErr) {
+      console.error('[DEBUG] Content moderation check failed:', moderationErr);
+      // Log the error but continue - don't block posting due to moderation service failure
+      console.log('[DEBUG] Continuing despite moderation error');
     }
 
     // Check for duplicate/similar errands posted by same user in last 24 hours
