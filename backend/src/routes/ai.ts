@@ -331,14 +331,14 @@ router.post('/suggest-recurrence', authMiddleware, async (req: AuthRequest, res:
 // POST /api/ai/check-content - Content moderation
 router.post('/check-content', async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, errand_id } = req.body;
+    const { title, description, notes, errand_id } = req.body;
     const userId = req.userId ? parseInt(req.userId, 10) : 0;
 
     if (!title) {
       return res.status(400).json({ error: 'title required' });
     }
 
-    const moderationResult = await contentMod.checkContentWithQwen(title, description);
+    const moderationResult = await contentMod.checkContentWithQwen(title, description || '', notes || '');
 
     const reasonCode = moderationResult.is_safe ? 'title_keyword_match' : 'content_moderation_warning';
 

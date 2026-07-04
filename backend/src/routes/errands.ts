@@ -1770,11 +1770,14 @@ router.post('/:id/confirm-completion', authMiddleware, async (req: AuthRequest, 
       return res.status(403).json({ error: 'Only asker can confirm completion' });
     }
 
-    // Update status from completed_unconfirmed to completed
-    await db.query(
-      'UPDATE errands SET status = $1, confirmed_at = NOW(), updated_at = NOW() WHERE id = $2',
+    // Update status to completed (from completed_unconfirmed or rated)
+    console.log('[ConfirmCompletion] Updating errand', id, 'from status', errand.status, 'to completed');
+    const updateResult = await db.query(
+      'UPDATE errands SET status = $1, confirmed_at = NOW(), updated_at = NOW() WHERE id = $2 RETURNING id, status',
       ['completed', id]
     );
+
+    console.log('[ConfirmCompletion] Update result:', updateResult.rows[0]);
 
     res.json({
       success: true,
@@ -1782,8 +1785,8 @@ router.post('/:id/confirm-completion', authMiddleware, async (req: AuthRequest, 
       data: { id, status: 'completed' },
     });
   } catch (error) {
-    console.error('Error confirming completion:', error);
-    res.status(500).json({ error: 'Failed to confirm completion' });
+    console.error('[ConfirmCompletion] Error confirming completion:', error);
+    res.status(500).json({ error: 'Failed to confirm completion', details: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
