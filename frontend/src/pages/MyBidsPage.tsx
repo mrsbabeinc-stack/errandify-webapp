@@ -106,6 +106,20 @@ export default function MyBidsPage() {
       completed: '🎉 Completed',
       rejected: '❌ Rejected',
       withdrawn: '↩️ Withdrawn',
+      closed: '✔️ Closed',
+    };
+    return labels[status] || status;
+  };
+
+  const getErrandStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      open: '📋 Open - Awaiting Bids',
+      confirmed: '🟢 Confirmed',
+      in_progress: '🔄 In Progress',
+      completed: '✔️ Completed - Awaiting Rating',
+      rated: '🎉 Completed & Rated',
+      expired: '⏰ Expired',
+      cancelled: '❌ Cancelled',
     };
     return labels[status] || status;
   };
@@ -240,7 +254,7 @@ export default function MyBidsPage() {
                     <p className="text-xs text-gray-600">by {bid.errand?.asker_name || 'Unknown'}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(bid.status)}`}>
-                    {getStatusLabel(bid.status)}
+                    {getErrandStatusLabel(bid.errand?.status || 'open')}
                   </span>
                 </div>
 
