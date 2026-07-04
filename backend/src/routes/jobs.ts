@@ -4,6 +4,7 @@ import db from '../db.js';
 import { stripeService } from '../services/stripe.js';
 import { createNotification } from './notifications.js';
 import { activityLogService } from '../services/activityLogService.js';
+import { scheduleRatingReminder } from '../services/ratingReminderService.js';
 
 const router = Router();
 
@@ -167,6 +168,12 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
         photosUploaded: photoUrls ? photoUrls.length : 0,
         message: `Job completed! Submission #${currentSubmissionNumber} uploaded. Waiting for asker to review.`,
       },
+    });
+
+    // Schedule rating reminder for doer (non-blocking)
+    scheduleRatingReminder(taskId, doerId).catch((error) => {
+      console.error('Failed to schedule rating reminder:', error);
+      // Non-blocking - don't fail the response
     });
   } catch (error) {
     console.error('Complete job error:', error);
