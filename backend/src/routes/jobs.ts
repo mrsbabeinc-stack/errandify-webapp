@@ -107,8 +107,8 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
       task_status: task.status
     });
 
-    // Allow completion from 'in_progress', 'confirmed', or 'completed' (for resubmission)
-    if (!['in_progress', 'confirmed', 'completed'].includes(task.status)) {
+    // Allow completion from 'in_progress', 'confirmed', 'completed', or 'rated' (for resubmission)
+    if (!['in_progress', 'confirmed', 'completed', 'rated'].includes(task.status)) {
       return res.status(400).json({ error: `Task must be in progress or completed to resubmit. Current status: ${task.status}` });
     }
 
