@@ -103,7 +103,12 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
       return res.status(400).json({ error: `Task must be in progress or completed to resubmit. Current status: ${task.status}` });
     }
 
-    if (!task.doer_id || task.doer_id !== doerId) {
+    // Verify current user is the confirmed doer
+    if (!task.doer_id) {
+      return res.status(400).json({ error: 'No doer assigned to this task. A bid must be accepted first.' });
+    }
+
+    if (task.doer_id !== doerId) {
       return res.status(403).json({ error: 'Only the assigned doer can complete this task' });
     }
 
