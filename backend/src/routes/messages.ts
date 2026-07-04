@@ -206,7 +206,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
     // If there's an accepted bid, use that. Otherwise fall back to most recent bid
     if (task.accepted_bid_id) {
       const acceptedBidResult = await db.query(
-        `SELECT b.doer_id, b.bid_amount, u.display_name, u.alias
+        `SELECT b.doer_id, b.amount, u.display_name, u.alias
          FROM bids b
          LEFT JOIN users u ON b.doer_id = u.id
          WHERE b.id = $1`,
@@ -216,12 +216,12 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
         doerId = acceptedBidResult.rows[0].doer_id;
         doerName = acceptedBidResult.rows[0].display_name || 'Unknown';
         doerAlias = acceptedBidResult.rows[0].alias || acceptedBidResult.rows[0].display_name || 'Unknown';
-        confirmedBidAmount = acceptedBidResult.rows[0].bid_amount;
+        confirmedBidAmount = acceptedBidResult.rows[0].amount;
       }
     } else {
       // Fallback: get most recent bid if no accepted bid
       const bidResult = await db.query(
-        `SELECT b.doer_id, b.bid_amount, u.display_name, u.alias
+        `SELECT b.doer_id, b.amount, u.display_name, u.alias
          FROM bids b
          LEFT JOIN users u ON b.doer_id = u.id
          WHERE b.errand_id = $1
@@ -233,7 +233,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
         doerId = bidResult.rows[0].doer_id;
         doerName = bidResult.rows[0].display_name || 'Unknown';
         doerAlias = bidResult.rows[0].alias || bidResult.rows[0].display_name || 'Unknown';
-        confirmedBidAmount = bidResult.rows[0].bid_amount;
+        confirmedBidAmount = bidResult.rows[0].amount;
       }
     }
     const isAsker = task.asker_id === userId;
