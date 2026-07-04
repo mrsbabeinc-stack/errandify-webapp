@@ -398,13 +398,11 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                       </span>
                     )}
 
-                    {errand.bidCount !== undefined && errand.bidCount > 0 && (
+                    {(errand.bidCount ?? 0) > 0 ? (
                       <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold">
                         📋 {errand.bidCount} {errand.bidCount === 1 ? 'Offer' : 'Offers'}
                       </span>
-                    )}
-
-                    {errand.bidCount === 0 && (
+                    ) : (
                       <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-semibold">
                         📋 No Offers
                       </span>
