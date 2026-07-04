@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import WarmMessage from './WarmMessage';
+import { formatCurrency } from '../utils/format';
 
 interface BidSubmissionModalProps {
   taskId: number;
@@ -238,7 +239,7 @@ export default function BidSubmissionModal({
               {isUpdating ? 'Offer updated' : 'Offer in'}
             </h2>
             <p className="text-lg font-semibold text-slate-900 mb-4">
-              SGD {successAmount}
+              {formatCurrency(successAmount)}
             </p>
             <p className="text-slate-700 text-base mb-4 leading-relaxed">
               {isUpdating

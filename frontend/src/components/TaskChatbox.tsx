@@ -4,6 +4,7 @@ import axios from 'axios';
 import { validateMessage, validateImage, validateAudio, validateFileUpload, moderateWithAI } from '../utils/messageValidator';
 import { addNotification } from '../utils/notificationStore';
 import { speechService } from '../services/speechService';
+import { formatCurrency } from '../utils/format';
 
 interface Message {
   id: number;
@@ -750,8 +751,8 @@ Your message doesn't meet our community standards. Please keep messages:
                 {/* Budget */}
                 <div>
                   <p className="text-xs text-gray-500">💰 Budget</p>
-                  <p className="text-xs text-errandify-orange">
-                    {(apiErrandDetails?.budget || errandDetails?.budget) ? `SGD $${apiErrandDetails?.budget || errandDetails?.budget}` : 'Not specified'}
+                  <p className="text-xs text-errandify-orange font-semibold">
+                    {(apiErrandDetails?.budget || errandDetails?.budget) ? formatCurrency(apiErrandDetails?.budget || errandDetails?.budget) : 'Not specified'}
                   </p>
                 </div>
 

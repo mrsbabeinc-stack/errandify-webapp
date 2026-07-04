@@ -13,3 +13,15 @@ export const capitalizeStatus = (status: string | undefined): string => {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 };
+
+/**
+ * Format currency as SGD with 2 decimal places: 105 -> SGD $105.00
+ */
+export const formatCurrency = (amount: number | string | null | undefined): string => {
+  if (amount === null || amount === undefined || amount === '') return 'SGD $0.00';
+
+  const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(num)) return 'SGD $0.00';
+
+  return `SGD $${num.toFixed(2)}`;
+};
