@@ -9,6 +9,7 @@ interface Bid {
   amount: number | string;
   note?: string;
   status: 'pending' | 'accepted' | 'confirmed' | 'in_progress' | 'job_completed' | 'completed' | 'rejected' | 'withdrawn';
+  is_accepted?: boolean;
   created_at: string;
   offer_id?: string;
   has_rated?: boolean;
@@ -110,7 +111,8 @@ export default function MyBidsPage() {
   };
 
   // Get active job (confirmed or in_progress)
-  const activeBid = bids.find(b => b.status === 'confirmed' || b.status === 'in_progress');
+  // Find the confirmed/in-progress bid that is actually accepted (is_accepted=true)
+  const activeBid = bids.find(b => b.is_accepted && (b.status === 'confirmed' || b.status === 'in_progress'));
 
   const filteredBids = filterStatus === 'all' ? bids : bids.filter(b => b.status === filterStatus);
 
