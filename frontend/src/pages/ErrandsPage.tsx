@@ -34,6 +34,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [bidFilter, setBidFilter] = useState<string>('all'); // 'all', 'has-bids', 'no-bids'
 
   console.log('[ErrandsPage] Mounted, userRole:', userRole);
 
@@ -220,7 +221,16 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
         errand.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         errand.category.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'all' || errand.status === statusFilter;
-      return matchesSearch && matchesStatus;
+
+      // Bid filter
+      let matchesBids = true;
+      if (bidFilter === 'has-bids') {
+        matchesBids = (errand.bidCount ?? 0) > 0;
+      } else if (bidFilter === 'no-bids') {
+        matchesBids = (errand.bidCount ?? 0) === 0;
+      }
+
+      return matchesSearch && matchesStatus && matchesBids;
     })
     .sort((a, b) => {
       // Sort by status priority first (in_progress → confirmed → open → completed → rated/closed)
@@ -229,9 +239,6 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
       // Then by creation date (newer first)
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-
-  // Get unique statuses
-  const uniqueStatuses = Array.from(new Set(errands.map(e => e.status)));
 
   return (
     <div className="min-h-screen bg-errandify-bg pb-32">
@@ -257,31 +264,105 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
           />
         </div>
 
-        {/* Status Filter - Horizontal Chips */}
-        <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
-          <button
-            onClick={() => setStatusFilter('all')}
-            className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
-              statusFilter === 'all'
-                ? 'bg-errandify-orange text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            All
-          </button>
-          {uniqueStatuses.map((status) => (
+        {/* Filters Section */}
+        <div className="mb-3 space-y-2">
+          {/* Status Filter */}
+          <div className="flex gap-1 overflow-x-auto pb-1">
             <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
+              onClick={() => setStatusFilter('all')}
               className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
-                statusFilter === status
+                statusFilter === 'all'
                   ? 'bg-errandify-orange text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
-              {status}
+              All
             </button>
-          ))}
+            <button
+              onClick={() => setStatusFilter('in_progress')}
+              className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                statusFilter === 'in_progress'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              🔄 In Progress
+            </button>
+            <button
+              onClick={() => setStatusFilter('confirmed')}
+              className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                statusFilter === 'confirmed'
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              ✓ Confirmed
+            </button>
+            <button
+              onClick={() => setStatusFilter('open')}
+              className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                statusFilter === 'open'
+                  ? 'bg-yellow-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              🔓 Open
+            </button>
+            <button
+              onClick={() => setStatusFilter('completed')}
+              className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                statusFilter === 'completed'
+                  ? 'bg-green-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              ✅ Completed
+            </button>
+            <button
+              onClick={() => setStatusFilter('rated')}
+              className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                statusFilter === 'rated'
+                  ? 'bg-teal-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              ⭐ Rated
+            </button>
+          </div>
+
+          {/* Bid Filter */}
+          <div className="flex gap-1">
+            <button
+              onClick={() => setBidFilter('all')}
+              className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                bidFilter === 'all'
+                  ? 'bg-errandify-orange text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              👤 All Bids
+            </button>
+            <button
+              onClick={() => setBidFilter('has-bids')}
+              className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                bidFilter === 'has-bids'
+                  ? 'bg-green-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              👤 Has Bids
+            </button>
+            <button
+              onClick={() => setBidFilter('no-bids')}
+              className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                bidFilter === 'no-bids'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              👤 No Bids
+            </button>
+          </div>
         </div>
 
         {/* Content Section */}
