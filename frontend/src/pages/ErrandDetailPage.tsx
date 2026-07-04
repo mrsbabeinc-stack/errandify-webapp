@@ -1004,8 +1004,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     ✓ Mark as Completed
                   </button>
                 </div>
-              ) : errand.status === 'confirmed' || errand.status === 'confirmed_awaiting_start' ? (
-                // Errand is confirmed - show start button
+              ) : (errand.status === 'confirmed' || errand.status === 'confirmed_awaiting_start') && currentUser && currentUser.id !== errand.askerId ? (
+                // Doer viewing confirmed errand - show chat, start, and cancel buttons
                 <div className="space-y-3 mt-2">
                   <p className="text-center text-sm font-semibold text-emerald-600 bg-emerald-50 p-3 rounded-lg">
                     🟢 Offer Confirmed
@@ -1013,12 +1013,26 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   <p className="text-center text-xs text-emerald-600 bg-emerald-50 px-3 pb-2 rounded-b-lg -mt-2">
                     Ready to start? Click below to begin the job (50% progress)
                   </p>
-                  <button
-                    onClick={handleStartJob}
-                    className="w-full bg-emerald-500 text-white py-3 rounded-lg font-bold hover:bg-emerald-600 transition-colors text-base"
-                  >
-                    ▶️ Start Errand
-                  </button>
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => setShowChat(true)}
+                      className="flex-1 bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition-colors text-base"
+                    >
+                      💬 Chat
+                    </button>
+                    <button
+                      onClick={handleStartJob}
+                      className="flex-1 bg-emerald-500 text-white py-3 rounded-lg font-bold hover:bg-emerald-600 transition-colors text-base"
+                    >
+                      ▶️ Start Errand
+                    </button>
+                    <button
+                      onClick={handleCancelErrand}
+                      className="flex-1 bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-red-600 transition-colors text-base"
+                    >
+                      ✕ Cancel
+                    </button>
+                  </div>
                 </div>
               ) : errand.status === 'open' && (bidStatus === 'accepted') ? (
                 // Bid is accepted but errand not confirmed yet - show confirm button
