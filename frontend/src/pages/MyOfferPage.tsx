@@ -151,25 +151,34 @@ export default function MyOfferPage() {
 
   // Define priority order for sorting by ERRAND STATUS (lower number = higher priority, shown first)
   const priorityOrder: Record<string, number> = {
-    'in_progress': 1,        // 🔄 Actively working - HIGHEST PRIORITY
-    'confirmed_awaiting_start': 2,  // 🟢 Confirmed, ready to start
-    'confirmed': 3,          // 🟢 Confirmed
-    'open': 4,               // 🔓 Open (bids submitted)
-    'completed_unconfirmed': 5,  // ✔️ Work done, awaiting review
-    'completed': 6,          // ✅ Rated & Closed
-    'rejected': 7,           // ❌ Rejected
-    'withdrawn': 8,          // ↩️ Withdrawn
-    'expired': 99,           // ⏰ Expired - LOWEST PRIORITY (shown at bottom, greyed out)
+    'in_progress': 0,               // 🔄 Actively working - HIGHEST PRIORITY
+    'confirmed_awaiting_start': 1,  // 🟢 Confirmed, ready to start
+    'confirmed': 2,                 // 🟢 Confirmed
+    'open': 3,                      // 🔓 Open (bids submitted)
+    'completed_unconfirmed': 4,     // ✔️ Work done, awaiting review
+    'completed': 5,                 // ✅ Rated & Closed
+    'rated': 6,                     // ✅ Rated & Closed (final state)
+    'rejected': 7,                  // ❌ Rejected
+    'withdrawn': 8,                 // ↩️ Withdrawn
+    'expired': 99,                  // ⏰ Expired - LOWEST PRIORITY (shown at bottom, greyed out)
   };
 
   const filteredBids = (filterStatus === 'all' ? bids : bids.filter(b => b.status === filterStatus))
     .sort((a, b) => {
-      // Sort by ERRAND STATUS, not bid status
+      // Sort by ERRAND STATUS priority first
       const errandStatusA = a.errand?.status || 'unknown';
       const errandStatusB = b.errand?.status || 'unknown';
       const priorityA = priorityOrder[errandStatusA] ?? 99;
       const priorityB = priorityOrder[errandStatusB] ?? 99;
-      return priorityA - priorityB;
+
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+
+      // Secondary sort: within same status, sort by date (newest first)
+      const dateA = new Date(a.errand?.created_at || 0).getTime();
+      const dateB = new Date(b.errand?.created_at || 0).getTime();
+      return dateB - dateA;
     });
 
   console.log('[MyOffer] filterStatus:', filterStatus);
