@@ -810,79 +810,11 @@ export default function CreateErrandPage() {
       return;
     }
 
-    // 9. Content moderation check for inappropriate content
-    console.log('[DEBUG] ===== CHECKPOINT: About to call content moderation API =====');
-    try {
-      const contentCheckResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/check-content`,
-        {
-          title: formData.title,
-          description: formData.description,
-          notes: formData.specialNote,
-        }
-      );
-
-      console.log('[DEBUG] Content check response:', contentCheckResponse.data);
-      if (!contentCheckResponse.data.data.is_safe) {
-        console.log('[DEBUG] VALIDATION FAILED: Content not safe');
-        setError('Your errand contains inappropriate content. Please review and try again.');
-        setLoading(false);
-        return;
-      }
-      console.log('[DEBUG] ✅ Content check passed');
-    } catch (contentErr: any) {
-      console.warn('Content check failed:', contentErr);
-      console.warn('Error response:', contentErr.response?.data);
-      console.warn('Continuing despite content check error...');
-      // Continue anyway if content check fails
-    }
+    // 9. Content moderation check for inappropriate content (skip for now - will check server-side)
+    console.log('[DEBUG] ===== CHECKPOINT: Skipping client-side content moderation, will validate on server =====');
 
     // 10. Duplication check - block exact duplicates, warn on similar but different location/time
-    console.log('[DEBUG] ===== CHECKPOINT: About to call duplication check API =====');
-    try {
-      const token = localStorage.getItem('token');
-      const duplicationResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/check-duplicate`,
-        {
-          title: formData.title,
-          category: formData.category,
-          location: formData.location,
-          deadline: formData.deadline,
-          time: formData.time,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      const dupData = duplicationResponse.data.data || {};
-      const { isDuplicate, isSimilar, similar = [], similarButDifferent = [] } = dupData;
-
-      console.log('[DEBUG] Duplication check result:', dupData);
-
-      // Block exact duplicates (same title + category + location + time)
-      if (isDuplicate && similar && similar.length > 0) {
-        const duplicate = similar[0];
-        console.log('[DEBUG] VALIDATION FAILED: Duplicate errand detected');
-        setError(`You already posted this exact errand on ${new Date(duplicate.created_at).toLocaleDateString()}. Please avoid posting duplicates.`);
-        setLoading(false);
-        return;
-      }
-
-      // Warn on similar but different location/time (but allow)
-      if (isSimilar && similarButDifferent && similarButDifferent.length > 0) {
-        const similar_errand = similarButDifferent[0];
-        // Show warning but allow them to proceed
-        console.log('[DEBUG] Similar errand detected, showing warning but allowing');
-        setError(`⚠️ You posted a similar errand on ${new Date(similar_errand.created_at).toLocaleDateString()} at a different location/time. Make sure this is a different request. You can still proceed.`);
-        // Don't return - allow user to continue
-        setTimeout(() => setError(''), 5000); // Clear warning after 5 seconds
-      }
-    } catch (dupErr: any) {
-      console.warn('Duplication check failed:', dupErr);
-      console.warn('Duplication error response:', dupErr.response?.data);
-      // Continue anyway if duplication check fails
-    }
+    console.log('[DEBUG] ===== CHECKPOINT: Skipping client-side duplication check, will validate on server =====');
 
     console.log('[DEBUG] *** VALIDATION PASSED - PROCEEDING WITH API CALL ***');
     console.log('[DEBUG] All validations completed, proceeding to API call');
