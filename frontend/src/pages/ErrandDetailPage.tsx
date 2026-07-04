@@ -462,6 +462,15 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     setShowCancelModal(true);
   };
 
+  const hasValidCancelReason = () => {
+    if (cancelReasonType === 'custom') {
+      return customCancelReason.trim().length > 0;
+    } else if (selectedCancelReason) {
+      return true;
+    }
+    return false;
+  };
+
   const confirmCancelErrand = async () => {
     try {
       // Determine final reason
@@ -472,6 +481,12 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         finalReason = selectedCancelReason;
       }
 
+      // Validate that a reason is provided
+      if (!finalReason) {
+        alert('Please select or enter a reason for cancellation.');
+        return;
+      }
+
       console.log('[Cancel] Submitting cancel request:', { id, finalReason, cancelReasonType });
 
       const token = localStorage.getItem('token');
@@ -479,7 +494,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/cancel`,
-        { reason: finalReason || null },
+        { reason: finalReason },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -2188,7 +2203,12 @@ Let's help each other! 🤝`}
               </button>
               <button
                 onClick={confirmCancelErrand}
-                className="flex-1 px-4 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition"
+                disabled={!hasValidCancelReason()}
+                className={`flex-1 px-4 py-3 rounded-lg font-semibold transition ${
+                  hasValidCancelReason()
+                    ? 'bg-red-500 text-white hover:bg-red-600 cursor-pointer'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
                 Cancel Errand
               </button>
