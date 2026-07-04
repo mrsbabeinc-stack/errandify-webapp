@@ -92,28 +92,40 @@ export default function ChatPage({ userRole }: ChatPageProps) {
       const token = localStorage.getItem('token');
 
       // Fetch both asker and doer conversations
-      const askerResponse = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands?myOnly=true`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      let askerData: any[] = [];
+      let doerData: any[] = [];
 
-      const doerResponse = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands?accepted=true`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      try {
+        const askerResponse = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands?myOnly=true`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        askerData = askerResponse.data.success && Array.isArray(askerResponse.data.data) ? askerResponse.data.data : [];
+        console.log('[ChatPage] askerResponse:', askerResponse.data);
+      } catch (askerErr) {
+        console.warn('[ChatPage] Failed to fetch asker conversations:', askerErr);
+        askerData = [];
+      }
+
+      try {
+        const doerResponse = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands?accepted=true`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        doerData = doerResponse.data.success && Array.isArray(doerResponse.data.data) ? doerResponse.data.data : [];
+        console.log('[ChatPage] doerResponse:', doerResponse.data);
+      } catch (doerErr) {
+        console.warn('[ChatPage] Failed to fetch doer conversations:', doerErr);
+        doerData = [];
+      }
 
       // Combine and deduplicate
-      const allData = [
-        ...(askerResponse.data.success && Array.isArray(askerResponse.data.data) ? askerResponse.data.data : []),
-        ...(doerResponse.data.success && Array.isArray(doerResponse.data.data) ? doerResponse.data.data : []),
-      ];
+      const allData = [...askerData, ...doerData];
 
-      console.log('[ChatPage] askerResponse:', askerResponse.data);
-      console.log('[ChatPage] doerResponse:', doerResponse.data);
       console.log('[ChatPage] allData (before dedup):', allData);
 
       // Remove duplicates based on ID
