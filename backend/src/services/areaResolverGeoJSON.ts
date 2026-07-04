@@ -7,7 +7,14 @@
  */
 
 import * as turf from '@turf/turf';
-import uraPlanningAreas from '../data/ura-planning-areas.json' assert { type: 'json' };
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uraPlanningAreasPath = path.join(__dirname, '../data/ura-planning-areas.json');
+const uraPlanningAreasData = JSON.parse(fs.readFileSync(uraPlanningAreasPath, 'utf-8'));
+const uraPlanningAreas = uraPlanningAreasData;
 
 /**
  * Get planning area from coordinates using official URA GeoJSON boundaries
