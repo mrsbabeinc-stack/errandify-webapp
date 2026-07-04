@@ -4,6 +4,7 @@ import db from '../db.js';
 import axios from 'axios';
 import { sendEmail } from '../services/email.js';
 import { offlineNotificationService } from '../services/offlineNotificationService.js';
+import { moderateContent } from '../services/contentModerationService.js';
 
 const router = Router();
 
@@ -41,15 +42,20 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
       return res.status(403).json({ error: 'Only asker and doer can message' });
     }
 
-    // Content moderation via Qwen
-    const moderationResult = await moderateMessage(content);
-    const isFlagged = moderationResult.status === 'FLAG';
+    // Content moderation - check for contact info and inappropriate content
+    const moderationResult = await moderateContent(content, 'chat_message');
 
-    // Reject flagged messages immediately
-    if (isFlagged) {
-      return res.status(400).json({
-        error: 'Your message contains inappropriate content. Please revise and try again.'
-      });
+    // Reject blocked messages
+    if (moderationResult.status === 'blocked') {
+      const errorMsg = moderationResult.reason?.includes('contact')
+        ? '❌ Message blocked: Do not share contact information (phone, email, address, social profiles, business cards). Please remove and try again.'
+        : `❌ Message blocked: ${moderationResult.reason}`;
+      return res.status(400).json({ error: errorMsg });
+    }
+
+    // Flag for review but allow to proceed
+    if (moderationResult.status === 'flagged') {
+      console.warn(`[Messages] Message flagged for review - User ${senderId}, Task ${taskId}: ${moderationResult.reason}`);
     }
 
     // Store message (only if it passed moderation)

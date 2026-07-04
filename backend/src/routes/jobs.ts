@@ -5,6 +5,7 @@ import { stripeService } from '../services/stripe.js';
 import { createNotification } from './notifications.js';
 import { activityLogService } from '../services/activityLogService.js';
 import { scheduleRatingReminder } from '../services/ratingReminderService.js';
+import { moderatePhotoContent, moderateContent } from '../services/contentModerationService.js';
 
 const router = Router();
 
@@ -131,6 +132,44 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
     // Validate photo count (max 5)
     if (photoUrls && photoUrls.length > 5) {
       return res.status(400).json({ error: 'Maximum 5 photos allowed' });
+    }
+
+    // Moderate completion notes for contact info
+    if (completionNotes && completionNotes.trim().length > 0) {
+      const notesModeration = await moderateContent(completionNotes, 'task_description');
+      if (notesModeration.status === 'blocked') {
+        return res.status(400).json({
+          error: `❌ Completion notes blocked: ${notesModeration.reason}. Please remove contact information (phone, email, address, social profiles, etc.) and resubmit.`,
+        });
+      }
+      if (notesModeration.status === 'flagged') {
+        console.warn(`[Jobs] Completion notes flagged for review - User ${doerId}, Errand ${taskId}`);
+      }
+    }
+
+    // Moderate photos for inappropriate content and contact info
+    if (photoUrls && photoUrls.length > 0) {
+      for (let i = 0; i < photoUrls.length; i++) {
+        const photoUrl = photoUrls[i];
+        try {
+          const photoModeration = await moderatePhotoContent(photoUrl, 'job_completion');
+          if (photoModeration.status === 'blocked') {
+            return res.status(400).json({
+              error: `❌ Photo ${i + 1} rejected: ${photoModeration.reason}. ${
+                photoModeration.reason?.includes('contact')
+                  ? 'Please do not include contact information (phone numbers, emails, addresses, business cards, namecards) in photos.'
+                  : ''
+              }`,
+            });
+          }
+          if (photoModeration.status === 'flagged') {
+            console.warn(`[Jobs] Photo ${i + 1} flagged for review - User ${doerId}, Errand ${taskId}`);
+          }
+        } catch (photoError) {
+          console.error(`[Jobs] Photo moderation error for photo ${i + 1}:`, photoError);
+          // Don't block on moderation errors - continue with submission
+        }
+      }
     }
 
     // Get current submission number (for tracking resubmissions)
