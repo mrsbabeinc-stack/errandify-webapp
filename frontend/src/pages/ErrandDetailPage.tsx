@@ -9,7 +9,7 @@ import JobExecutionPanel from '../components/JobExecutionPanel';
 import RecurringErrandSessionSelector from '../components/RecurringErrandSessionSelector';
 import TaskQA from '../components/TaskQA';
 import ErrandActivityLog from '../components/ErrandActivityLog';
-import { capitalizeStatus } from '../utils/format';
+import { capitalizeStatus, formatCurrency } from '../utils/format';
 
 interface ErrandDetail {
   id: number;
@@ -695,11 +695,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </div>
               <div className="text-right flex-shrink-0 flex flex-col items-end gap-0">
                 <p className="text-base font-bold text-white">
-                  SGD ${userBidAmount ? userBidAmount : errand.budget ? parseFloat(String(errand.budget)).toFixed(0) : '0'}
+                  {formatCurrency(userBidAmount ? userBidAmount : errand.budget || 0)}
                 </p>
                 {userBidAmount && errand.budget && (
                   <p className="text-xs text-orange-100 font-normal">
-                    Asker: ${parseFloat(String(errand.budget)).toFixed(0)}
+                    Asker: {formatCurrency(errand.budget)}
                   </p>
                 )}
               </div>
@@ -1255,7 +1255,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   <div>
                     <p className="font-bold text-amber-900">Payment on Hold</p>
                     <p className="text-sm text-amber-700 mt-1">
-                      SGD ${errand.budget} is securely held while dispute is reviewed
+                      {formatCurrency(errand.budget)} is securely held while dispute is reviewed
                     </p>
                     <p className="text-xs text-amber-600 mt-2">
                       Status: {errand.payment_status || 'Awaiting admin decision'}
@@ -1270,7 +1270,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   <div>
                     <p className="font-bold text-green-900">Payment Released</p>
                     <p className="text-sm text-green-700 mt-1">
-                      SGD ${errand.budget} was released {new Date(errand.payment_released_at).toLocaleDateString()}
+                      {formatCurrency(errand.budget)} was released {new Date(errand.payment_released_at).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
