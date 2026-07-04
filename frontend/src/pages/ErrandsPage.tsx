@@ -336,7 +336,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
-              ⭐ Rated
+              ⭐ Rated & Closed
             </button>
           </div>
 
