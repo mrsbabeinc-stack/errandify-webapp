@@ -1279,7 +1279,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
               }`}
             >
-              🔔 Notify
+              🔔 Notifications
             </button>
             <button
               onClick={() => setActiveSection('categories')}
