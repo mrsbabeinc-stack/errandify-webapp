@@ -462,7 +462,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         '06': "People's Park", '07': 'Chinatown', '08': 'Tanjong Pagar', '09': 'Tanjong Pagar', '10': 'Orchard',
         '11': 'Pasir Panjang', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park', '15': 'Henderson',
         '16': 'Henderson', '17': 'Balestier', '18': 'Macpherson', '19': 'Paya Lebar', '20': 'Paya Lebar',
-        '21': 'Geylang', '22': 'Geylang', '23': 'Geylang', '24': 'Eunos', '25': 'Bedok', '26': 'Bedok',
+        '21': 'Geylang', '22': 'Geylang', '23': 'Orchard', '24': 'Eunos', '25': 'Bedok', '26': 'Bedok',
         '27': 'Bedok', '28': 'Tampines', '29': 'Tampines', '30': 'Tampines', '31': 'Pasir Ris', '32': 'Pasir Ris',
         '33': 'Punggol', '34': 'Punggol', '35': 'Hougang', '36': 'Hougang', '37': 'Sengkang', '38': 'Sengkang',
         '39': 'Sengkang', '40': 'Jurong West', '41': 'Jurong West', '42': 'Jurong', '43': 'Jurong East',
