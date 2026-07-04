@@ -97,7 +97,7 @@ const POSTAL_CODE_SECTOR_MAPPING: Record<string, string> = {
   "65": "Jurong West",
   "66": "Jurong West",
   "67": "Clementi",
-  "68": "Jurong West",
+  "68": "Choa Chu Kang",
   "69": "Jurong West",
   "70": "Woodlands",
   "71": "Woodlands",
