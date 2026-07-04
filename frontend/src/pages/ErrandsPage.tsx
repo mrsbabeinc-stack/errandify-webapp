@@ -246,7 +246,13 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
       // Sort by status priority first (in_progress → confirmed → open → completed → rated/closed)
       const priorityDiff = getStatusPriority(a.status) - getStatusPriority(b.status);
       if (priorityDiff !== 0) return priorityDiff;
-      // Then by creation date (newer first)
+
+      // Then by nearest deadline (soonest first)
+      const deadlineA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+      const deadlineB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+      if (deadlineA !== deadlineB) return deadlineA - deadlineB;
+
+      // Finally by creation date (newer first)
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
