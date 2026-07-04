@@ -274,6 +274,21 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
     }
 
     const errand = result.rows[0];
+    const userId = req.userId ? parseInt(req.userId, 10) : null;
+
+    // If errand is cancelled, only allow asker or someone who made a bid to view it
+    if (errand.status === 'cancelled' && userId) {
+      const isAsker = errand.asker_id === userId;
+      const hasBid = await db.query(
+        'SELECT id FROM bids WHERE errand_id = $1 AND doer_id = $2 LIMIT 1',
+        [errandDatabaseId, userId]
+      );
+      const madeABid = hasBid.rows.length > 0;
+
+      if (!isAsker && !madeABid) {
+        return res.status(403).json({ error: 'This errand has been cancelled and is no longer available' });
+      }
+    }
 
     // Get asker info
     const askerResult = await db.query(
@@ -282,7 +297,6 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
     );
 
     // Check if current user is the confirmed doer (can view notes)
-    const userId = req.userId ? parseInt(req.userId, 10) : null;
     let doerId = null;
     let isConfirmedDoer = false;
 
