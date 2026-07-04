@@ -28,6 +28,7 @@ export default function TaskCompleteEvidencePage() {
   const [rating, setRating] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [zoomedImageIndex, setZoomedImageIndex] = useState<number | null>(null);
 
   const generateSuggestedText = () => {
     if (!task) return '';
@@ -88,13 +89,36 @@ export default function TaskCompleteEvidencePage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      // Max 5 files
-      const newFiles = Array.from(files).slice(0, 5 - uploadedFiles.length);
-      if (uploadedFiles.length + newFiles.length > 5) {
-        setError('Maximum 5 photos allowed');
-        return;
+      const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
+      const MAX_FILES = 5;
+
+      let validFiles: File[] = [];
+      let warnings: string[] = [];
+
+      Array.from(files).forEach((file) => {
+        // Check file size
+        if (file.size > MAX_FILE_SIZE) {
+          warnings.push(`${file.name} is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max 5MB per file.`);
+          return;
+        }
+
+        // Check total file count
+        if (validFiles.length + uploadedFiles.length >= MAX_FILES) {
+          warnings.push('Maximum 5 files allowed');
+          return;
+        }
+
+        validFiles.push(file);
+      });
+
+      if (warnings.length > 0) {
+        setError(warnings.join(' '));
+        setTimeout(() => setError(''), 4000);
       }
-      setUploadedFiles([...uploadedFiles, ...newFiles]);
+
+      if (validFiles.length > 0) {
+        setUploadedFiles([...uploadedFiles, ...validFiles]);
+      }
     }
   };
 
@@ -120,9 +144,8 @@ export default function TaskCompleteEvidencePage() {
           errandId: parseInt(id || '0', 10),
           files: uploadedFiles,
         },
-        (photoUrl: string, index: number, total: number) => {
+        (_photoUrl: string, index: number, total: number) => {
           setUploadProgress(Math.round((index / total) * 100));
-          setUploadingPhotoIndex(index);
         }
       );
 
@@ -160,7 +183,7 @@ export default function TaskCompleteEvidencePage() {
       }
 
       const token = localStorage.getItem('token');
-      const response = await axios.post(
+      await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${id}/complete`,
         {
           photoUrls: uploadedUrls,
@@ -290,22 +313,125 @@ export default function TaskCompleteEvidencePage() {
               {uploadedFiles.length > 0 && (
                 <div>
                   <p className="text-xs text-gray-600 mb-2">Selected files ({uploadedFiles.length}/5):</p>
-                  <div className="space-y-2">
-                    {uploadedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-200">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <span className="text-sm">📄</span>
-                          <span className="text-sm text-gray-700 truncate">{file.name}</span>
-                          <span className="text-xs text-gray-500">({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {uploadedFiles.map((file, index) => {
+                      const isImage = file.type.startsWith('image/');
+                      const previewUrl = isImage ? URL.createObjectURL(file) : null;
+
+                      return (
+                        <div key={index} className="relative group">
+                          {isImage && previewUrl ? (
+                            <div className="relative rounded-lg overflow-hidden border-2 border-gray-200 hover:border-errandify-orange transition-colors bg-gray-100 cursor-pointer group">
+                              <img
+                                src={previewUrl}
+                                alt={file.name}
+                                className="w-full h-32 object-cover hover:opacity-75 transition-opacity"
+                                onClick={() => setZoomedImageIndex(index)}
+                              />
+                              <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity flex items-center justify-center">
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setZoomedImageIndex(index);
+                                    }}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-500 hover:bg-blue-700 text-white rounded-full p-2 font-bold text-lg"
+                                    title="Zoom/Preview"
+                                  >
+                                    🔍
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removeFile(index);
+                                    }}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-700 text-white rounded-full p-2 font-bold text-lg"
+                                    title="Remove photo"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-700 p-1 truncate bg-gray-50">{file.name}</p>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-200 h-32 flex-col">
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="text-lg">📄</span>
+                                <span className="text-xs text-gray-700 truncate">{file.name}</span>
+                                <span className="text-xs text-gray-500">({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
+                              </div>
+                              <button
+                                onClick={() => removeFile(index)}
+                                className="text-red-500 hover:text-red-700 font-bold"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          )}
                         </div>
-                        <button
-                          onClick={() => removeFile(index)}
-                          className="text-red-500 hover:text-red-700 font-bold ml-2"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Image Zoom Modal */}
+              {zoomedImageIndex !== null && uploadedFiles[zoomedImageIndex] && (
+                <div
+                  className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
+                  onClick={() => setZoomedImageIndex(null)}
+                >
+                  <div
+                    className="relative max-w-2xl max-h-[80vh] w-full bg-white rounded-lg shadow-2xl overflow-auto"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => setZoomedImageIndex(null)}
+                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-700 text-white rounded-full p-2 font-bold z-10"
+                    >
+                      ✕
+                    </button>
+
+                    <img
+                      src={URL.createObjectURL(uploadedFiles[zoomedImageIndex])}
+                      alt="Zoomed preview"
+                      className="w-full h-auto"
+                    />
+
+                    <div className="bg-gray-50 p-3 border-t">
+                      <p className="text-xs font-semibold text-gray-800">{uploadedFiles[zoomedImageIndex].name}</p>
+                      <p className="text-xs text-gray-600">
+                        {(uploadedFiles[zoomedImageIndex].size / 1024 / 1024).toFixed(1)} MB
+                      </p>
+                    </div>
+
+                    {/* Navigation */}
+                    <div className="flex justify-center gap-2 p-3 bg-gray-100 border-t">
+                      <button
+                        onClick={() => {
+                          let newIndex = zoomedImageIndex - 1;
+                          if (newIndex < 0) newIndex = uploadedFiles.length - 1;
+                          setZoomedImageIndex(newIndex);
+                        }}
+                        className="px-3 py-1 bg-gray-400 hover:bg-gray-500 text-white rounded text-xs font-semibold"
+                      >
+                        ← Previous
+                      </button>
+                      <span className="text-xs text-gray-700 font-semibold self-center">
+                        {zoomedImageIndex + 1} / {uploadedFiles.filter(f => f.type.startsWith('image/')).length}
+                      </span>
+                      <button
+                        onClick={() => {
+                          let newIndex = zoomedImageIndex + 1;
+                          if (newIndex >= uploadedFiles.length) newIndex = 0;
+                          setZoomedImageIndex(newIndex);
+                        }}
+                        className="px-3 py-1 bg-gray-400 hover:bg-gray-500 text-white rounded text-xs font-semibold"
+                      >
+                        Next →
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
