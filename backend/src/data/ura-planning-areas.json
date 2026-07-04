@@ -1,0 +1,213 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Raffles Place" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8451, 1.2842], [103.8563, 1.2842], [103.8563, 1.2937], [103.8451, 1.2937], [103.8451, 1.2842]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Downtown Core" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8417, 1.2758], [103.8550, 1.2758], [103.8550, 1.2891], [103.8417, 1.2891], [103.8417, 1.2758]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Marina Bay" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8551, 1.2758], [103.8741, 1.2758], [103.8741, 1.2891], [103.8551, 1.2891], [103.8551, 1.2758]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Bukit Merah" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8241, 1.2750], [103.8500, 1.2750], [103.8500, 1.2999], [103.8241, 1.2999], [103.8241, 1.2750]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Outram" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8198, 1.2889], [103.8390, 1.2889], [103.8390, 1.3050], [103.8198, 1.3050], [103.8198, 1.2889]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Tanglin" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8133, 1.3104], [103.8346, 1.3104], [103.8346, 1.3251], [103.8133, 1.3251], [103.8133, 1.3104]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Orchard" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8299, 1.3000], [103.8569, 1.3000], [103.8569, 1.3216], [103.8299, 1.3216], [103.8299, 1.3000]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Novena" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8449, 1.3223], [103.8615, 1.3223], [103.8615, 1.3367], [103.8449, 1.3367], [103.8449, 1.3223]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Kallang" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8649, 1.3064], [103.8840, 1.3064], [103.8840, 1.3239], [103.8649, 1.3239], [103.8649, 1.3064]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Geylang" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8746, 1.3132], [103.8988, 1.3132], [103.8988, 1.3405], [103.8746, 1.3405], [103.8746, 1.3132]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Bedok" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.9271, 1.3192], [103.9501, 1.3192], [103.9501, 1.3462], [103.9271, 1.3462], [103.9271, 1.3192]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Tampines" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.9358, 1.3524], [103.9657, 1.3524], [103.9657, 1.3743], [103.9358, 1.3743], [103.9358, 1.3524]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Clementi" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.7613, 1.3317], [103.7896, 1.3317], [103.7896, 1.3549], [103.7613, 1.3549], [103.7613, 1.3317]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Jurong West" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.6700, 1.3100], [103.7400, 1.3100], [103.7400, 1.3627], [103.6700, 1.3627], [103.6700, 1.3100]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Jurong East" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.7402, 1.3200], [103.7581, 1.3200], [103.7581, 1.3418], [103.7402, 1.3418], [103.7402, 1.3200]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Bukit Timah" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.7600, 1.3200], [103.8150, 1.3200], [103.8150, 1.3750], [103.7600, 1.3750], [103.7600, 1.3200]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Toa Payoh" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8508, 1.3357], [103.8733, 1.3357], [103.8733, 1.3547], [103.8508, 1.3547], [103.8508, 1.3357]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Bishan" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8481, 1.3494], [103.8714, 1.3494], [103.8714, 1.3713], [103.8481, 1.3713], [103.8481, 1.3494]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Serangoon" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8615, 1.3492], [103.8910, 1.3492], [103.8910, 1.3719], [103.8615, 1.3719], [103.8615, 1.3492]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Hougang" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8897, 1.3568], [103.9191, 1.3568], [103.9191, 1.3782], [103.8897, 1.3782], [103.8897, 1.3568]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Sengkang" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8963, 1.3703], [103.9248, 1.3703], [103.9248, 1.3914], [103.8963, 1.3914], [103.8963, 1.3703]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Punggol" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.9099, 1.3905], [103.9385, 1.3905], [103.9385, 1.4062], [103.9099, 1.4062], [103.9099, 1.3905]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Choa Chu Kang" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.7391, 1.3828], [103.7637, 1.3828], [103.7637, 1.4024], [103.7391, 1.4024], [103.7391, 1.3828]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Sembawang" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8100, 1.4155], [103.8450, 1.4155], [103.8450, 1.4450], [103.8100, 1.4450], [103.8100, 1.4155]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Woodlands" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8306, 1.4450], [103.8683, 1.4450], [103.8683, 1.4512], [103.8306, 1.4512], [103.8306, 1.4450]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Yishun" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[103.8384, 1.4148], [103.8682, 1.4148], [103.8682, 1.4358], [103.8384, 1.4358], [103.8384, 1.4148]]]
+      }
+    }
+  ]
+}
