@@ -142,15 +142,15 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   };
 
   const getPendingAction = (errand: Errand) => {
-    // Show "Rate Now" badge ONLY if status is completed (not rated/closed yet)
-    // Status flow: open → confirmed → in_progress → completed → rated → closed
-    // "Rate Now" only shows when status is exactly 'completed' (awaiting user's rating)
+    // Show "Rate Now" badge ONLY if status is 'completed' (awaiting user's rating)
+    // Status flow: open → confirmed → in_progress → completed → rated (final)
+    // Once asker rates: status becomes 'rated' (task is closed and complete)
     if (errand.status === 'completed') {
       return { type: 'awaiting_rating', label: '💛 Rate Now', color: 'bg-amber-400' };
     }
-    // If status is 'rated' or 'closed', user has already rated - no action needed
+    // If status is 'rated' or 'closed', task is complete - asker already rated
     if (errand.status === 'rated' || errand.status === 'closed') {
-      return null; // Task complete and rated
+      return null; // No action needed - task is complete
     }
     // Show "Respond to Offers" reminder if status is open and has unviewed offers
     if (errand.status === 'open' && (errand.unviewedBidCount ?? 0) > 0) {
