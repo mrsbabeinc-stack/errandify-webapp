@@ -115,8 +115,7 @@ postal_code      | area              | full_address           | confidence | cac
 
 ### Already Done ✅
 ```bash
-# backend/.env
-MAPBOX_API_KEY=pk.eyJ1IjoiZXJyYW5kaWZ5IiwiYSI6ImNtcjVjemlxNTAzeDcyenFuOHEyaXIwa2wifQ.50Jtrp0am9AM_ZKBlIpB5A
+# backend/.env configured with API keys
 ```
 
 ### Backend Running ✅
