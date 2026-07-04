@@ -312,14 +312,29 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                 key={errand.id}
                 className={`bg-white rounded border border-gray-200 overflow-hidden hover:shadow-md transition-shadow ${getStatusBarColor(errand)}`}
               >
-                {/* Redesigned Card Layout */}
-                <div className="w-full p-2 text-left">
-                  {/* Top Row: Status + View/Copy Buttons */}
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-semibold">
+                {/* Clean 3-Row Card Layout */}
+                <div className="w-full p-2.5 text-left space-y-1.5">
+                  {/* ROW 1: Status | Title + ID | Actions */}
+                  <div className="flex items-start justify-between gap-2">
+                    {/* Left: Status Badge */}
+                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-semibold flex-shrink-0">
                       {capitalizeStatus(errand.status)}
                     </span>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
+
+                    {/* Center: Title + ID */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2">
+                        <h3 className="font-bold text-errandify-brown truncate text-sm flex-1">
+                          {errand.title}
+                        </h3>
+                        <span className="font-mono text-xs font-bold text-gray-400 flex-shrink-0">
+                          {errand.errandId}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Right: Action Buttons */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
                       {userRole === 'asker' && (errand.status === 'confirmed' || errand.status === 'in_progress') && (
                         <button
                           onClick={(e) => {
@@ -327,7 +342,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                             navigate(`/chat?errandId=${errand.id}`);
                           }}
                           className="text-lg hover:scale-110 transition-transform"
-                          title="Chat about this task"
+                          title="Chat"
                         >
                           💬
                         </button>
@@ -338,7 +353,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                           navigate(`/errand/${errand.id}`);
                         }}
                         className="px-2 py-1 bg-errandify-orange text-white text-xs rounded font-semibold hover:bg-opacity-90 transition"
-                        title="View errand details"
+                        title="View details"
                       >
                         View
                       </button>
@@ -349,7 +364,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                             handleCopyErrand(errand);
                           }}
                           className="px-2 py-1 bg-orange-500 text-white text-xs rounded font-semibold hover:bg-orange-600 transition"
-                          title="Copy this errand"
+                          title="Copy errand"
                         >
                           Copy
                         </button>
@@ -357,65 +372,54 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                     </div>
                   </div>
 
-                  {/* Title Row: Title on left, Errand ID on right */}
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <h3 className="font-bold text-errandify-brown truncate text-sm flex-1">
-                      {errand.title}
-                    </h3>
-                    <span className="font-mono text-xs font-bold text-gray-500 flex-shrink-0">
-                      {errand.errandId}
-                    </span>
-                  </div>
-
-                  {/* Quick Info Row: Category, Postal, Budget, Date, Offers, Rate Badge */}
-                  <div className="flex flex-wrap items-center gap-1 mt-0.5">
-                    <span className="text-gray-500 text-xs">
-                      {formatDate(errand.createdAt)}
-                    </span>
-
+                  {/* ROW 2: Category | Postal | Budget (Core Details) */}
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span
                       className={`${getCategoryColor(
                         errand.category
-                      )} px-1.5 py-0.5 rounded text-xs font-semibold`}
+                      )} px-2 py-0.5 rounded text-xs font-semibold`}
                     >
                       {errand.category}
                     </span>
 
                     {(errand.postal_code || errand.postalCode) && (
-                      <span className="text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded font-semibold">
-                        {errand.postal_code || errand.postalCode}
+                      <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-semibold">
+                        📍 {errand.postal_code || errand.postalCode}
                       </span>
                     )}
 
                     {errand.budget && (
-                      <span className="text-errandify-orange font-bold text-xs">
-                        SGD ${errand.budget}
+                      <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded font-bold">
+                        💰 SGD ${errand.budget}
                       </span>
                     )}
+                  </div>
 
+                  {/* ROW 3: Date | Offers | Rating Reminder (Status Info) */}
+                  <div className="flex items-center gap-2 flex-wrap">
                     {errand.deadline && (
-                      <span className="text-gray-600 text-xs">
+                      <span className="text-xs text-gray-600 bg-gray-50 px-2 py-0.5 rounded">
                         🗓️ {new Date(errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
                       </span>
                     )}
 
                     {(errand.bidCount ?? 0) > 0 ? (
-                      <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold">
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-semibold flex items-center gap-1">
                         📋 {errand.bidCount} {errand.bidCount === 1 ? 'Offer' : 'Offers'}
                         {(errand.unviewedBidCount ?? 0) > 0 && (
-                          <span className="ml-1 inline-block bg-red-500 text-white rounded-full px-1.5 py-0 text-xs font-bold">
+                          <span className="bg-red-500 text-white rounded-full px-1.5 py-0 text-xs font-bold ml-1">
                             {errand.unviewedBidCount}
                           </span>
                         )}
                       </span>
                     ) : (
-                      <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-semibold">
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-semibold">
                         📋 No Offers
                       </span>
                     )}
 
                     {pendingAction && (
-                      <span className={`text-xs ${pendingAction.color} text-white px-2 py-0.5 rounded-full font-bold`}>
+                      <span className={`text-xs ${pendingAction.color} text-white px-2 py-0.5 rounded font-bold flex items-center gap-1`}>
                         {pendingAction.label}
                       </span>
                     )}
