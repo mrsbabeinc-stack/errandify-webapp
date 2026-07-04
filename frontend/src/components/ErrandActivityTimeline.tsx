@@ -84,7 +84,7 @@ const ErrandActivityTimeline = forwardRef<ErrandActivityTimelineHandle, ErrandAc
       case 'bid_placed':
         return `${displayName} ${role} submitted an offer (${details?.offerId || '?'} - SGD $${details?.amount || '?'})`;
       case 'bid_accepted':
-        return `${displayName} ${role} accepted the offer`;
+        return `${displayName}'s offer was selected`;
       case 'bid_rejected':
         return `${displayName} ${role} rejected the offer`;
       case 'started':

@@ -425,10 +425,11 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
     }
 
     // Log activity: Bid accepted
-    const askerResult = await db.query('SELECT display_name, alias FROM users WHERE id = $1', [bid.asker_id]);
-    const askerName = askerResult.rows[0]?.display_name || 'Unknown User';
-    const askerAlias = askerResult.rows[0]?.alias || undefined;
-    await activityLogService.logBidAccepted(bid.errand_id, askerName, bid.asker_id, askerAlias);
+    // Log the DOER whose bid was accepted (not the asker who accepted it)
+    const doerResult = await db.query('SELECT display_name, alias FROM users WHERE id = $1', [bid.doer_id]);
+    const doerName = doerResult.rows[0]?.display_name || 'Unknown User';
+    const doerAlias = doerResult.rows[0]?.alias || undefined;
+    await activityLogService.logBidAccepted(bid.errand_id, doerName, bid.doer_id, doerAlias);
 
     // Notify doer in real-time that their bid was confirmed
     try {
