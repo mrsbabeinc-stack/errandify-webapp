@@ -92,13 +92,13 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Can only rate completed tasks' });
     }
 
-    // If ratedUserId not provided, try to find it from bids
+    // If ratedUserId not provided, try to find it from the ACCEPTED bid
     if (!ratedUserId) {
-      // Find any bid for this errand (confirmed or any status)
+      // Find the ACCEPTED/CONFIRMED bid for this errand using accepted_bid_id
       const bidResult = await db.query(
-        `SELECT doer_id FROM bids
-         WHERE errand_id = $1
-         ORDER BY created_at DESC LIMIT 1`,
+        `SELECT b.doer_id FROM bids b
+         INNER JOIN errands e ON e.accepted_bid_id = b.id
+         WHERE e.id = $1`,
         [taskId]
       );
 
