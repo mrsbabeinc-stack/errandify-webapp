@@ -82,6 +82,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
   const [hasRated, setHasRated] = useState(false);
   const [showCelebratory, setShowCelebratory] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -444,17 +446,16 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     return parts[parts.length - 1].trim();
   };
 
-  const handleCancelErrand = async () => {
-    const reason = window.prompt('Reason for cancellation (optional):');
-    if (reason === null) {
-      return; // User clicked Cancel
-    }
+  const handleCancelErrand = () => {
+    setShowCancelModal(true);
+  };
 
+  const confirmCancelErrand = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/cancel`,
-        { reason: reason || null },
+        { reason: cancelReason || null },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -470,6 +471,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
       const successMsg = stageMessages[stage] || '✓ Errand cancelled. All offers have been cancelled.';
       alert(successMsg);
+      setShowCancelModal(false);
+      setCancelReason('');
       navigate('/errands');
     } catch (error: any) {
       console.error('Failed to cancel errand:', error);
@@ -485,6 +488,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       } else {
         alert(errorMsg);
       }
+      setShowCancelModal(false);
+      setCancelReason('');
     }
   };
 
@@ -2059,6 +2064,50 @@ Let's help each other! 🤝`}
                 className="flex-1 px-4 py-3 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-600 transition"
               >
                 Let's Go! 🚀
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Errand Modal */}
+      {showCancelModal && errand && (
+        <div className="fixed inset-0 bg-slate-900 bg-opacity-40 flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-red-50 to-white rounded-2xl max-w-sm w-full p-8 shadow-2xl border-l-4 border-l-red-500">
+            <div className="text-4xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-red-700 mb-3">
+              Cancel This Errand?
+            </h2>
+            <p className="text-slate-700 mb-6">
+              Are you sure you want to cancel "{errand.title}"? All doers with offers will be notified.
+            </p>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Reason for cancellation (optional):
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="E.g., no longer need this errand, found another solution..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                rows={3}
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancelReason('');
+                }}
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition"
+              >
+                Keep It
+              </button>
+              <button
+                onClick={confirmCancelErrand}
+                className="flex-1 px-4 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition"
+              >
+                Cancel Errand
               </button>
             </div>
           </div>
