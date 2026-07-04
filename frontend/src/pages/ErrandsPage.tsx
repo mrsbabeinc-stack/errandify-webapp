@@ -410,7 +410,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                     {/* Offers */}
                     {(errand.bidCount ?? 0) > 0 ? (
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-semibold flex items-center gap-1">
-                        📋 {errand.bidCount}
+                        👤 {errand.bidCount} {errand.bidCount === 1 ? 'Bid' : 'Bids'}
                         {(errand.unviewedBidCount ?? 0) > 0 && (
                           <span className="bg-red-500 text-white rounded-full px-1.5 py-0 text-xs font-bold">
                             {errand.unviewedBidCount}
@@ -419,7 +419,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                       </span>
                     ) : (
                       <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-semibold">
-                        📋 —
+                        👤 No Bids
                       </span>
                     )}
 
