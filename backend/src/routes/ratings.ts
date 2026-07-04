@@ -92,35 +92,39 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Can only rate completed tasks' });
     }
 
-    // If ratedUserId not provided, try to find it from the ACCEPTED bid
-    if (!ratedUserId) {
-      // Find the ACCEPTED/CONFIRMED bid for this errand using accepted_bid_id
-      const bidResult = await db.query(
-        `SELECT b.doer_id FROM bids b
-         INNER JOIN errands e ON e.accepted_bid_id = b.id
-         WHERE e.id = $1`,
-        [taskId]
-      );
+    // Get the confirmed doer for this task
+    const doerResult = await db.query(
+      `SELECT b.doer_id FROM bids b
+       INNER JOIN errands e ON e.accepted_bid_id = b.id
+       WHERE e.id = $1`,
+      [taskId]
+    );
 
-      if (bidResult.rows[0]) {
-        ratedUserId = bidResult.rows[0].doer_id;
-      }
+    if (!doerResult.rows[0]) {
+      return res.status(400).json({ error: 'Could not find doer for this task. No bid found for this errand.' });
     }
 
+    const confirmedDoerId = doerResult.rows[0].doer_id;
+    const askerId = task.asker_id;
+
+    // Verify rater is either asker or doer
+    const isAsker = raterId === askerId;
+    const isDoer = raterId === confirmedDoerId;
+
+    if (!isAsker && !isDoer) {
+      return res.status(403).json({ error: 'Only task participants can rate' });
+    }
+
+    // Determine who is being rated
+    // If ratedUserId is provided, use it; otherwise determine based on rater role
     if (!ratedUserId) {
-      return res.status(400).json({ error: 'Could not find doer for this task. No bid found for this errand.' });
+      // If rater is the asker, they rate the doer
+      // If rater is the doer, they rate the asker
+      ratedUserId = isAsker ? confirmedDoerId : askerId;
     }
 
     if (raterId === ratedUserId) {
       return res.status(400).json({ error: 'Cannot rate yourself' });
-    }
-
-    // Verify rater is either asker or the doer being rated
-    const isAsker = task.asker_id === raterId;
-    const isDoer = raterId === ratedUserId;
-
-    if (!isAsker && !isDoer) {
-      return res.status(403).json({ error: 'Only task participants can rate' });
     }
 
     // Check if rating already exists
