@@ -98,6 +98,14 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
 
     const task = taskResult.rows[0];
 
+    console.log('[Jobs] Complete task - Query result:', {
+      taskId,
+      doerId,
+      accepted_bid_id: task.accepted_bid_id,
+      doer_id: task.doer_id,
+      task_status: task.status
+    });
+
     // Allow completion from 'in_progress', 'confirmed', or 'completed' (for resubmission)
     if (!['in_progress', 'confirmed', 'completed'].includes(task.status)) {
       return res.status(400).json({ error: `Task must be in progress or completed to resubmit. Current status: ${task.status}` });
@@ -105,10 +113,18 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
 
     // Verify current user is the confirmed doer
     if (!task.doer_id) {
+      console.warn('[Jobs] No doer_id found - bid lookup failed', {
+        accepted_bid_id: task.accepted_bid_id,
+        taskId
+      });
       return res.status(400).json({ error: 'No doer assigned to this task. A bid must be accepted first.' });
     }
 
     if (task.doer_id !== doerId) {
+      console.warn('[Jobs] Doer ID mismatch', {
+        expected: task.doer_id,
+        actual: doerId
+      });
       return res.status(403).json({ error: 'Only the assigned doer can complete this task' });
     }
 
