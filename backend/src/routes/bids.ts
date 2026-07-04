@@ -5,6 +5,7 @@ import axios from 'axios';
 import { activityLogService } from '../services/activityLogService.js';
 import * as contentMod from '../modules/content-moderation.js';
 import { notifyUser } from '../socket.js';
+import postalCodeLookup from '../services/postalCodeToAreaLookup.js';
 
 const router = Router();
 
@@ -657,10 +658,8 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
             }
           }
         } else if (bid.postal_code) {
-          // Fallback: map postal code to area using postal sector
-          const postalStr = String(bid.postal_code).padStart(6, '0');
-          const sector = postalStr.substring(0, 2);
-          const mappedArea = postalSectorToArea[sector];
+          // Fallback: map postal code to area using postal code lookup
+          const mappedArea = postalCodeLookup.getPlanningAreaFromPostalCode(String(bid.postal_code));
           if (mappedArea) {
             cleanLocation = mappedArea;
           }
