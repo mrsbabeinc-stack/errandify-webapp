@@ -772,9 +772,11 @@ export default function CreateErrandPage() {
       }
     }
     console.log('[DEBUG] Date/time validation passed');
+    console.log('[DEBUG] ===== CHECKPOINT: About to validate duration =====');
 
     // 6. Duration validation (if specified)
     if (formData.duration && formData.duration.trim().length > 0) {
+      console.log('[DEBUG] Checking duration:', formData.duration);
       const durationNum = parseFloat(formData.duration);
       if (isNaN(durationNum) || durationNum <= 0) {
         setError('Duration must be a valid positive number 🙃');
@@ -789,20 +791,27 @@ export default function CreateErrandPage() {
     }
 
     // 7. Description length validation
+    console.log('[DEBUG] ===== CHECKPOINT: About to validate description length =====');
+    console.log('[DEBUG] Description length:', formData.description?.length || 0);
     if (formData.description && formData.description.length > 150) {
+      console.log('[DEBUG] VALIDATION FAILED: Description too long');
       setError('Description is too long. Please keep it under 150 characters 📝');
       setLoading(false);
       return;
     }
 
     // 8. Notes length validation
+    console.log('[DEBUG] ===== CHECKPOINT: About to validate notes length =====');
+    console.log('[DEBUG] Notes length:', formData.specialNote?.length || 0);
     if (formData.specialNote && formData.specialNote.length > 500) {
+      console.log('[DEBUG] VALIDATION FAILED: Notes too long');
       setError('Notes are too long. Please keep them under 500 characters 😄');
       setLoading(false);
       return;
     }
 
     // 9. Content moderation check for inappropriate content
+    console.log('[DEBUG] ===== CHECKPOINT: About to call content moderation API =====');
     try {
       const contentCheckResponse = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/check-content`,
@@ -820,13 +829,16 @@ export default function CreateErrandPage() {
         setLoading(false);
         return;
       }
+      console.log('[DEBUG] ✅ Content check passed');
     } catch (contentErr: any) {
       console.warn('Content check failed:', contentErr);
       console.warn('Error response:', contentErr.response?.data);
+      console.warn('Continuing despite content check error...');
       // Continue anyway if content check fails
     }
 
     // 10. Duplication check - block exact duplicates, warn on similar but different location/time
+    console.log('[DEBUG] ===== CHECKPOINT: About to call duplication check API =====');
     try {
       const token = localStorage.getItem('token');
       const duplicationResponse = await axios.post(
