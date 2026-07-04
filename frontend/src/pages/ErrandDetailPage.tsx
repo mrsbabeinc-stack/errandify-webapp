@@ -2119,7 +2119,15 @@ Let's help each other! 🤝`}
                 <div className="space-y-2 mb-3">
                   <select
                     value={selectedCancelReason}
-                    onChange={(e) => setSelectedCancelReason(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setSelectedCancelReason(value);
+                      // If "Other reason" is selected, switch to custom mode
+                      if (value.includes('Other reason') || value.includes('✨')) {
+                        setCancelReasonType('custom');
+                        setCustomCancelReason('');
+                      }
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <option value="">Select a reason...</option>
