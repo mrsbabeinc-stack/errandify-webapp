@@ -188,7 +188,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       'moving-help': 'moving-help',
     };
 
-    // Enrich with asker info
+    // Enrich with asker info and bid count
     const errandsWithAskerInfo = await Promise.all(
       result.rows.map(async (errand) => {
         const askerResult = await db.query(
@@ -209,6 +209,14 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           doerName = bidResult.rows[0]?.display_name || 'Doer';
         }
 
+        // Get bid count for this errand
+        const bidCountResult = await db.query(
+          `SELECT COUNT(*) as bid_count FROM bids
+           WHERE errand_id = $1 AND status IN ('pending', 'accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress')`,
+          [errand.id]
+        );
+        const bidCount = parseInt(bidCountResult.rows[0]?.bid_count || 0, 10);
+
         return {
           id: errand.id,
           asker_id: errand.asker_id,
@@ -225,6 +233,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           askerName: askerResult.rows[0]?.display_name || 'Anonymous',
           doerName: doerName,
           askerRating: 4.8, // TODO: Calculate from ratings table
+          bidCount: bidCount,
           createdAt: errand.created_at,
           updatedAt: errand.updated_at,
         };

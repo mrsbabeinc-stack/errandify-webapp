@@ -23,6 +23,7 @@ interface Errand {
   createdAt: string;
   askerName?: string;
   askerRating?: number;
+  bidCount?: number; // Number of bids/offers received
 }
 
 export default function ErrandsPage({ userRole }: ErrandsPageProps) {
@@ -141,7 +142,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   const getPendingAction = (errand: Errand) => {
     // Only show "Rate Now" badge if status is exactly 'completed'
     if (errand.status === 'completed') {
-      return { type: 'awaiting_rating', label: '⚠️ Rate Now', color: 'bg-red-500' };
+      return { type: 'awaiting_rating', label: '💛 Rate Now', color: 'bg-amber-400' };
     }
     return null;
   };
@@ -199,14 +200,34 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
     );
   }
 
+  // Define status priority for sorting (lowest number = first)
+  const statusPriority: Record<string, number> = {
+    'in_progress': 0,
+    'confirmed': 1,
+    'open': 2,
+    'completed': 3,
+    'rated': 4,
+    'closed': 4,
+  };
+
+  const getStatusPriority = (status: string) => statusPriority[status] ?? 99;
+
   // Filter errands
-  const filteredErrands = errands.filter((errand) => {
-    const matchesSearch = !searchQuery ||
-      errand.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      errand.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || errand.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredErrands = errands
+    .filter((errand) => {
+      const matchesSearch = !searchQuery ||
+        errand.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        errand.category.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || errand.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      // Sort by status priority first (in_progress → confirmed → open → completed → rated/closed)
+      const priorityDiff = getStatusPriority(a.status) - getStatusPriority(b.status);
+      if (priorityDiff !== 0) return priorityDiff;
+      // Then by creation date (newer first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
   // Get unique statuses
   const uniqueStatuses = Array.from(new Set(errands.map(e => e.status)));
@@ -290,67 +311,13 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                 key={errand.id}
                 className={`bg-white rounded border border-gray-200 overflow-hidden hover:shadow-md transition-shadow ${getStatusBarColor(errand)}`}
               >
-                {/* Ultra-Compact Header */}
-                <div
-                  className="w-full p-2 text-left"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    {/* Left: Errand ID + Title & Quick Info */}
-                    <div className="flex-1 min-w-0">
-                      {/* Title with Errand ID inline */}
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-xs font-bold text-gray-500 flex-shrink-0">
-                          {errand.errandId}
-                        </span>
-                        <h3 className="font-bold text-errandify-brown truncate text-sm">
-                          {errand.title}
-                        </h3>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-1 mt-0.5">
-                        <span className="text-gray-500 text-xs">
-                          {formatDate(errand.createdAt)}
-                        </span>
-
-                        <span
-                          className={`${getCategoryColor(
-                            errand.category
-                          )} px-1.5 py-0.5 rounded text-xs font-semibold`}
-                        >
-                          {errand.category}
-                        </span>
-
-                        {(errand.postal_code || errand.postalCode) && (
-                          <span className="text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded font-semibold">
-                            {errand.postal_code || errand.postalCode}
-                          </span>
-                        )}
-
-                        {errand.budget && (
-                          <span className="text-errandify-orange font-bold text-xs">
-                            SGD ${errand.budget}
-                          </span>
-                        )}
-
-                        {errand.deadline && (
-                          <span className="text-gray-600 text-xs">
-                            🗓️ {new Date(errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
-                          </span>
-                        )}
-
-                        <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-semibold">
-                          {capitalizeStatus(errand.status)}
-                        </span>
-
-                        {pendingAction && (
-                          <span className={`text-xs ${pendingAction.color} text-white px-2 py-0.5 rounded-full font-bold`}>
-                            {pendingAction.label}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Right: Action buttons */}
+                {/* Redesigned Card Layout */}
+                <div className="w-full p-2 text-left">
+                  {/* Top Row: Status + View/Copy Buttons */}
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-semibold">
+                      {capitalizeStatus(errand.status)}
+                    </span>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       {userRole === 'asker' && (errand.status === 'confirmed' || errand.status === 'in_progress') && (
                         <button
@@ -388,9 +355,68 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                       )}
                     </div>
                   </div>
-                </div>
 
-                {/* Details shown on Detail page only - not here to save space */}
+                  {/* Title Row: Title on left, Errand ID on right */}
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <h3 className="font-bold text-errandify-brown truncate text-sm flex-1">
+                      {errand.title}
+                    </h3>
+                    <span className="font-mono text-xs font-bold text-gray-500 flex-shrink-0">
+                      {errand.errandId}
+                    </span>
+                  </div>
+
+                  {/* Quick Info Row: Category, Postal, Budget, Date, Offers, Rate Badge */}
+                  <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                    <span className="text-gray-500 text-xs">
+                      {formatDate(errand.createdAt)}
+                    </span>
+
+                    <span
+                      className={`${getCategoryColor(
+                        errand.category
+                      )} px-1.5 py-0.5 rounded text-xs font-semibold`}
+                    >
+                      {errand.category}
+                    </span>
+
+                    {(errand.postal_code || errand.postalCode) && (
+                      <span className="text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded font-semibold">
+                        {errand.postal_code || errand.postalCode}
+                      </span>
+                    )}
+
+                    {errand.budget && (
+                      <span className="text-errandify-orange font-bold text-xs">
+                        SGD ${errand.budget}
+                      </span>
+                    )}
+
+                    {errand.deadline && (
+                      <span className="text-gray-600 text-xs">
+                        🗓️ {new Date(errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
+
+                    {errand.bidCount !== undefined && errand.bidCount > 0 && (
+                      <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold">
+                        📋 {errand.bidCount} {errand.bidCount === 1 ? 'Offer' : 'Offers'}
+                      </span>
+                    )}
+
+                    {errand.bidCount === 0 && (
+                      <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-semibold">
+                        📋 No Offers
+                      </span>
+                    )}
+
+                    {pendingAction && (
+                      <span className={`text-xs ${pendingAction.color} text-white px-2 py-0.5 rounded-full font-bold`}>
+                        {pendingAction.label}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             );
             })
