@@ -34,7 +34,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [bidFilter, setBidFilter] = useState<string>('all'); // 'all', 'has-bids', 'no-bids'
+  const [offerFilter, setOfferFilter] = useState<string>('all'); // 'all', 'has-offers', 'no-offers'
 
   console.log('[ErrandsPage] Mounted, userRole:', userRole);
 
@@ -142,9 +142,13 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   };
 
   const getPendingAction = (errand: Errand) => {
-    // Only show "Rate Now" badge if status is exactly 'completed'
+    // Show "Rate Now" badge if status is completed
     if (errand.status === 'completed') {
       return { type: 'awaiting_rating', label: '💛 Rate Now', color: 'bg-amber-400' };
+    }
+    // Show "Respond to Offers" reminder if status is open and has unviewed offers
+    if (errand.status === 'open' && (errand.unviewedBidCount ?? 0) > 0) {
+      return { type: 'respond_offers', label: '📬 Respond to Offers', color: 'bg-blue-500' };
     }
     return null;
   };
@@ -222,15 +226,15 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
         errand.category.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'all' || errand.status === statusFilter;
 
-      // Bid filter
-      let matchesBids = true;
-      if (bidFilter === 'has-bids') {
-        matchesBids = (errand.bidCount ?? 0) > 0;
-      } else if (bidFilter === 'no-bids') {
-        matchesBids = (errand.bidCount ?? 0) === 0;
+      // Offer filter
+      let matchesOffers = true;
+      if (offerFilter === 'has-offers') {
+        matchesOffers = (errand.bidCount ?? 0) > 0;
+      } else if (offerFilter === 'no-offers') {
+        matchesOffers = (errand.bidCount ?? 0) === 0;
       }
 
-      return matchesSearch && matchesStatus && matchesBids;
+      return matchesSearch && matchesStatus && matchesOffers;
     })
     .sort((a, b) => {
       // Sort by status priority first (in_progress → confirmed → open → completed → rated/closed)
@@ -330,37 +334,37 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
             </button>
           </div>
 
-          {/* Bid Filter */}
+          {/* Offer Filter */}
           <div className="flex gap-1">
             <button
-              onClick={() => setBidFilter('all')}
+              onClick={() => setOfferFilter('all')}
               className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
-                bidFilter === 'all'
+                offerFilter === 'all'
                   ? 'bg-errandify-orange text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
-              👤 All Bids
+              📬 All Offers
             </button>
             <button
-              onClick={() => setBidFilter('has-bids')}
+              onClick={() => setOfferFilter('has-offers')}
               className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
-                bidFilter === 'has-bids'
+                offerFilter === 'has-offers'
                   ? 'bg-green-500 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
-              👤 Has Bids
+              📬 Has Offers
             </button>
             <button
-              onClick={() => setBidFilter('no-bids')}
+              onClick={() => setOfferFilter('no-offers')}
               className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
-                bidFilter === 'no-bids'
+                offerFilter === 'no-offers'
                   ? 'bg-red-500 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
-              👤 No Bids
+              📬 No Offers
             </button>
           </div>
         </div>
@@ -491,7 +495,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                     {/* Offers */}
                     {(errand.bidCount ?? 0) > 0 ? (
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-semibold flex items-center gap-1">
-                        👤 {errand.bidCount} {errand.bidCount === 1 ? 'Bid' : 'Bids'}
+                        📬 {errand.bidCount} {errand.bidCount === 1 ? 'Offer' : 'Offers'}
                         {(errand.unviewedBidCount ?? 0) > 0 && (
                           <span className="bg-red-500 text-white rounded-full px-1.5 py-0 text-xs font-bold">
                             {errand.unviewedBidCount}
@@ -500,7 +504,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                       </span>
                     ) : (
                       <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-semibold">
-                        👤 No Bids
+                        📬 No Offers
                       </span>
                     )}
 
