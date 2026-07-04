@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export default function MyRewardSpacePage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'errandify' | 'rewards' | 'history' | 'vouchers'>('errandify');
+  const [activeTab, setActiveTab] = useState<'errandify' | 'rewards' | 'shop' | 'history' | 'vouchers'>('errandify');
   const [redeeming, setRedeeming] = useState(false);
   const [message, setMessage] = useState('');
   const [redeemed, setRedeemed] = useState<number[]>([]);
@@ -21,6 +21,16 @@ export default function MyRewardSpacePage() {
 
   const vouchers = [
     { id: 1, name: 'Starbucks', category: 'Food', cost: '500 EP', expiry: 'No Expiry' },
+  ];
+
+  const shopItems = [
+    { id: 1, name: 'Starbucks $10', category: 'Food', cost: 500, icon: '☕', recommended: true },
+    { id: 2, name: 'KFC Voucher', category: 'Food', cost: 450, icon: '🍗', recommended: true },
+    { id: 3, name: 'GrabFood Credits', category: 'Food', cost: 600, icon: '🍕', recommended: false },
+    { id: 4, name: 'Cathay Cineplex Ticket', category: 'Entertainment', cost: 350, icon: '🎬', recommended: true },
+    { id: 5, name: 'Spotify Premium Month', category: 'Entertainment', cost: 250, icon: '🎵', recommended: false },
+    { id: 6, name: 'Changi Airport Lounge', category: 'Travel', cost: 1000, icon: '✈️', recommended: true },
+    { id: 7, name: 'Hotel.com Voucher', category: 'Travel', cost: 800, icon: '🏨', recommended: false },
   ];
 
   useEffect(() => {
@@ -133,6 +143,12 @@ export default function MyRewardSpacePage() {
               🎁 MyRewards
             </button>
             <button
+              onClick={() => setActiveTab('shop')}
+              className={`flex-1 p-2 text-center transition border-l border-gray-100 whitespace-nowrap ${activeTab === 'shop' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
+            >
+              🛍️ Shop
+            </button>
+            <button
               onClick={() => setActiveTab('history')}
               className={`flex-1 p-2 text-center transition border-l border-gray-100 whitespace-nowrap ${activeTab === 'history' ? 'bg-errandify-orange text-white' : 'hover:bg-gray-50'}`}
             >
@@ -183,6 +199,50 @@ export default function MyRewardSpacePage() {
                 <div className="bg-gray-50 rounded p-2">
                   <p className="text-xs font-bold text-gray-800 mb-2">Ways to Earn</p>
                   <p className="text-xs text-gray-600">Little actions, more points.</p>
+                </div>
+              </div>
+            )}
+
+            {/* Shop Tab */}
+            {activeTab === 'shop' && (
+              <div className="p-4 space-y-4">
+                {/* Recommended for You Section */}
+                <div>
+                  <h3 className="text-sm font-bold text-errandify-brown mb-3">✨ Recommended For You</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {shopItems.filter(item => item.recommended).map((item) => (
+                      <div key={item.id} className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-lg p-3 hover:shadow-md transition">
+                        <p className="text-3xl mb-2">{item.icon}</p>
+                        <p className="font-bold text-sm text-gray-900">{item.name}</p>
+                        <p className="text-xs text-gray-600 mb-2">{item.category}</p>
+                        <button className="w-full bg-errandify-orange text-white py-2 rounded font-bold text-xs hover:bg-orange-600 transition">
+                          {item.cost} EP
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* All Items by Category */}
+                <div>
+                  <h3 className="text-sm font-bold text-errandify-brown mb-3">🏪 Shop By Category</h3>
+                  {['Food', 'Entertainment', 'Travel'].map((category) => (
+                    <div key={category} className="mb-4">
+                      <p className="text-xs font-bold text-gray-700 mb-2">{category}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {shopItems.filter(item => item.category === category).map((item) => (
+                          <div key={item.id} className="bg-white border border-gray-200 rounded p-2 hover:shadow-sm transition">
+                            <p className="text-2xl mb-1">{item.icon}</p>
+                            <p className="text-xs font-semibold text-gray-800">{item.name}</p>
+                            <p className="text-xs text-errandify-orange font-bold mt-1">{item.cost} EP</p>
+                            <button className="w-full bg-gray-100 text-gray-700 py-1 rounded text-xs font-bold mt-1 hover:bg-gray-200 transition">
+                              Redeem
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
