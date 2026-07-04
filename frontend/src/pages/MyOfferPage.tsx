@@ -136,11 +136,13 @@ export default function MyOfferPage() {
       confirmed_awaiting_start: '🟢 Confirmed - Start',
       in_progress: '🔄 In Progress',
       completed: '✅ Rated & Closed',
+      rated: '✅ Rated & Closed',
       completed_unconfirmed: '✔️ Awaiting Review',
       completed_confirmed: '🎉 Completed',
       rejected: '❌ Rejected',
       withdrawn: '↩️ Withdrawn',
       expired: '⏰ Expired',
+      closed: '✅ Rated & Closed',
     };
     return labels[status] || status;
   };
