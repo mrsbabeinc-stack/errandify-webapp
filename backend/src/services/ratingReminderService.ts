@@ -4,6 +4,27 @@ import { sendEmail } from './email.js';
 import { templateRatingReminder } from '../templates/emailTemplates.js';
 
 /**
+ * Rating Reminder Service
+ * Handles scheduling and sending of rating reminders for doers to rate askers
+ */
+
+export const ratingReminderService = {
+  /**
+   * Send pending doer rating reminders (called by cron job every 6 hours)
+   */
+  async sendDoerRatingReminders(): Promise<void> {
+    await sendPendingRatingReminders();
+  },
+
+  /**
+   * Placeholder for asker rating reminders (future enhancement)
+   */
+  async sendAskerRatingReminders(): Promise<void> {
+    // TODO: Implement asker rating reminders if needed
+  },
+};
+
+/**
  * Schedule a rating reminder for the doer to rate the asker
  * Sends both email and in-app notification 24 hours after job completion
  */
@@ -102,11 +123,11 @@ export async function sendPendingRatingReminders(): Promise<void> {
         // Send email
         if (doerEmail) {
           const emailContent = templateRatingReminder(doerName, askerName, taskTitle, errandId);
-          await sendEmail(
-            doerEmail,
-            `💫 Don't Forget to Rate ${askerName}!`,
-            emailContent
-          );
+          await sendEmail({
+            to: doerEmail,
+            subject: `💫 Don't Forget to Rate ${askerName}!`,
+            html: emailContent,
+          });
         }
 
         // Mark reminder as sent
