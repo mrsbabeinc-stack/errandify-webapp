@@ -24,6 +24,10 @@ export default function TaskCompleteEvidencePage() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [completionNotes, setCompletionNotes] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState('');
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
   const generateSuggestedText = () => {
     if (!task) return '';
@@ -167,8 +171,9 @@ export default function TaskCompleteEvidencePage() {
         }
       );
 
-      // Show success message and redirect
+      // Show success message and show rating modal instead of immediate redirect
       setError(''); // Clear any errors
+      setShowRatingModal(true);
 
       // Create a warm, engaging toast notification
       const askerName = task?.asker_alias || task?.asker?.alias || task?.asker?.display_name || 'The person';
@@ -189,11 +194,6 @@ export default function TaskCompleteEvidencePage() {
         toastDiv.style.opacity = '0';
         setTimeout(() => toastDiv.remove(), 500);
       }, 6000);
-
-      // Redirect after 5 seconds
-      setTimeout(() => {
-        navigate('/my-offer');
-      }, 5000);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to submit completion');
     } finally {
@@ -382,6 +382,140 @@ export default function TaskCompleteEvidencePage() {
           </div>
         </div>
       </div>
+
+      {/* Post-Submission Rating Modal */}
+      {showRatingModal && task && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <p className="text-3xl mb-2">💫</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Turn Now!</h2>
+              <p className="text-gray-600">How did {task?.asker_alias || task?.asker?.display_name || 'they'} do as an asker?</p>
+            </div>
+
+            {/* Star Rating */}
+            <div className="flex gap-3 mb-6 justify-center">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  disabled={ratingSubmitting}
+                  className={`text-5xl transition-all transform hover:scale-125 hover:-translate-y-2 ${
+                    star <= rating ? 'text-yellow-400 drop-shadow-lg' : 'text-gray-300 hover:text-yellow-300'
+                  } ${ratingSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  title={['Not great', 'Could be better', 'Good!', 'Really good!', 'Amazing!'][star - 1]}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+
+            {/* Rating Message */}
+            {rating > 0 && (
+              <p className="text-center mb-4 text-sm font-semibold text-amber-800">
+                {rating === 1 && '😕 Let us know what could improve'}
+                {rating === 2 && '😐 Share what could be better'}
+                {rating === 3 && '😊 Good job! Add details if you like'}
+                {rating === 4 && '😄 Really impressed! Tell them why'}
+                {rating === 5 && '🎉 Wow! They were amazing! Let us know!'}
+              </p>
+            )}
+
+            {/* Comment Textarea */}
+            <textarea
+              value={ratingComment}
+              onChange={(e) => setRatingComment(e.target.value)}
+              disabled={ratingSubmitting}
+              placeholder="📝 Share your experience... (optional)"
+              maxLength={200}
+              rows={3}
+              className={`w-full text-sm px-3 py-2 border-2 border-amber-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none transition mb-4 ${ratingSubmitting ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+            />
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRatingModal(false);
+                  setTimeout(() => navigate('/my-offer'), 500);
+                }}
+                disabled={ratingSubmitting}
+                className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-lg font-semibold hover:bg-gray-200 disabled:opacity-50 transition"
+              >
+                Skip for now
+              </button>
+              <button
+                onClick={async () => {
+                  if (rating === 0) {
+                    alert('Please select a rating');
+                    return;
+                  }
+
+                  setRatingSubmitting(true);
+                  try {
+                    const token = localStorage.getItem('token');
+                    await axios.post(
+                      `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings`,
+                      {
+                        taskId: id,
+                        ratedUserId: task.asker_id,
+                        rating,
+                        comment: ratingComment || null,
+                      },
+                      { headers: { Authorization: `Bearer ${token}` } }
+                    );
+
+                    // Award bonus points
+                    await axios.post(
+                      `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/award-ep-bonus`,
+                      {
+                        errandId: id,
+                        userId: JSON.parse(localStorage.getItem('user') || '{}').id,
+                        bonus: 5,
+                        reason: 'doer_rating_bonus',
+                      },
+                      { headers: { Authorization: `Bearer ${token}` } }
+                    );
+
+                    // Show success and redirect
+                    setShowRatingModal(false);
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'fixed top-4 left-4 right-4 bg-gradient-to-r from-green-400 to-emerald-500 text-white p-5 rounded-lg shadow-2xl z-50 text-center';
+                    successDiv.innerHTML = `
+                      <p style="font-size: 1.2rem; font-weight: bold;">✅ Thanks for the feedback!</p>
+                      <p style="font-size: 0.95rem; margin-top: 0.5rem;">+5 Errandify Points earned 🎉</p>
+                    `;
+                    document.body.appendChild(successDiv);
+
+                    setTimeout(() => {
+                      successDiv.style.transition = 'opacity 0.5s ease-out';
+                      successDiv.style.opacity = '0';
+                      setTimeout(() => successDiv.remove(), 500);
+                    }, 4000);
+
+                    setTimeout(() => navigate('/my-offer'), 2000);
+                  } catch (err: any) {
+                    console.error('Rating submission error:', err);
+                    alert('Error submitting rating: ' + (err.response?.data?.error || err.message));
+                  } finally {
+                    setRatingSubmitting(false);
+                  }
+                }}
+                disabled={ratingSubmitting || rating === 0}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-bold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105"
+              >
+                {ratingSubmitting ? '✨ Submitting...' : '💙 Submit & Earn +5 EP'}
+              </button>
+            </div>
+
+            {/* Info Text */}
+            <p className="text-xs text-gray-500 text-center mt-4">
+              Your honest feedback helps build trust in our community
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
