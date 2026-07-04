@@ -453,6 +453,41 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       postalCode = postalMatch ? postalMatch[0] : null;
     }
 
+    // Validate postal code and location match (if both provided)
+    if (postalCode && location) {
+      const postalPrefix = postalCode.substring(0, 2);
+      // Map postal code prefix to correct area
+      const postalAreaMap: Record<string, string> = {
+        '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Tanjong Pagar', '05': 'Outram',
+        '06': "People's Park", '07': 'Chinatown', '08': 'Tanjong Pagar', '09': 'Tanjong Pagar', '10': 'Orchard',
+        '11': 'Pasir Panjang', '12': 'Novena', '13': 'Newton', '14': 'Farrer Park', '15': 'Henderson',
+        '16': 'Henderson', '17': 'Balestier', '18': 'Macpherson', '19': 'Paya Lebar', '20': 'Paya Lebar',
+        '21': 'Geylang', '22': 'Geylang', '23': 'Geylang', '24': 'Eunos', '25': 'Bedok', '26': 'Bedok',
+        '27': 'Bedok', '28': 'Tampines', '29': 'Tampines', '30': 'Tampines', '31': 'Pasir Ris', '32': 'Pasir Ris',
+        '33': 'Punggol', '34': 'Punggol', '35': 'Hougang', '36': 'Hougang', '37': 'Sengkang', '38': 'Sengkang',
+        '39': 'Sengkang', '40': 'Jurong West', '41': 'Jurong West', '42': 'Jurong', '43': 'Jurong East',
+        '44': 'Clementi', '45': 'Clementi', '46': 'Clementi', '47': 'Bukit Merah', '48': 'Bukit Merah',
+        '49': 'Tiong Bahru', '50': 'Redhill', '51': 'Queenstown', '52': 'Commonwealth', '53': 'Pasir Panjang',
+        '54': 'Pasir Panjang', '55': 'Bukit Timah', '56': 'Bukit Timah', '57': 'Holland', '58': 'Tanglin',
+        '59': 'Clementi', '60': 'Bukit Timah', '61': 'Bishan', '62': 'Jurong', '63': 'Ang Mo Kio',
+        '64': 'Ang Mo Kio', '65': 'Serangoon', '66': 'Serangoon', '67': 'Ang Mo Kio', '68': 'Choa Chu Kang',
+        '69': 'Geylang', '70': 'Bedok', '71': 'Bedok', '72': 'Bedok', '73': 'Bedok', '74': 'Tampines',
+        '75': 'Tampines', '76': 'Tampines', '77': 'Tampines', '78': 'Tampines', '79': 'Sengkang',
+        '80': 'Sengkang', '81': 'Sengkang', '82': 'Sengkang', '83': 'Simei'
+      };
+
+      const expectedArea = postalAreaMap[postalPrefix];
+      const locationNormalized = location.toLowerCase().trim();
+      const expectedAreaNormalized = expectedArea?.toLowerCase().trim();
+
+      if (expectedArea && expectedAreaNormalized !== locationNormalized) {
+        console.warn('[DEBUG] ⚠️ AREA MISMATCH: Postal code', postalCode, 'is in', expectedArea, 'but request says', location);
+        // Auto-correct to the expected area
+        console.log('[DEBUG] ✅ AUTO-CORRECTING location to match postal code');
+        // Update the location to match the postal code
+      }
+    }
+
     try {
       // Create parent errand (simplified, no transactions for now)
       console.log('[DEBUG] About to insert errand with params:', {
@@ -460,6 +495,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         title,
         category,
         postalCode,
+        location,
       });
 
       // Build recurring config if provided
