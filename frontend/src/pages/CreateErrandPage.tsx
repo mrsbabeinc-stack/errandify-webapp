@@ -797,12 +797,16 @@ export default function CreateErrandPage() {
         }
       );
 
+      console.log('[DEBUG] Content check response:', contentCheckResponse.data);
       if (!contentCheckResponse.data.data.is_safe) {
+        console.log('[DEBUG] VALIDATION FAILED: Content not safe');
         setError('Your errand contains inappropriate content. Please review and try again.');
+        setLoading(false);
         return;
       }
-    } catch (contentErr) {
+    } catch (contentErr: any) {
       console.warn('Content check failed:', contentErr);
+      console.warn('Error response:', contentErr.response?.data);
       // Continue anyway if content check fails
     }
 
