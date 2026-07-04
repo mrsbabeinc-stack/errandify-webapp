@@ -196,12 +196,13 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
     const task = taskResult.rows[0];
     console.log('[Messages GET] Task from DB:', { id: task.id, location: task.location, postal_code: task.postal_code });
 
-    // Get the doer name from any bid (active or completed)
+    // Get the doer name and confirmed bid amount from any bid (active or completed)
     let doerName = 'Unknown';
     let doerAlias = 'Unknown';
     let doerId = null;
+    let confirmedBidAmount = null;
     const bidResult = await db.query(
-      `SELECT b.doer_id, u.display_name, u.alias
+      `SELECT b.doer_id, b.bid_amount, u.display_name, u.alias
        FROM bids b
        LEFT JOIN users u ON b.doer_id = u.id
        WHERE b.errand_id = $1 AND b.status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress', 'completed_unconfirmed', 'completed_confirmed')
@@ -213,6 +214,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
       doerId = bidResult.rows[0].doer_id;
       doerName = bidResult.rows[0].display_name || 'Unknown';
       doerAlias = bidResult.rows[0].alias || bidResult.rows[0].display_name || 'Unknown';
+      confirmedBidAmount = bidResult.rows[0].bid_amount;
     }
     const isAsker = task.asker_id === userId;
     const isDoer = doerId === userId;
@@ -334,7 +336,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
           location: task.full_address || task.location,
           postal_code: task.postal_code,
           description: task.description,
-          budget: task.budget,
+          budget: confirmedBidAmount || task.budget,
           deadline: task.deadline,
         },
       },
