@@ -1734,38 +1734,54 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
                 {/* Doer Rating Form - Only show if doer and errand is completed but doer hasn't rated yet */}
                 {currentUser && currentUser.id !== errand.askerId && errand.status === 'completed' && !hasRated && (
-                  <div data-doer-rating-form className="mt-3 pt-3 border-t border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded">
-                    <p className="font-semibold text-xs text-purple-900 mb-2 text-center">Rate {errand.askerName || 'Jane'} & Earn +5 EP! ⭐</p>
-                    <div className="flex gap-1 mb-3 justify-center">
+                  <div data-doer-rating-form className="mt-4 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 border-2 border-amber-200 rounded-xl p-4 shadow-sm">
+                    {/* Warm Header */}
+                    <div className="text-center mb-4">
+                      <p className="text-lg font-bold text-amber-900 mb-1">💫 Your Turn to Give Feedback!</p>
+                      <p className="text-sm text-amber-700">Let {errand.askerName || 'them'} know how it went</p>
+                      <p className="text-xs text-amber-600 mt-2 font-semibold">+5 Errandify Points for rating ✨</p>
+                    </div>
+
+                    {/* Star Rating */}
+                    <div className="flex gap-2 mb-4 justify-center">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
                           onClick={() => !hasRated && setRating(star)}
                           disabled={hasRated}
-                          className={`text-3xl transition-all hover:scale-110 ${
-                            star <= rating ? 'text-yellow-400 drop-shadow-md' : 'text-gray-300 hover:text-yellow-300'
-                          } ${hasRated ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`text-4xl transition-all transform hover:scale-125 hover:-translate-y-1 ${
+                            star <= rating ? 'text-yellow-400 drop-shadow-lg' : 'text-gray-300 hover:text-yellow-300'
+                          } ${hasRated ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                          title={['Not great', 'Could be better', 'Good!', 'Really good!', 'Amazing!'][star - 1]}
                         >
                           ★
                         </button>
                       ))}
                     </div>
-                    <p className="text-xs text-center text-purple-800 mb-3 font-semibold">
-                      {rating === 1 && 'Needs improvement'}
-                      {rating === 2 && 'Could be better'}
-                      {rating === 3 && 'Good work!'}
-                      {rating === 4 && 'Really good!'}
-                      {rating === 5 && 'Amazing! Wonderful work!'}
-                    </p>
+
+                    {/* Rating feedback message */}
+                    {rating > 0 && (
+                      <p className="text-center mb-4 text-sm font-semibold text-amber-800">
+                        {rating === 1 && '😕 Let us know what could improve'}
+                        {rating === 2 && '😐 Share what could be better'}
+                        {rating === 3 && '😊 Good job! Add details if you like'}
+                        {rating === 4 && '😄 Really impressed! Tell them why'}
+                        {rating === 5 && '🎉 Wow! They were amazing! Let us know!'}
+                      </p>
+                    )}
+
+                    {/* Feedback textarea */}
                     <textarea
                       value={ratingComment}
                       onChange={(e) => !hasRated && setRatingComment(e.target.value)}
                       disabled={hasRated}
-                      placeholder="Share your experience (optional)..."
+                      placeholder="📝 Share your experience... e.g., 'Great communication, very punctual!' (optional)"
                       maxLength={200}
                       rows={2}
-                      className={`w-full text-xs px-2 py-1 border border-purple-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none ${hasRated ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+                      className={`w-full text-xs px-3 py-2 border-2 border-amber-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none transition ${hasRated ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
                     />
+
+                    {/* Submit Button */}
                     {!hasRated ? (
                       <button
                         onClick={async () => {
@@ -1817,14 +1833,14 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                             setRatingSubmitting(false);
                           }
                         }}
-                        disabled={ratingSubmitting}
-                        className="w-full mt-2 px-2 py-2 text-xs bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded font-semibold hover:shadow disabled:opacity-50 transition"
+                        disabled={ratingSubmitting || rating === 0}
+                        className="w-full mt-4 px-3 py-3 text-sm bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-bold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105"
                       >
-                        {ratingSubmitting ? '✨ Submitting...' : '⭐ Submit Rating & Earn +5 EP'}
+                        {ratingSubmitting ? '✨ Submitting your feedback...' : '💙 Submit & Earn +5 EP'}
                       </button>
                     ) : (
-                      <div className="w-full mt-2 px-2 py-2 text-xs bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 rounded font-semibold text-center border border-purple-300">
-                        ✨ Thanks for rating! +5 EP bonus earned!
+                      <div className="w-full mt-4 px-3 py-3 text-sm bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-lg font-bold text-center border-2 border-green-300">
+                        ✅ Thanks for the feedback! +5 EP bonus earned 🎉
                       </div>
                     )}
                   </div>
