@@ -160,6 +160,27 @@ export default function CreateErrandPage() {
           if (prefilledData.postalCode) {
             setPostalCode(prefilledData.postalCode);
             console.log('[CreateErrand] Postal code:', prefilledData.postalCode);
+
+            // Auto-correct area based on postal code (verify postal code mapping)
+            const postalPrefix = prefilledData.postalCode.substring(0, 2);
+            const correctAreaFromPostal = postalCodeAreas[postalPrefix]?.area;
+
+            if (correctAreaFromPostal) {
+              // Verify prefilled area matches postal code
+              const prefilliedAreaNormalized = prefilledData.area?.toLowerCase().trim() || '';
+              const correctAreaNormalized = correctAreaFromPostal.toLowerCase().trim();
+
+              if (prefilliedAreaNormalized !== correctAreaNormalized) {
+                console.warn('[CreateErrand] ⚠️ AREA MISMATCH: Postal code', prefilledData.postalCode, 'should be in', correctAreaFromPostal, 'but prefilled data says', prefilledData.area);
+                console.log('[CreateErrand] ✅ AUTO-CORRECTING area to match postal code');
+              }
+
+              setArea(correctAreaFromPostal);
+              setFormData((prev) => ({
+                ...prev,
+                location: correctAreaFromPostal,
+              }));
+            }
           }
 
           // Check if area confirmation is needed
@@ -167,20 +188,18 @@ export default function CreateErrandPage() {
             console.log('[CreateErrand] ⚠️ Area confirmation needed for postal:', prefilledData.postalCode);
             setNeedsAreaConfirmation(true);
             setPendingPostalCode(prefilledData.postalCode);
-          } else {
-            // Use prefilled area, normalize to title case
-            if (prefilledData.area) {
-              const normalizedArea = prefilledData.area
-                .split(' ')
-                .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join(' ');
-              setArea(normalizedArea);
-              setFormData((prev) => ({
-                ...prev,
-                location: normalizedArea,
-              }));
-              console.log('[CreateErrand] Area set from prefilled data:', normalizedArea);
-            }
+          } else if (prefilledData.area && !prefilledData.postalCode) {
+            // Only use prefilled area if NO postal code was provided
+            const normalizedArea = prefilledData.area
+              .split(' ')
+              .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+              .join(' ');
+            setArea(normalizedArea);
+            setFormData((prev) => ({
+              ...prev,
+              location: normalizedArea,
+            }));
+            console.log('[CreateErrand] Area set from prefilled data (no postal code):', normalizedArea);
           }
 
           if (prefilledData.fullAddress) {
