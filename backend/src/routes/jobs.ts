@@ -83,11 +83,11 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
     const doerId = parseInt(req.userId || '0', 10);
     const { photoUrls, completionNotes } = req.body; // Array of photo URLs (pre-uploaded to cloud) + completion notes
 
-    // Get task with doer info - the doer is the one with confirmed bid
+    // Get task with doer info - use accepted_bid_id for reliable doer lookup
     const taskResult = await db.query(
-      `SELECT e.id, e.title, e.status, e.description, e.formatted_id as errand_id_formatted, b.doer_id
+      `SELECT e.id, e.title, e.status, e.description, e.formatted_id as errand_id_formatted, e.accepted_bid_id, b.doer_id
        FROM errands e
-       LEFT JOIN bids b ON e.id = b.errand_id AND b.status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress')
+       LEFT JOIN bids b ON e.accepted_bid_id = b.id
        WHERE e.id = $1`,
       [taskId]
     );
