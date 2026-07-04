@@ -482,6 +482,24 @@ router.post('/demo-login', async (req: Request, res: Response) => {
         gender: 'M',
         bio: 'L3 Senior Staff - Final Appeals'
       },
+      alice: {
+        mobile: '91234567',
+        email: 'alice.ng@example.com',
+        name: 'Alice Ng',
+        nric: 'S2345678C',
+        defaultRole: 'asker',
+        gender: 'F',
+        bio: 'Busy professional looking for help with daily tasks'
+      },
+      bob: {
+        mobile: '92345678',
+        email: 'bob.wong@example.com',
+        name: 'Bob Wong',
+        nric: 'S3456789D',
+        defaultRole: 'asker',
+        gender: 'M',
+        bio: 'Need help with household chores and errands'
+      },
     };
 
     const demoUser = demoAccounts[account.toLowerCase()];
