@@ -180,8 +180,8 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
 
     // Verify user is involved in task
     const taskResult = await db.query(
-      `SELECT e.id, e.errand_id, e.title, e.description, e.category, e.budget, e.deadline,
-              e.location, e.postal_code, e.status, e.asker_id, e.updated_at,
+      `SELECT e.id, e.formatted_id, e.title, e.description, e.category, e.budget, e.deadline,
+              e.location, e.full_address, e.postal_code, e.status, e.asker_id, e.updated_at,
               asker.display_name as asker_name, asker.alias as asker_alias
        FROM errands e
        LEFT JOIN users asker ON e.asker_id = asker.id
@@ -329,9 +329,9 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
         },
         errandDetails: {
           id: task.id,
-          formattedId: task.errand_id,
+          formattedId: task.formatted_id,
           title: task.title,
-          location: task.location,
+          location: task.full_address || task.location,
           postal_code: task.postal_code,
           description: task.description,
           budget: task.budget,

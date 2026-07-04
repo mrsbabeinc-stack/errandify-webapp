@@ -757,30 +757,7 @@ Your message doesn't meet our community standards. Please keep messages:
                 <div>
                   <p className="text-xs text-gray-500">📍 Location</p>
                   <p className="text-xs text-gray-700 font-semibold break-words">
-                    {(() => {
-                      const location = apiErrandDetails?.location || errandDetails?.location || 'Not specified';
-                      const postalCode = apiErrandDetails?.postal_code || errandDetails?.postal_code;
-                      console.log('[TaskChatbox] Display - location:', location, 'postal:', postalCode, 'apiDetails:', apiErrandDetails);
-
-                      // If we have postal code, format with S prefix
-                      if (postalCode) {
-                        // Remove any existing postal code from location to avoid duplication
-                        const cleanLocation = location.replace(/\s*S?\d{6}\s*$/, '').trim();
-                        const result = `${cleanLocation} S${postalCode}`;
-                        console.log('[TaskChatbox] Display - result:', result);
-                        return result;
-                      }
-
-                      // Try to extract postal code from location string
-                      const postalMatch = location.match(/(\d{6})/);
-                      if (postalMatch) {
-                        const postal = postalMatch[1];
-                        const cleanLocation = location.replace(postal, '').trim();
-                        return `${cleanLocation} S${postal}`;
-                      }
-
-                      return location;
-                    })()}
+                    {apiErrandDetails?.location || errandDetails?.location || 'Not specified'}
                   </p>
                 </div>
 
