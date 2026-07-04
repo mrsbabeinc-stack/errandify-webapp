@@ -124,9 +124,18 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
     if (task.doer_id !== doerId) {
       console.warn('[Jobs] Doer ID mismatch', {
         expected: task.doer_id,
-        actual: doerId
+        actual: doerId,
+        accepted_bid_id: task.accepted_bid_id,
+        errand_formatted_id: task.errand_id_formatted
       });
-      return res.status(403).json({ error: 'Only the assigned doer can complete this task' });
+      return res.status(403).json({
+        error: 'Only the assigned doer can complete this task',
+        debug: {
+          expected_doer_id: task.doer_id,
+          your_id: doerId,
+          accepted_bid_id: task.accepted_bid_id
+        }
+      });
     }
 
     // Validate photo count (max 5)
