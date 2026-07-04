@@ -28,7 +28,7 @@ interface NewsItem {
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { type = 'all', limit = 20, offset = 0, postal_code } = req.query;
+    const { type = 'all', limit = 10000, offset = 0, postal_code } = req.query;
     const news: NewsItem[] = [];
 
     // Get CommunityNews
@@ -54,7 +54,7 @@ router.get('/', async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      data: news.slice(0, parseInt(limit as string)),
+      data: news,
       total: news.length,
     });
   } catch (error: any) {

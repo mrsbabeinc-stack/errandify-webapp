@@ -109,7 +109,7 @@ export default function MyKampungPage() {
       // Fetch news first (doesn't require auth)
       try {
         const newsRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/news?limit=100`,
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/news`,
           { timeout: 5000 }
         );
         console.log('News API response:', newsRes.data);
