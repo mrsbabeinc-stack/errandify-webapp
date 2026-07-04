@@ -1330,13 +1330,21 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
 
     const errand = errandResult.rows[0];
     const isAsker = userId === errand.asker_id;
+    const previousStatus = errand.status;
 
-    // Check permissions - only asker or the accepted doer can cancel
-    if (!isAsker && errand.accepted_bid_id) {
-      return res.status(403).json({ error: 'Only asker or accepted doer can cancel' });
+    // Check permissions
+    if (!isAsker) {
+      return res.status(403).json({ error: 'Only asker can cancel an errand', stage: previousStatus });
     }
 
-    const previousStatus = errand.status;
+    // Check if errand can be cancelled based on status
+    if (previousStatus === 'completed' || previousStatus === 'rated' || previousStatus === 'cancelled') {
+      return res.status(400).json({
+        error: `Cannot cancel ${previousStatus} errand`,
+        stage: previousStatus,
+        stageDescription: `Errand is ${previousStatus}`,
+      });
+    }
 
     // Update status to cancelled
     await db.query(
@@ -1428,42 +1436,13 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
     const userRole = isAsker ? 'asker' : 'doer';
     await activityLogService.logActivity(id, 'cancelled', userId, userName, userRole, { reason, previousStatus });
 
-    // Return stage-specific response
-    const stageInfo = {
-      'open': 'Job cancelled before any doer was selected',
-      'confirmed': 'Job cancelled after offer was confirmed by doer',
-      'in_progress': 'Job cancelled while in progress - dispute may be raised',
-      'completed': 'Job already completed - cannot cancel',
-      'cancelled': 'Job already cancelled',
-    };
-
-    if (previousStatus === 'in_progress') {
-      res.status(400).json({
-        error: 'Cannot cancel job in progress without asker confirmation. Contact asker to resolve dispute.',
-        stage: previousStatus,
-        stageDescription: stageInfo[previousStatus],
-      });
-    } else if (previousStatus === 'completed') {
-      res.status(400).json({
-        error: 'Cannot cancel completed job.',
-        stage: previousStatus,
-        stageDescription: stageInfo[previousStatus],
-      });
-    } else if (previousStatus === 'cancelled') {
-      res.status(400).json({
-        error: 'Job is already cancelled.',
-        stage: previousStatus,
-        stageDescription: stageInfo[previousStatus],
-      });
-    } else {
-      res.json({
-        success: true,
-        message: `Errand cancelled at ${previousStatus} stage. All bids and offers cancelled.`,
-        stage: previousStatus,
-        stageDescription: stageInfo[previousStatus] || 'Unknown stage',
-        allBiddersCancelled: true,
-      });
-    }
+    // Return success response
+    res.json({
+      success: true,
+      message: `Errand cancelled at ${previousStatus} stage. All bids and offers cancelled.`,
+      stage: previousStatus,
+      allBiddersCancelled: true,
+    });
   } catch (error) {
     console.error('Error cancelling job:', error);
     res.status(500).json({ error: 'Failed to cancel job' });
