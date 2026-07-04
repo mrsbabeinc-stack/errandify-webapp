@@ -87,6 +87,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [cancelReasonType, setCancelReasonType] = useState<'dropdown' | 'custom'>('dropdown');
   const [selectedCancelReason, setSelectedCancelReason] = useState('');
   const [customCancelReason, setCustomCancelReason] = useState('');
+  const [showCancelSuccess, setShowCancelSuccess] = useState(false);
+  const [cancelSuccessMessage, setCancelSuccessMessage] = useState('');
 
   const cancellationReasons = [
     '💙 Found a good friend to help instead',
@@ -511,13 +513,18 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       };
 
       const successMsg = stageMessages[stage] || '✓ Errand cancelled. All offers have been cancelled.';
-      alert(successMsg);
+      setCancelSuccessMessage(successMsg);
+      setShowCancelSuccess(true);
       setShowCancelModal(false);
       setCancelReason('');
       setSelectedCancelReason('');
       setCustomCancelReason('');
       setCancelReasonType('dropdown');
-      navigate('/errands');
+
+      // Navigate after 2 seconds
+      setTimeout(() => {
+        navigate('/errands');
+      }, 2000);
     } catch (error: any) {
       console.error('Failed to cancel errand:', error);
       const errorMsg = error.response?.data?.error || 'Failed to cancel errand. Please try again.';
@@ -2212,6 +2219,31 @@ Let's help each other! 🤝`}
               >
                 Cancel Errand
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Success Modal */}
+      {showCancelSuccess && (
+        <div className="fixed inset-0 bg-slate-900 bg-opacity-40 flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl max-w-sm w-full p-8 text-center shadow-2xl border-l-4 border-l-emerald-500">
+            <div className="text-5xl mb-4">✓</div>
+            <h2 className="text-2xl font-bold text-emerald-700 mb-3">
+              Errand Cancelled
+            </h2>
+            <p className="text-slate-700 mb-6 leading-relaxed">
+              {cancelSuccessMessage}
+            </p>
+            <p className="text-sm text-slate-500">
+              Redirecting to your errands...
+            </p>
+            <div className="mt-6 flex justify-center">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
             </div>
           </div>
         </div>
