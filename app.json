@@ -1,0 +1,60 @@
+{
+  "name": "Errandify",
+  "description": "Singapore's trusted gig economy platform for errands and services",
+  "repository": "https://github.com/your-org/errandify",
+  "keywords": [
+    "gig-economy",
+    "errands",
+    "singapore",
+    "services",
+    "marketplace"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "env": {
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production",
+      "required": true
+    },
+    "JWT_SECRET": {
+      "description": "Secret key for JWT tokens",
+      "value": "change-this-in-production",
+      "required": true
+    },
+    "DATABASE_URL": {
+      "description": "PostgreSQL database URL (added by Heroku Postgres addon)",
+      "required": true
+    },
+    "QWEN_API_KEY": {
+      "description": "Alibaba Qwen API key for AI features",
+      "value": "",
+      "required": false
+    },
+    "MAPBOX_API_KEY": {
+      "description": "Mapbox API key for address geocoding",
+      "value": "",
+      "required": false
+    },
+    "STRIPE_SECRET_KEY": {
+      "description": "Stripe secret key for payments",
+      "value": "",
+      "required": false
+    },
+    "USE_SINGPASS": {
+      "description": "Enable SingPass authentication",
+      "value": "false",
+      "required": false
+    }
+  },
+  "addons": [
+    "heroku-postgresql:hobby-dev"
+  ],
+  "stack": "heroku-22",
+  "scripts": {
+    "postbuild": "cd ../frontend && npm install && npm run build && npm run preview"
+  }
+}
