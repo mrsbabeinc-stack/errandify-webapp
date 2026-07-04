@@ -257,6 +257,11 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api/safety', safetyRoutes);
 app.use('/api', hanaRoutes);
 
+// Serve index.html for all non-API routes (React Router fallback)
+app.get('*', (req, res) => {
+  res.sendFile(join(__dirname, '../../frontend/dist/index.html'));
+});
+
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err);
