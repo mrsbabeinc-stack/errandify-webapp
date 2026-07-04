@@ -77,6 +77,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [completionPhotos, setCompletionPhotos] = useState<any[]>([]);
   const [completionNotes, setCompletionNotes] = useState('');
   const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(null);
+  const [zoomedPhotoIndex, setZoomedPhotoIndex] = useState<number | null>(null);
   const [rating, setRating] = useState(5);
   const [ratingComment, setRatingComment] = useState('');
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
@@ -1333,18 +1334,32 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                       <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200 space-y-2">
                         {completionPhotos.length > 0 && (
                           <div>
-                            <p className="font-semibold text-xs text-gray-700 mb-1">📷 Photos:</p>
-                            <div className="flex gap-2 flex-wrap">
-                              {completionPhotos.map((photo, idx) => (
-                                <button
-                                  key={idx}
-                                  onClick={() => setSelectedPhotoUrl(photo.file_url)}
-                                  className="text-xs bg-white text-blue-600 px-2 py-1 rounded border border-blue-300 hover:bg-blue-100 cursor-pointer transition-all"
-                                >
-                                  Photo {idx + 1}
-                                </button>
-                              ))}
+                            <p className="font-semibold text-xs text-gray-700 mb-2">📷 Completion Photos ({completionPhotos.length}):</p>
+                            <div className="grid grid-cols-3 gap-2">
+                              {completionPhotos.map((photo, idx) => {
+                                const photoUrl = photo.file_url || photo;
+                                return (
+                                  <div
+                                    key={idx}
+                                    onClick={() => setZoomedPhotoIndex(idx)}
+                                    className="relative rounded-lg overflow-hidden border-2 border-gray-300 hover:border-blue-500 transition-all cursor-pointer group bg-gray-100"
+                                  >
+                                    <img
+                                      src={photoUrl}
+                                      alt={`Completion photo ${idx + 1}`}
+                                      className="w-full h-20 object-cover hover:opacity-75 transition-opacity"
+                                    />
+                                    <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity flex items-center justify-center">
+                                      <span className="text-white text-lg opacity-0 group-hover:opacity-100 transition-opacity">🔍</span>
+                                    </div>
+                                    <div className="absolute top-1 right-1 bg-gray-900 bg-opacity-70 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                      {idx + 1}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
+                            <p className="text-xs text-gray-500 mt-2">Click any photo to view full size</p>
                           </div>
                         )}
                         {completionNotes && (
@@ -2271,6 +2286,68 @@ Let's help each other! 🤝`}
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Completion Photo Zoom Modal */}
+      {zoomedPhotoIndex !== null && completionPhotos.length > 0 && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4"
+          onClick={() => setZoomedPhotoIndex(null)}
+        >
+          <div
+            className="relative max-w-2xl max-h-[80vh] w-full bg-white rounded-lg shadow-2xl overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setZoomedPhotoIndex(null)}
+              className="absolute top-2 right-2 bg-red-500 hover:bg-red-700 text-white rounded-full p-2 font-bold z-10"
+            >
+              ✕
+            </button>
+
+            {/* Full Image */}
+            <img
+              src={completionPhotos[zoomedPhotoIndex]?.file_url || completionPhotos[zoomedPhotoIndex]}
+              alt="Full size preview"
+              className="w-full h-auto"
+            />
+
+            {/* Photo Info */}
+            <div className="bg-gray-50 p-4 border-t">
+              <div className="flex justify-between items-center mb-2">
+                <p className="text-sm font-semibold text-gray-800">Photo {zoomedPhotoIndex + 1} of {completionPhotos.length}</p>
+              </div>
+            </div>
+
+            {/* Navigation */}
+            <div className="flex justify-center gap-2 p-3 bg-gray-100 border-t">
+              <button
+                onClick={() => {
+                  let newIndex = zoomedPhotoIndex - 1;
+                  if (newIndex < 0) newIndex = completionPhotos.length - 1;
+                  setZoomedPhotoIndex(newIndex);
+                }}
+                className="px-3 py-1 bg-gray-400 hover:bg-gray-500 text-white rounded text-xs font-semibold"
+              >
+                ← Previous
+              </button>
+              <span className="text-xs text-gray-700 font-semibold self-center px-3">
+                {zoomedPhotoIndex + 1} / {completionPhotos.length}
+              </span>
+              <button
+                onClick={() => {
+                  let newIndex = zoomedPhotoIndex + 1;
+                  if (newIndex >= completionPhotos.length) newIndex = 0;
+                  setZoomedPhotoIndex(newIndex);
+                }}
+                className="px-3 py-1 bg-gray-400 hover:bg-gray-500 text-white rounded text-xs font-semibold"
+              >
+                Next →
+              </button>
             </div>
           </div>
         </div>
