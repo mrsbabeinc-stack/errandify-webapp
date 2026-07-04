@@ -711,16 +711,14 @@ export default function CreateErrandPage() {
       return;
     }
 
-    // 3c. Verify full address contains the area name (consistency check)
+    // 3c. Log full address area mismatch (for debugging, don't block)
     if (!isRemoteWork && fullAddress && area) {
       const fullAddressLower = fullAddress.toLowerCase();
       const areaLower = area.toLowerCase();
       if (!fullAddressLower.includes(areaLower)) {
-        console.log('[DEBUG] VALIDATION WARNING: Full address area mismatch');
-        console.log('[DEBUG] Full address:', fullAddress, '| Expected area:', area);
-        setError(`⚠️ Full address should include "${area}" area. Your address mentions a different area. Please correct this.`);
-        setLoading(false);
-        return;
+        console.log('[DEBUG] INFO: Full address area mismatch (non-blocking)');
+        console.log('[DEBUG] Full address:', fullAddress, '| Area from postal:', area);
+        // Don't block - just log it for debugging
       }
     }
 
