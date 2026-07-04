@@ -76,7 +76,7 @@ export default function MyKampungPage() {
   );
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [newsItems, setNewsItems] = useState<any[]>([]);
-  const [newsTypeFilter, setNewsTypeFilter] = useState<'all' | 'community' | 'singapore' | 'errandify'>('errandify');
+  const [newsTypeFilter, setNewsTypeFilter] = useState<'all' | 'community' | 'singapore' | 'errandify'>('singapore');
   const [newsCategoryFilter, setNewsCategoryFilter] = useState<string>('all');
   const [newsSearchQuery, setNewsSearchQuery] = useState('');
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
