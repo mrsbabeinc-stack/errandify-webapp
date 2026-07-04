@@ -381,7 +381,7 @@ export default function CreateErrandPage() {
     '20': { area: 'Paya Lebar', building: 'Paya Lebar Square' },
     '21': { area: 'Geylang', building: 'Geylang' },
     '22': { area: 'Geylang', building: 'Geylang' },
-    '23': { area: 'Geylang', building: 'Geylang' },
+    '23': { area: 'Orchard', building: 'Orchard' },
     '24': { area: 'Eunos', building: 'Eunos' },
     '25': { area: 'Bedok', building: 'Bedok' },
     '26': { area: 'Bedok', building: 'Bedok' },
