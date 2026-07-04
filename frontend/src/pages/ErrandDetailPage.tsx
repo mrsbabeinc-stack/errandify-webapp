@@ -1183,12 +1183,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   ▶️ Start Errand
                 </button>
                 <button
-                  onClick={() => {
-                    if (confirm('Cancel this errand? The asker will be notified.')) {
-                      // Call cancel endpoint
-                      console.log('Cancel errand');
-                    }
-                  }}
+                  onClick={handleCancelErrand}
                   className="flex-1 bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-red-600 transition-colors text-base"
                 >
                   ✕ Cancel
