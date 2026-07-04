@@ -1318,6 +1318,8 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
     const userId = parseInt(req.userId || '0', 10);
     const { reason } = req.body;
 
+    console.log('[Cancel] Request:', { id, userId, reason });
+
     // Get errand details
     const errandResult = await db.query(
       'SELECT id, status, asker_id, accepted_bid_id FROM errands WHERE id = $1',
@@ -1325,6 +1327,7 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
     );
 
     if (errandResult.rows.length === 0) {
+      console.log('[Cancel] Errand not found:', id);
       return res.status(404).json({ error: 'Errand not found' });
     }
 
@@ -1332,13 +1335,17 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
     const isAsker = userId === errand.asker_id;
     const previousStatus = errand.status;
 
+    console.log('[Cancel] Errand found:', { errand, isAsker, userId });
+
     // Check permissions
     if (!isAsker) {
+      console.log('[Cancel] Permission denied - not asker');
       return res.status(403).json({ error: 'Only asker can cancel an errand', stage: previousStatus });
     }
 
     // Check if errand can be cancelled based on status
     if (previousStatus === 'completed' || previousStatus === 'rated' || previousStatus === 'cancelled') {
+      console.log('[Cancel] Cannot cancel - status is:', previousStatus);
       return res.status(400).json({
         error: `Cannot cancel ${previousStatus} errand`,
         stage: previousStatus,
@@ -1444,8 +1451,12 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res: Respons
       allBiddersCancelled: true,
     });
   } catch (error) {
-    console.error('Error cancelling job:', error);
-    res.status(500).json({ error: 'Failed to cancel job' });
+    console.error('[Cancel] Error cancelling job:', error);
+    if (error instanceof Error) {
+      console.error('[Cancel] Error message:', error.message);
+      console.error('[Cancel] Error stack:', error.stack);
+    }
+    res.status(500).json({ error: 'Failed to cancel job', details: error instanceof Error ? error.message : String(error) });
   }
 });
 

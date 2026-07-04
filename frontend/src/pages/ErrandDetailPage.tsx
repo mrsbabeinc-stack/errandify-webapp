@@ -472,7 +472,11 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         finalReason = selectedCancelReason;
       }
 
+      console.log('[Cancel] Submitting cancel request:', { id, finalReason, cancelReasonType });
+
       const token = localStorage.getItem('token');
+      console.log('[Cancel] Token found:', !!token);
+
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/cancel`,
         { reason: finalReason || null },
@@ -480,6 +484,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+
+      console.log('[Cancel] Cancel successful:', response.data);
 
       // Show stage-specific success message
       const stage = response.data.stage;
