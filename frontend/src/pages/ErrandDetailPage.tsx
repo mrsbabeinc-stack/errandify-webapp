@@ -717,20 +717,32 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               </span>
               {(userBidAmount || errand.status !== 'open') && (
                 <span className={`text-xs px-2 py-1 rounded font-bold ${
-                  errand.status === 'in_progress'
+                  errand.status === 'open'
+                    ? 'bg-white text-errandify-orange'
+                    : errand.status === 'in_progress'
                     ? 'bg-blue-100 text-blue-700'
                     : errand.status === 'confirmed' || errand.status === 'confirmed_awaiting_start'
                     ? 'bg-emerald-100 text-emerald-700'
                     : errand.status === 'completed'
                     ? 'bg-green-100 text-green-700'
+                    : errand.status === 'rated'
+                    ? 'bg-purple-100 text-purple-700'
+                    : errand.status === 'expired'
+                    ? 'bg-gray-100 text-gray-700'
                     : 'bg-white text-errandify-orange'
                 }`}>
-                  {errand.status === 'in_progress'
+                  {errand.status === 'open'
+                    ? '📋 Open'
+                    : errand.status === 'in_progress'
                     ? '⚡ In Progress'
                     : errand.status === 'confirmed' || errand.status === 'confirmed_awaiting_start'
                     ? '🟢 Confirmed'
                     : errand.status === 'completed'
                     ? '✓ Completed'
+                    : errand.status === 'rated'
+                    ? '🎉 Rated & Closed'
+                    : errand.status === 'expired'
+                    ? '⏰ Expired'
                     : '✓ Offer Submitted'}
                 </span>
               )}
