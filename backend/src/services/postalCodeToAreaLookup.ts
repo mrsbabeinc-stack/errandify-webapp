@@ -76,6 +76,9 @@ const POSTAL_CODE_SECTOR_MAPPING: Record<string, string> = {
   "47": "Tampines",
   "48": "Sengkang",
 
+  // Central area (49)
+  "49": "Geylang",
+
   // West area (50-64)
   "50": "Bukit Timah",
   "51": "Bukit Timah",
