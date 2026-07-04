@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { uploadMultiplePhotos } from '../utils/photoUploadService.js';
+import ThemedMessage, { InlineMessage, AlertBox } from '../components/ThemedMessage';
 
 interface TaskDetail {
   id: number;
@@ -277,10 +278,7 @@ export default function TaskCompleteEvidencePage() {
           <div className="p-4 space-y-4">
             {/* Error Alert */}
             {error && (
-              <div className="p-4 bg-gradient-to-r from-red-100 to-rose-100 border-2 border-red-300 text-red-700 rounded-lg text-sm font-semibold shadow-sm">
-                <p className="mb-1">⚠️ {error}</p>
-                <p className="text-xs opacity-80">Please fix this and try again!</p>
-              </div>
+              <AlertBox type="error" title="Action Required" message={error} onClose={() => setError('')} />
             )}
 
             {/* Task Info - Compact */}
