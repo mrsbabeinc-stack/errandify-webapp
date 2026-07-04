@@ -260,13 +260,25 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   const getSummary = () => {
     if (userRole !== 'asker') return null;
 
+    const openErrands = filteredErrands.filter(e => e.status === 'open');
     const needsAction = filteredErrands.filter(e => ['open', 'confirmed', 'in_progress'].includes(e.status));
     const waitingRating = filteredErrands.filter(e => e.status === 'completed');
+
+    // Count total undecided offers (bids on open errands)
+    const totalUndecidedOffers = openErrands.reduce((sum, e) => sum + (e.bidCount ?? 0), 0);
+    const offersErrandCount = openErrands.filter(e => (e.bidCount ?? 0) > 0).length;
+
     const soonestDeadline = needsAction.length > 0
       ? needsAction.sort((a, b) => new Date(a.deadline || '9999').getTime() - new Date(b.deadline || '9999').getTime())[0]
       : null;
 
-    return { needsAction: needsAction.length, waitingRating: waitingRating.length, soonestDeadline };
+    return {
+      needsAction: needsAction.length,
+      waitingRating: waitingRating.length,
+      soonestDeadline,
+      undecidedOffers: totalUndecidedOffers,
+      offersErrandCount: offersErrandCount
+    };
   };
 
   const summary = getSummary();
@@ -285,9 +297,19 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
         </div>
 
         {/* Summary Section for Askers */}
-        {userRole === 'asker' && summary && (summary.needsAction > 0 || summary.waitingRating > 0) && (
+        {userRole === 'asker' && summary && (summary.needsAction > 0 || summary.waitingRating > 0 || summary.undecidedOffers > 0) && (
           <div className="mb-3 p-3 bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-errandify-orange rounded-lg">
             <div className="space-y-2">
+              {summary.undecidedOffers > 0 && (
+                <div
+                  className="cursor-pointer hover:bg-orange-200 p-2 rounded transition-colors"
+                  onClick={() => setStatusFilter('open')}
+                >
+                  <p className="text-sm font-semibold text-errandify-brown">
+                    💰 {summary.undecidedOffers} offer{summary.undecidedOffers > 1 ? 's' : ''} to review from {summary.offersErrandCount} errand{summary.offersErrandCount > 1 ? 's' : ''}
+                  </p>
+                </div>
+              )}
               {summary.needsAction > 0 && (
                 <div
                   className="cursor-pointer hover:bg-orange-200 p-2 rounded transition-colors"
