@@ -1054,4 +1054,99 @@ router.get('/recurring/:errandId', authMiddleware, async (req: AuthRequest, res:
   }
 });
 
+// POST /api/bids/:bidId/mark-viewed - Mark a bid as viewed by asker
+router.post('/:bidId/mark-viewed', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { bidId } = req.params;
+    const userId = parseInt(req.userId || '0', 10);
+
+    if (!bidId) {
+      return res.status(400).json({ error: 'Bid ID required' });
+    }
+
+    // Get the bid and verify the user is the asker
+    const bidResult = await db.query(
+      `SELECT b.*, e.asker_id FROM bids b
+       JOIN errands e ON b.task_id = e.id
+       WHERE b.id = $1`,
+      [bidId]
+    );
+
+    if (bidResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Bid not found' });
+    }
+
+    const bid = bidResult.rows[0];
+
+    // Verify the user is the asker
+    if (bid.asker_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized to view this bid' });
+    }
+
+    // Mark as viewed if not already viewed
+    if (!bid.viewed_at) {
+      await db.query(
+        `UPDATE bids
+         SET viewed_at = NOW(), viewed_by_asker = TRUE
+         WHERE id = $1`,
+        [bidId]
+      );
+
+      console.log(`[Bids] Marked bid ${bidId} as viewed by asker ${userId}`);
+    }
+
+    res.json({ success: true, message: 'Bid marked as viewed' });
+  } catch (error) {
+    console.error('Error marking bid as viewed:', error);
+    res.status(500).json({ error: 'Failed to mark bid as viewed' });
+  }
+});
+
+// POST /api/bids/mark-errand-viewed/:errandId - Mark all unviewed bids for an errand as viewed
+router.post('/mark-errand-viewed/:errandId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { errandId } = req.params;
+    const userId = parseInt(req.userId || '0', 10);
+
+    if (!errandId) {
+      return res.status(400).json({ error: 'Errand ID required' });
+    }
+
+    // Verify the user is the asker of this errand
+    const errandResult = await db.query(
+      'SELECT asker_id FROM errands WHERE id = $1 OR formatted_id = $1',
+      [errandId]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    if (errand.asker_id !== userId) {
+      return res.status(403).json({ error: 'Not authorized to view these bids' });
+    }
+
+    // Mark all unviewed bids as viewed
+    const updateResult = await db.query(
+      `UPDATE bids
+       SET viewed_at = NOW(), viewed_by_asker = TRUE
+       WHERE task_id = $1 AND viewed_at IS NULL`,
+      [errand.id]
+    );
+
+    console.log(`[Bids] Marked ${updateResult.rowCount} unviewed bids as viewed for errand ${errandId}`);
+
+    res.json({
+      success: true,
+      message: `Marked ${updateResult.rowCount} bids as viewed`,
+      markedCount: updateResult.rowCount
+    });
+  } catch (error) {
+    console.error('Error marking errand bids as viewed:', error);
+    res.status(500).json({ error: 'Failed to mark bids as viewed' });
+  }
+});
+
 export default router;

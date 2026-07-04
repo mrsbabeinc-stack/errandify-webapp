@@ -209,13 +209,17 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           doerName = bidResult.rows[0]?.display_name || 'Doer';
         }
 
-        // Get bid count for this errand
+        // Get bid count and unviewed count for this errand
         const bidCountResult = await db.query(
-          `SELECT COUNT(*) as bid_count FROM bids
-           WHERE errand_id = $1 AND status IN ('pending', 'accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress')`,
+          `SELECT
+             COUNT(*) as bid_count,
+             COUNT(CASE WHEN viewed_at IS NULL THEN 1 END) as unviewed_count
+           FROM bids
+           WHERE errand_id = $1 AND status IN ('pending', 'accepted', 'rejected_resubmitted')`,
           [errand.id]
         );
         const bidCount = parseInt(bidCountResult.rows[0]?.bid_count || 0, 10);
+        const unviewedCount = parseInt(bidCountResult.rows[0]?.unviewed_count || 0, 10);
 
         return {
           id: errand.id,
@@ -234,6 +238,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           doerName: doerName,
           askerRating: 4.8, // TODO: Calculate from ratings table
           bidCount: bidCount,
+          unviewedBidCount: unviewedCount,
           createdAt: errand.created_at,
           updatedAt: errand.updated_at,
         };

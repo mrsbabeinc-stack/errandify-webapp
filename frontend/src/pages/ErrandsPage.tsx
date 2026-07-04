@@ -24,6 +24,7 @@ interface Errand {
   askerName?: string;
   askerRating?: number;
   bidCount?: number; // Number of bids/offers received
+  unviewedBidCount?: number; // Number of unviewed offers
 }
 
 export default function ErrandsPage({ userRole }: ErrandsPageProps) {
@@ -401,6 +402,11 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                     {(errand.bidCount ?? 0) > 0 ? (
                       <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold">
                         📋 {errand.bidCount} {errand.bidCount === 1 ? 'Offer' : 'Offers'}
+                        {(errand.unviewedBidCount ?? 0) > 0 && (
+                          <span className="ml-1 inline-block bg-red-500 text-white rounded-full px-1.5 py-0 text-xs font-bold">
+                            {errand.unviewedBidCount}
+                          </span>
+                        )}
                       </span>
                     ) : (
                       <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-semibold">
