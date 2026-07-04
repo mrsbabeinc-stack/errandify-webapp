@@ -36,6 +36,7 @@ export default function MyOfferPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedErrandId, setSelectedErrandId] = useState<number | null>(null);
   const [showChatbox, setShowChatbox] = useState(false);
 
@@ -164,6 +165,15 @@ export default function MyOfferPage() {
   };
 
   const filteredBids = (filterStatus === 'all' ? bids : bids.filter(b => b.status === filterStatus))
+    // Apply search filter
+    .filter(b => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      const title = (b.errand?.title || '').toLowerCase();
+      const category = (b.errand?.category || '').toLowerCase();
+      const location = (b.errand?.location || '').toLowerCase();
+      return title.includes(query) || category.includes(query) || location.includes(query);
+    })
     .sort((a, b) => {
       // Sort by ERRAND STATUS priority first
       const errandStatusA = a.errand?.status || 'unknown';
@@ -175,10 +185,8 @@ export default function MyOfferPage() {
         return priorityA - priorityB;
       }
 
-      // Secondary sort: within same status, sort by date (newest first)
-      const dateA = new Date(a.errand?.created_at || 0).getTime();
-      const dateB = new Date(b.errand?.created_at || 0).getTime();
-      return dateB - dateA;
+      // Secondary sort: within same status, sort by newest first
+      return 0; // Keep original order if priorities are equal
     });
 
   console.log('[MyOffer] filterStatus:', filterStatus);
@@ -248,20 +256,32 @@ export default function MyOfferPage() {
           </div>
         )}
 
+        {/* Search Bar */}
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search by title, category, or location..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+          />
+        </div>
+
         {/* Filter Tabs - Organized by priority */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-          {['all', 'in_progress', 'confirmed', 'accepted', 'pending', 'completed_unconfirmed', 'completed'].map((status) => {
+          {['all', 'in_progress', 'confirmed', 'accepted', 'pending', 'completed_unconfirmed', 'completed', 'rated'].map((status) => {
             const count = bids.filter(b => b.status === status).length;
             if (count === 0 && status !== 'all') return null; // Hide empty tabs except 'All'
 
             const labels: Record<string, string> = {
               all: '📋 All',
-              in_progress: '🔄 In progress',
+              in_progress: '🔄 In Progress',
               confirmed: '🟢 Confirmed',
               accepted: '✅ Accepted',
               pending: '⏳ Pending',
               completed_unconfirmed: '✔️ Awaiting Review',
-              completed: '✅ Closed',
+              completed: '✅ Completed',
+              rated: '✅ Rated & Closed',
             };
 
             return (
