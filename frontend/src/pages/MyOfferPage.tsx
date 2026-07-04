@@ -164,7 +164,14 @@ export default function MyOfferPage() {
     'expired': 99,                  // ⏰ Expired - LOWEST PRIORITY (shown at bottom, greyed out)
   };
 
-  const filteredBids = (filterStatus === 'all' ? bids : bids.filter(b => b.status === filterStatus))
+  const filteredBids = bids
+    // Filter by ERRAND status (not bid status)
+    .filter(b => {
+      if (filterStatus === 'all') return true;
+      const errandStatus = b.errand?.status;
+      if (filterStatus === 'open') return errandStatus === 'open';
+      return errandStatus === filterStatus;
+    })
     // Apply search filter
     .filter(b => {
       if (!searchQuery.trim()) return true;
@@ -269,19 +276,24 @@ export default function MyOfferPage() {
 
         {/* Filter Tabs - Organized by priority */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-          {['all', 'in_progress', 'confirmed', 'accepted', 'pending', 'completed_unconfirmed', 'completed', 'rated'].map((status) => {
-            const count = bids.filter(b => b.status === status).length;
+          {['all', 'in_progress', 'confirmed', 'open', 'completed_unconfirmed', 'completed', 'rated', 'expired'].map((status) => {
+            // Count by ERRAND status, not bid status
+            const count = bids.filter(b => {
+              if (status === 'all') return true;
+              if (status === 'open') return b.errand?.status === 'open';
+              return b.errand?.status === status;
+            }).length;
             if (count === 0 && status !== 'all') return null; // Hide empty tabs except 'All'
 
             const labels: Record<string, string> = {
               all: '📋 All',
               in_progress: '🔄 In Progress',
               confirmed: '🟢 Confirmed',
-              accepted: '✅ Accepted',
-              pending: '⏳ Pending',
+              open: '🔓 Open',
               completed_unconfirmed: '✔️ Awaiting Review',
               completed: '✅ Completed',
               rated: '✅ Rated & Closed',
+              expired: '⏰ Expired',
             };
 
             return (
