@@ -12,6 +12,7 @@ export type NotificationType =
   | 'job_started'
   | 'job_completed'
   | 'rating_received'
+  | 'rating_reminder'
   | 'message_received'
   | 'errand_reopened'
   | 'payment_released'

@@ -706,3 +706,55 @@ export function templateRatingReceived(doerName: string, raterName: string, rati
     </html>
   `;
 }
+
+export function templateRatingReminder(doerName: string, askerName: string, taskTitle: string, taskId: number): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #FFB347 0%, #FF8C42 100%); color: white; padding: 30px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { background-color: #fff; padding: 30px 20px; border-radius: 0 0 8px 8px; border: 1px solid #f0f0f0; }
+        .reminder-box { background: linear-gradient(135deg, #FFF8E7 0%, #FFE5CC 100%); border-left: 4px solid #FF8C42; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .stars { font-size: 32px; text-align: center; margin: 15px 0; }
+        .button { background: linear-gradient(135deg, #FF8C42 0%, #FF7A29 100%); color: white; padding: 14px 32px; border-radius: 24px; text-decoration: none; display: inline-block; margin: 20px auto; text-align: center; font-weight: bold; }
+        .button-container { text-align: center; }
+        .footer { color: #999; font-size: 12px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+        .emoji { font-size: 40px; text-align: center; margin: 10px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1 style="margin: 0; font-size: 28px;">💫 Don't Forget!</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.95;">Rate your neighbor and earn +5 Errandify Points</p>
+        </div>
+        <div class="content">
+          <p>Hi ${doerName},</p>
+          <p style="font-size: 16px;">You completed <strong>"${taskTitle}"</strong> with <strong>${askerName}</strong>. Now it's time to rate their experience as an asker! 🎯</p>
+
+          <div class="reminder-box">
+            <div class="emoji">⭐</div>
+            <p style="margin: 10px 0; text-align: center; color: #856404;"><strong>Share your honest feedback</strong></p>
+            <p style="margin: 10px 0 0 0; font-size: 14px; color: #856404; text-align: center;">Your rating helps build trust in our community and earns you <strong>+5 bonus points!</strong></p>
+          </div>
+
+          <p style="color: #666; font-size: 14px; margin-top: 20px;">It only takes 30 seconds and really matters to ${askerName}. Let's keep Errandify a place where neighbors trust each other! 💙</p>
+
+          <div class="button-container">
+            <a href="http://localhost:5173/errand/${taskId}" class="button">Rate ${askerName} Now</a>
+          </div>
+
+          <p style="color: #999; font-size: 13px; margin-top: 30px; text-align: center;">You can rate anytime, but the sooner you do, the sooner payments settle and everyone's happy!</p>
+        </div>
+        <div class="footer">
+          <p>© 2026 Errandify. All rights reserved.</p>
+          <p><a href="http://localhost:5173/settings/notifications" style="color: #999; text-decoration: none;">Manage notification preferences</a></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
