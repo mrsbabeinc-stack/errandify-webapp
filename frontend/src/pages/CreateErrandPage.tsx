@@ -731,45 +731,59 @@ export default function CreateErrandPage() {
 
     // Use provided time or default to 09:00 if not specified
     const timeToUse = formData.time || '09:00';
+    console.log('[DEBUG] Time to use:', timeToUse);
 
     // Parse the deadline date
     const errandDateTime = new Date(`${formData.deadline}T${timeToUse}`);
+    console.log('[DEBUG] Parsed errandDateTime:', errandDateTime, 'isValid:', !isNaN(errandDateTime.getTime()));
+
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const errandDate = new Date(`${formData.deadline}T00:00:00`);
+    console.log('[DEBUG] Parsed today:', today, 'errandDate:', errandDate);
 
     if (isNaN(errandDateTime.getTime())) {
+      console.log('[DEBUG] VALIDATION FAILED: Invalid datetime');
       setError('Invalid date or time format. Please check again 🤨');
+      setLoading(false);
       return;
     }
 
     // Check if the selected date is in the past (before today)
     if (errandDate < today) {
+      console.log('[DEBUG] VALIDATION FAILED: Date in past');
       setError('That date is in the past. Please select today or a future date 📅');
+      setLoading(false);
       return;
     }
 
     // Check if date/time is at least 30 minutes from now (only if scheduling for TODAY)
     const isToday = errandDate.getTime() === today.getTime();
+    console.log('[DEBUG] Is today?', isToday);
 
     if (isToday) {
       // For today's errands, require 30 minutes from now
       const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60 * 1000);
       if (errandDateTime < thirtyMinutesFromNow) {
+        console.log('[DEBUG] VALIDATION FAILED: Not enough time from now');
         setError('Please schedule at least 30 minutes from now to give doers time to respond ⏳');
+        setLoading(false);
         return;
       }
     }
+    console.log('[DEBUG] Date/time validation passed');
 
     // 6. Duration validation (if specified)
     if (formData.duration && formData.duration.trim().length > 0) {
       const durationNum = parseFloat(formData.duration);
       if (isNaN(durationNum) || durationNum <= 0) {
         setError('Duration must be a valid positive number 🙃');
+        setLoading(false);
         return;
       }
       if (durationNum > 480) { // Max 8 hours
         setError('Duration cannot exceed 480 hours. That is too long 😅');
+        setLoading(false);
         return;
       }
     }
@@ -777,12 +791,14 @@ export default function CreateErrandPage() {
     // 7. Description length validation
     if (formData.description && formData.description.length > 150) {
       setError('Description is too long. Please keep it under 150 characters 📝');
+      setLoading(false);
       return;
     }
 
     // 8. Notes length validation
     if (formData.specialNote && formData.specialNote.length > 500) {
       setError('Notes are too long. Please keep them under 500 characters 😄');
+      setLoading(false);
       return;
     }
 
@@ -827,29 +843,37 @@ export default function CreateErrandPage() {
         }
       );
 
-      const { isDuplicate, isSimilar, similar, similarButDifferent, message } = duplicationResponse.data.data;
+      const dupData = duplicationResponse.data.data || {};
+      const { isDuplicate, isSimilar, similar = [], similarButDifferent = [] } = dupData;
+
+      console.log('[DEBUG] Duplication check result:', dupData);
 
       // Block exact duplicates (same title + category + location + time)
-      if (isDuplicate && similar.length > 0) {
+      if (isDuplicate && similar && similar.length > 0) {
         const duplicate = similar[0];
+        console.log('[DEBUG] VALIDATION FAILED: Duplicate errand detected');
         setError(`You already posted this exact errand on ${new Date(duplicate.created_at).toLocaleDateString()}. Please avoid posting duplicates.`);
+        setLoading(false);
         return;
       }
 
       // Warn on similar but different location/time (but allow)
-      if (isSimilar && similarButDifferent.length > 0) {
+      if (isSimilar && similarButDifferent && similarButDifferent.length > 0) {
         const similar_errand = similarButDifferent[0];
         // Show warning but allow them to proceed
+        console.log('[DEBUG] Similar errand detected, showing warning but allowing');
         setError(`⚠️ You posted a similar errand on ${new Date(similar_errand.created_at).toLocaleDateString()} at a different location/time. Make sure this is a different request. You can still proceed.`);
         // Don't return - allow user to continue
         setTimeout(() => setError(''), 5000); // Clear warning after 5 seconds
       }
-    } catch (dupErr) {
+    } catch (dupErr: any) {
       console.warn('Duplication check failed:', dupErr);
+      console.warn('Duplication error response:', dupErr.response?.data);
       // Continue anyway if duplication check fails
     }
 
     console.log('[DEBUG] *** VALIDATION PASSED - PROCEEDING WITH API CALL ***');
+    console.log('[DEBUG] All validations completed, proceeding to API call');
 
     try {
       const token = localStorage.getItem('token');
