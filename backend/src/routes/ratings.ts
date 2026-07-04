@@ -77,7 +77,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // Verify task exists and is completed
     const taskResult = await db.query(
-      'SELECT id, asker_id, status FROM errands WHERE id = $1',
+      'SELECT id, asker_id, status, title FROM errands WHERE id = $1',
       [taskId]
     );
 
@@ -180,7 +180,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
         ? `${ratingEmoji} New Review from ${raterName}`
         : `${ratingEmoji} New Review from ${raterName}`;
 
-      const formattedErrandId = task.errand_id || `ER26-${taskId}`;
+      const formattedErrandId = `ER26-${taskId}`;
       const notificationBody = rating === 5
         ? `${formattedErrandId}: ${raterName} loved your work on "${task.title}"! You earned ${totalEpAwarded} EP\n\nPayment releases in 24-48 hours if no dispute.`
         : `${formattedErrandId}: ${raterName} left you a ${Math.round(rating)}-star rating on "${task.title}". You earned ${totalEpAwarded} EP!`;
