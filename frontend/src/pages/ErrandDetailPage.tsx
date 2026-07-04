@@ -989,8 +989,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
             {/* Action Button */}
             {currentUser && currentUser.id !== errand.askerId ? (
-              errand.status === 'in_progress' ? (
-                // Errand is in progress - show chat and mark as completed buttons
+              errand.status === 'in_progress' && bidId === errand.acceptedBidId ? (
+                // Errand is in progress and user is the confirmed doer - show chat and mark as completed buttons
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => {
