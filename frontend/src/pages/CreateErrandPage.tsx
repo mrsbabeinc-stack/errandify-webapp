@@ -203,9 +203,9 @@ export default function CreateErrandPage() {
               blocked: false,
               error: '',
             });
-          } else if (newFormData.title && newFormData.category) {
-            // Otherwise fetch suggestions
-            console.log('[CreateErrand] Fetching suggestions for:', newFormData.title, 'category:', newFormData.category);
+          } else if (newFormData.title) {
+            // Fetch suggestions for any title to get AI category recommendation (even if category is empty)
+            console.log('[CreateErrand] Fetching AI suggestions for title:', newFormData.title, 'category:', newFormData.category);
             try {
               const response = await axios.post(
                 `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
