@@ -395,7 +395,7 @@ Your message doesn't meet our community standards. Please keep messages:
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end z-50 md:items-center md:justify-center">
-      <div className="bg-white rounded-t-lg md:rounded-lg w-full md:max-w-7xl md:h-96 flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
+      <div className="bg-white rounded-t-lg md:rounded-lg w-full md:max-w-6xl md:h-screen md:max-h-[85vh] flex flex-col max-h-[95vh] shadow-2xl overflow-hidden">
         {/* Header - Full Width */}
         <div className="bg-errandify-brown text-white p-3 flex items-start justify-between gap-2">
           <div className="flex-1">
@@ -667,7 +667,7 @@ Your message doesn't meet our community standards. Please keep messages:
 
           {/* Right Sidebar - Errand Details */}
           {errandDetails && (
-            <div className="w-80 flex flex-col border-l border-orange-200 bg-orange-50 p-4 overflow-y-auto">
+            <div className="w-80 flex flex-col border-l border-orange-200 bg-orange-50 p-4 overflow-hidden">
               {/* Participants - Show other person first based on current user role */}
               <div className="mb-4 pb-4 border-b border-orange-200">
                 {/* Show the OTHER person prominently */}
