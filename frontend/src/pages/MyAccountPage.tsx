@@ -981,6 +981,17 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
 
       // Update local state after successful backend call
       setUserBalance(userBalance - confirmRedeemData.points);
+
+      // Update profileData to reflect the new EP balance
+      if (profileData) {
+        const updatedProfileData = {
+          ...profileData,
+          errandifyPoints: (profileData.errandifyPoints || 0) - confirmRedeemData.points
+        };
+        setProfileData(updatedProfileData);
+        localStorage.setItem('profileData', JSON.stringify(updatedProfileData));
+      }
+
       const now = new Date();
       const dateStr = 'Today';
       const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -2231,6 +2242,92 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
                         }`}
                       >
                         {(profileData?.errandifyPoints ?? userBalance) >= 200 ? '✨ Redeem' : '🎯 Need 200 EP'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recommended for You Section */}
+                <div className="bg-white rounded-xl border-2 border-pink-200 overflow-hidden shadow-md">
+                  <div className="bg-gradient-to-r from-pink-400 to-rose-500 text-white p-3">
+                    <h3 className="text-sm font-bold">✨ Recommended For You ✨</h3>
+                    <p className="text-xs mt-1 opacity-90">Personalized vouchers based on your interests</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 p-3">
+                    <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-lg p-2 hover:shadow-md transition">
+                      <p className="text-2xl mb-1">☕</p>
+                      <p className="font-bold text-xs text-gray-900">Starbucks $10</p>
+                      <p className="text-xs text-orange-600 font-bold mb-1">500 EP</p>
+                      <button
+                        onClick={() => {
+                          const balance = profileData?.errandifyPoints ?? userBalance;
+                          if (balance >= 500) {
+                            setConfirmRedeemData({ points: 500, code: 'STARBUCKS10', amount: 10, name: 'Starbucks $10' });
+                          } else {
+                            setModalMessage('❌ Not enough points! You need 500 EP');
+                            setShowErrorModal(true);
+                          }
+                        }}
+                        className="w-full bg-errandify-orange text-white py-1 rounded text-xs font-bold hover:bg-orange-600 transition"
+                      >
+                        Redeem
+                      </button>
+                    </div>
+                    <div className="bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-200 rounded-lg p-2 hover:shadow-md transition">
+                      <p className="text-2xl mb-1">🍗</p>
+                      <p className="font-bold text-xs text-gray-900">KFC Voucher</p>
+                      <p className="text-xs text-red-600 font-bold mb-1">450 EP</p>
+                      <button
+                        onClick={() => {
+                          const balance = profileData?.errandifyPoints ?? userBalance;
+                          if (balance >= 450) {
+                            setConfirmRedeemData({ points: 450, code: 'KFC450', amount: 15, name: 'KFC Voucher' });
+                          } else {
+                            setModalMessage('❌ Not enough points! You need 450 EP');
+                            setShowErrorModal(true);
+                          }
+                        }}
+                        className="w-full bg-red-500 text-white py-1 rounded text-xs font-bold hover:bg-red-600 transition"
+                      >
+                        Redeem
+                      </button>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-lg p-2 hover:shadow-md transition">
+                      <p className="text-2xl mb-1">🎬</p>
+                      <p className="font-bold text-xs text-gray-900">Cathay Cineplex</p>
+                      <p className="text-xs text-purple-600 font-bold mb-1">350 EP</p>
+                      <button
+                        onClick={() => {
+                          const balance = profileData?.errandifyPoints ?? userBalance;
+                          if (balance >= 350) {
+                            setConfirmRedeemData({ points: 350, code: 'CINEPLEX350', amount: 25, name: 'Cathay Cineplex Ticket' });
+                          } else {
+                            setModalMessage('❌ Not enough points! You need 350 EP');
+                            setShowErrorModal(true);
+                          }
+                        }}
+                        className="w-full bg-purple-500 text-white py-1 rounded text-xs font-bold hover:bg-purple-600 transition"
+                      >
+                        Redeem
+                      </button>
+                    </div>
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-2 hover:shadow-md transition">
+                      <p className="text-2xl mb-1">✈️</p>
+                      <p className="font-bold text-xs text-gray-900">Changi Lounge</p>
+                      <p className="text-xs text-blue-600 font-bold mb-1">1000 EP</p>
+                      <button
+                        onClick={() => {
+                          const balance = profileData?.errandifyPoints ?? userBalance;
+                          if (balance >= 1000) {
+                            setConfirmRedeemData({ points: 1000, code: 'CHANGI1000', amount: 100, name: 'Changi Airport Lounge' });
+                          } else {
+                            setModalMessage('❌ Not enough points! You need 1000 EP');
+                            setShowErrorModal(true);
+                          }
+                        }}
+                        className="w-full bg-blue-500 text-white py-1 rounded text-xs font-bold hover:bg-blue-600 transition"
+                      >
+                        Redeem
                       </button>
                     </div>
                   </div>
