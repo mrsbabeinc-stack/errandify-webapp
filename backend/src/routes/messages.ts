@@ -182,6 +182,7 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
     const taskResult = await db.query(
       `SELECT e.id, e.formatted_id, e.title, e.description, e.category, e.budget, e.deadline,
               e.location, e.full_address, e.postal_code, e.status, e.asker_id, e.updated_at,
+              e.accepted_bid_id,
               asker.display_name as asker_name, asker.alias as asker_alias
        FROM errands e
        LEFT JOIN users asker ON e.asker_id = asker.id
@@ -196,25 +197,44 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
     const task = taskResult.rows[0];
     console.log('[Messages GET] Task from DB:', { id: task.id, location: task.location, postal_code: task.postal_code });
 
-    // Get the doer name and confirmed bid amount from any bid (active or completed)
+    // Get the doer name and confirmed bid amount
     let doerName = 'Unknown';
     let doerAlias = 'Unknown';
     let doerId = null;
     let confirmedBidAmount = null;
-    const bidResult = await db.query(
-      `SELECT b.doer_id, b.bid_amount, u.display_name, u.alias
-       FROM bids b
-       LEFT JOIN users u ON b.doer_id = u.id
-       WHERE b.errand_id = $1 AND b.status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress', 'completed_unconfirmed', 'completed_confirmed')
-       ORDER BY b.updated_at DESC
-       LIMIT 1`,
-      [taskId]
-    );
-    if (bidResult.rows.length > 0) {
-      doerId = bidResult.rows[0].doer_id;
-      doerName = bidResult.rows[0].display_name || 'Unknown';
-      doerAlias = bidResult.rows[0].alias || bidResult.rows[0].display_name || 'Unknown';
-      confirmedBidAmount = bidResult.rows[0].bid_amount;
+
+    // If there's an accepted bid, use that. Otherwise fall back to most recent bid
+    if (task.accepted_bid_id) {
+      const acceptedBidResult = await db.query(
+        `SELECT b.doer_id, b.bid_amount, u.display_name, u.alias
+         FROM bids b
+         LEFT JOIN users u ON b.doer_id = u.id
+         WHERE b.id = $1`,
+        [task.accepted_bid_id]
+      );
+      if (acceptedBidResult.rows.length > 0) {
+        doerId = acceptedBidResult.rows[0].doer_id;
+        doerName = acceptedBidResult.rows[0].display_name || 'Unknown';
+        doerAlias = acceptedBidResult.rows[0].alias || acceptedBidResult.rows[0].display_name || 'Unknown';
+        confirmedBidAmount = acceptedBidResult.rows[0].bid_amount;
+      }
+    } else {
+      // Fallback: get most recent bid if no accepted bid
+      const bidResult = await db.query(
+        `SELECT b.doer_id, b.bid_amount, u.display_name, u.alias
+         FROM bids b
+         LEFT JOIN users u ON b.doer_id = u.id
+         WHERE b.errand_id = $1
+         ORDER BY b.updated_at DESC
+         LIMIT 1`,
+        [taskId]
+      );
+      if (bidResult.rows.length > 0) {
+        doerId = bidResult.rows[0].doer_id;
+        doerName = bidResult.rows[0].display_name || 'Unknown';
+        doerAlias = bidResult.rows[0].alias || bidResult.rows[0].display_name || 'Unknown';
+        confirmedBidAmount = bidResult.rows[0].bid_amount;
+      }
     }
     const isAsker = task.asker_id === userId;
     const isDoer = doerId === userId;
