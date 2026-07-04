@@ -204,6 +204,13 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// Serve static frontend files
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+app.use(express.static(join(__dirname, '../../frontend/dist')));
+
 // Routes
 // MOCK TESTING ROUTES (for development/testing only)
 app.use('/api/mock-auth', mockAuthRoutes);
