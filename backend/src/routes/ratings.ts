@@ -199,6 +199,22 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       }).catch(err => {
         console.error('[Email] Failed to send rating_received email:', err);
       });
+
+      // If rater is asker, encourage doer to rate back for EP points (positive message)
+      if (isAsker) {
+        const doerTitle = '⭐ Ready to Rate Back?';
+        const doerBody = `${raterName} rated you ${Math.round(rating)}⭐ on "${task.title}"! Share your experience and earn 15+ EP points by rating them back. Every rating counts! 💛`;
+
+        await createNotification(
+          ratedUserId,
+          'rating_encouragement',
+          doerTitle,
+          doerBody,
+          null
+        ).catch(console.error);
+
+        console.log('[Rating] Sent doer encouragement notification for', taskId);
+      }
     } catch (epError) {
       console.error('Error awarding EP:', epError);
       // Don't fail the rating submission if EP awarding fails
