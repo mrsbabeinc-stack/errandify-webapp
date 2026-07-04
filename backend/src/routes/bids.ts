@@ -618,12 +618,14 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
       [now]
     );
 
-    // Get all bids for this doer with errand details
+    // Get all bids for this doer with errand details and rating status
     const bidsResult = await db.query(
-      `SELECT b.*, e.title, e.budget, e.category, e.status as errand_status, e.location, e.full_address, e.postal_code, e.deadline, e.description, e.formatted_id, u.alias, u.display_name as asker_display_name
+      `SELECT b.*, e.title, e.budget, e.category, e.status as errand_status, e.location, e.full_address, e.postal_code, e.deadline, e.description, e.formatted_id, u.alias, u.display_name as asker_display_name,
+              CASE WHEN r.id IS NOT NULL THEN true ELSE false END as has_rated
        FROM bids b
        JOIN errands e ON b.errand_id = e.id
        JOIN users u ON e.asker_id = u.id
+       LEFT JOIN ratings r ON e.id = r.errand_id AND r.rater_id = $1
        WHERE b.doer_id = $1
        ORDER BY b.created_at DESC`,
       [doerId]
@@ -675,6 +677,7 @@ router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) =
         status: bid.status,
         created_at: bid.created_at,
         offer_id: bid.offer_id || `OF${bid.id}`,
+        has_rated: bid.has_rated || false,
         errand: {
           title: bid.title,
           budget: bid.budget,
