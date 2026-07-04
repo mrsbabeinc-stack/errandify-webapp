@@ -190,6 +190,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   };
 
   useEffect(() => {
+    // Reset chat modal when navigating to a new errand
+    setShowChat(false);
     fetchErrandDetail();
   }, [id]);
 
