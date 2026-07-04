@@ -593,16 +593,17 @@ Your message doesn't meet our community standards. Please keep messages:
                 📎
               </button>
               {showImageMenu && (
-                <div className="absolute bottom-full mb-2 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+                <div className="absolute bottom-full mb-2 right-0 bg-white border border-orange-200 rounded-lg shadow-lg z-50 min-w-40">
                   <button
                     type="button"
                     onClick={() => {
                       fileInputRef.current?.click();
                       setShowImageMenu(false);
                     }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-orange-100 border-b border-orange-200"
+                    className="w-full px-4 py-3 text-left text-sm hover:bg-orange-50 border-b border-orange-100 transition flex items-center gap-3 font-medium"
                   >
-                    📁 From Gallery
+                    <span className="text-lg">📁</span>
+                    <span>From Gallery</span>
                   </button>
                   <button
                     type="button"
@@ -610,9 +611,10 @@ Your message doesn't meet our community standards. Please keep messages:
                       cameraInputRef.current?.click();
                       setShowImageMenu(false);
                     }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                    className="w-full px-4 py-3 text-left text-sm hover:bg-orange-50 transition flex items-center gap-3 font-medium"
                   >
-                    📸 From Camera
+                    <span className="text-lg">📸</span>
+                    <span>From Camera</span>
                   </button>
                 </div>
               )}
