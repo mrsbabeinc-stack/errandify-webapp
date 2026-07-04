@@ -312,86 +312,39 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                 key={errand.id}
                 className={`bg-white rounded border border-gray-200 overflow-hidden hover:shadow-md transition-shadow ${getStatusBarColor(errand)}`}
               >
-                {/* Clean 2-Row Card Layout - No Clutter */}
-                <div className="w-full p-2.5 text-left space-y-1">
-                  {/* ROW 1: Status | Title ID | Category Postal Budget | Date Offers | Actions */}
-                  <div className="flex items-center justify-between gap-1.5">
-                    {/* Left: Status Badge (Fixed Width) */}
-                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-semibold flex-shrink-0">
-                      {capitalizeStatus(errand.status)}
-                    </span>
+                {/* Balanced 2-Row Card Layout */}
+                <div className="w-full p-3 text-left space-y-2">
+                  {/* ROW 1: Status | Title + ID | Actions on Right */}
+                  <div className="flex items-center justify-between gap-3">
+                    {/* Left Section: Status + Title + ID */}
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      {/* Status Badge */}
+                      <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-semibold flex-shrink-0">
+                        {capitalizeStatus(errand.status)}
+                      </span>
 
-                    {/* Center: Title + ID + Essential Info */}
-                    <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                      {/* Title and ID */}
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1">
-                          <h3 className="font-bold text-errandify-brown truncate text-sm flex-1">
+                      {/* Title + ID */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline gap-2">
+                          <h3 className="font-bold text-errandify-brown truncate text-sm">
                             {errand.title}
                           </h3>
-                          <span className="font-mono text-xs font-bold text-gray-400 flex-shrink-0">
+                          <span className="font-mono text-xs text-gray-400 flex-shrink-0">
                             {errand.errandId}
                           </span>
                         </div>
                       </div>
-
-                      {/* Category */}
-                      <span
-                        className={`${getCategoryColor(
-                          errand.category
-                        )} px-1.5 py-0.5 rounded text-xs font-semibold flex-shrink-0`}
-                      >
-                        {errand.category}
-                      </span>
-
-                      {/* Postal Code */}
-                      {(errand.postal_code || errand.postalCode) && (
-                        <span className="text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded font-semibold flex-shrink-0">
-                          {errand.postal_code || errand.postalCode}
-                        </span>
-                      )}
-
-                      {/* Budget */}
-                      {errand.budget && (
-                        <span className="text-xs bg-green-50 text-green-700 px-1.5 py-0.5 rounded font-bold flex-shrink-0">
-                          SGD ${errand.budget}
-                        </span>
-                      )}
                     </div>
 
-                    {/* Right: Date + Offers + Actions */}
+                    {/* Right Section: Actions */}
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {/* Date */}
-                      {errand.deadline && (
-                        <span className="text-xs text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded flex-shrink-0 whitespace-nowrap">
-                          🗓️ {new Date(errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
-                        </span>
-                      )}
-
-                      {/* Offers */}
-                      {(errand.bidCount ?? 0) > 0 ? (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold flex items-center gap-0.5 flex-shrink-0">
-                          📋 {errand.bidCount}
-                          {(errand.unviewedBidCount ?? 0) > 0 && (
-                            <span className="bg-red-500 text-white rounded-full px-1 py-0 text-xs font-bold">
-                              {errand.unviewedBidCount}
-                            </span>
-                          )}
-                        </span>
-                      ) : (
-                        <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-semibold flex-shrink-0">
-                          📋 —
-                        </span>
-                      )}
-
-                      {/* Action Buttons */}
                       {userRole === 'asker' && (errand.status === 'confirmed' || errand.status === 'in_progress') && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/chat?errandId=${errand.id}`);
                           }}
-                          className="text-lg hover:scale-110 transition-transform flex-shrink-0"
+                          className="text-lg hover:scale-110 transition-transform"
                           title="Chat"
                         >
                           💬
@@ -402,7 +355,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                           e.stopPropagation();
                           navigate(`/errand/${errand.id}`);
                         }}
-                        className="px-2 py-1 bg-errandify-orange text-white text-xs rounded font-semibold hover:bg-opacity-90 transition flex-shrink-0"
+                        className="px-2 py-1 bg-errandify-orange text-white text-xs rounded font-semibold hover:bg-opacity-90 transition"
                         title="View"
                       >
                         View
@@ -413,7 +366,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                             e.stopPropagation();
                             handleCopyErrand(errand);
                           }}
-                          className="px-2 py-1 bg-orange-500 text-white text-xs rounded font-semibold hover:bg-orange-600 transition flex-shrink-0"
+                          className="px-2 py-1 bg-orange-500 text-white text-xs rounded font-semibold hover:bg-orange-600 transition"
                           title="Copy"
                         >
                           Copy
@@ -422,15 +375,61 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                     </div>
                   </div>
 
-                  {/* ROW 2: Rating Reminder Only (if needed) */}
-                  {pendingAction && (
-                    <div className="flex items-center gap-1">
-                      <div className="flex-1" />
-                      <span className={`text-xs ${pendingAction.color} text-white px-2 py-0.5 rounded font-bold flex-shrink-0`}>
+                  {/* ROW 2: Category, Postal, Budget, Date, Offers, Rating */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Category */}
+                    <span
+                      className={`${getCategoryColor(
+                        errand.category
+                      )} px-2 py-0.5 rounded text-xs font-semibold`}
+                    >
+                      {errand.category}
+                    </span>
+
+                    {/* Postal Code */}
+                    {(errand.postal_code || errand.postalCode) && (
+                      <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-semibold">
+                        📍 {errand.postal_code || errand.postalCode}
+                      </span>
+                    )}
+
+                    {/* Budget */}
+                    {errand.budget && (
+                      <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded font-bold">
+                        💰 SGD ${errand.budget}
+                      </span>
+                    )}
+
+                    {/* Date */}
+                    {errand.deadline && (
+                      <span className="text-xs text-gray-600 bg-gray-50 px-2 py-0.5 rounded">
+                        🗓️ {new Date(errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
+
+                    {/* Offers */}
+                    {(errand.bidCount ?? 0) > 0 ? (
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-semibold flex items-center gap-1">
+                        📋 {errand.bidCount}
+                        {(errand.unviewedBidCount ?? 0) > 0 && (
+                          <span className="bg-red-500 text-white rounded-full px-1.5 py-0 text-xs font-bold">
+                            {errand.unviewedBidCount}
+                          </span>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-semibold">
+                        📋 —
+                      </span>
+                    )}
+
+                    {/* Rating Reminder */}
+                    {pendingAction && (
+                      <span className={`text-xs ${pendingAction.color} text-white px-2 py-0.5 rounded font-bold`}>
                         {pendingAction.label}
                       </span>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             );
