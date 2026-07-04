@@ -81,7 +81,6 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [ratingComment, setRatingComment] = useState('');
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
   const [hasRated, setHasRated] = useState(false);
-  const [showRatingModal, setShowRatingModal] = useState(false);
   const [showCelebratory, setShowCelebratory] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -269,9 +268,6 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       );
       if (response.data.success && response.data.data && response.data.data.hasRated) {
         setHasRated(true);
-      } else if (response.data.success && response.data.data && !response.data.data.hasRated && errand?.status === 'completed' && userId !== errand?.askerId) {
-        // Show rating modal if doer hasn't rated yet and errand is completed
-        setShowRatingModal(true);
       }
     } catch (err: any) {
       // If endpoint doesn't exist, just ignore - rating check is optional
@@ -2280,126 +2276,6 @@ Let's help each other! 🤝`}
         </div>
       )}
 
-      {/* Doer Rating Modal - Appears when doer views completed errand */}
-      {showRatingModal && errand && currentUser && currentUser.id !== errand.askerId && (
-        <div className="fixed inset-0 bg-slate-900 bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 rounded-2xl max-w-md w-full p-8 shadow-2xl border-2 border-amber-200 max-h-[90vh] overflow-y-auto">
-            {/* Warm Header */}
-            <div className="text-center mb-6">
-              <p className="text-5xl mb-3">💫</p>
-              <h2 className="text-2xl font-bold text-amber-900 mb-2">Your Turn to Give Feedback!</h2>
-              <p className="text-sm text-amber-700">Let {errand.askerName || 'them'} know how it went</p>
-              <p className="text-xs text-amber-600 mt-2 font-semibold">+5 Errandify Points for rating ✨</p>
-            </div>
-
-            {/* Star Rating */}
-            <div className="flex gap-2 mb-6 justify-center">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => !hasRated && setRating(star)}
-                  disabled={hasRated}
-                  className={`text-5xl transition-all transform hover:scale-125 hover:-translate-y-1 ${
-                    star <= rating ? 'text-yellow-400 drop-shadow-lg' : 'text-gray-300 hover:text-yellow-300'
-                  } ${hasRated ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                  title={['Not great', 'Could be better', 'Good!', 'Really good!', 'Amazing!'][star - 1]}
-                >
-                  ★
-                </button>
-              ))}
-            </div>
-
-            {/* Rating feedback message */}
-            {rating > 0 && (
-              <p className="text-center mb-6 text-sm font-semibold text-amber-800">
-                {rating === 1 && '😕 Let us know what could improve'}
-                {rating === 2 && '😐 Share what could be better'}
-                {rating === 3 && '😊 Good job! Add details if you like'}
-                {rating === 4 && '😄 Really impressed! Tell them why'}
-                {rating === 5 && '🎉 Wow! They were amazing! Let us know!'}
-              </p>
-            )}
-
-            {/* Feedback textarea */}
-            <textarea
-              value={ratingComment}
-              onChange={(e) => !hasRated && setRatingComment(e.target.value)}
-              disabled={hasRated}
-              placeholder="📝 Share your experience... (optional)"
-              maxLength={200}
-              rows={2}
-              className={`w-full text-xs px-3 py-2 border-2 border-amber-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none transition mb-4 ${hasRated ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
-            />
-
-            {/* Buttons */}
-            <div className="flex gap-3">
-              {!hasRated ? (
-                <>
-                  <button
-                    onClick={() => setShowRatingModal(false)}
-                    className="flex-1 px-4 py-3 border border-amber-300 text-amber-700 rounded-lg font-semibold hover:bg-amber-50 transition text-sm"
-                  >
-                    Later
-                  </button>
-                  <button
-                    onClick={async () => {
-                      if (!currentUser || !errand) return;
-                      setRatingSubmitting(true);
-                      try {
-                        const token = localStorage.getItem('token');
-                        await axios.post(
-                          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings`,
-                          {
-                            taskId: errand.id,
-                            ratedUserId: errand.askerId,
-                            rating,
-                            comment: ratingComment || null,
-                          },
-                          { headers: { Authorization: `Bearer ${token}` } }
-                        );
-
-                        await axios.post(
-                          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/award-ep-bonus`,
-                          {
-                            errandId: errand.id,
-                            userId: currentUser.id,
-                            bonus: 5,
-                            reason: 'doer_rating_bonus',
-                          },
-                          { headers: { Authorization: `Bearer ${token}` } }
-                        );
-
-                        setHasRated(true);
-                        setShowCelebratory(true);
-                        window.dispatchEvent(new Event('ratingsUpdated'));
-                        window.dispatchEvent(new Event('profileDataUpdated'));
-
-                        setTimeout(() => {
-                          setShowCelebratory(false);
-                          setShowRatingModal(false);
-                        }, 2000);
-                      } catch (err: any) {
-                        console.error('Rating submission error:', err);
-                        alert('Error submitting rating: ' + (err.response?.data?.error || err.message));
-                      } finally {
-                        setRatingSubmitting(false);
-                      }
-                    }}
-                    disabled={ratingSubmitting || rating === 0}
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 text-sm"
-                  >
-                    {ratingSubmitting ? '✨ Submitting...' : '💙 Submit & Earn +5 EP'}
-                  </button>
-                </>
-              ) : (
-                <div className="w-full px-4 py-3 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-lg font-bold text-center border-2 border-green-300 text-sm">
-                  ✅ Thanks for the feedback! +5 EP bonus earned 🎉
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
