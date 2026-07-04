@@ -139,8 +139,8 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   };
 
   const getPendingAction = (errand: Errand) => {
-    // Only show "Rate Now" badge if status is exactly 'completed', not 'rated'
-    if (errand.status === 'completed' && errand.status !== 'rated') {
+    // Only show "Rate Now" badge if status is exactly 'completed'
+    if (errand.status === 'completed') {
       return { type: 'awaiting_rating', label: '⚠️ Rate Now', color: 'bg-red-500' };
     }
     return null;
@@ -352,7 +352,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
 
                     {/* Right: Action buttons */}
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {userRole === 'asker' && errand.status === 'confirmed' && (
+                      {userRole === 'asker' && (errand.status === 'confirmed' || errand.status === 'in_progress') && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
