@@ -84,6 +84,18 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [showCelebratory, setShowCelebratory] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [cancelReasonType, setCancelReasonType] = useState<'dropdown' | 'custom'>('dropdown');
+  const [selectedCancelReason, setSelectedCancelReason] = useState('');
+  const [customCancelReason, setCustomCancelReason] = useState('');
+
+  const cancellationReasons = [
+    '💙 Found a good friend to help instead',
+    '🎉 Already got it done! So grateful',
+    '💰 My budget situation changed',
+    '⏰ Timeline moved earlier than expected',
+    '🤝 Decided to do it myself after all',
+    '✨ Other reason',
+  ];
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -452,10 +464,18 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
   const confirmCancelErrand = async () => {
     try {
+      // Determine final reason
+      let finalReason = '';
+      if (cancelReasonType === 'custom') {
+        finalReason = customCancelReason.trim();
+      } else if (selectedCancelReason) {
+        finalReason = selectedCancelReason;
+      }
+
       const token = localStorage.getItem('token');
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/cancel`,
-        { reason: cancelReason || null },
+        { reason: finalReason || null },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -473,6 +493,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       alert(successMsg);
       setShowCancelModal(false);
       setCancelReason('');
+      setSelectedCancelReason('');
+      setCustomCancelReason('');
+      setCancelReasonType('dropdown');
       navigate('/errands');
     } catch (error: any) {
       console.error('Failed to cancel errand:', error);
@@ -490,6 +513,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       }
       setShowCancelModal(false);
       setCancelReason('');
+      setSelectedCancelReason('');
+      setCustomCancelReason('');
+      setCancelReasonType('dropdown');
     }
   };
 
@@ -2073,7 +2099,7 @@ Let's help each other! 🤝`}
       {/* Cancel Errand Modal */}
       {showCancelModal && errand && (
         <div className="fixed inset-0 bg-slate-900 bg-opacity-40 flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-red-50 to-white rounded-2xl max-w-sm w-full p-8 shadow-2xl border-l-4 border-l-red-500">
+          <div className="bg-gradient-to-br from-red-50 to-white rounded-2xl max-w-sm w-full p-8 shadow-2xl border-l-4 border-l-red-500 max-h-[90vh] overflow-y-auto">
             <div className="text-4xl mb-4">⚠️</div>
             <h2 className="text-2xl font-bold text-red-700 mb-3">
               Cancel This Errand?
@@ -2081,23 +2107,66 @@ Let's help each other! 🤝`}
             <p className="text-slate-700 mb-6">
               Are you sure you want to cancel "{errand.title}"? All doers with offers will be notified.
             </p>
+
+            {/* Reason Selection */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Reason for cancellation (optional):
+              <label className="block text-sm font-medium text-slate-700 mb-3">
+                Why are you cancelling? (optional)
               </label>
-              <textarea
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="E.g., no longer need this errand, found another solution..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                rows={3}
-              />
+
+              {/* Dropdown for preset reasons */}
+              {cancelReasonType === 'dropdown' && (
+                <div className="space-y-2 mb-3">
+                  <select
+                    value={selectedCancelReason}
+                    onChange={(e) => setSelectedCancelReason(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Select a reason...</option>
+                    {cancellationReasons.map((reason) => (
+                      <option key={reason} value={reason}>
+                        {reason}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Custom reason textarea */}
+              {cancelReasonType === 'custom' && (
+                <div className="mb-3">
+                  <textarea
+                    value={customCancelReason}
+                    onChange={(e) => setCustomCancelReason(e.target.value)}
+                    placeholder="Tell us why you're cancelling..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    rows={3}
+                  />
+                </div>
+              )}
+
+              {/* Toggle between preset and custom */}
+              <button
+                onClick={() => {
+                  setCancelReasonType(cancelReasonType === 'dropdown' ? 'custom' : 'dropdown');
+                  setSelectedCancelReason('');
+                  setCustomCancelReason('');
+                }}
+                className="text-xs text-red-600 hover:text-red-700 font-medium underline"
+              >
+                {cancelReasonType === 'dropdown' ? '✎ Write your own reason' : '← Use preset reasons'}
+              </button>
             </div>
+
+            {/* Action Buttons */}
             <div className="flex gap-3">
               <button
                 onClick={() => {
                   setShowCancelModal(false);
                   setCancelReason('');
+                  setSelectedCancelReason('');
+                  setCustomCancelReason('');
+                  setCancelReasonType('dropdown');
                 }}
                 className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition"
               >
