@@ -711,6 +711,19 @@ export default function CreateErrandPage() {
       return;
     }
 
+    // 3c. Verify full address contains the area name (consistency check)
+    if (!isRemoteWork && fullAddress && area) {
+      const fullAddressLower = fullAddress.toLowerCase();
+      const areaLower = area.toLowerCase();
+      if (!fullAddressLower.includes(areaLower)) {
+        console.log('[DEBUG] VALIDATION WARNING: Full address area mismatch');
+        console.log('[DEBUG] Full address:', fullAddress, '| Expected area:', area);
+        setError(`⚠️ Full address should include "${area}" area. Your address mentions a different area. Please correct this.`);
+        setLoading(false);
+        return;
+      }
+    }
+
     // 4. Budget validation
     console.log('[DEBUG] Validating budget:', formData.budget);
     if (!formData.budget || formData.budget.trim().length === 0) {
