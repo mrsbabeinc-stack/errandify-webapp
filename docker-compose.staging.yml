@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: errandify-postgres-staging
+    environment:
+      POSTGRES_DB: errandify_staging
+      POSTGRES_USER: errandify
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-staging-password}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data-staging:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U errandify"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend-builder
+    container_name: errandify-backend-staging
+    environment:
+      NODE_ENV: staging
+      PORT: 3000
+      DATABASE_URL: postgresql://errandify:${DB_PASSWORD:-staging-password}@postgres:5432/errandify_staging
+      JWT_SECRET: ${JWT_SECRET:-staging-jwt-secret-change-me}
+      QWEN_API_KEY: ${QWEN_API_KEY}
+      MAPBOX_API_KEY: ${MAPBOX_API_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      VITE_API_URL: ${BACKEND_URL:-http://localhost:3000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/src:/app/backend/src
+    command: npm run dev
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-builder
+      args:
+        VITE_API_URL: ${BACKEND_URL:-http://localhost:3000}
+    container_name: errandify-frontend-staging
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: ${BACKEND_URL:-http://localhost:3000}
+    volumes:
+      - ./frontend/src:/app/frontend/src
+    command: npm run dev
+    restart: unless-stopped
+
+volumes:
+  postgres-data-staging:
+    driver: local
