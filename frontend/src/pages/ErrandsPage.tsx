@@ -256,6 +256,21 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
+  // Calculate summary stats
+  const getSummary = () => {
+    if (userRole !== 'asker') return null;
+
+    const needsAction = filteredErrands.filter(e => ['open', 'confirmed', 'in_progress'].includes(e.status));
+    const waitingRating = filteredErrands.filter(e => e.status === 'completed');
+    const soonestDeadline = needsAction.length > 0
+      ? needsAction.sort((a, b) => new Date(a.deadline || '9999').getTime() - new Date(b.deadline || '9999').getTime())[0]
+      : null;
+
+    return { needsAction: needsAction.length, waitingRating: waitingRating.length, soonestDeadline };
+  };
+
+  const summary = getSummary();
+
   return (
     <div className="min-h-screen bg-errandify-bg pb-32">
       <div className="max-w-3xl mx-auto px-2 py-2">
@@ -268,6 +283,40 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
             {pageSubtitle}
           </p>
         </div>
+
+        {/* Summary Section for Askers */}
+        {userRole === 'asker' && summary && (summary.needsAction > 0 || summary.waitingRating > 0) && (
+          <div className="mb-3 p-3 bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-errandify-orange rounded-lg">
+            <div className="space-y-2">
+              {summary.needsAction > 0 && (
+                <div
+                  className="cursor-pointer hover:bg-orange-200 p-2 rounded transition-colors"
+                  onClick={() => summary.soonestDeadline && navigate(`/errand/${summary.soonestDeadline.id}`)}
+                >
+                  <p className="text-sm font-semibold text-errandify-brown">
+                    📋 {summary.needsAction} errand{summary.needsAction > 1 ? 's' : ''} need attention
+                  </p>
+                  {summary.soonestDeadline && (
+                    <p className="text-xs text-gray-700 mt-1">
+                      Next deadline: <strong>{summary.soonestDeadline.title}</strong>
+                      {summary.soonestDeadline.deadline && ` (${new Date(summary.soonestDeadline.deadline).toLocaleDateString()})`}
+                    </p>
+                  )}
+                </div>
+              )}
+              {summary.waitingRating > 0 && (
+                <div
+                  className="cursor-pointer hover:bg-orange-200 p-2 rounded transition-colors"
+                  onClick={() => setStatusFilter('completed')}
+                >
+                  <p className="text-sm font-semibold text-errandify-brown">
+                    ⭐ {summary.waitingRating} errand{summary.waitingRating > 1 ? 's' : ''} waiting for your rating
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="mb-2">
