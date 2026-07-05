@@ -1,14 +1,44 @@
 import pg from 'pg';
 import { config } from './config.js';
 const { Pool } = pg;
-const pool = new Pool({
-    connectionString: config.databaseUrl,
-});
-pool.on('error', (err) => {
-    console.error('Unexpected error on idle client', err);
-});
+let pool = null;
+try {
+    if (config.databaseUrl) {
+        pool = new Pool({
+            connectionString: config.databaseUrl,
+            max: 20,
+            idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: 2000,
+        });
+        pool.on('error', (err) => {
+            console.warn('[DB] Unexpected error on idle client', err);
+        });
+        pool.on('connect', () => {
+            console.log('[DB] Successfully connected to PostgreSQL');
+        });
+        console.log('[DB] PostgreSQL pool initialized');
+    }
+    else {
+        console.warn('[DB] DATABASE_URL not set - database operations will fail');
+    }
+}
+catch (err) {
+    console.error('[DB] Failed to initialize pool:', err);
+}
 export const db = {
-    query: (text, params) => pool.query(text, params),
-    getClient: () => pool.connect(),
+    query: (text, params) => {
+        if (!pool) {
+            console.error('[DB] No database connection available');
+            return Promise.reject(new Error('Database not connected'));
+        }
+        return pool.query(text, params);
+    },
+    getClient: () => {
+        if (!pool) {
+            console.error('[DB] No database connection available');
+            return Promise.reject(new Error('Database not connected'));
+        }
+        return pool.connect();
+    },
 };
 export default db;
