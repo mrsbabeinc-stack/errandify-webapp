@@ -509,11 +509,45 @@ router.post('/demo-login', async (req: Request, res: Response) => {
     }
     console.log('[Auth] Demo user found:', demoUser.name);
 
-    // Check if user exists, if not create them
+    // For demo accounts, skip database and return token directly
+    // (Database not required for demo mode)
+    const mockUserId = `demo-${account}-${Math.random().toString(36).substring(7)}`;
+    const token = jwt.sign(
+      {
+        userId: mockUserId,
+        email: demoUser.email,
+        role: demoUser.defaultRole,
+        isDemo: true,
+      },
+      config.jwtSecret,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      success: true,
+      message: 'Demo login successful',
+      data: {
+        accessToken: token,
+        user: {
+          id: mockUserId,
+          name: demoUser.name,
+          email: demoUser.email,
+          mobile: demoUser.mobile,
+          role: demoUser.defaultRole,
+          gender: demoUser.gender,
+          bio: demoUser.bio,
+          certificates: demoUser.certificates,
+          isDemo: true,
+        }
+      }
+    });
+
+    // Old database code (kept for reference, now skipped for demo mode)
+    /*
     let result = await db.query(
       'SELECT id, display_name, mobile, role, chas_card_color, formatted_user_id FROM users WHERE mobile = $1',
       [demoUser.mobile]
-    );
+    );*/
 
     let user;
     if (result.rows.length === 0) {
