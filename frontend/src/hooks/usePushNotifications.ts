@@ -20,10 +20,14 @@ export function usePushNotifications() {
 
   // Check if push notifications are supported
   useEffect(() => {
+    // Disable Service Worker in staging/demo
+    const isStaging = window.location.hostname.includes('heroku') || window.location.hostname.includes('staging');
+
     const supported =
       'serviceWorker' in navigator &&
       'PushManager' in window &&
-      'Notification' in window;
+      'Notification' in window &&
+      !isStaging;
 
     setIsSupported(supported);
 
