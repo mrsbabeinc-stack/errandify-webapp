@@ -5,7 +5,7 @@ echo "Installing backend dependencies..."
 cd backend
 npm install
 echo "Compiling TypeScript..."
-npx tsc
+node_modules/.bin/tsc
 cd ..
 
 echo "Installing frontend dependencies..."
