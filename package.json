@@ -7,7 +7,6 @@
     "npm": "11.x"
   },
   "scripts": {
-    "build": "bash build.sh",
     "dev": "cd frontend && npm run dev"
   }
 }
