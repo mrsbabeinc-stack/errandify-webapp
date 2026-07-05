@@ -18,16 +18,16 @@
     "NODE_ENV": {
       "description": "Node environment",
       "value": "production",
-      "required": true
+      "required": false
     },
     "JWT_SECRET": {
       "description": "Secret key for JWT tokens",
       "value": "change-this-in-production",
-      "required": true
+      "required": false
     },
     "DATABASE_URL": {
       "description": "PostgreSQL database URL (added by Heroku Postgres addon)",
-      "required": true
+      "required": false
     },
     "QWEN_API_KEY": {
       "description": "Alibaba Qwen API key for AI features",
@@ -50,8 +50,6 @@
       "required": false
     }
   },
-  "addons": [
-    "heroku-postgresql:hobby-dev"
-  ],
+  "addons": [],
   "stack": "heroku-24"
 }
