@@ -50,6 +50,8 @@
       "required": false
     }
   },
-  "addons": [],
+  "addons": [
+    "heroku-postgresql:hobby-dev"
+  ],
   "stack": "heroku-24"
 }
