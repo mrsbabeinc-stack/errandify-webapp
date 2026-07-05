@@ -3,8 +3,8 @@ set -e
 
 echo "Installing backend dependencies..."
 cd backend
-npm install
-npm run build
+npm install --production=false
+npx tsc
 cd ..
 
 echo "Installing frontend dependencies..."
