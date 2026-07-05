@@ -3,14 +3,14 @@ set -e
 
 echo "Installing backend dependencies..."
 cd backend
-npm install --only=prod
+npm install
 echo "Compiling TypeScript..."
-./node_modules/.bin/tsc
+npx tsc
 cd ..
 
 echo "Installing frontend dependencies..."
 cd frontend
-npm install --only=prod
+npm install
 npm run build
 cd ..
 
