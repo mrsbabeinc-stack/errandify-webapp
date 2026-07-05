@@ -277,17 +277,42 @@ const httpServer = http.createServer(app);
 // Initialize Socket.io
 initializeSocket(httpServer);
 
-httpServer.listen(PORT, () => {
-  console.log(`Errandify API running on port ${PORT}`);
-  console.log(`Environment: ${config.nodeEnv}`);
-  console.log(`SingPass enabled: ${config.singpass.useSingpass}`);
-  console.log(`Socket.io enabled on ws://localhost:${PORT}`);
-
-  // Start background cron jobs (wrapped in try-catch to prevent startup crash)
+// Test database connection on startup but don't fail if it's missing
+const testDatabase = async () => {
   try {
-    startCrons();
-  } catch (error) {
-    console.error('Failed to start cron jobs:', error);
-    console.log('Continuing without cron jobs...');
+    if (config.databaseUrl) {
+      await db.query('SELECT 1');
+      console.log('✅ Database connected');
+      return true;
+    } else {
+      console.warn('⚠️  DATABASE_URL not configured');
+      return false;
+    }
+  } catch (err) {
+    console.error('⚠️  Database connection failed - continuing without DB');
+    return false;
   }
-});
+};
+
+(async () => {
+  try {
+    await testDatabase();
+  } catch (err) {
+    console.error('Database test error:', err);
+  }
+
+  httpServer.listen(PORT, () => {
+    console.log(`✅ Errandify API running on port ${PORT}`);
+    console.log(`Environment: ${config.nodeEnv}`);
+    console.log(`SingPass enabled: ${config.singpass.useSingpass}`);
+    console.log(`Socket.io enabled on ws://localhost:${PORT}`);
+
+    // Start background cron jobs (wrapped in try-catch to prevent startup crash)
+    try {
+      startCrons();
+    } catch (error) {
+      console.error('Failed to start cron jobs:', error);
+      console.log('Continuing without cron jobs...');
+    }
+  });
+})();
