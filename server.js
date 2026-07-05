@@ -37,31 +37,46 @@ app.get('/test', (req, res) => {
 if (fs.existsSync(frontendPath)) {
   console.log('✅ Frontend dist directory found, serving static files');
 
-  // Explicitly serve JS with correct MIME type
-  app.get('/assets/*.js', (req, res) => {
+  // Explicitly serve JS with correct MIME type using regex
+  app.get(/^\/assets\/.+\.js$/, (req, res) => {
     const filePath = path.join(frontendPath, req.path);
-    console.log('Serving JS:', filePath, 'exists:', fs.existsSync(filePath));
+    console.log('Serving JS:', req.path, 'full path:', filePath, 'exists:', fs.existsSync(filePath));
     res.type('application/javascript');
     res.sendFile(filePath, (err) => {
-      if (err) console.error('Error serving JS:', err);
+      if (err) {
+        console.error('Error serving JS:', req.path, err.message);
+        res.status(404).send('Not found');
+      }
     });
   });
 
-  // Explicitly serve CSS with correct MIME type
-  app.get('/assets/*.css', (req, res) => {
+  // Explicitly serve CSS with correct MIME type using regex
+  app.get(/^\/assets\/.+\.css$/, (req, res) => {
     const filePath = path.join(frontendPath, req.path);
+    console.log('Serving CSS:', req.path);
     res.type('text/css');
-    res.sendFile(filePath);
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error('Error serving CSS:', err.message);
+        res.status(404).send('Not found');
+      }
+    });
   });
 
-  // General static files
+  // General static files (images, fonts, etc)
   app.use(express.static(frontendPath));
 
   // React Router fallback (for non-file routes)
   app.get('*', (req, res) => {
     const indexPath = path.join(frontendPath, 'index.html');
+    console.log('Fallback to index.html for:', req.path);
     res.type('text/html');
-    res.sendFile(indexPath);
+    res.sendFile(indexPath, (err) => {
+      if (err) {
+        console.error('Error serving index.html:', err.message);
+        res.status(404).send('index.html not found');
+      }
+    });
   });
 } else {
   app.get('*', (req, res) => {
