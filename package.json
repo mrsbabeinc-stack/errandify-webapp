@@ -7,7 +7,6 @@
     "npm": "11.x"
   },
   "scripts": {
-    "dev": "cd frontend && npm run dev",
-    "heroku-postbuild": "cd frontend && npm install && npm run build"
+    "dev": "cd frontend && npm run dev"
   }
 }
