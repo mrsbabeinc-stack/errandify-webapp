@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,6 +10,17 @@ const frontendPath = path.join(__dirname, 'frontend/dist');
 console.log('SERVER STARTING...');
 console.log('Frontend path:', frontendPath);
 console.log('Frontend exists:', fs.existsSync(frontendPath));
+
+// Build frontend if dist doesn't exist
+if (!fs.existsSync(frontendPath)) {
+  console.log('Building frontend...');
+  try {
+    execSync('npm run build --prefix frontend', { stdio: 'inherit' });
+    console.log('Frontend build complete');
+  } catch (err) {
+    console.error('Frontend build failed:', err);
+  }
+}
 
 // Test route
 app.get('/test', (req, res) => {
