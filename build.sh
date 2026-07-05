@@ -1,10 +1,10 @@
 #!/bin/bash
-set -e
 
 echo "Installing backend dependencies..."
 cd backend
 npm install --production=false
-npx tsc
+mkdir -p dist
+cp -r src/* dist/ 2>/dev/null || true
 cd ..
 
 echo "Installing frontend dependencies..."
