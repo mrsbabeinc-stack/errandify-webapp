@@ -1,1 +1,1 @@
-web: cd backend && npx tsx src/index.ts
+web: cd backend && npm start
