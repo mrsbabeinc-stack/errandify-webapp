@@ -53,8 +53,5 @@
   "addons": [
     "heroku-postgresql:hobby-dev"
   ],
-  "stack": "heroku-22",
-  "scripts": {
-    "postbuild": "bash ./build.sh"
-  }
+  "stack": "heroku-24"
 }
