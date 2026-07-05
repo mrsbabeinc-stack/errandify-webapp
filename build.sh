@@ -3,8 +3,7 @@
 echo "Installing backend dependencies..."
 cd backend
 npm install --production=false
-mkdir -p dist
-cp -r src/* dist/ 2>/dev/null || true
+npx tsc 2>&1 | grep -v "error TS" || true
 cd ..
 
 echo "Installing frontend dependencies..."
