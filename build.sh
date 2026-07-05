@@ -2,13 +2,13 @@
 
 echo "Installing backend dependencies..."
 cd backend
-npm install --production=false
-npx tsc 2>&1 | grep -v "error TS" || true
+npm install
+npx tsc
 cd ..
 
 echo "Installing frontend dependencies..."
 cd frontend
-npm install --production=false
+npm install
 npm run build
 cd ..
 
