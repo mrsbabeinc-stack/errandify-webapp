@@ -51,12 +51,7 @@
     }
   },
   "addons": [
-    {
-      "plan": "heroku-postgresql:hobby-dev",
-      "options": {
-        "version": "15"
-      }
-    }
+    "heroku-postgresql:hobby-dev"
   ],
   "stack": "heroku-24"
 }
