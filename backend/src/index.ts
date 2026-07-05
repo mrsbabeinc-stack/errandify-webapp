@@ -260,9 +260,10 @@ app.use('/api/safety', safetyRoutes);
 app.use('/api', hanaRoutes);
 
 // Serve index.html for all non-API routes (React Router fallback)
-// But skip if it's a static asset or API route
+// But skip if it's a static asset or has a file extension
 app.get('*', (req, res) => {
-  if (req.path.startsWith('/api') || req.path.startsWith('/assets') || req.path.includes('.')) {
+  // Don't serve index.html for API routes, assets, or files with extensions
+  if (req.path.startsWith('/api/') || req.path.startsWith('/assets/') || /\.\w+$/.test(req.path)) {
     return res.status(404).json({ error: 'Not found' });
   }
   res.sendFile(join(__dirname, '../../frontend/dist/index.html'));
