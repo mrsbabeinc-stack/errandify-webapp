@@ -1,15 +1,16 @@
 #!/bin/bash
 set -e
 
-echo "Building backend..."
+echo "Installing and building backend..."
 cd backend
+npm install
 echo "Compiling TypeScript..."
 npm run build
 cd ..
 
-echo "Building frontend..."
+echo "Installing and building frontend..."
 cd frontend
-npm install --omit=dev
+npm install
 npm run build
 cd ..
 
