@@ -14,7 +14,7 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
   // Handle SingPass Login - Standard OAuth2 Flow
   const handleSingPassLogin = () => {
