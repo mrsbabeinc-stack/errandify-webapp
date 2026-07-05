@@ -2,9 +2,13 @@
   "name": "errandify-monorepo",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "24.x",
+    "npm": "11.x"
+  },
   "scripts": {
     "build": "bash build.sh",
     "dev": "cd frontend && npm run dev",
-    "postinstall": "npm run build"
+    "heroku-postbuild": "bash build.sh"
   }
 }
