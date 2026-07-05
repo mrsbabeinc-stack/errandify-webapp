@@ -1,0 +1,166 @@
+/**
+ * Address Provider Interface
+ * Adapter pattern for multiple address lookup providers
+ *
+ * Current providers:
+ * - Mapbox (primary)
+ * - Google Geocoding (future)
+ * - SingPost SGLocate (future)
+ *
+ * Allows switching providers without changing core lookup logic
+ */
+import db from '../../db.js';
+import { normalizePostalCode } from '../postalCodeNormalizer.js';
+import { getPlanningAreaFromPostalCode } from '../postalCodeToAreaLookup.js';
+import { queryMapbox } from './mapboxProvider.js';
+/**
+ * Main address lookup - check cache first, then query provider
+ *
+ * @param postalCode - Input postal code (may have spaces, "S" prefix, etc)
+ * @returns Complete address data with area and coordinates, or null if unable to verify
+ */
+export async function lookupAddress(postalCode) {
+    const normalized = normalizePostalCode(postalCode);
+    if (!normalized) {
+        console.log('[AddressProvider] Invalid postal code format:', postalCode);
+        return null;
+    }
+    try {
+        // Check cache first
+        const cached = await getCachedAddress(normalized);
+        if (cached) {
+            console.log('[AddressProvider] Cache hit for', normalized);
+            return cached;
+        }
+        console.log('[AddressProvider] Cache miss for', normalized);
+        // Query Mapbox (primary provider)
+        const mapboxResult = await queryMapbox(normalized);
+        if (mapboxResult) {
+            const addressData = await enrichWithAreaAndCache(mapboxResult);
+            return addressData;
+        }
+        console.log('[AddressProvider] All providers failed for', normalized);
+        return null;
+    }
+    catch (err) {
+        console.error('[AddressProvider] Lookup error:', err);
+        return null;
+    }
+}
+/**
+ * Get cached address data
+ * Returns null if cache miss or address not found
+ */
+async function getCachedAddress(postalCode) {
+    try {
+        const result = await db.query(`SELECT * FROM postal_code_cache
+       WHERE postal_code = $1
+       AND last_verified_at > NOW() - INTERVAL '90 days'`, [postalCode]);
+        if (result.rows.length === 0) {
+            return null;
+        }
+        const row = result.rows[0];
+        return {
+            postal_code: row.postal_code,
+            formatted_address: row.full_address,
+            latitude: row.latitude,
+            longitude: row.longitude,
+            area: row.planning_area,
+            subzone: row.subzone,
+            provider: row.provider,
+            confidence: parseFloat(row.confidence),
+            manually_corrected: row.manually_corrected,
+            corrected_by_user_id: row.corrected_by_user_id,
+            last_verified_at: row.last_verified_at,
+        };
+    }
+    catch (err) {
+        console.error('[AddressProvider] Cache lookup error:', err);
+        return null;
+    }
+}
+/**
+ * Enrich address with area from postal code and cache the result
+ */
+async function enrichWithAreaAndCache(addressData) {
+    try {
+        // Resolve area from postal code using official Singapore postal code ranges
+        // This method is 100% accurate as it uses the official postal code to area mapping
+        const area = addressData.postal_code
+            ? getPlanningAreaFromPostalCode(addressData.postal_code)
+            : null;
+        const result = {
+            postal_code: addressData.postal_code,
+            formatted_address: addressData.formatted_address,
+            latitude: addressData.latitude,
+            longitude: addressData.longitude,
+            area: area || undefined,
+            provider: addressData.provider,
+            confidence: addressData.confidence,
+            last_verified_at: new Date(),
+        };
+        // Cache the result
+        await cacheAddress(result);
+        console.log('[AddressProvider] ✅ Complete lookup for', addressData.postal_code, 'area:', area);
+        return result;
+    }
+    catch (err) {
+        console.error('[AddressProvider] Enrichment error:', err);
+        return null;
+    }
+}
+/**
+ * Cache address data to database
+ */
+async function cacheAddress(data) {
+    try {
+        await db.query(`INSERT INTO postal_code_cache
+       (postal_code, full_address, latitude, longitude, planning_area, subzone, provider, confidence, last_verified_at, manually_corrected)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9)
+       ON CONFLICT (postal_code) DO UPDATE SET
+       full_address = EXCLUDED.full_address,
+       latitude = EXCLUDED.latitude,
+       longitude = EXCLUDED.longitude,
+       planning_area = EXCLUDED.planning_area,
+       subzone = EXCLUDED.subzone,
+       provider = EXCLUDED.provider,
+       confidence = EXCLUDED.confidence,
+       last_verified_at = NOW()`, [
+            data.postal_code,
+            data.formatted_address,
+            data.latitude,
+            data.longitude,
+            data.area || null,
+            data.subzone || null,
+            data.provider,
+            data.confidence,
+            data.manually_corrected || false,
+        ]);
+        console.log('[AddressProvider] ✅ Cached:', data.postal_code);
+    }
+    catch (err) {
+        console.error('[AddressProvider] Cache write error:', err);
+    }
+}
+/**
+ * Mark an address as manually corrected by user
+ * Updates the cache record to indicate user intervention
+ */
+export async function markManuallyCorrect(postalCode, userId, correctedAddress) {
+    try {
+        await db.query(`UPDATE postal_code_cache
+       SET manually_corrected = TRUE,
+           corrected_by_user_id = $1,
+           full_address = COALESCE($2, full_address),
+           last_verified_at = NOW()
+       WHERE postal_code = $3`, [userId, correctedAddress || null, postalCode]);
+        console.log('[AddressProvider] ✅ Marked corrected:', postalCode, 'by', userId);
+    }
+    catch (err) {
+        console.error('[AddressProvider] Mark corrected error:', err);
+    }
+}
+export default {
+    lookupAddress,
+    markManuallyCorrect,
+};
