@@ -1,5 +1,5 @@
 node_modules/
-dist/
+# dist/  - IMPORTANT: Keep dist/ tracked for Heroku deployment
 build/
 .env
 .env.local
