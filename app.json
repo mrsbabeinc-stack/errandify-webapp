@@ -22,7 +22,7 @@
     },
     "JWT_SECRET": {
       "description": "Secret key for JWT tokens",
-      "value": "change-this-in-production",
+      "value": "test-secret-key-staging",
       "required": false
     },
     "DATABASE_URL": {
@@ -50,6 +50,8 @@
       "required": false
     }
   },
-  "addons": [],
+  "addons": [
+    "heroku-postgresql:hobby-dev"
+  ],
   "stack": "heroku-24"
 }

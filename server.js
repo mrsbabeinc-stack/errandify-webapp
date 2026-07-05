@@ -1,72 +1,55 @@
-// Minimal server to serve frontend
-const express = require('express');
-const path = require('path');
+// Start compiled backend or fallback to frontend-only server
 const fs = require('fs');
+const path = require('path');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+const backendDistPath = path.join(__dirname, 'backend/dist/index.js');
+const hasBackend = fs.existsSync(backendDistPath);
 
-console.log('=== ERRANDIFY STAGING SERVER STARTING ===');
+console.log('=== ERRANDIFY STAGING SERVER ===');
 console.log('Node version:', process.version);
-console.log('PORT:', PORT);
-console.log('__dirname:', __dirname);
+console.log('Backend exists:', hasBackend);
+console.log('PORT:', process.env.PORT || 3000);
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  console.log('[HEALTH] Request received');
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Serve frontend static files
-const frontendPath = path.join(__dirname, 'frontend/dist');
-console.log('Frontend path:', frontendPath);
-console.log('Frontend exists:', fs.existsSync(frontendPath));
-
-if (fs.existsSync(frontendPath)) {
-  console.log('Frontend files:');
-  fs.readdirSync(frontendPath).forEach(file => {
-    console.log('  -', file);
-  });
+if (hasBackend) {
+  console.log('✅ Loading full backend from backend/dist/index.js');
+  try {
+    require(backendDistPath);
+  } catch (err) {
+    console.error('❌ Failed to load backend:', err.message);
+    console.log('Falling back to frontend-only server...');
+    startFrontendServer();
+  }
+} else {
+  console.log('Backend dist not found, starting frontend-only server');
+  startFrontendServer();
 }
 
-app.use(express.static(frontendPath, {
-  maxAge: '1d',
-  etag: false
-}));
+function startFrontendServer() {
+  const express = require('express');
+  const app = express();
+  const PORT = process.env.PORT || 3000;
 
-// React Router fallback - serve index.html for all non-API routes
-app.get('*', (req, res) => {
-  const indexPath = path.join(frontendPath, 'index.html');
-  console.log('[ROUTE]', req.path, '-> serving', indexPath);
+  console.log('=== FRONTEND-ONLY SERVER ===');
 
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
+  // Serve frontend
+  const frontendPath = path.join(__dirname, 'frontend/dist');
+  console.log('Serving frontend from:', frontendPath);
+  console.log('Frontend exists:', fs.existsSync(frontendPath));
+
+  if (fs.existsSync(frontendPath)) {
+    app.use(express.static(frontendPath, { maxAge: '1d' }));
+
+    // React Router fallback
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(frontendPath, 'index.html'));
+    });
   } else {
-    console.error('[ERROR] index.html not found at:', indexPath);
-    res.status(404).send('Frontend files not found');
+    app.get('*', (req, res) => {
+      res.status(404).send('Frontend files not found');
+    });
   }
-});
 
-// Start server
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`✅ App ready at http://0.0.0.0:${PORT}`);
-});
-
-// Error handling
-server.on('error', (err) => {
-  console.error('[SERVER ERROR]', err);
-  process.exit(1);
-});
-
-process.on('uncaughtException', (err) => {
-  console.error('[UNCAUGHT EXCEPTION]', err);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (err) => {
-  console.error('[UNHANDLED REJECTION]', err);
-  process.exit(1);
-});
-
-console.log('=== SERVER INITIALIZED ===');
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Server running on port ${PORT}`);
+  });
+}
