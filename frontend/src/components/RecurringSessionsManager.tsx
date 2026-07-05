@@ -54,7 +54,7 @@ export default function RecurringSessionsManager({
     try {
       setLoading(true);
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errandId}/sessions`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${errandId}/sessions`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
@@ -96,7 +96,7 @@ If doer: Show enthusiasm, suggest when to accept more sessions.
 Be warm, brief (1-2 sentences), and use an emoji. Sound like a friend cheering them on.`;
 
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggest`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/suggest`,
         { input: prompt }
       );
 
@@ -113,7 +113,7 @@ Be warm, brief (1-2 sentences), and use an emoji. Sound like a friend cheering t
   const handleCompleteSession = async (sessionId: number) => {
     try {
       await axios.patch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errandId}/sessions/${sessionId}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${errandId}/sessions/${sessionId}`,
         { status: 'completed' },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },

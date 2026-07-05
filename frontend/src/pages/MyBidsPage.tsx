@@ -59,7 +59,7 @@ export default function MyBidsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/my-bids`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/my-bids`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -418,7 +418,7 @@ export default function MyBidsPage() {
                   try {
                     const token = localStorage.getItem('token');
                     await axios.post(
-                      `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings`,
+                      `${import.meta.env.VITE_API_URL || window.location.origin}/api/ratings`,
                       {
                         taskId: ratingBid.errand_id,
                         ratedUserId: ratingBid.doer_id, // Rate the asker (doer's perspective)
@@ -434,7 +434,7 @@ export default function MyBidsPage() {
 
                     if (currentUser) {
                       await axios.post(
-                        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/award-ep-bonus`,
+                        `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/award-ep-bonus`,
                         {
                           errandId: ratingBid.errand_id,
                           userId: currentUser.id,

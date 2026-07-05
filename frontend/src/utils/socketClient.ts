@@ -13,7 +13,7 @@ export function initializeSocket(token: string): Socket {
     return socket;
   }
 
-  const socketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const socketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || window.location.origin;
 
   socket = io(socketUrl, {
     auth: { token },

@@ -52,7 +52,7 @@ export default function NotificationListener() {
 
       if (type === 'no_offers') {
         await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/email/send-no-offers-reminder`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/email/send-no-offers-reminder`,
           {
             email: userEmail,
             errandTitle: errand.title,
@@ -65,7 +65,7 @@ export default function NotificationListener() {
         console.log('[Reminder] No offers email sent for errand:', errand.id);
       } else if (type === 'start') {
         await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/email/send-errand-start-reminder`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/email/send-errand-start-reminder`,
           {
             email: userEmail,
             errandTitle: errand.title,
@@ -87,7 +87,7 @@ export default function NotificationListener() {
     try {
       // Fetch user's errands to check for reminders
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands?myOnly=true`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands?myOnly=true`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -154,7 +154,7 @@ export default function NotificationListener() {
         if (!token) return;
 
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/notifications`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

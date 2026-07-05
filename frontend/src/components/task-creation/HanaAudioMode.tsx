@@ -65,7 +65,7 @@ export default function HanaAudioMode({
 
       // Send to backend for transcription and extraction
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/transcribe-and-extract`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/transcribe-and-extract`,
         formData,
         {
           headers: {

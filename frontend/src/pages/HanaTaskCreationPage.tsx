@@ -66,7 +66,7 @@ export default function HanaTaskCreationPage({ userRole }: HanaTaskCreationPageP
     try {
       // Content filter check
       const filterResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/content-filter`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/content-filter`,
         {
           title: taskData.title,
           description: taskData.description,
@@ -82,7 +82,7 @@ export default function HanaTaskCreationPage({ userRole }: HanaTaskCreationPageP
       // Post the task
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands`,
         {
           title: taskData.title,
           description: taskData.description,

@@ -40,21 +40,21 @@ export default function RatingPage() {
 
       // Get current user
       const userResponse = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/me`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/me`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setCurrentUserId(userResponse.data.data.id);
 
       // Get errand details
       const errandResponse = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setErrand(errandResponse.data.data);
 
       // Check if already rated
       const ratingResponse = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings/check/${id}/${userResponse.data.data.id}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ratings/check/${id}/${userResponse.data.data.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setHasRated(ratingResponse.data.data?.hasRated || false);
@@ -77,7 +77,7 @@ export default function RatingPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ratings`,
         {
           errand_id: parseInt(id!),
           ratee_id: rateeId,

@@ -39,7 +39,7 @@ export default function RatingsHistoryPage() {
   const fetchRatings = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ratings`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }

@@ -14,7 +14,7 @@ interface ModerationResult {
  */
 const qwenModeration = async (text: string): Promise<ModerationResult> => {
   try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const apiUrl = import.meta.env.VITE_API_URL || window.location.origin;
 
     console.log('[Qwen Moderation] Analyzing post...');
 

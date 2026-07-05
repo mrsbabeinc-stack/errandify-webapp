@@ -64,7 +64,7 @@ export default function AdminModerationPage() {
       setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/admin/moderation`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/admin/moderation`,
         {
           headers: { Authorization: `Bearer ${token}` },
           params: { type: filterType !== 'all' ? filterType : undefined },
@@ -86,7 +86,7 @@ export default function AdminModerationPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/admin/moderation/${notificationId}/resolve`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/admin/moderation/${notificationId}/resolve`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -105,7 +105,7 @@ export default function AdminModerationPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/admin/users/${userId}/suspend`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/admin/users/${userId}/suspend`,
         { days },
         {
           headers: { Authorization: `Bearer ${token}` },

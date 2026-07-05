@@ -227,7 +227,7 @@ export default function CreateErrandPage() {
             console.log('[CreateErrand] Fetching AI suggestions for title:', newFormData.title, 'category:', newFormData.category);
             try {
               const response = await axios.post(
-                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+                `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/suggestions`,
                 {
                   title: newFormData.title,
                   description: newFormData.description,
@@ -450,7 +450,7 @@ export default function CreateErrandPage() {
     try {
       console.log('[EXTRACT] Calling /extract-task-info with:', title);
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/extract-task-info`,
         { input: title }
       );
 
@@ -507,7 +507,7 @@ export default function CreateErrandPage() {
     setAiLoading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/suggestions`,
         { title, description, category: formData.category, date: formData.deadline, time: formData.time }
       );
 
@@ -545,7 +545,7 @@ export default function CreateErrandPage() {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/suggestions`,
         { title, description, category: formData.category, date: formData.deadline, time: formData.time }
       );
 
@@ -895,7 +895,7 @@ export default function CreateErrandPage() {
       }
 
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -915,7 +915,7 @@ export default function CreateErrandPage() {
         // Analyze task with AI (non-blocking)
         try {
           await axios.post(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/analyze-task`,
+            `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/analyze-task`,
             {
               title: formData.title,
               description: formData.description,
@@ -1335,7 +1335,7 @@ export default function CreateErrandPage() {
 
                         // Call backend to lookup address via OneMap (which has auth token)
                         const token = localStorage.getItem('token');
-                        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`, {
+                        fetch(`${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/extract-task-info`, {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',

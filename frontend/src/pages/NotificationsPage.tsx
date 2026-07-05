@@ -52,7 +52,7 @@ export default function NotificationsPage() {
       }
 
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/notifications`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -116,7 +116,7 @@ export default function NotificationsPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/${id}/read`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/notifications/${id}/read`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -132,7 +132,7 @@ export default function NotificationsPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/read-all`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/notifications/read-all`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

@@ -28,7 +28,7 @@ export const loadResponsiveVoice = () => {
 };
 
 // Set up axios to use the API URL from environment
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : window.location.origin);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -182,7 +182,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/preferences`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/notifications/preferences`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (response.data.success) {
@@ -205,7 +205,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/preferences`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/notifications/preferences`,
         updated,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -262,7 +262,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
       }
 
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/preferences`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/${user.id}/preferences`,
         {
           canHelp: selectedCategoriesHelp,
           needHelp: selectedCategoriesNeed,
@@ -391,7 +391,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
       const token = localStorage.getItem('token');
       try {
         const profileRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/profile`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setProfileData(profileRes.data.data);
@@ -407,7 +407,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       try {
         const ratingsRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/ratings`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/${user.id}/ratings`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setRatings(ratingsRes.data.data);
@@ -436,7 +436,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
         if (!user) return;
 
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/preferences`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/${user.id}/preferences`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -460,7 +460,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/ai-alerts`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/notifications/ai-alerts`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (response.data.data?.alerts) {
@@ -476,7 +476,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payment/bank-details`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/payment/bank-details`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (response.data.data) {
@@ -499,7 +499,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/my-vouchers`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/my-vouchers`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (response.data.data && Array.isArray(response.data.data)) {
@@ -555,7 +555,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
 
         try {
           const profileRes = await axios.get(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+            `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/profile`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setProfileData(profileRes.data.data);
@@ -636,7 +636,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
 
         try {
           const ratingsRes = await axios.get(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/ratings`,
+            `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/${user.id}/ratings`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setRatings(ratingsRes.data.data);
@@ -684,7 +684,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
 
       // Fetch latest profile data
       const profileRes = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/profile`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setProfileData(profileRes.data.data);
@@ -692,7 +692,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
       // Fetch latest ratings
       try {
         const ratingsRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/ratings`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/${user.id}/ratings`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setRatings(ratingsRes.data.data);
@@ -747,7 +747,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/favorites`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/favorites`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -760,7 +760,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
             favoriteIds.map(async (userId: number) => {
               try {
                 const userRes = await axios.get(
-                  `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${userId}/public-profile`,
+                  `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/${userId}/public-profile`,
                   { headers: { Authorization: `Bearer ${token}` } }
                 );
                 const user = userRes.data.data;
@@ -889,7 +889,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
       }
 
       await axios.put(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/profile`,
         profilePayload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -954,7 +954,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/profile`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       localStorage.removeItem('token');
@@ -974,7 +974,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
 
       // Call backend to redeem and deduct points from database
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/redeem`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/redeem`,
         { rewardId: confirmRedeemData.code, points: confirmRedeemData.points },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -1987,7 +1987,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
 
                             // Step 1: Save bank details locally
                             await axios.post(
-                              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payment/save-bank-details`,
+                              `${import.meta.env.VITE_API_URL || window.location.origin}/api/payment/save-bank-details`,
                               {
                                 bankName: payoutForm.bankName,
                                 accountHolder: payoutForm.accountHolder,
@@ -1998,7 +1998,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
 
                             // Step 2: Get Stripe onboarding link
                             const stripeResponse = await axios.post(
-                              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payment/link-bank`,
+                              `${import.meta.env.VITE_API_URL || window.location.origin}/api/payment/link-bank`,
                               {
                                 returnUrl: window.location.href, // Return here after Stripe onboarding
                               },

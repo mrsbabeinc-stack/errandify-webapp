@@ -18,7 +18,7 @@ export async function uploadPhotoToAlibaba(options: UploadPhotoOptions): Promise
   uploadedAt: string;
 }> {
   const { token, errandId, file, caption, onProgress } = options;
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const apiUrl = import.meta.env.VITE_API_URL || window.location.origin;
 
   try {
     // Step 1: Get signed URL from backend

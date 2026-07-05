@@ -43,7 +43,7 @@ export default function BlogPostPage() {
   const fetchPost = async (postSlug: string) => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/blog/${postSlug}`
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/blog/${postSlug}`
       );
       setPost(response.data.data);
       setRelatedPosts(response.data.data.related_posts || []);

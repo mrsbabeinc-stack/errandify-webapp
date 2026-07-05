@@ -216,7 +216,7 @@ export default function HanaTaskCreation({
 
       // Use AI to extract structured task info from freeform input
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/extract-task-info`,
         { input: userInput }
       );
 
@@ -280,7 +280,7 @@ export default function HanaTaskCreation({
       try {
         console.log('[Hana] Requesting suggestions for:', updatedTaskData.category);
         const suggestionsResponse = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/suggestions`,
           {
             title: updatedTaskData.title,
             description: updatedTaskData.description,
@@ -342,7 +342,7 @@ export default function HanaTaskCreation({
       // Check content moderation on EXTRACTED data only (not raw input)
       try {
         const contentCheckResponse = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/check-content`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/check-content`,
           {
             title: enhancedTaskData.title,
             description: enhancedTaskData.description || '',
@@ -403,7 +403,7 @@ export default function HanaTaskCreation({
     try {
       // Content filter check
       const filterResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/content-filter`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/content-filter`,
         {
           title: taskData.title,
           description: taskData.description,
@@ -418,7 +418,7 @@ export default function HanaTaskCreation({
       // Get AI suggestions before closing
       try {
         const suggestionsResponse = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/suggestions`,
           {
             title: taskData.title,
             description: taskData.description,
@@ -489,7 +489,7 @@ export default function HanaTaskCreation({
 
         try {
           const response = await axios.post(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/transcribe`,
+            `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/transcribe`,
             { audio: base64Audio }
           );
 

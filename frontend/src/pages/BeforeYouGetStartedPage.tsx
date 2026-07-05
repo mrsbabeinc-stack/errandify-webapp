@@ -42,7 +42,7 @@ export default function BeforeYouGetStartedPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/accept-declaration`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/accept-declaration`,
         {
           declarations,
           acceptedAt: new Date().toISOString(),

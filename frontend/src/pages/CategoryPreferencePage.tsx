@@ -48,7 +48,7 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/profile`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/user/profile`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -97,7 +97,7 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
 
       // Save preferences
       await axios.patch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/preferences`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/user/preferences`,
         {
           doer_preferences: doerPreferences,
           asker_needs: askerNeeds,
@@ -110,7 +110,7 @@ export default function CategoryPreferencePage({ userRole, onComplete }: Categor
       // Analyze preferences with AI (non-blocking)
       try {
         const analysisResponse = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/analyze-preferences`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/analyze-preferences`,
           {
             doer_preferences: doerPreferences,
             asker_needs: askerNeeds,

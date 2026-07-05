@@ -37,7 +37,7 @@ export default function DisputePage() {
       const token = localStorage.getItem('token');
       const status = activeTab === 'all' ? 'all' : activeTab;
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/disputes?status=${status}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/disputes?status=${status}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setDisputes(response.data.data.disputes);
@@ -59,7 +59,7 @@ export default function DisputePage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/disputes/${disputeId}/evidence`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/disputes/${disputeId}/evidence`,
         { evidence: newEvidence },
         { headers: { Authorization: `Bearer ${token}` } }
       );

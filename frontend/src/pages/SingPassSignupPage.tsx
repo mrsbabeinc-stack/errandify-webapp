@@ -46,7 +46,7 @@ export default function SingPassSignupPage() {
     setLoading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/singpass-callback`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/auth/singpass-callback`,
         { code }
       );
 
@@ -96,7 +96,7 @@ export default function SingPassSignupPage() {
     try {
       // First create the account
       const signupResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/signup`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/auth/signup`,
         {
           nric: formData.nric,
           displayName: formData.displayName,
@@ -113,7 +113,7 @@ export default function SingPassSignupPage() {
 
       // Then run criminal records check
       const verifyResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/verification/check-criminal-records`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/verification/check-criminal-records`,
         {
           nric: formData.nric,
           name: formData.displayName,
@@ -148,7 +148,7 @@ export default function SingPassSignupPage() {
     try {
       // Create account with all data
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/signup`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/auth/signup`,
         {
           nric: formData.nric,
           displayName: formData.displayName,

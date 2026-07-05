@@ -13,7 +13,7 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
   const [message, setMessage] = useState('Processing SingPass login...');
   const [loading, setLoading] = useState(true);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
   useEffect(() => {
     const handleCallback = async () => {

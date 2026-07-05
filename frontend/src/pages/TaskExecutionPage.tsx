@@ -47,7 +47,7 @@ export default function TaskExecutionPage() {
   const fetchTaskStatus = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tasks/${id}/status`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/tasks/${id}/status`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
@@ -66,7 +66,7 @@ export default function TaskExecutionPage() {
     setStarting(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tasks/${id}/start`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/tasks/${id}/start`,
         {},
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -92,7 +92,7 @@ export default function TaskExecutionPage() {
     setUploading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tasks/${id}/upload-photo`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/tasks/${id}/upload-photo`,
         {
           photoUrl,
           caption: photoCaption || null,
@@ -118,7 +118,7 @@ export default function TaskExecutionPage() {
     setCompleting(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tasks/${id}/complete`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/tasks/${id}/complete`,
         { approved: true },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },

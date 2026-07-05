@@ -28,7 +28,7 @@ export default function AdminDisputePanel() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/disputes/list/all`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/disputes/list/all`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -81,7 +81,7 @@ export default function AdminDisputePanel() {
       }
 
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${selectedDispute.id}/resolve-dispute`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${selectedDispute.id}/resolve-dispute`,
         {
           resolution: resolutionText,
           payment_to: paymentTo,

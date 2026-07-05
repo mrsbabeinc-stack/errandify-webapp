@@ -45,7 +45,7 @@ export default function EmailNotificationSettingsPage() {
   const fetchSettings = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/email-settings`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/user/email-settings`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
@@ -62,7 +62,7 @@ export default function EmailNotificationSettingsPage() {
     setSaving(true);
     try {
       await axios.patch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/email-settings`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/user/email-settings`,
         settings,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },

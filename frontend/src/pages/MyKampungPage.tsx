@@ -109,7 +109,7 @@ export default function MyKampungPage() {
       // Fetch news first (doesn't require auth)
       try {
         const newsRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/news`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/news`,
           { timeout: 5000 }
         );
         console.log('News API response:', newsRes.data);
@@ -131,7 +131,7 @@ export default function MyKampungPage() {
       // Try to fetch from API endpoints
       try {
         const postsRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/community/posts`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/community/posts`,
           { headers, timeout: 3000 }
         );
         setPosts(postsRes.data.data || []);
@@ -141,7 +141,7 @@ export default function MyKampungPage() {
 
       try {
         const discussionsRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/community/discussions`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/community/discussions`,
           { headers, timeout: 3000 }
         );
         setDiscussions(discussionsRes.data.data || []);
@@ -151,7 +151,7 @@ export default function MyKampungPage() {
 
       try {
         const announcementsRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/announcements`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/announcements`,
           { headers, timeout: 3000 }
         );
         setAnnouncements(announcementsRes.data.data || []);
@@ -161,7 +161,7 @@ export default function MyKampungPage() {
 
       try {
         const eventsRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/events`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/events`,
           { headers, timeout: 3000 }
         );
         setEvents(eventsRes.data.data || []);
@@ -171,7 +171,7 @@ export default function MyKampungPage() {
 
       try {
         const blogsRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/blog`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/blog`,
           { headers, timeout: 3000 }
         );
         setBlogPosts(blogsRes.data.data || []);
@@ -584,7 +584,7 @@ export default function MyKampungPage() {
 
         // Send in-app notification
         await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/notifications`,
           {
             recipientId: user?.id,
             type: 'event_signup',
@@ -597,7 +597,7 @@ export default function MyKampungPage() {
 
         // Send email notification
         await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/email/send-event-confirmation`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/email/send-event-confirmation`,
           {
             userId: user?.id,
             email: user?.email,
@@ -658,7 +658,7 @@ export default function MyKampungPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/moderation/posts/${postId}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/moderation/posts/${postId}`,
         {
           data: { reason },
           headers: { Authorization: `Bearer ${token}` },

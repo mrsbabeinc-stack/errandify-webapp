@@ -16,7 +16,7 @@ export function useNotificationCount(refreshInterval: number = 3000) {
       }
 
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/notifications`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

@@ -1,7 +1,7 @@
 // API client for making HTTP requests to the backend
 // Handles authentication, error handling, and base URL configuration
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 interface RequestOptions extends RequestInit {
   headers?: Record<string, string>;

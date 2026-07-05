@@ -90,7 +90,7 @@ export default function TaskChatbox({
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/tasks/${taskId}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/messages/tasks/${taskId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -230,7 +230,7 @@ Your message doesn't meet our community standards. Please keep messages:
       }
 
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/tasks/${taskId}/send`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/messages/tasks/${taskId}/send`,
         { content: messageContent },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -345,7 +345,7 @@ Your message doesn't meet our community standards. Please keep messages:
       }
 
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/favorite/${otherUserId}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/favorite/${otherUserId}`,
         { taskId },
         {
           headers: { Authorization: `Bearer ${token}` },

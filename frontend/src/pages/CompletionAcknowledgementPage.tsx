@@ -64,7 +64,7 @@ export default function CompletionAcknowledgementPage() {
 
       // Fetch task details
       const taskRes = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTask(taskRes.data.data);
@@ -72,12 +72,12 @@ export default function CompletionAcknowledgementPage() {
       // Fetch reviews for both asker and doer
       try {
         const askerRatings = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings/user/${taskRes.data.data.asker_id}`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/ratings/user/${taskRes.data.data.asker_id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
         const doerRatings = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings/user/${taskRes.data.data.doer_id}`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/ratings/user/${taskRes.data.data.doer_id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 

@@ -43,14 +43,14 @@ export default function MyRewardSpacePage() {
 
       // Fetch current points
       const balanceRes = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/balance`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/balance`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setCurrentPoints(balanceRes.data.data.errandifyPoints || 0);
 
       // Fetch transaction history
       const historyRes = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/point-history`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/point-history`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const transactions = (historyRes.data.data || []).reverse();
@@ -58,7 +58,7 @@ export default function MyRewardSpacePage() {
 
       // Fetch user's redeemed vouchers
       const vouchersRes = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/my-vouchers`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/my-vouchers`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       console.log('Fetched vouchers:', vouchersRes.data.data);
@@ -81,7 +81,7 @@ export default function MyRewardSpacePage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/redeem`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/redeem`,
         { rewardId: confirmRedeemData.rewardId, points: confirmRedeemData.points },
         { headers: { Authorization: `Bearer ${token}` } }
       );

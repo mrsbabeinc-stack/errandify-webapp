@@ -23,7 +23,7 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
 
     try {
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/request-otp`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/auth/request-otp`,
         { mobile: phoneToUse }
       );
 
@@ -32,7 +32,7 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
       // Fetch the debug OTP
       try {
         const debugResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/debug/otp/${phoneToUse}`
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/auth/debug/otp/${phoneToUse}`
         );
         setDebugOtp(debugResponse.data.otp);
         console.log('📱 OTP for testing:', debugResponse.data.otp);
@@ -57,7 +57,7 @@ export default function LoginFlow({ onComplete, onBack }: LoginFlowProps) {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/verify-otp`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/auth/verify-otp`,
         { mobile, otp }
       );
 

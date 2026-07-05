@@ -45,7 +45,7 @@ export default function EditProfilePage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/profile`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -159,7 +159,7 @@ export default function EditProfilePage() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user-profile/me/update`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/user-profile/me/update`,
         {
           displayName: formData.displayName,
           bio: formData.bio,

@@ -25,7 +25,7 @@ export default function TrustedUsersPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/trusted-users`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/user/trusted-users`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTrustedUsers(response.data.data || []);
@@ -60,7 +60,7 @@ export default function TrustedUsersPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/trusted-users/${userId}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/user/trusted-users/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTrustedUsers(prev => prev.filter(u => u.id !== userId));

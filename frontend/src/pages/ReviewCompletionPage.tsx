@@ -46,7 +46,7 @@ export default function ReviewCompletionPage() {
 
       // Fetch task details
       const taskResponse = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -59,7 +59,7 @@ export default function ReviewCompletionPage() {
         try {
           // Try to fetch bid details to get doer info
           const bidResponse = await axios.get(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${taskData.accepted_bid_id}`,
+            `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/${taskData.accepted_bid_id}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -74,7 +74,7 @@ export default function ReviewCompletionPage() {
 
       // Fetch completion photos
       const photosResponse = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${id}/photos`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/jobs/${id}/photos`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -106,7 +106,7 @@ export default function ReviewCompletionPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${id}/confirm`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/jobs/${id}/confirm`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -117,7 +117,7 @@ export default function ReviewCompletionPage() {
       if (nominateAsStarOfMonth && task?.doer) {
         try {
           await axios.post(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/community/nominate`,
+            `${import.meta.env.VITE_API_URL || window.location.origin}/api/community/nominate`,
             {
               doer_id: task.doer_id,
               doer_name: task.doer.display_name,
@@ -159,7 +159,7 @@ export default function ReviewCompletionPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${id}/request-more-work`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/jobs/${id}/request-more-work`,
         { reason: reason.trim() },
         {
           headers: { Authorization: `Bearer ${token}` },

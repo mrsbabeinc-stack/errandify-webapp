@@ -65,7 +65,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/task/${taskId}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/task/${taskId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -92,7 +92,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
       // Fetch favorites list
       try {
         const favResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/favorites`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/favorites`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -106,7 +106,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
       for (const bid of bidsData) {
         try {
           const confidenceRes = await axios.get(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/user/${bid.doerId}/confidence`
+            `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/user/${bid.doerId}/confidence`
           );
           setDoerConfidence((prev) => ({
             ...prev,
@@ -129,7 +129,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${bidId}/accept`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/${bidId}/accept`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -142,7 +142,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
       // In dummy mode, auto-confirm payment
       if (stripeIntent) {
         await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payment/confirm`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/payment/confirm`,
           { intentId: stripeIntent.id },
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -172,7 +172,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${rejectingBidId}/reject`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/${rejectingBidId}/reject`,
         {
           reason: rejectReason,
           custom_reason: rejectCustomReason,
@@ -194,7 +194,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
       if (favorites.has(doerId)) {
         // Remove from favorites
         await axios.delete(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/favorites/${doerId}`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/favorites/${doerId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -207,7 +207,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
       } else {
         // Add to favorites
         await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/favorites/${doerId}`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/favorites/${doerId}`,
           {},
           {
             headers: { Authorization: `Bearer ${token}` },

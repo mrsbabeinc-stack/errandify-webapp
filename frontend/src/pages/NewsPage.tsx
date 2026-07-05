@@ -34,7 +34,7 @@ export default function NewsPage() {
       setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/news`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/news`,
         {
           params: {
             type: activeTypeFilter === 'all' ? undefined : activeTypeFilter,

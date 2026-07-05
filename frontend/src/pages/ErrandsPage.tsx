@@ -65,7 +65,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
         return;
       }
 
-      url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`;
+      url = `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands`;
 
       if (userRole === 'asker') {
         // Askers see their posted errands

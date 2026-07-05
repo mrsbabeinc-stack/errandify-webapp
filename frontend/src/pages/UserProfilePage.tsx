@@ -65,7 +65,7 @@ export default function UserProfilePage() {
   const fetchProfile = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user-profile/${userId}`
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/user-profile/${userId}`
       );
       setProfile(response.data.data);
       setError('');

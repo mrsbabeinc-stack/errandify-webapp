@@ -41,7 +41,7 @@ export default function BlogPage() {
   const fetchCategories = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/blog/categories`
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/blog/categories`
       );
       setCategories(response.data.data);
     } catch (error) {
@@ -52,7 +52,7 @@ export default function BlogPage() {
   const fetchPosts = async (page: number, category?: string) => {
     setLoading(true);
     try {
-      let url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/blog?page=${page}&limit=6`;
+      let url = `${import.meta.env.VITE_API_URL || window.location.origin}/api/blog?page=${page}&limit=6`;
       if (category) {
         url += `&category=${category}`;
       }
@@ -74,7 +74,7 @@ export default function BlogPage() {
 
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/blog/search?q=${encodeURIComponent(searchQuery)}`
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/blog/search?q=${encodeURIComponent(searchQuery)}`
       );
       setPosts(response.data.data);
       setPagination(null);

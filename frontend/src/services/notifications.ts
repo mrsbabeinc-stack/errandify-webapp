@@ -60,7 +60,7 @@ class NotificationService {
       if (!token) return;
 
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/notifications`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -127,7 +127,7 @@ class NotificationService {
       if (!token) return;
 
       await axios.patch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications/${notificationId}/read`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/notifications/${notificationId}/read`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -151,7 +151,7 @@ class NotificationService {
       if (!token) return;
 
       await axios.delete(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/notifications`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

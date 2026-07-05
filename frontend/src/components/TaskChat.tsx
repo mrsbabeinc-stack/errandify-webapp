@@ -38,7 +38,7 @@ export default function TaskChat({ taskId, taskTitle }: TaskChatProps) {
   const fetchMessages = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/tasks/${taskId}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/messages/tasks/${taskId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
@@ -59,7 +59,7 @@ export default function TaskChat({ taskId, taskTitle }: TaskChatProps) {
     setSending(true);
     try {
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/tasks/${taskId}/send`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/messages/tasks/${taskId}/send`,
         { content: newMessage },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },

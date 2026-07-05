@@ -112,7 +112,7 @@ export default function MyProfilePage() {
       formData.append('profilePhoto', blob, 'profile-photo.jpg');
 
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile-photo`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/profile-photo`,
         formData,
         {
           headers: {
@@ -154,7 +154,7 @@ export default function MyProfilePage() {
       formData.append('title', certificateTitle);
       formData.append('certificate', certificateFile);
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/certificates`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/certificates`,
         formData,
         {
           headers: {
@@ -183,7 +183,7 @@ export default function MyProfilePage() {
       const token = localStorage.getItem('token');
       const certTitle = profile?.certificates?.[idx]?.title;
       await axios.delete(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/certificates/${encodeURIComponent(certTitle || '')}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/certificates/${encodeURIComponent(certTitle || '')}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -214,7 +214,7 @@ export default function MyProfilePage() {
 
         // Fetch profile
         const profileRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/profile`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -228,7 +228,7 @@ export default function MyProfilePage() {
         // Fetch ratings
         try {
           const ratingsRes = await axios.get(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/${user.id}/ratings`
+            `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/${user.id}/ratings`
           );
           setRatings(ratingsRes.data.data);
         } catch (ratingsErr) {
@@ -257,7 +257,7 @@ export default function MyProfilePage() {
       };
 
       const response = await axios.put(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/profile`,
         updateData,
         { headers: { Authorization: `Bearer ${token}` } }
       );

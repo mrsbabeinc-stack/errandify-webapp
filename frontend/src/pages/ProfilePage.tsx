@@ -30,7 +30,7 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/profile`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setUserProfile(response.data.data);

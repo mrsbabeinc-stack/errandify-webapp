@@ -12,7 +12,7 @@ export interface Notification {
   created_at: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 export function useNotifications(pollInterval = 10000) {
   const [notifications, setNotifications] = useState<Notification[]>([]);

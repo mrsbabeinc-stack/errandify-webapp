@@ -45,7 +45,7 @@ export default function DoerCompletionConfirmPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTask(response.data.data);
@@ -88,7 +88,7 @@ export default function DoerCompletionConfirmPage() {
 
       // Mark task as completed
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/complete`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}/complete`,
         { notes: notes.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -103,7 +103,7 @@ export default function DoerCompletionConfirmPage() {
         });
 
         await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${id}/photos`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/jobs/${id}/photos`,
           formData,
           { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
         );

@@ -97,7 +97,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
 
       try {
         const askerResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands?myOnly=true`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands?myOnly=true`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -111,7 +111,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
 
       try {
         const doerResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands?accepted=true`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands?accepted=true`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

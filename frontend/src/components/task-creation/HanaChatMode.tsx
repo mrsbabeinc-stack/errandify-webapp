@@ -121,7 +121,7 @@ export default function HanaChatMode({
     // Detect category using extraction endpoint
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/extract-task-info`,
         { input }
       );
       console.log('[Hana] Full extraction response:', response.data.data);
@@ -147,7 +147,7 @@ export default function HanaChatMode({
     // Extract area and postal code from location
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/extract-task-info`,
         { input }
       );
       console.log('[Hana] Location extraction response:', response.data.data);
@@ -171,7 +171,7 @@ export default function HanaChatMode({
     // Parse natural language date
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/parse-datetime`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/parse-datetime`,
         { input }
       );
       const { date, time } = response.data.data;

@@ -48,7 +48,7 @@ export default function RecurringBidsViewer({
       setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/recurring/${errandId}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/recurring/${errandId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -86,7 +86,7 @@ export default function RecurringBidsViewer({
       setSubmitting(true);
       const token = localStorage.getItem('token');
       await axios.put(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${bidId}/accept-sessions`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/${bidId}/accept-sessions`,
         { sessions: selectedSessions },
         {
           headers: { Authorization: `Bearer ${token}` },

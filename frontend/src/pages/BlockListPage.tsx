@@ -24,7 +24,7 @@ export default function BlockListPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/blocked-users`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/user/blocked-users`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setBlockedUsers(response.data.data || []);
@@ -50,7 +50,7 @@ export default function BlockListPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/blocked-users/${userId}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/user/blocked-users/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setBlockedUsers(prev => prev.filter(u => u.id !== userId));

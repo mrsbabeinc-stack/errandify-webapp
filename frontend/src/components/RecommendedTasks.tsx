@@ -25,7 +25,7 @@ export default function RecommendedTasks() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/recommended`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/recommended`,
         {
           headers: { Authorization: `Bearer ${token}` },
           params: { limit: 5 },

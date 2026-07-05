@@ -73,7 +73,7 @@ export default function BrowseErrandsPage() {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands?category=${categoryId}`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands?category=${categoryId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -100,7 +100,7 @@ export default function BrowseErrandsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errandId}/recurring`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${errandId}/recurring`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -152,7 +152,7 @@ export default function BrowseErrandsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids`,
         {
           task_id: parentErrandId,
           amount,

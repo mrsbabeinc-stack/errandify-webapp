@@ -22,7 +22,7 @@ export default function ErrandifyPointsDisplay() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/gamification/me`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/gamification/me`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setData(response.data.data);

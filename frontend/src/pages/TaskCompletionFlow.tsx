@@ -92,7 +92,7 @@ export default function TaskCompletionFlow() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTask(response.data.data);
@@ -116,12 +116,12 @@ export default function TaskCompletionFlow() {
     try {
       // Fetch reviews for both parties
       const askerRatings = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings/user/${task?.asker_id}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ratings/user/${task?.asker_id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const doerRatings = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings/user/${task?.doer_id}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ratings/user/${task?.doer_id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -173,7 +173,7 @@ export default function TaskCompletionFlow() {
 
       // Step 1: Mark task as completed
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/complete`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}/complete`,
         { notes: notes.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -224,7 +224,7 @@ export default function TaskCompletionFlow() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${id}/confirm`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/jobs/${id}/confirm`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -251,7 +251,7 @@ export default function TaskCompletionFlow() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${id}/request-more-work`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/jobs/${id}/request-more-work`,
         { reason: reason.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );

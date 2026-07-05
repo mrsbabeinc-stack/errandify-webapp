@@ -39,7 +39,7 @@ export default function RecurringErrandSessionSelector({
     const fetchSessions = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/recurring/${errandId}`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/recurring/${errandId}`,
           {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           }
@@ -85,7 +85,7 @@ export default function RecurringErrandSessionSelector({
     setSubmitting(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/recurring-sessions`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/recurring-sessions`,
         {
           errandId,
           selectedSessionIds: Array.from(selectedSessions),

@@ -34,7 +34,7 @@ export default function CompletionReviewPage({ isAsker = true }: PageProps) {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${errandId}/submissions`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/jobs/${errandId}/submissions`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

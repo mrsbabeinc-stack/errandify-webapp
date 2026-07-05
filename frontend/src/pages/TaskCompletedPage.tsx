@@ -36,7 +36,7 @@ export default function TaskCompletedPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTask(response.data.data);

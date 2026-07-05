@@ -40,7 +40,7 @@ export default function FirstLoginPreferenceModal({ isOpen, onClose, onComplete 
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/category-preferences`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/category-preferences`,
         { preferredCategories: selectedCategories },
         { headers: { Authorization: `Bearer ${token}` } }
       );

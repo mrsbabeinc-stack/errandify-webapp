@@ -42,7 +42,7 @@ export default function AdminPanel() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/rewards/all`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/rewards/all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setRewards(response.data.data || []);
@@ -64,7 +64,7 @@ export default function AdminPanel() {
       if (editingId) {
         // Update existing reward
         await axios.put(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/rewards/${editingId}`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/rewards/${editingId}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -72,7 +72,7 @@ export default function AdminPanel() {
       } else {
         // Create new reward
         await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/rewards`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/rewards`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -119,7 +119,7 @@ export default function AdminPanel() {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/rewards/${id}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/rewards/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSuccessMessage('✅ Reward deleted successfully!');

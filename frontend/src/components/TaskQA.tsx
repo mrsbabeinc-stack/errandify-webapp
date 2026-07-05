@@ -37,7 +37,7 @@ export default function TaskQA({ errandId, isAsker, userRole = 'doer', errandSta
   const fetchQuestions = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/questions/${errandId}`
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/questions/${errandId}`
       );
       setQuestions(response.data.data || []);
       setError('');
@@ -58,7 +58,7 @@ export default function TaskQA({ errandId, isAsker, userRole = 'doer', errandSta
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/questions`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/questions`,
         { errandId, question: newQuestion },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -82,7 +82,7 @@ export default function TaskQA({ errandId, isAsker, userRole = 'doer', errandSta
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/questions/${questionId}/reply`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/questions/${questionId}/reply`,
         { reply: replyText },
         { headers: { Authorization: `Bearer ${token}` } }
       );

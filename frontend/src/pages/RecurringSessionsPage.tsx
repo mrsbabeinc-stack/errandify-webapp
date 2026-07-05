@@ -25,7 +25,7 @@ export default function RecurringSessionsPage() {
   const fetchSessions = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/recurring-sessions`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/recurring-sessions`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
@@ -70,7 +70,7 @@ export default function RecurringSessionsPage() {
   const handleCompleteSession = async (sessionId: number) => {
     try {
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/recurring-sessions/${sessionId}/complete`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/recurring-sessions/${sessionId}/complete`,
         {},
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -83,7 +83,7 @@ export default function RecurringSessionsPage() {
   const handleSkipSession = async (sessionId: number) => {
     try {
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/recurring-sessions/${sessionId}/skip`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/recurring-sessions/${sessionId}/skip`,
         {},
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );

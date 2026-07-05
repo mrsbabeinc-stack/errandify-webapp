@@ -72,7 +72,7 @@ export default function TaskCompleteEvidencePage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -185,7 +185,7 @@ export default function TaskCompleteEvidencePage() {
 
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${id}/complete`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/jobs/${id}/complete`,
         {
           photoUrls: uploadedUrls,
           completionNotes: completionNotes.trim(),
@@ -580,7 +580,7 @@ export default function TaskCompleteEvidencePage() {
                   try {
                     const token = localStorage.getItem('token');
                     await axios.post(
-                      `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings`,
+                      `${import.meta.env.VITE_API_URL || window.location.origin}/api/ratings`,
                       {
                         taskId: id,
                         ratedUserId: task.asker_id,
@@ -592,7 +592,7 @@ export default function TaskCompleteEvidencePage() {
 
                     // Award bonus points
                     await axios.post(
-                      `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/award-ep-bonus`,
+                      `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/award-ep-bonus`,
                       {
                         errandId: id,
                         userId: JSON.parse(localStorage.getItem('user') || '{}').id,

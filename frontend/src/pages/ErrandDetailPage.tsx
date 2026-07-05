@@ -115,7 +115,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         try {
           const token = localStorage.getItem('token');
           const response = await axios.get(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/check/${id}`,
+            `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/check/${id}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -144,7 +144,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     console.log('[ErrandDetail] loadCompletionEvidence called with targetId:', targetId, 'autoShow:', autoShow);
     try {
       const token = localStorage.getItem('token');
-      const url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${targetId}/submissions`;
+      const url = `${import.meta.env.VITE_API_URL || window.location.origin}/api/jobs/${targetId}/submissions`;
       console.log('[ErrandDetail] Fetching from:', url);
       const response = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
 
@@ -179,7 +179,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
         // Log that asker viewed the evidence
         if (autoShow || showCompletionEvidence) {
           await axios.post(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${targetId}/log-viewed-evidence`,
+            `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${targetId}/log-viewed-evidence`,
             {},
             { headers: { Authorization: `Bearer ${token}` } }
           ).catch(err => console.error('Failed to log evidence viewed:', err));
@@ -227,7 +227,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       }
 
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -264,7 +264,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings/check?errandId=${errandId}&userId=${userId}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ratings/check?errandId=${errandId}&userId=${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.data.success && response.data.data && response.data.data.hasRated) {
@@ -498,7 +498,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       console.log('[Cancel] Token found:', !!token);
 
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/cancel`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}/cancel`,
         { reason: finalReason },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -560,7 +560,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/start`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}/start`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -584,7 +584,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/complete`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}/complete`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -1068,7 +1068,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                       try {
                         const token = localStorage.getItem('token');
                         const response = await axios.put(
-                          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${bidId}/confirm`,
+                          `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/${bidId}/confirm`,
                           {},
                           { headers: { Authorization: `Bearer ${token}` } }
                         );
@@ -1079,7 +1079,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                         if (id && currentUser) {
                           try {
                             const bidResponse = await axios.get(
-                              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/check/${id}`,
+                              `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/check/${id}`,
                               { headers: { Authorization: `Bearer ${token}` } }
                             );
                             if (bidResponse.data.hasBid) {
@@ -1184,14 +1184,14 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     try {
                       const token = localStorage.getItem('token');
                       await axios.put(
-                        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/start`,
+                        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}/start`,
                         {},
                         { headers: { Authorization: `Bearer ${token}` } }
                       );
                       setErrandStarted(true);
                       // Notify asker
                       await axios.post(
-                        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/notifications`,
+                        `${import.meta.env.VITE_API_URL || window.location.origin}/api/notifications`,
                         {
                           recipientId: errand.askerId,
                           type: 'job_started',
@@ -1587,7 +1587,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
                                   // Step 1: Submit rating
                                   await axios.post(
-                                    `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings`,
+                                    `${import.meta.env.VITE_API_URL || window.location.origin}/api/ratings`,
                                     {
                                       taskId: errand.id,
                                       ratedUserId: errand.doerId || undefined,
@@ -1599,14 +1599,14 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
                                   // Step 2: Mark errand as completed (from completed_unconfirmed to completed)
                                   await axios.post(
-                                    `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/confirm-completion`,
+                                    `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${errand.id}/confirm-completion`,
                                     {},
                                     { headers: { Authorization: `Bearer ${token}` } }
                                   );
 
                                   // Step 3: Award EP to both asker and doer
                                   await axios.post(
-                                    `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/award-ep`,
+                                    `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/award-ep`,
                                     {
                                       errandId: errand.id,
                                       askerId: errand.askerId,
@@ -1730,7 +1730,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                           const reason = window.prompt('Why do you need to reopen this job? (Explain to doer)');
                           if (reason === null) return;
                           const token = localStorage.getItem('token');
-                          fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errand.id}/reopen`, {
+                          fetch(`${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${errand.id}/reopen`, {
                             method: 'POST',
                             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                             body: JSON.stringify({ reason: reason || 'Please revise your work' }),
@@ -1818,7 +1818,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                             const token = localStorage.getItem('token');
                             // Doer rates asker
                             await axios.post(
-                              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ratings`,
+                              `${import.meta.env.VITE_API_URL || window.location.origin}/api/ratings`,
                               {
                                 taskId: errand.id,
                                 ratedUserId: errand.askerId,
@@ -1830,7 +1830,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
                             // Award +5 EP bonus for doer rating within timeframe
                             await axios.post(
-                              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/award-ep-bonus`,
+                              `${import.meta.env.VITE_API_URL || window.location.origin}/api/wallet/award-ep-bonus`,
                               {
                                 errandId: errand.id,
                                 userId: currentUser.id,

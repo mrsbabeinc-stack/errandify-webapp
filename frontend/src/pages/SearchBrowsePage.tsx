@@ -51,7 +51,7 @@ export default function SearchBrowsePage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/categories`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/categories`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const cats = response.data.data.categories || response.data.data.accessible || [];
@@ -77,7 +77,7 @@ export default function SearchBrowsePage() {
 
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/search?${params}`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/search?${params}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setErrands(response.data.data.errands);
@@ -85,7 +85,7 @@ export default function SearchBrowsePage() {
         // Fallback to basic GET /api/errands if search endpoint is not available
         console.log('Search endpoint unavailable, using basic errands list');
         const fallbackResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         // GET /api/errands returns { success, data: [...] }
@@ -119,7 +119,7 @@ export default function SearchBrowsePage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/search/suggestions?q=${query}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/search/suggestions?q=${query}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSuggestions(response.data.data);

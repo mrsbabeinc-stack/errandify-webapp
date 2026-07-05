@@ -185,7 +185,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
         }
 
         const params = showRecommended ? '?recommended=true' : '';
-        const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands${params}`;
+        const apiUrl = `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands${params}`;
         console.log('[DoerBrowse] Fetching errands from:', apiUrl);
         console.log('[DoerBrowse] Token exists:', !!token);
 

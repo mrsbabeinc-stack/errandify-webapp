@@ -30,7 +30,7 @@ export default function DisputesManagementPage() {
   const fetchDisputes = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/disputes`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/disputes`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
@@ -70,7 +70,7 @@ export default function DisputesManagementPage() {
   const handleRaiseDispute = async (taskId: number, reason: string, description: string) => {
     try {
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/disputes`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/disputes`,
         { taskId, reason, description },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -88,7 +88,7 @@ export default function DisputesManagementPage() {
 
     try {
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/tasks/${taskId}/cancel`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/tasks/${taskId}/cancel`,
         {},
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },

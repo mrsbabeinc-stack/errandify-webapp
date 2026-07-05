@@ -38,7 +38,7 @@ const ErrandActivityTimeline = forwardRef<ErrandActivityTimelineHandle, ErrandAc
     try {
       setLoading(true);
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errandId}/activity-log`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${errandId}/activity-log`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }

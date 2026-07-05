@@ -44,7 +44,7 @@ export const DisputesPage: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/disputes`;
+      const url = `${import.meta.env.VITE_API_URL || window.location.origin}/api/disputes`;
       const params = filter !== 'all' ? `?status=${filter}` : '';
 
       const response = await axios.get(url + params, {
@@ -78,7 +78,7 @@ export const DisputesPage: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/disputes/${disputeId}/analysis`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/disputes/${disputeId}/analysis`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -103,7 +103,7 @@ export const DisputesPage: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/disputes/${selectedDispute.id}/resolve`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/disputes/${selectedDispute.id}/resolve`,
         {
           resolution,
           notes,

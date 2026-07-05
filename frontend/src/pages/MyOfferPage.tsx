@@ -68,7 +68,7 @@ export default function MyOfferPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/my-bids`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/my-bids`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -87,7 +87,7 @@ export default function MyOfferPage() {
       console.log('[MyOfferPage] Confirming bid:', bidId);
       const token = localStorage.getItem('token');
       const response = await axios.put(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${bidId}/confirm`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/${bidId}/confirm`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
