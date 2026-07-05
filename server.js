@@ -4,7 +4,7 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const frontendPath = path.join(__dirname, 'frontend/dist');
+const frontendPath = path.join(__dirname, 'public');
 
 console.log('=== SERVER STARTING ===');
 console.log('Frontend path:', frontendPath);
