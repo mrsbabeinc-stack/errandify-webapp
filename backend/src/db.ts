@@ -7,8 +7,13 @@ let pool: pg.Pool | null = null;
 
 try {
   if (config.databaseUrl) {
+    // Ensure SSL is enforced for Supabase
+    const connectionString = config.databaseUrl.includes('sslmode')
+      ? config.databaseUrl
+      : `${config.databaseUrl}?sslmode=require`;
+
     pool = new Pool({
-      connectionString: config.databaseUrl,
+      connectionString,
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
