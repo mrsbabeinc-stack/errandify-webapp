@@ -205,7 +205,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const frontendPath = join(__dirname, '../frontend/dist');
+const frontendPath = join(__dirname, '../../frontend/dist');
 console.log('Serving frontend from:', frontendPath);
 app.use(express.static(frontendPath));
 // Routes
@@ -254,7 +254,7 @@ app.use('/api/safety', safetyRoutes);
 app.use('/api', hanaRoutes);
 // Serve index.html for all non-API routes (React Router fallback)
 app.get('*', (req, res) => {
-    res.sendFile(join(__dirname, '../frontend/dist/index.html'));
+    res.sendFile(join(__dirname, '../../frontend/dist/index.html'));
 });
 // Error handling
 app.use((err, req, res, next) => {
