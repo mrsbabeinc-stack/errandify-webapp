@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "node ./node_modules/typescript/bin/tsc",
-    "start": "node dist/index.js",
+    "start": "node ../backend/dist/index.js",
     "lint": "eslint src --ext ts",
     "seed:blog": "tsx src/db/seed-blog-production.ts",
     "seed:errands": "tsx src/scripts/seed-sample-errands.ts"
