@@ -55,6 +55,6 @@
   ],
   "stack": "heroku-22",
   "scripts": {
-    "postbuild": "bash build.sh"
+    "postbuild": "bash ./build.sh"
   }
 }
