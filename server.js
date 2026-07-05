@@ -1,88 +1,47 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { execSync } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const frontendPath = path.join(__dirname, 'frontend/dist');
 
-console.log('SERVER STARTING...');
+console.log('=== SERVER STARTING ===');
 console.log('Frontend path:', frontendPath);
 console.log('Frontend exists:', fs.existsSync(frontendPath));
 
-// Build frontend if dist doesn't exist
-if (!fs.existsSync(frontendPath)) {
-  console.log('Building frontend...');
-  try {
-    execSync('npm run build --prefix frontend', { stdio: 'inherit' });
-    console.log('Frontend build complete');
-  } catch (err) {
-    console.error('Frontend build failed:', err);
+if (fs.existsSync(frontendPath)) {
+  const files = fs.readdirSync(frontendPath);
+  console.log('Contents:', files);
+  const assetsPath = path.join(frontendPath, 'assets');
+  if (fs.existsSync(assetsPath)) {
+    console.log('Assets folder exists, files:', fs.readdirSync(assetsPath).slice(0, 3));
   }
 }
 
-// Test route
+// Health check
 app.get('/test', (req, res) => {
-  const assetsPath = path.join(frontendPath, 'assets');
-  res.json({
-    status: 'server.js is running',
-    path: frontendPath,
-    assetsExist: fs.existsSync(assetsPath),
-    distFiles: fs.existsSync(frontendPath) ? fs.readdirSync(frontendPath) : []
-  });
+  res.json({ status: 'ok', frontendPath, exists: fs.existsSync(frontendPath) });
 });
 
-// Serve static files with explicit content type handling
-if (fs.existsSync(frontendPath)) {
-  console.log('✅ Frontend dist directory found, serving static files');
+// CRITICAL: Serve static files FIRST, with no caching
+app.use(express.static(frontendPath, {
+  maxAge: '0',
+  etag: false,
+  lastModified: false
+}));
 
-  // Explicitly serve JS with correct MIME type using regex
-  app.get(/^\/assets\/.+\.js$/, (req, res) => {
-    const filePath = path.join(frontendPath, req.path);
-    console.log('Serving JS:', req.path, 'full path:', filePath, 'exists:', fs.existsSync(filePath));
-    res.type('application/javascript');
-    res.sendFile(filePath, (err) => {
-      if (err) {
-        console.error('Error serving JS:', req.path, err.message);
-        res.status(404).send('Not found');
-      }
-    });
-  });
-
-  // Explicitly serve CSS with correct MIME type using regex
-  app.get(/^\/assets\/.+\.css$/, (req, res) => {
-    const filePath = path.join(frontendPath, req.path);
-    console.log('Serving CSS:', req.path);
-    res.type('text/css');
-    res.sendFile(filePath, (err) => {
-      if (err) {
-        console.error('Error serving CSS:', err.message);
-        res.status(404).send('Not found');
-      }
-    });
-  });
-
-  // General static files (images, fonts, etc)
-  app.use(express.static(frontendPath));
-
-  // React Router fallback (for non-file routes)
-  app.get('*', (req, res) => {
-    const indexPath = path.join(frontendPath, 'index.html');
-    console.log('Fallback to index.html for:', req.path);
-    res.type('text/html');
-    res.sendFile(indexPath, (err) => {
-      if (err) {
-        console.error('Error serving index.html:', err.message);
-        res.status(404).send('index.html not found');
-      }
-    });
-  });
-} else {
-  app.get('*', (req, res) => {
-    res.status(404).send('Frontend files not found at: ' + frontendPath);
-  });
-}
+// FALLBACK: React Router for all other routes
+app.get('*', (req, res) => {
+  const indexPath = path.join(frontendPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    console.log('✅ Serving index.html for route:', req.path);
+    res.sendFile(indexPath);
+  } else {
+    console.error('❌ index.html not found at:', indexPath);
+    res.status(404).send('index.html not found');
+  }
+});
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on port ${PORT}`);
