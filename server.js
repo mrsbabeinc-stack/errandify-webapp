@@ -1,10 +1,6 @@
 // Minimal server to test Heroku deployment
-import express from 'express';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const express = require('express');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,13 +11,13 @@ app.get('/health', (req, res) => {
 });
 
 // Serve frontend
-const frontendPath = join(__dirname, 'frontend/dist');
+const frontendPath = path.join(__dirname, 'frontend/dist');
 console.log('Serving frontend from:', frontendPath);
 app.use(express.static(frontendPath));
 
 // Fallback for React Router
 app.get('*', (req, res) => {
-  res.sendFile(join(frontendPath, 'index.html'));
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 app.listen(PORT, () => {
