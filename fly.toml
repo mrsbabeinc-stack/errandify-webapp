@@ -2,6 +2,8 @@ app = "errandify-webapp"
 primary_region = "sin"
 
 [build]
+  builder = "heroku"
+  buildpacks = ["heroku/nodejs"]
 
 [env]
   NODE_ENV = "production"
