@@ -408,24 +408,78 @@ app.post('/api/ai/extract-task-info', (req, res) => {
 });
 
 // Hana suggestions endpoint (mock for demo)
-app.get('/api/ai/suggestions', (req, res) => {
-  const { category } = req.query;
+app.post('/api/ai/suggestions', (req, res) => {
+  const { category, title, description, date, time } = req.body;
 
-  const suggestions = {
-    'home-maintenance': ['Fix leaky tap', 'Paint wall', 'Repair door', 'Clean gutters'],
-    'cleaning-household': ['Deep clean', 'Laundry', 'Organize closet', 'Vacuum carpet'],
-    'shopping-errands': ['Grocery shopping', 'Buy supplies', 'Pick up package', 'Mall shopping'],
-    'delivery-moving': ['Move boxes', 'Delivery', 'Transport items', 'Furniture moving'],
-    'pet-care': ['Dog walking', 'Pet sitting', 'Grooming', 'Vet visit'],
-    'default': ['Help needed', 'Get assistance', 'Find someone', 'Task help']
+  console.log('[Suggestions] Category:', category);
+
+  const skillMap = {
+    'home-maintenance': ['Handyman', 'Repairs', 'Maintenance', 'Carpentry'],
+    'cleaning-household': ['Deep cleaning', 'Laundry service', 'Organization', 'Vacuuming'],
+    'shopping-errands': ['Shopper', 'Delivery', 'Procurement', 'Errands'],
+    'delivery-moving': ['Moving', 'Heavy lifting', 'Transportation', 'Logistics'],
+    'pet-care': ['Dog walking', 'Pet sitting', 'Pet care', 'Animal care'],
+    'food-beverage': ['Cooking', 'Food prep', 'Catering', 'Delivery'],
+    'default': ['Help', 'Assistance', 'Support', 'Service']
   };
 
-  const skills = suggestions[category] || suggestions['default'];
+  const descriptionMap = {
+    'home-maintenance': 'Skilled professional needed for household repairs and maintenance.',
+    'cleaning-household': 'Professional cleaning and household organization service required.',
+    'shopping-errands': 'Shopping assistance and errand running service needed.',
+    'delivery-moving': 'Professional moving and delivery assistance required.',
+    'pet-care': 'Experienced pet care and dog walking service needed.',
+    'food-beverage': 'Professional food preparation and delivery service needed.',
+    'default': 'Professional assistance service required.'
+  };
+
+  const notesMap = {
+    'home-maintenance': 'Please bring necessary tools and materials. Access to all areas required.',
+    'cleaning-household': 'Please bring cleaning supplies if needed. Parking available nearby.',
+    'shopping-errands': 'Please have list of items ready. Flexible schedule appreciated.',
+    'delivery-moving': 'Please bring moving equipment. Help with loading/unloading needed.',
+    'pet-care': 'Please bring pet treats. Pet is friendly and well-behaved.',
+    'food-beverage': 'Please confirm dietary preferences. Kitchen access available.',
+    'default': 'Please confirm timing and any special requirements.'
+  };
+
+  const skills = skillMap[category] || skillMap['default'];
+  const suggestionDesc = descriptionMap[category] || descriptionMap['default'];
+  const suggestionNotes = notesMap[category] || notesMap['default'];
 
   res.json({
     success: true,
     data: {
-      suggestedSkills: skills
+      suggestedSkills: skills,
+      suggestedDescription: suggestionDesc,
+      suggestedNotes: suggestionNotes
+    }
+  });
+});
+
+// Content moderation endpoint (mock for demo)
+app.post('/api/ai/check-content', (req, res) => {
+  const { content } = req.body;
+
+  console.log('[Moderation] Checking content');
+
+  // Basic content filtering
+  const blockedPatterns = [
+    /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/, // Phone numbers
+    /\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/, // Email addresses
+    /\b(?:credit card|card number|cvv|bank account|routing number)\b/i,
+    /\b(?:paypal|stripe|payment|card details)\b/i
+  ];
+
+  const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
+  const hasBlocked = blockedPatterns.some(pattern => pattern.test(contentStr));
+
+  res.json({
+    success: true,
+    data: {
+      isClean: !hasBlocked,
+      hasBlocked,
+      reason: hasBlocked ? 'Contact information or payment details detected' : null
     }
   });
 });
