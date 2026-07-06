@@ -290,13 +290,16 @@ app.post('/api/ai/extract-task-info', (req, res) => {
 
     // Extract title - clean up metadata
     let title = input
-      .replace(/at\s+\d{6},?/i, '')
+      .replace(/,?\s*at\s+\d{6},?/i, '')  // Remove ", at 150101" or "at 150101"
+      .replace(/\d{6}\s*,?/g, '')  // Remove any 6-digit postal codes
       .replace(/budget\s*\$?\d+/i, '')
       .replace(/,?\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)/i, '')
       .replace(/(?:tomorrow|today|in\s+\d+\s+days?|next\s+\w+|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)/i, '')
       .replace(/for\s+[\d.]+\s*(?:hour|hr|min)s?/i, '')
       .replace(/^\s*(?:i\s+need|please|can you)\s+/i, '')
       .replace(/\s+/g, ' ')
+      .replace(/,\s*,/g, ',')  // Remove double commas
+      .replace(/,\s*$/g, '')  // Remove trailing commas
       .trim();
 
     if (!title || title.length < 3) {
