@@ -268,9 +268,9 @@ app.post('/api/ai/extract-task-info', (req, res) => {
 
     console.log('[Extract] Input:', input);
 
-    // Extract postal code (6 consecutive digits)
+    // Extract postal code - prefer AI-detected landmark postal code, fall back to regex
     const postalCodeMatch = input.match(/\b(\d{6})\b/);
-    const postalCode = postalCodeMatch ? postalCodeMatch[1] : '';
+    let postalCode = detectedPostalCode || (postalCodeMatch ? postalCodeMatch[1] : '');
 
     // Extract budget (smart extraction)
     let budget = '';
@@ -374,19 +374,83 @@ Task title:`,
       .join(' ');
     console.log('[Extract] Final title:', title);
 
-    // Category detection - checked in order of priority
+    // AI-powered category + landmark detection using Qwen
     const lowerInput = input.toLowerCase();
     let category = 'home-maintenance';
-    if (lowerInput.includes('walk') || lowerInput.includes('dog') || lowerInput.includes('pet')) category = 'pet-care';
-    else if (lowerInput.includes('clean') || lowerInput.includes('laundry')) category = 'cleaning-household';
-    else if (lowerInput.includes('move') || lowerInput.includes('deliver') || lowerInput.includes('moving')) category = 'delivery-moving';
-    else if (lowerInput.includes('buy') || lowerInput.includes('shop') || lowerInput.includes('grocery') || lowerInput.includes('supermarket') || lowerInput.includes('purchase') || lowerInput.includes('fetch')) category = 'shopping-errands';
-    else if (lowerInput.includes('cook') || lowerInput.includes('food') || lowerInput.includes('prepare')) category = 'food-beverage';
-    else if (lowerInput.includes('makeup') || lowerInput.includes('beauty') || lowerInput.includes('hair') || lowerInput.includes('salon') || lowerInput.includes('nails')) category = 'beauty-personal-care';
-    else if (lowerInput.includes('tutor') || lowerInput.includes('teach') || lowerInput.includes('lesson') || lowerInput.includes('class')) category = 'tutoring-lessons';
-    else if (lowerInput.includes('photo') || lowerInput.includes('picture') || lowerInput.includes('shoot')) category = 'photography';
-    else if (lowerInput.includes('design') || lowerInput.includes('graphic') || lowerInput.includes('logo')) category = 'design-creative';
-    else if (lowerInput.includes('repair') || lowerInput.includes('fix') || lowerInput.includes('maintenance')) category = 'home-maintenance';
+    let detectedLandmark = '';
+    let detectedPostalCode = '';
+
+    try {
+      const qwenCategoryResponse = await axios.post(
+        'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+        {
+          model: 'qwen-plus',
+          input: {
+            prompt: `Analyze this Singapore task and extract:
+1. CATEGORY: Which service type? (pet-care, childcare-tutoring, cleaning-household, shopping-errands, delivery-moving, food-beverage, beauty-personal-care, tutoring-lessons, photography, design-creative, or home-maintenance)
+2. LANDMARK: Is there a landmark/school/place name? Extract it exactly.
+3. POSTAL_CODE: What's the postal code for that landmark in Singapore (6 digits)?
+
+Task: "${input}"
+
+Format your response EXACTLY as:
+CATEGORY: [category]
+LANDMARK: [landmark or "NONE"]
+POSTAL_CODE: [6 digits or "NONE"]`,
+          },
+          parameters: {
+            temperature: 0.1,
+            max_tokens: 100,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 8000,
+        }
+      );
+
+      if (qwenCategoryResponse.data?.output?.text) {
+        const response = qwenCategoryResponse.data.output.text;
+        console.log('[Extract] Qwen category response:', response);
+
+        // Parse response
+        const categoryMatch = response.match(/CATEGORY:\s*([a-z-]+)/i);
+        const landmarkMatch = response.match(/LANDMARK:\s*([^\n]+)/i);
+        const postalMatch = response.match(/POSTAL_CODE:\s*(\d{6})/i);
+
+        if (categoryMatch && categoryMatch[1] && categoryMatch[1] !== 'none') {
+          category = categoryMatch[1].toLowerCase();
+          console.log('[Extract] Detected category:', category);
+        }
+
+        if (landmarkMatch && landmarkMatch[1] && !landmarkMatch[1].includes('NONE')) {
+          detectedLandmark = landmarkMatch[1].trim();
+          console.log('[Extract] Detected landmark:', detectedLandmark);
+        }
+
+        if (postalMatch && postalMatch[1]) {
+          detectedPostalCode = postalMatch[1];
+          console.log('[Extract] Detected postal code:', detectedPostalCode);
+        }
+      }
+    } catch (aiErr) {
+      console.warn('[Extract] Qwen category detection failed:', aiErr.message);
+      // Fallback to simple keyword detection
+      if (lowerInput.includes('pick up') || lowerInput.includes('dropoff') || lowerInput.includes('drop off') || lowerInput.includes('school') || lowerInput.includes('kindergarten')) category = 'childcare-tutoring';
+      else if (lowerInput.includes('walk') || lowerInput.includes('dog') || lowerInput.includes('pet')) category = 'pet-care';
+      else if (lowerInput.includes('clean') || lowerInput.includes('laundry')) category = 'cleaning-household';
+      else if (lowerInput.includes('move') || lowerInput.includes('deliver') || lowerInput.includes('moving')) category = 'delivery-moving';
+      else if (lowerInput.includes('buy') || lowerInput.includes('shop') || lowerInput.includes('grocery') || lowerInput.includes('supermarket') || lowerInput.includes('purchase') || lowerInput.includes('fetch')) category = 'shopping-errands';
+      else if (lowerInput.includes('cook') || lowerInput.includes('food') || lowerInput.includes('prepare')) category = 'food-beverage';
+      else if (lowerInput.includes('makeup') || lowerInput.includes('beauty') || lowerInput.includes('hair') || lowerInput.includes('salon') || lowerInput.includes('nails')) category = 'beauty-personal-care';
+      else if (lowerInput.includes('tutor') || lowerInput.includes('teach') || lowerInput.includes('lesson') || lowerInput.includes('class')) category = 'tutoring-lessons';
+      else if (lowerInput.includes('photo') || lowerInput.includes('picture') || lowerInput.includes('shoot')) category = 'photography';
+      else if (lowerInput.includes('design') || lowerInput.includes('graphic') || lowerInput.includes('logo')) category = 'design-creative';
+      else if (lowerInput.includes('repair') || lowerInput.includes('fix') || lowerInput.includes('maintenance')) category = 'home-maintenance';
+    }
 
     // Parse date
     let date = '';
