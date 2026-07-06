@@ -551,7 +551,7 @@ OUTPUT ONLY THE TITLE, nothing else.`,
         // Remove metadata at the end of the sentence (order matters!)
         .replace(/\s*,?\s*budget\s*[\d.$]*$/i, '') // Remove budget
         .replace(/\s*,?\s*\$\s*\d+$/i, '') // Remove $ amounts
-        .replace(/\s+for\s+[\d.]+\s*(?:hours?|hrs?|h|mins?|m)$/i, '') // Remove "for X hours/minutes"
+        .replace(/\s+(?:for\s+)?\d+(?:\.\d+)?\s*(?:hours?|hrs?|h|mins?|m)\b/i, '') // Remove duration (with or without 'for')
         // Remove time + location patterns like "on Saturday 2pm at Clementi"
         .replace(/\s+(?:on|every)\s+\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\b(?:\s+\d{1,2})?(?::\d{2})?\s*(?:am|pm)?(?:\s+at\s+[\w\s]+)?$/i, '')
         // Remove just time patterns "at 2pm" or "at 2:30pm"
@@ -560,9 +560,10 @@ OUTPUT ONLY THE TITLE, nothing else.`,
         .replace(/\s+at\s+\d+\s+[\w\s]+(?:drive|street|road|avenue|lane|court|place|crescent|close).*$/i, '')
         // Remove area names like "at Clementi" or "at salon"
         .replace(/\s+at\s+\b(?:clementi|bedok|tampines|jurong|bukit|pasir ris|yishun|hougang|serangoon|punggol|ang mo kio|bishan|toa payoh|novena|newton|tiong bahru|outram|queenstown|tanjong pagar|orchard|dhoby ghaut|chinatown|marina|raffles|sentosa|changi|kranji|woodlands|sembawang|salon|home|office|workplace)\b.*$/i, '')
-        .replace(/\s+\d{6}\b$/g, '') // Remove postal codes at end
+        .replace(/[,\s]+\d{6}\b/g, '') // Remove postal codes and adjacent commas
         // Remove leading filler phrases
         .replace(/^(?:i\s+need\s+to|can\s+you|please|could\s+you|would\s+you|i\s+need|need\s+to)\s+/i, '')
+        .replace(/,\s*,+/g, '') // Remove multiple commas
         // Final cleanup
         .replace(/\s+/g, ' ')
         .replace(/[.,\s]+$/g, '')
