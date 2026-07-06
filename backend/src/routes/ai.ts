@@ -1696,58 +1696,56 @@ Return ONLY valid JSON.`;
 });
 
 // POST /api/ai/transcribe - Transcribe audio to text using Qwen API
+// Falls back to empty text if transcription fails (user can type manually)
 router.post('/transcribe', async (req: Request, res: Response) => {
+  const startTime = Date.now();
   try {
     const { audio } = req.body;
 
     if (!audio) {
-      return res.status(400).json({ error: 'Audio data required' });
+      return res.json({ success: true, data: { text: '' } });
     }
 
-    // Convert base64 to buffer to verify it's valid
+    // Verify base64
     let audioBuffer: Buffer;
     try {
       audioBuffer = Buffer.from(audio, 'base64');
     } catch (e) {
-      return res.status(400).json({ error: 'Invalid base64 audio data' });
+      console.warn('[Transcribe] Invalid base64');
+      return res.json({ success: true, data: { text: '' } });
     }
 
-    if (audioBuffer.length === 0) {
-      return res.status(400).json({ error: 'Empty audio data' });
+    if (audioBuffer.length < 500) {
+      console.log('[Transcribe] Audio too short:', audioBuffer.length, 'bytes');
+      return res.json({ success: true, data: { text: '' } });
     }
 
-    console.log('[Transcribe] Processing audio of', audioBuffer.length, 'bytes');
+    console.log('[Transcribe] Processing', audioBuffer.length, 'bytes');
 
     const qwenApiKey = process.env.QWEN_API_KEY;
     if (!qwenApiKey) {
-      console.error('[Transcribe] Qwen API key not configured');
-      return res.status(500).json({ error: 'Transcription service not configured' });
+      console.warn('[Transcribe] No Qwen API key');
+      return res.json({ success: true, data: { text: '' } });
     }
 
     try {
-      // Use Qwen Paraformer API for speech-to-text
-      // The API expects base64 audio in the request body
-      console.log('[Transcribe] Calling Qwen Paraformer speech-to-text...');
-
+      // Call Qwen Paraformer via DashScope
       const qwenResponse = await axios.post(
         'https://dashscope.aliyuncs.com/api/v1/services/aigc/speech-to-text/transcription',
         {
           model: 'paraformer-realtime',
-          audio: audio, // Send base64 audio directly, not as data URI
+          audio: audio,
         },
         {
           headers: {
             'Authorization': `Bearer ${qwenApiKey}`,
             'Content-Type': 'application/json',
           },
-          timeout: 35000,
+          timeout: 40000,
         }
       );
 
-      console.log('[Transcribe] Response status:', qwenResponse.status);
-      console.log('[Transcribe] Response data keys:', Object.keys(qwenResponse.data || {}));
-
-      // Try multiple response formats from Qwen API
+      // Extract text from response
       let transcribedText = '';
 
       if (qwenResponse.data?.output?.text) {
@@ -1759,44 +1757,26 @@ router.post('/transcribe', async (req: Request, res: Response) => {
       }
 
       if (transcribedText && transcribedText.length > 0) {
-        console.log('[Transcribe] ✅ Success:', transcribedText.substring(0, 100));
+        const elapsed = Date.now() - startTime;
+        console.log(`[Transcribe] ✅ Success (${elapsed}ms):`, transcribedText.substring(0, 80));
         return res.json({
           success: true,
-          data: {
-            text: transcribedText,
-          },
+          data: { text: transcribedText },
         });
-      } else {
-        console.warn('[Transcribe] No text extracted from response');
       }
+
+      console.warn('[Transcribe] No text in response');
     } catch (qwenErr: any) {
-      console.error('[Transcribe] Qwen API error:', {
-        status: qwenErr.response?.status,
-        statusText: qwenErr.response?.statusText,
-        message: qwenErr.message,
-        code: qwenErr.code,
-      });
-      // Continue to fallback
+      const elapsed = Date.now() - startTime;
+      console.warn(`[Transcribe] Qwen error (${elapsed}ms):`, qwenErr.message);
     }
 
-    // Fallback: Return empty text - user will type manually
-    console.log('[Transcribe] Transcription attempt failed, allowing manual input');
-    res.json({
-      success: true,
-      data: {
-        text: '',
-      },
-    });
-  } catch (error: any) {
-    console.error('[Transcribe] Unexpected error:', error.message);
+    // Fallback: return empty text (user will type)
+    res.json({ success: true, data: { text: '' } });
 
-    // Always allow manual input as fallback
-    res.json({
-      success: true,
-      data: {
-        text: '',
-      },
-    });
+  } catch (error: any) {
+    console.error('[Transcribe] Error:', error.message);
+    res.json({ success: true, data: { text: '' } });
   }
 });
 
