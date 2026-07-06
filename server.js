@@ -228,6 +228,18 @@ app.get('/api/profile', (req, res) => {
   });
 });
 
+app.get('/api/users/profile', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      id: '1',
+      name: 'Demo User',
+      email: 'demo@example.com',
+      role: 'asker'
+    }
+  });
+});
+
 app.get('/api/user-stats', (req, res) => {
   res.json({
     success: true,
