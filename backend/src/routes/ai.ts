@@ -12,6 +12,13 @@ import * as explainability from '../modules/explainability.js';
 
 const router = Router();
 
+// Create axios instance with proper SSL handling for external APIs
+const axiosWithSSL = axios.create({
+  httpsAgent: new https.Agent({
+    rejectUnauthorized: false, // Allow self-signed certs for Qwen API
+  }),
+});
+
 // POST /api/ai/verify-chas-eligibility - Verify CHAS eligibility with AI check
 router.post('/verify-chas-eligibility', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -481,7 +488,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     if (qwenApiKey) {
       try {
         console.log('[Extract] ✓ Using Qwen to clean title...');
-        const titleCleanResponse = await axios.post(
+        const titleCleanResponse = await axiosWithSSL.post(
           `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
           {
             model: 'qwen-max',
@@ -643,7 +650,7 @@ OUTPUT ONLY THE TITLE, nothing else.`,
     if (category === 'homehelp' && process.env.QWEN_API_KEY) {
       try {
         console.log('[Extract] ✓ Using Qwen to detect category...');
-        const categoryResponse = await axios.post(
+        const categoryResponse = await axiosWithSSL.post(
           `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
           {
             model: 'qwen-max',
@@ -1183,7 +1190,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     // Make all Qwen calls in parallel
     console.log('[Suggestions] Making Qwen API calls...');
     const [skillsResult, descriptionResult, notesResult] = await Promise.allSettled([
-      qwenApiKey ? axios.post(
+      qwenApiKey ? axiosWithSSL.post(
         `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
           model: 'qwen-max',
@@ -1203,7 +1210,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
           timeout: 3000,
         }
       ) : Promise.reject('No API key'),
-      qwenApiKey ? axios.post(
+      qwenApiKey ? axiosWithSSL.post(
         `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
           model: 'qwen-max',
@@ -1223,7 +1230,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
           timeout: 3000,
         }
       ) : Promise.reject('No API key'),
-      qwenApiKey ? axios.post(
+      qwenApiKey ? axiosWithSSL.post(
         `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
           model: 'qwen-max',
@@ -1438,7 +1445,7 @@ Provide analysis in JSON format with:
 Return ONLY valid JSON, no markdown or code blocks.`;
 
     try {
-      const response = await axios.post(
+      const response = await axiosWithSSL.post(
         `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
         {
           model: 'qwen-max',
@@ -1564,7 +1571,7 @@ Format: Return as JSON with fields: doer_profile, asker_profile, skill_insights,
     console.log('[AI Analysis] Analyzing preferences:', { doerServices, askerServices });
 
     try {
-      const response = await axios.post(
+      const response = await axiosWithSSL.post(
         `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
         {
           model: 'qwen-max',
@@ -1697,7 +1704,7 @@ Analyze and provide JSON response with:
 Return ONLY valid JSON.`;
 
     try {
-      const response = await axios.post(
+      const response = await axiosWithSSL.post(
         `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
         {
           model: 'qwen-max',
@@ -1804,7 +1811,7 @@ router.post('/transcribe', async (req: Request, res: Response) => {
     try {
       // Call Qwen Paraformer via DashScope
       console.log('[Transcribe] Calling Qwen API...');
-      const qwenResponse = await axios.post(
+      const qwenResponse = await axiosWithSSL.post(
         'https://dashscope.aliyuncs.com/api/v1/services/aigc/speech-to-text/transcription',
         {
           model: 'paraformer-realtime',
