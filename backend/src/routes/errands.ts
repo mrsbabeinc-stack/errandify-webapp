@@ -337,9 +337,9 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         status: errand.status,
         budget: errand.budget,
         location: errand.location,
-        full_address: errand.full_address, // Show to all viewers
+        full_address: isAsker || isConfirmedDoer ? errand.full_address : null, // Only show to asker + confirmed doer
         postalCode: errand.postal_code,
-        postal_code: errand.postal_code,
+        postal_code: isAsker || isConfirmedDoer ? errand.postal_code : null, // Only show postal code to asker + confirmed doer
         deadline: errand.deadline,
         isRecurring: errand.is_recurring,
         askerId: errand.asker_id,
