@@ -385,51 +385,91 @@ app.post('/api/ai/extract-task-info', (req, res) => {
     };
     const description = descriptionMap[category] || 'Professional assistance needed. Provide specific details.';
 
-    // Use Qwen AI to intelligently resolve postal code to area + address (no hardcoding)
+    // Use Mapbox to resolve postal code → address, cache in DB to avoid future API calls
+    // This provides accurate real addresses, cached for performance, user-correctable for improvement
     let areaName = '';
     let fullAddressValue = '';
 
     if (postalCode && postalCode.length === 6) {
       try {
-        // Use Qwen to intelligently generate address from postal code
-        const qwenResponse = await axios.post(
-          'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-          {
-            model: 'qwen-max',
-            messages: [
-              {
-                role: 'system',
-                content: 'You are a Singapore address expert. Given a postal code, return ONLY a JSON object with "area" (URA planning area name) and "address" (complete street address in Singapore). Never guess. If unsure, return {"area": "", "address": ""}. Format: {"area":"name","address":"street address Singapore postal"}'
-              },
-              {
-                role: 'user',
-                content: `Postal code: ${postalCode}. Return ONLY JSON object with area and address.`
-              }
-            ],
-            temperature: 0.3
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${process.env.QWEN_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            timeout: 3000
-          }
-        );
+        console.log('[Extract] Looking up postal code:', postalCode);
 
-        const content = qwenResponse.data.choices[0].message.content;
-        const parsed = JSON.parse(content);
-        areaName = parsed.area || '';
-        fullAddressValue = parsed.address || '';
-        console.log('[Extract] Qwen resolved postal', postalCode, '→ area:', areaName, '| address:', fullAddressValue);
-      } catch (qwenErr) {
-        console.warn('[Extract] Qwen address resolution failed, using postal code sector fallback:', qwenErr.message);
-        // Fallback to sector-based area lookup only (no hardcoded addresses)
-        const postalCodeToAreaMap = {'01': 'Raffles Place','02': 'Downtown Core','03': 'Marina Bay','04': 'Bukit Merah','05': 'Outram','06': 'Bukit Merah','07': 'Outram','08': 'Outram','09': 'Outram','10': 'Orchard','11': 'Orchard','12': 'Orchard','23': 'Orchard','13': 'Tanglin','14': 'Tanglin','15': 'Clementi','16': 'Clementi','17': 'Novena','18': 'Novena','19': 'Bukit Timah','20': 'Bukit Timah','21': 'Clementi','22': 'Clementi','24': 'Kallang','25': 'Kallang','26': 'Geylang','27': 'Geylang','28': 'Bedok','29': 'Bedok','30': 'Bedok','31': 'Tampines','32': 'Tampines','33': 'Tampines','34': 'Tampines','35': 'Toa Payoh','36': 'Toa Payoh','37': 'Serangoon','38': 'Serangoon','39': 'Hougang','40': 'Hougang','41': 'Bishan','42': 'Bishan','43': 'Serangoon','44': 'Serangoon','45': 'Sengkang','46': 'Sengkang','47': 'Tampines','48': 'Sengkang','49': 'Geylang','50': 'Bukit Timah','51': 'Bukit Timah','52': 'Bukit Timah','53': 'Bukit Timah','54': 'Bukit Timah','55': 'Choa Chu Kang','56': 'Choa Chu Kang','57': 'Choa Chu Kang','58': 'Choa Chu Kang','59': 'Choa Chu Kang','60': 'Jurong East','61': 'Jurong East','62': 'Jurong West','63': 'Jurong West','64': 'Jurong West','65': 'Jurong West','66': 'Jurong West','67': 'Clementi','68': 'Choa Chu Kang','69': 'Jurong West','70': 'Woodlands','71': 'Woodlands','72': 'Woodlands','73': 'Woodlands','74': 'Yishun','75': 'Yishun','76': 'Yishun','77': 'Yishun','78': 'Sembawang','79': 'Sembawang','80': 'Punggol','81': 'Punggol','82': 'Punggol'};
-        const sector = postalCode.substring(0, 2);
-        areaName = postalCodeToAreaMap[sector] || '';
-        fullAddressValue = areaName ? `Singapore ${postalCode}` : '';
-        console.log('[Extract] Fallback area from sector', sector, '→', areaName);
+        // FIRST: Check database cache (no API calls if exists)
+        let cached = null;
+        try {
+          const cacheResult = await db.query(
+            'SELECT area, formatted_address FROM postal_code_cache WHERE postal_code = $1 LIMIT 1',
+            [postalCode]
+          );
+          if (cacheResult.rows.length > 0) {
+            cached = cacheResult.rows[0];
+            console.log('[Extract] Cache HIT for', postalCode);
+          }
+        } catch (dbErr) {
+          console.warn('[Extract] Cache lookup failed (DB may not exist yet):', dbErr.message);
+        }
+
+        if (cached) {
+          // Use cached value (zero API calls!)
+          areaName = cached.area || '';
+          fullAddressValue = cached.formatted_address || '';
+          console.log('[Extract] Using cached address:', fullAddressValue);
+        } else {
+          // SECOND: Call Mapbox API to get real address
+          console.log('[Extract] Cache MISS, querying Mapbox...');
+          try {
+            const mapboxResponse = await axios.get(
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/Singapore%20${postalCode}.json`,
+              {
+                params: { access_token: process.env.MAPBOX_API_KEY },
+                timeout: 5000
+              }
+            );
+
+            if (mapboxResponse.data.features && mapboxResponse.data.features.length > 0) {
+              const feature = mapboxResponse.data.features[0];
+              fullAddressValue = feature.place_name || `Singapore ${postalCode}`;
+
+              // Extract area from place name (e.g., "Choa Chu Kang, Singapore" → "Choa Chu Kang")
+              const parts = fullAddressValue.split(',');
+              areaName = parts[0]?.trim() || '';
+
+              console.log('[Extract] Mapbox result:', fullAddressValue);
+
+              // THIRD: Cache in DB for future requests (reduce API calls)
+              try {
+                await db.query(
+                  `INSERT INTO postal_code_cache (postal_code, area, formatted_address, provider, confidence)
+                   VALUES ($1, $2, $3, $4, $5)
+                   ON CONFLICT (postal_code) DO UPDATE SET
+                   area = $2, formatted_address = $3, provider = $4, confidence = $5, last_verified_at = NOW()`,
+                  [postalCode, areaName, fullAddressValue, 'mapbox', 0.95]
+                );
+                console.log('[Extract] Cached postal', postalCode, '→ area:', areaName);
+              } catch (cacheErr) {
+                console.warn('[Extract] Cache save failed (DB may not exist):', cacheErr.message);
+                // Continue anyway - address is still valid
+              }
+            } else {
+              console.log('[Extract] Mapbox returned no results for postal', postalCode);
+              // Fallback: use sector-based area mapping
+              const postalCodeToAreaMap = {'01': 'Raffles Place','02': 'Downtown Core','03': 'Marina Bay','04': 'Bukit Merah','05': 'Outram','06': 'Bukit Merah','07': 'Outram','08': 'Outram','09': 'Outram','10': 'Orchard','11': 'Orchard','12': 'Orchard','23': 'Orchard','13': 'Tanglin','14': 'Tanglin','15': 'Clementi','16': 'Clementi','17': 'Novena','18': 'Novena','19': 'Bukit Timah','20': 'Bukit Timah','21': 'Clementi','22': 'Clementi','24': 'Kallang','25': 'Kallang','26': 'Geylang','27': 'Geylang','28': 'Bedok','29': 'Bedok','30': 'Bedok','31': 'Tampines','32': 'Tampines','33': 'Tampines','34': 'Tampines','35': 'Toa Payoh','36': 'Toa Payoh','37': 'Serangoon','38': 'Serangoon','39': 'Hougang','40': 'Hougang','41': 'Bishan','42': 'Bishan','43': 'Serangoon','44': 'Serangoon','45': 'Sengkang','46': 'Sengkang','47': 'Tampines','48': 'Sengkang','49': 'Geylang','50': 'Bukit Timah','51': 'Bukit Timah','52': 'Bukit Timah','53': 'Bukit Timah','54': 'Bukit Timah','55': 'Choa Chu Kang','56': 'Choa Chu Kang','57': 'Choa Chu Kang','58': 'Choa Chu Kang','59': 'Choa Chu Kang','60': 'Jurong East','61': 'Jurong East','62': 'Jurong West','63': 'Jurong West','64': 'Jurong West','65': 'Jurong West','66': 'Jurong West','67': 'Clementi','68': 'Choa Chu Kang','69': 'Jurong West','70': 'Woodlands','71': 'Woodlands','72': 'Woodlands','73': 'Woodlands','74': 'Yishun','75': 'Yishun','76': 'Yishun','77': 'Yishun','78': 'Sembawang','79': 'Sembawang','80': 'Punggol','81': 'Punggol','82': 'Punggol'};
+              const sector = postalCode.substring(0, 2);
+              areaName = postalCodeToAreaMap[sector] || '';
+              fullAddressValue = areaName ? `Singapore ${postalCode}` : '';
+            }
+          } catch (mapboxErr) {
+            console.warn('[Extract] Mapbox API failed:', mapboxErr.message);
+            // Ultimate fallback: sector-only
+            const postalCodeToAreaMap = {'01': 'Raffles Place','02': 'Downtown Core','03': 'Marina Bay','04': 'Bukit Merah','05': 'Outram','06': 'Bukit Merah','07': 'Outram','08': 'Outram','09': 'Outram','10': 'Orchard','11': 'Orchard','12': 'Orchard','23': 'Orchard','13': 'Tanglin','14': 'Tanglin','15': 'Clementi','16': 'Clementi','17': 'Novena','18': 'Novena','19': 'Bukit Timah','20': 'Bukit Timah','21': 'Clementi','22': 'Clementi','24': 'Kallang','25': 'Kallang','26': 'Geylang','27': 'Geylang','28': 'Bedok','29': 'Bedok','30': 'Bedok','31': 'Tampines','32': 'Tampines','33': 'Tampines','34': 'Tampines','35': 'Toa Payoh','36': 'Toa Payoh','37': 'Serangoon','38': 'Serangoon','39': 'Hougang','40': 'Hougang','41': 'Bishan','42': 'Bishan','43': 'Serangoon','44': 'Serangoon','45': 'Sengkang','46': 'Sengkang','47': 'Tampines','48': 'Sengkang','49': 'Geylang','50': 'Bukit Timah','51': 'Bukit Timah','52': 'Bukit Timah','53': 'Bukit Timah','54': 'Bukit Timah','55': 'Choa Chu Kang','56': 'Choa Chu Kang','57': 'Choa Chu Kang','58': 'Choa Chu Kang','59': 'Choa Chu Kang','60': 'Jurong East','61': 'Jurong East','62': 'Jurong West','63': 'Jurong West','64': 'Jurong West','65': 'Jurong West','66': 'Jurong West','67': 'Clementi','68': 'Choa Chu Kang','69': 'Jurong West','70': 'Woodlands','71': 'Woodlands','72': 'Woodlands','73': 'Woodlands','74': 'Yishun','75': 'Yishun','76': 'Yishun','77': 'Yishun','78': 'Sembawang','79': 'Sembawang','80': 'Punggol','81': 'Punggol','82': 'Punggol'};
+              const sector = postalCode.substring(0, 2);
+              areaName = postalCodeToAreaMap[sector] || '';
+              fullAddressValue = areaName ? `Singapore ${postalCode}` : '';
+            }
+        }
+      } catch (err) {
+        console.error('[Extract] Postal code lookup error:', err.message);
+        // Continue with empty values - user can fill in manually
       }
     }
 
