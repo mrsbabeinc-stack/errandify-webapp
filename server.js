@@ -270,8 +270,20 @@ app.post('/api/ai/extract-task-info', (req, res) => {
     }
 
     // Simple mock extraction - parse the text for common patterns
-    const budgetMatch = userInput.match(/\$?(\d+)/);
-    const budget = budgetMatch ? parseInt(budgetMatch[1]) : 50;
+    // Look for "budget $XXX" pattern first, then fall back to last number
+    let budget = 50;
+    const budgetMatch = userInput.match(/budget\s*\$?(\d+)/i);
+    if (budgetMatch) {
+      budget = parseInt(budgetMatch[1]);
+    } else {
+      // Fall back to looking for last number (which might be budget)
+      const numbers = userInput.match(/\$?(\d+)/g);
+      if (numbers && numbers.length > 0) {
+        // Use the last number as budget (usually at the end after "budget")
+        const lastNum = numbers[numbers.length - 1];
+        budget = parseInt(lastNum.replace('$', ''));
+      }
+    }
 
     res.json({
       success: true,
@@ -301,6 +313,29 @@ app.post('/api/ai/extract-task-info', (req, res) => {
     console.error('Extract task error:', error);
     res.status(400).json({ error: 'Failed to extract task info' });
   }
+});
+
+// Hana suggestions endpoint (mock for demo)
+app.get('/api/ai/suggestions', (req, res) => {
+  const { category } = req.query;
+
+  const suggestions = {
+    'home-maintenance': ['Fix leaky tap', 'Paint wall', 'Repair door', 'Clean gutters'],
+    'cleaning-household': ['Deep clean', 'Laundry', 'Organize closet', 'Vacuum carpet'],
+    'shopping-errands': ['Grocery shopping', 'Buy supplies', 'Pick up package', 'Mall shopping'],
+    'delivery-moving': ['Move boxes', 'Delivery', 'Transport items', 'Furniture moving'],
+    'pet-care': ['Dog walking', 'Pet sitting', 'Grooming', 'Vet visit'],
+    'default': ['Help needed', 'Get assistance', 'Find someone', 'Task help']
+  };
+
+  const skills = suggestions[category] || suggestions['default'];
+
+  res.json({
+    success: true,
+    data: {
+      suggestedSkills: skills
+    }
+  });
 });
 
 // Catch all other POST requests
