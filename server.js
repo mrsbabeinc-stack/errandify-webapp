@@ -382,61 +382,85 @@ Task title:`,
       .join(' ');
     console.log('[Extract] Final title:', title);
 
-    // Smart category detection - keyword first (reliable), then Qwen (intelligent)
+    // Use Qwen for COMPREHENSIVE NLP extraction - not just category, but all fields
     const lowerInput = input.toLowerCase();
     let category = 'home-maintenance';
+    let extractedLandmark = '';
 
-    // FIRST: Try keyword detection (fast, reliable)
-    if (lowerInput.includes('pick up') || lowerInput.includes('dropoff') || lowerInput.includes('drop off') || lowerInput.includes('school') || lowerInput.includes('kindergarten') || lowerInput.includes('primary')) category = 'childcare-tutoring';
-    else if (lowerInput.includes('walk') || lowerInput.includes('dog') || lowerInput.includes('pet')) category = 'pet-care';
-    else if (lowerInput.includes('clean') || lowerInput.includes('laundry')) category = 'cleaning-household';
-    else if (lowerInput.includes('move') || lowerInput.includes('deliver') || lowerInput.includes('moving')) category = 'delivery-moving';
-    else if (lowerInput.includes('buy') || lowerInput.includes('shop') || lowerInput.includes('grocery') || lowerInput.includes('supermarket') || lowerInput.includes('purchase') || lowerInput.includes('fetch')) category = 'shopping-errands';
-    else if (lowerInput.includes('cook') || lowerInput.includes('food') || lowerInput.includes('prepare')) category = 'food-beverage';
-    else if (lowerInput.includes('makeup') || lowerInput.includes('beauty') || lowerInput.includes('hair') || lowerInput.includes('salon') || lowerInput.includes('nails')) category = 'beauty-personal-care';
-    else if (lowerInput.includes('tutor') || lowerInput.includes('teach') || lowerInput.includes('lesson') || lowerInput.includes('class')) category = 'tutoring-lessons';
-    else if (lowerInput.includes('photo') || lowerInput.includes('picture') || lowerInput.includes('shoot')) category = 'photography';
-    else if (lowerInput.includes('design') || lowerInput.includes('graphic') || lowerInput.includes('logo')) category = 'design-creative';
-    else if (lowerInput.includes('repair') || lowerInput.includes('fix') || lowerInput.includes('maintenance')) category = 'home-maintenance';
+    try {
+      const qwenExtractionResponse = await axios.post(
+        'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+        {
+          model: 'qwen-plus',
+          input: {
+            prompt: `Extract structured information from this Singapore task request. Return JSON only.
 
-    console.log('[Extract] Keyword detection result:', category);
+Task: "${input}"
 
-    // SECOND: Try Qwen for more nuanced detection (if keyword fallback was used)
-    if (category === 'home-maintenance' && process.env.QWEN_API_KEY) {
-      try {
-        const qwenCategoryResponse = await axios.post(
-          'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
-          {
-            model: 'qwen-plus',
-            input: {
-              prompt: `Determine category: pet-care, childcare-tutoring, cleaning-household, shopping-errands, delivery-moving, food-beverage, beauty-personal-care, tutoring-lessons, photography, design-creative, or home-maintenance. Task: "${input}" Answer only the category name:`,
-            },
-            parameters: { temperature: 0.1, max_tokens: 30 },
+Categories: pet-care, childcare-tutoring, cleaning-household, shopping-errands, delivery-moving, food-beverage, beauty-personal-care, tutoring-lessons, photography, design-creative, home-maintenance
+
+Return ONLY valid JSON (no markdown, no extra text):
+{
+  "category": "[most appropriate category]",
+  "landmark": "[landmark/school/place name or null]",
+  "title": "[clean task title without times/dates/postal codes]"
+}`,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            timeout: 5000,
-          }
-        );
+          parameters: { temperature: 0.1, max_tokens: 200 },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 8000,
+        }
+      );
 
-        if (qwenCategoryResponse.data?.output?.text) {
-          const response = qwenCategoryResponse.data.output.text.toLowerCase().trim();
-          const validCategories = ['pet-care', 'childcare-tutoring', 'cleaning-household', 'shopping-errands', 'delivery-moving', 'food-beverage', 'beauty-personal-care', 'tutoring-lessons', 'photography', 'design-creative'];
+      if (qwenExtractionResponse.data?.output?.text) {
+        try {
+          const response = qwenExtractionResponse.data.output.text.trim();
+          // Try to parse JSON from response
+          const jsonMatch = response.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const extracted = JSON.parse(jsonMatch[0]);
 
-          for (const cat of validCategories) {
-            if (response.includes(cat)) {
-              category = cat;
-              console.log('[Extract] Qwen override:', category);
-              break;
+            if (extracted.category) {
+              const validCategories = ['pet-care', 'childcare-tutoring', 'cleaning-household', 'shopping-errands', 'delivery-moving', 'food-beverage', 'beauty-personal-care', 'tutoring-lessons', 'photography', 'design-creative', 'home-maintenance'];
+              if (validCategories.includes(extracted.category)) {
+                category = extracted.category;
+                console.log('[Extract] Qwen category:', category);
+              }
+            }
+
+            if (extracted.landmark) {
+              extractedLandmark = extracted.landmark;
+              console.log('[Extract] Qwen landmark:', extractedLandmark);
+            }
+
+            // Override title with Qwen's extraction if it's better
+            if (extracted.title && extracted.title.length >= 3) {
+              title = extracted.title;
+              console.log('[Extract] Qwen title override:', title);
             }
           }
+        } catch (parseErr) {
+          console.warn('[Extract] Failed to parse Qwen JSON:', parseErr.message);
         }
-      } catch (aiErr) {
-        console.warn('[Extract] Qwen failed (continuing with keyword detection):', aiErr.message);
       }
+    } catch (aiErr) {
+      console.warn('[Extract] Qwen comprehensive extraction failed:', aiErr.message);
+      // If Qwen fails, fall back to keyword detection
+      if (lowerInput.includes('pick up') || lowerInput.includes('dropoff') || lowerInput.includes('drop off') || lowerInput.includes('school') || lowerInput.includes('kindergarten') || lowerInput.includes('primary')) category = 'childcare-tutoring';
+      else if (lowerInput.includes('walk') || lowerInput.includes('dog') || lowerInput.includes('pet')) category = 'pet-care';
+      else if (lowerInput.includes('clean') || lowerInput.includes('laundry')) category = 'cleaning-household';
+      else if (lowerInput.includes('move') || lowerInput.includes('deliver') || lowerInput.includes('moving')) category = 'delivery-moving';
+      else if (lowerInput.includes('buy') || lowerInput.includes('shop') || lowerInput.includes('grocery') || lowerInput.includes('supermarket') || lowerInput.includes('purchase') || lowerInput.includes('fetch')) category = 'shopping-errands';
+      else if (lowerInput.includes('cook') || lowerInput.includes('food') || lowerInput.includes('prepare')) category = 'food-beverage';
+      else if (lowerInput.includes('makeup') || lowerInput.includes('beauty') || lowerInput.includes('hair') || lowerInput.includes('salon') || lowerInput.includes('nails')) category = 'beauty-personal-care';
+      else if (lowerInput.includes('tutor') || lowerInput.includes('teach') || lowerInput.includes('lesson') || lowerInput.includes('class')) category = 'tutoring-lessons';
+      else if (lowerInput.includes('photo') || lowerInput.includes('picture') || lowerInput.includes('shoot')) category = 'photography';
+      else if (lowerInput.includes('design') || lowerInput.includes('graphic') || lowerInput.includes('logo')) category = 'design-creative';
     }
 
     // Parse date
