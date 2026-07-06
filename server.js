@@ -14,10 +14,11 @@ let db = null;
 if (process.env.DATABASE_URL) {
   db = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL.includes('supabase') ? true : { rejectUnauthorized: false },
+    ssl: process.env.DATABASE_URL.includes('supabase') ? { rejectUnauthorized: false } : true,
   });
   db.on('error', (err) => console.error('DB pool error:', err));
   db.on('connect', () => console.log('✅ Connected to Supabase database'));
+  console.log('📦 Database pool initialized');
 } else {
   console.warn('⚠️  DATABASE_URL not set - database features disabled');
 }
@@ -43,7 +44,7 @@ app.use(express.static(frontendPath, {
 
 // Health check
 app.get('/test', (req, res) => {
-  res.json({ status: 'ok', serving: frontendPath });
+  res.json({ status: 'ok', serving: frontendPath, database: !!db });
 });
 
 // Mock demo login endpoint
@@ -70,6 +71,74 @@ app.post('/api/auth/demo-login', express.json(), (req, res) => {
       user: { ...user, isDemo: true }
     }
   });
+});
+
+// Save errand endpoint
+app.post('/api/errands', async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(503).json({ error: 'Database not available' });
+    }
+
+    const {
+      user_id,
+      title,
+      category,
+      description,
+      budget,
+      deadline,
+      postal_code,
+      area,
+      full_address,
+      frequency
+    } = req.body;
+
+    // Validate required fields
+    if (!title || !category || !budget) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Insert into errands table
+    const query = `
+      INSERT INTO errands (
+        user_id,
+        title,
+        category,
+        description,
+        budget,
+        deadline,
+        postal_code,
+        area,
+        full_address,
+        frequency,
+        status,
+        created_at,
+        updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'open', NOW(), NOW())
+      RETURNING *
+    `;
+
+    const result = await db.query(query, [
+      user_id || '1', // Default to user 1 for demo
+      title,
+      category,
+      description || null,
+      budget,
+      deadline || null,
+      postal_code || null,
+      area || null,
+      full_address || null,
+      frequency || 'once'
+    ]);
+
+    res.json({
+      success: true,
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error saving errand:', error);
+    res.status(500).json({ error: 'Failed to save errand', details: error.message });
+  }
 });
 
 // React Router fallback
