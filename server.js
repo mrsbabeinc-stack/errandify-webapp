@@ -300,6 +300,7 @@ app.post('/api/ai/extract-task-info', (req, res) => {
       .replace(/^\s*(?:i\s+need|please|can you)\s+/i, '')
       .replace(/\s+on\s+/i, ' ')  // Remove "on" before dates/times
       .replace(/\s+at\s*$/i, '')  // Remove trailing " at"
+      .replace(/\s+at\s+/i, ' ')  // Remove " at " anywhere
       .replace(/\s+/g, ' ')
       .replace(/,\s*,/g, ',')  // Remove double commas
       .replace(/,\s*$/g, '')  // Remove trailing commas
@@ -392,7 +393,7 @@ app.post('/api/ai/extract-task-info', (req, res) => {
       '05': { area: 'People\'s Park', address: '5 People\'s Park Centre Singapore 050005' },
       '06': { area: 'Chinatown', address: '6 Chinatown Point Singapore 060006' },
       '07': { area: 'Orchard', address: '7 Orchard Road Singapore 070007' },
-      '08': { area: 'Pasir Panjang', address: '8 Pasir Panjang Road Singapore 080008' },
+      '08': { area: 'Outram', address: '167 Neil Road Singapore 088888' },
       '09': { area: 'Novena', address: '9 Novena Rise Singapore 090009' },
       '10': { area: 'Newton', address: '10 Newton Road Singapore 100010' },
       '11': { area: 'Farrer Park', address: '11 Farrer Park Drive Singapore 110011' },
@@ -407,7 +408,7 @@ app.post('/api/ai/extract-task-info', (req, res) => {
       '20': { area: 'Pasir Ris', address: '20 Pasir Ris Street 21 Singapore 200020' },
       '21': { area: 'Punggol', address: '21 Punggol Road Singapore 210021' },
       '22': { area: 'Hougang', address: '22 Hougang Avenue 8 Singapore 220022' },
-      '23': { area: 'Serangoon', address: '23 Serangoon Avenue 2 Singapore 230023' },
+      '23': { area: 'Orchard', address: '857 Tanjong Pagar Road Singapore 238857' },
       '24': { area: 'Sengkang', address: '24 Sengkang Street 23 Singapore 240024' },
       '25': { area: 'Choa Chu Kang', address: '25 Choa Chu Kang Avenue 3 Singapore 250025' },
       '26': { area: 'Jurong West', address: '26 Jurong West Street 31 Singapore 260026' },
@@ -452,7 +453,7 @@ app.post('/api/ai/extract-task-info', (req, res) => {
       '65': { area: 'Tampines', address: '65 Tampines Central 8 Singapore 650065' },
       '66': { area: 'Tampines', address: '66 Tampines West Street 65 Singapore 660066' },
       '67': { area: 'Tampines', address: '67 Tampines Street 65 Singapore 670067' },
-      '68': { area: 'Choa Chu Kang', address: '680 Choa Chu Kang Avenue 5 Singapore 680433' },
+      '68': { area: 'Choa Chu Kang', address: '433 Choa Chu Kang Avenue 4 Singapore 680433' },
       '69': { area: 'Bedok', address: '69 Bedok North Street 1 Singapore 690069' },
       '70': { area: 'Bedok', address: '70 Bedok North Road Singapore 700070' },
       '71': { area: 'Bedok', address: '71 Bedok Reservoir Road Singapore 710071' },
