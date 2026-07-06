@@ -77,6 +77,20 @@ const app = express();
       ADD COLUMN IF NOT EXISTS full_address VARCHAR(500);
     `);
     console.log('Migration: full_address column checked/added');
+  
+  try {
+    // Ensure formatted_id column exists
+    await db.query(`
+      ALTER TABLE errands ADD COLUMN IF NOT EXISTS formatted_id VARCHAR(20) UNIQUE;
+    `);
+    await db.query(`
+      CREATE INDEX IF NOT EXISTS idx_errands_formatted_id ON errands(formatted_id);
+    `);
+    console.log('Migration: formatted_id column checked/added');
+  } catch (error) {
+    console.log('Migration: formatted_id column already exists');
+  }
+
   } catch (error) {
     console.log('Migration: full_address column already exists or not needed');
   }
