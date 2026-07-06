@@ -405,6 +405,20 @@ const testDatabase = async () => {
       }
       console.log('Migration: Seeded landmarks table with 10 initial entries');
     }
+  
+  try {
+    // Ensure full_address column exists
+    await db.query(`
+      ALTER TABLE errands ADD COLUMN IF NOT EXISTS full_address VARCHAR(500);
+    `);
+    await db.query(`
+      CREATE INDEX IF NOT EXISTS idx_errands_full_address ON errands(full_address);
+    `);
+    console.log('Migration: full_address column checked/added');
+  } catch (error) {
+    console.log('Migration: full_address column already exists');
+  }
+
   } catch (error) {
     console.warn('Migration: landmarks table error:', error);
   }
