@@ -467,6 +467,7 @@ export default function HanaTaskCreation({
 
       mediaRecorder.start();
       setIsRecording(true);
+      setHanaMessage('🎤 Recording... speak naturally!');
     } catch (err) {
       console.error('Microphone access denied:', err);
       alert('Please allow microphone access to use voice input');
@@ -489,10 +490,12 @@ export default function HanaTaskCreation({
 
         try {
           console.log('[Transcribe] Sending audio of', base64Audio.length, 'chars');
+          setHanaMessage('🎤 Transcribing your audio...');
+
           const response = await axios.post(
             `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/transcribe`,
             { audio: base64Audio },
-            { timeout: 35000 }
+            { timeout: 40000 }
           );
 
           const transcribedText = (response.data?.data?.text || '').trim();
@@ -500,7 +503,11 @@ export default function HanaTaskCreation({
 
           if (!transcribedText) {
             // Transcription failed or returned empty, show friendly message
-            setHanaMessage('🎤 I had trouble with that audio. No worries! Please type what you need instead. 😊');
+            setHanaMessage('🎤 I had trouble with that audio. Please type or try again. 😊');
+            setCurrentStep('input');
+          } else if (transcribedText.includes('[') && transcribedText.includes(']')) {
+            // Fallback message returned
+            setHanaMessage('🎤 Let me try that again. Please type what you need. 😊');
             setCurrentStep('input');
           } else {
             // Success - set input and auto-submit
@@ -514,8 +521,7 @@ export default function HanaTaskCreation({
           }
         } catch (err: any) {
           console.error('[Transcribe] Error:', err.message);
-          // Timeout or network error
-          setHanaMessage('🎤 Connection issue with transcription. Please type manually or try again. 😊');
+          setHanaMessage('🎤 Connection issue. Please type or try again. 😊');
           setCurrentStep('input');
         }
       };
