@@ -1304,82 +1304,91 @@ export default function CreateErrandPage() {
 
             {/* Postal Code and Area - Side by side */}
             {!isRemoteWork && (
-              <div className="grid grid-cols-2 gap-3 mb-2">
-                {/* Postal Code */}
-                <div>
-                  <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
-                    Postal Code (SG)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="082001"
-                    value={postalCode}
-                    onChange={(e) => {
-                      const code = e.target.value.trim();
-                      setPostalCode(code);
+              <div className="mb-2">
+                <div className="grid grid-cols-2 gap-3 mb-2">
+                  {/* Postal Code */}
+                  <div>
+                    <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
+                      Postal Code (SG)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="082001"
+                      value={postalCode}
+                      onChange={(e) => {
+                        const code = e.target.value.trim();
+                        setPostalCode(code);
 
-                      // Only look up postal code if exactly 6 digits
-                      if (code.length === 6 && /^\d+$/.test(code)) {
-                        // Get area from comprehensive postal code database
-                        const areaName = getAreaFromPostalCode(code);
+                        // Only look up postal code if exactly 6 digits
+                        if (code.length === 6 && /^\d+$/.test(code)) {
+                          // Get area from comprehensive postal code database
+                          const areaName = getAreaFromPostalCode(code);
 
-                        // Set area immediately (no waiting for OneMap)
-                        if (areaName) {
+                          // Set area immediately (no waiting for OneMap)
+                          if (areaName) {
+                            setFormData((prev) => ({
+                              ...prev,
+                              location: areaName,
+                            }));
+                            setArea(areaName);
+                            console.log('[PostalCode] Area auto-set to:', areaName);
+                          }
+
+                          // Call backend to lookup address via OneMap (which has auth token)
+                          const token = localStorage.getItem('token');
+                          fetch(`${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/extract-task-info`, {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({ input: code }), // Just send postal code
+                          })
+                            .then(res => res.json())
+                            .then(data => {
+                              console.log('[Extract] Response:', data);
+                              if (data.success && data.data.fullAddress && data.data.fullAddress !== `Singapore ${code}`) {
+                                console.log('[Extract] Setting full address to:', data.data.fullAddress);
+                                setFullAddress(data.data.fullAddress);
+                              } else {
+                                console.log('[Extract] No address found or default fallback');
+                              }
+                            })
+                            .catch(err => {
+                              console.warn('Address lookup failed:', err);
+                            });
+                        } else if (code.length === 0) {
+                          // Clear addresses only if postal code is completely cleared
                           setFormData((prev) => ({
                             ...prev,
-                            location: areaName,
+                            location: '',
                           }));
-                          setArea(areaName);
-                          console.log('[PostalCode] Area auto-set to:', areaName);
+                          setArea('');
+                          setFullAddress('');
                         }
+                        // Otherwise: don't update location (partial postal codes won't modify anything)
+                      }}
+                      className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown placeholder:text-gray-400"
+                    />
+                  </div>
 
-                        // Call backend to lookup address via OneMap (which has auth token)
-                        const token = localStorage.getItem('token');
-                        fetch(`${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/extract-task-info`, {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`,
-                          },
-                          body: JSON.stringify({ input: code }), // Just send postal code
-                        })
-                          .then(res => res.json())
-                          .then(data => {
-                            console.log('[Extract] Response:', data);
-                            if (data.success && data.data.fullAddress && data.data.fullAddress !== `Singapore ${code}`) {
-                              console.log('[Extract] Setting full address to:', data.data.fullAddress);
-                              setFullAddress(data.data.fullAddress);
-                            } else {
-                              console.log('[Extract] No address found or default fallback');
-                            }
-                          })
-                          .catch(err => {
-                            console.warn('Address lookup failed:', err);
-                          });
-                      } else if (code.length === 0) {
-                        // Clear addresses only if postal code is completely cleared
-                        setFormData((prev) => ({
-                          ...prev,
-                          location: '',
-                        }));
-                        setArea('');
-                        setFullAddress('');
-                      }
-                      // Otherwise: don't update location (partial postal codes won't modify anything)
-                    }}
-                    className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown placeholder:text-gray-400"
-                  />
-                </div>
-
-                {/* Area - READ ONLY */}
-                <div>
-                  <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
-                    Area <span className="text-xs font-normal text-gray-500">(Auto-resolved from postal code)</span>
-                  </label>
-                  <div className="w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 text-sm font-medium text-errandify-brown">
-                    {area || '—'}
+                  {/* Area - READ ONLY */}
+                  <div>
+                    <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
+                      Area <span className="text-xs font-normal text-gray-500">(Auto-resolved from postal code)</span>
+                    </label>
+                    <div className="w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 text-sm font-medium text-errandify-brown">
+                      {area || '—'}
+                    </div>
                   </div>
                 </div>
+
+                {/* Verification message if postal code has valid area */}
+                {postalCode && area && (
+                  <div className="p-2 bg-blue-50 border-l-4 border-blue-400 rounded text-xs text-blue-900">
+                    ✅ Postal code <span className="font-semibold">{postalCode}</span> resolved to <span className="font-semibold">{area}</span>. Area is locked to match your postal code for accuracy.
+                  </div>
+                )}
               </div>
             )}
 
