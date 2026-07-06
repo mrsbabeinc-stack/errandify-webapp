@@ -300,8 +300,8 @@ app.post('/api/ai/extract-task-info', (req, res) => {
       .replace(/for\s+[\d.]+\s*(?:hour|hr|min)s?/i, '')
       .replace(/^\s*(?:i\s+need|please|can you)\s+/i, '')
       .replace(/\s+on\s+/i, ' ')  // Remove "on" before dates/times
-      .replace(/\s+at\s*$/i, '')  // Remove trailing " at"
-      .replace(/\s+at\s+/i, ' ')  // Remove " at " anywhere
+      .replace(/,?\s+(?:at|on|in)\s*$/i, '')  // Remove trailing ", at" / " at" / " on" / " in"
+      .replace(/\s+(?:at|on)\s+/i, ' ')  // Remove " at " or " on " anywhere in middle
       .replace(/\s+/g, ' ')
       .replace(/,\s*,/g, ',')  // Remove double commas
       .replace(/,\s*$/g, '')  // Remove trailing commas
