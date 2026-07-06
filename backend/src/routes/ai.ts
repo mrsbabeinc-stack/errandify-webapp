@@ -897,60 +897,37 @@ OUTPUT ONLY the category name, nothing else.`,
       fullAddress = detectedArea;
     }
 
-    // If no postal code but landmark name found, use Qwen to get postal code directly
-    if (!postalCode && landmarkName && process.env.QWEN_API_KEY) {
+    // If no postal code but landmark name found, use OneMap search (free, authoritative)
+    if (!postalCode && landmarkName) {
       try {
-        console.log('[Extract] Using Qwen to resolve landmark:', landmarkName);
-        const qwenResponse = await axios.post(
-          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
-          {
-            model: 'qwen-max',
-            messages: [
-              {
-                role: 'system',
-                content: 'You are a Singapore postal code expert. Given only a landmark name, respond with ONLY the 6-digit postal code. Example: 128806. No other text.'
-              },
-              {
-                role: 'user',
-                content: `Postal code for "${landmarkName}" in Singapore?`
-              }
-            ]
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${process.env.QWEN_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            timeout: 5000
-          }
-        );
+        console.log('[Extract] Using OneMap to search for landmark:', landmarkName);
         
-        const qwenPostal = qwenResponse.data?.choices?.[0]?.message?.content?.trim();
-        if (qwenPostal) {
-          // Extract postal code from response (in case Qwen adds extra text)
-          const postalMatch = qwenPostal.match(/(\d{6})/);
+        // Query OneMap search API directly with landmark name
+        const onemapUrl = `https://www.onemap.sg/api/common/elastic/search?searchVal=${encodeURIComponent(landmarkName)}&returnGeom=Y&getAddrDetails=Y`;
+        const onemapResponse = await axios.get(onemapUrl, { timeout: 5000 });
+        
+        if (onemapResponse.data?.results?.length > 0) {
+          const result = onemapResponse.data.results[0];
+          
+          // Extract postal code from the result
+          const resultAddress = result.ADDRESS || '';
+          const postalMatch = resultAddress.match(/\b(\d{6})\b/);
+          
           if (postalMatch) {
-            const extractedPostal = postalMatch[1];
-            postalCode = extractedPostal;
-            console.log('[Extract] ✅ Qwen landmark resolution - postal:', postalCode);
+            postalCode = postalMatch[1];
+            fullAddress = resultAddress || `Singapore ${postalCode}`;
+            console.log('[Extract] ✅ OneMap landmark search success - postal:', postalCode, 'address:', fullAddress);
           } else {
-            console.log('[Extract] Qwen returned text without postal code:', qwenPostal);
+            console.log('[Extract] OneMap found landmark but no postal code in address:', resultAddress);
           }
         } else {
-          console.log('[Extract] Qwen returned empty response for landmark');
-        }
-          
-          // Lookup address from postal code
-          const addressData = await lookupAddress(postalCode);
-          if (addressData) {
-            fullAddress = addressData.formatted_address || `Singapore ${postalCode}`;
-            areaName = addressData.area || '';
-          }
+          console.log('[Extract] OneMap landmark search found no results');
         }
       } catch (error) {
-        console.warn('[Extract] Landmark resolution failed:', error instanceof Error ? error.message : error);
+        console.warn('[Extract] OneMap landmark search failed:', error instanceof Error ? error.message : error);
       }
     }
+
 
     console.log('[Extract] Final - area:', area, 'fullAddress:', fullAddress);
 
