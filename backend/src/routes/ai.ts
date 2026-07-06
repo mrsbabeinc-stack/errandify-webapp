@@ -1876,16 +1876,4 @@ router.post('/transcribe', async (req: Request, res: Response) => {
   }
 });
 
-// Debug endpoint to check environment variables (remove after testing)
-router.get('/debug-env', (req: Request, res: Response) => {
-  res.json({
-    hasQwenKey: !!process.env.QWEN_API_KEY,
-    qwenKeyLength: process.env.QWEN_API_KEY?.length || 0,
-    qwenKeyStart: process.env.QWEN_API_KEY?.substring(0, 20),
-    hasQwenBase: !!process.env.QWEN_API_BASE,
-    qwenBase: process.env.QWEN_API_BASE,
-    nodeEnv: process.env.NODE_ENV,
-  });
-});
-
 export default router;
