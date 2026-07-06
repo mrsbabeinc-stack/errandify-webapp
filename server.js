@@ -289,40 +289,79 @@ app.post('/api/ai/extract-task-info', (req, res) => {
     }
     console.log('[Extract] Budget:', budget || '(empty)');
 
-    // Title extraction - smart regex (more reliable than AI for this simple task)
+    // Title extraction using Qwen - correct API format
     let title = input;
+    try {
+      const qwenResponse = await axios.post(
+        'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+        {
+          model: 'qwen-plus',
+          input: {
+            prompt: `Extract the task title from this user input. Remove all metadata like dates, times, budgets, postal codes, durations. Return ONLY the clean task title (2-5 words). No explanations.
 
-    // Remove in specific order to avoid conflicts
-    title = title
-      // 1. Remove everything after $ sign (budgets)
-      .replace(/\s*\$.*$/i, '')
-      // 2. Remove "for X hours/mins" patterns
-      .replace(/\s+for\s+\d+\s*(?:hours?|hrs?|h|minutes?|mins?|m)$/i, '')
-      // 3. Remove time patterns (10am, 2:30pm, etc)
-      .replace(/\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i, '')
-      // 4. Remove date words (tomorrow, today, monday, etc)
-      .replace(/\s+(?:tomorrow|today|tonight|in\s+\d+\s+days?)\b/i, '')
-      .replace(/\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\b/i, '')
-      // 5. Remove postal codes (6 digits)
-      .replace(/\s+\d{6}\b/g, '')
-      // 6. Remove "at" or "on" when followed by location/time
-      .replace(/\s+(?:at|on)\s+(?:\d|[A-Z])/i, ' ')
-      // 7. Remove "at" or "on" at end of string
-      .replace(/\s+(?:at|on)\s*$/i, '')
-      // 8. Remove "for" when not followed by action word
-      .replace(/\s+for\s+(?:the\s+)?(?:1|a)\s+(?:hour|hr)\s*$/i, '')
-      // 9. Clean up extra spaces
-      .replace(/\s+/g, ' ')
-      .trim();
+Example: "buy bread from supermarket 088888 tomorrow 10am for 1 hour $100" → "Buy Bread From Supermarket"
 
-    // If title is empty or too short, use first part
-    if (!title || title.length < 3) {
+User input: "${input}"
+Task title:`,
+          },
+          parameters: {
+            temperature: 0.1,
+            max_tokens: 30,
+            top_p: 0.1,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 8000,
+        }
+      );
+
+      if (qwenResponse.data?.output?.text) {
+        title = qwenResponse.data.output.text
+          .trim()
+          .split('\n')[0] // Take first line only
+          .replace(/^[-•*]\s*/, '') // Remove bullet points
+          .replace(/^(Task title:|Title:)\s*/i, '') // Remove prefixes
+          .substring(0, 150)
+          .trim();
+
+        // Validate it's not empty and has reasonable content
+        if (title && title.length >= 2 && !title.includes('$') && !title.includes('tomorrow')) {
+          console.log('[Extract] Qwen title:', title);
+        } else {
+          console.warn('[Extract] Qwen returned invalid title:', title);
+          throw new Error('Invalid response');
+        }
+      } else {
+        throw new Error('No response from Qwen');
+      }
+    } catch (aiErr) {
+      console.warn('[Extract] Qwen title extraction failed:', aiErr.message);
+      // Fallback to regex if Qwen fails
+      title = input
+        .replace(/\s*\$.*$/i, '') // Remove budget
+        .replace(/\s+for\s+\d+\s*(?:hours?|hrs?|h|minutes?|mins?|m)/i, '') // Remove duration
+        .replace(/\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i, '') // Remove time
+        .replace(/\s+(?:tomorrow|today|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\b/i, '') // Remove dates
+        .replace(/\s+\d{6}\b/g, '') // Remove postal codes
+        .replace(/\s+(?:at|on)\s*$/i, '') // Remove trailing at/on
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    // If title is still empty, use first part
+    if (!title || title.length < 2) {
       title = input.split(/[,.]|budget|tomorrow|today/i)[0].trim() || 'Help needed';
     }
 
-    // Final cleanup - remove any trailing particles
+    // Final capitalization
     title = title
-      .replace(/\s+(?:for|at|on|in)$/i, '')
+      .split(' ')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ')
       .trim();
 
     if (!title || title.length < 3) {
