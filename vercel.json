@@ -1,4 +1,5 @@
 {
-  "buildCommand": "npm run build --prefix frontend",
-  "outputDirectory": "frontend/dist"
+  "buildCommand": "npm run build --prefix frontend && cp -r frontend/dist/* public/",
+  "outputDirectory": "public",
+  "framework": "static"
 }
