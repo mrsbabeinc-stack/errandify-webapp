@@ -904,26 +904,58 @@ OUTPUT ONLY the category name, nothing else.`,
         const mapboxApiKey = process.env.MAPBOX_API_KEY;
         
         if (mapboxApiKey) {
-          const query = encodeURIComponent(`${landmarkName}, Singapore`);
-          const mapboxUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?country=SG&types=poi&limit=1&access_token=${mapboxApiKey}`;
+          // Try multiple query variations
+          const queries = [
+            `${landmarkName}, Singapore`,
+            landmarkName,
+            `${landmarkName} Singapore`
+          ];
           
-          const mapboxResponse = await axios.get(mapboxUrl, { timeout: 5000 });
+          let feature = null;
+          for (const q of queries) {
+            try {
+              const query = encodeURIComponent(q);
+              const mapboxUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?country=SG&limit=1&access_token=${mapboxApiKey}`;
+              const mapboxResponse = await axios.get(mapboxUrl, { timeout: 5000 });
+              
+              if (mapboxResponse.data?.features?.length > 0) {
+                feature = mapboxResponse.data.features[0];
+                console.log('[Extract] Mapbox found:', q, '→', feature.place_name);
+                break;
+              }
+            } catch (e) {
+              console.log('[Extract] Mapbox query failed for:', q);
+            }
+          }
           
-          if (mapboxResponse.data?.features?.length > 0) {
-            const feature = mapboxResponse.data.features[0];
-            const [lon, lat] = feature.geometry.coordinates;
-            
-            // Extract postal code from context (feature name usually includes it)
-            // Or use reverse geocoding if needed
+          if (feature) {
             const featureName = feature.place_name || '';
             const postalMatch = featureName.match(/\b(\d{6})\b/);
             
             if (postalMatch) {
+              // Postal code found in Mapbox response
               postalCode = postalMatch[1];
               fullAddress = featureName;
-              console.log('[Extract] ✅ Mapbox landmark lookup success - postal:', postalCode);
+              console.log('[Extract] ✅ Mapbox returned postal code:', postalCode);
             } else {
-              console.log('[Extract] Mapbox found landmark but no postal code in response:', featureName);
+              // Try OneMap reverse geocoding
+              try {
+                const [lon, lat] = feature.geometry.coordinates;
+                console.log('[Extract] Trying OneMap reverse geocoding at', lon, lat);
+                const onemapUrl = `https://www.onemap.sg/api/rev/latlngSearch?location=${lat},${lon}`;
+                const onemapResponse = await axios.get(onemapUrl, { timeout: 5000 });
+                
+                if (onemapResponse.data?.results?.length > 0) {
+                  const result = onemapResponse.data.results[0];
+                  postalCode = result.POSTAL_CODE || '';
+                  fullAddress = result.ROAD_NAME ? `${result.ROAD_NAME}, Singapore ${postalCode}` : featureName;
+                  console.log('[Extract] ✅ OneMap reverse geocoding success - postal:', postalCode);
+                } else {
+                  console.log('[Extract] OneMap found no results at these coordinates');
+                }
+              } catch (onemapErr) {
+                console.warn('[Extract] OneMap lookup failed:', onemapErr instanceof Error ? onemapErr.message : onemapErr);
+              }
             }
           } else {
             console.log('[Extract] Mapbox landmark lookup found no results');
