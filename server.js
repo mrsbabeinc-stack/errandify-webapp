@@ -1,12 +1,26 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Enable JSON parsing for all routes
 app.use(express.json());
+
+// Initialize PostgreSQL connection pool for Supabase
+let db = null;
+if (process.env.DATABASE_URL) {
+  db = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL.includes('supabase') ? true : { rejectUnauthorized: false },
+  });
+  db.on('error', (err) => console.error('DB pool error:', err));
+  db.on('connect', () => console.log('✅ Connected to Supabase database'));
+} else {
+  console.warn('⚠️  DATABASE_URL not set - database features disabled');
+}
 
 // Try both possible paths (prefer frontend/dist for latest build)
 const distPath = path.join(__dirname, 'frontend/dist');
