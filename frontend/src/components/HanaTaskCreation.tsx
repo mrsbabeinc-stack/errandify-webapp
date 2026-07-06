@@ -456,21 +456,35 @@ export default function HanaTaskCreation({
 
   const startRecording = async () => {
     try {
+      console.log('[Recording] Requesting microphone access...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log('[Recording] ✅ Microphone access granted');
+
       const mediaRecorder = new MediaRecorder(stream);
+      console.log('[Recording] MediaRecorder created');
+
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
+        console.log('[Recording] Data chunk received:', event.data.size, 'bytes');
         audioChunksRef.current.push(event.data);
       };
 
+      mediaRecorder.onerror = (err: any) => {
+        console.error('[Recording] MediaRecorder error:', err);
+        setHanaMessage('🎤 Recording error. Please try again! 😊');
+        setIsRecording(false);
+      };
+
       mediaRecorder.start();
+      console.log('[Recording] Recording started');
       setIsRecording(true);
       setHanaMessage('🎤 Recording... Click ⏹️ when done speaking!');
-    } catch (err) {
-      console.error('Microphone access denied:', err);
-      alert('Please allow microphone access to use voice input');
+    } catch (err: any) {
+      console.error('[Recording] Error:', err.name, err.message);
+      setIsRecording(false);
+      setHanaMessage('🎤 Microphone access needed. Please allow it in settings! 😊');
     }
   };
 
