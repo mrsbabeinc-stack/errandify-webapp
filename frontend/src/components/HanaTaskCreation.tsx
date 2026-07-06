@@ -488,21 +488,32 @@ export default function HanaTaskCreation({
         const base64Audio = (reader.result as string).split(',')[1];
 
         try {
+          console.log('[Transcribe] Sending audio of', base64Audio.length, 'chars');
           const response = await axios.post(
             `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/transcribe`,
             { audio: base64Audio }
           );
 
-          const transcribedText = response.data.data.text;
-          setInput(transcribedText);
+          const transcribedText = response.data?.data?.text || '';
+          console.log('[Transcribe] Response:', transcribedText);
 
-          // Auto-submit the transcribed text
-          setTimeout(() => {
-            handleSendMessage({ preventDefault: () => {} } as any);
-          }, 500);
+          if (!transcribedText || transcribedText.includes('Unable') || transcribedText.includes('Please try')) {
+            // Transcription failed, show user friendly message
+            setHanaMessage('🎤 I couldn\'t transcribe that audio. Please try again or type manually. 😊');
+            setCurrentStep('input');
+          } else {
+            // Success - set input and auto-submit
+            setInput(transcribedText);
+
+            // Auto-submit the transcribed text
+            setTimeout(() => {
+              handleSendMessage({ preventDefault: () => {} } as any);
+            }, 500);
+          }
         } catch (err) {
-          console.error('Transcription failed:', err);
-          alert('Could not transcribe audio. Please try again.');
+          console.error('[Transcribe] Error:', err);
+          setHanaMessage('🎤 Could not transcribe audio. Please try again or type manually. 😊');
+          setCurrentStep('input');
         }
       };
 
