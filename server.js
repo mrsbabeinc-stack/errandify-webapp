@@ -299,15 +299,15 @@ app.post('/api/ai/extract-task-info', (req, res) => {
           messages: [
             {
               role: 'system',
-              content: 'You are a task title extractor. Extract ONLY the core task title from user input. Remove all metadata (dates, times, budgets, postal codes, durations). Return ONLY the clean title in 1-5 words. No explanation, no extra text.'
+              content: 'Extract task title. Rules: (1) Remove numbers and $ amounts, (2) Remove dates (tomorrow, today, mon-sun), (3) Remove times (am/pm), (4) Remove durations (hours, mins), (5) Remove postal codes, (6) Remove "for" when followed by money/time, (7) Keep only core action (1-5 words). Example: "buy bread from supermarket 150102 tomorrow 10am for 1 hour $100" → "Buy Bread From Supermarket"'
             },
             {
               role: 'user',
-              content: `Extract the task title from: "${input}"`
+              content: input
             }
           ],
-          temperature: 0.3,
-          max_tokens: 50
+          temperature: 0.2,
+          max_tokens: 40
         },
         {
           headers: {
@@ -321,8 +321,13 @@ app.post('/api/ai/extract-task-info', (req, res) => {
       if (qwenResponse.data.choices?.[0]?.message?.content) {
         title = qwenResponse.data.choices[0].message.content
           .trim()
-          .replace(/^["']|["']$/g, '') // Remove quotes
-          .substring(0, 150);
+          .replace(/^["'\n]|["'\n]$/g, '') // Remove quotes and newlines
+          .replace(/^-\s*/, '') // Remove leading dash
+          .replace(/\$.*$/i, '') // Remove anything after $
+          .replace(/\bfor\s*\$?\d+/i, '') // Remove "for $100" or "for 100"
+          .replace(/\bfor\s+\d+\s*(?:hours?|mins?|h|m)/i, '') // Remove "for 1 hour"
+          .substring(0, 150)
+          .trim();
         console.log('[Extract] AI-cleaned title:', title);
       }
     } catch (aiErr) {
@@ -330,9 +335,11 @@ app.post('/api/ai/extract-task-info', (req, res) => {
       // Fallback to simple regex if AI fails
       title = input
         .replace(/\d{6}/g, '') // Remove postal codes
-        .replace(/\$?\d+\s*(?:on|at)?/g, '') // Remove prices/budget
+        .replace(/\bfor\s+\$?\d+/i, '') // Remove "for $100"
+        .replace(/\$?\d+/g, '') // Remove any prices/budget
         .replace(/\d{1,2}(?::\d{2})?\s*(?:am|pm)/i, '') // Remove times
         .replace(/(?:tomorrow|today|mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i, '') // Remove dates
+        .replace(/\bfor\s+\d+\s*(?:hours?|hrs?|mins?|h|m)/i, '') // Remove "for 2 hours"
         .replace(/[\d.]+\s*(?:hours?|hrs?|mins?|h|m)/i, '') // Remove durations
         .replace(/\s+/g, ' ')
         .trim();
@@ -348,19 +355,19 @@ app.post('/api/ai/extract-task-info', (req, res) => {
       .join(' ');
     console.log('[Extract] Final title:', title);
 
-    // Category detection
+    // Category detection - checked in order of priority
     const lowerInput = input.toLowerCase();
     let category = 'home-maintenance';
     if (lowerInput.includes('walk') || lowerInput.includes('dog') || lowerInput.includes('pet')) category = 'pet-care';
     else if (lowerInput.includes('clean') || lowerInput.includes('laundry')) category = 'cleaning-household';
     else if (lowerInput.includes('move') || lowerInput.includes('deliver') || lowerInput.includes('moving')) category = 'delivery-moving';
-    else if (lowerInput.includes('shop') || lowerInput.includes('grocery')) category = 'shopping-errands';
-    else if (lowerInput.includes('cook') || lowerInput.includes('food')) category = 'food-beverage';
+    else if (lowerInput.includes('buy') || lowerInput.includes('shop') || lowerInput.includes('grocery') || lowerInput.includes('supermarket') || lowerInput.includes('purchase') || lowerInput.includes('fetch')) category = 'shopping-errands';
+    else if (lowerInput.includes('cook') || lowerInput.includes('food') || lowerInput.includes('prepare')) category = 'food-beverage';
     else if (lowerInput.includes('makeup') || lowerInput.includes('beauty') || lowerInput.includes('hair') || lowerInput.includes('salon') || lowerInput.includes('nails')) category = 'beauty-personal-care';
     else if (lowerInput.includes('tutor') || lowerInput.includes('teach') || lowerInput.includes('lesson') || lowerInput.includes('class')) category = 'tutoring-lessons';
     else if (lowerInput.includes('photo') || lowerInput.includes('picture') || lowerInput.includes('shoot')) category = 'photography';
     else if (lowerInput.includes('design') || lowerInput.includes('graphic') || lowerInput.includes('logo')) category = 'design-creative';
-    else if (lowerInput.includes('repair') || lowerInput.includes('fix')) category = 'home-maintenance';
+    else if (lowerInput.includes('repair') || lowerInput.includes('fix') || lowerInput.includes('maintenance')) category = 'home-maintenance';
 
     // Parse date
     let date = '';
