@@ -1178,44 +1178,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     // Use provided category or detect from title/description
     let detectedCategory = categoryMap[category] || 'homehelp';
 
-    // Parallel calls to Qwen for skills, description, and notes
-    const skillMap: Record<string, string[]> = {
-      'eldercare': ['Patience', 'Communication Skills', 'Physical Care Experience', 'Empathy'],
-      'childcare': ['Child Safety Awareness', 'Communication', 'Patience', 'Activity Planning'],
-      'homehelp': ['Attention to Detail', 'Time Management', 'Physical Stamina', 'Problem-solving'],
-      'petcare': ['Animal Care Experience', 'Patience', 'Physical Fitness', 'Communication'],
-      'delivery': ['Reliability', 'Navigation Skills', 'Physical Fitness', 'Customer Service'],
-      'eventhelp': ['Organization', 'Communication', 'Physical Stamina', 'Problem-solving'],
-      'tech-support': ['Technical Knowledge', 'Problem-solving', 'Patience', 'Communication'],
-      'data-entry': ['Data Entry Skills', 'Accuracy', 'Time Management', 'Attention to Detail'],
-      'beauty': ['Makeup Application', 'Hair Styling', 'Skincare Knowledge', 'Customer Service', 'Hygiene Standards'],
-    };
-
-    const descriptionSuggestions: Record<string, string> = {
-      'eldercare': 'Help with daily activities and companionship for elderly person. Include mobility assistance, meal prep, or medication reminders needed.',
-      'childcare': 'Provide childcare and supervision for child. Specify age group, activities, any allergies or special needs.',
-      'homehelp': 'Professional household assistance. Specify areas (bedroom, kitchen, bathroom) and type of work (cleaning, organizing, repairs).',
-      'petcare': 'Pet care services. Specify pet type, size, temperament, and what\'s needed (walking, sitting, grooming).',
-      'delivery': 'Deliver items from point A to point B. Specify item type, size, weight, and any special handling needs.',
-      'eventhelp': 'Help with event preparation and execution. Specify event type (party, wedding, corporate), size, and setup needs.',
-      'admin-business': 'Administrative support work. Specify exact tasks (data entry, document preparation, spreadsheet management).',
-      'tech-support': 'Technical help for device or software. Specify device type, operating system, and exact problem or issue.',
-      'creative-arts': 'Creative services project. Specify deliverable (design, photo, video), style preferences, and deadline.',
-      'beauty': 'Professional beauty and personal care service. Specify services needed (makeup, hair, nails, skincare), your skin type, any allergies, and desired look/style.',
-    };
-
-    const notesSuggestions: Record<string, string> = {
-      'eldercare': 'Ask doer: Experience with elderly care? Any medical training? Can handle mobility assistance? Can you provide references?',
-      'childcare': 'Ask doer: Experience with this age group? Any certifications (CPR, First Aid)? Background check? References from previous families?',
-      'homehelp': 'Ask doer: Own cleaning supplies or expect to be provided? Experience level? Can you handle same-day work? References?',
-      'petcare': 'Ask doer: Experience with this pet type? Any certifications? Comfortable handling emergencies? What\'s your experience with this breed?',
-      'delivery': 'Ask doer: Vehicle type? Can handle fragile/delicate items? Insured? Can pick up same day? Experience with this distance?',
-      'eventhelp': 'Ask doer: Event experience? Physical fitness for setup work? Flexibility with timing? Can you follow instructions?',
-      'admin-business': 'Ask doer: Software experience (Excel, Google Sheets)? Accuracy record? Attention to detail? Experience with this task type?',
-      'tech-support': 'Ask doer: Device expertise? Problem-solving approach? Availability for follow-up? What tools do you typically use?',
-      'beauty': 'Ask doer: Professional qualifications? Experience with your skin/hair type? Products - do you have your own or will I provide? Comfort with product allergies?',
-      'creative-arts': 'Ask doer: Portfolio examples? Software/tools you use? Design philosophy? Timeline flexibility? Revision policy?',
-    };
+    // Always use Qwen for smart, title-specific suggestions (no hardcoded fallbacks)
 
     // Make all Qwen calls in parallel
     console.log('[Suggestions] Making Qwen API calls...');
@@ -1318,22 +1281,64 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       console.warn('[Qwen] Notes generation failed');
     }
 
-    // Fallback to basic skills if Qwen fails
-    if (skills.length === 0) {
-      skills = skillMap[detectedCategory] || ['Problem-solving', 'Communication', 'Reliability'];
-      console.log('[Suggestions] Using fallback skills for', detectedCategory, ':', skills);
+    // If Qwen fails to generate, use title-based smart fallbacks
+    if (skills.length === 0 && title) {
+      console.log('[Suggestions] Qwen skills failed, generating from title:', title);
+      const titleLower = title.toLowerCase();
+      const skillKeywords: Record<string, string[]> = {
+        'clean': ['Attention to Detail', 'Thorough Cleaning', 'Time Management'],
+        'wash': ['Laundry Care', 'Stain Removal', 'Fabric Handling'],
+        'pick up': ['Punctuality', 'Reliability', 'Safe Handling'],
+        'move': ['Physical Strength', 'Careful Packing', 'Organization'],
+        'teach': ['Subject Expertise', 'Patience', 'Communication'],
+        'tutor': ['Subject Expertise', 'Explaining Skills', 'Patience'],
+        'care': ['Empathy', 'Attentiveness', 'Dependability'],
+        'babysit': ['Child Care Experience', 'Safety Awareness', 'Patience'],
+        'repair': ['Problem-solving', 'Technical Skills', 'Attention to Detail'],
+        'install': ['Technical Ability', 'Precision', 'Safety Awareness'],
+        'deliver': ['Reliability', 'Navigation Skills', 'Customer Service'],
+        'fetch': ['Punctuality', 'Reliability', 'Organization'],
+        'makeup': ['Makeup Expertise', 'Aesthetic Judgment', 'Product Knowledge'],
+        'hair': ['Hair Styling Skills', 'Product Knowledge', 'Communication'],
+        'organize': ['Organization Skills', 'Attention to Detail', 'Planning'],
+      };
+
+      for (const [keyword, skillSet] of Object.entries(skillKeywords)) {
+        if (titleLower.includes(keyword)) {
+          skills = skillSet;
+          break;
+        }
+      }
+      if (skills.length === 0) {
+        skills = ['Problem-solving', 'Communication', 'Reliability'];
+      }
+      console.log('[Suggestions] Fallback skills generated:', skills);
     }
 
-    // Fallback if Qwen not used
-    if (!suggestedDescription) {
-      suggestedDescription = descriptionSuggestions[detectedCategory] || 'Describe what needs to be done, what doers should expect, and any special requirements.';
-      console.log('[Qwen] Using fallback description');
+    if (!suggestedDescription && title) {
+      console.log('[Suggestions] Qwen description failed, generating from title');
+      suggestedDescription = `${title}. Please describe exactly what needs to be done, timeline, location, and any specific requirements for the doer.`;
+      if (suggestedDescription.length > 180) {
+        suggestedDescription = suggestedDescription.substring(0, 177) + '...';
+      }
     }
 
-    // Fallback if Qwen not used
-    if (!notes) {
-      notes = notesSuggestions[detectedCategory] || 'Add important questions or requirements for potential doers.';
-      console.log('[Qwen] Using fallback notes');
+    if (!notes && title) {
+      console.log('[Suggestions] Qwen notes failed, generating from title');
+      const titleLower = title.toLowerCase();
+      if (titleLower.includes('clean') || titleLower.includes('wash')) {
+        notes = 'Ask doer: Do you have cleaning supplies? Experience level? Can you work same-day?';
+      } else if (titleLower.includes('move')) {
+        notes = 'Ask doer: Physical capacity? Vehicle available? Timeline flexibility?';
+      } else if (titleLower.includes('pick up') || titleLower.includes('deliver') || titleLower.includes('fetch')) {
+        notes = 'Ask doer: Can you be punctual? Transportation available? Experience with this task?';
+      } else if (titleLower.includes('teach') || titleLower.includes('tutor')) {
+        notes = 'Ask doer: Subject expertise? Teaching credentials? Experience with student level?';
+      } else if (titleLower.includes('babysit') || titleLower.includes('care')) {
+        notes = 'Ask doer: Experience level? CPR/First Aid certified? Can handle emergencies?';
+      } else {
+        notes = 'Ask doer: Experience? Timeline? Special requirements or certifications?';
+      }
     }
 
     // Ensure all response fields have valid values
