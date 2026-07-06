@@ -624,7 +624,7 @@ OUTPUT ONLY THE TITLE, nothing else.`,
 
     // Extract landmark/location name for address lookup
     let landmarkName = '';
-    const atMatch = input.match(/at\s+([^,]*?)(?:\s+tomorrow|\s+today|\s+\d{6}|,|.|$)/i);
+    const atMatch = input.match(/at\s+([^,]+?)(?:\s+tomorrow|\s+today|\s+\d{6})/i);
     if (atMatch) {
       landmarkName = atMatch[1].trim();
       console.log('[Extract] Landmark detected:', landmarkName);
