@@ -295,6 +295,7 @@ app.post('/api/ai/extract-task-info', (req, res) => {
       .replace(/budget\s*\$?\d+/i, '')
       .replace(/,?\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)/i, '')
       .replace(/(?:tomorrow|today|in\s+\d+\s+days?|next\s+\w+|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)/i, '')
+      .replace(/,?\s*[\d.]+\s*(?:hours?|hrs?|h|minutes?|mins?|m)/i, '')  // Remove duration like "2 hours", "30 mins"
       .replace(/for\s+[\d.]+\s*(?:hour|hr|min)s?/i, '')
       .replace(/^\s*(?:i\s+need|please|can you)\s+/i, '')
       .replace(/\s+on\s+/i, ' ')  // Remove "on" before dates/times
