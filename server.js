@@ -211,6 +211,56 @@ app.get('/api/notifications', (req, res) => {
   }
 });
 
+// Stub API endpoints for demo (prevent 404s and looping notifications)
+app.get('/api/errands', (req, res) => {
+  res.json({ success: true, data: [] });
+});
+
+app.get('/api/profile', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      id: '1',
+      name: 'Demo User',
+      email: 'demo@example.com',
+      role: 'asker'
+    }
+  });
+});
+
+app.get('/api/user-stats', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      tasksCompleted: 0,
+      rating: 5,
+      points: 0,
+      streak: 0
+    }
+  });
+});
+
+app.get('/api/shop/vouchers', (req, res) => {
+  res.json({
+    success: true,
+    data: []
+  });
+});
+
+// Catch all other POST requests
+app.post('/api/email/send-no-offers-reminder', (req, res) => {
+  res.json({ success: true });
+});
+
+app.post('/api/email/send-errand-start-reminder', (req, res) => {
+  res.json({ success: true });
+});
+
+// Catch all other unimplemented API calls
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API endpoint not found' });
+});
+
 // React Router fallback
 app.get('*', (req, res) => {
   const indexPath = path.join(frontendPath, 'index.html');
