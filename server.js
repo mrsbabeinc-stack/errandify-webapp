@@ -4,6 +4,14 @@ const fs = require('fs');
 const { Pool } = require('pg');
 const axios = require('axios');
 
+// IMPORTANT: Landmark database MUST have verified, accurate postal codes
+// DO NOT guess - postal codes determine area/address accuracy for users
+// Only add landmarks that are verified with correct postal codes
+const SG_LANDMARKS = {
+  // Format: 'landmark name': { postal: 'XXXXXX', area: 'Area Name' }
+  // NOTE: Postal codes must be VERIFIED - inaccurate landmarks are frustrating for users!
+};
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
