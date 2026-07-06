@@ -291,8 +291,9 @@ app.post('/api/ai/extract-task-info', (req, res) => {
 
     // Extract title - clean up metadata
     let title = input
-      .replace(/,?\s*(?:on\s+)?at\s+\d{6},?/i, '')  // Remove ", at 150101", "on at 150101", "at 150101"
+      .replace(/,?\s*(?:on|at)\s+\d{6},?/i, '')  // Remove ", on 150101", "on at 150101", "at 150101"
       .replace(/\d{6}\s*,?/g, '')  // Remove any 6-digit postal codes
+      .replace(/\$?\d+\s*(?:on|at)?(?:\s+on|\s+at)?$/i, '')  // Remove "$200 on", "$200 at" at end
       .replace(/\$\d+|budget\s*\$?\d+/i, '')  // Remove budget like "$200" or "budget 200"
       .replace(/,?\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)/i, '')
       .replace(/(?:tomorrow|today|in\s+\d+\s+days?|next\s+\w+|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)/i, '')
@@ -465,7 +466,7 @@ app.post('/api/ai/extract-task-info', (req, res) => {
           } catch (mapboxErr) {
             console.warn('[Extract] Mapbox API failed:', mapboxErr.message);
             // Ultimate fallback: sector-only
-            const postalCodeToAreaMap = {'01': 'Raffles Place','02': 'Downtown Core','03': 'Marina Bay','04': 'Bukit Merah','05': 'Outram','06': 'Bukit Merah','07': 'Outram','08': 'Outram','09': 'Outram','10': 'Orchard','11': 'Orchard','12': 'Orchard','23': 'Orchard','13': 'Tanglin','14': 'Tanglin','15': 'Clementi','16': 'Clementi','17': 'Novena','18': 'Novena','19': 'Bukit Timah','20': 'Bukit Timah','21': 'Clementi','22': 'Clementi','24': 'Kallang','25': 'Kallang','26': 'Geylang','27': 'Geylang','28': 'Bedok','29': 'Bedok','30': 'Bedok','31': 'Tampines','32': 'Tampines','33': 'Tampines','34': 'Tampines','35': 'Toa Payoh','36': 'Toa Payoh','37': 'Serangoon','38': 'Serangoon','39': 'Hougang','40': 'Hougang','41': 'Bishan','42': 'Bishan','43': 'Serangoon','44': 'Serangoon','45': 'Sengkang','46': 'Sengkang','47': 'Tampines','48': 'Sengkang','49': 'Geylang','50': 'Bukit Timah','51': 'Bukit Timah','52': 'Bukit Timah','53': 'Bukit Timah','54': 'Bukit Timah','55': 'Choa Chu Kang','56': 'Choa Chu Kang','57': 'Choa Chu Kang','58': 'Choa Chu Kang','59': 'Choa Chu Kang','60': 'Jurong East','61': 'Jurong East','62': 'Jurong West','63': 'Jurong West','64': 'Jurong West','65': 'Jurong West','66': 'Jurong West','67': 'Clementi','68': 'Choa Chu Kang','69': 'Jurong West','70': 'Woodlands','71': 'Woodlands','72': 'Woodlands','73': 'Woodlands','74': 'Yishun','75': 'Yishun','76': 'Yishun','77': 'Yishun','78': 'Sembawang','79': 'Sembawang','80': 'Punggol','81': 'Punggol','82': 'Punggol'};
+            const postalCodeToAreaMap = {'01': 'Raffles Place','02': 'Downtown Core','03': 'Marina Bay','04': 'Bukit Merah','05': 'Outram','06': 'Bukit Merah','07': 'Outram','08': 'Outram','09': 'Outram','10': 'Orchard','11': 'Orchard','12': 'Orchard','23': 'Orchard','13': 'Tanglin','14': 'Tanglin','15': 'Henderson','16': 'Clementi','17': 'Novena','18': 'Novena','19': 'Bukit Timah','20': 'Bukit Timah','21': 'Clementi','22': 'Clementi','24': 'Kallang','25': 'Kallang','26': 'Geylang','27': 'Geylang','28': 'Bedok','29': 'Bedok','30': 'Bedok','31': 'Tampines','32': 'Tampines','33': 'Tampines','34': 'Tampines','35': 'Toa Payoh','36': 'Toa Payoh','37': 'Serangoon','38': 'Serangoon','39': 'Hougang','40': 'Hougang','41': 'Bishan','42': 'Bishan','43': 'Serangoon','44': 'Serangoon','45': 'Sengkang','46': 'Sengkang','47': 'Tampines','48': 'Sengkang','49': 'Geylang','50': 'Bukit Timah','51': 'Bukit Timah','52': 'Bukit Timah','53': 'Bukit Timah','54': 'Bukit Timah','55': 'Choa Chu Kang','56': 'Choa Chu Kang','57': 'Choa Chu Kang','58': 'Choa Chu Kang','59': 'Choa Chu Kang','60': 'Jurong East','61': 'Jurong East','62': 'Jurong West','63': 'Jurong West','64': 'Jurong West','65': 'Jurong West','66': 'Jurong West','67': 'Clementi','68': 'Choa Chu Kang','69': 'Jurong West','70': 'Woodlands','71': 'Woodlands','72': 'Woodlands','73': 'Woodlands','74': 'Yishun','75': 'Yishun','76': 'Yishun','77': 'Yishun','78': 'Sembawang','79': 'Sembawang','80': 'Punggol','81': 'Punggol','82': 'Punggol'};
               const sector = postalCode.substring(0, 2);
               areaName = postalCodeToAreaMap[sector] || '';
               fullAddressValue = areaName ? `Singapore ${postalCode}` : '';
@@ -557,7 +558,39 @@ app.post('/api/ai/suggestions', (req, res) => {
 
   const skills = skillMap[category] || skillMap['default'];
   const suggestionDesc = descriptionMap[category] || descriptionMap['default'];
-  const suggestionNotes = notesMap[category] || notesMap['default'];
+  let suggestionNotes = notesMap[category] || notesMap['default'];
+
+  // Enhance notes based on title keywords for more specific guidance
+  const titleLower = (title || '').toLowerCase();
+
+  // Cleaning-specific enhancements
+  if (category === 'cleaning-household') {
+    if (titleLower.includes('deep') || titleLower.includes('thorough')) {
+      suggestionNotes = 'Deep cleaning required. Please bring all necessary cleaning supplies and equipment.';
+    } else if (titleLower.includes('laundry') || titleLower.includes('wash')) {
+      suggestionNotes = 'Laundry service. Please bring detergent and fabric care products if needed.';
+    } else if (titleLower.includes('organize') || titleLower.includes('declutter')) {
+      suggestionNotes = 'Organization service. Please confirm area to organize and any special handling needed.';
+    }
+  }
+
+  // Moving-specific enhancements
+  if (category === 'delivery-moving') {
+    if (titleLower.includes('move') || titleLower.includes('relocate')) {
+      suggestionNotes = 'Help with moving required. Please bring packing materials, boxes, and moving equipment.';
+    } else if (titleLower.includes('deliver') || titleLower.includes('transport')) {
+      suggestionNotes = 'Delivery service. Please confirm item size/weight and any special handling instructions.';
+    }
+  }
+
+  // Pet-care enhancements
+  if (category === 'pet-care') {
+    if (titleLower.includes('walk') || titleLower.includes('walking')) {
+      suggestionNotes = 'Dog walking service. Please provide leash, treats, and confirm route preference.';
+    } else if (titleLower.includes('sit') || titleLower.includes('sitting')) {
+      suggestionNotes = 'Pet sitting. Please provide food, toys, and emergency contact information.';
+    }
+  }
 
   res.json({
     success: true,
