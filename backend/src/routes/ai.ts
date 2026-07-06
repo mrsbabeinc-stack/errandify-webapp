@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { lookupAddress } from '../services/providers/addressProvider.js';
+import { searchLandmark, recordLandmarkUsage } from '../services/landmarkService.js';
 import axios from 'axios';
 import https from 'https';
 import * as biasDetector from '../modules/bias-detector.js';
@@ -897,35 +898,48 @@ OUTPUT ONLY the category name, nothing else.`,
       fullAddress = detectedArea;
     }
 
-    // If no postal code but landmark name found, use OneMap search (free, authoritative)
+    // If no postal code but landmark name found, search database first (instant + reliable)
     if (!postalCode && landmarkName) {
       try {
-        console.log('[Extract] Using OneMap to search for landmark:', landmarkName);
+        console.log('[Extract] Searching landmark database for:', landmarkName);
         
-        // Query OneMap search API directly with landmark name
-        const onemapUrl = `https://www.onemap.sg/api/common/elastic/search?searchVal=${encodeURIComponent(landmarkName)}&returnGeom=Y&getAddrDetails=Y`;
-        const onemapResponse = await axios.get(onemapUrl, { timeout: 5000 });
+        // Database lookup (instant)
+        const landmark = await searchLandmark(landmarkName);
         
-        if (onemapResponse.data?.results?.length > 0) {
-          const result = onemapResponse.data.results[0];
+        if (landmark) {
+          // Found in database!
+          postalCode = landmark.postal_code;
+          fullAddress = landmark.address || `Singapore ${postalCode}`;
+          console.log('[Extract] ✅ Landmark database match - postal:', postalCode);
           
-          // Extract postal code from the result
-          const resultAddress = result.ADDRESS || '';
-          const postalMatch = resultAddress.match(/\b(\d{6})\b/);
-          
-          if (postalMatch) {
-            postalCode = postalMatch[1];
-            fullAddress = resultAddress || `Singapore ${postalCode}`;
-            console.log('[Extract] ✅ OneMap landmark search success - postal:', postalCode, 'address:', fullAddress);
-          } else {
-            console.log('[Extract] OneMap found landmark but no postal code in address:', resultAddress);
-          }
+          // Record this search to improve database
+          await recordLandmarkUsage(landmarkName, postalCode);
         } else {
-          console.log('[Extract] OneMap landmark search found no results');
+          // Not in database, try OneMap as fallback
+          console.log('[Extract] Landmark not in database, trying OneMap...');
+          try {
+            const onemapUrl = `https://www.onemap.sg/api/common/elastic/search?searchVal=${encodeURIComponent(landmarkName)}&returnGeom=Y&getAddrDetails=Y`;
+            const onemapResponse = await axios.get(onemapUrl, { timeout: 5000 });
+            
+            if (onemapResponse.data?.results?.length > 0) {
+              const result = onemapResponse.data.results[0];
+              const resultAddress = result.ADDRESS || '';
+              const postalMatch = resultAddress.match(/\b(\d{6})\b/);
+              
+              if (postalMatch) {
+                postalCode = postalMatch[1];
+                fullAddress = resultAddress;
+                console.log('[Extract] ✅ OneMap found - postal:', postalCode);
+              }
+            }
+          } catch (onemapErr) {
+            console.log('[Extract] OneMap lookup also failed');
+          }
         }
       } catch (error) {
-        console.warn('[Extract] OneMap landmark search failed:', error instanceof Error ? error.message : error);
+        console.warn('[Extract] Landmark resolution error:', error instanceof Error ? error.message : error);
       }
+    }
     }
 
 
