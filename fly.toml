@@ -2,7 +2,7 @@ app = "errandify-webapp"
 primary_region = "sin"
 
 [build]
-  builder = "docker"
+  builder = "paket"
 
 [env]
   NODE_ENV = "production"
