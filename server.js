@@ -299,6 +299,7 @@ app.post('/api/ai/extract-task-info', (req, res) => {
       .replace(/for\s+[\d.]+\s*(?:hour|hr|min)s?/i, '')
       .replace(/^\s*(?:i\s+need|please|can you)\s+/i, '')
       .replace(/\s+on\s+/i, ' ')  // Remove "on" before dates/times
+      .replace(/\s+at\s*$/i, '')  // Remove trailing " at"
       .replace(/\s+/g, ' ')
       .replace(/,\s*,/g, ',')  // Remove double commas
       .replace(/,\s*$/g, '')  // Remove trailing commas
@@ -451,7 +452,7 @@ app.post('/api/ai/extract-task-info', (req, res) => {
       '65': { area: 'Tampines', address: '65 Tampines Central 8 Singapore 650065' },
       '66': { area: 'Tampines', address: '66 Tampines West Street 65 Singapore 660066' },
       '67': { area: 'Tampines', address: '67 Tampines Street 65 Singapore 670067' },
-      '68': { area: 'Bedok', address: '68 Bedok Road Singapore 680068' },
+      '68': { area: 'Choa Chu Kang', address: '680 Choa Chu Kang Avenue 5 Singapore 680433' },
       '69': { area: 'Bedok', address: '69 Bedok North Street 1 Singapore 690069' },
       '70': { area: 'Bedok', address: '70 Bedok North Road Singapore 700070' },
       '71': { area: 'Bedok', address: '71 Bedok Reservoir Road Singapore 710071' },
