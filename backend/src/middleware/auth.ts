@@ -5,7 +5,7 @@ import db from '../db.js';
 
 export interface AuthRequest extends Request {
   userId?: string;
-  user?: {
+  user?: Record<string, any> & {
     id: string;
     email: string;
   };
