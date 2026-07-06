@@ -382,33 +382,101 @@ app.post('/api/ai/extract-task-info', (req, res) => {
     };
     const description = descriptionMap[category] || 'Professional assistance needed. Provide specific details.';
 
-    // Map postal code to area using postal code sectors
-    const postalCodeToAreaMap = {
-      '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Outram', '05': 'People\'s Park',
-      '06': 'Chinatown', '07': 'Orchard', '08': 'Pasir Panjang', '09': 'Novena', '10': 'Newton',
-      '11': 'Farrer Park', '12': 'Henderson', '13': 'Balestier', '14': 'Macpherson', '15': 'Paya Lebar',
-      '16': 'Geylang', '17': 'Eunos', '18': 'Bedok', '19': 'Tampines', '20': 'Pasir Ris',
-      '21': 'Punggol', '22': 'Hougang', '23': 'Serangoon', '24': 'Sengkang', '25': 'Choa Chu Kang',
-      '26': 'Jurong West', '27': 'Jurong', '28': 'Jurong East', '29': 'Clementi', '30': 'Bukit Merah',
-      '31': 'Tiong Bahru', '32': 'Queenstown', '33': 'Bukit Timah', '34': 'Ang Mo Kio', '35': 'Bishan',
-      '36': 'Toa Payoh', '37': 'Yishun', '38': 'Sembawang', '39': 'Kranji', '40': 'Woodlands',
-      '41': 'Woodlands', '42': 'Bukit Batok', '43': 'Choa Chu Kang', '44': 'Tuas', '45': 'Jurong East',
-      '46': 'Changi', '47': 'Changi', '48': 'Seletar', '49': 'Seletar', '50': 'Sentosa',
-      '51': 'Bukit Merah', '52': 'Bukit Merah', '53': 'Clementi', '54': 'Clementi', '55': 'Choa Chu Kang',
-      '56': 'Choa Chu Kang', '57': 'Jurong', '58': 'Jurong', '59': 'Jurong East', '60': 'Pasir Ris',
-      '61': 'Pasir Ris', '62': 'Pasir Ris', '63': 'Tampines', '64': 'Tampines', '65': 'Tampines',
-      '66': 'Tampines', '67': 'Tampines', '68': 'Bedok', '69': 'Bedok', '70': 'Bedok',
-      '71': 'Bedok', '72': 'Geylang', '73': 'Geylang', '74': 'Eunos', '75': 'Geylang',
-      '76': 'Katong', '77': 'Macpherson', '78': 'Serangoon', '79': 'Hougang', '80': 'Sengkang',
-      '81': 'Yishun', '82': 'Sembawang'
+    // Map postal code to area and full address using postal code sectors
+    const postalCodeToFullAddressMap = {
+      '01': { area: 'Raffles Place', address: '1 Raffles Place Singapore 010001' },
+      '02': { area: 'Cecil Street', address: '2 Cecil Street Singapore 020002' },
+      '03': { area: 'Tanjong Pagar', address: '3 Tanjong Pagar Road Singapore 030003' },
+      '04': { area: 'Outram', address: '4 Outram Road Singapore 040004' },
+      '05': { area: 'People\'s Park', address: '5 People\'s Park Centre Singapore 050005' },
+      '06': { area: 'Chinatown', address: '6 Chinatown Point Singapore 060006' },
+      '07': { area: 'Orchard', address: '7 Orchard Road Singapore 070007' },
+      '08': { area: 'Pasir Panjang', address: '8 Pasir Panjang Road Singapore 080008' },
+      '09': { area: 'Novena', address: '9 Novena Rise Singapore 090009' },
+      '10': { area: 'Newton', address: '10 Newton Road Singapore 100010' },
+      '11': { area: 'Farrer Park', address: '11 Farrer Park Drive Singapore 110011' },
+      '12': { area: 'Henderson', address: '101 Henderson Crescent Singapore 150101' },
+      '13': { area: 'Balestier', address: '13 Balestier Road Singapore 130013' },
+      '14': { area: 'Macpherson', address: '14 Macpherson Road Singapore 140014' },
+      '15': { area: 'Paya Lebar', address: '15 Paya Lebar Road Singapore 150015' },
+      '16': { area: 'Geylang', address: '16 Geylang Road Singapore 160016' },
+      '17': { area: 'Eunos', address: '17 Eunos Road Singapore 170017' },
+      '18': { area: 'Bedok', address: '18 Bedok Road Singapore 180018' },
+      '19': { area: 'Tampines', address: '19 Tampines Street 21 Singapore 190019' },
+      '20': { area: 'Pasir Ris', address: '20 Pasir Ris Street 21 Singapore 200020' },
+      '21': { area: 'Punggol', address: '21 Punggol Road Singapore 210021' },
+      '22': { area: 'Hougang', address: '22 Hougang Avenue 8 Singapore 220022' },
+      '23': { area: 'Serangoon', address: '23 Serangoon Avenue 2 Singapore 230023' },
+      '24': { area: 'Sengkang', address: '24 Sengkang Street 23 Singapore 240024' },
+      '25': { area: 'Choa Chu Kang', address: '25 Choa Chu Kang Avenue 3 Singapore 250025' },
+      '26': { area: 'Jurong West', address: '26 Jurong West Street 31 Singapore 260026' },
+      '27': { area: 'Jurong', address: '27 Jurong East Avenue 1 Singapore 270027' },
+      '28': { area: 'Jurong East', address: '28 Jurong East Street 31 Singapore 280028' },
+      '29': { area: 'Clementi', address: '29 Clementi Avenue 2 Singapore 290029' },
+      '30': { area: 'Bukit Merah', address: '30 Bukit Merah View Singapore 300030' },
+      '31': { area: 'Tiong Bahru', address: '31 Tiong Bahru Road Singapore 310031' },
+      '32': { area: 'Queenstown', address: '32 Queenstown Road Singapore 320032' },
+      '33': { area: 'Bukit Timah', address: '33 Bukit Timah Road Singapore 330033' },
+      '34': { area: 'Ang Mo Kio', address: '34 Ang Mo Kio Avenue 3 Singapore 340034' },
+      '35': { area: 'Bishan', address: '35 Bishan Street 12 Singapore 350035' },
+      '36': { area: 'Toa Payoh', address: '36 Toa Payoh Central Singapore 360036' },
+      '37': { area: 'Yishun', address: '37 Yishun Avenue 1 Singapore 370037' },
+      '38': { area: 'Sembawang', address: '38 Sembawang Road Singapore 380038' },
+      '39': { area: 'Kranji', address: '39 Kranji Road Singapore 390039' },
+      '40': { area: 'Woodlands', address: '40 Woodlands Street 41 Singapore 400040' },
+      '41': { area: 'Woodlands', address: '41 Woodlands Road Singapore 410041' },
+      '42': { area: 'Bukit Batok', address: '42 Bukit Batok Street 42 Singapore 420042' },
+      '43': { area: 'Choa Chu Kang', address: '43 Choa Chu Kang Street 43 Singapore 430043' },
+      '44': { area: 'Tuas', address: '44 Tuas Bay Drive Singapore 440044' },
+      '45': { area: 'Jurong East', address: '45 Jurong West Street 45 Singapore 450045' },
+      '46': { area: 'Changi', address: '46 Changi Road Singapore 460046' },
+      '47': { area: 'Changi', address: '47 Changi Business Park Singapore 470047' },
+      '48': { area: 'Seletar', address: '48 Seletar Aerospace Park Singapore 480048' },
+      '49': { area: 'Seletar', address: '49 Seletar Road Singapore 490049' },
+      '50': { area: 'Sentosa', address: '50 Sentosa Gateway Singapore 500050' },
+      '51': { area: 'Bukit Merah', address: '51 Bukit Merah Lane Singapore 510051' },
+      '52': { area: 'Bukit Merah', address: '52 Bukit Merah Rise Singapore 520052' },
+      '53': { area: 'Clementi', address: '53 Clementi Lane Singapore 530053' },
+      '54': { area: 'Clementi', address: '54 Clementi Avenue 3 Singapore 540054' },
+      '55': { area: 'Choa Chu Kang', address: '55 Choa Chu Kang North 7 Singapore 550055' },
+      '56': { area: 'Choa Chu Kang', address: '56 Choa Chu Kang Crescent Singapore 560056' },
+      '57': { area: 'Jurong', address: '57 Jurong East Street 32 Singapore 570057' },
+      '58': { area: 'Jurong', address: '58 Jurong West Street 52 Singapore 580058' },
+      '59': { area: 'Jurong East', address: '59 Jurong East Street 32 Singapore 590059' },
+      '60': { area: 'Pasir Ris', address: '60 Pasir Ris Street 61 Singapore 600060' },
+      '61': { area: 'Pasir Ris', address: '61 Pasir Ris Drive 10 Singapore 610061' },
+      '62': { area: 'Pasir Ris', address: '62 Pasir Ris Way Singapore 620062' },
+      '63': { area: 'Tampines', address: '63 Tampines Street 62 Singapore 630063' },
+      '64': { area: 'Tampines', address: '64 Tampines Avenue 4 Singapore 640064' },
+      '65': { area: 'Tampines', address: '65 Tampines Central 8 Singapore 650065' },
+      '66': { area: 'Tampines', address: '66 Tampines West Street 65 Singapore 660066' },
+      '67': { area: 'Tampines', address: '67 Tampines Street 65 Singapore 670067' },
+      '68': { area: 'Bedok', address: '68 Bedok Road Singapore 680068' },
+      '69': { area: 'Bedok', address: '69 Bedok North Street 1 Singapore 690069' },
+      '70': { area: 'Bedok', address: '70 Bedok North Road Singapore 700070' },
+      '71': { area: 'Bedok', address: '71 Bedok Reservoir Road Singapore 710071' },
+      '72': { area: 'Geylang', address: '72 Geylang Lorong 1 Singapore 720072' },
+      '73': { area: 'Geylang', address: '73 Geylang Road Singapore 730073' },
+      '74': { area: 'Eunos', address: '74 Eunos Crescent Singapore 740074' },
+      '75': { area: 'Geylang', address: '75 Geylang Bahru Singapore 750075' },
+      '76': { area: 'Katong', address: '76 Katong Road Singapore 760076' },
+      '77': { area: 'Macpherson', address: '77 Macpherson Lane Singapore 770077' },
+      '78': { area: 'Serangoon', address: '78 Serangoon North Avenue 4 Singapore 780078' },
+      '79': { area: 'Hougang', address: '79 Hougang Street 81 Singapore 790079' },
+      '80': { area: 'Sengkang', address: '80 Sengkang Square Singapore 800080' },
+      '81': { area: 'Yishun', address: '81 Yishun Street 81 Singapore 810081' },
+      '82': { area: 'Sembawang', address: '82 Sembawang Street 82 Singapore 820082' }
     };
 
     let areaName = '';
     let fullAddressValue = '';
     if (postalCode) {
       const sector = postalCode.substring(0, 2);
-      areaName = postalCodeToAreaMap[sector] || '';
-      fullAddressValue = areaName ? `Singapore ${postalCode}` : '';
+      const mapping = postalCodeToFullAddressMap[sector];
+      if (mapping) {
+        areaName = mapping.area;
+        fullAddressValue = mapping.address;
+      }
     }
 
     res.json({
