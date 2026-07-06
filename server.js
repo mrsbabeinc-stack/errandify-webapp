@@ -477,8 +477,8 @@ app.post('/api/ai/check-content', (req, res) => {
   res.json({
     success: true,
     data: {
-      isClean: !hasBlocked,
-      hasBlocked,
+      is_safe: !hasBlocked,
+      has_blocked: hasBlocked,
       reason: hasBlocked ? 'Contact information or payment details detected' : null
     }
   });
