@@ -481,7 +481,8 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     // Use Qwen to intelligently extract clean title from messy user input
     let cleanedTitle = title;
-    const qwenApiKey = process.env.QWEN_API_KEY;
+    const qwenApiKey = process.env.QWEN_API_KEY || 'sk-ws-H.IEXLEL.Z3E5.MEUCIQC8wObhyMlp03fPr_w_rWelWwHZiVcIOcsp05yntX56fgIgEkEpVo29g6na675nmhk_tr97nUPj3JAHGiSfWrmg4qw';
+    const qwenApiBase = process.env.QWEN_API_BASE || 'https://ws-5qpu2xdkh16k4pgo.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1';
 
     console.log('[Extract] Qwen API Key available:', !!qwenApiKey);
 
@@ -489,7 +490,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       try {
         console.log('[Extract] ✓ Using Qwen to clean title...');
         const titleCleanResponse = await axiosWithSSL.post(
-          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+          `${qwenApiBase}/chat/completions`,
           {
             model: 'qwen-max',
             messages: [
@@ -654,7 +655,7 @@ OUTPUT ONLY THE TITLE IN TITLE CASE, nothing else.`,
       try {
         console.log('[Extract] ✓ Using Qwen to detect category...');
         const categoryResponse = await axiosWithSSL.post(
-          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+          `${qwenApiBase}/chat/completions`,
           {
             model: 'qwen-max',
             messages: [
@@ -1155,19 +1156,14 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Title and category required' });
     }
 
-    // Get Qwen API key from environment
-    const qwenApiKey = process.env.QWEN_API_KEY;
-    const qwenApiBase = process.env.QWEN_API_BASE;
+    // Get Qwen API key from environment with hardcoded fallback
+    const qwenApiKey = process.env.QWEN_API_KEY || 'sk-ws-H.IEXLEL.Z3E5.MEUCIQC8wObhyMlp03fPr_w_rWelWwHZiVcIOcsp05yntX56fgIgEkEpVo29g6na675nmhk_tr97nUPj3JAHGiSfWrmg4qw';
+    const qwenApiBase = process.env.QWEN_API_BASE || 'https://ws-5qpu2xdkh16k4pgo.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1';
 
     console.log('[Suggestions] QWEN CHECK:');
     console.log('[Suggestions] - Has API Key:', !!qwenApiKey);
-    console.log('[Suggestions] - Key length:', qwenApiKey?.length || 0);
-    console.log('[Suggestions] - Has API Base:', !!qwenApiBase);
-    console.log('[Suggestions] - API Base:', qwenApiBase || 'NOT SET');
-
-    if (!qwenApiKey) {
-      console.warn('[Suggestions] ⚠️ Qwen API key not configured, will use fallbacks only');
-    }
+    console.log('[Suggestions] - Using hardcoded fallback:', !process.env.QWEN_API_KEY);
+    console.log('[Suggestions] - API Base:', qwenApiBase);
 
     // Map frontend category IDs to AI-friendly internal categories
     // Also handles internal category names (petcare, childcare, etc.) that come from extract endpoint
@@ -1201,7 +1197,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     console.log('[Suggestions] Making Qwen API calls...');
     const [skillsResult, descriptionResult, notesResult] = await Promise.allSettled([
       qwenApiKey ? axiosWithSSL.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
+        `${qwenApiBase}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
           model: 'qwen-max',
           messages: [
@@ -1234,7 +1230,7 @@ What specific certifications or qualifications are needed?`,
         }
       ) : Promise.reject('No API key'),
       qwenApiKey ? axiosWithSSL.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
+        `${qwenApiBase}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
           model: 'qwen-max',
           messages: [
@@ -1254,7 +1250,7 @@ What specific certifications or qualifications are needed?`,
         }
       ) : Promise.reject('No API key'),
       qwenApiKey ? axiosWithSSL.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
+        `${qwenApiBase}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
           model: 'qwen-max',
           messages: [
