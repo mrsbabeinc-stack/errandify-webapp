@@ -340,4 +340,59 @@ const testDatabase = async () => {
       console.log('Continuing without cron jobs...');
     }
   });
+
+  try {
+    // Create landmarks table for postal code resolution
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS landmarks (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL UNIQUE,
+        postal_code CHAR(6) NOT NULL,
+        address TEXT,
+        category VARCHAR(50),
+        alternate_names TEXT[] DEFAULT '{}',
+        latitude DECIMAL(10, 8),
+        longitude DECIMAL(11, 8),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    
+    // Create indexes
+    await db.query('CREATE INDEX IF NOT EXISTS idx_landmarks_name ON landmarks(name);');
+    await db.query('CREATE INDEX IF NOT EXISTS idx_landmarks_postal ON landmarks(postal_code);');
+    await db.query('CREATE INDEX IF NOT EXISTS idx_landmarks_category ON landmarks(category);');
+    
+    console.log('Migration: landmarks table checked/created');
+    
+    // Seed initial landmarks if table is empty
+    const checkCount = await db.query('SELECT COUNT(*) as cnt FROM landmarks');
+    if (checkCount.rows[0].cnt === 0) {
+      const seedData = [
+        ['Nan Hua Primary School', '128806', '30 Jalan Lempeng, Clementi, Singapore 128806', 'school', ARRAY['nan hua', 'nanhua primary']],
+        ['Marina Bay Sands', '018956', '10 Bayfront Avenue, Marina Bay, Singapore 018956', 'landmark', ARRAY['mbs', 'marina bay']],
+        ['National Library Board', '179103', '100 Victoria Street, City Hall, Singapore 179103', 'library', ARRAY['national library', 'nlb']],
+        ['Clementi Mall', '129603', '3155 Commonwealth Avenue West, Clementi, Singapore 129603', 'mall', ARRAY['clementi']],
+        ['Gardens by the Bay', '018953', '18 Marina Gardens Drive, Marina Bay, Singapore 018953', 'landmark', ARRAY['gardens', 'bay']],
+        ['Singapore Zoo', '729826', '80 Mandai Lake Road, Mandai, Singapore 729826', 'landmark', ARRAY['zoo', 'mandai']],
+        ['Sentosa Island', '098269', 'Sentosa, Singapore 098269', 'landmark', ARRAY['sentosa']],
+        ['Orchard Road', '238801', 'Orchard Road, Orchard, Singapore 238801', 'shopping', ARRAY['orchard']],
+        ['Changi Airport', '918141', '65 Airport Boulevard, Changi, Singapore 918141', 'airport', ARRAY['airport', 'changi']],
+        ['Pulau Ubin', '508667', 'Pulau Ubin, Singapore 508667', 'landmark', ARRAY['ubin']]
+      ];
+      
+      for (const [name, postal, address, category, altNames] of seedData) {
+        await db.query(
+          `INSERT INTO landmarks (name, postal_code, address, category, alternate_names) 
+            VALUES ($1, $2, $3, $4, $5) 
+            ON CONFLICT (name) DO NOTHING`,
+          [name, postal, address, category, altNames]
+        );
+      }
+      console.log('Migration: Seeded landmarks table with 10 initial entries');
+    }
+  } catch (error) {
+    console.warn('Migration: landmarks table error:', error);
+  }
+
 })();
