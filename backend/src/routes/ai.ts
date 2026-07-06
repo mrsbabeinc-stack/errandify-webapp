@@ -1725,28 +1725,40 @@ router.post('/transcribe', async (req: Request, res: Response) => {
     }
 
     try {
-      // Try Qwen speech recognition endpoint with proper format
-      console.log('[Transcribe] Calling Qwen speech-to-text...');
+      // Use Qwen Paraformer API for speech-to-text
+      // The API expects base64 audio in the request body
+      console.log('[Transcribe] Calling Qwen Paraformer speech-to-text...');
+
       const qwenResponse = await axios.post(
         'https://dashscope.aliyuncs.com/api/v1/services/aigc/speech-to-text/transcription',
         {
           model: 'paraformer-realtime',
-          audio_url: `data:audio/wav;base64,${audio}`,
+          audio: audio, // Send base64 audio directly, not as data URI
         },
         {
           headers: {
             'Authorization': `Bearer ${qwenApiKey}`,
             'Content-Type': 'application/json',
           },
-          timeout: 30000,
+          timeout: 35000,
         }
       );
 
-      console.log('[Transcribe] Qwen response:', qwenResponse.data);
+      console.log('[Transcribe] Response status:', qwenResponse.status);
+      console.log('[Transcribe] Response data keys:', Object.keys(qwenResponse.data || {}));
 
-      const transcribedText = qwenResponse.data?.output?.text?.trim() || qwenResponse.data?.text?.trim();
+      // Try multiple response formats from Qwen API
+      let transcribedText = '';
 
-      if (transcribedText && !transcribedText.includes('error')) {
+      if (qwenResponse.data?.output?.text) {
+        transcribedText = qwenResponse.data.output.text.trim();
+      } else if (qwenResponse.data?.text) {
+        transcribedText = qwenResponse.data.text.trim();
+      } else if (qwenResponse.data?.result) {
+        transcribedText = qwenResponse.data.result.trim();
+      }
+
+      if (transcribedText && transcribedText.length > 0) {
         console.log('[Transcribe] ✅ Success:', transcribedText.substring(0, 100));
         return res.json({
           success: true,
@@ -1754,14 +1766,21 @@ router.post('/transcribe', async (req: Request, res: Response) => {
             text: transcribedText,
           },
         });
+      } else {
+        console.warn('[Transcribe] No text extracted from response');
       }
     } catch (qwenErr: any) {
-      console.warn('[Transcribe] Qwen API error:', qwenErr.message);
+      console.error('[Transcribe] Qwen API error:', {
+        status: qwenErr.response?.status,
+        statusText: qwenErr.response?.statusText,
+        message: qwenErr.message,
+        code: qwenErr.code,
+      });
       // Continue to fallback
     }
 
-    // Fallback: Return placeholder message if transcription fails
-    console.log('[Transcribe] Transcription failed, returning fallback');
+    // Fallback: Return empty text - user will type manually
+    console.log('[Transcribe] Transcription attempt failed, allowing manual input');
     res.json({
       success: true,
       data: {
@@ -1771,7 +1790,7 @@ router.post('/transcribe', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Transcribe] Unexpected error:', error.message);
 
-    // Return empty text to allow manual input
+    // Always allow manual input as fallback
     res.json({
       success: true,
       data: {
