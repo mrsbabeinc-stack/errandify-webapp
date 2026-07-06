@@ -14,6 +14,7 @@ import db from '../../db.js';
 import { normalizePostalCode } from '../postalCodeNormalizer.js';
 import { getPlanningAreaFromPostalCode } from '../postalCodeToAreaLookup.js';
 import { queryMapbox } from './mapboxProvider.js';
+import { getAddressFromPostalCode } from '../postalCodeService.js';
 
 export interface AddressLookupResult {
   postal_code: string;
@@ -35,6 +36,19 @@ export interface AddressLookupResult {
  * @param postalCode - Input postal code (may have spaces, "S" prefix, etc)
  * @returns Complete address data with area and coordinates, or null if unable to verify
  */
+
+function extractAreaFromAddress(address: string): string | undefined {
+  // Extract planning area from address string if present
+  const areas = ['Raffles Place', 'Downtown Core', 'Marina Bay', 'Bukit Merah', 'Outram', 'Orchard', 'Clementi', 'Novena', 'Tanjong Pagar', 'Serangoon', 'Tampines', 'Bedok', 'Geylang', 'Hougang', 'Sengkang', 'Punggol', 'Yishun', 'Woodlands', 'Sembawang', 'Ang Mo Kio', 'Bishan', 'Toa Payoh', 'Choa Chu Kang', 'Bukit Timah', 'Clementi', 'Jurong East', 'Jurong West', 'Boon Lay', 'Pasir Ris'];
+  
+  for (const area of areas) {
+    if (address.includes(area)) {
+      return area;
+    }
+  }
+  return undefined;
+}
+
 export async function lookupAddress(postalCode: string): Promise<AddressLookupResult | null> {
   const normalized = normalizePostalCode(postalCode);
 
@@ -53,11 +67,57 @@ export async function lookupAddress(postalCode: string): Promise<AddressLookupRe
 
     console.log('[AddressProvider] Cache miss for', normalized);
 
-    // Query Mapbox (primary provider)
+    // Try Mapbox first (if configured)
     const mapboxResult = await queryMapbox(normalized);
     if (mapboxResult) {
       const addressData = await enrichWithAreaAndCache(mapboxResult);
       return addressData;
+    }
+
+    // Fallback: Try OneMap
+    try {
+      const onemapUrl = `https://www.onemap.sg/api/common/elastic/search?searchVal=${normalized}&returnGeom=Y&getAddrDetails=Y`;
+      const onemapResponse = await fetch(onemapUrl, { timeout: 5000 });
+      const data = await onemapResponse.json();
+      
+      if (data?.results?.length > 0) {
+        const result = data.results[0];
+        const oneMapData = {
+          postal_code: normalized,
+          formatted_address: result.ADDRESS || `Singapore ${normalized}`,
+          latitude: result.LATITUDE ? parseFloat(result.LATITUDE) : undefined,
+          longitude: result.LONGITUDE ? parseFloat(result.LONGITUDE) : undefined,
+          area: undefined,
+          provider: 'OneMap',
+          confidence: 0.8
+        };
+        
+        // Try to get area from coordinates
+        const areaFromCoords = await getPlanningAreaFromCoords(result.LATITUDE, result.LONGITUDE);
+        if (areaFromCoords) {
+          oneMapData.area = areaFromCoords;
+        }
+        
+        // Cache it
+        await enrichWithAreaAndCache(oneMapData);
+        console.log('[AddressProvider] ✅ OneMap fallback success:', oneMapData.formatted_address);
+        return oneMapData;
+      }
+    } catch (onemapErr) {
+      console.log('[AddressProvider] OneMap fallback failed');
+    }
+
+    // Final fallback: Use hardcoded postal code database
+    const dbAddress = getAddressFromPostalCode(normalized);
+    if (dbAddress) {
+      console.log('[AddressProvider] ✅ Database fallback success:', dbAddress);
+      return {
+        postal_code: normalized,
+        formatted_address: dbAddress,
+        area: extractAreaFromAddress(dbAddress),
+        provider: 'Database',
+        confidence: 0.6
+      };
     }
 
     console.log('[AddressProvider] All providers failed for', normalized);
