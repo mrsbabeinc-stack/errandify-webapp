@@ -1197,7 +1197,20 @@ router.post('/suggestions', async (req: Request, res: Response) => {
           messages: [
             {
               role: 'user',
-              content: `You are a skills assessment expert. Given a task, list 4-5 specific skills required to complete it successfully. Return ONLY the skills as a comma-separated list. Be specific to THIS task, not generic.\n\nTask: "${title}"\nCategory: ${detectedCategory}\nWhat specific skills are required?`,
+              content: `You are a certification and qualification expert. Given a task, list 3-4 specific certifications, licenses, or professional qualifications required. Focus on REAL credentials that doers should have or can verify.
+
+EXAMPLES:
+- "fix electrical wiring" → "Electrician License, Electrical Safety Certification, Building Code Knowledge"
+- "teach math to child" → "Math Teaching Certification, Early Education Diploma, Subject Matter Expertise"
+- "care for elderly" → "Elderly Care Certification, First Aid CPR Certification, Dementia Care Training"
+- "clean commercial building" → "Commercial Cleaning Certification, OSHA Safety Training, Chemical Handling License"
+- "tutor english" → "English Language Teaching Certification, TOEFL/IELTS Examiner Qualification"
+
+Return ONLY the certifications as a comma-separated list. Be specific to THIS task.
+
+Task: "${title}"
+Category: ${detectedCategory}
+What specific certifications or qualifications are needed?`,
             },
           ],
         },
