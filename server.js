@@ -285,18 +285,43 @@ app.post('/api/ai/extract-task-info', (req, res) => {
       }
     }
 
+    // Parse date from input (tomorrow, today, specific date, etc)
+    let date = new Date().toISOString().split('T')[0]; // default today
+    if (userInput.toLowerCase().includes('tomorrow')) {
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      date = tomorrow.toISOString().split('T')[0];
+    }
+
+    // Parse time from input (5pm, 3pm, etc)
+    let time = '10:00'; // default
+    const timeMatch = userInput.match(/(\d{1,2})(am|pm|:\d{2})?/i);
+    if (timeMatch) {
+      let hour = parseInt(timeMatch[1]);
+      if (timeMatch[2] && timeMatch[2].toLowerCase().includes('pm') && hour !== 12) {
+        hour += 12;
+      }
+      time = `${String(hour).padStart(2, '0')}:00`;
+    }
+
+    // Extract title (first 50 chars or up to first comma)
+    const titleEnd = userInput.indexOf(',') > 0 ? userInput.indexOf(',') : 50;
+    let title = userInput.substring(0, titleEnd).trim();
+    // Remove postal codes from title
+    title = title.replace(/at\s+\d+,?/i, '').trim();
+    if (!title) title = 'Help needed';
+
     res.json({
       success: true,
       data: {
-        title: userInput.substring(0, 100) || 'Help needed',
+        title: title,
         category: 'home-maintenance',
         description: userInput,
         budget: budget,
-        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        deadline: new Date(new Date(date).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         location: '',
         postal_code: '',
-        date: new Date().toISOString().split('T')[0],
-        time: '10:00',
+        date: date,
+        time: time,
         duration: '',
         durationUnit: 'Hr',
         area: '',
