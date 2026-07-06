@@ -262,25 +262,43 @@ app.get('/api/shop/vouchers', (req, res) => {
 // Hana AI task extraction endpoint (mock for demo)
 app.post('/api/ai/extract-task-info', (req, res) => {
   try {
-    const { text } = req.body;
+    const { input, text } = req.body;
+    const userInput = input || text || '';
+
+    if (!userInput) {
+      return res.status(400).json({ error: 'No input provided' });
+    }
 
     // Simple mock extraction - parse the text for common patterns
-    const budgetMatch = text.match(/\$?(\d+)/);
+    const budgetMatch = userInput.match(/\$?(\d+)/);
     const budget = budgetMatch ? parseInt(budgetMatch[1]) : 50;
 
     res.json({
       success: true,
       data: {
-        title: text.substring(0, 100) || 'Help needed',
+        title: userInput.substring(0, 100) || 'Help needed',
         category: 'home-maintenance',
-        description: text,
+        description: userInput,
         budget: budget,
         deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         location: '',
-        postal_code: ''
+        postal_code: '',
+        date: new Date().toISOString().split('T')[0],
+        time: '10:00',
+        duration: '',
+        durationUnit: 'Hr',
+        area: '',
+        fullAddress: '',
+        notes: '',
+        isRecurring: false,
+        repeatEvery: 1,
+        repeatUnit: 'week',
+        occurrences: 1,
+        suggestedSkills: []
       }
     });
   } catch (error) {
+    console.error('Extract task error:', error);
     res.status(400).json({ error: 'Failed to extract task info' });
   }
 });
