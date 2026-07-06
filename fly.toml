@@ -2,7 +2,6 @@ app = "errandify-webapp"
 primary_region = "sin"
 
 [build]
-  builder = "paket"
 
 [env]
   NODE_ENV = "production"

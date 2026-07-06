@@ -63,7 +63,7 @@ export default function LandingPage() {
 
           {/* CTA Button */}
           <button
-            onClick={() => window.location.href = '/login'}
+            onClick={() => window.location.href = '/auth'}
             className="w-full max-w-xs bg-errandify-orange text-white py-3 rounded-full font-bold text-sm hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl mb-3"
           >
             Get Started
@@ -72,7 +72,7 @@ export default function LandingPage() {
           {/* Sign In Link */}
           <p className="text-sm text-gray-700 text-center mb-4">
             Already have an account?{' '}
-            <a href="/login" className="text-errandify-orange font-bold hover:underline">
+            <a href="/auth" className="text-errandify-orange font-bold hover:underline">
               Sign in
             </a>
           </p>

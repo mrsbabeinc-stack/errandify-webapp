@@ -84,17 +84,25 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
     setLoading(true);
 
     try {
+      console.log('🔐 Demo login attempt:', account);
       const response = await axios.post(
         `${API_URL}/api/auth/demo-login`,
         { account }
       );
 
+      console.log('✅ Login response:', response.data);
       localStorage.setItem('token', response.data.data.accessToken);
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
 
       const userData = response.data.data.user;
+      console.log('📍 Calling onLogin with role:', userData.role);
       onLogin(userData.role || 'asker');
+      // Redirect after a brief delay to ensure state updates
+      setTimeout(() => {
+        navigate('/home');
+      }, 100);
     } catch (err: any) {
+      console.error('❌ Login error:', err);
       setError(err.response?.data?.error || 'Login failed');
       setLoading(false);
     }
