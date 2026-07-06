@@ -478,26 +478,36 @@ export default function HanaTaskCreation({
 
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
       let silenceCount = 0;
-      const silenceThreshold = 30; // volume threshold
-      const silenceFrames = 10; // ~2 seconds of silence (100ms per frame)
+      const silenceThreshold = 15; // Lower threshold = more sensitive (detects quieter silence)
+      const silenceFrames = 20; // ~2 seconds of silence (100ms per frame)
+      let hasDetectedSound = false;
 
       const checkSilence = () => {
         analyser.getByteFrequencyData(dataArray);
         const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
 
-        if (average < silenceThreshold) {
-          silenceCount++;
-          console.log('[VAD] Silence count:', silenceCount, 'Average volume:', average);
+        // Wait until we detect actual sound first
+        if (!hasDetectedSound && average > silenceThreshold + 10) {
+          hasDetectedSound = true;
+          console.log('[VAD] Sound detected, starting silence monitor');
+        }
 
-          // Auto-stop after 2 seconds of silence
-          if (silenceCount >= silenceFrames) {
-            console.log('[VAD] Silence detected - auto-stopping recording');
-            stopRecording();
-            audioContext.close();
-            return;
+        // Only check for silence after sound was detected
+        if (hasDetectedSound) {
+          if (average < silenceThreshold) {
+            silenceCount++;
+            console.log('[VAD] Silence count:', silenceCount, '/', silenceFrames);
+
+            // Auto-stop after 2+ seconds of silence
+            if (silenceCount >= silenceFrames) {
+              console.log('[VAD] ✅ Silence detected - auto-stopping');
+              stopRecording();
+              audioContext.close();
+              return;
+            }
+          } else {
+            silenceCount = 0; // Reset if sound detected
           }
-        } else {
-          silenceCount = 0; // Reset if sound detected
         }
 
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
@@ -505,8 +515,8 @@ export default function HanaTaskCreation({
         }
       };
 
-      // Start silence detection
-      setTimeout(checkSilence, 500); // Start checking after 500ms
+      // Start silence detection after 1 second (let mic warm up)
+      setTimeout(checkSilence, 1000);
     } catch (err) {
       console.error('Microphone access denied:', err);
       alert('Please allow microphone access to use voice input');
