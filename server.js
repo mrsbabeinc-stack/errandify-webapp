@@ -141,6 +141,76 @@ app.post('/api/errands', async (req, res) => {
   }
 });
 
+// Voucher redemption endpoint
+app.post('/api/vouchers/:voucherId/redeem', async (req, res) => {
+  try {
+    const { voucherId } = req.params;
+    const { user_id } = req.body;
+
+    // Mock voucher data for demo
+    const vouchers = {
+      'starbucks-10': { name: 'Starbucks $10', discount: 10, cost: 500 },
+      'kfc-voucher': { name: 'KFC Voucher', discount: 15, cost: 450 },
+      'cathay-cineplex': { name: 'Cathay Cineplex', discount: 20, cost: 350 },
+      'changi-lounge': { name: 'Changi Lounge', discount: 50, cost: 1000 }
+    };
+
+    const voucher = vouchers[voucherId];
+    if (!voucher) {
+      return res.status(404).json({ error: 'Voucher not found' });
+    }
+
+    // Mock redemption - just return success
+    res.json({
+      success: true,
+      message: `Successfully redeemed ${voucher.name}!`,
+      data: {
+        voucher_id: voucherId,
+        user_id: user_id || '1',
+        discount_value: voucher.discount,
+        redeemed_at: new Date().toISOString(),
+        status: 'completed'
+      }
+    });
+  } catch (error) {
+    console.error('Error redeeming voucher:', error);
+    res.status(500).json({ error: 'Failed to redeem voucher', details: error.message });
+  }
+});
+
+// Get notifications endpoint
+app.get('/api/notifications', (req, res) => {
+  try {
+    // Mock notifications for demo
+    const notifications = [
+      {
+        id: 1,
+        type: 'bid_placed',
+        title: 'New Bid Received',
+        message: 'Someone bid on your errand',
+        read: false,
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 2,
+        type: 'bid_accepted',
+        title: 'Bid Accepted',
+        message: 'Your bid was accepted',
+        read: false,
+        created_at: new Date().toISOString()
+      }
+    ];
+
+    res.json({
+      success: true,
+      data: notifications
+    });
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ error: 'Failed to fetch notifications' });
+  }
+});
+
 // React Router fallback
 app.get('*', (req, res) => {
   const indexPath = path.join(frontendPath, 'index.html');
