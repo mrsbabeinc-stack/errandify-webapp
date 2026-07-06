@@ -150,7 +150,7 @@ export default function HanaTaskCreation({
       // Update task data with extracted info - USE EXTRACTED CATEGORY, NOT RANDOM
       const updatedTaskData: TaskData = {
         title: extracted.title || userInput.substring(0, 50),
-        description: extracted.description || '',
+        description: '', // Keep empty - user fills in their own description
         category: extracted.category || '', // USE extracted category directly, NOT random
         location: extracted.location || '',
         area: extracted.area || '',
