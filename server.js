@@ -16,51 +16,16 @@ const frontendPath = fs.existsSync(distPath) ? distPath : publicPath;
 console.log('Serving from:', frontendPath);
 console.log('Path exists:', fs.existsSync(frontendPath));
 
-// Manual file serving with direct readFile
-app.get('/assets/:filename', (req, res) => {
-  const file = path.join(frontendPath, 'assets', req.params.filename);
-
-  // Security: prevent path traversal
-  if (!file.startsWith(path.join(frontendPath, 'assets'))) {
-    return res.status(403).send('Forbidden');
+// Serve static files with proper headers
+app.use(express.static(frontendPath, {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    } else if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
   }
-
-  fs.readFile(file, (err, data) => {
-    if (err) {
-      console.error('File not found:', file);
-      return res.status(404).send('Not found');
-    }
-
-    // Set correct MIME type
-    if (req.params.filename.endsWith('.js')) {
-      res.type('application/javascript');
-    } else if (req.params.filename.endsWith('.css')) {
-      res.type('text/css');
-    }
-
-    res.send(data);
-  });
-});
-
-// Serve images
-app.get('/images/:filename', (req, res) => {
-  const file = path.join(frontendPath, 'images', req.params.filename);
-  fs.readFile(file, (err, data) => {
-    if (err) return res.status(404).send('Not found');
-    res.send(data);
-  });
-});
-
-// Serve other static files
-app.get('/:filename', (req, res) => {
-  const file = path.join(frontendPath, req.params.filename);
-  if (file.includes('..')) return res.status(403).send('Forbidden');
-
-  fs.readFile(file, (err, data) => {
-    if (err) return res.status(404).send('Not found');
-    res.send(data);
-  });
-});
+}));
 
 // Health check
 app.get('/test', (req, res) => {
