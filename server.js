@@ -276,9 +276,9 @@ app.post('/api/ai/extract-task-info', (req, res) => {
 
     console.log('[Extract] Input:', input);
 
-    // Extract postal code - prefer AI-detected landmark postal code, fall back to regex
+    // Extract postal code from user input (6-digit number)
     const postalCodeMatch = input.match(/\b(\d{6})\b/);
-    let postalCode = detectedPostalCode || (postalCodeMatch ? postalCodeMatch[1] : '');
+    let postalCode = postalCodeMatch ? postalCodeMatch[1] : '';
 
     // Extract budget (smart extraction)
     let budget = '';
@@ -382,11 +382,9 @@ Task title:`,
       .join(' ');
     console.log('[Extract] Final title:', title);
 
-    // AI-powered category + landmark detection using Qwen
+    // Smart category detection - Qwen ONLY for category (NOT for postal codes)
     const lowerInput = input.toLowerCase();
     let category = 'home-maintenance';
-    let detectedLandmark = '';
-    let detectedPostalCode = '';
 
     try {
       const qwenCategoryResponse = await axios.post(
@@ -394,21 +392,14 @@ Task title:`,
         {
           model: 'qwen-plus',
           input: {
-            prompt: `Analyze this Singapore task and extract:
-1. CATEGORY: Which service type? (pet-care, childcare-tutoring, cleaning-household, shopping-errands, delivery-moving, food-beverage, beauty-personal-care, tutoring-lessons, photography, design-creative, or home-maintenance)
-2. LANDMARK: Is there a landmark/school/place name? Extract it exactly.
-3. POSTAL_CODE: What's the postal code for that landmark in Singapore (6 digits)?
+            prompt: `What service category is this task? Answer with ONLY the category name:
+pet-care, childcare-tutoring, cleaning-household, shopping-errands, delivery-moving, food-beverage, beauty-personal-care, tutoring-lessons, photography, design-creative, or home-maintenance
 
-Task: "${input}"
-
-Format your response EXACTLY as:
-CATEGORY: [category]
-LANDMARK: [landmark or "NONE"]
-POSTAL_CODE: [6 digits or "NONE"]`,
+Task: "${input}"`,
           },
           parameters: {
             temperature: 0.1,
-            max_tokens: 100,
+            max_tokens: 30,
           },
         },
         {
@@ -421,33 +412,21 @@ POSTAL_CODE: [6 digits or "NONE"]`,
       );
 
       if (qwenCategoryResponse.data?.output?.text) {
-        const response = qwenCategoryResponse.data.output.text;
-        console.log('[Extract] Qwen category response:', response);
+        const response = qwenCategoryResponse.data.output.text.toLowerCase().trim();
+        const validCategories = ['pet-care', 'childcare-tutoring', 'cleaning-household', 'shopping-errands', 'delivery-moving', 'food-beverage', 'beauty-personal-care', 'tutoring-lessons', 'photography', 'design-creative', 'home-maintenance'];
 
-        // Parse response
-        const categoryMatch = response.match(/CATEGORY:\s*([a-z-]+)/i);
-        const landmarkMatch = response.match(/LANDMARK:\s*([^\n]+)/i);
-        const postalMatch = response.match(/POSTAL_CODE:\s*(\d{6})/i);
-
-        if (categoryMatch && categoryMatch[1] && categoryMatch[1] !== 'none') {
-          category = categoryMatch[1].toLowerCase();
-          console.log('[Extract] Detected category:', category);
-        }
-
-        if (landmarkMatch && landmarkMatch[1] && !landmarkMatch[1].includes('NONE')) {
-          detectedLandmark = landmarkMatch[1].trim();
-          console.log('[Extract] Detected landmark:', detectedLandmark);
-        }
-
-        if (postalMatch && postalMatch[1]) {
-          detectedPostalCode = postalMatch[1];
-          console.log('[Extract] Detected postal code:', detectedPostalCode);
+        for (const cat of validCategories) {
+          if (response.includes(cat)) {
+            category = cat;
+            console.log('[Extract] Qwen detected category:', category);
+            break;
+          }
         }
       }
     } catch (aiErr) {
       console.warn('[Extract] Qwen category detection failed:', aiErr.message);
-      // Fallback to simple keyword detection
-      if (lowerInput.includes('pick up') || lowerInput.includes('dropoff') || lowerInput.includes('drop off') || lowerInput.includes('school') || lowerInput.includes('kindergarten')) category = 'childcare-tutoring';
+      // Fallback to keyword detection
+      if (lowerInput.includes('pick up') || lowerInput.includes('dropoff') || lowerInput.includes('drop off') || lowerInput.includes('school') || lowerInput.includes('kindergarten') || lowerInput.includes('primary')) category = 'childcare-tutoring';
       else if (lowerInput.includes('walk') || lowerInput.includes('dog') || lowerInput.includes('pet')) category = 'pet-care';
       else if (lowerInput.includes('clean') || lowerInput.includes('laundry')) category = 'cleaning-household';
       else if (lowerInput.includes('move') || lowerInput.includes('deliver') || lowerInput.includes('moving')) category = 'delivery-moving';
