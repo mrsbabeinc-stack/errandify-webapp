@@ -520,56 +520,69 @@ export default function HanaTaskCreation({
     setIsRecording(false);
 
     mediaRecorderRef.current.onstop = async () => {
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+      try {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
 
-      // Convert to base64 and send to Qwen API for transcription
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
+        // Convert to base64 and send to Qwen API for transcription
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          try {
+            const base64Audio = (reader.result as string).split(',')[1];
 
-        try {
-          console.log('[Transcribe] Sending audio of', base64Audio.length, 'chars');
-          setHanaMessage('🎤 Transcribing your audio...');
+            if (!base64Audio || base64Audio.length < 50) {
+              setHanaMessage('🎤 Recording too short. Please try again! 😊');
+              setCurrentStep('input');
+              return;
+            }
 
-          const response = await axios.post(
-            `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/transcribe`,
-            { audio: base64Audio },
-            { timeout: 40000 }
-          );
+            console.log('[Transcribe] Sending audio, size:', base64Audio.length);
+            setHanaMessage('🎤 Transcribing audio...');
 
-          const transcribedText = (response.data?.data?.text || '').trim();
-          console.log('[Transcribe] Response:', transcribedText);
+            const response = await axios.post(
+              `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/transcribe`,
+              { audio: base64Audio },
+              { timeout: 50000 } // 50 second timeout
+            );
 
-          if (!transcribedText) {
-            // Transcription failed or returned empty, show friendly message
-            setHanaMessage('🎤 I had trouble with that audio. Please type or try again. 😊');
+            const transcribedText = (response.data?.data?.text || '').trim();
+            console.log('[Transcribe] Response text:', transcribedText.substring(0, 80));
+
+            if (transcribedText && transcribedText.length > 0) {
+              // Success - set input and auto-submit
+              console.log('[Transcribe] ✅ Success');
+              setInput(transcribedText);
+
+              // Auto-submit the transcribed text after a short delay
+              setTimeout(() => {
+                handleSendMessage({ preventDefault: () => {} } as any);
+              }, 500);
+            } else {
+              // Empty response - allow manual typing
+              console.warn('[Transcribe] Empty response');
+              setHanaMessage('🎤 Please type what you need! 😊');
+              setCurrentStep('input');
+            }
+          } catch (err: any) {
+            console.error('[Transcribe] Error:', err.message || err.code);
+            setHanaMessage('🎤 Please type your request! 😊');
             setCurrentStep('input');
-          } else if (transcribedText.includes('[') && transcribedText.includes(']')) {
-            // Fallback message returned
-            setHanaMessage('🎤 Let me try that again. Please type what you need. 😊');
-            setCurrentStep('input');
-          } else {
-            // Success - set input and auto-submit
-            console.log('[Transcribe] ✅ Got text:', transcribedText);
-            setInput(transcribedText);
-
-            // Auto-submit the transcribed text after a short delay
-            setTimeout(() => {
-              handleSendMessage({ preventDefault: () => {} } as any);
-            }, 500);
           }
-        } catch (err: any) {
-          console.error('[Transcribe] Error:', err.message);
-          setHanaMessage('🎤 Connection issue. Please type or try again. 😊');
-          setCurrentStep('input');
-        }
-      };
+        };
 
-      reader.readAsDataURL(audioBlob);
+        reader.readAsDataURL(audioBlob);
+      } catch (err: any) {
+        console.error('[Stop Recording] Error:', err.message);
+        setHanaMessage('🎤 Error. Please type instead! 😊');
+        setCurrentStep('input');
+      }
     };
 
-    // Stop all tracks
-    mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    // Stop all audio tracks
+    try {
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    } catch (err) {
+      console.warn('[Cleanup] Could not stop tracks');
+    }
   };
 
   if (!isOpen) return null;
