@@ -12,5 +12,7 @@ services:
         sync: false
       - key: QWEN_API_KEY
         sync: false
+      - key: MAPBOX_API_KEY
+        sync: false
       - key: QWEN_API_BASE
         value: https://dashscope.aliyuncs.com/compatible-mode/v1
