@@ -269,7 +269,7 @@ app.get('/api/shop/vouchers', (req, res) => {
 });
 
 // Hana AI task extraction endpoint (mock for demo)
-app.post('/api/ai/extract-task-info', (req, res) => {
+app.post('/api/ai/extract-task-info', async (req, res) => {
   try {
     let { input } = req.body;
     if (!input) return res.status(400).json({ error: 'input required' });
@@ -351,11 +351,12 @@ Task title:`,
       // Fallback to regex if Qwen fails
       title = input
         .replace(/\s*\$.*$/i, '') // Remove budget
-        .replace(/\s+for\s+\d+\s*(?:hours?|hrs?|h|minutes?|mins?|m)/i, '') // Remove duration
+        .replace(/\s+(?:for\s+)?\d+\s*(?:hours?|hrs?|h|minutes?|mins?|m)\b/i, '') // Remove duration
         .replace(/\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i, '') // Remove time
         .replace(/\s+(?:tomorrow|today|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\b/i, '') // Remove dates
-        .replace(/\s+\d{6}\b/g, '') // Remove postal codes
-        .replace(/\s+(?:at|on)\s*$/i, '') // Remove trailing at/on
+        .replace(/[,\s]+\d{6}\b/g, '') // Remove postal codes and adjacent commas
+        .replace(/\s+(?:at|on)\b/i, '') // Remove at/on
+        .replace(/,\s*,+/g, '') // Remove multiple commas
         .replace(/\s+/g, ' ')
         .trim();
     }
