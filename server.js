@@ -262,70 +262,137 @@ app.get('/api/shop/vouchers', (req, res) => {
 // Hana AI task extraction endpoint (mock for demo)
 app.post('/api/ai/extract-task-info', (req, res) => {
   try {
-    const { input, text } = req.body;
-    const userInput = input || text || '';
+    let { input } = req.body;
+    if (!input) return res.status(400).json({ error: 'input required' });
 
-    if (!userInput) {
-      return res.status(400).json({ error: 'No input provided' });
-    }
+    console.log('[Extract] Input:', input);
 
-    // Simple mock extraction - parse the text for common patterns
-    // Look for "budget $XXX" pattern first, then fall back to last number
-    let budget = 50;
-    const budgetMatch = userInput.match(/budget\s*\$?(\d+)/i);
+    // Extract postal code (6 consecutive digits)
+    const postalCodeMatch = input.match(/\b(\d{6})\b/);
+    const postalCode = postalCodeMatch ? postalCodeMatch[1] : '';
+
+    // Extract budget (smart extraction)
+    let budget = '';
+    const budgetMatch = input.match(/[\$@]\s*(\d+)|budget\s*[\$@]?\s*(\d+)/i);
     if (budgetMatch) {
-      budget = parseInt(budgetMatch[1]);
+      budget = budgetMatch[1] || budgetMatch[2];
     } else {
-      // Fall back to looking for last number (which might be budget)
-      const numbers = userInput.match(/\$?(\d+)/g);
-      if (numbers && numbers.length > 0) {
-        // Use the last number as budget (usually at the end after "budget")
-        const lastNum = numbers[numbers.length - 1];
-        budget = parseInt(lastNum.replace('$', ''));
+      const allNumbers = input.match(/\b(\d+)\b/g) || [];
+      const budgetCandidates = allNumbers
+        .filter(num => num.length < 6)
+        .map(num => parseInt(num))
+        .filter(num => num >= 8 && num <= 999);
+      if (budgetCandidates.length > 0) {
+        budget = budgetCandidates[0].toString();
       }
     }
+    console.log('[Extract] Budget:', budget || '(empty)');
 
-    // Parse date from input (tomorrow, today, specific date, etc)
-    let date = new Date().toISOString().split('T')[0]; // default today
-    if (userInput.toLowerCase().includes('tomorrow')) {
-      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      date = tomorrow.toISOString().split('T')[0];
+    // Extract title - clean up metadata
+    let title = input
+      .replace(/at\s+\d{6},?/i, '')
+      .replace(/budget\s*\$?\d+/i, '')
+      .replace(/,?\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)/i, '')
+      .replace(/(?:tomorrow|today|in\s+\d+\s+days?|next\s+\w+|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)/i, '')
+      .replace(/for\s+[\d.]+\s*(?:hour|hr|min)s?/i, '')
+      .replace(/^\s*(?:i\s+need|please|can you)\s+/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!title || title.length < 3) {
+      title = input.split(/[,.]|budget/i)[0].trim();
     }
-
-    // Parse time from input (5pm, 3pm, etc)
-    let time = '10:00'; // default
-    const timeMatch = userInput.match(/(\d{1,2})(am|pm|:\d{2})?/i);
-    if (timeMatch) {
-      let hour = parseInt(timeMatch[1]);
-      if (timeMatch[2] && timeMatch[2].toLowerCase().includes('pm') && hour !== 12) {
-        hour += 12;
-      }
-      time = `${String(hour).padStart(2, '0')}:00`;
-    }
-
-    // Extract title (first 50 chars or up to first comma)
-    const titleEnd = userInput.indexOf(',') > 0 ? userInput.indexOf(',') : 50;
-    let title = userInput.substring(0, titleEnd).trim();
-    // Remove postal codes from title
-    title = title.replace(/at\s+\d+,?/i, '').trim();
     if (!title) title = 'Help needed';
+
+    title = title.split(' ')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ')
+      .substring(0, 150);
+    console.log('[Extract] Title:', title);
+
+    // Category detection
+    const lowerInput = input.toLowerCase();
+    let category = 'home-maintenance';
+    if (lowerInput.includes('walk') || lowerInput.includes('dog') || lowerInput.includes('pet')) category = 'pet-care';
+    else if (lowerInput.includes('clean') || lowerInput.includes('laundry')) category = 'cleaning-household';
+    else if (lowerInput.includes('move') || lowerInput.includes('deliver') || lowerInput.includes('moving')) category = 'delivery-moving';
+    else if (lowerInput.includes('shop') || lowerInput.includes('grocery')) category = 'shopping-errands';
+    else if (lowerInput.includes('cook') || lowerInput.includes('food')) category = 'food-beverage';
+
+    // Parse date
+    let date = '';
+    if (/tomorrow/i.test(input)) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      date = tomorrow.toISOString().split('T')[0];
+    } else if (/today|later/i.test(input)) {
+      date = new Date().toISOString().split('T')[0];
+    } else {
+      const dayMatch = input.match(/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)\b/i);
+      if (dayMatch) {
+        const dayMap = { sun:0, mon:1, tue:2, wed:3, thu:4, fri:5, sat:6, sunday:0, monday:1, tuesday:2, wednesday:3, thursday:4, friday:5, saturday:6 };
+        const dayIndex = dayMap[dayMatch[1].toLowerCase()] || 0;
+        const today = new Date();
+        const current = today.getDay();
+        let diff = dayIndex - current;
+        if (diff <= 0) diff += 7;
+        const result = new Date(today);
+        result.setDate(result.getDate() + diff);
+        date = result.toISOString().split('T')[0];
+      }
+    }
+    console.log('[Extract] Date:', date || '(empty)');
+
+    // Parse time
+    let time = '';
+    const timeMatch = input.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)|(\d{1,2})\s*(am|pm)/i);
+    if (timeMatch) {
+      let hours = parseInt(timeMatch[1] || timeMatch[4]);
+      const mins = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+      const period = (timeMatch[3] || timeMatch[5])?.toLowerCase();
+      if (period === 'pm' && hours !== 12) hours += 12;
+      if (period === 'am' && hours === 12) hours = 0;
+      time = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    }
+    console.log('[Extract] Time:', time || '(empty)');
+
+    // Parse duration
+    let duration = '';
+    let durationUnit = 'Hr';
+    const durationMatch = input.match(/(\d+(?:\.\d+)?)\s*(?:hour|hr|h)s?|(\d+(?:\.\d+)?)\s*(?:min|m)(?:ute)?s?/i);
+    if (durationMatch) {
+      duration = durationMatch[1] || durationMatch[2];
+      if (durationMatch[2]) durationUnit = 'Min';
+    }
+    console.log('[Extract] Duration:', duration, durationUnit);
+
+    // Generate description
+    const descriptionMap = {
+      'home-maintenance': 'Professional household help needed. Specify area and type of work required.',
+      'pet-care': 'Pet care service needed. Specify pet type, size, and what\'s needed.',
+      'delivery-moving': 'Delivery or moving assistance needed. Specify items and locations.',
+      'shopping-errands': 'Shopping assistance needed. Specify items and stores.',
+      'food-beverage': 'Food preparation or delivery needed. Specify meal type and preferences.',
+      'cleaning-household': 'Professional cleaning needed. Specify areas and type of cleaning.',
+    };
+    const description = descriptionMap[category] || 'Professional assistance needed. Provide specific details.';
 
     res.json({
       success: true,
       data: {
-        title: title,
-        category: 'home-maintenance',
-        description: userInput,
-        budget: budget,
-        deadline: new Date(new Date(date).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        title,
+        category,
+        description,
+        budget: budget ? parseInt(budget) : '',
+        deadline: date ? new Date(new Date(date).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString() : '',
+        date,
+        time,
+        duration,
+        durationUnit,
         location: '',
-        postal_code: '',
-        date: date,
-        time: time,
-        duration: '',
-        durationUnit: 'Hr',
         area: '',
         fullAddress: '',
+        postalCode: postalCode || '',
         notes: '',
         isRecurring: false,
         repeatEvery: 1,
@@ -335,7 +402,7 @@ app.post('/api/ai/extract-task-info', (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Extract task error:', error);
+    console.error('Extract error:', error);
     res.status(400).json({ error: 'Failed to extract task info' });
   }
 });
