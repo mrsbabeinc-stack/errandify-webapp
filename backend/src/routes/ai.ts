@@ -1695,4 +1695,85 @@ Return ONLY valid JSON.`;
   }
 });
 
+// POST /api/ai/transcribe - Transcribe audio to text using Qwen API
+router.post('/transcribe', async (req: Request, res: Response) => {
+  try {
+    const { audio } = req.body;
+
+    if (!audio) {
+      return res.status(400).json({ error: 'Audio data required' });
+    }
+
+    // Convert base64 to buffer
+    const audioBuffer = Buffer.from(audio, 'base64');
+
+    if (audioBuffer.length === 0) {
+      return res.status(400).json({ error: 'Invalid audio data' });
+    }
+
+    console.log('[Transcribe] Processing audio of', audioBuffer.length, 'bytes');
+
+    // Use Qwen API with audio transcription
+    // Qwen models support base64-encoded audio via URL or direct base64
+    const qwenApiKey = process.env.QWEN_API_KEY;
+    if (!qwenApiKey) {
+      return res.status(500).json({ error: 'Qwen API key not configured' });
+    }
+
+    // Prepare audio as base64 data URI
+    const audioDataUri = `data:audio/wav;base64,${audio}`;
+
+    const qwenResponse = await axios.post(
+      'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+      {
+        model: 'qwen-vl-max',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'audio',
+                audio_url: audioDataUri,
+              },
+              {
+                type: 'text',
+                text: 'Please transcribe this audio to text. Return ONLY the transcribed text, nothing else.',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${qwenApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000,
+      }
+    );
+
+    const transcribedText = qwenResponse.data?.output?.text?.trim();
+
+    if (!transcribedText) {
+      console.error('[Transcribe] No text returned from Qwen:', qwenResponse.data);
+      return res.status(500).json({ error: 'Failed to transcribe audio' });
+    }
+
+    console.log('[Transcribe] ✅ Success:', transcribedText.substring(0, 100));
+
+    res.json({
+      success: true,
+      data: {
+        text: transcribedText,
+      },
+    });
+  } catch (error: any) {
+    console.error('[Transcribe] Error:', error.message);
+    res.status(500).json({
+      error: 'Transcription failed',
+      details: error.message,
+    });
+  }
+});
+
 export default router;
