@@ -1724,12 +1724,15 @@ router.post('/transcribe', async (req: Request, res: Response) => {
 
     const qwenApiKey = process.env.QWEN_API_KEY;
     if (!qwenApiKey) {
-      console.warn('[Transcribe] No Qwen API key');
+      console.error('[Transcribe] ❌ QWEN_API_KEY not set in environment!');
       return res.json({ success: true, data: { text: '' } });
     }
 
+    console.log('[Transcribe] Using Qwen API key (first 20 chars):', qwenApiKey.substring(0, 20) + '...');
+
     try {
       // Call Qwen Paraformer via DashScope
+      console.log('[Transcribe] Calling Qwen API...');
       const qwenResponse = await axios.post(
         'https://dashscope.aliyuncs.com/api/v1/services/aigc/speech-to-text/transcription',
         {
@@ -1744,6 +1747,8 @@ router.post('/transcribe', async (req: Request, res: Response) => {
           timeout: 40000,
         }
       );
+
+      console.log('[Transcribe] Qwen API response received:', qwenResponse.status);
 
       // Extract text from response
       let transcribedText = '';
