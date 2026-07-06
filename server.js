@@ -382,6 +382,35 @@ app.post('/api/ai/extract-task-info', (req, res) => {
     };
     const description = descriptionMap[category] || 'Professional assistance needed. Provide specific details.';
 
+    // Map postal code to area using postal code sectors
+    const postalCodeToAreaMap = {
+      '01': 'Raffles Place', '02': 'Cecil Street', '03': 'Tanjong Pagar', '04': 'Outram', '05': 'People\'s Park',
+      '06': 'Chinatown', '07': 'Orchard', '08': 'Pasir Panjang', '09': 'Novena', '10': 'Newton',
+      '11': 'Farrer Park', '12': 'Henderson', '13': 'Balestier', '14': 'Macpherson', '15': 'Paya Lebar',
+      '16': 'Geylang', '17': 'Eunos', '18': 'Bedok', '19': 'Tampines', '20': 'Pasir Ris',
+      '21': 'Punggol', '22': 'Hougang', '23': 'Serangoon', '24': 'Sengkang', '25': 'Choa Chu Kang',
+      '26': 'Jurong West', '27': 'Jurong', '28': 'Jurong East', '29': 'Clementi', '30': 'Bukit Merah',
+      '31': 'Tiong Bahru', '32': 'Queenstown', '33': 'Bukit Timah', '34': 'Ang Mo Kio', '35': 'Bishan',
+      '36': 'Toa Payoh', '37': 'Yishun', '38': 'Sembawang', '39': 'Kranji', '40': 'Woodlands',
+      '41': 'Woodlands', '42': 'Bukit Batok', '43': 'Choa Chu Kang', '44': 'Tuas', '45': 'Jurong East',
+      '46': 'Changi', '47': 'Changi', '48': 'Seletar', '49': 'Seletar', '50': 'Sentosa',
+      '51': 'Bukit Merah', '52': 'Bukit Merah', '53': 'Clementi', '54': 'Clementi', '55': 'Choa Chu Kang',
+      '56': 'Choa Chu Kang', '57': 'Jurong', '58': 'Jurong', '59': 'Jurong East', '60': 'Pasir Ris',
+      '61': 'Pasir Ris', '62': 'Pasir Ris', '63': 'Tampines', '64': 'Tampines', '65': 'Tampines',
+      '66': 'Tampines', '67': 'Tampines', '68': 'Bedok', '69': 'Bedok', '70': 'Bedok',
+      '71': 'Bedok', '72': 'Geylang', '73': 'Geylang', '74': 'Eunos', '75': 'Geylang',
+      '76': 'Katong', '77': 'Macpherson', '78': 'Serangoon', '79': 'Hougang', '80': 'Sengkang',
+      '81': 'Yishun', '82': 'Sembawang'
+    };
+
+    let areaName = '';
+    let fullAddressValue = '';
+    if (postalCode) {
+      const sector = postalCode.substring(0, 2);
+      areaName = postalCodeToAreaMap[sector] || '';
+      fullAddressValue = areaName ? `Singapore ${postalCode}` : '';
+    }
+
     res.json({
       success: true,
       data: {
@@ -394,9 +423,9 @@ app.post('/api/ai/extract-task-info', (req, res) => {
         time,
         duration,
         durationUnit,
-        location: '',
-        area: '',
-        fullAddress: '',
+        location: areaName,
+        area: areaName,
+        fullAddress: fullAddressValue,
         postalCode: postalCode || '',
         notes: '',
         isRecurring: false,
