@@ -686,12 +686,21 @@ export default function HanaTaskCreation({
               />
               <button
                 type="button"
-                onClick={isRecording ? stopRecording : startRecording}
+                onClick={async (e) => {
+                  e.preventDefault();
+                  console.log('[Button] Clicked, isRecording:', isRecording);
+                  if (isRecording) {
+                    await stopRecording();
+                  } else {
+                    await startRecording();
+                  }
+                }}
+                disabled={loading}
                 className={`px-4 py-3 rounded-full font-bold transition-all text-sm flex-shrink-0 ${
                   isRecording
                     ? 'bg-red-500 hover:bg-red-600 text-white'
                     : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                }`}
+                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title={isRecording ? 'Stop recording' : 'Start voice input'}
               >
                 {isRecording ? '⏹️' : '🎤'}
