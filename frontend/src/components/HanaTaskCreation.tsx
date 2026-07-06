@@ -454,119 +454,7 @@ export default function HanaTaskCreation({
     }
   };
 
-  const startRecording = async () => {
-    try {
-      console.log('[Recording] Requesting microphone access...');
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log('[Recording] ✅ Microphone access granted');
-
-      const mediaRecorder = new MediaRecorder(stream);
-      console.log('[Recording] MediaRecorder created');
-
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        console.log('[Recording] Data chunk received:', event.data.size, 'bytes');
-        audioChunksRef.current.push(event.data);
-      };
-
-      mediaRecorder.onerror = (err: any) => {
-        console.error('[Recording] MediaRecorder error:', err);
-        setHanaMessage('🎤 Recording error. Please try again! 😊');
-        setIsRecording(false);
-      };
-
-      mediaRecorder.start();
-      console.log('[Recording] Recording started');
-      setIsRecording(true);
-      setHanaMessage('🎤 Recording... Click ⏹️ when done speaking!');
-    } catch (err: any) {
-      console.error('[Recording] Error:', err.name, err.message);
-      setIsRecording(false);
-      setHanaMessage('🎤 Microphone access needed. Please allow it in settings! 😊');
-    }
-  };
-
-  const stopRecording = async () => {
-    if (!mediaRecorderRef.current) return;
-
-    mediaRecorderRef.current.stop();
-    setIsRecording(false);
-
-    mediaRecorderRef.current.onstop = async () => {
-      try {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-
-        // Try to transcribe via Qwen API
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          try {
-            const base64Audio = (reader.result as string).split(',')[1];
-
-            if (!base64Audio || base64Audio.length < 50) {
-              console.log('[Audio] Recording too short');
-              setHanaMessage('🎤 Recording too short. Please try again! 😊');
-              setCurrentStep('input');
-              return;
-            }
-
-            console.log('[Audio] Size:', base64Audio.length, 'bytes');
-            setHanaMessage('🎤 Processing audio...');
-
-            // Send to transcribe endpoint
-            let transcribedText = '';
-
-            try {
-              const response = await axios.post(
-                `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/transcribe`,
-                { audio: base64Audio },
-                { timeout: 55000 }
-              );
-
-              transcribedText = (response.data?.data?.text || '').trim();
-              console.log('[Audio] Transcribed:', transcribedText.substring(0, 80) || '(empty)');
-            } catch (apiErr: any) {
-              console.error('[Audio] Transcription failed:', apiErr.message);
-              // Continue without transcription - will show manual input prompt
-            }
-
-            if (transcribedText && transcribedText.length > 0) {
-              // Success - auto-submit
-              console.log('[Audio] ✅ Got transcript, submitting...');
-              setInput(transcribedText);
-
-              setTimeout(() => {
-                handleSendMessage({ preventDefault: () => {} } as any);
-              }, 500);
-            } else {
-              // No transcript - show manual input option
-              console.log('[Audio] No transcript, showing manual input');
-              setHanaMessage('🎤 Please type what you need! 😊');
-              setCurrentStep('input');
-            }
-          } catch (err: any) {
-            console.error('[Audio] Error:', err.message);
-            setHanaMessage('🎤 Please type your request! 😊');
-            setCurrentStep('input');
-          }
-        };
-
-        reader.readAsDataURL(audioBlob);
-      } catch (err: any) {
-        console.error('[Recording] Error:', err.message);
-        setHanaMessage('🎤 Please type instead! 😊');
-        setCurrentStep('input');
-      }
-    };
-
-    // Cleanup
-    try {
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-    } catch (err) {
-      console.warn('[Cleanup] Track stop failed');
-    }
-  };
+  // Audio recording removed - using text input only for reliability
 
   if (!isOpen) return null;
 
@@ -678,33 +566,12 @@ export default function HanaTaskCreation({
                     handleSendMessage({ preventDefault: () => {} } as any);
                   }
                 }}
-                placeholder="Type all details here..."
+                placeholder="Type your errand details here..."
                 className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-2xl focus:outline-none focus:border-opacity-100 text-base font-semibold resize-none"
                 rows={2}
-                disabled={loading || isRecording}
+                disabled={loading}
                 autoFocus
               />
-              <button
-                type="button"
-                onClick={async (e) => {
-                  e.preventDefault();
-                  console.log('[Button] Clicked, isRecording:', isRecording);
-                  if (isRecording) {
-                    await stopRecording();
-                  } else {
-                    await startRecording();
-                  }
-                }}
-                disabled={loading}
-                className={`px-4 py-3 rounded-full font-bold transition-all text-sm flex-shrink-0 ${
-                  isRecording
-                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                title={isRecording ? 'Stop recording' : 'Start voice input'}
-              >
-                {isRecording ? '⏹️' : '🎤'}
-              </button>
               <button
                 type="submit"
                 disabled={loading || !input.trim()}
