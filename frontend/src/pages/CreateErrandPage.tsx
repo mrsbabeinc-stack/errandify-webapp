@@ -318,6 +318,10 @@ export default function CreateErrandPage() {
       'admin-business': 'admin-business',
       'donate': 'charity-community',
       'charity-community': 'charity-community',
+      'beauty-personal-care': 'personal-care',
+      'tutoring-lessons': 'childcare-education',
+      'home-maintenance': 'home-maintenance',
+      'cleaning-household': 'cleaning-household',
     };
     return mapping[category] || category;
   };

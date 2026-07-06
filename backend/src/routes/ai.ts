@@ -1164,6 +1164,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       'pet-care': 'petcare',
       'tech-support': 'tech-support',
       'moving-help': 'delivery',
+      'beauty-personal-care': 'beauty',
       // Internal categories (already normalized from extract)
       'eldercare': 'eldercare',
       'eventhelp': 'eventhelp',
@@ -1187,6 +1188,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       'eventhelp': ['Organization', 'Communication', 'Physical Stamina', 'Problem-solving'],
       'tech-support': ['Technical Knowledge', 'Problem-solving', 'Patience', 'Communication'],
       'data-entry': ['Data Entry Skills', 'Accuracy', 'Time Management', 'Attention to Detail'],
+      'beauty': ['Makeup Application', 'Hair Styling', 'Skincare Knowledge', 'Customer Service', 'Hygiene Standards'],
     };
 
     const descriptionSuggestions: Record<string, string> = {
@@ -1199,6 +1201,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       'admin-business': 'Administrative support work. Specify exact tasks (data entry, document preparation, spreadsheet management).',
       'tech-support': 'Technical help for device or software. Specify device type, operating system, and exact problem or issue.',
       'creative-arts': 'Creative services project. Specify deliverable (design, photo, video), style preferences, and deadline.',
+      'beauty': 'Professional beauty and personal care service. Specify services needed (makeup, hair, nails, skincare), your skin type, any allergies, and desired look/style.',
     };
 
     const notesSuggestions: Record<string, string> = {
@@ -1210,6 +1213,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       'eventhelp': 'Ask doer: Event experience? Physical fitness for setup work? Flexibility with timing? Can you follow instructions?',
       'admin-business': 'Ask doer: Software experience (Excel, Google Sheets)? Accuracy record? Attention to detail? Experience with this task type?',
       'tech-support': 'Ask doer: Device expertise? Problem-solving approach? Availability for follow-up? What tools do you typically use?',
+      'beauty': 'Ask doer: Professional qualifications? Experience with your skin/hair type? Products - do you have your own or will I provide? Comfort with product allergies?',
       'creative-arts': 'Ask doer: Portfolio examples? Software/tools you use? Design philosophy? Timeline flexibility? Revision policy?',
     };
 
