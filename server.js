@@ -289,61 +289,41 @@ app.post('/api/ai/extract-task-info', (req, res) => {
     }
     console.log('[Extract] Budget:', budget || '(empty)');
 
-    // AI-powered title extraction using Qwen
+    // Title extraction - smart regex (more reliable than AI for this simple task)
     let title = input;
-    try {
-      const qwenResponse = await axios.post(
-        'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-        {
-          model: 'qwen-plus',
-          messages: [
-            {
-              role: 'system',
-              content: 'Extract task title. Rules: (1) Remove numbers and $ amounts, (2) Remove dates (tomorrow, today, mon-sun), (3) Remove times (am/pm), (4) Remove durations (hours, mins), (5) Remove postal codes, (6) Remove "for" when followed by money/time, (7) Keep only core action (1-5 words). Example: "buy bread from supermarket 150102 tomorrow 10am for 1 hour $100" → "Buy Bread From Supermarket"'
-            },
-            {
-              role: 'user',
-              content: input
-            }
-          ],
-          temperature: 0.2,
-          max_tokens: 40
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${process.env.QWEN_API_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          timeout: 5000
-        }
-      );
 
-      if (qwenResponse.data.choices?.[0]?.message?.content) {
-        title = qwenResponse.data.choices[0].message.content
-          .trim()
-          .replace(/^["'\n]|["'\n]$/g, '') // Remove quotes and newlines
-          .replace(/^-\s*/, '') // Remove leading dash
-          .replace(/\$.*$/i, '') // Remove anything after $
-          .replace(/\bfor\s*\$?\d+/i, '') // Remove "for $100" or "for 100"
-          .replace(/\bfor\s+\d+\s*(?:hours?|mins?|h|m)/i, '') // Remove "for 1 hour"
-          .substring(0, 150)
-          .trim();
-        console.log('[Extract] AI-cleaned title:', title);
-      }
-    } catch (aiErr) {
-      console.warn('[Extract] AI title cleaning failed, using fallback:', aiErr.message);
-      // Fallback to simple regex if AI fails
-      title = input
-        .replace(/\d{6}/g, '') // Remove postal codes
-        .replace(/\bfor\s+\$?\d+/i, '') // Remove "for $100"
-        .replace(/\$?\d+/g, '') // Remove any prices/budget
-        .replace(/\d{1,2}(?::\d{2})?\s*(?:am|pm)/i, '') // Remove times
-        .replace(/(?:tomorrow|today|mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i, '') // Remove dates
-        .replace(/\bfor\s+\d+\s*(?:hours?|hrs?|mins?|h|m)/i, '') // Remove "for 2 hours"
-        .replace(/[\d.]+\s*(?:hours?|hrs?|mins?|h|m)/i, '') // Remove durations
-        .replace(/\s+/g, ' ')
-        .trim();
+    // Remove in specific order to avoid conflicts
+    title = title
+      // 1. Remove everything after $ sign (budgets)
+      .replace(/\s*\$.*$/i, '')
+      // 2. Remove "for X hours/mins" patterns
+      .replace(/\s+for\s+\d+\s*(?:hours?|hrs?|h|minutes?|mins?|m)$/i, '')
+      // 3. Remove time patterns (10am, 2:30pm, etc)
+      .replace(/\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i, '')
+      // 4. Remove date words (tomorrow, today, monday, etc)
+      .replace(/\s+(?:tomorrow|today|tonight|in\s+\d+\s+days?)\b/i, '')
+      .replace(/\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\b/i, '')
+      // 5. Remove postal codes (6 digits)
+      .replace(/\s+\d{6}\b/g, '')
+      // 6. Remove "at" or "on" when followed by location/time
+      .replace(/\s+(?:at|on)\s+(?:\d|[A-Z])/i, ' ')
+      // 7. Remove "at" or "on" at end of string
+      .replace(/\s+(?:at|on)\s*$/i, '')
+      // 8. Remove "for" when not followed by action word
+      .replace(/\s+for\s+(?:the\s+)?(?:1|a)\s+(?:hour|hr)\s*$/i, '')
+      // 9. Clean up extra spaces
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // If title is empty or too short, use first part
+    if (!title || title.length < 3) {
+      title = input.split(/[,.]|budget|tomorrow|today/i)[0].trim() || 'Help needed';
     }
+
+    // Final cleanup - remove any trailing particles
+    title = title
+      .replace(/\s+(?:for|at|on|in)$/i, '')
+      .trim();
 
     if (!title || title.length < 3) {
       title = 'Help needed';
