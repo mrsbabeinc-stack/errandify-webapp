@@ -481,7 +481,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     // Use Qwen to intelligently extract clean title from messy user input
     let cleanedTitle = title;
-    const qwenApiKey = process.env.QWEN_API_KEY || 'sk-ws-H.IEXLEL.Z3E5.MEUCIQC8wObhyMlp03fPr_w_rWelWwHZiVcIOcsp05yntX56fgIgEkEpVo29g6na675nmhk_tr97nUPj3JAHGiSfWrmg4qw';
+    const qwenApiKey = process.env.QWEN_API_KEY;
     const qwenApiBase = process.env.QWEN_API_BASE || 'https://ws-5qpu2xdkh16k4pgo.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1';
 
     console.log('[Extract] Qwen API Key available:', !!qwenApiKey);
@@ -1156,8 +1156,8 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Title and category required' });
     }
 
-    // Get Qwen API key from environment with hardcoded fallback
-    const qwenApiKey = process.env.QWEN_API_KEY || 'sk-ws-H.IEXLEL.Z3E5.MEUCIQC8wObhyMlp03fPr_w_rWelWwHZiVcIOcsp05yntX56fgIgEkEpVo29g6na675nmhk_tr97nUPj3JAHGiSfWrmg4qw';
+    // Get Qwen API key from environment
+    const qwenApiKey = process.env.QWEN_API_KEY;
     const qwenApiBase = process.env.QWEN_API_BASE || 'https://ws-5qpu2xdkh16k4pgo.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1';
 
     console.log('[Suggestions] QWEN CHECK:');
