@@ -3,8 +3,14 @@ services:
     name: errandify-webapp
     env: node
     plan: free
-    buildCommand: npm install && npm run build --prefix frontend
-    startCommand: node server.js
+    buildCommand: npm install && npm run build --prefix frontend && cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: QWEN_API_KEY
+        sync: false
+      - key: QWEN_API_BASE
+        value: https://dashscope.aliyuncs.com/compatible-mode/v1
