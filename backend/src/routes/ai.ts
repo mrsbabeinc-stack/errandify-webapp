@@ -1154,6 +1154,13 @@ router.post('/suggestions', async (req: Request, res: Response) => {
 
     // Get Qwen API key from environment
     const qwenApiKey = process.env.QWEN_API_KEY;
+    const qwenApiBase = process.env.QWEN_API_BASE;
+
+    console.log('[Suggestions] QWEN CHECK:');
+    console.log('[Suggestions] - Has API Key:', !!qwenApiKey);
+    console.log('[Suggestions] - Key length:', qwenApiKey?.length || 0);
+    console.log('[Suggestions] - Has API Base:', !!qwenApiBase);
+    console.log('[Suggestions] - API Base:', qwenApiBase || 'NOT SET');
 
     if (!qwenApiKey) {
       console.warn('[Suggestions] ⚠️ Qwen API key not configured, will use fallbacks only');
