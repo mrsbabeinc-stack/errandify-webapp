@@ -897,18 +897,58 @@ OUTPUT ONLY the category name, nothing else.`,
       fullAddress = detectedArea;
     }
 
-    // If no postal code but landmark name found, try to lookup via Mapbox
+    // If no postal code but landmark name found, try to resolve via Mapbox + OneMap
     if (!postalCode && landmarkName) {
       try {
-        console.log('[Extract] Attempting Mapbox lookup for landmark:', landmarkName);
+        console.log('[Extract] Attempting landmark resolution for:', landmarkName);
         const mapboxApiKey = process.env.MAPBOX_API_KEY;
+        const qwenApiKey = process.env.QWEN_API_KEY;
         
+        // First, try to use Qwen to get the actual address for the landmark
+        let addressForLookup = landmarkName;
+        if (qwenApiKey) {
+          try {
+            console.log('[Extract] Using Qwen to get address for landmark:', landmarkName);
+            const qwenResponse = await axios.post(
+              `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+              {
+                model: 'qwen-max',
+                messages: [
+                  {
+                    role: 'system',
+                    content: 'You are a Singapore location expert. Given a landmark name, return ONLY the street address in Singapore. Format: "Street Name, Planning Area" or "Street Number Street Name, Planning Area". No explanation.'
+                  },
+                  {
+                    role: 'user',
+                    content: `What is the street address of "${landmarkName}" in Singapore?`
+                  }
+                ]
+              },
+              {
+                headers: {
+                  'Authorization': `Bearer ${qwenApiKey}`,
+                  'Content-Type': 'application/json'
+                },
+                timeout: 5000
+              }
+            );
+            
+            const qwenAddress = qwenResponse.data?.choices?.[0]?.message?.content?.trim();
+            if (qwenAddress && qwenAddress.length > 5 && qwenAddress.length < 100) {
+              addressForLookup = qwenAddress;
+              console.log('[Extract] Qwen provided address:', addressForLookup);
+            }
+          } catch (qwenErr) {
+            console.log('[Extract] Qwen address lookup failed, using landmark name');
+          }
+        }
+        
+        // Now try Mapbox with the (possibly improved) address
         if (mapboxApiKey) {
-          // Try multiple query variations
           const queries = [
-            `${landmarkName}, Singapore`,
-            landmarkName,
-            `${landmarkName} Singapore`
+            `${addressForLookup}, Singapore`,
+            addressForLookup,
+            landmarkName
           ];
           
           let feature = null;
@@ -933,26 +973,17 @@ OUTPUT ONLY the category name, nothing else.`,
             const postalMatch = featureName.match(/\b(\d{6})\b/);
             
             if (postalMatch) {
-              // Postal code found in Mapbox response
               postalCode = postalMatch[1];
               fullAddress = featureName;
-              console.log('[Extract] ✅ Mapbox returned postal code:', postalCode);
-            } else {
-              // Try OneMap reverse geocoding
-              try {
-                const [lon, lat] = feature.geometry.coordinates;
-                console.log('[Extract] Trying OneMap reverse geocoding at', lon, lat);
-                const onemapUrl = `https://www.onemap.sg/api/rev/latlngSearch?location=${lat},${lon}`;
-                const onemapResponse = await axios.get(onemapUrl, { timeout: 5000 });
-                
-                if (onemapResponse.data?.results?.length > 0) {
-                  const result = onemapResponse.data.results[0];
-                  postalCode = result.POSTAL_CODE || '';
-                  fullAddress = result.ROAD_NAME ? `${result.ROAD_NAME}, Singapore ${postalCode}` : featureName;
-                  console.log('[Extract] ✅ OneMap reverse geocoding success - postal:', postalCode);
-                } else {
-                  console.log('[Extract] OneMap found no results at these coordinates');
-                }
+              console.log('[Extract] ✅ Landmark resolved - postal:', postalCode);
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('[Extract] Landmark resolution failed:', error instanceof Error ? error.message : error);
+      }
+    }
+
               } catch (onemapErr) {
                 console.warn('[Extract] OneMap lookup failed:', onemapErr instanceof Error ? onemapErr.message : onemapErr);
               }
