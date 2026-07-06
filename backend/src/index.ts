@@ -46,6 +46,14 @@ import db from './db.js';
 
 const app = express();
 
+// Log environment variables on startup for debugging
+console.log('=== ENVIRONMENT VARIABLES CHECK ===');
+console.log('QWEN_API_KEY:', process.env.QWEN_API_KEY ? `Set (${process.env.QWEN_API_KEY.substring(0, 20)}...)` : 'NOT SET');
+console.log('QWEN_API_BASE:', process.env.QWEN_API_BASE ? `Set: ${process.env.QWEN_API_BASE}` : 'NOT SET');
+console.log('MAPBOX_API_KEY:', process.env.MAPBOX_API_KEY ? `Set (${process.env.MAPBOX_API_KEY.substring(0, 20)}...)` : 'NOT SET');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('===================================\n');
+
 // Run migrations on startup
 (async () => {
   try {
