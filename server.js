@@ -293,7 +293,7 @@ app.post('/api/ai/extract-task-info', (req, res) => {
     let title = input
       .replace(/,?\s*(?:on\s+)?at\s+\d{6},?/i, '')  // Remove ", at 150101", "on at 150101", "at 150101"
       .replace(/\d{6}\s*,?/g, '')  // Remove any 6-digit postal codes
-      .replace(/budget\s*\$?\d+/i, '')
+      .replace(/\$\d+|budget\s*\$?\d+/i, '')  // Remove budget like "$200" or "budget 200"
       .replace(/,?\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)/i, '')
       .replace(/(?:tomorrow|today|in\s+\d+\s+days?|next\s+\w+|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)/i, '')
       .replace(/,?\s*[\d.]+\s*(?:hours?|hrs?|h|minutes?|mins?|m)/i, '')  // Remove duration like "2 hours", "30 mins"
@@ -325,6 +325,11 @@ app.post('/api/ai/extract-task-info', (req, res) => {
     else if (lowerInput.includes('move') || lowerInput.includes('deliver') || lowerInput.includes('moving')) category = 'delivery-moving';
     else if (lowerInput.includes('shop') || lowerInput.includes('grocery')) category = 'shopping-errands';
     else if (lowerInput.includes('cook') || lowerInput.includes('food')) category = 'food-beverage';
+    else if (lowerInput.includes('makeup') || lowerInput.includes('beauty') || lowerInput.includes('hair') || lowerInput.includes('salon') || lowerInput.includes('nails')) category = 'beauty-personal-care';
+    else if (lowerInput.includes('tutor') || lowerInput.includes('teach') || lowerInput.includes('lesson') || lowerInput.includes('class')) category = 'tutoring-lessons';
+    else if (lowerInput.includes('photo') || lowerInput.includes('picture') || lowerInput.includes('shoot')) category = 'photography';
+    else if (lowerInput.includes('design') || lowerInput.includes('graphic') || lowerInput.includes('logo')) category = 'design-creative';
+    else if (lowerInput.includes('repair') || lowerInput.includes('fix')) category = 'home-maintenance';
 
     // Parse date
     let date = '';
@@ -452,7 +457,7 @@ app.post('/api/ai/extract-task-info', (req, res) => {
             } else {
               console.log('[Extract] Mapbox returned no results for postal', postalCode);
               // Fallback: use sector-based area mapping
-              const postalCodeToAreaMap = {'01': 'Raffles Place','02': 'Downtown Core','03': 'Marina Bay','04': 'Bukit Merah','05': 'Outram','06': 'Bukit Merah','07': 'Outram','08': 'Outram','09': 'Outram','10': 'Orchard','11': 'Orchard','12': 'Orchard','23': 'Orchard','13': 'Tanglin','14': 'Tanglin','15': 'Clementi','16': 'Clementi','17': 'Novena','18': 'Novena','19': 'Bukit Timah','20': 'Bukit Timah','21': 'Clementi','22': 'Clementi','24': 'Kallang','25': 'Kallang','26': 'Geylang','27': 'Geylang','28': 'Bedok','29': 'Bedok','30': 'Bedok','31': 'Tampines','32': 'Tampines','33': 'Tampines','34': 'Tampines','35': 'Toa Payoh','36': 'Toa Payoh','37': 'Serangoon','38': 'Serangoon','39': 'Hougang','40': 'Hougang','41': 'Bishan','42': 'Bishan','43': 'Serangoon','44': 'Serangoon','45': 'Sengkang','46': 'Sengkang','47': 'Tampines','48': 'Sengkang','49': 'Geylang','50': 'Bukit Timah','51': 'Bukit Timah','52': 'Bukit Timah','53': 'Bukit Timah','54': 'Bukit Timah','55': 'Choa Chu Kang','56': 'Choa Chu Kang','57': 'Choa Chu Kang','58': 'Choa Chu Kang','59': 'Choa Chu Kang','60': 'Jurong East','61': 'Jurong East','62': 'Jurong West','63': 'Jurong West','64': 'Jurong West','65': 'Jurong West','66': 'Jurong West','67': 'Clementi','68': 'Choa Chu Kang','69': 'Jurong West','70': 'Woodlands','71': 'Woodlands','72': 'Woodlands','73': 'Woodlands','74': 'Yishun','75': 'Yishun','76': 'Yishun','77': 'Yishun','78': 'Sembawang','79': 'Sembawang','80': 'Punggol','81': 'Punggol','82': 'Punggol'};
+              const postalCodeToAreaMap = {'01': 'Raffles Place','02': 'Downtown Core','03': 'Marina Bay','04': 'Bukit Merah','05': 'Outram','06': 'Bukit Merah','07': 'Outram','08': 'Outram','09': 'Outram','10': 'Orchard','11': 'Orchard','12': 'Orchard','23': 'Orchard','13': 'Tanglin','14': 'Tanglin','15': 'Henderson','16': 'Clementi','17': 'Novena','18': 'Novena','19': 'Bukit Timah','20': 'Bukit Timah','21': 'Clementi','22': 'Clementi','24': 'Kallang','25': 'Kallang','26': 'Geylang','27': 'Geylang','28': 'Bedok','29': 'Bedok','30': 'Bedok','31': 'Tampines','32': 'Tampines','33': 'Tampines','34': 'Tampines','35': 'Toa Payoh','36': 'Toa Payoh','37': 'Serangoon','38': 'Serangoon','39': 'Hougang','40': 'Hougang','41': 'Bishan','42': 'Bishan','43': 'Serangoon','44': 'Serangoon','45': 'Sengkang','46': 'Sengkang','47': 'Tampines','48': 'Sengkang','49': 'Geylang','50': 'Bukit Timah','51': 'Bukit Timah','52': 'Bukit Timah','53': 'Bukit Timah','54': 'Bukit Timah','55': 'Choa Chu Kang','56': 'Choa Chu Kang','57': 'Choa Chu Kang','58': 'Choa Chu Kang','59': 'Choa Chu Kang','60': 'Jurong East','61': 'Jurong East','62': 'Jurong West','63': 'Jurong West','64': 'Jurong West','65': 'Jurong West','66': 'Jurong West','67': 'Clementi','68': 'Choa Chu Kang','69': 'Jurong West','70': 'Woodlands','71': 'Woodlands','72': 'Woodlands','73': 'Woodlands','74': 'Yishun','75': 'Yishun','76': 'Yishun','77': 'Yishun','78': 'Sembawang','79': 'Sembawang','80': 'Punggol','81': 'Punggol','82': 'Punggol'};
               const sector = postalCode.substring(0, 2);
               areaName = postalCodeToAreaMap[sector] || '';
               fullAddressValue = areaName ? `Singapore ${postalCode}` : '';
@@ -515,6 +520,10 @@ app.post('/api/ai/suggestions', (req, res) => {
     'delivery-moving': ['Moving', 'Heavy lifting', 'Transportation', 'Logistics'],
     'pet-care': ['Dog walking', 'Pet sitting', 'Pet care', 'Animal care'],
     'food-beverage': ['Cooking', 'Food prep', 'Catering', 'Delivery'],
+    'beauty-personal-care': ['Makeup artist', 'Hair styling', 'Nail care', 'Beauty consultant'],
+    'tutoring-lessons': ['Tutor', 'Instructor', 'Coach', 'Mentor'],
+    'photography': ['Photographer', 'Photo editing', 'Videography', 'Lighting'],
+    'design-creative': ['Designer', 'Graphic design', 'Creative', 'Illustrator'],
     'default': ['Help', 'Assistance', 'Support', 'Service']
   };
 
@@ -525,6 +534,10 @@ app.post('/api/ai/suggestions', (req, res) => {
     'delivery-moving': 'Professional moving and delivery assistance required.',
     'pet-care': 'Experienced pet care and dog walking service needed.',
     'food-beverage': 'Professional food preparation and delivery service needed.',
+    'beauty-personal-care': 'Professional beauty and personal care service needed.',
+    'tutoring-lessons': 'Experienced tutor or instructor needed for lessons and coaching.',
+    'photography': 'Professional photography and visual content creation service required.',
+    'design-creative': 'Creative design and visual content service needed.',
     'default': 'Professional assistance service required.'
   };
 
@@ -535,6 +548,10 @@ app.post('/api/ai/suggestions', (req, res) => {
     'delivery-moving': 'Please bring moving equipment. Help with loading/unloading needed.',
     'pet-care': 'Please bring pet treats. Pet is friendly and well-behaved.',
     'food-beverage': 'Please confirm dietary preferences. Kitchen access available.',
+    'beauty-personal-care': 'Please bring all necessary products and equipment. Hygienic setup required.',
+    'tutoring-lessons': 'Please confirm learning objectives and preferred teaching methods.',
+    'photography': 'Please confirm location and lighting requirements. Equipment as discussed.',
+    'design-creative': 'Please provide brief and reference materials. Timeline to be confirmed.',
     'default': 'Please confirm timing and any special requirements.'
   };
 
