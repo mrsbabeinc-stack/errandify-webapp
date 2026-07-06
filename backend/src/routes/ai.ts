@@ -897,106 +897,50 @@ OUTPUT ONLY the category name, nothing else.`,
       fullAddress = detectedArea;
     }
 
-    // If no postal code but landmark name found, try to resolve via Mapbox + OneMap
-    if (!postalCode && landmarkName) {
+    // If no postal code but landmark name found, use Qwen to get postal code directly
+    if (!postalCode && landmarkName && process.env.QWEN_API_KEY) {
       try {
-        console.log('[Extract] Attempting landmark resolution for:', landmarkName);
-        const mapboxApiKey = process.env.MAPBOX_API_KEY;
-        const qwenApiKey = process.env.QWEN_API_KEY;
-        
-        // First, try to use Qwen to get the actual address for the landmark
-        let addressForLookup = landmarkName;
-        if (qwenApiKey) {
-          try {
-            console.log('[Extract] Using Qwen to get address for landmark:', landmarkName);
-            const qwenResponse = await axios.post(
-              `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+        console.log('[Extract] Using Qwen to resolve landmark:', landmarkName);
+        const qwenResponse = await axios.post(
+          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+          {
+            model: 'qwen-max',
+            messages: [
               {
-                model: 'qwen-max',
-                messages: [
-                  {
-                    role: 'system',
-                    content: 'You are a Singapore location expert. Given a landmark name, return ONLY the street address in Singapore. Format: "Street Name, Planning Area" or "Street Number Street Name, Planning Area". No explanation.'
-                  },
-                  {
-                    role: 'user',
-                    content: `What is the street address of "${landmarkName}" in Singapore?`
-                  }
-                ]
+                role: 'system',
+                content: 'You are a Singapore postal code expert. Given only a landmark name, respond with ONLY the 6-digit postal code. Example: 128806. No other text.'
               },
               {
-                headers: {
-                  'Authorization': `Bearer ${qwenApiKey}`,
-                  'Content-Type': 'application/json'
-                },
-                timeout: 5000
+                role: 'user',
+                content: `Postal code for "${landmarkName}" in Singapore?`
               }
-            );
-            
-            const qwenAddress = qwenResponse.data?.choices?.[0]?.message?.content?.trim();
-            if (qwenAddress && qwenAddress.length > 5 && qwenAddress.length < 100) {
-              addressForLookup = qwenAddress;
-              console.log('[Extract] Qwen provided address:', addressForLookup);
-            }
-          } catch (qwenErr) {
-            console.log('[Extract] Qwen address lookup failed, using landmark name');
+            ]
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${process.env.QWEN_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 5000
           }
-        }
+        );
         
-        // Now try Mapbox with the (possibly improved) address
-        if (mapboxApiKey) {
-          const queries = [
-            `${addressForLookup}, Singapore`,
-            addressForLookup,
-            landmarkName
-          ];
+        const qwenPostal = qwenResponse.data?.choices?.[0]?.message?.content?.trim();
+        if (qwenPostal && /^\d{6}$/.test(qwenPostal)) {
+          postalCode = qwenPostal;
+          console.log('[Extract] ✅ Qwen landmark resolution - postal:', postalCode);
           
-          let feature = null;
-          for (const q of queries) {
-            try {
-              const query = encodeURIComponent(q);
-              const mapboxUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?country=SG&limit=1&access_token=${mapboxApiKey}`;
-              const mapboxResponse = await axios.get(mapboxUrl, { timeout: 5000 });
-              
-              if (mapboxResponse.data?.features?.length > 0) {
-                feature = mapboxResponse.data.features[0];
-                console.log('[Extract] Mapbox found:', q, '→', feature.place_name);
-                break;
-              }
-            } catch (e) {
-              console.log('[Extract] Mapbox query failed for:', q);
-            }
-          }
-          
-          if (feature) {
-            const featureName = feature.place_name || '';
-            const postalMatch = featureName.match(/\b(\d{6})\b/);
-            
-            if (postalMatch) {
-              postalCode = postalMatch[1];
-              fullAddress = featureName;
-              console.log('[Extract] ✅ Landmark resolved - postal:', postalCode);
-            }
+          // Lookup address from postal code
+          const addressData = await lookupAddress(postalCode);
+          if (addressData) {
+            fullAddress = addressData.formatted_address || `Singapore ${postalCode}`;
+            areaName = addressData.area || '';
           }
         }
       } catch (error) {
         console.warn('[Extract] Landmark resolution failed:', error instanceof Error ? error.message : error);
       }
     }
-
-              } catch (onemapErr) {
-                console.warn('[Extract] OneMap lookup failed:', onemapErr instanceof Error ? onemapErr.message : onemapErr);
-              }
-            }
-          } else {
-            console.log('[Extract] Mapbox landmark lookup found no results');
-          }
-        }
-      } catch (error) {
-        console.warn('[Extract] Mapbox landmark lookup failed:', error instanceof Error ? error.message : error);
-      }
-    }
-
 
     console.log('[Extract] Final - area:', area, 'fullAddress:', fullAddress);
 
