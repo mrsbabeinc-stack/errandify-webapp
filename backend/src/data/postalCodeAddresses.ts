@@ -6,6 +6,7 @@ export const postalCodeAddresses: Record<string, string> = {
   // Common Central Singapore
   '049206': '1 Marina Boulevard, MARINA BAY, Singapore 049206',
   '018957': '8 Raffles Avenue, RAFFLES PLACE, Singapore 018957',
+  '082001': '1 Tanjong Pagar Plaza, TANJONG PAGAR, Singapore 082001',
   '068808': '6 Shenton Way, TANJONG PAGAR, Singapore 068808',
   '070018': '2 Jalan Besar, CHINATOWN, Singapore 070018',
   '150101': '1 Henderson Road, HENDERSON, Singapore 150101',
