@@ -495,18 +495,18 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
             messages: [
               {
                 role: 'system',
-                content: `You are a task title extractor. Extract ONLY the core action + what needs to be done.
+                content: `You are a task title extractor. Extract ONLY the core action + what needs to be done. Use proper Title Case (capitalize first letter of each word).
 
 RULES:
-1. Keep it SHORT and MEANINGFUL (3-8 words max)
+1. Keep it SHORT and MEANINGFUL (3-7 words max)
 2. Include ONLY the ACTION and WHAT (verb + object)
 3. Keep important context like: AMOUNTS ($500), TYPE (ringgit), SKILL (fade)
-4. REMOVE EVERYTHING ELSE: dates, times, days, locations, addresses, postal codes, durations, budget, explanations
-5. Start with action verb (Change, Fix, Deliver, Clean, Walk, Tutor, Cut, etc)
-6. NO metadata like "I need to", "Can you", "Please", "on Saturday", "at salon", "for 1 hour"
+4. REMOVE EVERYTHING ELSE: dates (tomorrow, next week), times (2pm, 10am), days (monday, friday), locations, addresses, postal codes, durations (2 hours), budget ($200)
+5. Start with action verb (Change, Fix, Deliver, Clean, Walk, Tutor, Cut, Take, etc)
+6. NO metadata like "I need to", "Can you", "Please", "on Saturday", "at salon", "for 1 hour", "tomorrow"
 
 EXAMPLES:
-- Input: "i need to change 500 dollars sgd to ringgit. i am flying off tomorrow. i need this to be done today"
+- Input: "i need to change 500 dollars sgd to ringgit. i am flying off tomorrow"
   Output: Change $500 SGD To Ringgit
 
 - Input: "walk my dog every friday. 1 hour at 32 flora drive. budget $150"
@@ -521,7 +521,10 @@ EXAMPLES:
 - Input: "Cut my hair at salon. Need fade haircut"
   Output: Cut Hair With Fade
 
-OUTPUT ONLY THE TITLE, nothing else.`,
+- Input: "take care of baby tomorrow 2 hours 2pm $200 082001"
+  Output: Take Care Of Baby
+
+OUTPUT ONLY THE TITLE IN TITLE CASE, nothing else.`,
               },
               {
                 role: 'user',
