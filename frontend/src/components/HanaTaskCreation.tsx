@@ -467,56 +467,7 @@ export default function HanaTaskCreation({
 
       mediaRecorder.start();
       setIsRecording(true);
-      setHanaMessage('🎤 Recording... speak naturally! I\'ll stop when you pause.');
-
-      // Voice Activity Detection - auto-stop after silence
-      // Setup: detect silence for 2 seconds = user stopped talking
-      const audioContext = new (window as any).AudioContext();
-      const analyser = audioContext.createAnalyser();
-      const microphone = audioContext.createMediaStreamSource(stream);
-      microphone.connect(analyser);
-
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-      let silenceCount = 0;
-      const silenceThreshold = 15; // Lower threshold = more sensitive (detects quieter silence)
-      const silenceFrames = 20; // ~2 seconds of silence (100ms per frame)
-      let hasDetectedSound = false;
-
-      const checkSilence = () => {
-        analyser.getByteFrequencyData(dataArray);
-        const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-
-        // Wait until we detect actual sound first
-        if (!hasDetectedSound && average > silenceThreshold + 10) {
-          hasDetectedSound = true;
-          console.log('[VAD] Sound detected, starting silence monitor');
-        }
-
-        // Only check for silence after sound was detected
-        if (hasDetectedSound) {
-          if (average < silenceThreshold) {
-            silenceCount++;
-            console.log('[VAD] Silence count:', silenceCount, '/', silenceFrames);
-
-            // Auto-stop after 2+ seconds of silence
-            if (silenceCount >= silenceFrames) {
-              console.log('[VAD] ✅ Silence detected - auto-stopping');
-              stopRecording();
-              audioContext.close();
-              return;
-            }
-          } else {
-            silenceCount = 0; // Reset if sound detected
-          }
-        }
-
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-          setTimeout(checkSilence, 100); // Check every 100ms
-        }
-      };
-
-      // Start silence detection after 1 second (let mic warm up)
-      setTimeout(checkSilence, 1000);
+      setHanaMessage('🎤 Recording... Click ⏹️ when done speaking!');
     } catch (err) {
       console.error('Microphone access denied:', err);
       alert('Please allow microphone access to use voice input');
