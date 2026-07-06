@@ -621,6 +621,23 @@ OUTPUT ONLY THE TITLE, nothing else.`,
       category = 'charity-community';
     }
 
+
+    // Extract landmark/location name for address lookup
+    // Pattern: "at <landmark>" or "at <place name>" or just a place name if no postal code
+    let landmarkName = '';
+    const atMatch = input.match(/ats+([^,]*?)(?:s+tomorrow|s+today|s+d{6}|,|.|$)/i);
+    if (atMatch) {
+      landmarkName = atMatch[1].trim();
+      console.log('[Extract] Landmark detected:', landmarkName);
+    } else if (!postalCode && lowerInput.includes('primary') || lowerInput.includes('secondary') || lowerInput.includes('school')) {
+      // For school-related tasks, try to find school name
+      const schoolMatch = input.match(/(?:at|from|near)s+([^,.]*?(?:primary|secondary|school)[^,.]*)/i);
+      if (schoolMatch) {
+        landmarkName = schoolMatch[1].trim();
+        console.log('[Extract] School landmark detected:', landmarkName);
+      }
+    }
+
     console.log('[Extract] Category detected (keyword-based):', category);
 
     // If keyword matching gave default "homehelp", try Qwen AI for better detection
@@ -881,6 +898,44 @@ OUTPUT ONLY the category name, nothing else.`,
     } else {
       fullAddress = detectedArea;
     }
+
+    // If no postal code but landmark name found, try to lookup via Mapbox
+    if (!postalCode && landmarkName) {
+      try {
+        console.log('[Extract] Attempting Mapbox lookup for landmark:', landmarkName);
+        const mapboxApiKey = process.env.MAPBOX_API_KEY;
+        
+        if (mapboxApiKey) {
+          const query = encodeURIComponent(`${landmarkName}, Singapore`);
+          const mapboxUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?country=SG&types=poi&limit=1&access_token=${mapboxApiKey}`;
+          
+          const mapboxResponse = await axios.get(mapboxUrl, { timeout: 5000 });
+          
+          if (mapboxResponse.data?.features?.length > 0) {
+            const feature = mapboxResponse.data.features[0];
+            const [lon, lat] = feature.geometry.coordinates;
+            
+            // Extract postal code from context (feature name usually includes it)
+            // Or use reverse geocoding if needed
+            const featureName = feature.place_name || '';
+            const postalMatch = featureName.match(/\b(\d{6})\b/);
+            
+            if (postalMatch) {
+              postalCode = postalMatch[1];
+              fullAddress = featureName;
+              console.log('[Extract] ✅ Mapbox landmark lookup success - postal:', postalCode);
+            } else {
+              console.log('[Extract] Mapbox found landmark but no postal code in response:', featureName);
+            }
+          } else {
+            console.log('[Extract] Mapbox landmark lookup found no results');
+          }
+        }
+      } catch (error) {
+        console.warn('[Extract] Mapbox landmark lookup failed:', error instanceof Error ? error.message : error);
+      }
+    }
+
 
     console.log('[Extract] Final - area:', area, 'fullAddress:', fullAddress);
 
