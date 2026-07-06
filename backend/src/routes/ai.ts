@@ -926,9 +926,19 @@ OUTPUT ONLY the category name, nothing else.`,
         );
         
         const qwenPostal = qwenResponse.data?.choices?.[0]?.message?.content?.trim();
-        if (qwenPostal && /^\d{6}$/.test(qwenPostal)) {
-          postalCode = qwenPostal;
-          console.log('[Extract] ✅ Qwen landmark resolution - postal:', postalCode);
+        if (qwenPostal) {
+          // Extract postal code from response (in case Qwen adds extra text)
+          const postalMatch = qwenPostal.match(/(\d{6})/);
+          if (postalMatch) {
+            const extractedPostal = postalMatch[1];
+            postalCode = extractedPostal;
+            console.log('[Extract] ✅ Qwen landmark resolution - postal:', postalCode);
+          } else {
+            console.log('[Extract] Qwen returned text without postal code:', qwenPostal);
+          }
+        } else {
+          console.log('[Extract] Qwen returned empty response for landmark');
+        }
           
           // Lookup address from postal code
           const addressData = await lookupAddress(postalCode);
