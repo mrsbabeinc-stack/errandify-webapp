@@ -1371,27 +1371,14 @@ export default function CreateErrandPage() {
                   />
                 </div>
 
-                {/* Area */}
+                {/* Area - READ ONLY */}
                 <div>
                   <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
-                    Area <span className="text-xs font-normal text-gray-500">(Shown to All)</span>
+                    Area <span className="text-xs font-normal text-gray-500">(Auto-resolved from postal code)</span>
                   </label>
-                  <select
-                    value={area}
-                    onChange={(e) => {
-                      setArea(e.target.value);
-                      setFormData((prev) => ({
-                        ...prev,
-                        location: e.target.value,
-                      }));
-                    }}
-                    className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown appearance-none cursor-pointer"
-                  >
-                    <option value="">Select Area</option>
-                    {Array.from(new Set(Object.values(postalCodeAreas).map(x => x.area))).sort().map((areaName) => (
-                      <option key={areaName} value={areaName}>{areaName}</option>
-                    ))}
-                  </select>
+                  <div className="w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 text-sm font-medium text-errandify-brown">
+                    {area || '—'}
+                  </div>
                 </div>
               </div>
             )}
@@ -1400,14 +1387,26 @@ export default function CreateErrandPage() {
             {!isRemoteWork && (
               <div>
                   <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
-                    Full address (add unit if needed) <span className="text-xs font-normal text-gray-500">(Shown to Confirmed Doer)</span>
+                    Full Address <span className="text-xs font-normal text-gray-500">(Auto-resolved from postal code)</span>
                   </label>
-                  <textarea
-                    value={fullAddress}
-                    onChange={(e) => setFullAddress(e.target.value)}
-                    placeholder="e.g., Block 1, Unit #5-10"
-                    rows={2}
-                    className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium text-errandify-brown placeholder:text-gray-400"
+                  {/* Display auto-resolved address - READ ONLY */}
+                  <div className="w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 text-sm font-medium text-errandify-brown mb-2 break-words">
+                    {fullAddress || '—'}
+                  </div>
+
+                  {/* Optional unit/additional details */}
+                  <label className="block text-xs font-semibold text-errandify-brown mb-1">
+                    Add unit number if needed (e.g., #05-10)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.specialNote || ''}
+                    onChange={(e) => setFormData((prev) => ({
+                      ...prev,
+                      specialNote: e.target.value,
+                    }))}
+                    placeholder="e.g., Block 123, Unit #05-10"
+                    className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown placeholder:text-gray-400"
                   />
 
                   {/* GPS Location Notice */}
