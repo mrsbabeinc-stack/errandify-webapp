@@ -216,9 +216,9 @@ export default function HanaTaskCreation({
             // Populate AI suggestions for the form
             enhancedTaskData = {
               ...updatedTaskData,
-              suggestedSkills: suggestions.skills || [],
-              suggestedDescription: suggestions.description || '',
-              suggestedNotes: suggestions.notes || '',
+              suggestedSkills: suggestions.suggestedSkills || suggestions.skills || [],
+              suggestedDescription: suggestions.suggestedDescription || suggestions.description || '',
+              suggestedNotes: suggestions.suggestedNotes || suggestions.notes || '',
             };
             console.log('[Hana] Enhanced task data with suggestions:', enhancedTaskData);
           }
