@@ -150,7 +150,8 @@ export default function App() {
     <NotificationProvider>
       <Router>
         {isAuthenticated && !isStaff && <FloatingHana />}
-        {isAuthenticated && <NotificationListener />}
+        {/* NotificationListener disabled on staging/demo to prevent notification loops */}
+        {/* {isAuthenticated && <NotificationListener />} */}
         <NotificationToastContainer />
         <Routes>
         {/* Landing/Home page - shown first to unauthenticated users */}
