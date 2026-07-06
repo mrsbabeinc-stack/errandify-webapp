@@ -289,34 +289,64 @@ app.post('/api/ai/extract-task-info', (req, res) => {
     }
     console.log('[Extract] Budget:', budget || '(empty)');
 
-    // Extract title - clean up metadata
-    let title = input
-      .replace(/,?\s*(?:on|at)\s+\d{6},?/i, '')  // Remove ", on 150101", "on at 150101", "at 150101"
-      .replace(/\d{6}\s*,?/g, '')  // Remove any 6-digit postal codes
-      .replace(/\$?\d+\s*(?:on|at)?(?:\s+on|\s+at)?$/i, '')  // Remove "$200 on", "$200 at" at end
-      .replace(/\$\d+|budget\s*\$?\d+/i, '')  // Remove budget like "$200" or "budget 200"
-      .replace(/,?\s*\d{1,2}(?::\d{2})?\s*(?:am|pm)/i, '')
-      .replace(/(?:tomorrow|today|in\s+\d+\s+days?|next\s+\w+|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)/i, '')
-      .replace(/,?\s*[\d.]+\s*(?:hours?|hrs?|h|minutes?|mins?|m)/i, '')  // Remove duration like "2 hours", "30 mins"
-      .replace(/for\s+[\d.]+\s*(?:hour|hr|min)s?/i, '')
-      .replace(/^\s*(?:i\s+need|please|can you)\s+/i, '')
-      .replace(/,?\s+(?:at|on)\s*$/i, '')  // Remove trailing ", at" / " at" / " on" only
-      .replace(/\s+(?:at|on)\s+/i, ' ')  // Remove " at " or " on " but NOT " to " or " from "
-      .replace(/\s+/g, ' ')
-      .replace(/,\s*,/g, ',')  // Remove double commas
-      .replace(/,\s*$/g, '')  // Remove trailing commas
-      .trim();
+    // AI-powered title extraction using Qwen
+    let title = input;
+    try {
+      const qwenResponse = await axios.post(
+        'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+        {
+          model: 'qwen-plus',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a task title extractor. Extract ONLY the core task title from user input. Remove all metadata (dates, times, budgets, postal codes, durations). Return ONLY the clean title in 1-5 words. No explanation, no extra text.'
+            },
+            {
+              role: 'user',
+              content: `Extract the task title from: "${input}"`
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 50
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${process.env.QWEN_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 5000
+        }
+      );
+
+      if (qwenResponse.data.choices?.[0]?.message?.content) {
+        title = qwenResponse.data.choices[0].message.content
+          .trim()
+          .replace(/^["']|["']$/g, '') // Remove quotes
+          .substring(0, 150);
+        console.log('[Extract] AI-cleaned title:', title);
+      }
+    } catch (aiErr) {
+      console.warn('[Extract] AI title cleaning failed, using fallback:', aiErr.message);
+      // Fallback to simple regex if AI fails
+      title = input
+        .replace(/\d{6}/g, '') // Remove postal codes
+        .replace(/\$?\d+\s*(?:on|at)?/g, '') // Remove prices/budget
+        .replace(/\d{1,2}(?::\d{2})?\s*(?:am|pm)/i, '') // Remove times
+        .replace(/(?:tomorrow|today|mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i, '') // Remove dates
+        .replace(/[\d.]+\s*(?:hours?|hrs?|mins?|h|m)/i, '') // Remove durations
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
 
     if (!title || title.length < 3) {
-      title = input.split(/[,.]|budget/i)[0].trim();
+      title = 'Help needed';
     }
-    if (!title) title = 'Help needed';
 
+    // Capitalize properly
     title = title.split(' ')
       .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-      .join(' ')
-      .substring(0, 150);
-    console.log('[Extract] Title:', title);
+      .join(' ');
+    console.log('[Extract] Final title:', title);
 
     // Category detection
     const lowerInput = input.toLowerCase();
