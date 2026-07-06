@@ -510,9 +510,9 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
       const formattedId = generateErrandId(category);
       const errandResult = await db.query(
-        `INSERT INTO errands (asker_id, title, description, category, location, full_address, postal_code, budget, deadline, is_recurring, recurring_schedule, status, formatted_id)
+        `INSERT INTO errands (asker_id, title, description, category, location, full_address, postal_code, budget, deadline, is_recurring, recurring_config, status, formatted_id)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-         RETURNING id, formatted_id, title, description, category, status, budget, deadline, is_recurring, recurring_schedule, created_at`,
+         RETURNING id, formatted_id, title, description, category, status, budget, deadline, is_recurring, recurring_config, created_at`,
         [
           askerId,
           title,
@@ -642,7 +642,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           location: location || null,
           postalCode: postalCode,
           isRecurring: errand.is_recurring,
-          recurringSchedule: errand.recurring_schedule,
+          recurringSchedule: errand.recurring_config,
           createdAt: errand.created_at,
         },
       });
@@ -1757,7 +1757,7 @@ router.get('/:id/recurring', async (req: AuthRequest, res: Response) => {
 
     // Get parent errand
     const parentResult = await db.query(
-      `SELECT id, title, is_recurring, recurring_schedule FROM errands WHERE id = $1`,
+      `SELECT id, title, is_recurring, recurring_config FROM errands WHERE id = $1`,
       [parentId]
     );
 
