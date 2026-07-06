@@ -1704,68 +1704,78 @@ router.post('/transcribe', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Audio data required' });
     }
 
-    // Convert base64 to buffer
-    const audioBuffer = Buffer.from(audio, 'base64');
+    // Convert base64 to buffer to verify it's valid
+    let audioBuffer: Buffer;
+    try {
+      audioBuffer = Buffer.from(audio, 'base64');
+    } catch (e) {
+      return res.status(400).json({ error: 'Invalid base64 audio data' });
+    }
 
     if (audioBuffer.length === 0) {
-      return res.status(400).json({ error: 'Invalid audio data' });
+      return res.status(400).json({ error: 'Empty audio data' });
     }
 
     console.log('[Transcribe] Processing audio of', audioBuffer.length, 'bytes');
 
     const qwenApiKey = process.env.QWEN_API_KEY;
     if (!qwenApiKey) {
-      return res.status(500).json({ error: 'Qwen API key not configured' });
+      console.error('[Transcribe] Qwen API key not configured');
+      return res.status(500).json({ error: 'Transcription service not configured' });
     }
 
-    // Use Qwen speech recognition endpoint
-    // Convert base64 audio to proper format for Qwen API
-    const qwenResponse = await axios.post(
-      'https://dashscope.aliyuncs.com/api/v1/services/aigc/speech-to-text/transcription',
-      {
-        model: 'paraformer-realtime',
-        audio: audio, // Send base64 directly
-        format: 'wav',
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${qwenApiKey}`,
-          'Content-Type': 'application/json',
+    try {
+      // Try Qwen speech recognition endpoint with proper format
+      console.log('[Transcribe] Calling Qwen speech-to-text...');
+      const qwenResponse = await axios.post(
+        'https://dashscope.aliyuncs.com/api/v1/services/aigc/speech-to-text/transcription',
+        {
+          model: 'paraformer-realtime',
+          audio_url: `data:audio/wav;base64,${audio}`,
         },
-        timeout: 30000,
+        {
+          headers: {
+            'Authorization': `Bearer ${qwenApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 30000,
+        }
+      );
+
+      console.log('[Transcribe] Qwen response:', qwenResponse.data);
+
+      const transcribedText = qwenResponse.data?.output?.text?.trim() || qwenResponse.data?.text?.trim();
+
+      if (transcribedText && !transcribedText.includes('error')) {
+        console.log('[Transcribe] ✅ Success:', transcribedText.substring(0, 100));
+        return res.json({
+          success: true,
+          data: {
+            text: transcribedText,
+          },
+        });
       }
-    );
-
-    const transcribedText = qwenResponse.data?.output?.text?.trim() || qwenResponse.data?.text?.trim();
-
-    if (!transcribedText) {
-      console.error('[Transcribe] No text returned from Qwen:', qwenResponse.data);
-
-      // Fallback: If Qwen fails, return a placeholder to allow user to type manually
-      return res.json({
-        success: true,
-        data: {
-          text: '[Please try again or type manually]',
-        },
-      });
+    } catch (qwenErr: any) {
+      console.warn('[Transcribe] Qwen API error:', qwenErr.message);
+      // Continue to fallback
     }
 
-    console.log('[Transcribe] ✅ Success:', transcribedText.substring(0, 100));
-
+    // Fallback: Return placeholder message if transcription fails
+    console.log('[Transcribe] Transcription failed, returning fallback');
     res.json({
       success: true,
       data: {
-        text: transcribedText,
+        text: '',
       },
     });
   } catch (error: any) {
-    console.error('[Transcribe] Error:', error.message);
+    console.error('[Transcribe] Unexpected error:', error.message);
 
-    // Return graceful fallback instead of error
+    // Return empty text to allow manual input
     res.json({
       success: true,
       data: {
-        text: '[Unable to transcribe - please type or try again]',
+        text: '',
       },
     });
   }

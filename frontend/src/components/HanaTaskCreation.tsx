@@ -491,28 +491,31 @@ export default function HanaTaskCreation({
           console.log('[Transcribe] Sending audio of', base64Audio.length, 'chars');
           const response = await axios.post(
             `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/transcribe`,
-            { audio: base64Audio }
+            { audio: base64Audio },
+            { timeout: 35000 }
           );
 
-          const transcribedText = response.data?.data?.text || '';
+          const transcribedText = (response.data?.data?.text || '').trim();
           console.log('[Transcribe] Response:', transcribedText);
 
-          if (!transcribedText || transcribedText.includes('Unable') || transcribedText.includes('Please try')) {
-            // Transcription failed, show user friendly message
-            setHanaMessage('🎤 I couldn\'t transcribe that audio. Please try again or type manually. 😊');
+          if (!transcribedText) {
+            // Transcription failed or returned empty, show friendly message
+            setHanaMessage('🎤 I had trouble with that audio. No worries! Please type what you need instead. 😊');
             setCurrentStep('input');
           } else {
             // Success - set input and auto-submit
+            console.log('[Transcribe] ✅ Got text:', transcribedText);
             setInput(transcribedText);
 
-            // Auto-submit the transcribed text
+            // Auto-submit the transcribed text after a short delay
             setTimeout(() => {
               handleSendMessage({ preventDefault: () => {} } as any);
             }, 500);
           }
-        } catch (err) {
-          console.error('[Transcribe] Error:', err);
-          setHanaMessage('🎤 Could not transcribe audio. Please try again or type manually. 😊');
+        } catch (err: any) {
+          console.error('[Transcribe] Error:', err.message);
+          // Timeout or network error
+          setHanaMessage('🎤 Connection issue with transcription. Please type manually or try again. 😊');
           setCurrentStep('input');
         }
       };
