@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import HanaAnimatedAvatar from './HanaAnimatedAvatar';
 import { loadResponsiveVoice } from '../main';
@@ -62,9 +62,6 @@ export default function HanaTaskCreation({
   const [loading, setLoading] = useState(false);
   const [hanaMessage, setHanaMessage] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -77,90 +74,12 @@ export default function HanaTaskCreation({
     }
   }, [isOpen, defaultCategory]);
 
-  const getRandomPostalCode = () => {
-    const postalCodes = ['680433', '238857', '269163', '554262', '507565', '408600', '750131', '629652', '535239', '110001'];
-    return postalCodes[Math.floor(Math.random() * postalCodes.length)];
-  };
-
-  const getRandomDay = () => {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    return days[Math.floor(Math.random() * days.length)];
-  };
-
-  const getRandomTime = () => {
-    const times = ['9am', '10am', '12pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm'];
-    return times[Math.floor(Math.random() * times.length)];
-  };
-
-  const getRandomDuration = () => {
-    const durations = ['30 mins', '1 hour', '1.5 hours', '2 hours', '2.5 hours', '3 hours', '4 hours'];
-    return durations[Math.floor(Math.random() * durations.length)];
-  };
-
-  const getRandomBudget = () => {
-    const budgets = [30, 50, 75, 100, 150, 200, 250, 300];
-    return budgets[Math.floor(Math.random() * budgets.length)];
-  };
-
-  const getRandomCategory = () => {
-    const categories = [
-      'home-maintenance',
-      'cleaning-household',
-      'food-beverage',
-      'furniture-assembly',
-      'shopping-errands',
-      'delivery-moving',
-      'travel-mobility',
-      'event-planning',
-      'childcare-education',
-      'eldercare-healthcare',
-      'pet-care',
-      'personal-care',
-      'tech-support',
-      'creative-arts',
-      'admin-business',
-      'charity-community',
-    ];
-    return categories[Math.floor(Math.random() * categories.length)];
-  };
-
-  const getRandomDate = () => {
-    const dates = ['tomorrow', 'next Wednesday', 'this Saturday', 'next Monday', 'in 3 days'];
-    return dates[Math.floor(Math.random() * dates.length)];
-  };
-
-  const getExampleByCategory = (category: string) => {
-    const postalCode = getRandomPostalCode();
-    const date = getRandomDate();
-    const time = getRandomTime();
-    const duration = getRandomDuration();
-    const budget = getRandomBudget();
-
-    const examples: Record<string, string> = {
-      'home-maintenance': `Fix leaky kitchen tap at ${postalCode}, ${date} ${time}, ${duration}, budget $${budget}`,
-      'cleaning-household': `Clean my house at ${postalCode}, ${date} ${time}, ${duration}, budget $${budget}`,
-      'food-beverage': `Prepare lunch for 4 people at ${postalCode}, ${date} ${time}, ${duration}, budget $${budget}`,
-      'furniture-assembly': `Assemble IKEA bookshelf at ${postalCode}, ${date} ${time}, ${duration}, budget $${budget}`,
-      'shopping-errands': `Grocery shopping at ${postalCode}, ${date} ${time}, ${duration}, budget $${budget}`,
-      'delivery-moving': `Move boxes from office to home at ${postalCode}, ${date} ${time}, ${duration}, budget $${budget}`,
-      'travel-mobility': `Drive me to airport at ${postalCode}, ${date} ${time}, budget $${budget}`,
-      'event-planning': `Decorate apartment for party at ${postalCode}, ${date} ${time}, ${duration}, budget $${budget}`,
-      'childcare-education': `Tutor my son in Math at ${postalCode}, ${date} ${time}, ${duration}, budget $${budget}`,
-      'eldercare-healthcare': `Help mum with groceries at ${postalCode}, ${date} ${time}, ${duration}, budget $${budget}`,
-      'pet-care': `Walk my dog at ${postalCode}, ${date} ${time}, ${duration}, budget $${budget}`,
-      'personal-care': `Hair cut at home (${postalCode}), ${date} ${time}, ${duration}, budget $${budget}`,
-      'tech-support': `Fix WiFi router at ${postalCode}, ${date} ${time}, ${duration}, budget $${budget}`,
-      'creative-arts': `Design logo for my business, budget $${budget}`,
-      'admin-business': `Data entry for my business at ${postalCode}, ${date} ${time}, ${duration}, budget $${budget}`,
-      'charity-community': `Pack donation boxes at ${postalCode}, ${date} ${time}, ${duration}, budget $${budget}`,
-    };
-    return examples[category] || `Describe your errand: what, postal code, date, time, duration, and budget`;
+  const getExamplePrompt = () => {
+    return `Hi! What errand do you need help with?\n\nExample:\n'Help me move boxes from office to home on Saturday at 2pm, 2 hours, budget $100'`;
   };
 
   const initializeChat = () => {
-    const categoryToUse = defaultCategory || getRandomCategory();
-    const example = getExampleByCategory(categoryToUse);
-    setHanaMessage(`Hi! What errand do you need help with?\n\nExample:\n'${example}'`);
+    setHanaMessage(getExamplePrompt());
     setCurrentStep('input');
     triggerSpeaking();
   };
@@ -228,11 +147,11 @@ export default function HanaTaskCreation({
       console.log('[Hana] Extracted postalCode:', extracted.postalCode);
       console.log('[Hana] Extracted location:', extracted.location);
 
-      // Update task data with extracted info
+      // Update task data with extracted info - USE EXTRACTED CATEGORY, NOT RANDOM
       const updatedTaskData: TaskData = {
         title: extracted.title || userInput.substring(0, 50),
         description: extracted.description || '',
-        category: extracted.category || '',
+        category: extracted.category || '', // USE extracted category directly, NOT random
         location: extracted.location || '',
         area: extracted.area || '',
         fullAddress: extracted.fullAddress || extracted.location || '',
@@ -274,41 +193,42 @@ export default function HanaTaskCreation({
         return;
       }
 
-      // Get AI suggestions for this category (even with incomplete data)
-      // Qwen will be called again in the form when more details are added
+      // Get AI suggestions for this category - MUST use extracted category
       let enhancedTaskData = { ...updatedTaskData };
-      try {
-        console.log('[Hana] Requesting suggestions for:', updatedTaskData.category);
-        const suggestionsResponse = await axios.post(
-          `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/suggestions`,
-          {
-            title: updatedTaskData.title,
-            description: updatedTaskData.description,
-            category: updatedTaskData.category,
-            date: updatedTaskData.date || 'TBD',
-            time: updatedTaskData.time || 'TBD',
+      if (updatedTaskData.category) {
+        try {
+          console.log('[Hana] Requesting suggestions for category:', updatedTaskData.category, 'title:', updatedTaskData.title);
+          const suggestionsResponse = await axios.post(
+            `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/suggestions`,
+            {
+              title: updatedTaskData.title,
+              description: updatedTaskData.description || '',
+              category: updatedTaskData.category, // USE extracted category, not random
+              date: updatedTaskData.date || '',
+              time: updatedTaskData.time || '',
+            }
+          );
+
+          console.log('[Hana] Suggestions response:', suggestionsResponse.data);
+
+          const suggestions = suggestionsResponse.data.data;
+          if (suggestions) {
+            // Populate AI suggestions for the form
+            enhancedTaskData = {
+              ...updatedTaskData,
+              suggestedSkills: suggestions.skills || [],
+              suggestedDescription: suggestions.description || '',
+              suggestedNotes: suggestions.notes || '',
+            };
+            console.log('[Hana] Enhanced task data with suggestions:', enhancedTaskData);
           }
-        );
-
-        console.log('[Hana] Suggestions response:', suggestionsResponse.data);
-
-        const suggestions = suggestionsResponse.data.data;
-        // Don't auto-fill description and notes - just send the suggestion data separately
-        // Form will show these as suggestion boxes for user to click and apply
-        enhancedTaskData = {
-          ...updatedTaskData,
-          description: '', // Keep empty - user will click "Use" button to apply
-          notes: '', // Keep empty - user will click "Use" button to apply
-          suggestedSkills: suggestions.skills || [],
-          // These will be passed to form via aiSuggestions state
-          suggestedDescription: suggestions.description,
-          suggestedNotes: suggestions.notes,
-        };
-
-        console.log('[Hana] Enhanced task data with suggestions:', enhancedTaskData);
-      } catch (suggestionsError) {
-        console.warn('[Hana] Suggestions call failed (will retry in form):', suggestionsError instanceof Error ? suggestionsError.message : suggestionsError);
-        // Continue without suggestions - form will call again
+        } catch (suggestionsError) {
+          console.warn('[Hana] Suggestions call failed (will retry in form):', suggestionsError instanceof Error ? suggestionsError.message : suggestionsError);
+          // Continue without suggestions - form will call again
+          enhancedTaskData = updatedTaskData;
+        }
+      } else {
+        console.log('[Hana] No category extracted, skipping suggestions for now');
         enhancedTaskData = updatedTaskData;
       }
 
@@ -340,26 +260,33 @@ export default function HanaTaskCreation({
       }
 
       // Check content moderation on EXTRACTED data only (not raw input)
+      // Check title, description, and notes from the extraction
       try {
+        console.log('[Hana] Checking content moderation for:', {
+          title: enhancedTaskData.title,
+          description: enhancedTaskData.description,
+          notes: enhancedTaskData.notes
+        });
         const contentCheckResponse = await axios.post(
           `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/check-content`,
           {
-            title: enhancedTaskData.title,
+            title: enhancedTaskData.title || '',
             description: enhancedTaskData.description || '',
             notes: enhancedTaskData.notes || '',
           }
         );
 
         if (!contentCheckResponse.data.data.is_safe) {
-          console.log('[Hana] Content check failed on extracted data');
+          console.log('[Hana] Content check failed on extracted data - blocking');
           setHanaMessage('I cannot help with that request. It contains inappropriate content. Please describe your errand in a different way. 😊');
           setCurrentStep('input');
           setInput('');
           return;
         }
+        console.log('[Hana] Content check passed - data is safe');
       } catch (contentCheckErr) {
-        console.warn('[Hana] Content check error:', contentCheckErr);
-        // Continue anyway if content check fails
+        console.warn('[Hana] Content check error (continuing anyway):', contentCheckErr instanceof Error ? contentCheckErr.message : contentCheckErr);
+        // Continue anyway if content check fails - server will validate
       }
 
       setTaskData(enhancedTaskData as any);
@@ -370,7 +297,20 @@ export default function HanaTaskCreation({
 
       // Auto-fill form and proceed after a short delay
       setTimeout(() => {
-        console.log('[Hana] Calling onComplete with:', enhancedTaskData);
+        console.log('[Hana] ===== CALLING onComplete WITH FINAL DATA =====');
+        console.log('[Hana] Category:', enhancedTaskData.category);
+        console.log('[Hana] Title:', enhancedTaskData.title);
+        console.log('[Hana] Description:', enhancedTaskData.description);
+        console.log('[Hana] Location:', enhancedTaskData.location);
+        console.log('[Hana] Area:', enhancedTaskData.area);
+        console.log('[Hana] Full Address:', enhancedTaskData.fullAddress);
+        console.log('[Hana] Postal Code:', enhancedTaskData.postalCode);
+        console.log('[Hana] Date:', enhancedTaskData.date);
+        console.log('[Hana] Time:', enhancedTaskData.time);
+        console.log('[Hana] Budget:', enhancedTaskData.budget);
+        console.log('[Hana] Suggested Skills:', enhancedTaskData.suggestedSkills);
+        console.log('[Hana] Suggested Description:', enhancedTaskData.suggestedDescription);
+        console.log('[Hana] Suggested Notes:', enhancedTaskData.suggestedNotes);
         onComplete(enhancedTaskData as any);
       }, 1000);
     } catch (err: any) {
@@ -381,22 +321,6 @@ export default function HanaTaskCreation({
     }
   };
 
-  const buildSummary = (data: TaskData) => {
-    let summary = '✓ Task Summary:\n\n';
-    if (data.title) summary += `📝 ${data.title}\n`;
-    if (data.fullAddress) summary += `📍 ${data.fullAddress}\n`;
-    else if (data.location) summary += `📍 ${data.location}\n`;
-    if (data.postalCode) summary += `🏘️ ${data.postalCode}\n`;
-    if (data.date) {
-      const dateStr = new Date(data.date).toLocaleDateString('en-SG');
-      summary += `📅 ${dateStr}`;
-      if (data.time) summary += ` at ${data.time}`;
-      summary += '\n';
-    }
-    if (data.budget) summary += `💰 SGD $${data.budget}\n`;
-    if (data.notes) summary += `📌 ${data.notes}`;
-    return summary;
-  };
 
   const handleConfirmAndProceed = async () => {
     setLoading(true);
