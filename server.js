@@ -439,11 +439,9 @@ Return ONLY valid JSON (no markdown, no extra text):
               console.log('[Extract] Qwen landmark:', extractedLandmark);
             }
 
-            // Override title with Qwen's extraction if it's better
-            if (extracted.title && extracted.title.length >= 3) {
-              title = extracted.title;
-              console.log('[Extract] Qwen title override:', title);
-            }
+            // Don't override title - it was already cleaned by the dedicated title extraction
+            // The title extraction endpoint handles Title Case conversion properly
+            // Just use category and landmark from comprehensive extraction
           }
         } catch (parseErr) {
           console.warn('[Extract] Failed to parse Qwen JSON:', parseErr.message);
