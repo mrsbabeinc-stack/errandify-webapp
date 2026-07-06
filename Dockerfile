@@ -6,9 +6,11 @@ WORKDIR /app
 COPY package*.json ./
 COPY frontend/package*.json ./frontend/
 
-# Install dependencies
-RUN npm install
-RUN npm install --prefix frontend
+# Install root dependencies
+RUN npm ci --omit=dev
+
+# Install frontend dependencies
+RUN npm ci --omit=dev --prefix frontend
 
 # Copy all files
 COPY . .
