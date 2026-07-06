@@ -623,15 +623,13 @@ OUTPUT ONLY THE TITLE, nothing else.`,
 
 
     // Extract landmark/location name for address lookup
-    // Pattern: "at <landmark>" or "at <place name>" or just a place name if no postal code
     let landmarkName = '';
-    const atMatch = input.match(/ats+([^,]*?)(?:s+tomorrow|s+today|s+d{6}|,|.|$)/i);
+    const atMatch = input.match(/at\s+([^,]*?)(?:\s+tomorrow|\s+today|\s+\d{6}|,|.|$)/i);
     if (atMatch) {
       landmarkName = atMatch[1].trim();
       console.log('[Extract] Landmark detected:', landmarkName);
-    } else if (!postalCode && lowerInput.includes('primary') || lowerInput.includes('secondary') || lowerInput.includes('school')) {
-      // For school-related tasks, try to find school name
-      const schoolMatch = input.match(/(?:at|from|near)s+([^,.]*?(?:primary|secondary|school)[^,.]*)/i);
+    } else if (!postalCode && (lowerInput.includes('primary') || lowerInput.includes('secondary') || lowerInput.includes('school'))) {
+      const schoolMatch = input.match(/(?:at|from|near)\s+([^,.]*?(?:primary|secondary|school)[^,.]*)/i);
       if (schoolMatch) {
         landmarkName = schoolMatch[1].trim();
         console.log('[Extract] School landmark detected:', landmarkName);
