@@ -193,6 +193,26 @@ const app = express();
   } catch (error) {
     console.log('Migration: corrected_by_user_id column already exists');
   }
+
+  try {
+    // Create task_analysis table for sentiment + complexity analysis
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS task_analysis (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        title VARCHAR(255) NOT NULL,
+        location_insights JSONB,
+        task_complexity JSONB,
+        sentiment_analysis JSONB,
+        ai_suggestions JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, title)
+      );
+    `);
+    console.log('Migration: task_analysis table checked/created');
+  } catch (error) {
+    console.log('Migration: task_analysis table already exists or creation failed');
+  }
 })();
 
 // Middleware
