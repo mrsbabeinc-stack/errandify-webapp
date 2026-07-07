@@ -952,8 +952,26 @@ export default function CreateErrandPage() {
         // Show success modal with errand ID
         console.log('[DEBUG] Full response:', JSON.stringify(response.data));
         console.log('[DEBUG] response.data.data:', response.data.data);
-        const errandId = response.data.data?.errandId || response.data.data?.formatted_id || response.data.data?.id || response.data.errandId || response.data.id;
-        console.log('[DEBUG] Extracted errandId:', errandId);
+        const dbErrandId = response.data.data?.id;
+
+        // Fetch the errand from database to get the actual formatted_id
+        let errandId = response.data.data?.formatted_id || response.data.data?.errandId;
+
+        if (!errandId && dbErrandId) {
+          try {
+            const freshResponse = await axios.get(
+              `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${dbErrandId}`,
+              { headers: { Authorization: `Bearer ${token}` }, timeout: 5000 }
+            );
+            errandId = freshResponse.data.formatted_id || freshResponse.data.errandId || dbErrandId;
+            console.log('[DEBUG] Fetched formatted_id from database:', errandId);
+          } catch (fetchErr) {
+            console.warn('[DEBUG] Could not fetch formatted_id, using ID:', dbErrandId);
+            errandId = dbErrandId;
+          }
+        }
+
+        console.log('[DEBUG] Final Extracted errandId:', errandId);
 
         if (errandId) {
           setSuccessErrandId(String(errandId));
