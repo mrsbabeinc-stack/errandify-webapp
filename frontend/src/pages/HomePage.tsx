@@ -16,98 +16,9 @@ interface Category {
   group: string;
 }
 
-interface CategoryExample {
-  [key: string]: string[];
-}
-
 export default function HomePage({ userRole }: HomePageProps) {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('Friend');
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [showExamplesModal, setShowExamplesModal] = useState(false);
-
-  const categoryExamples: CategoryExample = {
-    'home-maintenance': [
-      'Fix leaking bathroom tap on Saturday 10am, Tanjong Pagar 150101, Budget $80',
-      'Install ceiling fan on Tuesday 2pm, Bedok 450100, Budget $150',
-      'Repair kitchen cabinet on Wednesday 1pm, Clementi 120100, Budget $120',
-    ],
-    'cleaning-household': [
-      'Clean my house on Tuesday 6pm, 2 hours, Tanjong Pagar 150101, Budget $150',
-      'Deep clean office on Friday 3pm, 3 hours, Bugis 190100, Budget $200',
-      'Laundry service on Monday 10am, Orchard 230100, Budget $60',
-    ],
-    'food-beverage': [
-      'Cook dinner for 6 people on Saturday 5pm, Tiong Bahru 160100, Budget $200',
-      'Grocery shopping on Thursday 2pm, Pasir Ris 510100, Budget $100',
-      'Meal prep for the week on Sunday 11am, Ang Mo Kio 560100, Budget $150',
-    ],
-    'furniture-assembly': [
-      'Assemble IKEA furniture on Saturday 2pm, 2 hours, Serangoon 550100, Budget $120',
-      'Arrange living room furniture on Wednesday 1pm, Jurong 640100, Budget $100',
-      'Move bed and wardrobe on Friday morning, Tampines 520100, Budget $180',
-    ],
-    'shopping-errands': [
-      'Pick up document from office on Thursday 11am, Raffles Place 040100, Budget $25',
-      'Shopping for groceries on Saturday 10am, Tanjong Pagar 150101, Budget $80',
-      'Pick up packages from multiple locations on Monday 3pm, Downtown 010100, Budget $50',
-    ],
-    'delivery-moving': [
-      'Send package to Jurong on Monday 9am, Tanjong Pagar 150101, Budget $40',
-      'Help move to new apartment on Saturday, 4 hours, Bedok 450100, Budget $300',
-      'Courier service to JB on Tuesday 8am, Woodland 730100, Budget $60',
-    ],
-    'travel-mobility': [
-      'Airport pickup on Sunday 6am from Changi, Marina Bay 180100, Budget $50',
-      'Travel planning for Japan trip, Online or Orchard 230100, Budget $150',
-      'Arrange relocation services on Friday, multiple locations, Budget $400',
-    ],
-    'event-planning': [
-      'Help set up birthday party on Saturday 2pm, 3 hours, Bishan 570100, Budget $120',
-      'Assist with wedding reception setup on Friday 11am, Marina Bay 180100, Budget $250',
-      'Event registration on Sunday 9am, 2 hours, Downtown 010100, Budget $80',
-    ],
-    'childcare-education': [
-      'Pick up my kids from school on Wednesday 2:30pm, Marina Bay 180100, Budget $30',
-      'Babysit on Saturday evening 6pm, 4 hours, Orchard 230100, Budget $100',
-      'Tutor math on Tuesday 4pm, 1.5 hours, Ang Mo Kio 560100, Budget $60',
-    ],
-    'eldercare-healthcare': [
-      'Accompany grandma to doctor on Tuesday 10am, Bedok 450100, Budget $50',
-      'Help elderly neighbor with groceries on Thursday afternoon, Serangoon 550100, Budget $30',
-      'Senior care companion on weekends, Tiong Bahru 160100, Budget $120',
-    ],
-    'pet-care': [
-      'Walk my dog on weekday morning 7am, 30 mins, Clementi 120100, Budget $20',
-      'Pet sit over weekend, Tiong Bahru 160100, Budget $80',
-      'Dog grooming on Saturday 10am, Tanjong Pagar 150101, Budget $100',
-    ],
-    'personal-care': [
-      'Personal training session on Monday 6pm, 1 hour, Punggol 820100, Budget $60',
-      'Hair styling on Saturday afternoon 2pm, Orchard 230100, Budget $80',
-      'Massage therapy on Friday evening 7pm, 1.5 hours, Marina Bay 180100, Budget $120',
-    ],
-    'tech-support': [
-      'Fix laptop on Thursday 3pm, Pasir Ris 510100, Budget $80',
-      'Setup new computer on Saturday 2pm, Ang Mo Kio 560100, Budget $100',
-      'WiFi troubleshooting on Monday 7pm, Tiong Bahru 160100, Budget $50',
-    ],
-    'creative-arts': [
-      'Photography for family event on Saturday 2pm, 3 hours, Bedok 450100, Budget $300',
-      'Graphic design for business flyer, Online or Tanjong Pagar 150101, Budget $150',
-      'Portrait drawing session on Sunday 11am, Clementi 120100, Budget $120',
-    ],
-    'admin-business': [
-      'Pick up document from office on Thursday 11am, Raffles Place 040100, Budget $25',
-      'Data entry for spreadsheet on Wednesday 2pm, 2 hours, Downtown 010100, Budget $80',
-      'Bookkeeping assistance on Friday 10am, 3 hours, Marina Bay 180100, Budget $150',
-    ],
-    'charity-community': [
-      'Volunteer for community cleanup on Saturday 8am, Tiong Bahru 160100, Flexible budget',
-      'Help organize charity event on Sunday 10am, Marina Bay 180100, Budget $100',
-      'Donate and distribute items on Wednesday afternoon, Tanjong Pagar 150101, Budget $50',
-    ],
-  };
 
   const categories: Category[] = [
     // GROUP 1: HOME & HOUSEHOLD
@@ -157,18 +68,12 @@ export default function HomePage({ userRole }: HomePageProps) {
   }, []);
 
   const handleCategoryClick = (category: Category) => {
-    setSelectedCategory(category);
-    setShowExamplesModal(true);
-  };
-
-  const handleProceedWithCategory = (categoryId: string) => {
-    setShowExamplesModal(false);
     if (userRole === 'asker') {
       // Askers: Go to Hana with category pre-filled
-      navigate(`/create-errand-hana?category=${categoryId}`);
+      navigate(`/create-errand-hana?category=${category.id}`);
     } else {
       // Doers: Go to browse with category filter
-      navigate(`/browse?category=${categoryId}`);
+      navigate(`/browse?category=${category.id}`);
     }
   };
 
@@ -256,51 +161,6 @@ export default function HomePage({ userRole }: HomePageProps) {
         </div>
 
       </div>
-
-      {/* Examples Modal */}
-      {showExamplesModal && selectedCategory && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 max-h-96 overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-errandify-brown">
-                {selectedCategory.icon} {selectedCategory.name}
-              </h2>
-              <button
-                onClick={() => setShowExamplesModal(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl font-light"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-600 mb-4">{selectedCategory.purpose}</p>
-
-            <div className="space-y-2 mb-6">
-              <p className="text-xs font-semibold text-gray-700 mb-3">💡 Examples of tasks in this category:</p>
-              {categoryExamples[selectedCategory.id]?.map((example, idx) => (
-                <div key={idx} className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg p-2.5">
-                  <p className="text-xs text-errandify-brown leading-relaxed">✓ {example}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowExamplesModal(false)}
-                className="flex-1 border border-gray-300 py-2.5 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 text-sm"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => handleProceedWithCategory(selectedCategory.id)}
-                className="flex-1 bg-errandify-orange text-white py-2.5 rounded-lg font-bold hover:bg-opacity-90 text-sm"
-              >
-                {userRole === 'asker' ? '📝 Post' : '🔍 Browse'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
