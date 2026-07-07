@@ -939,14 +939,14 @@ export default function CreateErrandPage() {
 
         // Show success modal with errand ID
         console.log('[DEBUG] response.data.data:', response.data.data);
-        const errandId = response.data.data?.errandId || response.data.errandId;
+        const errandId = response.data.data?.formatted_id || response.data.data?.id || response.data.errandId || response.data.id;
         console.log('[DEBUG] Extracted errandId:', errandId);
 
         if (errandId) {
           setSuccessErrandId(errandId);
           setShowSuccess(true);
         } else {
-          console.log('[DEBUG] No errandId found, redirecting to home');
+          console.log('[DEBUG] No errandId found, redirecting to my-errands');
           navigate('/my-errands');
         }
       } else {
