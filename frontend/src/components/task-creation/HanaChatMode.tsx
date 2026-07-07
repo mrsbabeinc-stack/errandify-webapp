@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { TaskData } from '../../pages/HanaTaskCreationPage';
 
@@ -6,6 +6,7 @@ interface HanaChatModeProps {
   taskData: TaskData;
   onTaskUpdate: (updates: Partial<TaskData>) => void;
   onReview: () => void;
+  selectedCategory?: string;
 }
 
 type ChatStep = 'title' | 'location' | 'date' | 'budget' | 'notes' | 'complete';
@@ -60,7 +61,7 @@ export default function HanaChatMode({
   onReview,
 }: HanaChatModeProps) {
   const [currentStep, setCurrentStep] = useState<ChatStep>('title');
-  const [randomExample] = useState(() => getRandomExample());
+  const randomExample = useMemo(() => getRandomExample(), []);
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: '1',
