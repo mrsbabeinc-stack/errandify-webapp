@@ -85,7 +85,10 @@ console.log('===================================\n');
       ADD COLUMN IF NOT EXISTS full_address VARCHAR(500);
     `);
     console.log('Migration: full_address column checked/added');
-  
+  } catch (error) {
+    console.log('Migration: full_address column already exists or not needed');
+  }
+
   try {
     // Ensure formatted_id column exists
     await db.query(`
