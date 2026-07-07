@@ -17,18 +17,55 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+const getRandomExample = (): string => {
+  const examples = [
+    // Household/Cleaning
+    'Clean my house on Tuesday 6pm, 2 hours, Tanjong Pagar 150101, Budget $150',
+    'Clean my office on Friday 3pm, 3 hours, Bugis 190100, Budget $200',
+
+    // Childcare
+    'Pick up my kids from school on Wednesday 2:30pm, Marina Bay 180100, Budget $30',
+    'Babysit on Saturday evening 6pm, 4 hours, Orchard 230100, Budget $100',
+
+    // Delivery/Errand
+    'Pick up document from office on Thursday 11am, Raffles Place 040100, Budget $25',
+    'Send package to Jurong on Monday 9am, Tanjong Pagar 150101, Budget $40',
+
+    // Pet Care
+    'Walk my dog on weekday morning 7am, 30 mins, Clementi 120100, Budget $20',
+    'Pet sit over weekend, Tiong Bahru 160100, Budget $80',
+
+    // Elderly Care
+    'Accompany grandma to doctor on Tuesday 10am, Bedok 450100, Budget $50',
+    'Help elderly neighbor with groceries on Thursday afternoon, Serangoon 550100, Budget $30',
+
+    // Event Help
+    'Help set up birthday party on Saturday 2pm, 3 hours, Bishan 570100, Budget $120',
+    'Assist with event registration on Sunday 9am, 2 hours, Downtown 010100, Budget $80',
+
+    // Wellness
+    'Personal training session on Monday 6pm, 1 hour, Punggol 820100, Budget $60',
+    'Fitness class coaching on Friday 5:30pm, 1.5 hours, Bukit Timah 590100, Budget $75',
+
+    // Cross-border
+    'Shop for items in JB on Saturday, return Monday, Johor Bahru, Budget $150',
+    'Collect package from Malaysia on Friday 3pm, Woodlands 730100, Budget $40',
+  ];
+  return examples[Math.floor(Math.random() * examples.length)];
+};
+
 export default function HanaChatMode({
   taskData,
   onTaskUpdate,
   onReview,
 }: HanaChatModeProps) {
   const [currentStep, setCurrentStep] = useState<ChatStep>('title');
-  const [randomExample] = useState(getRandomExample());
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [randomExample] = useState(() => getRandomExample());
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: '1',
       role: 'hana',
-      content: `Hello! I'm Hana 🌸. Let's create your task together. What do you need done?\n\nExample: "${getRandomExample()}"`,
+      content: `Hello! I'm Hana 🌸. Let's create your task together. What do you need done?\n\nExample: "${randomExample}"`,
       timestamp: new Date(),
     },
   ]);
@@ -46,43 +83,6 @@ export default function HanaChatMode({
     'eventhelp': 'Events',
     'donate': 'Donate / Giveback',
     'localbiz': 'Microservices for Local SMEs',
-  };
-
-  const getRandomExample = (): string => {
-    const examples = [
-      // Household/Cleaning
-      'Clean my house on Tuesday 6pm, 2 hours, Tanjong Pagar 150101, Budget $150',
-      'Clean my office on Friday 3pm, 3 hours, Bugis 190100, Budget $200',
-
-      // Childcare
-      'Pick up my kids from school on Wednesday 2:30pm, Marina Bay 180100, Budget $30',
-      'Babysit on Saturday evening 6pm, 4 hours, Orchard 230100, Budget $100',
-
-      // Delivery/Errand
-      'Pick up document from office on Thursday 11am, Raffles Place 040100, Budget $25',
-      'Send package to Jurong on Monday 9am, Tanjong Pagar 150101, Budget $40',
-
-      // Pet Care
-      'Walk my dog on weekday morning 7am, 30 mins, Clementi 120100, Budget $20',
-      'Pet sit over weekend, Tiong Bahru 160100, Budget $80',
-
-      // Elderly Care
-      'Accompany grandma to doctor on Tuesday 10am, Bedok 450100, Budget $50',
-      'Help elderly neighbor with groceries on Thursday afternoon, Serangoon 550100, Budget $30',
-
-      // Event Help
-      'Help set up birthday party on Saturday 2pm, 3 hours, Bishan 570100, Budget $120',
-      'Assist with event registration on Sunday 9am, 2 hours, Downtown 010100, Budget $80',
-
-      // Wellness
-      'Personal training session on Monday 6pm, 1 hour, Punggol 820100, Budget $60',
-      'Fitness class coaching on Friday 5:30pm, 1.5 hours, Bukit Timah 590100, Budget $75',
-
-      // Cross-border
-      'Shop for items in JB on Saturday, return Monday, Johor Bahru, Budget $150',
-      'Collect package from Malaysia on Friday 3pm, Woodlands 730100, Budget $40',
-    ];
-    return examples[Math.floor(Math.random() * examples.length)];
   };
 
   const stepPrompts: Record<ChatStep, string> = {
