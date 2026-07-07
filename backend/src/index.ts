@@ -46,6 +46,7 @@ import db from './db.js';
 
 const app = express();
 
+import db, { getDbStatus, isDbConnected } from './db.js';
 // Log environment variables on startup for debugging
 console.log('=== ENVIRONMENT VARIABLES CHECK ===');
 console.log('QWEN_API_KEY:', process.env.QWEN_API_KEY ? `Set (${process.env.QWEN_API_KEY.substring(0, 20)}...)` : 'NOT SET');
@@ -244,9 +245,13 @@ console.log('===================================\n');
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+app.get("/health", async (req, res) => {
+  const dbStatus = await getDbStatus();
+  res.json({
+    status: "ok",
+    database: dbStatus,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Serve static frontend files

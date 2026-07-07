@@ -32,17 +32,46 @@ try {
   console.error('[DB] Failed to initialize pool:', err);
 }
 
+export const isDbConnected = (): boolean => {
+  return pool !== null;
+};
+
+export const getDbStatus = async () => {
+  if (!pool) {
+    return {
+      connected: false,
+      databaseUrl: config.databaseUrl ? 'SET' : 'NOT SET',
+      error: 'No pool created',
+    };
+  }
+
+  try {
+    const result = await pool.query('SELECT NOW()');
+    return {
+      connected: true,
+      databaseUrl: config.databaseUrl ? 'SET' : 'NOT SET',
+      timestamp: result.rows[0].now,
+    };
+  } catch (err) {
+    return {
+      connected: false,
+      databaseUrl: config.databaseUrl ? 'SET' : 'NOT SET',
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+};
+
 export const db = {
   query: (text: string, params?: unknown[]) => {
     if (!pool) {
-      console.error('[DB] No database connection available');
+      console.error('[DB] No database connection available. DATABASE_URL:', config.databaseUrl ? 'SET' : 'NOT SET');
       return Promise.reject(new Error('Database not connected'));
     }
     return pool.query(text, params);
   },
   getClient: () => {
     if (!pool) {
-      console.error('[DB] No database connection available');
+      console.error('[DB] No database connection available. DATABASE_URL:', config.databaseUrl ? 'SET' : 'NOT SET');
       return Promise.reject(new Error('Database not connected'));
     }
     return pool.connect();
