@@ -876,11 +876,17 @@ export default function CreateErrandPage() {
         title: formData.title,
         description: formData.description,
         category: formData.category,
-        location: formData.location || null,  // This should be the AREA name from the form
+        location: formData.location || null,
         full_address: fullAddress || null,
         postal_code: postalCode || null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
         deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
+        time: formData.time || null,
+        duration: formData.duration || null,
+        durationUnit: formData.durationUnit || null,
+        notes: formData.specialNote || null,
+        skills: formData.skills.length > 0 ? formData.skills : null,
+        startLocation: formData.startLocation || null,
         certifications:
           formData.certifications.required.length > 0 ||
           formData.certifications.optional.length > 0

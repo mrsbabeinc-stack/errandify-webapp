@@ -361,7 +361,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
 // Create errand (asker only)
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, category, location, full_address, postal_code, budget, deadline, certifications, isRecurring, repeatEvery, repeatUnit, occurrences } = req.body;
+    const { title, description, category, location, full_address, postal_code, budget, deadline, certifications, isRecurring, repeatEvery, repeatUnit, occurrences, notes, duration, durationUnit, skills, startLocation, time } = req.body;
     const askerId = parseInt(req.userId || '0', 10);
 
     console.log('[DEBUG] POST /api/errands called:', {
@@ -510,9 +510,9 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
       const formattedId = generateErrandId(category);
       const errandResult = await db.query(
-        `INSERT INTO errands (asker_id, title, description, category, location, full_address, postal_code, budget, deadline, is_recurring, recurring_config, status, formatted_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-         RETURNING id, formatted_id, title, description, category, status, budget, deadline, is_recurring, recurring_config, created_at`,
+        `INSERT INTO errands (asker_id, title, description, category, location, full_address, postal_code, budget, deadline, is_recurring, recurring_config, status, formatted_id, notes, duration, duration_unit, skills, start_location, time_of_day, area)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+         RETURNING id, formatted_id, title, description, category, status, budget, deadline, is_recurring, recurring_config, notes, duration, duration_unit, skills, start_location, time_of_day, area, created_at`,
         [
           askerId,
           title,
@@ -526,7 +526,14 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           isRecurring || false,
           recurringConfig,
           'open',
-          formattedId
+          formattedId,
+          notes || null,
+          duration || null,
+          durationUnit || null,
+          skills ? JSON.stringify(skills) : null,
+          startLocation || null,
+          time || null,
+          location || null  // area defaults to location
         ]
       );
 
