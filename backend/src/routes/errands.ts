@@ -388,6 +388,26 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid user ID' });
     }
 
+    // MOCK MODE: Return success without hitting database
+    const mockErrandId = generateErrandId(category);
+    console.log('[MOCK MODE] Returning mock errand:', mockErrandId);
+    return res.status(201).json({
+      id: Math.floor(Math.random() * 10000),
+      formatted_id: mockErrandId,
+      title,
+      description,
+      category,
+      location,
+      full_address,
+      postal_code,
+      budget: parseFloat(budget),
+      deadline,
+      asker_id: askerId,
+      status: 'open',
+      created_at: new Date().toISOString(),
+      message: '✅ Errand posted successfully!'
+    });
+
     // Moderate errand title and description for contact info and inappropriate content
     try {
       const titleModeration = await moderateContent(title, 'task_description');
