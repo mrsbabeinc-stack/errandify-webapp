@@ -110,34 +110,29 @@ app.post('/api/errands', async (req, res) => {
     // Insert into errands table
     const query = `
       INSERT INTO errands (
-        user_id,
+        asker_id,
         title,
         category,
         description,
         budget,
         deadline,
         postal_code,
-        area,
         full_address,
-        frequency,
         status,
-        created_at,
-        updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'open', NOW(), NOW())
+        created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'open', NOW())
       RETURNING *
     `;
 
     const result = await db.query(query, [
-      user_id || '1', // Default to user 1 for demo
+      user_id || 1, // Default to user 1 for demo
       title,
       category,
       description || null,
       budget,
       deadline || null,
       postal_code || null,
-      area || null,
-      full_address || null,
-      frequency || 'once'
+      full_address || null
     ]);
 
     res.json({
