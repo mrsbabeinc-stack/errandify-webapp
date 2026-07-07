@@ -26,10 +26,67 @@ export default function TaskReviewModal({
     'localbiz': '🏪',
   };
 
+  const getTaskSpecificTips = (title: string, category?: string): string => {
+    const lowerTitle = title.toLowerCase();
+
+    // Category-specific tips with certification references
+    if (category === 'childcare') {
+      return '📚 Ideal for: Childcare certification (ECSRN), Early Childhood Development knowledge. • Confirm emergency contacts, dietary needs, and sleep schedules. • Update asker with photos/messages. • Have safeguarding knowledge.';
+    }
+
+    if (category === 'eldercare') {
+      return '👴 Ideal for: Eldercare/caregiver certification, dementia care training. • Ask about mobility, medication, or special care needs. • Keep emergency contacts handy. • Practice patience & compassionate communication.';
+    }
+
+    if (category === 'wellness') {
+      return '💪 Ideal for: Fitness certification (ACE, NASM), nutritionist/dietitian credentials. • Clarify health conditions or injuries before starting. • Check insurance/liability if providing fitness services. • Customize approach to asker\'s fitness level.';
+    }
+
+    if (category === 'homehelp') {
+      return '🏠 Ideal for: Home maintenance certification, pest control license (if needed). • Document before/after with photos. • Use safe, eco-friendly products when possible. • Request access details & restricted areas beforehand.';
+    }
+
+    if (category === 'petcare') {
+      return '🐾 Ideal for: Pet first aid, dog training certification (optional). • Ask about pet temperament, diet, medications, emergency vet. • Know breed-specific needs & allergies. • Keep leashes & safety equipment ready.';
+    }
+
+    if (category === 'delivery') {
+      return '📦 Ideal for: Driver\'s license, vehicle insurance, delivery experience. • Photo-document items before & after pickup. • Confirm fragile items & handling instructions. • Provide real-time location updates to asker.';
+    }
+
+    if (category === 'tripcarry') {
+      return '✈️ Ideal for: Knowledge of customs regulations, immigration requirements. • Clarify prohibited items & declaration needs. • Get detailed list of items before traveling. • Keep receipts & documentation for customs.';
+    }
+
+    if (category === 'eventhelp') {
+      return '🎉 Ideal for: Event planning experience, vendor management skills. • Arrive early to assess setup & requirements. • Confirm materials, timeline, & responsibilities. • Stay in frequent contact with organizer.';
+    }
+
+    if (category === 'donate') {
+      return '❤️ Ideal for: Community service experience, knowledge of local charities. • Confirm donation items & recipient organizations. • Handle donations with care & respect. • Keep donation records for tax purposes.';
+    }
+
+    if (category === 'localbiz') {
+      return '📋 Ideal for: Business administration, document handling, accounting knowledge. • Handle documents with care & confidentiality. • Understand filing systems & organizational needs. • Provide accurate pickup/delivery with proper receipts.';
+    }
+
+    return '✅ Ideal for: Relevant skills & experience in this area. • Communicate clearly about expectations & timeline. • Take progress photos/videos as documentation. • Provide professional, friendly service.';
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
         <h2 className="text-2xl font-bold text-errandify-brown mb-6">Review Your Task</h2>
+
+        {/* Tips for Doers */}
+        {taskData.category && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-6">
+            <p className="text-xs font-semibold text-errandify-orange mb-2">💡 What doers should know:</p>
+            <p className="text-xs text-errandify-orange leading-relaxed">
+              {getTaskSpecificTips(taskData.title, taskData.category)}
+            </p>
+          </div>
+        )}
 
         {/* Task Summary */}
         <div className="space-y-4 mb-6 bg-gray-50 p-4 rounded-lg">

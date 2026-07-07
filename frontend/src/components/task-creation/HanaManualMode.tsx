@@ -40,39 +40,69 @@ export default function HanaManualMode({
   const getTaskSpecificTips = (title: string, category?: string): string => {
     const lowerTitle = title.toLowerCase();
 
-    if (lowerTitle.includes('lunch') || lowerTitle.includes('meal') || lowerTitle.includes('cook') || lowerTitle.includes('prepare') || category === 'food-beverage') {
-      return '• Confirm any dietary restrictions or allergies with the asker. • Bring all necessary cooking equipment unless specified otherwise. • Arrive 15-30 minutes early to prep ingredients.';
+    // Category-specific tips with certification references
+    if (category === 'childcare') {
+      return '📚 Ideal for: Childcare certification (ECSRN), Early Childhood Development knowledge. • Confirm emergency contacts, dietary needs, and sleep schedules. • Update asker with photos/messages. • Have safeguarding knowledge.';
     }
 
-    if (lowerTitle.includes('clean') || category === 'cleaning-laundry') {
-      return '• Bring all cleaning supplies unless the asker provides them. • Take photos before and after as evidence. • Check if access to any restricted areas needs prior arrangement.';
+    if (category === 'eldercare') {
+      return '👴 Ideal for: Eldercare/caregiver certification, dementia care training. • Ask about mobility, medication, or special care needs. • Keep emergency contacts handy. • Practice patience & compassionate communication.';
     }
 
-    if (lowerTitle.includes('babysit') || lowerTitle.includes('childcare') || category === 'childcare-tutoring') {
-      return '• Get emergency contact numbers and ensure you have them saved. • Ask about bedtime routines and any special dietary needs. • Keep the asker updated with photos/messages during the job.';
+    if (category === 'wellness') {
+      return '💪 Ideal for: Fitness certification (ACE, NASM), nutritionist/dietitian credentials. • Clarify health conditions or injuries before starting. • Check insurance/liability if providing fitness services. • Customize approach to asker\'s fitness level.';
     }
 
-    if (lowerTitle.includes('elderly') || lowerTitle.includes('elder') || lowerTitle.includes('care')) {
-      return '• Ask about any mobility assistance or special care requirements. • Ensure you have emergency contacts and medical history if needed. • Be patient and maintain a calm, supportive demeanor.';
+    if (category === 'homehelp') {
+      return '🏠 Ideal for: Home maintenance certification, pest control license (if needed). • Document before/after with photos. • Use safe, eco-friendly products when possible. • Request access details & restricted areas beforehand.';
     }
 
-    if (lowerTitle.includes('delivery') || lowerTitle.includes('send') || lowerTitle.includes('transport')) {
-      return '• Take photos of items before and after delivery. • Keep the asker informed of your location and ETA. • Handle items with care and avoid damage.';
+    if (category === 'petcare') {
+      return '🐾 Ideal for: Pet first aid, dog training certification (optional). • Ask about pet temperament, diet, medications, emergency vet. • Know breed-specific needs & allergies. • Keep leashes & safety equipment ready.';
+    }
+
+    if (category === 'delivery') {
+      return '📦 Ideal for: Driver\'s license, vehicle insurance, delivery experience. • Photo-document items before & after pickup. • Confirm fragile items & handling instructions. • Provide real-time location updates to asker.';
+    }
+
+    if (category === 'tripcarry') {
+      return '✈️ Ideal for: Knowledge of customs regulations, immigration requirements. • Clarify prohibited items & declaration needs. • Get detailed list of items before traveling. • Keep receipts & documentation for customs.';
+    }
+
+    if (category === 'eventhelp') {
+      return '🎉 Ideal for: Event planning experience, vendor management skills. • Arrive early to assess setup & requirements. • Confirm materials, timeline, & responsibilities. • Stay in frequent contact with organizer.';
+    }
+
+    if (category === 'donate') {
+      return '❤️ Ideal for: Community service experience, knowledge of local charities. • Confirm donation items & recipient organizations. • Handle donations with care & respect. • Keep donation records for tax purposes.';
+    }
+
+    if (category === 'localbiz') {
+      return '📋 Ideal for: Business administration, document handling, accounting knowledge. • Handle documents with care & confidentiality. • Understand filing systems & organizational needs. • Provide accurate pickup/delivery with proper receipts.';
+    }
+
+    // Title-based fallback tips
+    if (lowerTitle.includes('lunch') || lowerTitle.includes('meal') || lowerTitle.includes('cook') || lowerTitle.includes('prepare')) {
+      return '🍽️ Ideal for: Food handler certificate, culinary training. • Confirm dietary restrictions, allergies, & preferences. • Bring necessary equipment unless asker provides. • Maintain food safety & hygiene standards.';
+    }
+
+    if (lowerTitle.includes('clean')) {
+      return '🧹 Ideal for: Cleaning certification, eco-friendly product knowledge. • Document before/after with photos. • Use safe, appropriate cleaning agents. • Arrange access & discuss restricted areas.';
     }
 
     if (lowerTitle.includes('tutor') || lowerTitle.includes('teach') || lowerTitle.includes('lesson')) {
-      return '• Clarify learning goals and student level before the session. • Prepare materials and examples relevant to the subject. • Provide feedback and suggest next steps for improvement.';
-    }
-
-    if (lowerTitle.includes('event') || lowerTitle.includes('party') || lowerTitle.includes('setup')) {
-      return '• Arrive early to understand the layout and setup needs. • Confirm what materials/decorations you need to provide. • Have a clear timeline and stay in touch with the organizer.';
+      return '📖 Ideal for: Teaching qualification, subject-matter expertise. • Understand student\'s learning goals & level. • Prepare tailored materials & examples. • Provide constructive feedback & progress updates.';
     }
 
     if (lowerTitle.includes('repair') || lowerTitle.includes('fix')) {
-      return '• Assess the problem and provide a cost estimate upfront. • Use quality materials and ensure proper installation. • Provide warranty or guarantee if applicable.';
+      return '🔧 Ideal for: Trade certifications (electrical, plumbing, etc.). • Assess & provide cost estimate upfront. • Use quality parts & professional techniques. • Offer warranty & follow-up support.';
     }
 
-    return '• Communicate clearly with the asker about expectations. • Take progress photos/videos as documentation. • Follow any special instructions provided by the asker.';
+    if (lowerTitle.includes('delivery') || lowerTitle.includes('send') || lowerTitle.includes('transport')) {
+      return '🚗 Ideal for: Driver\'s license, delivery experience. • Photo-document items before & after. • Confirm handling instructions for fragile items. • Provide location & ETA updates.';
+    }
+
+    return '✅ Ideal for: Relevant skills & experience in this area. • Communicate clearly about expectations & timeline. • Take progress photos/videos as documentation. • Provide professional, friendly service.';
   };
 
   // Debounced title input to fetch suggestions
