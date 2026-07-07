@@ -824,10 +824,16 @@ export default function CreateErrandPage() {
       }
     }
 
-    // 7. Description length validation
-    console.log('[DEBUG] ===== CHECKPOINT: About to validate description length =====');
+    // 7. Description validation (REQUIRED)
+    console.log('[DEBUG] ===== CHECKPOINT: About to validate description =====');
     console.log('[DEBUG] Description length:', formData.description?.length || 0);
-    if (formData.description && formData.description.length > 150) {
+    if (!formData.description || formData.description.trim().length === 0) {
+      console.log('[DEBUG] VALIDATION FAILED: Description is empty');
+      setError('Please describe what you need done. Be specific! 📝');
+      setLoading(false);
+      return;
+    }
+    if (formData.description.length > 150) {
       console.log('[DEBUG] VALIDATION FAILED: Description too long');
       setError('Description is too long. Please keep it under 150 characters 📝');
       setLoading(false);
