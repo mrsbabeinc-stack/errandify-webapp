@@ -938,16 +938,18 @@ export default function CreateErrandPage() {
         }
 
         // Show success modal with errand ID
+        console.log('[DEBUG] Full response:', JSON.stringify(response.data));
         console.log('[DEBUG] response.data.data:', response.data.data);
-        const errandId = response.data.data?.formatted_id || response.data.data?.id || response.data.errandId || response.data.id;
+        const errandId = response.data.data?.errandId || response.data.data?.formatted_id || response.data.data?.id || response.data.errandId || response.data.id;
         console.log('[DEBUG] Extracted errandId:', errandId);
 
         if (errandId) {
-          setSuccessErrandId(errandId);
+          setSuccessErrandId(String(errandId));
           setShowSuccess(true);
         } else {
-          console.log('[DEBUG] No errandId found, redirecting to my-errands');
-          navigate('/my-errands');
+          console.log('[DEBUG] No errandId found, but posting succeeded - redirecting to my-errands');
+          // Even without ID, redirect to my-errands since posting succeeded
+          setTimeout(() => navigate('/my-errands'), 1000);
         }
       } else {
         console.error('[DEBUG] *** API RETURNED success:false ***:', response.data);
