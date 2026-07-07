@@ -11,8 +11,9 @@ try {
       connectionString: config.databaseUrl,
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      connectionTimeoutMillis: 5000,
       ssl: config.databaseUrl.includes('supabase') ? true : { rejectUnauthorized: false },
+      family: 4, // Force IPv4 instead of IPv6
     });
 
     pool.on('error', (err) => {
