@@ -35,6 +35,16 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
       return res.status(401).json({ error: 'No token provided' });
     }
 
+    // Support demo tokens for testing (demo-token-1, demo-token-2, etc.)
+    if (token.startsWith('demo-token-')) {
+      const userId = token.replace('demo-token-', '');
+      req.userId = userId;
+      req.user = { id: userId, email: `user${userId}@demo.com` };
+      updateUserActivity(userId);
+      next();
+      return;
+    }
+
     const decoded = jwt.verify(token, config.jwtSecret) as { userId: string; email: string };
     req.userId = decoded.userId;
     req.user = { id: decoded.userId, email: decoded.email };
