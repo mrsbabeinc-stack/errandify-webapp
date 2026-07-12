@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import MockSingpassModal from './MockSingpassModal';
 import CompleteProfileStep from './CompleteProfileStep';
-import CompanySignupPromptModal from '../CompanySignupPromptModal';
+import RoleSelectionStep from './RoleSelectionStep';
 
-type SignupStep = 'mock-singpass' | 'complete-profile' | 'company-prompt';
+type SignupStep = 'mock-singpass' | 'complete-profile' | 'role-selection';
 
 interface SignupFlowProps {
   onComplete: () => void;
@@ -27,12 +27,12 @@ export default function SignupFlow({ onComplete, onBack }: SignupFlowProps) {
   };
 
   const handleProfileComplete = () => {
-    // Show company signup prompt instead of immediately completing
-    setStep('company-prompt');
+    // After profile completion, user selects role (individual or company)
+    setStep('role-selection');
   };
 
-  const handleCompanyPromptClose = () => {
-    // User dismissed/skipped company signup, complete the overall flow
+  const handleRoleSelectionComplete = () => {
+    // Role selection complete, flow is done
     onComplete();
   };
 
@@ -51,10 +51,13 @@ export default function SignupFlow({ onComplete, onBack }: SignupFlowProps) {
           onBack={() => setStep('mock-singpass')}
         />
       )}
-      <CompanySignupPromptModal
-        isOpen={step === 'company-prompt'}
-        onClose={handleCompanyPromptClose}
-      />
+      {step === 'role-selection' && mockData && (
+        <RoleSelectionStep
+          mockData={mockData}
+          onComplete={handleRoleSelectionComplete}
+          onBack={() => setStep('complete-profile')}
+        />
+      )}
     </div>
   );
 }
