@@ -15,6 +15,16 @@ const router = Router();
 function fallbackTitleClean(title: string): string {
   let cleaned = title;
 
+  // IMPORTANT: Remove metadata BEFORE we do case normalization
+  // Order matters - remove specific patterns first
+
+  // Remove budget patterns: "budget 300", "$300", ", 300"
+  cleaned = cleaned.replace(/,?\s*budget\s*\$?\s*\d+(?:\.\d{2})?/gi, '');
+  cleaned = cleaned.replace(/,?\s*\$\s*\d+(?:\.\d{2})?(?:\s+budget)?/gi, '');
+
+  // Remove postal codes with "at": "at 680433"
+  cleaned = cleaned.replace(/\s+at\s+\d{6}\b/gi, '');
+
   // Remove postal codes at end
   cleaned = cleaned.replace(/\s+\d{6}\s*$/g, '');
 
@@ -31,11 +41,13 @@ function fallbackTitleClean(title: string): string {
   // Remove duration like "2 hours", "30 mins"
   cleaned = cleaned.replace(/,?\s+\d+\s*(?:hours?|hrs?|h|mins?|m|days?)/gi, '');
 
-  // Remove "at" followed by location/postal
+  // Remove "at" followed by generic location (after postal code is removed)
   cleaned = cleaned.replace(/\s+at\s+[\w\s]+/gi, '');
 
   // Remove leading/trailing commas and spaces
   cleaned = cleaned.replace(/^\s*,\s*/, '').replace(/\s*,\s*$/, '');
+  cleaned = cleaned.replace(/\s+at\s*$/gi, ''); // Remove trailing "at"
+  cleaned = cleaned.replace(/,\s*$/g, ''); // Remove trailing comma
 
   // Title case
   cleaned = cleaned
