@@ -208,7 +208,7 @@ export default function CreateErrandPage() {
           }
 
           // Set AI suggestions from prefilled data if available
-          if (prefilledData.suggestedDescription || prefilledData.suggestedNotes) {
+          if (prefilledData.suggestedDescription || prefilledData.suggestedNotes || prefilledData.suggestedCertifications) {
             console.log('[CreateErrand] Setting AI suggestions from prefilled data');
             setAiSuggestions({
               suggestedCategory: '',
@@ -217,8 +217,8 @@ export default function CreateErrandPage() {
               hasCorrections: false,
               suggestedBudget: null,
               suggestedNotes: prefilledData.suggestedNotes || '',
-              certifications: { required: [], optional: [] },
-              skills: prefilledData.suggestedSkills || [],
+              certifications: { required: prefilledData.suggestedCertifications || [], optional: [] },
+              skills: [],
               blocked: false,
               error: '',
             });
@@ -245,8 +245,8 @@ export default function CreateErrandPage() {
                   hasCorrections: response.data.data.hasCorrections,
                   suggestedBudget: response.data.data.suggestedBudget || null,
                   suggestedNotes: response.data.data.notes || '',
-                  certifications: response.data.data.certifications || { required: [], optional: [] },
-                  skills: response.data.data.skills || [],
+                  certifications: response.data.data.certifications ? { required: response.data.data.certifications, optional: [] } : { required: [], optional: [] },
+                  skills: [],
                   blocked: false,
                   error: '',
                 });
@@ -288,8 +288,10 @@ export default function CreateErrandPage() {
     const mapping: Record<string, string> = {
       'homehelp': 'home-maintenance',
       'homehelp-maintenance': 'home-maintenance',
+      'home-maintenance': 'home-maintenance',
       'cleaning': 'cleaning-household',
       'cleaning-laundry': 'cleaning-household',
+      'cleaning-household': 'cleaning-household',
       'food': 'food-beverage',
       'food-beverage': 'food-beverage',
       'furniture': 'furniture-assembly',

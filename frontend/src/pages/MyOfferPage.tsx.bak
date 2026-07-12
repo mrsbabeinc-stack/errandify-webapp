@@ -1,0 +1,543 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import TaskChatbox from '../components/TaskChatbox';
+import { getSocket } from '../utils/socketClient';
+
+interface Bid {
+  id: number;
+  errand_id: number;
+  doer_id: number;
+  amount: number | string;
+  note?: string;
+  status: 'pending' | 'accepted' | 'confirmed' | 'confirmed_awaiting_start' | 'in_progress' | 'completed_unconfirmed' | 'completed_confirmed' | 'rejected' | 'withdrawn';
+  created_at: string;
+  offer_id?: string;
+  errand?: {
+    title: string;
+    budget: number | string;
+    category: string;
+    status: string;
+    asker_name: string;
+    asker_display_name?: string;
+    asker_alias?: string;
+    location?: string;
+    full_address?: string;
+    postal_code?: string;
+    deadline?: string;
+    description?: string;
+    formatted_id?: string;
+  };
+}
+
+export default function MyOfferPage() {
+  const navigate = useNavigate();
+  const [bids, setBids] = useState<Bid[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedErrandId, setSelectedErrandId] = useState<number | null>(null);
+  const [showChatbox, setShowChatbox] = useState(false);
+
+  useEffect(() => {
+    // Fetch immediately on mount
+    fetchMyBids();
+
+    // Poll for updates every 2 seconds (faster updates)
+    const interval = setInterval(fetchMyBids, 2000);
+
+    // Listen for real-time bid confirmation events
+    const socket = getSocket();
+    if (socket) {
+      socket.on('bid_confirmed', () => {
+        console.log('[MyOfferPage] Received bid_confirmed event, refreshing...');
+        fetchMyBids();
+      });
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (socket) {
+        socket.off('bid_confirmed');
+      }
+    };
+  }, []);
+
+  const fetchMyBids = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/my-bids`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setBids(response.data.data || []);
+      setError('');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to load offers');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmBid = async (bidId: number) => {
+    try {
+      console.log('[MyOfferPage] Confirming bid:', bidId);
+      const token = localStorage.getItem('token');
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${bidId}/confirm`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log('[MyOfferPage] Bid confirmed successfully:', response.data);
+      // Refresh bids immediately to get updated status from server
+      await fetchMyBids();
+      setError('');
+    } catch (err: any) {
+      console.error('[MyOfferPage] Failed to confirm bid:', err);
+      setError(err.response?.data?.error || 'Failed to confirm offer');
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-gray-100 text-gray-800 border-gray-300';
+      case 'accepted':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'confirmed':
+      case 'confirmed_awaiting_start':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'completed_unconfirmed':
+        return 'bg-orange-100 text-orange-800 border-orange-300';
+      case 'completed_confirmed':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'rejected':
+        return 'bg-red-100 text-red-800 border-red-300';
+      case 'withdrawn':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'expired':
+        return 'bg-gray-200 text-gray-500 border-gray-400';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      pending: '⏳ Pending Review',
+      accepted: '✅ Accepted - Confirm',
+      confirmed: '🟢 Confirmed - Start',
+      confirmed_awaiting_start: '🟢 Confirmed - Start',
+      in_progress: '🔄 In Progress',
+      completed: '✅ Rated & Closed',
+      rated: '✅ Rated & Closed',
+      completed_unconfirmed: '✔️ Awaiting Review',
+      completed_confirmed: '🎉 Completed',
+      rejected: '❌ Rejected',
+      withdrawn: '↩️ Withdrawn',
+      expired: '⏰ Expired',
+      closed: '✅ Rated & Closed',
+    };
+    return labels[status] || status;
+  };
+  // Get active job (confirmed or in_progress)
+  const activeBid = bids.find(b => b.status === 'confirmed' || b.status === 'confirmed_awaiting_start' || b.status === 'in_progress');
+
+  // Define priority order for sorting by ERRAND STATUS (lower number = higher priority, shown first)
+  const priorityOrder: Record<string, number> = {
+    'in_progress': 0,               // 🔄 Actively working - HIGHEST PRIORITY
+    'confirmed_awaiting_start': 1,  // 🟢 Confirmed, ready to start
+    'confirmed': 2,                 // 🟢 Confirmed
+    'open': 3,                      // 🔓 Open (bids submitted)
+    'completed_unconfirmed': 4,     // ✔️ Work done, awaiting review
+    'completed': 5,                 // ✅ Rated & Closed
+    'rated': 6,                     // ✅ Rated & Closed (final state)
+    'rejected': 7,                  // ❌ Rejected
+    'withdrawn': 8,                 // ↩️ Withdrawn
+    'expired': 99,                  // ⏰ Expired - LOWEST PRIORITY (shown at bottom, greyed out)
+  };
+
+  const filteredBids = bids
+    // Filter by ERRAND status (not bid status)
+    .filter(b => {
+      if (filterStatus === 'all') return true;
+      const errandStatus = b.errand?.status;
+      if (filterStatus === 'open') return errandStatus === 'open';
+      return errandStatus === filterStatus;
+    })
+    // Apply search filter
+    .filter(b => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      const title = (b.errand?.title || '').toLowerCase();
+      const category = (b.errand?.category || '').toLowerCase();
+      const location = (b.errand?.location || '').toLowerCase();
+      return title.includes(query) || category.includes(query) || location.includes(query);
+    })
+    .sort((a, b) => {
+      // Sort by ERRAND STATUS priority first
+      const errandStatusA = a.errand?.status || 'unknown';
+      const errandStatusB = b.errand?.status || 'unknown';
+      const priorityA = priorityOrder[errandStatusA] ?? 99;
+      const priorityB = priorityOrder[errandStatusB] ?? 99;
+
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+
+      // Secondary sort: within same status, sort by newest first
+      return 0; // Keep original order if priorities are equal
+    });
+
+  console.log('[MyOffer] filterStatus:', filterStatus);
+  console.log('[MyOffer] filteredBids count:', filteredBids.length);
+  filteredBids.forEach((bid, idx) => {
+    console.log(`[MyOffer] Bid ${idx + 1}: "${bid.errand?.title}" - Bid Status: ${bid.status}, Errand Status: ${bid.errand?.status}`);
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-errandify-bg p-6">
+        <p className="text-gray-600">Loading your offers...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-errandify-bg pb-32">
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/home')}
+            className="text-errandify-orange font-semibold mb-2 text-xs"
+          >
+            ← Back
+          </button>
+          <h1 className="text-2xl font-bold text-errandify-brown">MyOffer</h1>
+          <p className="text-gray-600 text-sm">Track all your offers and active jobs</p>
+        </div>
+
+        {/* Active Job Sticky Header - Only show if in_progress */}
+        {activeBid && activeBid.status === 'in_progress' && (
+          <div className={`mb-6 p-4 rounded-lg border-2 ${
+            activeBid.status === 'in_progress'
+              ? 'bg-blue-50 border-blue-300'
+              : 'bg-green-50 border-green-300'
+          }`}>
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                  {activeBid.status === 'in_progress' ? '🔄 Currently Working' : '🟢 Active Job'}
+                </p>
+                <h3 className="text-lg font-bold text-errandify-brown mt-1">
+                  {activeBid.errand?.title}
+                </h3>
+                <p className="text-sm text-gray-700 mt-1">
+                  {activeBid.errand?.asker_display_name || activeBid.errand?.asker_name || 'Anonymous'} • SGD ${Math.round(Number(activeBid.amount))}
+                </p>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(activeBid.errand?.status || activeBid.status)}`}>
+                {getStatusLabel(activeBid.errand?.status || activeBid.status)}
+              </span>
+            </div>
+
+            {/* Action Button */}
+            <button
+              onClick={() => navigate(`/errand/${activeBid.errand_id}`)}
+              className={`w-full py-3 rounded-lg font-bold text-white transition-all ${
+                activeBid.status === 'in_progress'
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-green-600 hover:bg-green-700'
+              }`}
+            >
+              {activeBid.status === 'confirmed' || activeBid.status === 'confirmed_awaiting_start' ? '▶️ Start Job' : '✏️ Continue Working'}
+            </button>
+          </div>
+        )}
+
+        {/* Search Bar */}
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search by title, category, or location..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+          />
+        </div>
+
+        {/* Filter Tabs - Organized by priority */}
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+          {['all', 'in_progress', 'confirmed', 'open', 'completed_unconfirmed', 'completed', 'rated', 'expired'].map((status) => {
+            // Count by ERRAND status, not bid status
+            const count = bids.filter(b => {
+              if (status === 'all') return true;
+              if (status === 'open') return b.errand?.status === 'open';
+              return b.errand?.status === status;
+            }).length;
+            if (count === 0 && status !== 'all') return null; // Hide empty tabs except 'All'
+
+            const labels: Record<string, string> = {
+              all: '📋 All',
+              in_progress: '🔄 In Progress',
+              confirmed: '🟢 Confirmed',
+              open: '🔓 Open',
+              completed_unconfirmed: '✔️ Awaiting Review',
+              completed: '✅ Completed',
+              rated: '✅ Rated & Closed',
+              expired: '⏰ Expired',
+            };
+
+            return (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={`px-4 py-2 rounded-full font-semibold text-xs whitespace-nowrap transition-all ${
+                  filterStatus === status
+                    ? 'bg-errandify-orange text-white'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:border-errandify-orange'
+                }`}
+              >
+                {labels[status]} {count > 0 ? `(${count})` : ''}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg mb-4 text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* Bids List */}
+        {filteredBids.length === 0 ? (
+          <div className="bg-white rounded-lg p-8 text-center">
+            <p className="text-gray-600 mb-2">
+              {filterStatus === 'all' ? 'No offers yet' : `No ${filterStatus} offers`}
+            </p>
+            <p className="text-xs text-gray-500">
+              Start browsing errands and place your first offer!
+            </p>
+            <button
+              onClick={() => navigate('/browse')}
+              className="mt-4 px-4 py-2 bg-errandify-orange text-white rounded-lg font-semibold text-sm hover:bg-opacity-90"
+            >
+              Browse ToHelp
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filteredBids.map((bid) => (
+              <div
+                key={bid.id}
+                className={`bg-white rounded-lg p-2 border transition-all text-sm ${
+                  bid === activeBid
+                    ? 'border-green-300 shadow-md'
+                    : 'border-gray-200 hover:shadow-md'
+                }`}
+              >
+                {/* Line 1: Title, Errand ID, Status */}
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <h3 className="font-semibold text-errandify-brown text-sm truncate">
+                      {bid.errand?.title || 'Errand #' + bid.errand_id}
+                    </h3>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded font-mono whitespace-nowrap">
+                      {bid.errand?.formatted_id || `ER26${String(bid.errand_id).padStart(2, '0')}-${String(bid.id).slice(-4).toUpperCase().padEnd(4, '0')}`}
+                    </span>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border whitespace-nowrap ${getStatusColor(bid.errand?.status || bid.status)}`}>
+                    {getStatusLabel(bid.errand?.status || bid.status)}
+                  </span>
+                </div>
+
+                {/* Line 2: Posted by + Category on left, Price + ID on right */}
+                <div className="flex items-start justify-between gap-2 text-xs mb-1">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <p className="text-gray-600 whitespace-nowrap">by {bid.errand?.asker_alias || bid.errand?.asker_name || 'Unknown'}</p>
+                    {bid.errand?.category && (
+                      <span className="px-2 py-0.5 bg-orange-100 text-errandify-orange rounded text-xs font-semibold whitespace-nowrap">
+                        {bid.errand.category}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-gray-700 font-semibold">SGD ${Number(bid.amount).toFixed(2)}</p>
+                    <p className="text-gray-500 font-mono text-xs">{bid.offer_id || `OF${bid.id}`}</p>
+                  </div>
+                </div>
+
+                {/* Line 3: Date/Time + Location on left, Offer placed date on right */}
+                <div className="flex items-center justify-between gap-2 text-xs mb-1 flex-wrap">
+                  <div className="flex items-center gap-2 text-gray-600 flex-wrap">
+                    {bid.errand?.deadline && (
+                      <>
+                        <span>📅 {new Date(bid.errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}</span>
+                        <span>⏰ {new Date(bid.errand.deadline).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}</span>
+                      </>
+                    )}
+                    {(() => {
+                      const isCompleted = bid.errand?.status === 'completed' || bid.errand?.status === 'completed_confirmed' || bid.errand?.status === 'completed_unconfirmed';
+                      const isExpired = bid.errand?.status === 'expired';
+
+                      // Don't show location for expired errands
+                      if (isExpired) return null;
+
+                      // For completed: only show if area is valid and not generic
+                      if (isCompleted) {
+                        const loc = bid.errand?.location?.trim() || '';
+                        if (!loc || loc.toLowerCase() === 'singapore' || loc.toLowerCase() === 'remote') {
+                          return null;
+                        }
+                        return (
+                          <span>
+                            📍 {loc}
+                          </span>
+                        );
+                      }
+
+                      // For active: show full address or location + postal
+                      if (bid.errand?.location || bid.errand?.postal_code) {
+                        const displayText = bid.errand.full_address
+                          ? bid.errand.full_address
+                          : `${bid.errand.location || ''}${bid.errand?.postal_code ? ` ${bid.errand.postal_code}` : ''}`.trim();
+
+                        return (
+                          <span>
+                            📍 {displayText}
+                          </span>
+                        );
+                      }
+
+                      return null;
+                    })()}
+                  </div>
+                  <p className="text-gray-400 whitespace-nowrap">Offer placed {new Date(bid.created_at).toLocaleDateString()}</p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-1 flex-wrap mt-2">
+                  {bid.errand?.status !== 'expired' && (
+                    <button
+                      onClick={() => navigate(`/errand/${bid.errand_id}`)}
+                      className="flex-1 px-2 py-1 border border-gray-300 text-gray-700 rounded font-semibold text-xs hover:bg-gray-50 min-w-20"
+                    >
+                      View Details
+                    </button>
+                  )}
+
+                  {bid.status === 'pending' && bid.errand?.status !== 'expired' && (
+                    <button
+                      onClick={() => navigate(`/errand/${bid.errand_id}`)}
+                      className="flex-1 px-2 py-1 bg-errandify-orange text-white rounded font-semibold text-xs hover:bg-opacity-90"
+                    >
+                      Edit Offer
+                    </button>
+                  )}
+
+                  {/* Show Chat if errand is in_progress or pending review, regardless of bid status */}
+                  {(bid.errand?.status === 'in_progress' || bid.status === 'completed_unconfirmed') && (
+                    <button
+                      onClick={() => {
+                        setSelectedErrandId(bid.errand_id);
+                        setShowChatbox(true);
+                      }}
+                      className="flex-1 px-2 py-1 border-2 border-blue-400 text-blue-600 rounded font-semibold text-xs hover:bg-blue-50"
+                    >
+                      💬 Chat
+                    </button>
+                  )}
+
+                  {/* Show Confirm only if bid is accepted AND errand is still open */}
+                  {bid.status === 'accepted' && bid.errand?.status === 'open' && (
+                    <button
+                      onClick={() => handleConfirmBid(bid.id)}
+                      className="flex-1 px-2 py-1 bg-green-600 text-white rounded font-semibold text-xs hover:bg-green-700"
+                    >
+                      ✅ Confirm
+                    </button>
+                  )}
+
+                  {/* Show Start if errand is confirmed */}
+                  {(bid.errand?.status === 'confirmed' || bid.errand?.status === 'confirmed_awaiting_start') && (
+                    <button
+                      onClick={() => navigate(`/errand/${bid.errand_id}`)}
+                      className="flex-1 px-2 py-1 bg-emerald-600 text-white rounded font-semibold text-xs hover:bg-emerald-700"
+                    >
+                      ▶️ Start
+                    </button>
+                  )}
+
+                  {bid.status === 'completed_unconfirmed' && (
+                    <button
+                      onClick={() => navigate(`/errand/${bid.errand_id}`)}
+                      className="flex-1 px-2 py-1 bg-gradient-to-r from-amber-400 to-yellow-500 text-white rounded font-semibold text-xs hover:from-amber-500 hover:to-yellow-600 hover:shadow-md transition-all transform hover:scale-105"
+                    >
+                      ⭐ Show Some Love! +5 EP
+                    </button>
+                  )}
+                </div>
+
+                {/* Photo Preview Section - Show when bid is completed */}
+                {(bid.status === 'completed_unconfirmed' || bid.status === 'completed_confirmed') && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <p className="text-xs font-semibold text-gray-700 mb-2">Your submitted photos:</p>
+                    <button
+                      onClick={() => navigate(`/errand/${bid.errand_id}`)}
+                      className="text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                    >
+                      View all photos & details
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Summary */}
+        {filteredBids.length > 0 && (
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-800">
+              📊 <span className="font-semibold">{filteredBids.length}</span> offer
+              {filteredBids.length !== 1 ? 's' : ''} {filterStatus === 'all' ? 'total' : `in "${filterStatus}" status`}
+            </p>
+          </div>
+        )}
+
+        {/* TaskChatbox Modal - Handles its own modal wrapper */}
+        {showChatbox && selectedErrandId && (() => {
+          const selectedBid = bids.find(b => b.errand_id === selectedErrandId);
+          return (
+            <TaskChatbox
+              taskId={selectedErrandId}
+              taskTitle={selectedBid?.errand?.title || 'Errand'}
+              isOpen={showChatbox}
+              onClose={() => {
+                setShowChatbox(false);
+                setSelectedErrandId(null);
+              }}
+              errandDetails={{
+                budget: selectedBid?.errand?.budget ? Number(selectedBid.errand.budget) : undefined,
+                description: selectedBid?.errand?.description,
+                location: selectedBid?.errand?.location,
+                postal_code: selectedBid?.errand?.postal_code,
+                deadline: selectedBid?.errand?.deadline,
+              }}
+            />
+          );
+        })()}
+      </div>
+    </div>
+  );
+}

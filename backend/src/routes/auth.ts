@@ -500,6 +500,15 @@ router.post('/demo-login', async (req: Request, res: Response) => {
         gender: 'M',
         bio: 'Need help with household chores and errands'
       },
+      company_owner: {
+        mobile: '+6584234567',
+        email: 'john.lim@rumahemas.sg',
+        name: 'John Lim',
+        nric: 'S1111111A',
+        defaultRole: 'asker',
+        gender: 'M',
+        bio: 'Company owner - Rumah Emas Demo Company'
+      }
     };
 
     const demoUser = demoAccounts[account.toLowerCase()];

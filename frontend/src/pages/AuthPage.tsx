@@ -94,6 +94,13 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
 
       const userData = response.data.data.user;
       onLogin(userData.role || 'asker');
+
+      // Check if company owner and redirect to company dashboard
+      if (account === 'company_owner') {
+        navigate('/company/dashboard');
+      } else {
+        navigate('/home');
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login failed');
       setLoading(false);
@@ -241,6 +248,13 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
                 className="w-full py-2 px-4 bg-purple-50 border-2 border-purple-300 text-purple-700 rounded-lg font-semibold hover:bg-purple-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 👨‍⚖️ Demo: Support L3 (Final Appeals)
+              </button>
+              <button
+                onClick={() => handleDemoLogin('company_owner')}
+                disabled={loading}
+                className="w-full py-2 px-4 bg-amber-50 border-2 border-amber-300 text-amber-700 rounded-lg font-semibold hover:bg-amber-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                🏢 Demo: Company Owner (Rumah Emas)
               </button>
             </div>
           </div>

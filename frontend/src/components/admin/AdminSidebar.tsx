@@ -24,6 +24,17 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
+    id: 'company',
+    label: 'Company',
+    icon: '🏢',
+    children: [
+      { id: 'company-mgmt', label: 'Company Management', icon: '👔', path: '/admin/company/management' },
+      { id: 'subscriptions', label: 'Subscription Packages', icon: '💳', path: '/admin/company/subscriptions' },
+      { id: 'advertising', label: 'Advertising Approval', icon: '📸', path: '/admin/company/advertising' },
+      { id: 'partner-tiers', label: 'Partner Tiers', icon: '👑', path: '/admin/company/partner-tiers' },
+    ]
+  },
+  {
     id: 'manage',
     label: 'Manage',
     icon: '🛠️',
@@ -88,7 +99,7 @@ const menuItems: MenuItem[] = [
 
 export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['dashboard', 'reports'])
+    new Set(['dashboard', 'reports', 'company'])
   );
   const location = useLocation();
   const navigate = useNavigate();

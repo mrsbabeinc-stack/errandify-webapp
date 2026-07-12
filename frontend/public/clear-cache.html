@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Cache</title>
+</head>
+<body>
+    <h1>Clearing cache...</h1>
+    <script>
+        // Unregister all service workers
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(reg => {
+                reg.unregister();
+                console.log('Unregistered service worker');
+            });
+        });
+
+        // Clear all caches
+        caches.keys().then(cacheNames => {
+            cacheNames.forEach(cacheName => {
+                caches.delete(cacheName);
+                console.log('Deleted cache:', cacheName);
+            });
+        });
+
+        // Clear localStorage
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // Redirect after 2 seconds
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 2000);
+    </script>
+</body>
+</html>

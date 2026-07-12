@@ -21,7 +21,7 @@ interface TaskData {
   repeatEvery?: number;
   repeatUnit?: 'day' | 'week' | 'month';
   occurrences?: number;
-  suggestedSkills?: string[];
+  suggestedCertifications?: string[];
   suggestedDescription?: string;
   suggestedNotes?: string;
 }
@@ -247,7 +247,6 @@ export default function HanaTaskCreation({
         repeatEvery: extracted.repeatEvery || 1,
         repeatUnit: extracted.repeatUnit || 'week',
         occurrences: extracted.occurrences || 1,
-        suggestedSkills: extracted.suggestedSkills || [],
       };
 
       console.log('[Hana] Updated task data:', updatedTaskData);
@@ -274,43 +273,15 @@ export default function HanaTaskCreation({
         return;
       }
 
-      // Get AI suggestions for this category (even with incomplete data)
-      // Qwen will be called again in the form when more details are added
-      let enhancedTaskData = { ...updatedTaskData };
-      try {
-        console.log('[Hana] Requesting suggestions for:', updatedTaskData.category);
-        const suggestionsResponse = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
-          {
-            title: updatedTaskData.title,
-            description: updatedTaskData.description,
-            category: updatedTaskData.category,
-            date: updatedTaskData.date || 'TBD',
-            time: updatedTaskData.time || 'TBD',
-          }
-        );
+      // Skip suggestions in Hana - form will fetch them for better UX
+      // This way user sees pre-filled form immediately without waiting for Qwen to generate tips
+      const enhancedTaskData = {
+        ...updatedTaskData,
+        description: '', // Form will refetch if needed
+        notes: '', // Form will refetch if needed
+      };
 
-        console.log('[Hana] Suggestions response:', suggestionsResponse.data);
-
-        const suggestions = suggestionsResponse.data.data;
-        // Don't auto-fill description and notes - just send the suggestion data separately
-        // Form will show these as suggestion boxes for user to click and apply
-        enhancedTaskData = {
-          ...updatedTaskData,
-          description: '', // Keep empty - user will click "Use" button to apply
-          notes: '', // Keep empty - user will click "Use" button to apply
-          suggestedSkills: suggestions.skills || [],
-          // These will be passed to form via aiSuggestions state
-          suggestedDescription: suggestions.description,
-          suggestedNotes: suggestions.notes,
-        };
-
-        console.log('[Hana] Enhanced task data with suggestions:', enhancedTaskData);
-      } catch (suggestionsError) {
-        console.warn('[Hana] Suggestions call failed (will retry in form):', suggestionsError instanceof Error ? suggestionsError.message : suggestionsError);
-        // Continue without suggestions - form will call again
-        enhancedTaskData = updatedTaskData;
-      }
+      console.log('[Hana] Skipping suggestions fetch (form will fetch them). Task data ready.');
 
       // Validate date and time ONLY if user provided them
       if (enhancedTaskData.date && enhancedTaskData.date !== 'TBD' && enhancedTaskData.time && enhancedTaskData.time !== 'TBD') {

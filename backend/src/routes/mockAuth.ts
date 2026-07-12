@@ -16,6 +16,14 @@ router.post('/mock-singpass-login', (req: Request, res: Response) => {
 
     // Simulate SingPass returning user data
     const mockUsers: Record<string, any> = {
+      'owner@test.com': {
+        id: 1,
+        nric: '0123456789DEF',
+        displayName: 'Rumah Emas Owner',
+        email: 'owner@rumahemas.sg',
+        phone: '+6565123456',
+        role: 'company_owner',
+      },
       'asker@test.com': {
         id: 2,
         nric: '1234567890ABC',
