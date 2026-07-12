@@ -392,7 +392,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
               <div
                 key={errand.id}
                 className="bg-white rounded-xl shadow-sm hover:shadow-md hover:border-orange-200 transition-all cursor-pointer border border-orange-50 overflow-hidden"
-                onClick={() => navigate(`/errand/${errand.id}`)}
+                onClick={() => navigate(`/errand/${errand.id}`, { state: { userRole } })}
               >
                 <div className="p-2">
                 {/* Title + Budget + Your Bid */}

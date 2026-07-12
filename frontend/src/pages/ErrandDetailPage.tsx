@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import BidSubmissionModal from '../components/BidSubmissionModal';
 import BidsViewer from '../components/BidsViewer';
@@ -52,9 +52,13 @@ interface Props {
 }
 
 export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
-  console.log('[ErrandDetail] Component mounted with userRole:', userRole);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Use userRole from navigation state if available (e.g., from company dashboard)
+  const effectiveUserRole = (location.state?.userRole as 'asker' | 'doer') || userRole;
+  console.log('[ErrandDetail] Component mounted with userRole:', effectiveUserRole, 'from state:', location.state?.userRole, 'from prop:', userRole);
   const activityTimelineRef = useRef<any>(null);
   const bidsViewerRef = useRef<any>(null);
   const [errand, setErrand] = useState<ErrandDetail | null>(null);
@@ -212,7 +216,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
   // Redirect askers to their own errands page if they try to browse others' posts
   useEffect(() => {
-    if (errand && userRole === 'asker' && currentUser && currentUser.id !== errand.askerId) {
+    if (errand && effectiveUserRole === 'asker' && currentUser && currentUser.id !== errand.askerId) {
       navigate('/errands', { replace: true });
     }
   }, [errand, userRole, currentUser, navigate]);
@@ -1170,7 +1174,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   ✕ Cancel
                 </button>
               </div>
-            ) : errand.status === 'confirmed' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
+            ) : errand.status === 'confirmed' && currentUser && currentUser.id !== errand.askerId && effectiveUserRole === 'doer' ? (
               // Doer can start errand once it's confirmed, or cancel if within window
               <div className="flex gap-2 mt-2">
                 <button
@@ -1218,7 +1222,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   ✕ Cancel
                 </button>
               </div>
-            ) : errand.status === 'in_progress' && currentUser && currentUser.id !== errand.askerId && userRole === 'doer' ? (
+            ) : errand.status === 'in_progress' && currentUser && currentUser.id !== errand.askerId && effectiveUserRole === 'doer' ? (
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => setShowChat(true)}
