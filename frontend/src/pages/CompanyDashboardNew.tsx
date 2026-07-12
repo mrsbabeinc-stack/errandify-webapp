@@ -12,7 +12,7 @@ import AskerPostErrand from '../components/AskerPostErrand';
 import AskerBidsReceived from '../components/AskerBidsReceived';
 import AskerReviews from '../components/AskerReviews';
 import ErrandsPage from './ErrandsPage';
-import DoerBrowseErrands from '../components/DoerBrowseErrands';
+import DoerBrowsePage from './DoerBrowsePage';
 import DoerAllocateErrands from '../components/DoerAllocateErrands';
 import DoerMyOffers from '../components/DoerMyOffers';
 import DoerActiveErrands from '../components/DoerActiveErrands';
@@ -1451,7 +1451,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
           {/* DOER SECTION - Browse Errands */}
           {activeSection === 'doer-browse' && (
             <div className="section-content">
-              <DoerBrowseErrands userRole="owner" />
+              <DoerBrowsePage userRole="doer" />
             </div>
           )}
 
