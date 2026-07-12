@@ -9,31 +9,46 @@
 
 .registration-card {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  padding: 40px;
-  max-width: 600px;
+  border-radius: 16px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+  padding: 48px;
+  max-width: 700px;
   width: 100%;
+}
+
+.header-section {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.header-section .icon {
+  font-size: 48px;
+  margin-bottom: 16px;
 }
 
 .registration-card h1 {
   color: #1B5E75;
-  font-size: 28px;
+  font-size: 32px;
   margin-bottom: 8px;
   font-weight: 700;
 }
 
 .registration-card .subtitle {
   color: #666;
-  font-size: 14px;
-  margin-bottom: 30px;
+  font-size: 16px;
+  margin-bottom: 0;
+  line-height: 1.5;
 }
 
 .alert {
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 24px;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
 }
 
 .alert-error {
@@ -51,13 +66,28 @@
 form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 28px;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-section h3 {
+  color: #1B5E75;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .form-row {
@@ -72,21 +102,42 @@ form {
   font-size: 14px;
 }
 
+.form-group label .optional {
+  color: #999;
+  font-weight: 400;
+  font-size: 12px;
+}
+
 .form-group input,
 .form-group textarea {
   padding: 12px 16px;
   border: 2px solid #E0E0E0;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
   font-family: inherit;
   transition: all 0.2s ease;
+  background: #FAFAFA;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
   border-color: #FF6B35;
+  background: white;
   box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.form-group input:disabled,
+.form-group textarea:disabled {
+  background: #F5F5F5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-group input.error,
+.form-group textarea.error {
+  border-color: #C62828;
+  background: #FFEBEE;
 }
 
 .form-group input::placeholder,
@@ -94,35 +145,80 @@ form {
   color: #999;
 }
 
+.field-error {
+  color: #C62828;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.field-hint {
+  color: #999;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
 .submit-btn {
-  background: #FF6B35;
-  color: white;
   padding: 14px 24px;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 10px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
 }
 
-.submit-btn:hover:not(:disabled) {
+.submit-btn.primary {
+  background: #FF6B35;
+  color: white;
+  flex: 2;
+}
+
+.submit-btn.primary:hover:not(:disabled) {
   background: #E55A24;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.3);
+}
+
+.submit-btn.secondary {
+  background: white;
+  color: #666;
+  border: 2px solid #E0E0E0;
+  flex: 1;
+}
+
+.submit-btn.secondary:hover:not(:disabled) {
+  border-color: #FF6B35;
+  color: #FF6B35;
+  background: #FFF5F0;
 }
 
 .submit-btn:disabled {
   background: #CCC;
+  color: #999;
   cursor: not-allowed;
+  transform: none;
 }
 
 .support-text {
   text-align: center;
   color: #666;
-  font-size: 14px;
-  margin-top: 20px;
+  font-size: 12px;
+  margin-top: 16px;
+  line-height: 1.6;
 }
 
 .support-text a {
@@ -142,11 +238,27 @@ form {
     padding: 24px;
   }
 
+  .header-section .icon {
+    font-size: 40px;
+  }
+
   .registration-card h1 {
-    font-size: 24px;
+    font-size: 28px;
+  }
+
+  .registration-card .subtitle {
+    font-size: 14px;
   }
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .submit-btn {
+    flex: 1 !important;
   }
 }

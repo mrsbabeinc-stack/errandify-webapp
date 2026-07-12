@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import MockSingpassModal from './MockSingpassModal';
 import CompleteProfileStep from './CompleteProfileStep';
+import CompanySignupPromptModal from '../CompanySignupPromptModal';
 
-type SignupStep = 'mock-singpass' | 'complete-profile';
+type SignupStep = 'mock-singpass' | 'complete-profile' | 'company-prompt';
 
 interface SignupFlowProps {
   onComplete: () => void;
@@ -26,6 +27,12 @@ export default function SignupFlow({ onComplete, onBack }: SignupFlowProps) {
   };
 
   const handleProfileComplete = () => {
+    // Show company signup prompt instead of immediately completing
+    setStep('company-prompt');
+  };
+
+  const handleCompanyPromptClose = () => {
+    // User dismissed/skipped company signup, complete the overall flow
     onComplete();
   };
 
@@ -44,6 +51,10 @@ export default function SignupFlow({ onComplete, onBack }: SignupFlowProps) {
           onBack={() => setStep('mock-singpass')}
         />
       )}
+      <CompanySignupPromptModal
+        isOpen={step === 'company-prompt'}
+        onClose={handleCompanyPromptClose}
+      />
     </div>
   );
 }
