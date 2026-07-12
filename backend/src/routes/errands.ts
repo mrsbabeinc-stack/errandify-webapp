@@ -244,6 +244,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
           askerRating: 4.8, // TODO: Calculate from ratings table
           bidCount: bidCount,
           unviewedBidCount: unviewedCount,
+          acceptedBidId: errand.accepted_bid_id,
           createdAt: errand.created_at,
           updatedAt: errand.updated_at,
         };
