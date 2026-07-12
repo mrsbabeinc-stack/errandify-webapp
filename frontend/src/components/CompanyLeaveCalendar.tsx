@@ -15,6 +15,20 @@ interface Leave {
   createdDate: string;
 }
 
+interface LeaveBalance {
+  employeeId: string;
+  employeeName: string;
+  fullDay: number;
+  halfDay: number;
+  timeOff: number;
+}
+
+interface CompanyLeavePolicy {
+  fullDayPerYear: number;
+  halfDayPerYear: number;
+  timeOffHoursPerYear: number;
+}
+
 interface CompanyLeaveCalendarProps {
   viewMode?: 'calendar' | 'list';
 }
@@ -22,6 +36,22 @@ interface CompanyLeaveCalendarProps {
 const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 'calendar' }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 6)); // July 2026
   const [view, setView] = useState<'today' | 'week' | 'month'>('today');
+  const [showSetup, setShowSetup] = useState(false);
+  const [leavePolicy, setLeavePolicy] = useState<CompanyLeavePolicy>({
+    fullDayPerYear: 14,
+    halfDayPerYear: 8,
+    timeOffHoursPerYear: 40,
+  });
+
+  const [leaveBalances, setLeaveBalances] = useState<LeaveBalance[]>([
+    { employeeId: 'STF-001', employeeName: 'Jordan Smith', fullDay: 12, halfDay: 6, timeOff: 32 },
+    { employeeId: 'STF-002', employeeName: 'Ava Johnson', fullDay: 14, halfDay: 8, timeOff: 40 },
+    { employeeId: 'STF-003', employeeName: 'Liam Brown', fullDay: 10, halfDay: 5, timeOff: 24 },
+    { employeeId: 'STF-004', employeeName: 'Mason Wilson', fullDay: 11, halfDay: 7, timeOff: 28 },
+    { employeeId: 'STF-005', employeeName: 'Sarah Davis', fullDay: 14, halfDay: 8, timeOff: 40 },
+    { employeeId: 'STF-006', employeeName: 'Emily Lee', fullDay: 13, halfDay: 7, timeOff: 36 },
+  ]);
+
   const [leaves, setLeaves] = useState<Leave[]>([
     {
       id: 1,
@@ -85,6 +115,25 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
     emp.name.toLowerCase().includes(employeeSearchInput.toLowerCase()) ||
     emp.id.includes(employeeSearchInput)
   );
+
+  const getEmployeeLeaveBalance = (employeeId: string) => {
+    return leaveBalances.find(b => b.employeeId === employeeId);
+  };
+
+  const calculateRemainingBalance = (employeeId: string, leaveType: string) => {
+    const balance = getEmployeeLeaveBalance(employeeId);
+    if (!balance) return null;
+
+    let remaining = 0;
+    if (leaveType === 'full-day') remaining = balance.fullDay - 1;
+    else if (leaveType === 'half-day-morning' || leaveType === 'half-day-afternoon') remaining = balance.halfDay - 1;
+    else if (leaveType === 'time-off') remaining = balance.timeOff - 1;
+
+    return {
+      current: { fullDay: balance.fullDay, halfDay: balance.halfDay, timeOff: balance.timeOff },
+      remaining: { fullDay: leaveType === 'full-day' ? remaining : balance.fullDay, halfDay: leaveType === 'half-day-morning' || leaveType === 'half-day-afternoon' ? remaining : balance.halfDay, timeOff: leaveType === 'time-off' ? remaining : balance.timeOff }
+    };
+  };
 
   const daysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
@@ -177,7 +226,10 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
               📊 Month
             </button>
           </div>
-          <button className="btn-primary" onClick={() => setShowModal(true)}>+ Request Leave</button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn-setup" onClick={() => setShowSetup(true)}>⚙️ Leave Setup</button>
+            <button className="btn-primary" onClick={() => setShowModal(true)}>+ Request Leave</button>
+          </div>
         </div>
       </div>
 
@@ -293,6 +345,126 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
         </div>
       )}
 
+      {/* Leave Setup Modal */}
+      {showSetup && (
+        <div className="modal-overlay" onClick={() => setShowSetup(false)}>
+          <div className="modal-content modal-large" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Leave Policy Setup</h3>
+              <button className="close-btn" onClick={() => setShowSetup(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              {/* Company Policy Section */}
+              <div className="setup-section">
+                <h4>Company Leave Policy</h4>
+                <div className="policy-form">
+                  <div className="policy-input-group">
+                    <label>Full Day Leaves per Year</label>
+                    <input
+                      type="number"
+                      value={leavePolicy.fullDayPerYear}
+                      onChange={e => setLeavePolicy({ ...leavePolicy, fullDayPerYear: parseInt(e.target.value) })}
+                    />
+                  </div>
+                  <div className="policy-input-group">
+                    <label>Half Day Leaves per Year</label>
+                    <input
+                      type="number"
+                      value={leavePolicy.halfDayPerYear}
+                      onChange={e => setLeavePolicy({ ...leavePolicy, halfDayPerYear: parseInt(e.target.value) })}
+                    />
+                  </div>
+                  <div className="policy-input-group">
+                    <label>Time Off Hours per Year</label>
+                    <input
+                      type="number"
+                      value={leavePolicy.timeOffHoursPerYear}
+                      onChange={e => setLeavePolicy({ ...leavePolicy, timeOffHoursPerYear: parseInt(e.target.value) })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Employee Leave Balances Section */}
+              <div className="setup-section">
+                <h4>Employee Leave Balances</h4>
+                <div className="balance-table-container">
+                  <table className="balance-table">
+                    <thead>
+                      <tr>
+                        <th>Employee ID</th>
+                        <th>Employee Name</th>
+                        <th>Full Day</th>
+                        <th>Half Day</th>
+                        <th>Time Off (hrs)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leaveBalances.map(balance => (
+                        <tr key={balance.employeeId}>
+                          <td><strong>{balance.employeeId}</strong></td>
+                          <td>{balance.employeeName}</td>
+                          <td>
+                            <input
+                              type="number"
+                              value={balance.fullDay}
+                              onChange={e => {
+                                const updated = leaveBalances.map(b =>
+                                  b.employeeId === balance.employeeId
+                                    ? { ...b, fullDay: parseInt(e.target.value) }
+                                    : b
+                                );
+                                setLeaveBalances(updated);
+                              }}
+                              className="balance-input"
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              value={balance.halfDay}
+                              onChange={e => {
+                                const updated = leaveBalances.map(b =>
+                                  b.employeeId === balance.employeeId
+                                    ? { ...b, halfDay: parseInt(e.target.value) }
+                                    : b
+                                );
+                                setLeaveBalances(updated);
+                              }}
+                              className="balance-input"
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              value={balance.timeOff}
+                              onChange={e => {
+                                const updated = leaveBalances.map(b =>
+                                  b.employeeId === balance.employeeId
+                                    ? { ...b, timeOff: parseInt(e.target.value) }
+                                    : b
+                                );
+                                setLeaveBalances(updated);
+                              }}
+                              className="balance-input"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button className="btn-primary" onClick={() => setShowSetup(false)}>Save Changes</button>
+                <button className="btn-secondary" onClick={() => setShowSetup(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Leave Request Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
@@ -342,6 +514,28 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
                   )}
                 </div>
               </div>
+
+              {/* Leave Balance Display */}
+              {selectedEmployee && getEmployeeLeaveBalance(selectedEmployee) && (
+                <div className="balance-summary">
+                  <div className="balance-title">📊 Current Leave Balance</div>
+                  <div className="balance-cards">
+                    <div className="balance-card">
+                      <span className="balance-label">Full Day</span>
+                      <span className="balance-value">{getEmployeeLeaveBalance(selectedEmployee)?.fullDay ?? 0}</span>
+                    </div>
+                    <div className="balance-card">
+                      <span className="balance-label">Half Day</span>
+                      <span className="balance-value">{getEmployeeLeaveBalance(selectedEmployee)?.halfDay ?? 0}</span>
+                    </div>
+                    <div className="balance-card">
+                      <span className="balance-label">Time Off (hrs)</span>
+                      <span className="balance-value">{getEmployeeLeaveBalance(selectedEmployee)?.timeOff ?? 0}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="form-group">
                 <label>Leave Type</label>
                 <select value={leaveType} onChange={e => setLeaveType(e.target.value as any)}>
@@ -351,6 +545,33 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
                   <option value="time-off">Time Off - Custom Hours</option>
                 </select>
               </div>
+
+              {/* Remaining Balance Preview */}
+              {selectedEmployee && leaveType && (
+                <div className="remaining-balance-preview">
+                  <div className="preview-label">📈 Balance After Apply</div>
+                  <div className="preview-content">
+                    {leaveType === 'full-day' && getEmployeeLeaveBalance(selectedEmployee) && (
+                      <div className="preview-info">
+                        <span>Full Day: <strong>{getEmployeeLeaveBalance(selectedEmployee)!.fullDay}</strong> → <strong style={{ color: getEmployeeLeaveBalance(selectedEmployee)!.fullDay - 1 < 0 ? '#E74C3C' : '#27AE60' }}>{getEmployeeLeaveBalance(selectedEmployee)!.fullDay - 1}</strong></span>
+                        {getEmployeeLeaveBalance(selectedEmployee)!.fullDay - 1 < 0 && <span style={{ color: '#E74C3C', fontSize: '12px' }}>⚠️ Insufficient balance</span>}
+                      </div>
+                    )}
+                    {(leaveType === 'half-day-morning' || leaveType === 'half-day-afternoon') && getEmployeeLeaveBalance(selectedEmployee) && (
+                      <div className="preview-info">
+                        <span>Half Day: <strong>{getEmployeeLeaveBalance(selectedEmployee)!.halfDay}</strong> → <strong style={{ color: getEmployeeLeaveBalance(selectedEmployee)!.halfDay - 1 < 0 ? '#E74C3C' : '#27AE60' }}>{getEmployeeLeaveBalance(selectedEmployee)!.halfDay - 1}</strong></span>
+                        {getEmployeeLeaveBalance(selectedEmployee)!.halfDay - 1 < 0 && <span style={{ color: '#E74C3C', fontSize: '12px' }}>⚠️ Insufficient balance</span>}
+                      </div>
+                    )}
+                    {leaveType === 'time-off' && getEmployeeLeaveBalance(selectedEmployee) && (
+                      <div className="preview-info">
+                        <span>Time Off: <strong>{getEmployeeLeaveBalance(selectedEmployee)!.timeOff}</strong> → <strong style={{ color: getEmployeeLeaveBalance(selectedEmployee)!.timeOff - 1 < 0 ? '#E74C3C' : '#27AE60' }}>{getEmployeeLeaveBalance(selectedEmployee)!.timeOff - 1}</strong></span>
+                        {getEmployeeLeaveBalance(selectedEmployee)!.timeOff - 1 < 0 && <span style={{ color: '#E74C3C', fontSize: '12px' }}>⚠️ Insufficient balance</span>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="form-group">
                 <label>Date</label>
@@ -978,6 +1199,199 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
 
         .selected-employee-display strong {
           color: #1B5E20;
+        }
+
+        .btn-setup {
+          padding: 10px 16px;
+          background: #f0f0f0;
+          color: #333;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 13px;
+          transition: all 0.2s;
+        }
+
+        .btn-setup:hover {
+          background: #e0e0e0;
+          transform: translateY(-2px);
+        }
+
+        .modal-large {
+          max-width: 900px !important;
+          max-height: 90vh !important;
+          overflow-y: auto !important;
+        }
+
+        .setup-section {
+          margin-bottom: 28px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid #e0e0e0;
+        }
+
+        .setup-section:last-child {
+          border-bottom: none;
+        }
+
+        .setup-section h4 {
+          margin: 0 0 16px 0;
+          font-size: 15px;
+          font-weight: 600;
+          color: #333;
+        }
+
+        .policy-form {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+        }
+
+        .policy-input-group {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .policy-input-group label {
+          margin-bottom: 8px;
+          font-weight: 600;
+          font-size: 13px;
+          color: #666;
+        }
+
+        .policy-input-group input {
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          font-size: 14px;
+        }
+
+        .balance-table-container {
+          overflow-x: auto;
+          max-height: 400px;
+          overflow-y: auto;
+          border: 1px solid #e0e0e0;
+          border-radius: 8px;
+        }
+
+        .balance-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 13px;
+        }
+
+        .balance-table thead {
+          background: #f5f5f5;
+          position: sticky;
+          top: 0;
+        }
+
+        .balance-table th {
+          padding: 12px;
+          text-align: left;
+          font-weight: 600;
+          color: #333;
+          border-bottom: 2px solid #e0e0e0;
+        }
+
+        .balance-table td {
+          padding: 12px;
+          border-bottom: 1px solid #f0f0f0;
+        }
+
+        .balance-table tr:hover {
+          background: #fafafa;
+        }
+
+        .balance-input {
+          width: 100%;
+          padding: 8px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-size: 13px;
+          text-align: center;
+        }
+
+        .balance-input:focus {
+          outline: none;
+          border-color: #FF6B35;
+          box-shadow: 0 0 4px rgba(255, 107, 53, 0.2);
+        }
+
+        .balance-summary {
+          background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+          border: 1px solid #90CAF9;
+          border-radius: 8px;
+          padding: 16px;
+          margin-bottom: 20px;
+        }
+
+        .balance-title {
+          font-weight: 600;
+          margin-bottom: 12px;
+          font-size: 13px;
+          color: #0D47A1;
+        }
+
+        .balance-cards {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          gap: 12px;
+        }
+
+        .balance-card {
+          background: #fff;
+          border-left: 3px solid #2196F3;
+          padding: 12px;
+          border-radius: 6px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .balance-label {
+          font-size: 11px;
+          color: #666;
+          font-weight: 600;
+        }
+
+        .balance-value {
+          font-size: 18px;
+          font-weight: 700;
+          color: #0D47A1;
+        }
+
+        .remaining-balance-preview {
+          background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%);
+          border: 1px solid #CE93D8;
+          border-radius: 8px;
+          padding: 14px;
+          margin-bottom: 16px;
+        }
+
+        .preview-label {
+          font-weight: 600;
+          margin-bottom: 10px;
+          font-size: 12px;
+          color: #6A1B9A;
+        }
+
+        .preview-content {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .preview-info {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          font-size: 13px;
+        }
+
+        .preview-info span {
+          flex: 1;
         }
       `}</style>
     </div>
