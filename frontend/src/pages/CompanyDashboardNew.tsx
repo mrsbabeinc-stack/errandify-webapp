@@ -4,7 +4,6 @@ import '../styles/CompanyDashboardNew.css';
 import CompanyLeaveCalendar from '../components/CompanyLeaveCalendar';
 import CompanyPointsDistribution from '../components/CompanyPointsDistribution';
 import CompanyStaffResignation from '../components/CompanyStaffResignation';
-import CompanyAdvertisingManagement from '../components/CompanyAdvertisingManagement';
 import CompanyPaymentHistory from '../components/CompanyPaymentHistory';
 import ManagerStaffAllocations from '../components/ManagerStaffAllocations';
 import ReviewApprovalPanel from '../components/ReviewApprovalPanel';
@@ -835,21 +834,43 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
           {activeSection === 'errand-allocation' && (
             <div className="section-content">
               <h2>Errand Allocation</h2>
-              <ManagerStaffAllocations />
+              <ManagerStaffAllocations companyId={company?.id || 1} />
             </div>
           )}
 
           {activeSection === 'review-approval' && (
             <div className="section-content">
               <h2>Review Approval</h2>
-              <ReviewApprovalPanel />
+              <ReviewApprovalPanel companyId={company?.id || 1} />
             </div>
           )}
 
           {activeSection === 'disputes' && (
             <div className="section-content">
-              <h2>Disputes</h2>
-              <DisputeReviewPanel />
+              <h2>Disputes & Cases</h2>
+              <DisputeReviewPanel
+                disputeId={1}
+                doerName="Staff Member"
+                askerName="Company"
+                jobTitle="Sample Task"
+                budget={100}
+                disputeType="Incomplete Work"
+                description="Task was not completed to specifications"
+                evidence={{
+                  hasGps: true,
+                  gpsLocation: "Singapore 123456",
+                  photoCount: 3,
+                  photoPreviews: [],
+                  hasChat: true,
+                  waitTime: 120
+                }}
+                analysis={{
+                  confidenceScore: 0.85,
+                  recommendedDecision: "Partial Refund",
+                  reasoning: "Evidence shows incomplete task, recommend 50% refund",
+                  safetyConcern: false
+                }}
+              />
             </div>
           )}
 
@@ -1457,12 +1478,6 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
           {activeSection === 'staff-resignation' && (
             <div className="section-content">
               <CompanyStaffResignation />
-            </div>
-          )}
-
-          {activeSection === 'ads' && (
-            <div className="section-content">
-              <CompanyAdvertisingManagement />
             </div>
           )}
 
