@@ -11,6 +11,7 @@ import CompanyDisputeCenter from '../components/CompanyDisputeCenter';
 import AskerPostErrand from '../components/AskerPostErrand';
 import AskerBidsReceived from '../components/AskerBidsReceived';
 import AskerReviews from '../components/AskerReviews';
+import ErrandsPage from './ErrandsPage';
 import DoerBrowseErrands from '../components/DoerBrowseErrands';
 import DoerAllocateErrands from '../components/DoerAllocateErrands';
 import DoerMyOffers from '../components/DoerMyOffers';
@@ -698,63 +699,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
 
           {activeSection === 'errands' && (
             <div className="section-content">
-              <h2>MyBizErrands</h2>
-              <div className="errands-container">
-                <div className="errands-filters">
-                  <button className="filter-chip active">All (12)</button>
-                  <button className="filter-chip">Active (5)</button>
-                  <button className="filter-chip">Completed (7)</button>
-                  <button className="filter-chip">Cancelled (0)</button>
-                </div>
-                <div className="errands-list">
-                  <div className="errand-card active">
-                    <div className="errand-header">
-                      <h4>House Cleaning - Bishan</h4>
-                      <span className="status-badge active">Active</span>
-                    </div>
-                    <p className="errand-desc">Professional house cleaning service for 3-bedroom apartment</p>
-                    <div className="errand-meta">
-                      <span>📍 Bishan, Singapore</span>
-                      <span>💰 SGD $180</span>
-                      <span>👤 Jordan Smith (Doer)</span>
-                    </div>
-                    <div className="errand-progress">
-                      <div className="progress-bar" style={{width: '60%'}}></div>
-                    </div>
-                    <p className="progress-text">In Progress - 60% complete</p>
-                  </div>
-
-                  <div className="errand-card active">
-                    <div className="errand-header">
-                      <h4>Office Renovation - Raffles</h4>
-                      <span className="status-badge active">Active</span>
-                    </div>
-                    <p className="errand-desc">Minor office renovation and painting work</p>
-                    <div className="errand-meta">
-                      <span>📍 Raffles, Singapore</span>
-                      <span>💰 SGD $450</span>
-                      <span>👤 Ava Johnson (Doer)</span>
-                    </div>
-                    <div className="errand-progress">
-                      <div className="progress-bar" style={{width: '30%'}}></div>
-                    </div>
-                    <p className="progress-text">Not Started - 0% complete</p>
-                  </div>
-
-                  <div className="errand-card completed">
-                    <div className="errand-header">
-                      <h4>Website Design - Marina Bay</h4>
-                      <span className="status-badge completed">✓ Completed</span>
-                    </div>
-                    <p className="errand-desc">Completed on July 8, 2026</p>
-                    <div className="errand-meta">
-                      <span>📍 Marina Bay, Singapore</span>
-                      <span>💰 SGD $800</span>
-                      <span>⭐ Rating: 4.9/5</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <ErrandsPage userRole="asker" />
             </div>
           )}
 
