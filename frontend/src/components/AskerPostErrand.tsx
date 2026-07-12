@@ -246,7 +246,7 @@ const AskerPostErrand: React.FC = () => {
                 onClick={() => {
                   setCurrentStep('input');
                   setInput('');
-                  setHanaMessage(`Hi! What errand do you need help with?\n\nExample:\n'Office cleaning at 238857, tomorrow 2pm, 2 hours, budget $150'`);
+                  setHanaMessage(`Hi! What errand do you need help with?\n\nExample:\n'Clean my office at 238857 tomorrow 2pm 2 hours budget $150'`);
                 }}
                 className="btn-start-over"
               >
