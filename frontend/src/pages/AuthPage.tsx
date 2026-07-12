@@ -96,9 +96,7 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
       onLogin(userData.role || 'asker');
 
       // Route to appropriate dashboard based on account type
-      if (account === 'company_owner' || account === 'demo_owner') {
-        navigate('/company/dashboard');
-      } else if (account === 'demo_manager') {
+      if (account === 'demo_owner' || account === 'demo_manager') {
         navigate('/company/dashboard');
       } else if (account === 'demo_staff1' || account === 'demo_staff2') {
         navigate('/staff/dashboard');
@@ -217,7 +215,7 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1 max-h-[500px] overflow-y-auto">
               <button
                 onClick={() => handleDemoLogin('sarah')}
                 disabled={loading}
@@ -253,14 +251,6 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
               >
                 👨‍⚖️ Demo: Support L3 (Final Appeals)
               </button>
-              <button
-                onClick={() => handleDemoLogin('company_owner')}
-                disabled={loading}
-                className="w-full py-2 px-4 bg-amber-50 border-2 border-amber-300 text-amber-700 rounded-lg font-semibold hover:bg-amber-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                🏢 Demo: Company Owner (Rumah Emas)
-              </button>
-
               {/* Company Staff Accounts */}
               <div className="text-xs font-semibold text-gray-600 my-2 px-1">Company Demo Accounts (Staff Management)</div>
 
