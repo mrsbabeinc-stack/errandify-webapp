@@ -1482,7 +1482,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
           {/* ASKER SECTION - Post Errand */}
           {activeSection === 'asker-post' && (
             <div className="section-content">
-              <AskerPostErrand />
+              <AskerPostErrand onClose={() => setActiveSection('dashboard')} />
             </div>
           )}
 

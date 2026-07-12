@@ -18,7 +18,11 @@ interface TaskData {
   notes: string;
 }
 
-const AskerPostErrand: React.FC = () => {
+interface AskerPostErrandProps {
+  onClose?: () => void;
+}
+
+const AskerPostErrand: React.FC<AskerPostErrandProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const [isOpen] = useState(true);
 
@@ -32,7 +36,11 @@ const AskerPostErrand: React.FC = () => {
   };
 
   const handleClose = () => {
-    navigate(-1);
+    if (onClose) {
+      onClose();
+    } else {
+      navigate(-1);
+    }
   };
 
   const handleSkipToManual = () => {
