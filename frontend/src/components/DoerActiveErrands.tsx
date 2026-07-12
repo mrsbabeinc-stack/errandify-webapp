@@ -23,6 +23,18 @@ const DoerActiveErrands: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'confirmed' | 'in_progress' | 'job_completed' | 'all'>('confirmed');
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelErrandId, setCancelErrandId] = useState<number | null>(null);
+  const [cancelReason, setCancelReason] = useState('staff_unavailable');
+  const [cancelCustomReason, setCancelCustomReason] = useState('');
+
+  const cancelReasons = [
+    { value: 'staff_unavailable', label: 'Staff member no longer available' },
+    { value: 'circumstances_changed', label: 'Circumstances changed' },
+    { value: 'equipment_issue', label: 'Equipment or resource issue' },
+    { value: 'safety_concern', label: 'Safety concern' },
+    { value: 'other', label: 'Other reason' },
+  ];
 
   // Fetch active errands that user has accepted bids on
   useEffect(() => {
@@ -128,6 +140,44 @@ const DoerActiveErrands: React.FC = () => {
 
   const handleViewDetails = (errandId: number) => {
     navigate(`/errand/${errandId}`);
+  };
+
+  const openCancelModal = (errandId: number) => {
+    setCancelErrandId(errandId);
+    setCancelReason('staff_unavailable');
+    setCancelCustomReason('');
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelErrandId) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const finalReason = cancelReason === 'other' ? cancelCustomReason : cancelReason;
+
+      if (!finalReason) {
+        alert('Please provide a reason for cancellation');
+        return;
+      }
+
+      // Cancel the errand - revert to open status
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${cancelErrandId}/cancel`,
+        { cancellationReason: finalReason, cancelledBy: 'doer' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert('Errand cancelled. It is now open for other doers to bid.');
+      setShowCancelModal(false);
+      setCancelErrandId(null);
+
+      // Remove from active list
+      setErrands(errands.filter(e => e.id !== cancelErrandId));
+    } catch (err) {
+      console.error('Failed to cancel:', err);
+      alert('Failed to cancel errand. Please try again.');
+    }
   };
 
   const getStatusDisplay = (status: string) => {
@@ -237,6 +287,12 @@ const DoerActiveErrands: React.FC = () => {
                         ▶ Start Errand
                       </button>
                       <button
+                        onClick={() => openCancelModal(errand.id)}
+                        className="flex-1 bg-red-500 text-white py-2 rounded-lg font-bold hover:bg-red-600 transition-colors"
+                      >
+                        ✕ Cancel
+                      </button>
+                      <button
                         onClick={() => handleViewDetails(errand.id)}
                         className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-bold hover:bg-gray-300 transition-colors"
                       >
@@ -274,6 +330,60 @@ const DoerActiveErrands: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Cancel Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-errandify-brown mb-4">Cancel Errand?</h3>
+
+            <p className="text-gray-600 mb-4">
+              Please select a reason for cancellation. The errand will return to open status for other doers to bid.
+            </p>
+
+            <div className="mb-4 space-y-2">
+              {cancelReasons.map(reason => (
+                <label key={reason.value} className="flex items-center p-2 border rounded cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name="cancelReason"
+                    value={reason.value}
+                    checked={cancelReason === reason.value}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    className="mr-3"
+                  />
+                  <span className="text-gray-700">{reason.label}</span>
+                </label>
+              ))}
+            </div>
+
+            {cancelReason === 'other' && (
+              <textarea
+                placeholder="Please explain your reason for cancellation..."
+                value={cancelCustomReason}
+                onChange={(e) => setCancelCustomReason(e.target.value)}
+                className="w-full p-2 border rounded mb-4 focus:outline-none focus:border-errandify-orange"
+                rows={3}
+              />
+            )}
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-bold hover:bg-gray-300 transition-colors"
+              >
+                Keep It
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="flex-1 bg-red-500 text-white py-2 rounded-lg font-bold hover:bg-red-600 transition-colors"
+              >
+                Confirm Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
