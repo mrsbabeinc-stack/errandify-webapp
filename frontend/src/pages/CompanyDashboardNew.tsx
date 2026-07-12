@@ -424,11 +424,11 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       <div className="action-item medium-priority">
                         <div className="priority-badge">MEDIUM</div>
                         <div className="item-content">
-                          <h4>Review Staff Resignation Requests</h4>
-                          <p>1 errand resignation pending manager approval</p>
+                          <h4>Review Staff Reassignment Requests</h4>
+                          <p>1 errand reassignment pending manager approval</p>
                           <span className="due-date">Due: Tomorrow</span>
                         </div>
-                        <button className="item-action" onClick={() => setActiveSection('staff-resignation')}>→ Review</button>
+                        <button className="item-action" onClick={() => setActiveSection('staff-reassignment')}>→ Review</button>
                       </div>
 
                       <div className="action-item medium-priority">
