@@ -15,11 +15,11 @@ export default function NotificationToastContainer() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-3 max-w-sm pointer-events-none">
+    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-3 max-w-lg pointer-events-none">
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className="pointer-events-auto bg-gradient-to-r from-white to-orange-50 rounded-2xl shadow-2xl border-2 border-errandify-orange p-4 animate-slideup"
+          className="pointer-events-auto bg-gradient-to-r from-white to-orange-50 rounded-2xl shadow-2xl border-2 border-errandify-orange p-4 animate-slidedown"
         >
           <div className="flex items-start gap-3">
             {toast.icon && <span className="text-3xl flex-shrink-0 animate-bounce">{toast.icon}</span>}
@@ -44,6 +44,23 @@ export default function NotificationToastContainer() {
           </div>
         </div>
       ))}
+
+      <style>{`
+        @keyframes slidedown {
+          from {
+            transform: translateY(-100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+
+        .animate-slidedown {
+          animation: slidedown 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
