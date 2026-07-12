@@ -415,7 +415,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         <p>2 staff members waiting for approval</p>
                         <span className="due-date">Due: Today</span>
                       </div>
-                      <button className="item-action">→ Review</button>
+                      <button className="item-action" onClick={() => setActiveSection('leave-calendar')}>→ Review</button>
                     </div>
                   )}
 
@@ -428,7 +428,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                           <p>1 errand resignation pending manager approval</p>
                           <span className="due-date">Due: Tomorrow</span>
                         </div>
-                        <button className="item-action">→ Review</button>
+                        <button className="item-action" onClick={() => setActiveSection('staff-resignation')}>→ Review</button>
                       </div>
 
                       <div className="action-item medium-priority">
@@ -438,7 +438,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                           <p>Monthly points distribution pending</p>
                           <span className="due-date">Due: Jul 15</span>
                         </div>
-                        <button className="item-action">→ Allocate</button>
+                        <button className="item-action" onClick={() => setActiveSection('points-distribution')}>→ Allocate</button>
                       </div>
                     </>
                   )}
@@ -451,7 +451,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         <p>2 active campaigns - CTR declined 2%</p>
                         <span className="due-date">Due: Jul 20</span>
                       </div>
-                      <button className="item-action">→ Analyze</button>
+                      <button className="item-action" onClick={() => setActiveSection('advertising')}>→ Analyze</button>
                     </div>
                   )}
 
