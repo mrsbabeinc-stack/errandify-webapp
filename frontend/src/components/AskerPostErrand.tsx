@@ -1,10 +1,9 @@
 import React from 'react';
-import HanaTaskCreationPage from '../pages/HanaTaskCreationPage';
+import CreateErrandPage from '../pages/CreateErrandPage';
 
 const AskerPostErrand: React.FC = () => {
-  // Companies use the EXACT SAME Hana task creation flow as individuals
-  // Just with userRole="asker" to indicate company is acting as task poster
-  return <HanaTaskCreationPage userRole="asker" />;
+  // Companies use the EXACT SAME form as individuals
+  return <CreateErrandPage />;
 };
 
 export default AskerPostErrand;
