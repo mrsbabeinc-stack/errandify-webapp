@@ -64,7 +64,7 @@ const CompanyDashboardNew: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'mybiz' | 'errands' | 'staff' | 'ads' | 'subscription' | 'analytics' | 'settings' | 'leave-calendar' | 'points-distribution' | 'staff-resignation' | 'payment-history' | 'errand-allocation' | 'review-approval' | 'disputes'>('dashboard');
+  const [activeSection, setActiveSection] = useState<string>('dashboard');
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
   const [bannerIndex, setBannerIndex] = useState(0);
   const [actionItemFilter, setActionItemFilter] = useState<'all' | 'high' | 'medium' | 'low' | 'done'>('all');
@@ -240,78 +240,84 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
         {sidebarOpen && (
           <aside className="sidebar">
             <nav className="sidebar-nav">
+              {/* TOP LEVEL */}
               <div className="nav-section">
-                <h3>Main</h3>
+                <h3>TOP LEVEL</h3>
                 <a href="#" className={`nav-item ${activeSection === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveSection('dashboard')}>
                   📊 Dashboard
                 </a>
               </div>
 
-              {(viewMode === 'asker' || viewMode === 'owner') && (
-                <div className="nav-section">
-                  <h3>Company</h3>
-                  <a href="#" className={`nav-item ${activeSection === 'mybiz' ? 'active' : ''}`} onClick={() => setActiveSection('mybiz')}>
-                    🏢 MyBiz Profile
-                  </a>
-                </div>
-              )}
+              {/* ASKER SECTION - Company posting tasks */}
+              <div className="nav-section">
+                <h3>ASKER SECTION</h3>
+                <a href="#" className={`nav-item ${activeSection === 'errands' ? 'active' : ''}`} onClick={() => setActiveSection('errands')}>
+                  📁 My Errands
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'asker-post' ? 'active' : ''}`} onClick={() => setActiveSection('asker-post')}>
+                  ➕ Post Errand
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'asker-bids' ? 'active' : ''}`} onClick={() => setActiveSection('asker-bids')}>
+                  📊 Bids Received
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'asker-reviews' ? 'active' : ''}`} onClick={() => setActiveSection('asker-reviews')}>
+                  ⭐ Reviews (As Asker)
+                </a>
+              </div>
 
-              {(viewMode === 'asker' || viewMode === 'owner') && (
-                <div className="nav-section">
-                  <h3>Operations</h3>
-                  <a href="#" className={`nav-item ${activeSection === 'errands' ? 'active' : ''}`} onClick={() => setActiveSection('errands')}>
-                    📋 My Errands
-                  </a>
-                  <a href="#" className={`nav-item ${activeSection === 'staff' ? 'active' : ''}`} onClick={() => setActiveSection('staff')}>
-                    👥 My Staff
-                  </a>
-                  <a href="#" className={`nav-item ${activeSection === 'ads' ? 'active' : ''}`} onClick={() => setActiveSection('ads')}>
-                    📢 Advertising
-                  </a>
-                </div>
-              )}
+              {/* DOER SECTION - Company's staff doing tasks */}
+              <div className="nav-section">
+                <h3>DOER SECTION</h3>
+                <a href="#" className={`nav-item ${activeSection === 'doer-offers' ? 'active' : ''}`} onClick={() => setActiveSection('doer-offers')}>
+                  🎁 My Offers
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'doer-browse' ? 'active' : ''}`} onClick={() => setActiveSection('doer-browse')}>
+                  🔍 Browse Tasks
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'doer-active' ? 'active' : ''}`} onClick={() => setActiveSection('doer-active')}>
+                  🚀 Active Tasks
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'doer-completed' ? 'active' : ''}`} onClick={() => setActiveSection('doer-completed')}>
+                  ✅ Completed
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'doer-reviews' ? 'active' : ''}`} onClick={() => setActiveSection('doer-reviews')}>
+                  ⭐ Reviews (As Doer)
+                </a>
+              </div>
 
-              {(viewMode === 'owner') && (
-                <>
-                  <div className="nav-section">
-                    <h3>Management</h3>
-                    <a href="#" className={`nav-item ${activeSection === 'errand-allocation' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('errand-allocation'); }}>
-                      📦 Errand Allocation
-                    </a>
-                    <a href="#" className={`nav-item ${activeSection === 'review-approval' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('review-approval'); }}>
-                      ⭐ Review Approval
-                    </a>
-                    <a href="#" className={`nav-item ${activeSection === 'disputes' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('disputes'); }}>
-                      ⚠️ Disputes
-                    </a>
-                    <a href="#" className={`nav-item ${activeSection === 'leave-calendar' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('leave-calendar'); }}>
-                      📅 Leave Calendar
-                    </a>
-                    <a href="#" className={`nav-item ${activeSection === 'points-distribution' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('points-distribution'); }}>
-                      🎁 Points Distribution
-                    </a>
-                    <a href="#" className={`nav-item ${activeSection === 'staff-resignation' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('staff-resignation'); }}>
-                      📋 Staff Resignations
-                    </a>
-                    <a href="#" className={`nav-item ${activeSection === 'payment-history' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('payment-history'); }}>
-                      💳 Payment History
-                    </a>
-                  </div>
+              {/* STAFF MANAGEMENT */}
+              <div className="nav-section">
+                <h3>STAFF MANAGEMENT</h3>
+                <a href="#" className={`nav-item ${activeSection === 'staff' ? 'active' : ''}`} onClick={() => setActiveSection('staff')}>
+                  👥 My Staff
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'errand-allocation' ? 'active' : ''}`} onClick={() => setActiveSection('errand-allocation')}>
+                  📦 Staff Tasks
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'leave-calendar' ? 'active' : ''}`} onClick={() => setActiveSection('leave-calendar')}>
+                  📅 Leave Calendar
+                </a>
+              </div>
 
-                  <div className="nav-section">
-                    <h3>Business</h3>
-                    <a href="#" className={`nav-item ${activeSection === 'subscription' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('subscription'); }}>
-                      💳 Subscription & Billing
-                    </a>
-                    <a href="#" className={`nav-item ${activeSection === 'analytics' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('analytics'); }}>
-                      📈 Analytics & Reports
-                    </a>
-                    <a href="#" className={`nav-item ${activeSection === 'settings' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('settings'); }}>
-                      ⚙️ Settings
-                    </a>
-                  </div>
-                </>
-              )}
+              {/* COMPANY OPS */}
+              <div className="nav-section">
+                <h3>COMPANY OPS</h3>
+                <a href="#" className={`nav-item ${activeSection === 'mybiz' ? 'active' : ''}`} onClick={() => setActiveSection('mybiz')}>
+                  🏢 Company Profile
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'payment-history' ? 'active' : ''}`} onClick={() => setActiveSection('payment-history')}>
+                  💳 Payments
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'analytics' ? 'active' : ''}`} onClick={() => setActiveSection('analytics')}>
+                  📈 Analytics
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'disputes' ? 'active' : ''}`} onClick={() => setActiveSection('disputes')}>
+                  ⚠️ Disputes
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'settings' ? 'active' : ''}`} onClick={() => setActiveSection('settings')}>
+                  ⚙️ Settings
+                </a>
+              </div>
             </nav>
           </aside>
         )}
