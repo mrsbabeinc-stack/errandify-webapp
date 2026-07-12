@@ -82,7 +82,8 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
                 onLogin(signupResponse.data.data.user.role || 'asker');
                 setMessage('Account created successfully!');
                 setLoading(false);
-                setTimeout(() => navigate('/home'), 500);
+                // After SingPass + signup: Go to background verification form (new flow)
+                setTimeout(() => navigate('/auth/verification'), 500);
               }
             } catch (signupErr: any) {
               // If user already exists (409), just log them in
