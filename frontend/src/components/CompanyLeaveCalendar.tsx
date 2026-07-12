@@ -314,6 +314,20 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
             </button>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              className="btn-setup"
+              onClick={() => {
+                (window as any).topNotification?.({
+                  type: 'info',
+                  message: '💡 Top notification is working! Try submitting a leave request.',
+                  icon: 'ℹ️',
+                  duration: 5000,
+                });
+              }}
+              title="Click to test top notification"
+            >
+              🔔 Test Notification
+            </button>
             <button className="btn-setup" onClick={() => setShowSetup(true)}>⚙️ Leave Setup</button>
             <button className="btn-primary" onClick={() => setShowModal(true)}>+ Request Leave</button>
           </div>
