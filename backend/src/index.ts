@@ -43,7 +43,7 @@ import disputesL2L3Routes from './routes/disputes_l2_l3.js';
 import casesRoutes from './routes/cases.js';
 import companyRoutes from './routes/companyRoutes.js';
 import acraRoutes from './routes/acraRoutes.js';
-import companyErrandOperations from "./routes/companyErrandOperations.js";
+// import companyErrandOperations from "./routes/companyErrandOperations.js"; // Merged into companyRoutes
 import demoRoutes from './routes/demo.js';
 import { startCrons } from './cron.js';
 import db from './db.js';
@@ -264,7 +264,7 @@ app.use('/api/safety', safetyRoutes);
 app.use('/api', companyRoutes); // Company module routes
 app.use('/api/acra-lookup', acraRoutes); // ACRA company verification
 app.use('/api/demo', demoRoutes);
-app.use("/api/company", companyErrandOperations); // Company errand allocation, leave, recommendations
+// Company errand allocation, leave, recommendations - merged into companyRoutes
 app.use('/api', hanaRoutes);
 
 // Serve index.html for all non-API routes (React Router fallback)
