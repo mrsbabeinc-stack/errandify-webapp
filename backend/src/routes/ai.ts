@@ -11,6 +11,42 @@ import * as explainability from '../modules/explainability.js';
 
 const router = Router();
 
+// Helper: Fast regex-based title cleaning (fallback for when Qwen is unavailable)
+function fallbackTitleClean(title: string): string {
+  let cleaned = title;
+
+  // Remove postal codes at end
+  cleaned = cleaned.replace(/\s+\d{6}\s*$/g, '');
+
+  // Remove time patterns like "tomorrow 9am", "next monday 2pm"
+  cleaned = cleaned.replace(/\s+(?:tomorrow|today|tonight|next|this)\s+\w+\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)?/gi, '');
+  cleaned = cleaned.replace(/\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)/gi, '');
+
+  // Remove day names
+  cleaned = cleaned.replace(/\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)/gi, '');
+
+  // Remove "tomorrow", "today", date patterns
+  cleaned = cleaned.replace(/\s+(?:tomorrow|today|next\s+\w+|in\s+\d+\s+days?)/gi, '');
+
+  // Remove duration like "2 hours", "30 mins"
+  cleaned = cleaned.replace(/,?\s+\d+\s*(?:hours?|hrs?|h|mins?|m|days?)/gi, '');
+
+  // Remove "at" followed by location/postal
+  cleaned = cleaned.replace(/\s+at\s+[\w\s]+/gi, '');
+
+  // Remove leading/trailing commas and spaces
+  cleaned = cleaned.replace(/^\s*,\s*/, '').replace(/\s*,\s*$/, '');
+
+  // Title case
+  cleaned = cleaned
+    .split(/\s+/)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ')
+    .trim();
+
+  return cleaned || title;
+}
+
 // POST /api/ai/verify-chas-eligibility - Verify CHAS eligibility with AI check
 router.post('/verify-chas-eligibility', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -477,9 +513,13 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
 
     console.log('[Extract] Qwen API Key available:', !!qwenApiKey);
 
-    if (qwenApiKey) {
+    // Always use regex fallback first for faster processing
+    // Only try Qwen if fallback didn't work well
+    const regexCleanedTitle = fallbackTitleClean(title);
+
+    if (qwenApiKey && (!regexCleanedTitle || regexCleanedTitle.length < 5)) {
       try {
-        console.log('[Extract] ✓ Using Qwen to clean title...');
+        console.log('[Extract] ✓ Trying Qwen to clean title (regex fallback failed)...');
         const titleCleanResponse = await axios.post(
           `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
           {
@@ -487,36 +527,9 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
             messages: [
               {
                 role: 'system',
-                content: `You are a task title extractor. Extract ONLY the core action + what needs to be done.
+                content: `Extract only the core action + what needs to be done. Keep SHORT (3-8 words max). REMOVE dates, times, locations, postal codes. OUTPUT ONLY the title, nothing else.
 
-RULES:
-1. Keep it SHORT and MEANINGFUL (3-8 words max)
-2. Include ONLY the ACTION and WHAT (verb + object)
-3. Keep important context like: AMOUNTS ($500), TYPE (ringgit), SKILL (fade)
-4. REMOVE EVERYTHING ELSE: dates, times, days, locations, addresses, postal codes, durations, budget, explanations
-5. Start with action verb (Decorate, Clean, Fix, Deliver, Walk, Tutor, Cut, etc)
-6. NO metadata like "I need to", "Can you", "Please", "tomorrow", "at salon", "for 1 hour", "at 238857"
-
-EXAMPLES:
-- Input: "Decorate Apartment For Party At 238857, Tomorrow 9am, 2 Hours"
-  Output: Decorate Apartment For Party
-
-- Input: "i need to change 500 dollars sgd to ringgit. i am flying off tomorrow. i need this to be done today"
-  Output: Change $500 SGD To Ringgit
-
-- Input: "walk my dog every friday. 1 hour at 32 flora drive. budget $150"
-  Output: Walk My Dog
-
-- Input: "Fix my leaky tap on Saturday at 2pm near the kitchen. It's dripping"
-  Output: Fix Leaky Kitchen Tap
-
-- Input: "Tutor My Daughter P6 In Math. 489223. 7-9pm. monday. budget 70"
-  Output: Tutor My Daughter P6 In Math
-
-- Input: "Cut my hair at salon. Need fade haircut"
-  Output: Cut Hair With Fade
-
-OUTPUT ONLY THE TITLE, nothing else.`,
+Example: "Decorate Apartment For Party At 238857, Tomorrow 9am" → "Decorate Apartment For Party"`,
               },
               {
                 role: 'user',
@@ -529,20 +542,22 @@ OUTPUT ONLY THE TITLE, nothing else.`,
               'Authorization': `Bearer ${qwenApiKey}`,
               'Content-Type': 'application/json',
             },
-            timeout: 5000,
+            timeout: 3000,
           }
         );
 
         const qwenTitle = titleCleanResponse.data?.choices?.[0]?.message?.content?.trim();
-        if (qwenTitle && qwenTitle.length > 0 && qwenTitle.length < 80) {
+        if (qwenTitle && qwenTitle.length > 0 && qwenTitle.length < 100) {
           cleanedTitle = qwenTitle;
           console.log('[Extract] ✅ Qwen cleaned title:', cleanedTitle);
-        } else {
-          console.warn('[Extract] Qwen title too long or empty:', qwenTitle);
         }
       } catch (error) {
-        console.warn('[Extract] Qwen title cleaning failed, using fallback:', error instanceof Error ? error.message : error);
+        console.warn('[Extract] Qwen title cleaning skipped (using regex):', error instanceof Error ? error.message : '');
+        cleanedTitle = regexCleanedTitle;
       }
+    } else if (regexCleanedTitle) {
+      cleanedTitle = regexCleanedTitle;
+      console.log('[Extract] ✓ Using regex-cleaned title:', cleanedTitle);
     }
 
     // Fallback: basic cleanup if Qwen not available
@@ -889,78 +904,58 @@ OUTPUT ONLY the category name, nothing else.`,
     console.log('[Extract] Final - area:', area, 'fullAddress:', fullAddress);
 
 
-    // Use Qwen to intelligently suggest relevant skills and certifications based on title
+    // Suggest relevant skills based on category and title keywords
     let suggestedSkills: string[] = [];
 
-    if (qwenApiKey) {
-      try {
-        console.log('[Extract] ✓ Using Qwen to suggest relevant skills...');
-        const skillsResponse = await axios.post(
-          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
-          {
-            model: 'qwen-max',
-            messages: [
-              {
-                role: 'system',
-                content: `You are a skill/certification suggester. Given a task title and category, suggest relevant skills and certifications needed.
+    // Build keyword-based suggestions (works even without Qwen)
+    const categorySkillMap: Record<string, string[]> = {
+      'eventhelp': ['Event Planning', 'Interior Design', 'Decoration', 'Vendor Coordination'],
+      'petcare': ['Pet Care', 'Dog Handling', 'Pet Grooming', 'Animal Health'],
+      'childcare': ['Childcare', 'CPR/First Aid', 'Child Development', 'Education'],
+      'eldercare': ['Elder Care', 'Patient Care', 'Compassion', 'Health Awareness'],
+      'homehelp': ['Cleaning', 'Organization', 'Maintenance', 'Problem Solving'],
+      'food-beverage': ['Cooking', 'Food Safety', 'Meal Planning', 'Nutrition'],
+      'travel-mobility': ['Navigation', 'Driving', 'Customer Service', 'Reliability'],
+      'delivery-moving': ['Physical Fitness', 'Organization', 'Driving', 'Customer Service'],
+      'creative-arts': ['Design', 'Creativity', 'Visual Communication', 'Software Skills'],
+      'shopping-errands': ['Organization', 'Attention to Detail', 'Communication', 'Time Management'],
+    };
 
-RULES:
-1. Suggest ONLY 2-4 relevant skills max
-2. Focus on REQUIRED or HIGHLY USEFUL skills for this task
-3. Include certifications only if truly necessary
-4. Return as JSON array of strings
-5. Be specific to the task title, not generic
-6. Skill names should be clear and professional
+    const baseSkills = categorySkillMap[category] || ['Reliability', 'Communication', 'Attention to Detail'];
 
-EXAMPLES:
-- Title: "Decorate Apartment For Party", Category: "eventhelp" → ["Event Planning", "Interior Design", "Decoration"]
-- Title: "Walk My Dog", Category: "petcare" → ["Pet Care", "Dog Handling"]
-- Title: "Tutor My Daughter P6 In Math", Category: "childcare" → ["Math Tutoring", "Primary Education"]
-- Title: "Clean My House Deep Clean", Category: "homehelp" → ["Deep Cleaning", "Attention to Detail"]
-- Title: "Fix Leaky Kitchen Tap", Category: "homehelp" → ["Plumbing", "Maintenance"]
-- Title: "Babysit 2 Kids Ages 3-5", Category: "childcare" → ["Childcare", "CPR/First Aid", "Child Development"]
-- Title: "Elderly Care And Companionship", Category: "eldercare" → ["Elder Care", "Empathy", "Patient Communication"]
+    // Add title-specific skills
+    const titleLower = title.toLowerCase();
 
-Return ONLY a JSON array of strings, nothing else.
-Example output: ["Event Planning", "Interior Design", "Decoration"]`,
-              },
-              {
-                role: 'user',
-                content: `Title: "${title}", Category: "${category}"`,
-              },
-            ],
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${qwenApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            timeout: 5000,
-          }
-        );
+    if (titleLower.includes('math') || titleLower.includes('tutor')) {
+      suggestedSkills.push('Math Expertise');
+    }
+    if (titleLower.includes('english') || titleLower.includes('language')) {
+      suggestedSkills.push('Language Skills');
+    }
+    if (titleLower.includes('plumb') || titleLower.includes('tap') || titleLower.includes('pipe')) {
+      suggestedSkills.push('Plumbing');
+    }
+    if (titleLower.includes('electric') || titleLower.includes('wire')) {
+      suggestedSkills.push('Electrical Work');
+    }
+    if (titleLower.includes('deep clean') || titleLower.includes('spring clean')) {
+      suggestedSkills.push('Deep Cleaning');
+    }
+    if (titleLower.includes('groom') || titleLower.includes('pet')) {
+      suggestedSkills.push('Pet Grooming');
+    }
+    if (titleLower.includes('hair') || titleLower.includes('salon') || titleLower.includes('cut')) {
+      suggestedSkills.push('Hair Styling');
+    }
 
-        const skillsText = skillsResponse.data?.choices?.[0]?.message?.content?.trim();
-        if (skillsText) {
-          try {
-            // Extract JSON array from response
-            const jsonMatch = skillsText.match(/\[[\s\S]*\]/);
-            if (jsonMatch) {
-              const parsed = JSON.parse(jsonMatch[0]);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                suggestedSkills = parsed.filter((s: any) => typeof s === 'string' && s.length > 0);
-                console.log('[Extract] ✅ Qwen suggested skills:', suggestedSkills);
-              }
-            }
-          } catch (parseErr) {
-            console.warn('[Extract] Could not parse skills JSON:', skillsText);
-          }
-        }
-      } catch (error) {
-        console.warn('[Extract] Qwen skills suggestion failed, continuing without:', error instanceof Error ? error.message : error);
+    // Add 2-3 skills from category base list
+    for (const skill of baseSkills) {
+      if (!suggestedSkills.includes(skill) && suggestedSkills.length < 4) {
+        suggestedSkills.push(skill);
       }
     }
 
-    console.log('[Extract] Final suggested skills:', suggestedSkills);
+    console.log('[Extract] Suggested skills (fallback):', suggestedSkills);
 
     // Extract recurring pattern from input (e.g., "every 2 weeks", "weekly", "monthly")
     let isRecurring = false;
