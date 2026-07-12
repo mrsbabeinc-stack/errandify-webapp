@@ -14,20 +14,22 @@ const TopNotificationBar: React.FC = () => {
 
   const addNotification = (notification: Omit<TopNotification, 'id'>) => {
     const id = Math.random().toString(36).substr(2, 9);
+    const duration = notification.duration ?? 4000;
     const newNotification: TopNotification = {
       ...notification,
       id,
       dismissible: notification.dismissible ?? true,
-      duration: notification.duration ?? 4000,
+      duration: duration,
     };
 
+    console.log('[TopNotificationBar] Adding notification:', newNotification);
     setNotifications((prev) => [...prev, newNotification]);
 
     // Auto-dismiss if duration > 0
-    if (newNotification.duration > 0) {
+    if (duration > 0) {
       setTimeout(() => {
         removeNotification(id);
-      }, newNotification.duration);
+      }, duration);
     }
   };
 
@@ -38,6 +40,7 @@ const TopNotificationBar: React.FC = () => {
   // Expose addNotification globally for use across the app
   useEffect(() => {
     (window as any).topNotification = addNotification;
+    console.log('[TopNotificationBar] Ready - window.topNotification is available');
   }, []);
 
   const getBackgroundColor = (type: string) => {

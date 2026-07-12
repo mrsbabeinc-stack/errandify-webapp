@@ -317,6 +317,8 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
             <button
               className="btn-setup"
               onClick={() => {
+                console.log('[CompanyLeaveCalendar] Test notification button clicked');
+                console.log('[CompanyLeaveCalendar] window.topNotification:', (window as any).topNotification);
                 (window as any).topNotification?.({
                   type: 'info',
                   message: '💡 Top notification is working! Try submitting a leave request.',
