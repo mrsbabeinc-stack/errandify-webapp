@@ -142,7 +142,8 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // Filter by status (additional status filter for myOnly)
     if (status && isMyOnly) {
-      query += ` AND status = $${paramIndex}`;
+      const statusPrefix = isAccepted ? 'e.' : '';
+      query += ` AND ${statusPrefix}status = $${paramIndex}`;
       params.push(status);
       paramIndex++;
     }
@@ -150,8 +151,9 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     // Exclude expired errands for doers without bids (but show if they have a bid on it)
     if (!isMyOnly) {
       // For doers: exclude expired errands UNLESS they have made a bid on it
-      query += ` AND (status != 'expired' OR EXISTS (
-        SELECT 1 FROM bids WHERE bids.errand_id = errands.id AND bids.doer_id = $${paramIndex}
+      const tablePrefix = isAccepted ? 'e.' : '';
+      query += ` AND (${tablePrefix}status != 'expired' OR EXISTS (
+        SELECT 1 FROM bids WHERE bids.errand_id = ${tablePrefix}id AND bids.doer_id = $${paramIndex}
       ))`;
       params.push(currentUserId);
       paramIndex++;
