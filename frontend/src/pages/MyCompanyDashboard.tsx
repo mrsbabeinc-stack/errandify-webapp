@@ -163,7 +163,11 @@ const MyCompanyDashboard: React.FC = () => {
   }, []);
 
   const handleSaveBizProfile = async () => {
-    if (!company) return;
+    console.log('[MyBizProfile] Save clicked, company:', company, 'bizForm:', bizForm);
+    if (!company) {
+      showError('Company data not loaded', 'Please refresh and try again');
+      return;
+    }
     setSavingBiz(true);
     try {
       const token = localStorage.getItem('token');
@@ -198,13 +202,16 @@ const MyCompanyDashboard: React.FC = () => {
   };
 
   const suggestErrandCategories = async () => {
+    console.log('[MyBizProfile] Suggest categories clicked');
     if (!company?.industry && !company?.bio) {
+      console.log('[MyBizProfile] No industry or bio set');
       showError('Please fill in Industry or Bio first', 'Add business details to get AI suggestions');
       return;
     }
 
     try {
       const token = localStorage.getItem('token');
+      console.log('[MyBizProfile] Calling suggest-categories API for company:', company.id);
       const res = await fetch(`${API_URL}/api/companies/${company.id}/suggest-categories`, {
         method: 'POST',
         headers: {
@@ -217,6 +224,8 @@ const MyCompanyDashboard: React.FC = () => {
         }),
       });
 
+      console.log('[MyBizProfile] Suggest-categories response:', res.status, res.statusText);
+
       if (res.ok) {
         const data = await res.json();
         showSuccess(
@@ -224,11 +233,13 @@ const MyCompanyDashboard: React.FC = () => {
           `Suggested categories: ${data.suggestions.slice(0, 3).join(', ')}...`
         );
       } else {
-        showError('Failed to get suggestions', 'Please try again');
+        const errorText = await res.text();
+        console.error('[MyBizProfile] API error:', errorText);
+        showError('Failed to get suggestions', `Status: ${res.status}`);
       }
     } catch (err: any) {
-      console.error('Error suggesting categories:', err);
-      showError('Error getting suggestions', 'Please try again');
+      console.error('[MyBizProfile] Error suggesting categories:', err);
+      showError('Error getting suggestions', err.message);
     }
   };
 
@@ -245,9 +256,14 @@ const MyCompanyDashboard: React.FC = () => {
   };
 
   const handleLogoUpload = async () => {
-    if (!logoPreview || !company) return;
+    console.log('[MyBizProfile] Logo upload clicked');
+    if (!logoPreview || !company) {
+      console.log('[MyBizProfile] Missing logoPreview or company data');
+      return;
+    }
     try {
       const token = localStorage.getItem('token');
+      console.log('[MyBizProfile] Uploading logo for company:', company.id);
 
       const res = await fetch(`${API_URL}/api/companies/${company.id}/logo`, {
         method: 'POST',
@@ -258,18 +274,21 @@ const MyCompanyDashboard: React.FC = () => {
         body: JSON.stringify({ logoUrl: logoPreview }),
       });
 
+      console.log('[MyBizProfile] Logo upload response:', res.status, res.statusText);
+
       if (res.ok) {
         const data = await res.json();
         setCompany({ ...company, logo_url: data.data.logo_url });
-        setLogoFile(null);
         setLogoPreview('');
         showSuccess('Logo uploaded successfully!', 'Your company logo has been updated');
       } else {
-        showError('Failed to upload logo', 'Please try again');
+        const errorText = await res.text();
+        console.error('[MyBizProfile] Logo upload error:', errorText);
+        showError('Failed to upload logo', `Status: ${res.status}`);
       }
     } catch (err: any) {
-      console.error('Logo upload failed:', err);
-      showError('Error uploading logo', 'An unexpected error occurred');
+      console.error('[MyBizProfile] Logo upload failed:', err);
+      showError('Error uploading logo', err.message);
     }
   };
 
