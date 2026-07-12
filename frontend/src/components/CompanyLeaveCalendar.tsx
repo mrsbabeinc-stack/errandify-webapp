@@ -144,37 +144,124 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
       return;
     }
 
+    // Check if employee has sufficient balance
+    const balance = getEmployeeLeaveBalance(selectedEmployee);
+    if (!balance) {
+      alert('Employee not found');
+      return;
+    }
+
+    // Check balance based on leave type
+    if (leaveType === 'full-day' && balance.fullDay <= 0) {
+      (window as any).topNotification?.({
+        type: 'error',
+        message: `⚠️ ${employeeSearchInput} has no full day leaves remaining`,
+        icon: '✗',
+        duration: 4000,
+      });
+      return;
+    }
+    if ((leaveType === 'half-day-morning' || leaveType === 'half-day-afternoon') && balance.halfDay <= 0) {
+      (window as any).topNotification?.({
+        type: 'error',
+        message: `⚠️ ${employeeSearchInput} has no half day leaves remaining`,
+        icon: '✗',
+        duration: 4000,
+      });
+      return;
+    }
+    if (leaveType === 'time-off' && balance.timeOff <= 0) {
+      (window as any).topNotification?.({
+        type: 'error',
+        message: `⚠️ ${employeeSearchInput} has no time off hours remaining`,
+        icon: '✗',
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Deduct from balance
+    const updated = leaveBalances.map(b => {
+      if (b.employeeId === selectedEmployee) {
+        if (leaveType === 'full-day') return { ...b, fullDay: b.fullDay - 1 };
+        if (leaveType === 'half-day-morning' || leaveType === 'half-day-afternoon') return { ...b, halfDay: b.halfDay - 1 };
+        if (leaveType === 'time-off') return { ...b, timeOff: b.timeOff - 1 };
+      }
+      return b;
+    });
+    setLeaveBalances(updated);
+
     const newLeave: Leave = {
       id: leaves.length + 1,
       employeeId: 1,
-      employeeName: selectedEmployee,
+      employeeName: employeeSearchInput,
       leaveType: leaveType,
       startDate: leaveDate,
       endDate: leaveDate,
       startTime: leaveType === 'time-off' ? startTime : undefined,
       endTime: leaveType === 'time-off' ? endTime : undefined,
-      reason: reason,
+      reason: reason === 'Others' ? otherReason : reason,
       assignedManager: 'Loh Kean Yew',
       status: 'pending',
       createdDate: new Date().toISOString().split('T')[0],
     };
 
     setLeaves([...leaves, newLeave]);
+
+    // Show success notification
+    (window as any).topNotification?.({
+      type: 'success',
+      message: `✓ Leave request submitted for ${employeeSearchInput} on ${leaveDate}`,
+      icon: '✓',
+      duration: 4000,
+    });
+
     setShowModal(false);
     setSelectedEmployee('');
+    setEmployeeSearchInput('');
     setLeaveType('full-day');
     setReason('');
+    setOtherReason('');
     setLeaveDate('');
     setStartTime('09:00');
     setEndTime('12:00');
   };
 
   const handleApprove = (leaveId: number) => {
+    const leave = leaves.find(l => l.id === leaveId);
     setLeaves(leaves.map(l => l.id === leaveId ? { ...l, status: 'approved' } : l));
+
+    (window as any).topNotification?.({
+      type: 'success',
+      message: `✓ Leave approved for ${leave?.employeeName} on ${leave?.startDate}`,
+      icon: '✓',
+      duration: 4000,
+    });
   };
 
   const handleReject = (leaveId: number) => {
+    const leave = leaves.find(l => l.id === leaveId);
     setLeaves(leaves.map(l => l.id === leaveId ? { ...l, status: 'rejected' } : l));
+
+    // Refund balance if rejected
+    if (leave) {
+      const updated = leaveBalances.map(b => {
+        if (b.employeeId === leave.employeeName) {
+          if (leave.leaveType === 'full-day') return { ...b, fullDay: b.fullDay + 1 };
+          if (leave.leaveType === 'half-day-morning' || leave.leaveType === 'half-day-afternoon') return { ...b, halfDay: b.halfDay + 1 };
+          if (leave.leaveType === 'time-off') return { ...b, timeOff: b.timeOff + 1 };
+        }
+        return b;
+      });
+      setLeaveBalances(updated);
+    }
+
+    (window as any).topNotification?.({
+      type: 'warning',
+      message: `Leave rejected for ${leave?.employeeName}. Balance refunded.`,
+      icon: '✗',
+      duration: 4000,
+    });
   };
 
   const monthDays = daysInMonth(currentMonth);
@@ -457,7 +544,15 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
               </div>
 
               <div className="modal-actions">
-                <button className="btn-primary" onClick={() => setShowSetup(false)}>Save Changes</button>
+                <button className="btn-primary" onClick={() => {
+                  setShowSetup(false);
+                  (window as any).topNotification?.({
+                    type: 'success',
+                    message: '✓ Leave policy and balances updated successfully',
+                    icon: '✓',
+                    duration: 4000,
+                  });
+                }}>Save Changes</button>
                 <button className="btn-secondary" onClick={() => setShowSetup(false)}>Cancel</button>
               </div>
             </div>
