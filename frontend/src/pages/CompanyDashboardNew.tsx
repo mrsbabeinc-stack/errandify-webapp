@@ -261,7 +261,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
               <div className="nav-section">
                 <h3>ASKER SECTION</h3>
                 <a href="#" className={`nav-item ${activeSection === 'errands' ? 'active' : ''}`} onClick={() => setActiveSection('errands')}>
-                  📁 My Errands
+                  📁 MyBizErrands
                 </a>
                 <a href="#" className={`nav-item ${activeSection === 'asker-post' ? 'active' : ''}`} onClick={() => setActiveSection('asker-post')}>
                   ➕ Post Errand
@@ -698,7 +698,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
 
           {activeSection === 'errands' && (
             <div className="section-content">
-              <h2>My Errands</h2>
+              <h2>MyBizErrands</h2>
               <div className="errands-container">
                 <div className="errands-filters">
                   <button className="filter-chip active">All (12)</button>
@@ -1482,7 +1482,10 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
           {/* ASKER SECTION - Post Errand */}
           {activeSection === 'asker-post' && (
             <div className="section-content">
-              <AskerPostErrand onClose={() => setActiveSection('dashboard')} />
+              <AskerPostErrand
+                onClose={() => setActiveSection('errands')}
+                onPostComplete={() => setActiveSection('errands')}
+              />
             </div>
           )}
 
