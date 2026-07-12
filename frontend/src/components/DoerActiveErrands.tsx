@@ -87,9 +87,14 @@ const DoerActiveErrands: React.FC = () => {
     return '#2D7A34';
   };
 
+  const pendingCount = errands.filter(e => e.status === 'in_progress').length;
+
   return (
     <div className="active-errands-container">
-      <h2>Active Errands</h2>
+      <div className="section-header">
+        <h2>Active Errands</h2>
+        {pendingCount > 0 && <span className="pending-badge">{pendingCount}</span>}
+      </div>
       <p className="subtitle">Track work in progress</p>
 
       {/* Filter Tabs */}
@@ -226,6 +231,27 @@ const DoerActiveErrands: React.FC = () => {
       <style>{`
         .active-errands-container {
           max-width: 100%;
+        }
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 8px;
+        }
+
+        .section-header h2 {
+          margin: 0;
+        }
+
+        .pending-badge {
+          background: #FF6B35;
+          color: white;
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
         }
 
         .subtitle {

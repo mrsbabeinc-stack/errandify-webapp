@@ -71,9 +71,14 @@ const DoerMyOffers: React.FC = () => {
     return badges[status] || badges.pending;
   };
 
+  const pendingCount = offers.filter(o => o.status === 'pending').length;
+
   return (
     <div className="doer-offers-container">
-      <h2>My Offers</h2>
+      <div className="section-header">
+        <h2>My Offers</h2>
+        {pendingCount > 0 && <span className="pending-badge">{pendingCount}</span>}
+      </div>
       <p className="subtitle">Track offers you've submitted on errands</p>
 
       {/* Filter Tabs */}
@@ -161,6 +166,27 @@ const DoerMyOffers: React.FC = () => {
       <style>{`
         .doer-offers-container {
           max-width: 100%;
+        }
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 8px;
+        }
+
+        .section-header h2 {
+          margin: 0;
+        }
+
+        .pending-badge {
+          background: #FF6B35;
+          color: white;
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
         }
 
         .subtitle {

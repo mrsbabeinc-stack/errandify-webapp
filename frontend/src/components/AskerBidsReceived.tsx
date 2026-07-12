@@ -97,9 +97,14 @@ const AskerBidsReceived: React.FC = () => {
     );
   };
 
+  const pendingOffers = offers.filter(o => o.status === 'pending').length;
+
   return (
     <div className="asker-bids-container">
-      <h2>Offers Received</h2>
+      <div className="section-header">
+        <h2>Offers Received</h2>
+        {pendingOffers > 0 && <span className="pending-badge">{pendingOffers}</span>}
+      </div>
       <p className="subtitle">Review offers from doers on your posted errands</p>
 
       {/* Filter Tabs */}
@@ -241,6 +246,27 @@ const AskerBidsReceived: React.FC = () => {
       <style>{`
         .asker-bids-container {
           max-width: 100%;
+        }
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 8px;
+        }
+
+        .section-header h2 {
+          margin: 0;
+        }
+
+        .pending-badge {
+          background: #FF6B35;
+          color: white;
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
         }
 
         .subtitle {

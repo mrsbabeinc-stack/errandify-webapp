@@ -20,7 +20,8 @@ interface DoerBrowseErrandsProps {
 }
 
 const DoerBrowseErrands: React.FC<DoerBrowseErrandsProps> = ({ userRole = 'staff' }) => {
-  const [errands, setErrands] = useState<Errand[]>([
+  // All available errands (for owner/manager)
+  const allErrands: Errand[] = [
     {
       id: 1,
       formattedId: 'ERR-2026-001',
@@ -63,7 +64,30 @@ const DoerBrowseErrands: React.FC<DoerBrowseErrandsProps> = ({ userRole = 'staff
       askerName: 'John Lee',
       askerType: 'individual'
     }
-  ]);
+  ];
+
+  // Errands allocated to this staff member only
+  const allocatedErrands: Errand[] = [
+    {
+      id: 1,
+      formattedId: 'ERR-2026-001',
+      title: 'Office Cleaning Service',
+      description: 'Clean and organize office space, including desks, floors, and common areas',
+      category: 'Cleaning',
+      budget: 150,
+      area: 'Orchard',
+      location: '123 Orchard Road, Singapore 238801',
+      status: 'allocated',
+      createdAt: '2026-07-10',
+      askerName: 'ABC Corp',
+      askerType: 'company'
+    },
+  ];
+
+  // Show all errands for owner/manager, only allocated for staff
+  const displayErrands = userRole === 'staff' ? allocatedErrands : allErrands;
+
+  const [errands] = useState<Errand[]>(displayErrands);
 
   const [filteredErrands, setFilteredErrands] = useState<Errand[]>(errands);
   const [searchTerm, setSearchTerm] = useState('');
@@ -89,8 +113,8 @@ const DoerBrowseErrands: React.FC<DoerBrowseErrandsProps> = ({ userRole = 'staff
     setFilteredErrands(filtered);
   }, [searchTerm, selectedCategory, errands]);
 
-  const handleSubmitOffer = (errand: Errand) => {
-    alert(`Offer submitted for ${errand.title}`);
+  const handleSubmitOffer = (errnd: Errand) => {
+    alert(`Offer submitted for ${errnd.title}`);
     setSelectedErrand(null);
   };
 
@@ -107,10 +131,22 @@ const DoerBrowseErrands: React.FC<DoerBrowseErrandsProps> = ({ userRole = 'staff
 
   const canAllocate = userRole === 'owner' || userRole === 'manager';
 
+  const isStaff = userRole === 'staff';
+
   return (
     <div className="doer-browse-container">
       <h2>Browse Errands</h2>
-      <p className="subtitle">Find and submit offers on available errands</p>
+      <p className="subtitle">
+        {isStaff
+          ? '📋 Errands allocated to you - Complete and track progress'
+          : 'Find and submit offers on available errands'}
+      </p>
+      {isStaff && errands.length > 0 && (
+        <div className="staff-notice">
+          <span className="badge">{errands.length}</span>
+          <p>Errand(s) assigned to you</p>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="filters-section">
@@ -222,6 +258,11 @@ const DoerBrowseErrands: React.FC<DoerBrowseErrandsProps> = ({ userRole = 'staff
                     ✋ Submit Offer
                   </button>
                 </>
+              ) : isStaff ? (
+                <div className="staff-message">
+                  <p>✅ This errand has been assigned to you</p>
+                  <p style={{ fontSize: '12px', marginTop: '8px' }}>View progress in "Active Tasks"</p>
+                </div>
               ) : (
                 <button
                   className="btn-submit-offer"
@@ -273,7 +314,55 @@ const DoerBrowseErrands: React.FC<DoerBrowseErrandsProps> = ({ userRole = 'staff
 
         .subtitle {
           color: #666;
+          margin-bottom: 12px;
+          font-size: 14px;
+        }
+
+        .staff-notice {
+          background: #E3F2FD;
+          border: 1px solid #90CAF9;
+          border-left: 4px solid #1976D2;
+          border-radius: 8px;
+          padding: 12px 16px;
           margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .staff-notice .badge {
+          background: #1976D2;
+          color: white;
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 600;
+          font-size: 14px;
+          flex-shrink: 0;
+        }
+
+        .staff-notice p {
+          margin: 0;
+          color: #1565C0;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .staff-message {
+          background: #E8F5E9;
+          border: 1px solid #C8E6C9;
+          border-radius: 8px;
+          padding: 16px;
+          text-align: center;
+          color: #2E7D32;
+        }
+
+        .staff-message p {
+          margin: 0;
+          font-weight: 600;
           font-size: 14px;
         }
 

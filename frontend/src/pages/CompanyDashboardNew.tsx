@@ -277,11 +277,11 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
               {/* DOER SECTION - Company's staff doing tasks */}
               <div className="nav-section">
                 <h3>DOER SECTION</h3>
-                <a href="#" className={`nav-item ${activeSection === 'doer-offers' ? 'active' : ''}`} onClick={() => setActiveSection('doer-offers')}>
-                  🎁 My Offers
-                </a>
                 <a href="#" className={`nav-item ${activeSection === 'doer-browse' ? 'active' : ''}`} onClick={() => setActiveSection('doer-browse')}>
                   🔍 Browse Tasks
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'doer-allocate' ? 'active' : ''}`} onClick={() => setActiveSection('doer-allocate')}>
+                  📦 Allocate Tasks
                 </a>
                 <a href="#" className={`nav-item ${activeSection === 'doer-active' ? 'active' : ''}`} onClick={() => setActiveSection('doer-active')}>
                   🚀 Active Tasks

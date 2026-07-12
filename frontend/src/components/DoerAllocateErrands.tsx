@@ -51,9 +51,15 @@ const DoerAllocateErrands: React.FC = () => {
   const getStaffName = (staffId: number) => staff.find(s => s.id === staffId)?.name || '';
   const getErrandTitle = (errandId: number) => errands.find(e => e.id === errandId)?.title || '';
 
+  const pendingAllocations = allocations.filter(a => a.status === 'pending').length;
+  const totalToAllocate = errands.length;
+
   return (
     <div className="allocate-errands-container">
-      <h2>Allocate Errands to Staff</h2>
+      <div className="section-header">
+        <h2>Allocate Errands to Staff</h2>
+        {totalToAllocate > 0 && <span className="pending-badge">{totalToAllocate}</span>}
+      </div>
       <p className="subtitle">Assign errands to your staff members</p>
 
       <div className="allocation-form">
@@ -121,6 +127,27 @@ const DoerAllocateErrands: React.FC = () => {
       <style>{`
         .allocate-errands-container {
           max-width: 600px;
+        }
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 8px;
+        }
+
+        .section-header h2 {
+          margin: 0;
+        }
+
+        .pending-badge {
+          background: #FF6B35;
+          color: white;
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
         }
 
         .subtitle {
