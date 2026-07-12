@@ -893,11 +893,25 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Not authorized to update this errand' });
     }
 
-    // Prevent editing once offer is confirmed
+    // Prevent editing once any offer is received
     if (errand.status !== 'open') {
       return res.status(403).json({
         error: 'Cannot edit errand once an offer is confirmed',
         message: 'This errand has been accepted and is no longer editable. You can only update the status.'
+      });
+    }
+
+    // Check if there are any bids/offers on this errand
+    const bidCheckResult = await db.query(
+      'SELECT COUNT(*) as bid_count FROM bids WHERE errand_id = $1',
+      [id]
+    );
+    const bidCount = parseInt(bidCheckResult.rows[0]?.bid_count || '0', 10);
+
+    if (bidCount > 0) {
+      return res.status(403).json({
+        error: 'Cannot edit errand once offers are received',
+        message: 'This errand has received offers and cannot be edited to ensure fairness. You can cancel the errand and post a new one if needed.'
       });
     }
 

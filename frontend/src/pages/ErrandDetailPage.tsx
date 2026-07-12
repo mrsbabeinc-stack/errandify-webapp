@@ -114,7 +114,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
   // Fetch user's own bid for this errand (if they're a doer)
   useEffect(() => {
-    if (id && currentUser && currentUser.role === 'doer') {
+    if (id && currentUser && effectiveUserRole === 'doer') {
       const fetchUserBid = async () => {
         try {
           const token = localStorage.getItem('token');
@@ -140,7 +140,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       };
       fetchUserBid();
     }
-  }, [id, currentUser]);
+  }, [id, currentUser, effectiveUserRole]);
 
   // Load completion evidence for an errand
   const loadCompletionEvidence = async (errandId?: string | number, autoShow: boolean = false) => {
