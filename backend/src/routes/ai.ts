@@ -1008,48 +1008,105 @@ Example output: ["Event Planning", "Interior Design", "Decoration"]`,
       }
     }
 
-    // Generate AI-based description suggestion based on title keywords
-    // This creates context-aware descriptions tied to what the user actually typed
+    // Use Qwen to generate smart, task-specific tips for the description field
     let description = '';
-    const titleLowercase = title.toLowerCase();
 
-    // Check title for specific keywords and generate relevant descriptions
-    if (titleLowercase.includes('hair') || titleLowercase.includes('salon') || titleLowercase.includes('cut')) {
-      description = `Provide hair cutting/styling service. Specify hair type, length, style preference, and any special requirements.`;
-    } else if (titleLowercase.includes('cleaning') || titleLowercase.includes('clean')) {
-      description = `Professional cleaning service. Specify areas to clean (bedroom, kitchen, bathroom), type (deep clean, regular maintenance), and any allergies/sensitivities.`;
-    } else if (titleLowercase.includes('dog') || titleLowercase.includes('walk') || titleLowercase.includes('pet')) {
-      description = `Pet care service. Specify pet type, breed, size, temperament, health needs, and what's needed (walking, sitting, grooming, feeding).`;
-    } else if (titleLowercase.includes('babysit') || titleLowercase.includes('childcare') || titleLowercase.includes('child')) {
-      description = `Childcare service. Specify child age, activities to do, any allergies/dietary restrictions, bedtime routine, emergency contacts.`;
-    } else if (titleLowercase.includes('elderly') || titleLowercase.includes('elder') || titleLowercase.includes('senior')) {
-      description = `Elder care and companionship. Specify mobility needs, meal preparation, medication assistance, activities preferred, emergency contacts.`;
-    } else if (titleLowercase.includes('delivery') || titleLowercase.includes('send') || titleLowercase.includes('deliver')) {
-      description = `Delivery service. Specify what item(s) to deliver, pickup location, destination, size/weight, special handling needs, preferred timing.`;
-    } else if (titleLowercase.includes('event') || titleLowercase.includes('party') || titleLowercase.includes('setup')) {
-      description = `Event assistance. Specify event type, date, location, number of guests, setup/decoration needs, timeline, special requirements.`;
-    } else if (titleLowercase.includes('teach') || titleLowercase.includes('tutor') || titleLowercase.includes('lesson')) {
-      description = `Tutoring/teaching service. Specify subject, student age/level, learning goals, lesson frequency, duration per session, teaching style preference.`;
-    } else if (titleLowercase.includes('repair') || titleLowercase.includes('fix')) {
-      description = `Repair service. Specify what needs repair, issue/problem, preferred solution, timeline, budget constraints, any special requirements.`;
-    } else if (titleLowercase.includes('move') || titleLowercase.includes('carry') || titleLowercase.includes('transport')) {
-      description = `Moving/transport assistance. Specify items to move, pickup location, destination, timeline, equipment needed, help required (packing, lifting, driving).`;
-    } else if (titleLowercase.includes('shop') || titleLowercase.includes('grocery') || titleLowercase.includes('buy') || titleLowercase.includes('purchasing')) {
-      description = `Shopping/errand assistance. Specify what items to buy/shop for, stores to visit, budget, special requirements, and any dietary/preference restrictions.`;
-    } else if (titleLowercase.includes('design') || titleLowercase.includes('logo') || titleLowercase.includes('graphic') || titleLowercase.includes('art') || titleLowercase.includes('creative')) {
-      description = `Design/creative service. Specify what design is needed (logo, poster, social media, etc.), style preference, brand colors, target audience, and any specific requirements.`;
-    } else {
-      // Fallback: use category-based description with title reference
-      const categoryDescriptions: Record<string, string> = {
-        'homehelp': 'Household assistance needed. Specify the task, areas involved, any materials needed, and timeline.',
-        'petcare': 'Pet care needed. Specify pet type, requirements, and what care is needed.',
-        'delivery': 'Delivery service needed. Specify items and destination.',
-        'eventhelp': 'Event support needed. Specify event type and requirements.',
-        'childcare': 'Childcare needed. Specify child age and requirements.',
-        'eldercare': 'Elder care needed. Specify care requirements.',
-        'wellness': 'Wellness support needed. Specify the type of assistance.',
-      };
-      description = categoryDescriptions[category] || `Help needed: ${title}. Please provide more details about the task, timeline, and specific requirements.`;
+    if (qwenApiKey) {
+      try {
+        console.log('[Extract] ✓ Using Qwen to generate task-specific tips...');
+        const tipsResponse = await axios.post(
+          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+          {
+            model: 'qwen-max',
+            messages: [
+              {
+                role: 'system',
+                content: `You are a helpful task description assistant. Given a task title, generate a SHORT and PRACTICAL tip that guides the doer on what details to include.
+
+RULES:
+1. Keep it SHORT (1-2 sentences max, under 120 chars)
+2. Be SPECIFIC to the task title, not generic
+3. Ask for ACTIONABLE details only (what matters for doing the task)
+4. Be warm and helpful, not robotic
+5. Focus on WHAT information is needed, not generic instructions
+
+EXAMPLES:
+- Title: "Decorate Apartment For Party" → "Let me know party size, theme/style, and which rooms to decorate. Do you have specific colors or decorations in mind?"
+- Title: "Walk My Dog" → "Tell me about your dog's size, temperament, and if there are any health issues or areas to avoid."
+- Title: "Clean My House" → "Which areas need most attention? Do you prefer eco-friendly products or have any cleaning preferences?"
+- Title: "Fix Leaky Kitchen Tap" → "Describe the issue in detail - is it dripping constantly or leaking under the sink? Any previous repair attempts?"
+- Title: "Tutor My Daughter P6 Math" → "What's her current level and which topics need focus? Do you have specific materials or exams to prepare for?"
+- Title: "Babysit 2 Kids Ages 3-5" → "Any dietary restrictions, allergies, or bedtime routines I should know about? What activities do they enjoy?"
+
+Output ONLY the tip (1-2 sentences), nothing else.`,
+              },
+              {
+                role: 'user',
+                content: `Task: "${title}"`,
+              },
+            ],
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${qwenApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 5000,
+          }
+        );
+
+        const tipsText = tipsResponse.data?.choices?.[0]?.message?.content?.trim();
+        if (tipsText && tipsText.length > 0 && tipsText.length < 250) {
+          description = tipsText;
+          console.log('[Extract] ✅ Qwen generated tips:', description);
+        }
+      } catch (error) {
+        console.warn('[Extract] Qwen tips generation failed, using fallback:', error instanceof Error ? error.message : error);
+      }
+    }
+
+    // Fallback if Qwen not available or failed
+    if (!description) {
+      const titleLowercase = title.toLowerCase();
+
+      // Keyword-based fallback descriptions
+      if (titleLowercase.includes('hair') || titleLowercase.includes('salon') || titleLowercase.includes('cut')) {
+        description = `Specify hair type, length, preferred style, and any special requirements or concerns.`;
+      } else if (titleLowercase.includes('cleaning') || titleLowercase.includes('clean')) {
+        description = `Which areas need attention? What's your preference: eco-friendly products, allergen concerns, or specific cleaning type?`;
+      } else if (titleLowercase.includes('dog') || titleLowercase.includes('walk') || titleLowercase.includes('pet')) {
+        description = `Tell me about your pet's size, temperament, and any health or behavioral needs to be aware of.`;
+      } else if (titleLowercase.includes('babysit') || titleLowercase.includes('childcare') || titleLowercase.includes('child')) {
+        description = `What's the child's age? Any dietary restrictions, allergies, bedtime routine, or preferred activities?`;
+      } else if (titleLowercase.includes('elderly') || titleLowercase.includes('elder') || titleLowercase.includes('senior')) {
+        description = `What type of care needed? Any mobility assistance, medications, or specific preferences?`;
+      } else if (titleLowercase.includes('delivery') || titleLowercase.includes('send') || titleLowercase.includes('deliver')) {
+        description = `What's being delivered? Provide item details, pickup/drop-off locations, and any special handling needs.`;
+      } else if (titleLowercase.includes('event') || titleLowercase.includes('party') || titleLowercase.includes('setup')) {
+        description = `How many guests? What's the theme or style? Which areas need setup or decoration?`;
+      } else if (titleLowercase.includes('teach') || titleLowercase.includes('tutor') || titleLowercase.includes('lesson')) {
+        description = `What subject? Student age/level? Learning goals? Any materials or exams to prepare for?`;
+      } else if (titleLowercase.includes('repair') || titleLowercase.includes('fix')) {
+        description = `Describe the issue in detail. What's broken or not working? Any previous attempts to fix it?`;
+      } else if (titleLowercase.includes('move') || titleLowercase.includes('carry') || titleLowercase.includes('transport')) {
+        description = `What's being moved? Pickup and drop-off locations? Any fragile items or special equipment needed?`;
+      } else if (titleLowercase.includes('shop') || titleLowercase.includes('grocery') || titleLowercase.includes('buy')) {
+        description = `What items to buy or stores to visit? Any budget, brand, or dietary preferences?`;
+      } else if (titleLowercase.includes('design') || titleLowercase.includes('logo') || titleLowercase.includes('graphic')) {
+        description = `What design is needed? Style preference? Brand colors? Target audience? Any reference materials?`;
+      } else {
+        // Generic fallback by category
+        const categoryDescriptions: Record<string, string> = {
+          'homehelp': 'Which areas or tasks need help? Any preferences for materials or methods?',
+          'petcare': 'Tell me about your pet and what type of care is needed.',
+          'delivery': 'What needs to be delivered and where?',
+          'eventhelp': 'Describe the event type, size, and what help is needed.',
+          'childcare': 'Child age and any special requirements or preferences?',
+          'eldercare': 'What type of care or assistance is needed?',
+          'wellness': 'What type of wellness support do you need?',
+        };
+        description = categoryDescriptions[category] || `Tell me more details about what you need help with.`;
+      }
     }
 
     res.json({
