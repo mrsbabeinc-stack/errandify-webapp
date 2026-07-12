@@ -1,6 +1,5 @@
 import React from 'react';
 import { showSuccess, showError, showWarning, showInfo } from '../utils/topNotification';
-import '../styles/TestPage.css';
 
 const TopNotificationTestPage: React.FC = () => {
   return (
