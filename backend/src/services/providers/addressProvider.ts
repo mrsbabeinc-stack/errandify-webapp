@@ -60,6 +60,24 @@ export async function lookupAddress(postalCode: string): Promise<AddressLookupRe
       return addressData;
     }
 
+    console.log('[AddressProvider] Mapbox failed, trying fallback with postal code mapping...');
+
+    // Fallback: Use local postal code → area mapping (always works offline)
+    const area = getPlanningAreaFromPostalCode(normalized);
+    if (area) {
+      console.log('[AddressProvider] ✅ Fallback: Using postal code mapping for area:', area);
+      const fallbackResult: AddressLookupResult = {
+        postal_code: normalized,
+        formatted_address: `Singapore ${normalized}`,
+        area: area,
+        latitude: 0, // Placeholder - not needed for address display
+        longitude: 0,
+        provider: 'postal_code_lookup',
+        confidence: 0.8,
+      };
+      return fallbackResult;
+    }
+
     console.log('[AddressProvider] All providers failed for', normalized);
     return null;
   } catch (err) {
