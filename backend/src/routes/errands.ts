@@ -325,6 +325,13 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
     const askerData = askerResult.rows[0];
     const isAsker = userId === errand.asker_id;
 
+    // Get bid count for this errand
+    const bidCountResult = await db.query(
+      'SELECT COUNT(*) as bid_count FROM bids WHERE errand_id = $1',
+      [errandDatabaseId]
+    );
+    const bidCount = parseInt(bidCountResult.rows[0]?.bid_count || '0', 10);
+
     res.json({
       success: true,
       data: {
@@ -348,6 +355,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         doerId: doerId,
         doer_alias: doerData?.alias || null,
         acceptedBidId: errand.accepted_bid_id,
+        bidCount: bidCount,
         asker: askerData,
         doer: doerData,
         createdAt: errand.created_at,
