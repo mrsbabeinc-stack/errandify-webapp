@@ -81,6 +81,7 @@ import MyCompanyDashboard from './pages/MyCompanyDashboard';
 import CompanyStaffManagement from './pages/CompanyStaffManagement';
 import CompanyPostErrandPage from './pages/CompanyPostErrandPage';
 import CompanyDashboardNew from './pages/CompanyDashboardNew';
+import StaffDashboard from './pages/StaffDashboard';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -415,8 +416,9 @@ export default function App() {
 
         {/* Company Registration and Dashboard Routes */}
         <Route path="/company/register" element={isAuthenticated ? <CompanyRegistrationPage /> : <Navigate to="/login" replace />} />
-        <Route path="/company/dashboard" element={isAuthenticated ? <MyCompanyDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/company/dashboard" element={isAuthenticated ? <CompanyDashboardNew /> : <Navigate to="/login" replace />} />
         <Route path="/company/dashboard-new" element={isAuthenticated ? <CompanyDashboardNew /> : <Navigate to="/login" replace />} />
+        <Route path="/staff/dashboard" element={isAuthenticated ? <StaffDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/company/staff" element={isAuthenticated ? <CompanyStaffManagement /> : <Navigate to="/login" replace />} />
         <Route path="/company/post-errand" element={isAuthenticated ? <CompanyPostErrandPage /> : <Navigate to="/login" replace />} />
 
