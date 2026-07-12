@@ -8,6 +8,15 @@ import CompanyPaymentHistory from '../components/CompanyPaymentHistory';
 import ManagerStaffAllocations from '../components/ManagerStaffAllocations';
 import ReviewApprovalPanel from '../components/ReviewApprovalPanel';
 import CompanyDisputeCenter from '../components/CompanyDisputeCenter';
+import AskerPostErrand from '../components/AskerPostErrand';
+import AskerBidsReceived from '../components/AskerBidsReceived';
+import AskerReviews from '../components/AskerReviews';
+import DoerBrowseErrands from '../components/DoerBrowseErrands';
+import DoerAllocateErrands from '../components/DoerAllocateErrands';
+import DoerMyOffers from '../components/DoerMyOffers';
+import DoerActiveErrands from '../components/DoerActiveErrands';
+import DoerCompletedErrands from '../components/DoerCompletedErrands';
+import DoerReviews from '../components/DoerReviews';
 
 interface Company {
   id: number;
@@ -1467,6 +1476,69 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
           {activeSection === 'payment-history' && (
             <div className="section-content">
               <CompanyPaymentHistory />
+            </div>
+          )}
+
+          {/* ASKER SECTION - Post Errand */}
+          {activeSection === 'asker-post' && (
+            <div className="section-content">
+              <AskerPostErrand />
+            </div>
+          )}
+
+          {/* ASKER SECTION - Bids Received */}
+          {activeSection === 'asker-bids' && (
+            <div className="section-content">
+              <AskerBidsReceived />
+            </div>
+          )}
+
+          {/* ASKER SECTION - Reviews As Asker */}
+          {activeSection === 'asker-reviews' && (
+            <div className="section-content">
+              <AskerReviews />
+            </div>
+          )}
+
+          {/* DOER SECTION - Browse Errands */}
+          {activeSection === 'doer-browse' && (
+            <div className="section-content">
+              <DoerBrowseErrands userRole="owner" />
+            </div>
+          )}
+
+          {/* DOER SECTION - Allocate Errands (Modal in Browse, but also standalone) */}
+          {activeSection === 'doer-allocate' && (
+            <div className="section-content">
+              <DoerAllocateErrands />
+            </div>
+          )}
+
+          {/* DOER SECTION - My Offers */}
+          {activeSection === 'doer-offers' && (
+            <div className="section-content">
+              <DoerMyOffers />
+            </div>
+          )}
+
+          {/* DOER SECTION - Active Errands */}
+          {activeSection === 'doer-active' && (
+            <div className="section-content">
+              <DoerActiveErrands />
+            </div>
+          )}
+
+          {/* DOER SECTION - Completed Errands */}
+          {activeSection === 'doer-completed' && (
+            <div className="section-content">
+              <DoerCompletedErrands />
+            </div>
+          )}
+
+          {/* DOER SECTION - Reviews As Doer */}
+          {activeSection === 'doer-reviews' && (
+            <div className="section-content">
+              <DoerReviews />
             </div>
           )}
         </main>

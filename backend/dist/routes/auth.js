@@ -409,6 +409,42 @@ router.post('/demo-login', async (req, res) => {
                 gender: 'M',
                 bio: 'Need help with household chores and errands'
             },
+            demo_owner: {
+                mobile: '+6590000001',
+                email: 'demo.owner@errandify.ai',
+                name: 'Demo Owner',
+                nric: 'hash_demo_owner',
+                defaultRole: 'asker',
+                gender: 'M',
+                bio: 'Demo Company Owner - Can manage staff and post tasks'
+            },
+            demo_manager: {
+                mobile: '+6590000002',
+                email: 'demo.manager@errandify.ai',
+                name: 'Demo Manager',
+                nric: 'hash_+6590000002',
+                defaultRole: 'asker',
+                gender: 'M',
+                bio: 'Demo Company Manager - Can allocate tasks and approve reviews'
+            },
+            demo_staff1: {
+                mobile: '+6590000003',
+                email: 'demo.staff1@errandify.ai',
+                name: 'Demo Staff 1',
+                nric: 'hash_+6590000003',
+                defaultRole: 'doer',
+                gender: 'M',
+                bio: 'Demo Company Staff - Executes assigned tasks'
+            },
+            demo_staff2: {
+                mobile: '+6590000004',
+                email: 'demo.staff2@errandify.ai',
+                name: 'Demo Staff 2',
+                nric: 'hash_+6590000004',
+                defaultRole: 'doer',
+                gender: 'F',
+                bio: 'Demo Company Staff - Executes assigned tasks'
+            }
         };
         const demoUser = demoAccounts[account.toLowerCase()];
         if (!demoUser) {

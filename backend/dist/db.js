@@ -4,12 +4,17 @@ const { Pool } = pg;
 let pool = null;
 try {
     if (config.databaseUrl) {
-        pool = new Pool({
+        const poolConfig = {
             connectionString: config.databaseUrl,
             max: 20,
             idleTimeoutMillis: 30000,
             connectionTimeoutMillis: 2000,
-        });
+        };
+        // Only use SSL for remote databases, not localhost
+        if (!config.databaseUrl.includes('localhost')) {
+            poolConfig.ssl = { rejectUnauthorized: false };
+        }
+        pool = new Pool(poolConfig);
         pool.on('error', (err) => {
             console.warn('[DB] Unexpected error on idle client', err);
         });
