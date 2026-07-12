@@ -6,53 +6,79 @@ const router = Router();
 // POST /api/demo/seed - Create demo owner, manager, and staff accounts (PUBLIC - no auth required)
 router.post('/seed', async (_req: any, res: Response) => {
   try {
-    // Create demo owner user
-    const ownerRes = await db.query(
-      `INSERT INTO users (nric_hash, display_name, mobile, role)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (nric_hash) DO UPDATE SET display_name = EXCLUDED.display_name
-       RETURNING id`,
-      ['hash_demo_owner', 'Demo Owner', '+6590000001', 'asker']
-    );
-    const ownerId = ownerRes.rows[0].id;
+    // Create demo owner user (or get existing)
+    let ownerId: number;
+    try {
+      const existingOwner = await db.query(
+        `SELECT id FROM users WHERE mobile = $1 LIMIT 1`,
+        ['+6590000001']
+      );
+      if (existingOwner.rows.length > 0) {
+        ownerId = existingOwner.rows[0].id;
+      } else {
+        const ownerRes = await db.query(
+          `INSERT INTO users (nric_hash, display_name, mobile, role)
+           VALUES ($1, $2, $3, $4)
+           RETURNING id`,
+          ['hash_demo_owner', 'Demo Owner', '+6590000001', 'asker']
+        );
+        ownerId = ownerRes.rows[0].id;
+      }
+    } catch (error) {
+      console.error('Error creating owner:', error);
+      throw error;
+    }
 
-    // Create demo company
+    // Create demo company (or get existing)
     let companyId: number;
     try {
-      const companyRes = await db.query(
-        `INSERT INTO companies (uen, name, description, owner_id, email, phone, address, postal_code, area, subscription_tier, company_status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-         ON CONFLICT (uen) DO UPDATE SET name = EXCLUDED.name
-         RETURNING id`,
-        [
-          'UEN999999999',
-          'Demo Company',
-          'Demo company for testing staff allocation and management',
-          ownerId,
-          'demo@errandify.ai',
-          '+6590000001',
-          '123 Demo Street, Singapore 123456',
-          '123456',
-          'Bukit Merah',
-          'silver',
-          'active'
-        ]
+      const existingCompany = await db.query(
+        `SELECT id FROM companies WHERE uen = $1 LIMIT 1`,
+        ['UEN999999999']
       );
-      companyId = companyRes.rows[0].id;
+      if (existingCompany.rows.length > 0) {
+        companyId = existingCompany.rows[0].id;
+      } else {
+        const companyRes = await db.query(
+          `INSERT INTO companies (uen, name, description, owner_id, email, phone, address, postal_code, area, subscription_tier, company_status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+           RETURNING id`,
+          [
+            'UEN999999999',
+            'Demo Company',
+            'Demo company for testing staff allocation and management',
+            ownerId,
+            'demo@errandify.ai',
+            '+6590000001',
+            '123 Demo Street, Singapore 123456',
+            '123456',
+            'Bukit Merah',
+            'silver',
+            'active'
+          ]
+        );
+        companyId = companyRes.rows[0].id;
+      }
     } catch (error) {
-      // If companies table doesn't exist, get or create it
+      // If companies table doesn't exist, default to 1
       console.log('Note: companies table may not exist yet, proceeding with demo staff creation');
-      companyId = 1; // Default to company_id 1 for testing
+      companyId = 1;
     }
 
     // Add owner to employees as owner role (if employees table exists)
     try {
-      await db.query(
-        `INSERT INTO employees (company_id, user_id, role, skills, status, hire_date)
-         VALUES ($1, $2, $3, $4, $5, NOW())
-         ON CONFLICT (company_id, user_id) DO UPDATE SET role = EXCLUDED.role`,
-        [companyId, ownerId, 'owner', 'Company Management', 'active']
+      const existingOwnerAssignment = await db.query(
+        `SELECT id FROM employees WHERE company_id = $1 AND user_id = $2 LIMIT 1`,
+        [companyId, ownerId]
       );
+
+      if (existingOwnerAssignment.rows.length === 0) {
+        await db.query(
+          `INSERT INTO employees (company_id, user_id, role, skills, status, hire_date)
+           VALUES ($1, $2, $3, $4, $5, NOW())`,
+          [companyId, ownerId, 'owner', 'Company Management', 'active']
+        );
+      }
     } catch (error) {
       console.log('Note: employees table may not exist, skipping owner assignment');
     }
@@ -67,23 +93,40 @@ router.post('/seed', async (_req: any, res: Response) => {
     const staffIds: any[] = [];
     for (const emp of employees) {
       try {
-        const empRes = await db.query(
-          `INSERT INTO users (nric_hash, display_name, mobile, role)
-           VALUES ($1, $2, $3, $4)
-           ON CONFLICT (nric_hash) DO UPDATE SET display_name = EXCLUDED.display_name
-           RETURNING id`,
-          [`hash_${emp.phone}`, emp.name, emp.phone, 'asker']
+        // Check if user already exists by phone
+        const existingEmp = await db.query(
+          `SELECT id FROM users WHERE mobile = $1 LIMIT 1`,
+          [emp.phone]
         );
-        staffIds.push({ id: empRes.rows[0].id, ...emp });
+
+        let empId: number;
+        if (existingEmp.rows.length > 0) {
+          empId = existingEmp.rows[0].id;
+        } else {
+          const empRes = await db.query(
+            `INSERT INTO users (nric_hash, display_name, mobile, role)
+             VALUES ($1, $2, $3, $4)
+             RETURNING id`,
+            [`hash_${emp.phone}`, emp.name, emp.phone, 'asker']
+          );
+          empId = empRes.rows[0].id;
+        }
+        staffIds.push({ id: empId, ...emp });
 
         // Tag to company as staff member (if employees table exists)
         try {
-          await db.query(
-            `INSERT INTO employees (company_id, user_id, role, skills, status, hire_date)
-             VALUES ($1, $2, $3, $4, $5, NOW())
-             ON CONFLICT (company_id, user_id) DO UPDATE SET role = EXCLUDED.role`,
-            [companyId, empRes.rows[0].id, emp.role, emp.skills, 'active']
+          const existingAssignment = await db.query(
+            `SELECT id FROM employees WHERE company_id = $1 AND user_id = $2 LIMIT 1`,
+            [companyId, empId]
           );
+
+          if (existingAssignment.rows.length === 0) {
+            await db.query(
+              `INSERT INTO employees (company_id, user_id, role, skills, status, hire_date)
+               VALUES ($1, $2, $3, $4, $5, NOW())`,
+              [companyId, empId, emp.role, emp.skills, 'active']
+            );
+          }
         } catch (error) {
           console.log('Note: Could not assign employee to company');
         }
