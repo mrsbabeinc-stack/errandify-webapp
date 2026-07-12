@@ -25,19 +25,20 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
     const id = Math.random().toString(36).substr(2, 9);
+    const duration = toast.duration ?? 10000; // Default 10 seconds
     const newToast: Toast = {
       ...toast,
       id,
-      duration: toast.duration ?? 5000, // Default 5 seconds
+      duration: duration,
     };
 
     setToasts((prev) => [...prev, newToast]);
 
     // Auto-dismiss if duration > 0
-    if (newToast.duration > 0) {
+    if (duration > 0) {
       setTimeout(() => {
         removeToast(id);
-      }, newToast.duration);
+      }, duration);
     }
   }, []);
 
