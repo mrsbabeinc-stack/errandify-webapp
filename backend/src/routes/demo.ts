@@ -1,11 +1,10 @@
 import { Router, Response } from 'express';
 import db from '../db.js';
-import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 
 const router = Router();
 
-// POST /api/demo/seed - Create demo owner, manager, and staff accounts
-router.post('/seed', authMiddleware, async (_req: AuthRequest, res: Response) => {
+// POST /api/demo/seed - Create demo owner, manager, and staff accounts (PUBLIC - no auth required)
+router.post('/seed', async (_req: any, res: Response) => {
   try {
     // Create demo owner user
     const ownerRes = await db.query(
