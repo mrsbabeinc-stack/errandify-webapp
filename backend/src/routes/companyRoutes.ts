@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import pool from '../db';
+import db from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
 
 const router = Router();
@@ -9,7 +9,7 @@ router.get('/companies/user/my-company', authMiddleware, async (req: Request, re
   try {
     const userId = (req as any).userId;
 
-    const result = await pool.query(
+    const result = await db.query(
       `SELECT c.*, cw.balance as wallet_balance, cs.tier as subscription_tier
        FROM companies c
        LEFT JOIN company_wallets cw ON c.id = cw.company_id
@@ -41,7 +41,7 @@ router.get('/companies/user/my-company', authMiddleware, async (req: Request, re
 
 // POST /api/companies - Create new company
 router.post('/companies', authMiddleware, async (req: Request, res: Response) => {
-  const client = await pool.connect();
+  const client = await db.connect();
 
   try {
     const userId = (req as any).userId;
@@ -104,7 +104,7 @@ router.get('/companies/:companyId', authMiddleware, async (req: Request, res: Re
   try {
     const { companyId } = req.params;
 
-    const result = await pool.query(
+    const result = await db.query(
       `SELECT c.*, cw.balance as wallet_balance, cs.tier as subscription_tier
        FROM companies c
        LEFT JOIN company_wallets cw ON c.id = cw.company_id
@@ -140,7 +140,7 @@ router.put('/companies/:companyId', authMiddleware, async (req: Request, res: Re
     const { companyId } = req.params;
     const { name, email, phone, address, description } = req.body;
 
-    const result = await pool.query(
+    const result = await db.query(
       `UPDATE companies
        SET name = COALESCE($1, name),
            email = COALESCE($2, email),
@@ -188,7 +188,7 @@ router.post('/companies/:companyId/employees', authMiddleware, async (req: Reque
       });
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `INSERT INTO employees (company_id, user_id, role, skills, status, hire_date)
        VALUES ($1, $2, $3, $4, $5, NOW())
        ON CONFLICT (company_id, user_id) DO UPDATE SET role = $3, skills = $4
@@ -230,7 +230,7 @@ router.get('/companies/:companyId/employees', authMiddleware, async (req: Reques
 
     query += ` ORDER BY e.hire_date DESC`;
 
-    const result = await pool.query(query, params);
+    const result = await db.query(query, params);
 
     res.json({
       success: true,
@@ -251,7 +251,7 @@ router.delete('/companies/:companyId/employees/:userId', authMiddleware, async (
   try {
     const { companyId, userId } = req.params;
 
-    await pool.query(
+    await db.query(
       `UPDATE employees
        SET status = $1, updated_at = NOW()
        WHERE company_id = $2 AND user_id = $3`,
@@ -274,7 +274,7 @@ router.delete('/companies/:companyId/employees/:userId', authMiddleware, async (
 
 // POST /api/companies/:companyId/employees/bulk-import - Bulk import employees
 router.post('/companies/:companyId/employees/bulk-import', authMiddleware, async (req: Request, res: Response) => {
-  const client = await pool.connect();
+  const client = await db.connect();
 
   try {
     const { companyId } = req.params;
@@ -354,7 +354,7 @@ router.post('/companies/:companyId/leaves', authMiddleware, async (req: Request,
       });
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `INSERT INTO employee_leaves (company_id, user_id, start_date, end_date, leave_type, reason, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
@@ -395,7 +395,7 @@ router.get('/companies/:companyId/leaves', authMiddleware, async (req: Request, 
 
     query += ` ORDER BY el.start_date DESC`;
 
-    const result = await pool.query(query, params);
+    const result = await db.query(query, params);
 
     res.json({
       success: true,
@@ -424,7 +424,7 @@ router.put('/companies/leaves/:leaveId/approve', authMiddleware, async (req: Req
       });
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `UPDATE employee_leaves
        SET status = $1, approval_notes = $2, updated_at = NOW()
        WHERE id = $3
@@ -511,7 +511,7 @@ router.get('/companies/:companyId/reviews', authMiddleware, async (req: Request,
     const { companyId } = req.params;
 
     // Get all reviews for the company
-    const result = await pool.query(
+    const result = await db.query(
       `SELECT cr.id, cr.rating, cr.comment, u.display_name as rater_name, cr.created_at
        FROM company_reviews cr
        JOIN users u ON cr.rater_id = u.id
@@ -522,7 +522,7 @@ router.get('/companies/:companyId/reviews', authMiddleware, async (req: Request,
     );
 
     // Calculate average rating
-    const avgResult = await pool.query(
+    const avgResult = await db.query(
       `SELECT AVG(rating) as average_rating FROM company_reviews WHERE company_id = $1`,
       [companyId]
     );
@@ -559,7 +559,7 @@ router.post('/companies/:companyId/reviews', authMiddleware, async (req: Request
       });
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `INSERT INTO company_reviews (company_id, rater_id, rating, comment, task_id)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
@@ -597,7 +597,7 @@ router.post('/companies/:companyId/logo', authMiddleware, async (req: Request, r
       });
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `UPDATE companies
        SET logo_url = $1, updated_at = NOW()
        WHERE id = $2
