@@ -11,14 +11,9 @@ interface HanaExtraction {
 
 const AskerPostErrand: React.FC = () => {
   const [step, setStep] = useState<'hana' | 'form'>('hana');
-  const [hanaMessages, setHanaMessages] = useState<Array<{ role: 'hana' | 'user'; content: string }>>([
-    {
-      role: 'hana',
-      content: 'Hi! 👋 I\'m Hana, your AI assistant. Let me help you post an errand. Tell me what you need done!'
-    }
-  ]);
   const [userInput, setUserInput] = useState('');
   const [extractedData, setExtractedData] = useState<HanaExtraction>({});
+  const [showExtracted, setShowExtracted] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -32,37 +27,10 @@ const AskerPostErrand: React.FC = () => {
     e.preventDefault();
     if (!userInput.trim()) return;
 
-    // Add user message to chat
-    const newMessages = [...hanaMessages, { role: 'user' as const, content: userInput }];
-    setHanaMessages(newMessages);
-
-    // Simulate Hana extraction and response
+    // Simulate Hana extraction
     const extracted = simulateHanaExtraction(userInput);
     setExtractedData(extracted);
-
-    // Hana response
-    let hanaResponse = '';
-    if (extracted.title) hanaResponse += `✓ Title: ${extracted.title}\n`;
-    if (extracted.category) hanaResponse += `✓ Category: ${extracted.category}\n`;
-    if (extracted.budget) hanaResponse += `✓ Budget: $${extracted.budget}\n`;
-    if (extracted.location) hanaResponse += `✓ Location: ${extracted.location}\n`;
-    if (extracted.deadline) hanaResponse += `✓ Deadline: ${extracted.deadline}\n`;
-
-    if (Object.keys(extracted).length === 0) {
-      hanaResponse = 'I couldn\'t extract the details. Can you provide more information? (What needs to be done, where, when, and budget?)';
-    } else if (Object.keys(extracted).length === 5) {
-      hanaResponse += '\n✅ Great! I have all the details. Ready to proceed?';
-    } else {
-      const missing = [];
-      if (!extracted.title) missing.push('title');
-      if (!extracted.category) missing.push('category');
-      if (!extracted.budget) missing.push('budget');
-      if (!extracted.location) missing.push('location');
-      if (!extracted.deadline) missing.push('deadline');
-      hanaResponse += `\nI still need: ${missing.join(', ')}. Can you provide these?`;
-    }
-
-    setHanaMessages([...newMessages, { role: 'hana', content: hanaResponse }]);
+    setShowExtracted(true);
     setUserInput('');
   };
 
@@ -138,8 +106,8 @@ const AskerPostErrand: React.FC = () => {
     console.log('Posting errand:', formData);
     alert('Errand posted successfully!');
     setFormData({ title: '', description: '', category: 'Other', budget: '', location: '', deadline: '' });
-    setHanaMessages([{ role: 'hana', content: 'Hi! 👋 I\'m Hana, your AI assistant. Let me help you post an errand. Tell me what you need done!' }]);
     setExtractedData({});
+    setShowExtracted(false);
     setStep('hana');
   };
 
@@ -148,46 +116,52 @@ const AskerPostErrand: React.FC = () => {
       <h2>Post New Errand</h2>
       <p className="subtitle">Create a new task for individuals or other companies to complete</p>
 
-      {/* HANA AI FORM */}
+      {/* HANA AI FORM - MODAL STYLE */}
       {step === 'hana' && (
-        <div className="hana-form-container">
-          <div className="hana-avatar">
-            <span>🤖</span>
-            <p>Hana AI Assistant</p>
+        <div className="hana-modal">
+          <div className="hana-header">
+            <h3>Hana (Your AI Sister)</h3>
+            <p>Chat With Hana</p>
           </div>
 
-          <div className="hana-chat">
-            {hanaMessages.map((msg, idx) => (
-              <div key={idx} className={`message ${msg.role}`}>
-                {msg.role === 'hana' && <span className="avatar">🤖</span>}
-                <div className="bubble">{msg.content}</div>
+          <div className="hana-content">
+            <div className="hana-greeting">
+              <p>Hi! What errand do you need help with?</p>
+              <div className="example">
+                <strong>Example:</strong>
+                <br />
+                'Grocery shopping at 535239, in 3 days 2pm, 1 hour, budget $200'
               </div>
-            ))}
+            </div>
+
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 400'%3E%3Crect fill='%23e8d4c4' width='200' height='400'/%3E%3Ccircle cx='100' cy='80' r='40' fill='%23d4a574'/%3E%3Cpath d='M 80 200 Q 80 180 100 180 Q 120 180 120 200 L 120 300 Q 120 320 100 320 Q 80 320 80 300 Z' fill='%235fa3d9'/%3E%3Cpath d='M 60 240 L 50 260 Q 50 270 60 270 L 70 270 L 75 290 L 85 270 L 130 270 Q 140 270 140 260 L 130 240' fill='%23a85a50'/%3E%3Ccircle cx='85' cy='190' r='5' fill='%23333'/%3E%3Ccircle cx='115' cy='190' r='5' fill='%23333'/%3E%3Cpath d='M 85 210 Q 100 220 115 210' stroke='%23333' stroke-width='2' fill='none'/%3E%3C/svg%3E" alt="Hana" className="hana-avatar-img" />
+
+            {showExtracted && Object.keys(extractedData).length > 0 && (
+              <div className="extracted-data">
+                {extractedData.title && <div>✓ Title: <strong>{extractedData.title}</strong></div>}
+                {extractedData.category && <div>✓ Category: <strong>{extractedData.category}</strong></div>}
+                {extractedData.budget && <div>✓ Budget: <strong>${extractedData.budget}</strong></div>}
+                {extractedData.location && <div>✓ Location: <strong>{extractedData.location}</strong></div>}
+                {extractedData.deadline && <div>✓ Deadline: <strong>{extractedData.deadline}</strong></div>}
+              </div>
+            )}
           </div>
 
-          <form onSubmit={handleHanaSubmit} className="hana-input-form">
+          <form onSubmit={handleHanaSubmit} className="hana-input-section">
             <input
               type="text"
-              placeholder="Tell me about your errand... (e.g., 'Need office cleaning in Orchard, $150, this weekend')"
+              placeholder="Type all details here..."
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               className="hana-input"
               autoFocus
             />
-            <button type="submit" className="btn-send">
-              Send ✓
-            </button>
+            <button type="submit" className="btn-send-hana">→</button>
           </form>
 
-          {Object.keys(extractedData).length > 0 && Object.keys(extractedData).length < 5 && (
-            <button onClick={handleProceedToForm} className="btn-proceed">
-              Continue with form →
-            </button>
-          )}
-
-          {Object.keys(extractedData).length === 5 && (
-            <button onClick={handleProceedToForm} className="btn-proceed primary">
-              ✅ Proceed to Review Form
+          {showExtracted && Object.keys(extractedData).length > 0 && (
+            <button onClick={handleProceedToForm} className="btn-proceed-hana">
+              Proceed →
             </button>
           )}
         </div>
@@ -286,17 +260,211 @@ const AskerPostErrand: React.FC = () => {
           font-size: 14px;
         }
 
-        /* HANA FORM STYLES */
-        .hana-form-container {
+        /* HANA MODAL STYLES */
+        .hana-modal {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 90%;
+          max-width: 500px;
           background: white;
-          border: 1px solid #E8E8E8;
-          border-radius: 12px;
-          padding: 20px;
+          border-radius: 20px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          z-index: 1000;
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          max-height: 90vh;
+          overflow: hidden;
         }
 
+        .hana-header {
+          background: linear-gradient(135deg, #FF6B35, #FF8C5A);
+          color: white;
+          padding: 20px;
+          text-align: center;
+          position: relative;
+        }
+
+        .hana-header h3 {
+          margin: 0 0 4px 0;
+          font-size: 18px;
+          font-weight: 700;
+        }
+
+        .hana-header p {
+          margin: 0;
+          font-size: 13px;
+          opacity: 0.95;
+          font-weight: 500;
+        }
+
+        .hana-header::after {
+          content: '✕';
+          position: absolute;
+          top: 16px;
+          right: 20px;
+          font-size: 24px;
+          cursor: pointer;
+          opacity: 0.8;
+          transition: opacity 0.2s;
+        }
+
+        .hana-header::after:hover {
+          opacity: 1;
+        }
+
+        .hana-content {
+          flex: 1;
+          overflow-y: auto;
+          padding: 32px 24px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 24px;
+        }
+
+        .hana-greeting {
+          text-align: center;
+          max-width: 350px;
+        }
+
+        .hana-greeting p {
+          margin: 0 0 16px 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: #333;
+        }
+
+        .example {
+          background: #FFF4E6;
+          border: 2px solid #FF6B35;
+          border-radius: 16px;
+          padding: 16px;
+          font-size: 13px;
+          line-height: 1.6;
+          color: #333;
+          text-align: center;
+        }
+
+        .example strong {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 700;
+          color: #1B5E75;
+        }
+
+        .hana-avatar-img {
+          width: 140px;
+          height: auto;
+          max-height: 200px;
+        }
+
+        .extracted-data {
+          background: #E8F5E9;
+          border-radius: 12px;
+          padding: 16px;
+          width: 100%;
+          max-width: 300px;
+          font-size: 13px;
+          line-height: 1.8;
+          color: #2D7A34;
+        }
+
+        .extracted-data div {
+          margin-bottom: 6px;
+        }
+
+        .extracted-data div:last-child {
+          margin-bottom: 0;
+        }
+
+        .extracted-data strong {
+          font-weight: 600;
+          color: #1E5B25;
+        }
+
+        .hana-input-section {
+          display: flex;
+          gap: 8px;
+          padding: 16px 24px 24px;
+          background: white;
+        }
+
+        .hana-input {
+          flex: 1;
+          padding: 14px 16px;
+          border: 2px solid #FF6B35;
+          border-radius: 12px;
+          font-size: 14px;
+          font-family: inherit;
+          color: #333;
+        }
+
+        .hana-input::placeholder {
+          color: #999;
+        }
+
+        .hana-input:focus {
+          outline: none;
+          border-color: #FF6B35;
+          box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .btn-send-hana {
+          width: 48px;
+          height: 48px;
+          padding: 0;
+          background: #FF6B35;
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 20px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .btn-send-hana:hover {
+          background: #E55A24;
+          transform: scale(1.05);
+        }
+
+        .btn-proceed-hana {
+          width: calc(100% - 48px);
+          margin: 0 24px 24px 24px;
+          padding: 12px 24px;
+          background: #FF6B35;
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-proceed-hana:hover {
+          background: #E55A24;
+          transform: translateY(-2px);
+        }
+
+        /* BACKDROP */
+        .hana-modal::before {
+          content: '';
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.4);
+          z-index: -1;
+        }
+
+        /* OLD STYLES - KEEP FOR FORM */
         .hana-avatar {
           text-align: center;
           padding: 20px;
