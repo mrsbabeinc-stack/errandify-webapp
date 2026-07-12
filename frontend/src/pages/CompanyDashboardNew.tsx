@@ -7,7 +7,7 @@ import CompanyStaffResignation from '../components/CompanyStaffResignation';
 import CompanyPaymentHistory from '../components/CompanyPaymentHistory';
 import ManagerStaffAllocations from '../components/ManagerStaffAllocations';
 import ReviewApprovalPanel from '../components/ReviewApprovalPanel';
-import DisputeReviewPanel from '../components/DisputeReviewPanel';
+import CompanyDisputeCenter from '../components/CompanyDisputeCenter';
 
 interface Company {
   id: number;
@@ -847,30 +847,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
 
           {activeSection === 'disputes' && (
             <div className="section-content">
-              <h2>Disputes & Cases</h2>
-              <DisputeReviewPanel
-                disputeId={1}
-                doerName="Staff Member"
-                askerName="Company"
-                jobTitle="Sample Task"
-                budget={100}
-                disputeType="Incomplete Work"
-                description="Task was not completed to specifications"
-                evidence={{
-                  hasGps: true,
-                  gpsLocation: "Singapore 123456",
-                  photoCount: 3,
-                  photoPreviews: [],
-                  hasChat: true,
-                  waitTime: 120
-                }}
-                analysis={{
-                  confidenceScore: 0.85,
-                  recommendedDecision: "Partial Refund",
-                  reasoning: "Evidence shows incomplete task, recommend 50% refund",
-                  safetyConcern: false
-                }}
-              />
+              <CompanyDisputeCenter companyId={company?.id || 1} />
             </div>
           )}
 
