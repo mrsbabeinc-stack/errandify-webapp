@@ -225,7 +225,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
             <button
               className={`view-btn ${viewMode === 'doer' ? 'active' : ''}`}
               onClick={() => setViewMode('doer')}
-              title="Doer - Browse Tasks"
+              title="Doer - Browse Errands"
             >
               🔍 Doer
             </button>
@@ -257,7 +257,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 </a>
               </div>
 
-              {/* ASKER SECTION - Company posting tasks */}
+              {/* ASKER SECTION - Company posting errands */}
               <div className="nav-section">
                 <h3>ASKER SECTION</h3>
                 <a href="#" className={`nav-item ${activeSection === 'errands' ? 'active' : ''}`} onClick={() => setActiveSection('errands')}>
@@ -267,24 +267,24 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                   ➕ Post Errand
                 </a>
                 <a href="#" className={`nav-item ${activeSection === 'asker-bids' ? 'active' : ''}`} onClick={() => setActiveSection('asker-bids')}>
-                  📊 Bids Received
+                  📊 Offers Received
                 </a>
                 <a href="#" className={`nav-item ${activeSection === 'asker-reviews' ? 'active' : ''}`} onClick={() => setActiveSection('asker-reviews')}>
                   ⭐ Reviews (As Asker)
                 </a>
               </div>
 
-              {/* DOER SECTION - Company's staff doing tasks */}
+              {/* DOER SECTION - Company's staff doing errands */}
               <div className="nav-section">
                 <h3>DOER SECTION</h3>
                 <a href="#" className={`nav-item ${activeSection === 'doer-browse' ? 'active' : ''}`} onClick={() => setActiveSection('doer-browse')}>
-                  🔍 Browse Tasks
+                  🔍 Browse Errands
                 </a>
                 <a href="#" className={`nav-item ${activeSection === 'doer-allocate' ? 'active' : ''}`} onClick={() => setActiveSection('doer-allocate')}>
-                  📦 Allocate Tasks
+                  📦 Allocate Errands
                 </a>
                 <a href="#" className={`nav-item ${activeSection === 'doer-active' ? 'active' : ''}`} onClick={() => setActiveSection('doer-active')}>
-                  🚀 Active Tasks
+                  🚀 Active Errands
                 </a>
                 <a href="#" className={`nav-item ${activeSection === 'doer-completed' ? 'active' : ''}`} onClick={() => setActiveSection('doer-completed')}>
                   ✅ Completed
@@ -301,7 +301,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                   👥 My Staff
                 </a>
                 <a href="#" className={`nav-item ${activeSection === 'errand-allocation' ? 'active' : ''}`} onClick={() => setActiveSection('errand-allocation')}>
-                  📦 Staff Tasks
+                  📦 Staff Errands
                 </a>
                 <a href="#" className={`nav-item ${activeSection === 'leave-calendar' ? 'active' : ''}`} onClick={() => setActiveSection('leave-calendar')}>
                   📅 Leave Calendar
@@ -472,7 +472,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
               <div className="kpi-grid">
                 <div className="kpi-card">
                   <div className="kpi-top">
-                    <h3>✅ Tasks Completed</h3>
+                    <h3>✅ Errands Completed</h3>
                   </div>
                   <div className="kpi-bottom">
                     <div className="kpi-value">{stats.tasksDone}</div>
@@ -486,7 +486,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                   </div>
                   <div className="kpi-bottom">
                     <div className="kpi-value">{stats.thisMonth}</div>
-                    <div className="kpi-description">Tasks posted</div>
+                    <div className="kpi-description">Errands posted</div>
                   </div>
                 </div>
 
@@ -785,7 +785,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                     </div>
                     <div className="staff-actions-small">
                       <button>Edit</button>
-                      <button>View Tasks</button>
+                      <button>View Errands</button>
                     </div>
                   </div>
 
@@ -808,7 +808,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                     </div>
                     <div className="staff-actions-small">
                       <button>Edit</button>
-                      <button>View Tasks</button>
+                      <button>View Errands</button>
                     </div>
                   </div>
 
@@ -831,7 +831,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                     </div>
                     <div className="staff-actions-small">
                       <button>Edit</button>
-                      <button>View Tasks</button>
+                      <button>View Errands</button>
                     </div>
                   </div>
                 </div>
