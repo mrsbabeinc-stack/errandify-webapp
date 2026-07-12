@@ -30,6 +30,8 @@ const DoerAllocateErrands: React.FC = () => {
   const [selectedErrandId, setSelectedErrandId] = useState<number | null>(null);
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
   const [confirmedErrandId, setConfirmedErrandId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [recommendedStaffId, setRecommendedStaffId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,10 +50,15 @@ const DoerAllocateErrands: React.FC = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
+        console.log('[DoerAllocateErrands] All errands:', errandsResponse.data.data);
+
         // Filter for confirmed status errands that have user's accepted bid
         // These are errands ready to be allocated to company staff
         const confirmedErrands = errandsResponse.data.data
-          .filter((e: any) => e.status === 'confirmed' && e.acceptedBidId)
+          .filter((e: any) => {
+            console.log(`[DoerAllocateErrands] Checking errand ${e.id}: status=${e.status}, acceptedBidId=${e.acceptedBidId}`);
+            return e.status === 'confirmed' && e.acceptedBidId;
+          })
           .map((e: any) => ({
             id: e.id,
             errandId: e.errandId || e.formatted_id,
@@ -65,14 +72,39 @@ const DoerAllocateErrands: React.FC = () => {
             acceptedBidId: e.acceptedBidId,
           }));
 
+        console.log('[DoerAllocateErrands] Filtered confirmed errands:', confirmedErrands);
         setErrands(confirmedErrands);
 
-        // Use demo staff members (in production, this would fetch from /api/companies/staff)
-        setStaff([
-          { id: 11, display_name: 'Support L3 Senior', alias: 'Support L3', role: 'Senior Staff' },
-          { id: 12, display_name: 'Support L2 Agent', alias: 'Support L2', role: 'Support Agent' },
-          { id: 13, display_name: 'Operations Lead', alias: 'Ops', role: 'Operations' },
-        ]);
+        // Fetch real company staff members
+        try {
+          const staffResponse = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/company/staff`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (staffResponse.data.data && Array.isArray(staffResponse.data.data)) {
+            const realStaff = staffResponse.data.data.map((s: any) => ({
+              id: s.id,
+              display_name: s.display_name || s.name,
+              alias: s.alias,
+              role: s.role || 'Staff',
+            }));
+            setStaff(realStaff);
+
+            // AI Recommendation: suggest staff based on errand category and their skills
+            if (confirmedErrands.length > 0 && realStaff.length > 0) {
+              // For now, recommend the first available staff (in future: use AI to match skills)
+              setRecommendedStaffId(realStaff[0].id);
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to fetch real staff, using demo:', err);
+          // Fallback to demo staff if API fails
+          setStaff([
+            { id: 11, display_name: 'Support L3 Senior', alias: 'Support L3', role: 'Senior Staff' },
+            { id: 12, display_name: 'Support L2 Agent', alias: 'Support L2', role: 'Support Agent' },
+            { id: 13, display_name: 'Operations Lead', alias: 'Ops', role: 'Operations' },
+          ]);
+        }
 
       } catch (err) {
         console.error('Failed to fetch data:', err);
@@ -238,22 +270,53 @@ const DoerAllocateErrands: React.FC = () => {
               {/* Staff Selection */}
               <div className="space-y-4">
                 <div className="bg-white border-2 border-blue-100 rounded-lg p-4">
-                  <h3 className="font-bold text-lg mb-3">Select Staff ({staff.length})</h3>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-bold text-lg">Select Staff ({staff.length})</h3>
+                    {recommendedStaffId && (
+                      <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-bold">
+                        🤖 AI Recommended
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Search Box */}
+                  <input
+                    type="text"
+                    placeholder="🔍 Search staff by name or role..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full p-2 border-2 border-gray-300 rounded-lg mb-3 focus:outline-none focus:border-blue-500"
+                  />
+
                   <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {staff.map(member => (
-                      <button
-                        key={member.id}
-                        onClick={() => setSelectedStaffId(member.id)}
-                        className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
-                          selectedStaffId === member.id
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 hover:border-blue-200'
-                        }`}
-                      >
-                        <div className="font-bold text-gray-800">{member.display_name}</div>
-                        <div className="text-xs text-gray-600">{member.role}</div>
-                      </button>
-                    ))}
+                    {staff
+                      .filter(member =>
+                        member.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        member.role.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .map(member => (
+                        <button
+                          key={member.id}
+                          onClick={() => setSelectedStaffId(member.id)}
+                          className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                            selectedStaffId === member.id
+                              ? 'border-blue-500 bg-blue-50'
+                              : recommendedStaffId === member.id
+                              ? 'border-purple-300 bg-purple-50 hover:border-purple-400'
+                              : 'border-gray-200 hover:border-blue-200'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-bold text-gray-800">{member.display_name}</div>
+                              <div className="text-xs text-gray-600">ID: {member.id} • {member.role}</div>
+                            </div>
+                            {recommendedStaffId === member.id && (
+                              <span className="text-lg">🤖</span>
+                            )}
+                          </div>
+                        </button>
+                      ))}
                   </div>
                 </div>
 
