@@ -623,10 +623,15 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       }
 
       // Log activity: Errand posted
-      const askerResult = await db.query('SELECT display_name, alias FROM users WHERE id = $1', [askerId]);
-      const askerName = askerResult.rows[0]?.display_name || 'Unknown User';
-      const askerAlias = askerResult.rows[0]?.alias || undefined;
-      await activityLogService.logPosted(errand.id, askerName, askerId, askerAlias);
+      try {
+        const askerResult = await db.query('SELECT display_name, alias FROM users WHERE id = $1', [askerId]);
+        const askerName = askerResult.rows[0]?.display_name || 'Unknown User';
+        const askerAlias = askerResult.rows[0]?.alias || undefined;
+        await activityLogService.logPosted(errand.id, askerName, askerId, askerAlias);
+      } catch (activityErr) {
+        console.error('[DEBUG] Activity logging error (non-blocking):', activityErr);
+        // Don't fail the errand creation if activity logging fails
+      }
 
       res.status(201).json({
         success: true,
