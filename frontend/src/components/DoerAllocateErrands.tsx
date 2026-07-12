@@ -41,13 +41,14 @@ const DoerAllocateErrands: React.FC = () => {
 
         // Fetch confirmed errands (those with accepted bids, ready for allocation)
         const errandsResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands?myOnly=true`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        // Filter for confirmed status errands (those with accepted bids)
+        // Filter for confirmed status errands WITHOUT existing assignments
+        // (those with accepted bids that haven't been allocated yet)
         const confirmedErrands = errandsResponse.data.data
-          .filter((e: any) => e.status === 'confirmed' || (e.status === 'open' && e.bidCount > 0))
+          .filter((e: any) => e.status === 'confirmed')
           .map((e: any) => ({
             id: e.id,
             errandId: e.errandId || e.formatted_id,
@@ -63,13 +64,26 @@ const DoerAllocateErrands: React.FC = () => {
 
         setErrands(confirmedErrands);
 
-        // Fetch company staff members (if company context available)
-        // For now, this would need to be called from company API
-        // This is a placeholder - in full implementation, get from /api/companies/staff
-        setStaff([
-          { id: 1, display_name: 'Support L3 Senior', alias: 'Support L3', role: 'Senior Staff' },
-          { id: 2, display_name: 'Support L2 Agent', alias: 'Support L2', role: 'Support Agent' },
-        ]);
+        // Fetch company staff members
+        try {
+          const staffResponse = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/staff`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (staffResponse.data.data && staffResponse.data.data.length > 0) {
+            setStaff(staffResponse.data.data.map((s: any) => ({
+              id: s.id,
+              display_name: s.display_name,
+              alias: s.alias,
+              role: s.role || 'Staff',
+            })));
+          } else {
+            setStaff([]);
+          }
+        } catch (err) {
+          console.error('Failed to fetch staff:', err);
+          setStaff([]);
+        }
 
       } catch (err) {
         console.error('Failed to fetch data:', err);
