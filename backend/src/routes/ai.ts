@@ -889,39 +889,78 @@ OUTPUT ONLY the category name, nothing else.`,
     console.log('[Extract] Final - area:', area, 'fullAddress:', fullAddress);
 
 
-    // Extract certification/skill keywords from title and remove them from title
-    const skillKeywords = {
-      childcare: ['certified', 'certification', 'cpr', 'first aid', 'trained', 'professional'],
-      eldercare: ['certified', 'certification', 'cpr', 'first aid', 'trained', 'professional', 'dementia'],
-      petcare: ['certified', 'grooming', 'professional', 'experienced', 'trained'],
-    };
-
+    // Use Qwen to intelligently suggest relevant skills and certifications based on title
     let suggestedSkills: string[] = [];
-    const titleLower = title.toLowerCase();
 
-    // Check for skill-related keywords in the title
-    if (category === 'childcare' && (titleLower.includes('certified') || titleLower.includes('certification'))) {
-      suggestedSkills.push('Childcare Certification');
-      title = title.replace(/\b(certified|certification)\b/gi, '').replace(/\s+/g, ' ').trim();
-    }
-    if (category === 'childcare' && (titleLower.includes('cpr') || titleLower.includes('first aid'))) {
-      suggestedSkills.push('First Aid/CPR');
-      title = title.replace(/\b(cpr|first\s+aid)\b/gi, '').replace(/\s+/g, ' ').trim();
-    }
-    if (category === 'eldercare' && (titleLower.includes('certified') || titleLower.includes('certification'))) {
-      suggestedSkills.push('Basic Elder Care Certification');
-      title = title.replace(/\b(certified|certification)\b/gi, '').replace(/\s+/g, ' ').trim();
-    }
-    if (category === 'eldercare' && (titleLower.includes('dementia') || titleLower.includes('alzheimer'))) {
-      suggestedSkills.push('Dementia Care');
-      title = title.replace(/\b(dementia|alzheimer)\b/gi, '').replace(/\s+/g, ' ').trim();
-    }
-    if (category === 'petcare' && (titleLower.includes('grooming') || titleLower.includes('groom'))) {
-      suggestedSkills.push('Pet Grooming');
-      title = title.replace(/\b(groom|grooming)\b/gi, '').replace(/\s+/g, ' ').trim();
+    if (qwenApiKey) {
+      try {
+        console.log('[Extract] ✓ Using Qwen to suggest relevant skills...');
+        const skillsResponse = await axios.post(
+          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+          {
+            model: 'qwen-max',
+            messages: [
+              {
+                role: 'system',
+                content: `You are a skill/certification suggester. Given a task title and category, suggest relevant skills and certifications needed.
+
+RULES:
+1. Suggest ONLY 2-4 relevant skills max
+2. Focus on REQUIRED or HIGHLY USEFUL skills for this task
+3. Include certifications only if truly necessary
+4. Return as JSON array of strings
+5. Be specific to the task title, not generic
+6. Skill names should be clear and professional
+
+EXAMPLES:
+- Title: "Decorate Apartment For Party", Category: "eventhelp" → ["Event Planning", "Interior Design", "Decoration"]
+- Title: "Walk My Dog", Category: "petcare" → ["Pet Care", "Dog Handling"]
+- Title: "Tutor My Daughter P6 In Math", Category: "childcare" → ["Math Tutoring", "Primary Education"]
+- Title: "Clean My House Deep Clean", Category: "homehelp" → ["Deep Cleaning", "Attention to Detail"]
+- Title: "Fix Leaky Kitchen Tap", Category: "homehelp" → ["Plumbing", "Maintenance"]
+- Title: "Babysit 2 Kids Ages 3-5", Category: "childcare" → ["Childcare", "CPR/First Aid", "Child Development"]
+- Title: "Elderly Care And Companionship", Category: "eldercare" → ["Elder Care", "Empathy", "Patient Communication"]
+
+Return ONLY a JSON array of strings, nothing else.
+Example output: ["Event Planning", "Interior Design", "Decoration"]`,
+              },
+              {
+                role: 'user',
+                content: `Title: "${title}", Category: "${category}"`,
+              },
+            ],
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${qwenApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 5000,
+          }
+        );
+
+        const skillsText = skillsResponse.data?.choices?.[0]?.message?.content?.trim();
+        if (skillsText) {
+          try {
+            // Extract JSON array from response
+            const jsonMatch = skillsText.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                suggestedSkills = parsed.filter((s: any) => typeof s === 'string' && s.length > 0);
+                console.log('[Extract] ✅ Qwen suggested skills:', suggestedSkills);
+              }
+            }
+          } catch (parseErr) {
+            console.warn('[Extract] Could not parse skills JSON:', skillsText);
+          }
+        }
+      } catch (error) {
+        console.warn('[Extract] Qwen skills suggestion failed, continuing without:', error instanceof Error ? error.message : error);
+      }
     }
 
-    console.log('[Extract] Extracted skills:', suggestedSkills);
+    console.log('[Extract] Final suggested skills:', suggestedSkills);
 
     // Extract recurring pattern from input (e.g., "every 2 weeks", "weekly", "monthly")
     let isRecurring = false;
