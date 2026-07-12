@@ -6,6 +6,9 @@ import CompanyPointsDistribution from '../components/CompanyPointsDistribution';
 import CompanyStaffResignation from '../components/CompanyStaffResignation';
 import CompanyAdvertisingManagement from '../components/CompanyAdvertisingManagement';
 import CompanyPaymentHistory from '../components/CompanyPaymentHistory';
+import ManagerStaffAllocations from '../components/ManagerStaffAllocations';
+import ReviewApprovalPanel from '../components/ReviewApprovalPanel';
+import DisputeReviewPanel from '../components/DisputeReviewPanel';
 
 interface Company {
   id: number;
@@ -62,7 +65,7 @@ const CompanyDashboardNew: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'mybiz' | 'errands' | 'staff' | 'ads' | 'subscription' | 'analytics' | 'settings' | 'leave-calendar' | 'points-distribution' | 'staff-resignation' | 'payment-history'>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'mybiz' | 'errands' | 'staff' | 'ads' | 'subscription' | 'analytics' | 'settings' | 'leave-calendar' | 'points-distribution' | 'staff-resignation' | 'payment-history' | 'errand-allocation' | 'review-approval' | 'disputes'>('dashboard');
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
   const [bannerIndex, setBannerIndex] = useState(0);
   const [actionItemFilter, setActionItemFilter] = useState<'all' | 'high' | 'medium' | 'low' | 'done'>('all');
@@ -273,6 +276,15 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 <>
                   <div className="nav-section">
                     <h3>Management</h3>
+                    <a href="#" className={`nav-item ${activeSection === 'errand-allocation' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('errand-allocation'); }}>
+                      📦 Errand Allocation
+                    </a>
+                    <a href="#" className={`nav-item ${activeSection === 'review-approval' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('review-approval'); }}>
+                      ⭐ Review Approval
+                    </a>
+                    <a href="#" className={`nav-item ${activeSection === 'disputes' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('disputes'); }}>
+                      ⚠️ Disputes
+                    </a>
                     <a href="#" className={`nav-item ${activeSection === 'leave-calendar' ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); setActiveSection('leave-calendar'); }}>
                       📅 Leave Calendar
                     </a>
@@ -817,6 +829,27 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
             <div className="section-content">
               <h2>Advertising</h2>
               <p>Advertising management section coming soon...</p>
+            </div>
+          )}
+
+          {activeSection === 'errand-allocation' && (
+            <div className="section-content">
+              <h2>Errand Allocation</h2>
+              <ManagerStaffAllocations />
+            </div>
+          )}
+
+          {activeSection === 'review-approval' && (
+            <div className="section-content">
+              <h2>Review Approval</h2>
+              <ReviewApprovalPanel />
+            </div>
+          )}
+
+          {activeSection === 'disputes' && (
+            <div className="section-content">
+              <h2>Disputes</h2>
+              <DisputeReviewPanel />
             </div>
           )}
 
