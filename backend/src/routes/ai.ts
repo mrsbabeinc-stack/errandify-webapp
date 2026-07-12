@@ -957,6 +957,46 @@ OUTPUT ONLY the category name, nothing else.`,
 
     console.log('[Extract] Suggested skills (fallback):', suggestedSkills);
 
+    // Extract certifications needed based on category and title
+    let suggestedCertifications: string[] = [];
+
+    const categoryCertifications: Record<string, string[]> = {
+      'childcare': ['Childcare Certification', 'First Aid/CPR', 'Child Protection'],
+      'eldercare': ['Elder Care Certification', 'Health & Safety', 'Patient Care'],
+      'petcare': ['Animal Care Certificate', 'Pet First Aid'],
+      'food-beverage': ['Food Hygiene', 'Food Handling Certificate'],
+      'travel-mobility': ['Driving License', 'Vehicle Insurance'],
+    };
+
+    const titleLowerCert = title.toLowerCase();
+
+    // Add title-specific certifications
+    if (titleLowerCert.includes('tutor') || titleLowerCert.includes('teach')) {
+      suggestedCertifications.push('Teaching Certification');
+    }
+    if (titleLowerCert.includes('babysit') || titleLowerCert.includes('childcare')) {
+      suggestedCertifications.push('CPR/First Aid');
+    }
+    if (titleLowerCert.includes('elderly') || titleLowerCert.includes('elder')) {
+      suggestedCertifications.push('Elder Care Certification');
+    }
+    if (titleLowerCert.includes('plumb')) {
+      suggestedCertifications.push('Plumbing License');
+    }
+    if (titleLowerCert.includes('electric')) {
+      suggestedCertifications.push('Electrical License');
+    }
+
+    // Add category-based certifications
+    const baseCerts = categoryCertifications[category] || [];
+    for (const cert of baseCerts) {
+      if (!suggestedCertifications.includes(cert) && suggestedCertifications.length < 2) {
+        suggestedCertifications.push(cert);
+      }
+    }
+
+    console.log('[Extract] Suggested certifications:', suggestedCertifications);
+
     // Extract recurring pattern from input (e.g., "every 2 weeks", "weekly", "monthly")
     let isRecurring = false;
     let repeatEvery = 1;
@@ -1064,43 +1104,64 @@ Output ONLY the tip (1-2 sentences), nothing else.`,
     if (!description) {
       const titleLowercase = title.toLowerCase();
 
-      // Keyword-based fallback descriptions
-      if (titleLowercase.includes('hair') || titleLowercase.includes('salon') || titleLowercase.includes('cut')) {
-        description = `Specify hair type, length, preferred style, and any special requirements or concerns.`;
-      } else if (titleLowercase.includes('cleaning') || titleLowercase.includes('clean')) {
-        description = `Which areas need attention? What's your preference: eco-friendly products, allergen concerns, or specific cleaning type?`;
-      } else if (titleLowercase.includes('dog') || titleLowercase.includes('walk') || titleLowercase.includes('pet')) {
-        description = `Tell me about your pet's size, temperament, and any health or behavioral needs to be aware of.`;
-      } else if (titleLowercase.includes('babysit') || titleLowercase.includes('childcare') || titleLowercase.includes('child')) {
-        description = `What's the child's age? Any dietary restrictions, allergies, bedtime routine, or preferred activities?`;
-      } else if (titleLowercase.includes('elderly') || titleLowercase.includes('elder') || titleLowercase.includes('senior')) {
-        description = `What type of care needed? Any mobility assistance, medications, or specific preferences?`;
-      } else if (titleLowercase.includes('delivery') || titleLowercase.includes('send') || titleLowercase.includes('deliver')) {
-        description = `What's being delivered? Provide item details, pickup/drop-off locations, and any special handling needs.`;
-      } else if (titleLowercase.includes('event') || titleLowercase.includes('party') || titleLowercase.includes('setup')) {
-        description = `How many guests? What's the theme or style? Which areas need setup or decoration?`;
-      } else if (titleLowercase.includes('teach') || titleLowercase.includes('tutor') || titleLowercase.includes('lesson')) {
-        description = `What subject? Student age/level? Learning goals? Any materials or exams to prepare for?`;
+      // Task-specific fallback tips
+      if (titleLowercase.includes('decorate') && titleLowercase.includes('party')) {
+        description = `Need: party size, theme/colors, which rooms, and any rental constraints?`;
+      } else if (titleLowercase.includes('hair') || titleLowercase.includes('salon') || titleLowercase.includes('cut')) {
+        description = `Need: hair type, desired length/style, face shape, and previous color?`;
+      } else if (titleLowercase.includes('deep clean') || titleLowercase.includes('spring clean')) {
+        description = `Need: sq footage, which rooms prioritized, inside cabinets/fridge, eco-friendly?`;
+      } else if (titleLowercase.includes('office') && titleLowercase.includes('clean')) {
+        description = `Need: size, how many rooms, high-touch areas, eco-friendly products?`;
+      } else if (titleLowercase.includes('clean') && titleLowercase.includes('house')) {
+        description = `Need: rooms prioritized, deep areas (behind furniture), pet-friendly products?`;
+      } else if (titleLowercase.includes('walk') && (titleLowercase.includes('dog') || titleLowercase.includes('pet'))) {
+        description = `Need: dog size/breed, temperament with strangers, areas to avoid, health issues?`;
+      } else if (titleLowercase.includes('pet') && titleLowercase.includes('care')) {
+        description = `Need: pet type/size, medical conditions, diet, favorite toys, anxiety triggers?`;
+      } else if (titleLowercase.includes('babysit') && (titleLowercase.includes('twins') || titleLowercase.includes('ages'))) {
+        description = `Need: nap times, food allergies, screen time, emergency contacts, bedtime?`;
+      } else if (titleLowercase.includes('babysit') || titleLowercase.includes('childcare')) {
+        description = `Need: child age(s), allergies, bedtime routine, favorite activities, screen time?`;
+      } else if (titleLowercase.includes('tutor') && titleLowercase.includes('math')) {
+        description = `Need: student level, weaknesses, exam date, learning pace, materials?`;
+      } else if (titleLowercase.includes('tutor') || titleLowercase.includes('teach')) {
+        description = `Need: subject, student level, weak areas, exam coming, teaching style?`;
+      } else if (titleLowercase.includes('fix') && titleLowercase.includes('tap')) {
+        description = `Need: dripping or spraying? Under-sink leaks? Faucet type? Previous repairs?`;
+      } else if (titleLowercase.includes('repair') && titleLowercase.includes('washing')) {
+        description = `Need: error codes shown? Sounds/smells? Repair history? Budget for parts?`;
       } else if (titleLowercase.includes('repair') || titleLowercase.includes('fix')) {
-        description = `Describe the issue in detail. What's broken or not working? Any previous attempts to fix it?`;
-      } else if (titleLowercase.includes('move') || titleLowercase.includes('carry') || titleLowercase.includes('transport')) {
-        description = `What's being moved? Pickup and drop-off locations? Any fragile items or special equipment needed?`;
-      } else if (titleLowercase.includes('shop') || titleLowercase.includes('grocery') || titleLowercase.includes('buy')) {
-        description = `What items to buy or stores to visit? Any budget, brand, or dietary preferences?`;
-      } else if (titleLowercase.includes('design') || titleLowercase.includes('logo') || titleLowercase.includes('graphic')) {
-        description = `What design is needed? Style preference? Brand colors? Target audience? Any reference materials?`;
+        description = `Need: what's broken exactly? When stopped working? Repair history? Budget?`;
+      } else if (titleLowercase.includes('elderly') || titleLowercase.includes('elder')) {
+        description = `Need: mobility level, medications to manage, meals to prep, activities?`;
+      } else if (titleLowercase.includes('deliver') && titleLowercase.includes('fragile')) {
+        description = `Need: item description, weight/size, destination, time window, insurance?`;
+      } else if (titleLowercase.includes('deliver') || titleLowercase.includes('delivery')) {
+        description = `Need: item type, weight/size, pickup location, destination, time window?`;
+      } else if (titleLowercase.includes('move') || titleLowercase.includes('moving')) {
+        description = `Need: how many rooms/items, fragile items, packing help, destination floor?`;
+      } else if (titleLowercase.includes('shop') && titleLowercase.includes('grocery')) {
+        description = `Need: stores to visit, dietary restrictions/allergies, budget, brands?`;
+      } else if (titleLowercase.includes('shop') || titleLowercase.includes('grocery')) {
+        description = `Need: specific items list, stores, budget limit, dietary restrictions?`;
+      } else if (titleLowercase.includes('design') || titleLowercase.includes('logo')) {
+        description = `Need: style/mood, brand colors, target audience, deadline, revision rounds?`;
       } else {
-        // Generic fallback by category
+        // Generic by category with specific prompts
         const categoryDescriptions: Record<string, string> = {
-          'homehelp': 'Which areas or tasks need help? Any preferences for materials or methods?',
-          'petcare': 'Tell me about your pet and what type of care is needed.',
-          'delivery': 'What needs to be delivered and where?',
-          'eventhelp': 'Describe the event type, size, and what help is needed.',
-          'childcare': 'Child age and any special requirements or preferences?',
-          'eldercare': 'What type of care or assistance is needed?',
-          'wellness': 'What type of wellness support do you need?',
+          'homehelp': 'Need: which areas/rooms, materials available, allergies/sensitivities?',
+          'petcare': 'Need: pet type/size/age, health issues, diet, temperament?',
+          'delivery': 'Need: what item, weight/size, pickup location, destination, timeframe?',
+          'eventhelp': 'Need: party size, theme/style, which rooms, budget for decorations?',
+          'childcare': 'Need: child age, allergies, bedtime, activities, emergency contacts?',
+          'eldercare': 'Need: mobility level, medications, meal prep, preferred activities?',
+          'wellness': 'Need: specific wellness goal, health conditions, availability, budget?',
+          'food-beverage': 'Need: guest count, dietary restrictions, cuisine, serving style?',
+          'travel-mobility': 'Need: destination, timeframe, luggage amount, accessibility needs?',
+          'creative-arts': 'Need: style preference, target audience, brand colors, deadline?',
         };
-        description = categoryDescriptions[category] || `Tell me more details about what you need help with.`;
+        description = categoryDescriptions[category] || `Need: more details about what's required?`;
       }
     }
 
@@ -1125,6 +1186,7 @@ Output ONLY the tip (1-2 sentences), nothing else.`,
         repeatUnit,
         occurrences,
         suggestedSkills,
+        suggestedCertifications,
         needsAreaConfirmation, // Flag to ask user to confirm area if OneMap failed
       },
     });
