@@ -1,20 +1,40 @@
 import React, { useState } from 'react';
 
-interface HanaExtraction {
-  title?: string;
-  description?: string;
-  category?: string;
-  budget?: string;
-  location?: string;
-  deadline?: string;
+interface ErrandData {
+  title: string;
+  description: string;
+  category: string;
+  budget: string;
+  location: string;
+  fullAddress?: string;
+  area?: string;
+  deadline: string;
+}
+
+type ChatStep = 'title' | 'location' | 'date' | 'budget' | 'notes' | 'complete';
+
+interface ChatMessage {
+  id: string;
+  role: 'hana' | 'user';
+  content: string;
+  timestamp: Date;
 }
 
 const AskerPostErrand: React.FC = () => {
   const [step, setStep] = useState<'hana' | 'form'>('hana');
-  const [userInput, setUserInput] = useState('');
-  const [extractedData, setExtractedData] = useState<HanaExtraction>({});
-  const [showExtracted, setShowExtracted] = useState(false);
-  const [formData, setFormData] = useState({
+  const [currentStep, setCurrentStep] = useState<ChatStep>('title');
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: '1',
+      role: 'hana',
+      content: "Hello! I'm Hana 🌸. Let's create your errand together. What do you need done?",
+      timestamp: new Date(),
+    },
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const [errandData, setErrandData] = useState<ErrandData>({
     title: '',
     description: '',
     category: 'Other',
@@ -23,146 +43,254 @@ const AskerPostErrand: React.FC = () => {
     deadline: '',
   });
 
-  const handleHanaSubmit = (e: React.FormEvent) => {
+  const stepPrompts: Record<ChatStep, string> = {
+    title: 'What do you need done?',
+    location: 'Where? (your location or specific address)',
+    date: 'When do you need it? (date and time)',
+    budget: "What's your budget? (in SGD)",
+    notes: 'Any special requirements? (optional, you can skip)',
+    complete: 'Perfect! Let me review your errand.',
+  };
+
+  const addHanaMessage = (content: string) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: (Date.now() + Math.random()).toString(),
+        role: 'hana',
+        content,
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userInput.trim()) return;
+    if (!input.trim() || loading) return;
 
-    // Simulate Hana extraction
-    const extracted = simulateHanaExtraction(userInput);
-    setExtractedData(extracted);
-    setShowExtracted(true);
-    setUserInput('');
+    const userMessage = input.trim();
+
+    // Add user message to chat
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        role: 'user',
+        content: userMessage,
+        timestamp: new Date(),
+      },
+    ]);
+
+    setInput('');
+    setLoading(true);
+
+    try {
+      // Process based on current step
+      switch (currentStep) {
+        case 'title':
+          processTitle(userMessage);
+          break;
+        case 'location':
+          processLocation(userMessage);
+          break;
+        case 'date':
+          processDate(userMessage);
+          break;
+        case 'budget':
+          processBudget(userMessage);
+          break;
+        case 'notes':
+          processNotes(userMessage);
+          break;
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      addHanaMessage('Sorry, I had trouble understanding. Can you try again?');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const simulateHanaExtraction = (input: string): HanaExtraction => {
-    const extracted: HanaExtraction = {};
-    const lowerInput = input.toLowerCase();
+  const processTitle = (userInput: string) => {
+    setErrandData(prev => ({ ...prev, title: userInput, description: userInput }));
 
-    // Title extraction
-    if (lowerInput.includes('need') || lowerInput.includes('want') || lowerInput.includes('help')) {
-      const titleMatch = input.match(/(?:need|want|help with|looking for|require)\s+(.+?)(?:\s+(?:in|at|on|for|by|budget|cost)|\.|$)/i);
-      if (titleMatch) extracted.title = titleMatch[1].trim();
-    }
-
-    // Category extraction
-    const categories: { [key: string]: string } = {
-      'clean': 'Cleaning', 'cleaning': 'Cleaning', 'wash': 'Cleaning',
-      'deliver': 'Delivery', 'delivery': 'Delivery', 'courier': 'Delivery',
-      'fix': 'Handyman', 'repair': 'Handyman', 'maintenance': 'Handyman',
-      'admin': 'Admin', 'data': 'Admin', 'entry': 'Admin'
+    // Simple category detection
+    const categoryMap: Record<string, string> = {
+      'clean': 'Cleaning',
+      'deliver': 'Delivery',
+      'repair': 'Handyman',
+      'fix': 'Handyman',
+      'admin': 'Admin',
     };
-    for (const [key, cat] of Object.entries(categories)) {
-      if (lowerInput.includes(key)) {
-        extracted.category = cat;
+
+    let detectedCategory = 'Other';
+    for (const [key, cat] of Object.entries(categoryMap)) {
+      if (userInput.toLowerCase().includes(key)) {
+        detectedCategory = cat;
         break;
       }
     }
 
-    // Budget extraction
-    const budgetMatch = input.match(/\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/);
-    if (budgetMatch) extracted.budget = budgetMatch[1].replace(/,/g, '');
-
-    // Location extraction
-    const locationKeywords = ['singapore', 'orchard', 'cbd', 'bukit', 'jurong', 'ang mo kio', 'tampines', 'clementi', 'bishan'];
-    for (const loc of locationKeywords) {
-      if (lowerInput.includes(loc)) {
-        const locMatch = input.match(new RegExp(`(\\d+\\s+[^,]*${loc}[^,]*|${loc}[^,]*)`, 'i'));
-        if (locMatch) extracted.location = locMatch[1].trim();
-        break;
-      }
-    }
-
-    // Deadline extraction
-    const now = new Date();
-    if (lowerInput.includes('today')) {
-      extracted.deadline = now.toISOString().slice(0, 16);
-    } else if (lowerInput.includes('tomorrow')) {
-      now.setDate(now.getDate() + 1);
-      extracted.deadline = now.toISOString().slice(0, 16);
-    } else if (lowerInput.includes('next week')) {
-      now.setDate(now.getDate() + 7);
-      extracted.deadline = now.toISOString().slice(0, 16);
-    } else if (lowerInput.includes('urgent')) {
-      extracted.deadline = new Date(now.getTime() + 3600000).toISOString().slice(0, 16);
-    }
-
-    return extracted;
+    setErrandData(prev => ({ ...prev, category: detectedCategory }));
+    addHanaMessage('Got it! Now, where do you need this done?');
+    setCurrentStep('location');
   };
 
-  const handleProceedToForm = () => {
-    setFormData({
-      title: extractedData.title || '',
-      description: extractedData.description || '',
-      category: extractedData.category || 'Other',
-      budget: extractedData.budget || '',
-      location: extractedData.location || '',
-      deadline: extractedData.deadline || '',
-    });
+  const processLocation = (userInput: string) => {
+    setErrandData(prev => ({ ...prev, location: userInput, fullAddress: userInput }));
+    addHanaMessage('Thanks! When do you need it done? (e.g., Tomorrow at 2pm, Saturday, Next week)');
+    setCurrentStep('date');
+  };
+
+  const processDate = (userInput: string) => {
+    // Parse natural language date - simple version
+    let deadline = userInput;
+    const now = new Date();
+
+    if (userInput.toLowerCase().includes('today')) {
+      deadline = now.toISOString().slice(0, 16);
+    } else if (userInput.toLowerCase().includes('tomorrow')) {
+      now.setDate(now.getDate() + 1);
+      deadline = now.toISOString().slice(0, 16);
+    } else if (userInput.toLowerCase().includes('next week')) {
+      now.setDate(now.getDate() + 7);
+      deadline = now.toISOString().slice(0, 16);
+    } else if (userInput.toLowerCase().includes('this weekend')) {
+      const day = now.getDay();
+      const daysUntilSaturday = (6 - day) % 7 || 7;
+      now.setDate(now.getDate() + daysUntilSaturday);
+      deadline = now.toISOString().slice(0, 16);
+    }
+
+    setErrandData(prev => ({ ...prev, deadline }));
+    addHanaMessage("Perfect! What's your budget for this? (in SGD, e.g., 50, 100)");
+    setCurrentStep('budget');
+  };
+
+  const processBudget = (userInput: string) => {
+    const budget = userInput.replace(/[^\d.]/g, '');
+    setErrandData(prev => ({ ...prev, budget }));
+    addHanaMessage('Great! Any special requirements or notes? (You can skip this if not)');
+    setCurrentStep('notes');
+  };
+
+  const processNotes = (userInput: string) => {
+    if (userInput.toLowerCase() !== 'skip' && userInput.toLowerCase() !== 'no') {
+      setErrandData(prev => ({ ...prev, description: userInput }));
+    }
+
+    // Show summary
+    const summary =
+      `Perfect! Here's your errand summary:\n\n` +
+      `📝 ${errandData.title}\n` +
+      `📍 ${errandData.location}\n` +
+      `📅 ${errandData.deadline}\n` +
+      `💰 SGD $${errandData.budget}\n` +
+      (errandData.description && errandData.description !== errandData.title ? `📌 ${errandData.description}\n` : '') +
+      `\nReady to post?`;
+
+    addHanaMessage(summary);
+    setCurrentStep('complete');
+  };
+
+  const handleSkip = () => {
+    if (currentStep === 'notes') {
+      processNotes('skip');
+    }
+  };
+
+  const handleProceedToReview = () => {
     setStep('form');
+  };
+
+  const handleStartOver = () => {
+    setCurrentStep('title');
+    setMessages([
+      {
+        id: '1',
+        role: 'hana',
+        content: "Hello! I'm Hana 🌸. Let's create your errand together. What do you need done?",
+        timestamp: new Date(),
+      },
+    ]);
+    setErrandData({
+      title: '',
+      description: '',
+      category: 'Other',
+      budget: '',
+      location: '',
+      deadline: '',
+    });
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Posting errand:', formData);
+    console.log('Posting errand:', errandData);
     alert('Errand posted successfully!');
-    setFormData({ title: '', description: '', category: 'Other', budget: '', location: '', deadline: '' });
-    setExtractedData({});
-    setShowExtracted(false);
+    setErrandData({ title: '', description: '', category: 'Other', budget: '', location: '', deadline: '' });
+    handleStartOver();
     setStep('hana');
   };
 
   return (
     <div className="post-errand-container">
       <h2>Post New Errand</h2>
-      <p className="subtitle">Create a new task for individuals or other companies to complete</p>
+      <p className="subtitle">Create a new errand for individuals or other companies to complete</p>
 
-      {/* HANA AI FORM - MODAL STYLE */}
+      {/* HANA CHAT MODE */}
       {step === 'hana' && (
-        <div className="hana-modal">
-          <div className="hana-header">
-            <h3>Hana (Your AI Sister)</h3>
-            <p>Chat With Hana</p>
+        <div className="hana-chat-container">
+          {/* Chat Messages */}
+          <div className="hana-messages">
+            {messages.map((msg) => (
+              <div key={msg.id} className={`message ${msg.role}`}>
+                {msg.role === 'hana' && <span className="avatar">🌸</span>}
+                <div className="bubble">{msg.content}</div>
+              </div>
+            ))}
           </div>
 
-          <div className="hana-content">
-            <div className="hana-greeting">
-              <p>Hi! What errand do you need help with?</p>
-              <div className="example">
-                <strong>Example:</strong>
-                <br />
-                'Grocery shopping at 535239, in 3 days 2pm, 1 hour, budget $200'
+          {/* Input Area */}
+          {currentStep !== 'complete' ? (
+            <form onSubmit={handleSendMessage} className="hana-input-area">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type your answer..."
+                className="hana-input"
+                disabled={loading}
+                autoFocus
+              />
+              <div className="hana-buttons">
+                <button
+                  type="submit"
+                  disabled={loading || !input.trim()}
+                  className="btn-send"
+                >
+                  {loading ? 'Sending...' : 'Send'}
+                </button>
+                {currentStep === 'notes' && (
+                  <button
+                    type="button"
+                    onClick={handleSkip}
+                    disabled={loading}
+                    className="btn-skip"
+                  >
+                    Skip
+                  </button>
+                )}
               </div>
+            </form>
+          ) : (
+            <div className="hana-buttons-complete">
+              <button onClick={handleProceedToReview} className="btn-review">
+                Review & Post
+              </button>
+              <button onClick={handleStartOver} className="btn-start-over">
+                Start Over
+              </button>
             </div>
-
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 400'%3E%3Crect fill='%23e8d4c4' width='200' height='400'/%3E%3Ccircle cx='100' cy='80' r='40' fill='%23d4a574'/%3E%3Cpath d='M 80 200 Q 80 180 100 180 Q 120 180 120 200 L 120 300 Q 120 320 100 320 Q 80 320 80 300 Z' fill='%235fa3d9'/%3E%3Cpath d='M 60 240 L 50 260 Q 50 270 60 270 L 70 270 L 75 290 L 85 270 L 130 270 Q 140 270 140 260 L 130 240' fill='%23a85a50'/%3E%3Ccircle cx='85' cy='190' r='5' fill='%23333'/%3E%3Ccircle cx='115' cy='190' r='5' fill='%23333'/%3E%3Cpath d='M 85 210 Q 100 220 115 210' stroke='%23333' stroke-width='2' fill='none'/%3E%3C/svg%3E" alt="Hana" className="hana-avatar-img" />
-
-            {showExtracted && Object.keys(extractedData).length > 0 && (
-              <div className="extracted-data">
-                {extractedData.title && <div>✓ Title: <strong>{extractedData.title}</strong></div>}
-                {extractedData.category && <div>✓ Category: <strong>{extractedData.category}</strong></div>}
-                {extractedData.budget && <div>✓ Budget: <strong>${extractedData.budget}</strong></div>}
-                {extractedData.location && <div>✓ Location: <strong>{extractedData.location}</strong></div>}
-                {extractedData.deadline && <div>✓ Deadline: <strong>{extractedData.deadline}</strong></div>}
-              </div>
-            )}
-          </div>
-
-          <form onSubmit={handleHanaSubmit} className="hana-input-section">
-            <input
-              type="text"
-              placeholder="Type all details here..."
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              className="hana-input"
-              autoFocus
-            />
-            <button type="submit" className="btn-send-hana">→</button>
-          </form>
-
-          {showExtracted && Object.keys(extractedData).length > 0 && (
-            <button onClick={handleProceedToForm} className="btn-proceed-hana">
-              Proceed →
-            </button>
           )}
         </div>
       )}
@@ -174,9 +302,8 @@ const AskerPostErrand: React.FC = () => {
             <label>Errand Title *</label>
             <input
               type="text"
-              placeholder="e.g., Office Cleaning, Delivery Service"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              value={errandData.title}
+              onChange={(e) => setErrandData({ ...errandData, title: e.target.value })}
               required
             />
           </div>
@@ -185,8 +312,8 @@ const AskerPostErrand: React.FC = () => {
             <label>Description *</label>
             <textarea
               placeholder="Describe what needs to be done..."
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              value={errandData.description}
+              onChange={(e) => setErrandData({ ...errandData, description: e.target.value })}
               rows={4}
               required
             />
@@ -196,8 +323,8 @@ const AskerPostErrand: React.FC = () => {
             <div className="form-group">
               <label>Category *</label>
               <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                value={errandData.category}
+                onChange={(e) => setErrandData({ ...errandData, category: e.target.value })}
                 required
               >
                 <option>Other</option>
@@ -213,8 +340,8 @@ const AskerPostErrand: React.FC = () => {
               <input
                 type="number"
                 placeholder="e.g., 150"
-                value={formData.budget}
-                onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                value={errandData.budget}
+                onChange={(e) => setErrandData({ ...errandData, budget: e.target.value })}
                 min="10"
                 required
               />
@@ -226,8 +353,8 @@ const AskerPostErrand: React.FC = () => {
             <input
               type="text"
               placeholder="e.g., 123 Main Street, Singapore"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              value={errandData.location}
+              onChange={(e) => setErrandData({ ...errandData, location: e.target.value })}
               required
             />
           </div>
@@ -236,8 +363,8 @@ const AskerPostErrand: React.FC = () => {
             <label>Deadline *</label>
             <input
               type="datetime-local"
-              value={formData.deadline}
-              onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+              value={errandData.deadline}
+              onChange={(e) => setErrandData({ ...errandData, deadline: e.target.value })}
               required
             />
           </div>
@@ -252,6 +379,7 @@ const AskerPostErrand: React.FC = () => {
       <style>{`
         .post-errand-container {
           max-width: 800px;
+          margin: 0 auto;
         }
 
         .subtitle {
@@ -260,246 +388,30 @@ const AskerPostErrand: React.FC = () => {
           font-size: 14px;
         }
 
-        /* HANA MODAL STYLES */
-        .hana-modal {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 90%;
-          max-width: 500px;
+        /* HANA CHAT STYLES */
+        .hana-chat-container {
           background: white;
-          border-radius: 20px;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-          z-index: 1000;
-          display: flex;
-          flex-direction: column;
-          max-height: 90vh;
+          border-radius: 12px;
+          border: 1px solid #E8E8E8;
           overflow: hidden;
-        }
-
-        .hana-header {
-          background: linear-gradient(135deg, #FF6B35, #FF8C5A);
-          color: white;
-          padding: 20px;
-          text-align: center;
-          position: relative;
-        }
-
-        .hana-header h3 {
-          margin: 0 0 4px 0;
-          font-size: 18px;
-          font-weight: 700;
-        }
-
-        .hana-header p {
-          margin: 0;
-          font-size: 13px;
-          opacity: 0.95;
-          font-weight: 500;
-        }
-
-        .hana-header::after {
-          content: '✕';
-          position: absolute;
-          top: 16px;
-          right: 20px;
-          font-size: 24px;
-          cursor: pointer;
-          opacity: 0.8;
-          transition: opacity 0.2s;
-        }
-
-        .hana-header::after:hover {
-          opacity: 1;
-        }
-
-        .hana-content {
-          flex: 1;
-          overflow-y: auto;
-          padding: 32px 24px;
           display: flex;
           flex-direction: column;
-          align-items: center;
-          gap: 24px;
+          height: 600px;
         }
 
-        .hana-greeting {
-          text-align: center;
-          max-width: 350px;
-        }
-
-        .hana-greeting p {
-          margin: 0 0 16px 0;
-          font-size: 16px;
-          font-weight: 600;
-          color: #333;
-        }
-
-        .example {
-          background: #FFF4E6;
-          border: 2px solid #FF6B35;
-          border-radius: 16px;
-          padding: 16px;
-          font-size: 13px;
-          line-height: 1.6;
-          color: #333;
-          text-align: center;
-        }
-
-        .example strong {
-          display: block;
-          margin-bottom: 8px;
-          font-weight: 700;
-          color: #1B5E75;
-        }
-
-        .hana-avatar-img {
-          width: 140px;
-          height: auto;
-          max-height: 200px;
-        }
-
-        .extracted-data {
-          background: #E8F5E9;
-          border-radius: 12px;
-          padding: 16px;
-          width: 100%;
-          max-width: 300px;
-          font-size: 13px;
-          line-height: 1.8;
-          color: #2D7A34;
-        }
-
-        .extracted-data div {
-          margin-bottom: 6px;
-        }
-
-        .extracted-data div:last-child {
-          margin-bottom: 0;
-        }
-
-        .extracted-data strong {
-          font-weight: 600;
-          color: #1E5B25;
-        }
-
-        .hana-input-section {
-          display: flex;
-          gap: 8px;
-          padding: 16px 24px 24px;
-          background: white;
-        }
-
-        .hana-input {
+        .hana-messages {
           flex: 1;
-          padding: 14px 16px;
-          border: 2px solid #FF6B35;
-          border-radius: 12px;
-          font-size: 14px;
-          font-family: inherit;
-          color: #333;
-        }
-
-        .hana-input::placeholder {
-          color: #999;
-        }
-
-        .hana-input:focus {
-          outline: none;
-          border-color: #FF6B35;
-          box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
-        }
-
-        .btn-send-hana {
-          width: 48px;
-          height: 48px;
-          padding: 0;
-          background: #FF6B35;
-          color: white;
-          border: none;
-          border-radius: 12px;
-          font-size: 20px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .btn-send-hana:hover {
-          background: #E55A24;
-          transform: scale(1.05);
-        }
-
-        .btn-proceed-hana {
-          width: calc(100% - 48px);
-          margin: 0 24px 24px 24px;
-          padding: 12px 24px;
-          background: #FF6B35;
-          color: white;
-          border: none;
-          border-radius: 12px;
-          font-weight: 600;
-          font-size: 14px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-proceed-hana:hover {
-          background: #E55A24;
-          transform: translateY(-2px);
-        }
-
-        /* BACKDROP */
-        .hana-modal::before {
-          content: '';
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.4);
-          z-index: -1;
-        }
-
-        /* OLD STYLES - KEEP FOR FORM */
-        .hana-avatar {
-          text-align: center;
-          padding: 20px;
-          background: linear-gradient(135deg, #FF6B35, #FF8C5A);
-          border-radius: 12px;
-          color: white;
-        }
-
-        .hana-avatar span {
-          font-size: 48px;
-          display: block;
-          margin-bottom: 8px;
-        }
-
-        .hana-avatar p {
-          margin: 0;
-          font-weight: 600;
-          font-size: 16px;
-        }
-
-        .hana-chat {
+          overflow-y: auto;
+          padding: 24px;
           background: #F8FAFB;
-          border-radius: 8px;
-          padding: 16px;
-          min-height: 200px;
-          max-height: 400px;
-          overflow-y: auto;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 16px;
         }
 
         .message {
           display: flex;
-          gap: 8px;
+          gap: 12px;
           align-items: flex-start;
         }
 
@@ -520,8 +432,8 @@ const AskerPostErrand: React.FC = () => {
           max-width: 70%;
           padding: 12px 16px;
           border-radius: 12px;
-          font-size: 13px;
-          line-height: 1.5;
+          font-size: 14px;
+          line-height: 1.6;
           word-wrap: break-word;
           white-space: pre-wrap;
         }
@@ -537,13 +449,16 @@ const AskerPostErrand: React.FC = () => {
           color: white;
         }
 
-        .hana-input-form {
-          display: flex;
-          gap: 8px;
+        .hana-input-area {
+          padding: 16px;
+          background: white;
+          border-top: 1px solid #E8E8E8;
+          display: grid;
+          gap: 12px;
         }
 
         .hana-input {
-          flex: 1;
+          width: 100%;
           padding: 12px 16px;
           border: 1px solid #E8E8E8;
           border-radius: 8px;
@@ -557,50 +472,84 @@ const AskerPostErrand: React.FC = () => {
           box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
         }
 
-        .btn-send {
+        .hana-buttons {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        .hana-buttons-complete {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          padding: 16px;
+          background: white;
+          border-top: 1px solid #E8E8E8;
+        }
+
+        .btn-send,
+        .btn-skip,
+        .btn-review,
+        .btn-start-over {
           padding: 12px 24px;
-          background: #FF6B35;
-          color: white;
           border: none;
           border-radius: 8px;
           font-weight: 600;
+          font-size: 14px;
           cursor: pointer;
           transition: all 0.2s;
-          font-size: 14px;
         }
 
-        .btn-send:hover {
+        .btn-send {
+          background: #FF6B35;
+          color: white;
+        }
+
+        .btn-send:hover:not(:disabled) {
           background: #E55A24;
           transform: translateY(-1px);
         }
 
-        .btn-proceed {
-          padding: 12px 24px;
-          background: #1B5E75;
+        .btn-send:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .btn-skip {
+          background: white;
+          color: #666;
+          border: 1px solid #E8E8E8;
+        }
+
+        .btn-skip:hover:not(:disabled) {
+          background: #F8FAFB;
+        }
+
+        .btn-review {
+          background: #FF6B35;
           color: white;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          font-size: 14px;
-          width: 100%;
         }
 
-        .btn-proceed:hover {
-          background: #144A5A;
+        .btn-review:hover {
+          background: #E55A24;
         }
 
-        .btn-proceed.primary {
-          background: #2D7A34;
+        .btn-start-over {
+          background: white;
+          color: #666;
+          border: 1px solid #E8E8E8;
         }
 
-        .btn-proceed.primary:hover {
-          background: #1E5B25;
+        .btn-start-over:hover {
+          background: #F8FAFB;
         }
 
         /* STANDARD FORM STYLES */
         .post-form {
+          background: white;
+          border-radius: 12px;
+          border: 1px solid #E8E8E8;
+          padding: 24px;
           display: grid;
           gap: 16px;
         }
@@ -678,20 +627,20 @@ const AskerPostErrand: React.FC = () => {
         }
 
         @media (max-width: 768px) {
-          .form-row {
-            grid-template-columns: 1fr;
-          }
-
-          .form-actions {
-            flex-direction: column;
+          .hana-chat-container {
+            height: 500px;
           }
 
           .bubble {
             max-width: 100%;
           }
 
-          .hana-chat {
-            max-height: 300px;
+          .form-row {
+            grid-template-columns: 1fr;
+          }
+
+          .form-actions {
+            flex-direction: column;
           }
         }
       `}</style>
