@@ -223,36 +223,45 @@ export default function CreateErrandPage() {
               error: '',
             });
           } else if (newFormData.title) {
-            // Fetch suggestions for any title to get AI category recommendation (even if category is empty)
-            console.log('[CreateErrand] Fetching AI suggestions for title:', newFormData.title, 'category:', newFormData.category);
-            try {
-              const response = await axios.post(
-                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
-                {
-                  title: newFormData.title,
-                  description: newFormData.description,
-                  category: newFormData.category,
-                  date: newFormData.deadline,
-                  time: newFormData.time
+            // If description came from Hana (AI tips), use it directly without refetching
+            if (prefilledData.description) {
+              console.log('[CreateErrand] Using AI tips from Hana:', prefilledData.description);
+              setAiSuggestions((prev) => ({
+                ...prev,
+                suggestedDescription: prefilledData.description,
+              }));
+            } else {
+              // Fetch suggestions for any title to get AI category recommendation (even if category is empty)
+              console.log('[CreateErrand] Fetching AI suggestions for title:', newFormData.title, 'category:', newFormData.category);
+              try {
+                const response = await axios.post(
+                  `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+                  {
+                    title: newFormData.title,
+                    description: newFormData.description,
+                    category: newFormData.category,
+                    date: newFormData.deadline,
+                    time: newFormData.time
+                  }
+                );
+                if (response.data.success) {
+                  console.log('[CreateErrand] Got suggestions:', response.data.data);
+                  setAiSuggestions({
+                    suggestedCategory: response.data.data.category,
+                    suggestedDescription: response.data.data.description,
+                    correctedTitle: response.data.data.correctedTitle || '',
+                    hasCorrections: response.data.data.hasCorrections,
+                    suggestedBudget: response.data.data.suggestedBudget || null,
+                    suggestedNotes: response.data.data.notes || '',
+                    certifications: response.data.data.certifications ? { required: response.data.data.certifications, optional: [] } : { required: [], optional: [] },
+                    skills: [],
+                    blocked: false,
+                    error: '',
+                  });
                 }
-              );
-              if (response.data.success) {
-                console.log('[CreateErrand] Got suggestions:', response.data.data);
-                setAiSuggestions({
-                  suggestedCategory: response.data.data.category,
-                  suggestedDescription: response.data.data.description,
-                  correctedTitle: response.data.data.correctedTitle || '',
-                  hasCorrections: response.data.data.hasCorrections,
-                  suggestedBudget: response.data.data.suggestedBudget || null,
-                  suggestedNotes: response.data.data.notes || '',
-                  certifications: response.data.data.certifications ? { required: response.data.data.certifications, optional: [] } : { required: [], optional: [] },
-                  skills: [],
-                  blocked: false,
-                  error: '',
-                });
+              } catch (err) {
+                console.error('Error fetching suggestions:', err);
               }
-            } catch (err) {
-              console.error('Error fetching suggestions:', err);
             }
           }
         } catch (err) {
