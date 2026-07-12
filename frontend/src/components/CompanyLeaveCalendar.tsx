@@ -50,11 +50,41 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
   ]);
   const [showModal, setShowModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState('');
+  const [employeeSearchInput, setEmployeeSearchInput] = useState('');
+  const [showEmployeeDropdown, setShowEmployeeDropdown] = useState(false);
   const [leaveType, setLeaveType] = useState<'full-day' | 'half-day-morning' | 'half-day-afternoon' | 'time-off'>('full-day');
   const [reason, setReason] = useState('');
+  const [otherReason, setOtherReason] = useState('');
   const [leaveDate, setLeaveDate] = useState('');
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('12:00');
+
+  const employees = [
+    { id: 'STF-001', name: 'Jordan Smith' },
+    { id: 'STF-002', name: 'Ava Johnson' },
+    { id: 'STF-003', name: 'Liam Brown' },
+    { id: 'STF-004', name: 'Mason Wilson' },
+    { id: 'STF-005', name: 'Sarah Davis' },
+    { id: 'STF-006', name: 'Emily Lee' },
+  ];
+
+  const leaveReasons = [
+    'Medical / Doctor Appointment',
+    'Family Emergency',
+    'Personal Leave',
+    'Vacation / Holiday',
+    'Bereavement',
+    'Marriage / Wedding',
+    'Maternity / Paternity',
+    'Sabbatical',
+    'Training / Conference',
+    'Others',
+  ];
+
+  const filteredEmployees = employees.filter(emp =>
+    emp.name.toLowerCase().includes(employeeSearchInput.toLowerCase()) ||
+    emp.id.includes(employeeSearchInput)
+  );
 
   const daysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
@@ -273,13 +303,44 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
             </div>
             <div className="modal-body">
               <div className="form-group">
-                <label>Employee</label>
-                <input
-                  type="text"
-                  placeholder="Select employee"
-                  value={selectedEmployee}
-                  onChange={e => setSelectedEmployee(e.target.value)}
-                />
+                <label>Employee <span style={{ color: '#E74C3C' }}>*</span></label>
+                <div className="employee-search-container">
+                  <input
+                    type="text"
+                    placeholder="Search by name or employee ID (e.g., STF-001)"
+                    value={employeeSearchInput}
+                    onChange={e => setEmployeeSearchInput(e.target.value)}
+                    onFocus={() => setShowEmployeeDropdown(true)}
+                    className="employee-search-input"
+                  />
+                  {showEmployeeDropdown && (
+                    <div className="employee-dropdown">
+                      {filteredEmployees.length === 0 ? (
+                        <div className="dropdown-item no-results">No employees found</div>
+                      ) : (
+                        filteredEmployees.map(emp => (
+                          <div
+                            key={emp.id}
+                            className="dropdown-item"
+                            onClick={() => {
+                              setSelectedEmployee(emp.id);
+                              setEmployeeSearchInput(emp.name);
+                              setShowEmployeeDropdown(false);
+                            }}
+                          >
+                            <span className="emp-name">{emp.name}</span>
+                            <span className="emp-id">{emp.id}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                  {selectedEmployee && (
+                    <div className="selected-employee-display">
+                      Selected: <strong>{employeeSearchInput}</strong> ({selectedEmployee})
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="form-group">
                 <label>Leave Type</label>
@@ -327,12 +388,25 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
               )}
 
               <div className="form-group">
-                <label>Reason</label>
-                <textarea
-                  placeholder="Reason for leave"
+                <label>Reason <span style={{ color: '#E74C3C' }}>*</span></label>
+                <select
                   value={reason}
                   onChange={e => setReason(e.target.value)}
-                />
+                  style={{ marginBottom: reason === 'Others' ? '12px' : '0' }}
+                >
+                  <option value="">-- Select a reason --</option>
+                  {leaveReasons.map(r => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+                {reason === 'Others' && (
+                  <textarea
+                    placeholder="Please specify your reason"
+                    value={otherReason}
+                    onChange={e => setOtherReason(e.target.value)}
+                    style={{ marginTop: '12px' }}
+                  />
+                )}
               </div>
               <div className="modal-actions">
                 <button className="btn-primary" onClick={handleSubmitLeave}>Submit Request</button>
@@ -817,6 +891,93 @@ const CompanyLeaveCalendar: React.FC<CompanyLeaveCalendarProps> = ({ viewMode = 
           border-radius: 6px;
           cursor: pointer;
           font-weight: 600;
+        }
+
+        .employee-search-container {
+          position: relative;
+        }
+
+        .employee-search-input {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          font-size: 14px;
+          font-family: inherit;
+          box-sizing: border-box;
+        }
+
+        .employee-search-input:focus {
+          outline: none;
+          border-color: #FF6B35;
+          box-shadow: 0 0 4px rgba(255, 107, 53, 0.2);
+        }
+
+        .employee-dropdown {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: #fff;
+          border: 1px solid #ddd;
+          border-top: none;
+          border-radius: 0 0 6px 6px;
+          max-height: 200px;
+          overflow-y: auto;
+          z-index: 1000;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropdown-item {
+          padding: 12px;
+          border-bottom: 1px solid #f0f0f0;
+          cursor: pointer;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          transition: all 0.2s;
+        }
+
+        .dropdown-item:hover {
+          background: #f9f9f9;
+        }
+
+        .dropdown-item.no-results {
+          cursor: default;
+          color: #999;
+          font-style: italic;
+        }
+
+        .dropdown-item.no-results:hover {
+          background: #fff;
+        }
+
+        .emp-name {
+          font-weight: 500;
+          color: #333;
+          flex: 1;
+        }
+
+        .emp-id {
+          font-size: 12px;
+          color: #FF6B35;
+          font-weight: 600;
+          margin-left: 8px;
+          white-space: nowrap;
+        }
+
+        .selected-employee-display {
+          margin-top: 8px;
+          padding: 8px 12px;
+          background: #E8F5E9;
+          border-left: 3px solid #27AE60;
+          border-radius: 4px;
+          font-size: 12px;
+          color: #2E7D32;
+        }
+
+        .selected-employee-display strong {
+          color: #1B5E20;
         }
       `}</style>
     </div>
