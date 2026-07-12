@@ -240,45 +240,80 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 </a>
               </div>
 
-              {/* OWNER WORKFLOW */}
+              {/* ASKER SECTION - Company posting errands */}
               <div className="nav-section">
-                <h3>OWNER WORKFLOW</h3>
+                <h3>ASKER SECTION</h3>
+                <a href="#" className={`nav-item ${activeSection === 'errands' ? 'active' : ''}`} onClick={() => setActiveSection('errands')}>
+                  📁 MyBizErrands
+                </a>
                 <a href="#" className={`nav-item ${activeSection === 'asker-post' ? 'active' : ''}`} onClick={() => setActiveSection('asker-post')}>
                   ➕ Post Errand
                 </a>
-                <a href="#" className={`nav-item ${activeSection === 'doer-allocate' ? 'active' : ''}`} onClick={() => setActiveSection('doer-allocate')}>
-                  📦 Allocate to Staff
+                <a href="#" className={`nav-item ${activeSection === 'asker-bids' ? 'active' : ''}`} onClick={() => setActiveSection('asker-bids')}>
+                  📊 Offers Received
                 </a>
-                <a href="#" className={`nav-item ${activeSection === 'confirm-queue' ? 'active' : ''}`} onClick={() => setActiveSection('confirm-queue')}>
-                  ✅ Staff Confirmations
-                </a>
-                <a href="#" className={`nav-item ${activeSection === 'review-queue' ? 'active' : ''}`} onClick={() => setActiveSection('review-queue')}>
-                  📋 Review & Approve
+                <a href="#" className={`nav-item ${activeSection === 'asker-reviews' ? 'active' : ''}`} onClick={() => setActiveSection('asker-reviews')}>
+                  ⭐ Reviews (As Asker)
                 </a>
               </div>
 
-              {/* MONITORING */}
+              {/* DOER SECTION - Company's staff doing errands */}
               <div className="nav-section">
-                <h3>MONITORING</h3>
+                <h3>DOER SECTION</h3>
+                <a href="#" className={`nav-item ${activeSection === 'doer-browse' ? 'active' : ''}`} onClick={() => setActiveSection('doer-browse')}>
+                  🔍 Browse Errands
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'doer-allocate' ? 'active' : ''}`} onClick={() => setActiveSection('doer-allocate')}>
+                  📦 Allocate Errands
+                </a>
                 <a href="#" className={`nav-item ${activeSection === 'doer-active' ? 'active' : ''}`} onClick={() => setActiveSection('doer-active')}>
                   🚀 Active Errands
                 </a>
                 <a href="#" className={`nav-item ${activeSection === 'doer-completed' ? 'active' : ''}`} onClick={() => setActiveSection('doer-completed')}>
                   ✅ Completed
                 </a>
+                <a href="#" className={`nav-item ${activeSection === 'doer-reviews' ? 'active' : ''}`} onClick={() => setActiveSection('doer-reviews')}>
+                  ⭐ Reviews (As Doer)
+                </a>
               </div>
 
-              {/* STAFF & COMPANY */}
+              {/* STAFF MANAGEMENT */}
               <div className="nav-section">
-                <h3>STAFF & COMPANY</h3>
+                <h3>STAFF MANAGEMENT</h3>
                 <a href="#" className={`nav-item ${activeSection === 'staff' ? 'active' : ''}`} onClick={() => setActiveSection('staff')}>
                   👥 My Staff
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'errand-allocation' ? 'active' : ''}`} onClick={() => setActiveSection('errand-allocation')}>
+                  📦 Staff Errands
                 </a>
                 <a href="#" className={`nav-item ${activeSection === 'leave-calendar' ? 'active' : ''}`} onClick={() => setActiveSection('leave-calendar')}>
                   📅 Leave Calendar
                 </a>
+              </div>
+
+              {/* COMPANY OPS */}
+              <div className="nav-section">
+                <h3>COMPANY OPS</h3>
                 <a href="#" className={`nav-item ${activeSection === 'mybiz' ? 'active' : ''}`} onClick={() => setActiveSection('mybiz')}>
                   🏢 Company Profile
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'payment-history' ? 'active' : ''}`} onClick={() => setActiveSection('payment-history')}>
+                  💳 Payments
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'analytics' ? 'active' : ''}`} onClick={() => setActiveSection('analytics')}>
+                  📈 Analytics
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'review-queue' ? 'active' : ''}`} onClick={() => setActiveSection('review-queue')}>
+                  📋 Review Queue
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'confirm-queue' ? 'active' : ''}`} onClick={() => setActiveSection('confirm-queue')}>
+                  ✅ Staff Confirmations
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'disputes' ? 'active' : ''}`} onClick={() => setActiveSection('disputes')}>
+                  ⚠️ Disputes
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'settings' ? 'active' : ''}`} onClick={() => setActiveSection('settings')}>
+                  ⚙️ Settings
                 </a>
               </div>
             </nav>
