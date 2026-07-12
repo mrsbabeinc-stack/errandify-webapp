@@ -594,8 +594,10 @@ OUTPUT ONLY THE TITLE, nothing else.`,
     const lowerInput = input.toLowerCase();
 
     // Map keywords to categories (order matters - check specific before general)
-    // Check creative-arts FIRST before other generic keywords like "post", "write", "design"
-    if (lowerInput.includes('social media') || lowerInput.includes('content') || lowerInput.includes('graphic') || lowerInput.includes('video') || lowerInput.includes('photo') || lowerInput.includes('photography') || lowerInput.includes('art') || lowerInput.includes('illustration') || lowerInput.includes('creative') || lowerInput.includes('design')) {
+    // Check event/party FIRST (before creative-arts which includes "design")
+    if (lowerInput.includes('event') || lowerInput.includes('party') || lowerInput.includes('decorate') || lowerInput.includes('decoration') || lowerInput.includes('setup') || lowerInput.includes('wedding') || lowerInput.includes('celebration')) {
+      category = 'eventhelp';
+    } else if (lowerInput.includes('social media') || lowerInput.includes('content') || lowerInput.includes('graphic') || lowerInput.includes('video') || lowerInput.includes('photo') || lowerInput.includes('photography') || lowerInput.includes('art') || lowerInput.includes('illustration') || lowerInput.includes('creative') || lowerInput.includes('design')) {
       category = 'creative-arts';
     } else if (lowerInput.includes('walk') || lowerInput.includes('dog') || lowerInput.includes('pet') || lowerInput.includes('cat')) {
       category = 'petcare';
