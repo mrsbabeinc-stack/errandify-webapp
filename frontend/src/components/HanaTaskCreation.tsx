@@ -273,15 +273,17 @@ export default function HanaTaskCreation({
         return;
       }
 
-      // Skip suggestions in Hana - form will fetch them for better UX
-      // This way user sees pre-filled form immediately without waiting for Qwen to generate tips
+      // Keep AI-generated description and skills from extraction
+      // These are intelligent tips related to the title based on Qwen AI analysis
       const enhancedTaskData = {
         ...updatedTaskData,
-        description: '', // Form will refetch if needed
-        notes: '', // Form will refetch if needed
+        description: extracted.description || '', // AI tips based on title (e.g., "Pet care service. Specify pet type, breed...")
+        suggestedCertifications: extracted.suggestedSkills || [], // Suggested skills/certifications
+        notes: extracted.notes || '',
       };
 
-      console.log('[Hana] Skipping suggestions fetch (form will fetch them). Task data ready.');
+      console.log('[Hana] AI extraction complete with tips:', extracted.description);
+      console.log('[Hana] Suggested skills:', extracted.suggestedSkills);
 
       // Validate date and time ONLY if user provided them
       if (enhancedTaskData.date && enhancedTaskData.date !== 'TBD' && enhancedTaskData.time && enhancedTaskData.time !== 'TBD') {
