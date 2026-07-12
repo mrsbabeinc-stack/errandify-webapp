@@ -50,6 +50,7 @@ import NotificationPreferencesPage from './pages/NotificationPreferencesPage';
 import BeforeYouGetStartedPage from './pages/BeforeYouGetStartedPage';
 import SafetyResourcesPage from './pages/SafetyResourcesPage';
 import SupportDashboardPage from './pages/SupportDashboardPage';
+import TopNotificationTestPage from './pages/TopNotificationTestPage';
 import DisputeReviewPage from './pages/DisputeReviewPage';
 import AppealDashboardPage from './pages/AppealDashboardPage';
 import AdminDashboard from './pages/admin/Dashboard';
@@ -289,6 +290,7 @@ export default function App() {
         {/* TEST ROUTE - to verify routing works */}
         <Route path="/test" element={<TestPage />} />
         <Route path="/test-cannot-complete" element={<TestCannotComplete />} />
+        <Route path="/test-notifications" element={<TopNotificationTestPage />} />
 
         {/* Profile sub-pages (outside layout for simpler rendering) */}
         <Route path="/my-profile" element={isAuthenticated ? <MyProfilePage /> : <Navigate to="/login" replace />} />

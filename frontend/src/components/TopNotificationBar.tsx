@@ -41,6 +41,19 @@ const TopNotificationBar: React.FC = () => {
   useEffect(() => {
     (window as any).topNotification = addNotification;
     console.log('[TopNotificationBar] Ready - window.topNotification is available');
+
+    // Show welcome notification on first load
+    if (typeof window !== 'undefined' && !(window as any).topNotificationInitialized) {
+      setTimeout(() => {
+        addNotification({
+          type: 'info',
+          message: '💡 Click buttons to see notifications at the top',
+          icon: 'ℹ️',
+          duration: 6000,
+        });
+      }, 500);
+      (window as any).topNotificationInitialized = true;
+    }
   }, []);
 
   const getBackgroundColor = (type: string) => {
