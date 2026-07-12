@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useToastNotification } from '../../utils/toastNotification';
+import CompanySettingsStep from './CompanySettingsStep';
 
 interface MockUserData {
   name: string;
@@ -331,38 +332,15 @@ export default function ACRALookupStep({
   // COMPANY SETTINGS STEP
   if (step === 'company-settings' && acraData && acraData.ownerVerified) {
     return (
-      <div className="min-h-screen bg-errandify-bg flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl">
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-errandify-brown mb-2">
-                Complete Company Settings
-              </h1>
-              <p className="text-gray-600">
-                Set up your company profile
-              </p>
-            </div>
-
-            {/* Placeholder - will be replaced with full form */}
-            <div className="p-8 bg-blue-50 rounded-lg text-center border border-blue-200">
-              <p className="text-blue-900">
-                <strong>🚀 Company Settings Form</strong><br />
-                Logo upload, description, industry, categories, manager invites<br />
-                <span className="text-sm">(Building next...)</span>
-              </p>
-            </div>
-
-            <div className="mt-8 text-center">
-              <button
-                onClick={onComplete}
-                className="bg-errandify-orange text-white px-8 py-3 rounded-lg font-bold hover:bg-opacity-90 transition-all"
-              >
-                Complete Setup
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <CompanySettingsStep
+        companyData={{
+          companyName: acraData.companyName,
+          ownerName: acraData.ownerName,
+          uen: uen
+        }}
+        onComplete={onComplete}
+        onBack={() => setStep('verification-result')}
+      />
     );
   }
 
