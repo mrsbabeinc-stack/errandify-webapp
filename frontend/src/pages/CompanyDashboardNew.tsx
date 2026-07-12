@@ -19,6 +19,7 @@ import DoerActiveErrands from '../components/DoerActiveErrands';
 import DoerCompletedErrands from '../components/DoerCompletedErrands';
 import DoerReviews from '../components/DoerReviews';
 import ReviewQueuePanel from '../components/ReviewQueuePanel';
+import ManagerConfirmationQueue from '../components/ManagerConfirmationQueue';
 
 interface Company {
   id: number;
@@ -324,6 +325,9 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 </a>
                 <a href="#" className={`nav-item ${activeSection === 'review-queue' ? 'active' : ''}`} onClick={() => setActiveSection('review-queue')}>
                   📋 Review Queue
+                </a>
+                <a href="#" className={`nav-item ${activeSection === 'confirm-queue' ? 'active' : ''}`} onClick={() => setActiveSection('confirm-queue')}>
+                  ✅ Staff Confirmations
                 </a>
                 <a href="#" className={`nav-item ${activeSection === 'disputes' ? 'active' : ''}`} onClick={() => setActiveSection('disputes')}>
                   ⚠️ Disputes
@@ -812,6 +816,12 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
           {activeSection === 'review-queue' && (
             <div className="section-content">
               <ReviewQueuePanel />
+            </div>
+          )}
+
+          {activeSection === 'confirm-queue' && (
+            <div className="section-content">
+              <ManagerConfirmationQueue />
             </div>
           )}
 

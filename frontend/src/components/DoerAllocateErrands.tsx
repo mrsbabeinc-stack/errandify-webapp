@@ -1,301 +1,222 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 interface Errand {
   id: number;
-  formattedId: string;
+  errandId: string;
   title: string;
-  budget: number;
-  area: string;
+  description: string;
   category: string;
+  budget: number;
+  location: string;
+  askerName: string;
+  status: 'confirmed' | 'acknowledged' | 'confirmed_awaiting_start';
+  acceptedBidId?: number;
 }
 
 interface StaffMember {
   id: number;
-  name: string;
+  display_name: string;
+  alias?: string;
   role: string;
-  skills: string;
-  rating: number;
-  availability: string;
 }
 
 const DoerAllocateErrands: React.FC = () => {
-  const [errands] = useState<Errand[]>([
-    { id: 1, formattedId: 'ERR-2026-001', title: 'Office Cleaning', budget: 150, area: 'Orchard', category: 'Cleaning' },
-    { id: 2, formattedId: 'ERR-2026-002', title: 'Delivery Service', budget: 85, area: 'CBD', category: 'Delivery' },
-    { id: 3, formattedId: 'ERR-2026-003', title: 'Handyman Repairs', budget: 200, area: 'Bukit Merah', category: 'Handyman' },
-  ]);
+  const [errands, setErrands] = useState<Errand[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [selectedErrandId, setSelectedErrandId] = useState<number | null>(null);
+  const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
 
-  const [staff] = useState<StaffMember[]>([
-    { id: 1, name: 'Staff 1', role: 'Cleaner', skills: 'Cleaning, Organization', rating: 4.8, availability: 'Available' },
-    { id: 2, name: 'Staff 2', role: 'Courier', skills: 'Delivery, Logistics', rating: 4.9, availability: 'Available' },
-    { id: 3, name: 'Manager', role: 'Manager', skills: 'All', rating: 4.7, availability: 'Busy' },
-  ]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Not authenticated');
+          setLoading(false);
+          return;
+        }
 
-  const [allocations, setAllocations] = useState<{ errandId: number; staffId: number; status: string }[]>([]);
-  const [selectedErrand, setSelectedErrand] = useState<number | null>(null);
-  const [selectedStaff, setSelectedStaff] = useState<number | null>(null);
+        // Fetch confirmed errands (those with accepted bids, ready for allocation)
+        const errandsResponse = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-  const handleAllocate = () => {
-    if (!selectedErrand || !selectedStaff) {
-      alert('Please select both errand and staff member');
+        // Filter for confirmed status errands (those with accepted bids)
+        const confirmedErrands = errandsResponse.data.data
+          .filter((e: any) => e.status === 'confirmed' || (e.status === 'open' && e.bidCount > 0))
+          .map((e: any) => ({
+            id: e.id,
+            errandId: e.errandId || e.formatted_id,
+            title: e.title,
+            description: e.description,
+            category: e.category,
+            budget: e.budget,
+            location: e.location,
+            askerName: e.askerName,
+            status: e.status,
+            acceptedBidId: e.acceptedBidId,
+          }));
+
+        setErrands(confirmedErrands);
+
+        // Fetch company staff members (if company context available)
+        // For now, this would need to be called from company API
+        // This is a placeholder - in full implementation, get from /api/companies/staff
+        setStaff([
+          { id: 1, display_name: 'Support L3 Senior', alias: 'Support L3', role: 'Senior Staff' },
+          { id: 2, display_name: 'Support L2 Agent', alias: 'Support L2', role: 'Support Agent' },
+        ]);
+
+      } catch (err) {
+        console.error('Failed to fetch data:', err);
+        setError('Failed to load errands and staff');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleAllocate = async () => {
+    if (!selectedErrandId || !selectedStaffId) {
+      alert('Please select both an errand and a staff member');
       return;
     }
 
-    const newAllocation = { errandId: selectedErrand, staffId: selectedStaff, status: 'pending' };
-    setAllocations([...allocations, newAllocation]);
-    alert('Errand allocated successfully!');
-    setSelectedErrand(null);
-    setSelectedStaff(null);
+    try {
+      const token = localStorage.getItem('token');
+
+      // Create errand assignment
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errand-assignments`,
+        {
+          errandId: selectedErrandId,
+          doerId: selectedStaffId,
+          status: 'allocated',
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert('Errand allocated successfully!');
+      setSelectedErrandId(null);
+      setSelectedStaffId(null);
+
+      // Refresh the list
+      setErrands(errands.filter(e => e.id !== selectedErrandId));
+    } catch (err: any) {
+      console.error('Failed to allocate:', err);
+      alert(err.response?.data?.error || 'Failed to allocate errand');
+    }
   };
 
-  const getStaffName = (staffId: number) => staff.find(s => s.id === staffId)?.name || '';
-  const getErrandTitle = (errandId: number) => errands.find(e => e.id === errandId)?.title || '';
+  if (loading) {
+    return <div className="p-4 text-center">Loading...</div>;
+  }
 
-  const pendingAllocations = allocations.filter(a => a.status === 'pending').length;
-  const totalToAllocate = errands.length;
+  const selectedErrand = errands.find(e => e.id === selectedErrandId);
+  const selectedStaff = staff.find(s => s.id === selectedStaffId);
 
   return (
-    <div className="allocate-errands-container">
-      <div className="section-header">
-        <h2>Allocate Errands to Staff</h2>
-        {totalToAllocate > 0 && <span className="pending-badge">{totalToAllocate}</span>}
-      </div>
-      <p className="subtitle">Assign errands to your staff members</p>
-
-      <div className="allocation-form">
-        <div className="form-group">
-          <label>Select Errand *</label>
-          <select
-            value={selectedErrand || ''}
-            onChange={(e) => setSelectedErrand(Number(e.target.value))}
-            className="form-select"
-          >
-            <option value="">Choose an errand...</option>
-            {errands.map(e => (
-              <option key={e.id} value={e.id}>
-                {e.title} - ${e.budget} ({e.formattedId})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Select Staff Member *</label>
-          <select
-            value={selectedStaff || ''}
-            onChange={(e) => setSelectedStaff(Number(e.target.value))}
-            className="form-select"
-          >
-            <option value="">Choose staff...</option>
-            {staff.map(s => (
-              <option key={s.id} value={s.id}>
-                {s.name} - {s.role} (⭐ {s.rating})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <button onClick={handleAllocate} className="btn-allocate">
-          📦 Allocate Errand
-        </button>
+    <div className="space-y-4 p-4">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-2">Allocate Errands to Staff</h2>
+        <p className="text-gray-600">Assign accepted errands to your team members for execution</p>
       </div>
 
-      {/* Allocation History */}
-      <div className="allocation-history">
-        <h3>Allocation History</h3>
-        {allocations.length === 0 ? (
-          <div className="empty-state">
-            <p>No allocations yet</p>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+
+      {errands.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          <p>No pending errands to allocate</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Errands Column */}
+          <div className="bg-white border-2 border-orange-100 rounded-lg p-4">
+            <h3 className="font-bold text-lg mb-3">Pending Errands ({errands.length})</h3>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {errands.map(errand => (
+                <button
+                  key={errand.id}
+                  onClick={() => setSelectedErrandId(errand.id)}
+                  className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                    selectedErrandId === errand.id
+                      ? 'border-errandify-orange bg-orange-50'
+                      : 'border-gray-200 hover:border-orange-200'
+                  }`}
+                >
+                  <div className="font-bold text-errandify-brown">{errand.title}</div>
+                  <div className="text-xs text-gray-600 mt-1">{errand.errandId}</div>
+                  <div className="text-sm text-gray-700 mt-1">
+                    <span className="font-semibold">SGD ${errand.budget}</span> • {errand.location}
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
-        ) : (
-          <div className="allocations-list">
-            {allocations.map((alloc, idx) => (
-              <div key={idx} className="allocation-item">
-                <div className="allocation-info">
-                  <span className="errand-name">{getErrandTitle(alloc.errandId)}</span>
-                  <span className="staff-name">→ {getStaffName(alloc.staffId)}</span>
-                </div>
-                <span className={`status-badge ${alloc.status}`}>
-                  {alloc.status === 'pending' ? '⏳' : '✅'} {alloc.status}
-                </span>
+
+          {/* Selection Panel */}
+          <div className="space-y-4">
+            {/* Staff Column */}
+            <div className="bg-white border-2 border-blue-100 rounded-lg p-4">
+              <h3 className="font-bold text-lg mb-3">Select Staff ({staff.length})</h3>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {staff.map(member => (
+                  <button
+                    key={member.id}
+                    onClick={() => setSelectedStaffId(member.id)}
+                    className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                      selectedStaffId === member.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-blue-200'
+                    }`}
+                  >
+                    <div className="font-bold text-gray-800">{member.display_name}</div>
+                    <div className="text-xs text-gray-600">{member.role}</div>
+                  </button>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Summary */}
+            {selectedErrand && selectedStaff && (
+              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+                <h4 className="font-bold text-green-900 mb-3">Allocation Summary</h4>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-600">Errand:</span>
+                    <span className="font-semibold block">{selectedErrand.title}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Assigned to:</span>
+                    <span className="font-semibold block">{selectedStaff.display_name}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Budget:</span>
+                    <span className="font-semibold block">SGD ${selectedErrand.budget}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleAllocate}
+                  className="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg transition-colors"
+                >
+                  ✓ Confirm Allocation
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-
-      <style>{`
-        .allocate-errands-container {
-          max-width: 600px;
-        }
-
-        .section-header {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 8px;
-        }
-
-        .section-header h2 {
-          margin: 0;
-        }
-
-        .pending-badge {
-          background: #FF6B35;
-          color: white;
-          padding: 4px 12px;
-          border-radius: 20px;
-          font-size: 12px;
-          font-weight: 600;
-          white-space: nowrap;
-        }
-
-        .subtitle {
-          color: #666;
-          margin-bottom: 24px;
-          font-size: 14px;
-        }
-
-        .allocation-form {
-          background: white;
-          border: 1px solid #E8E8E8;
-          border-radius: 12px;
-          padding: 20px;
-          margin-bottom: 24px;
-        }
-
-        .form-group {
-          margin-bottom: 16px;
-        }
-
-        .form-group:last-of-type {
-          margin-bottom: 20px;
-        }
-
-        .form-group label {
-          display: block;
-          font-weight: 600;
-          color: #1B5E75;
-          margin-bottom: 8px;
-          font-size: 14px;
-        }
-
-        .form-select {
-          width: 100%;
-          padding: 10px 12px;
-          border: 1px solid #E8E8E8;
-          border-radius: 8px;
-          font-size: 14px;
-          cursor: pointer;
-          background: white;
-        }
-
-        .form-select:focus {
-          outline: none;
-          border-color: #FF6B35;
-          box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
-        }
-
-        .btn-allocate {
-          width: 100%;
-          padding: 12px 24px;
-          background: #FF6B35;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          font-size: 14px;
-        }
-
-        .btn-allocate:hover {
-          background: #E55A24;
-          transform: translateY(-1px);
-        }
-
-        .allocation-history {
-          background: white;
-          border: 1px solid #E8E8E8;
-          border-radius: 12px;
-          padding: 20px;
-        }
-
-        .allocation-history h3 {
-          margin: 0 0 16px 0;
-          color: #1B5E75;
-          font-size: 16px;
-        }
-
-        .empty-state {
-          text-align: center;
-          padding: 20px;
-          color: #999;
-        }
-
-        .allocations-list {
-          display: grid;
-          gap: 12px;
-        }
-
-        .allocation-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 12px;
-          background: #F8FAFB;
-          border-radius: 8px;
-          border: 1px solid #E8E8E8;
-        }
-
-        .allocation-info {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-          flex: 1;
-        }
-
-        .errand-name {
-          font-weight: 600;
-          color: #1A1A1A;
-          font-size: 14px;
-        }
-
-        .staff-name {
-          color: #666;
-          font-size: 13px;
-        }
-
-        .status-badge {
-          padding: 4px 12px;
-          border-radius: 6px;
-          font-size: 12px;
-          font-weight: 600;
-          white-space: nowrap;
-        }
-
-        .status-badge.pending {
-          background: #FFF4E6;
-          color: #FF6B35;
-        }
-
-        .status-badge.accepted {
-          background: #E6F9E6;
-          color: #2D7A34;
-        }
-
-        @media (max-width: 768px) {
-          .allocate-errands-container {
-            max-width: 100%;
-          }
-
-          .allocation-item {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
-          }
-        }
-      `}</style>
+        </div>
+      )}
     </div>
   );
 };

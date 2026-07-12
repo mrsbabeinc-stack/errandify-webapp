@@ -8,7 +8,7 @@ interface ActiveErrand {
   title: string;
   description: string;
   askerName: string;
-  status: 'confirmed' | 'in_progress' | 'job_completed';
+  status: 'confirmed' | 'acknowledged' | 'confirmed_awaiting_start' | 'in_progress' | 'job_completed';
   budget: number;
   location: string;
   deadline?: string;
@@ -22,7 +22,7 @@ const DoerActiveErrands: React.FC = () => {
   const [errands, setErrands] = useState<ActiveErrand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<'confirmed' | 'in_progress' | 'job_completed' | 'all'>('confirmed');
+  const [selectedFilter, setSelectedFilter] = useState<'confirmed' | 'acknowledged' | 'confirmed_awaiting_start' | 'in_progress' | 'job_completed' | 'all'>('all');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelErrandId, setCancelErrandId] = useState<number | null>(null);
   const [cancelReason, setCancelReason] = useState('staff_unavailable');
@@ -81,37 +81,21 @@ const DoerActiveErrands: React.FC = () => {
     fetchActiveErrands();
   }, []);
 
-  const handleConfirm = async (errandId: number) => {
+  const handleAcknowledge = async (errandId: number) => {
     try {
       const token = localStorage.getItem('token');
 
-      // Get the bid ID first
-      const errandDetail = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errandId}`,
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${errandId}/acknowledge`,
+        {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Find the user's bid
-      const bidsResult = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/check/${errandId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (bidsResult.data.hasBid) {
-        // Confirm the bid
-        await axios.put(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${bidsResult.data.bidId}/confirm`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        alert('Confirmed! You\'re ready to start.');
-        // Refresh the list
-        setErrands(errands.map(e => e.id === errandId ? { ...e, status: 'confirmed' } : e));
-      }
+      alert('✅ Errand acknowledged! Waiting for manager confirmation...');
+      setErrands(errands.map(e => e.id === errandId ? { ...e, status: 'acknowledged' } : e));
     } catch (err) {
-      console.error('Failed to confirm:', err);
-      alert('Failed to confirm. Please try again.');
+      console.error('Failed to acknowledge:', err);
+      alert('Failed to acknowledge. Please try again.');
     }
   };
 
@@ -182,7 +166,9 @@ const DoerActiveErrands: React.FC = () => {
 
   const getStatusDisplay = (status: string) => {
     const statusMap: { [key: string]: { label: string; color: string; icon: string } } = {
-      'confirmed': { label: 'Ready to Start', color: '#FF9800', icon: '⏳' },
+      'confirmed': { label: 'Awaiting Acknowledgment', color: '#FFC107', icon: '📋' },
+      'acknowledged': { label: 'Awaiting Manager Confirmation', color: '#FF9800', icon: '⏳' },
+      'confirmed_awaiting_start': { label: 'Ready to Start', color: '#4CAF50', icon: '✅' },
       'in_progress': { label: 'In Progress', color: '#2196F3', icon: '⚙️' },
       'job_completed': { label: 'Completed', color: '#4CAF50', icon: '✅' },
     };
@@ -213,8 +199,8 @@ const DoerActiveErrands: React.FC = () => {
       )}
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 mb-4">
-        {(['confirmed', 'in_progress', 'job_completed', 'all'] as const).map(filter => (
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {(['confirmed', 'acknowledged', 'confirmed_awaiting_start', 'in_progress', 'job_completed', 'all'] as const).map(filter => (
           <button
             key={filter}
             onClick={() => setSelectedFilter(filter)}
@@ -224,7 +210,11 @@ const DoerActiveErrands: React.FC = () => {
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            {filter === 'confirmed' ? 'Ready' : filter === 'in_progress' ? 'In Progress' : filter === 'job_completed' ? 'Completed' : 'All'}
+            {filter === 'confirmed' ? 'Awaiting ACK' :
+             filter === 'acknowledged' ? 'Awaiting Confirm' :
+             filter === 'confirmed_awaiting_start' ? 'Ready' :
+             filter === 'in_progress' ? 'In Progress' :
+             filter === 'job_completed' ? 'Completed' : 'All'}
             <span className="ml-1 text-sm">
               ({errands.filter(e => filter === 'all' ? true : e.status === filter).length})
             </span>
@@ -281,8 +271,48 @@ const DoerActiveErrands: React.FC = () => {
                   {errand.status === 'confirmed' && (
                     <>
                       <button
-                        onClick={() => handleStart(errand.id)}
+                        onClick={() => handleAcknowledge(errand.id)}
                         className="flex-1 bg-errandify-orange text-white py-2 rounded-lg font-bold hover:bg-opacity-90 transition-colors"
+                      >
+                        📋 Acknowledge Receipt
+                      </button>
+                      <button
+                        onClick={() => openCancelModal(errand.id)}
+                        className="flex-1 bg-red-500 text-white py-2 rounded-lg font-bold hover:bg-red-600 transition-colors"
+                      >
+                        ✕ Cancel
+                      </button>
+                      <button
+                        onClick={() => handleViewDetails(errand.id)}
+                        className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-bold hover:bg-gray-300 transition-colors"
+                      >
+                        View Details
+                      </button>
+                    </>
+                  )}
+
+                  {errand.status === 'acknowledged' && (
+                    <>
+                      <button
+                        disabled
+                        className="flex-1 bg-gray-300 text-gray-600 py-2 rounded-lg font-bold cursor-not-allowed"
+                      >
+                        ⏳ Awaiting Manager Confirmation
+                      </button>
+                      <button
+                        onClick={() => handleViewDetails(errand.id)}
+                        className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-bold hover:bg-gray-300 transition-colors"
+                      >
+                        View Details
+                      </button>
+                    </>
+                  )}
+
+                  {errand.status === 'confirmed_awaiting_start' && (
+                    <>
+                      <button
+                        onClick={() => handleStart(errand.id)}
+                        className="flex-1 bg-green-500 text-white py-2 rounded-lg font-bold hover:bg-green-600 transition-colors"
                       >
                         ▶ Start Errand
                       </button>
