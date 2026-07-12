@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { initPushNotifications } from './utils/pushNotifications';
 import Layout from './components/Layout';
@@ -12,6 +12,9 @@ import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import SingPassSimulator from './pages/SingPassSimulator';
 import SingPassCallbackPage from './pages/SingPassCallbackPage';
+import VerificationStep from './components/auth/VerificationStep';
+import RoleSelectionStep from './components/auth/RoleSelectionStep';
+import ACRALookupStep from './components/auth/ACRALookupStep';
 import HomePage from './pages/HomePage';
 import CategorySelectionPage from './pages/CategorySelectionPage';
 import CategoryPreferencePage from './pages/CategoryPreferencePage';
@@ -158,6 +161,36 @@ export default function App() {
     </div>;
   }
 
+  // Wrapper components for routes that need navigation
+  const VerificationStepRouteWrapper = () => {
+    const navigate = useNavigate();
+    return (
+      <VerificationStep
+        onComplete={() => navigate('/auth/complete-profile')}
+        onBack={() => navigate('/auth')}
+      />
+    );
+  };
+
+  const RoleSelectionStepRouteWrapper = () => {
+    const navigate = useNavigate();
+    const user = localStorage.getItem('user');
+    const userData = user ? JSON.parse(user) : {};
+
+    return (
+      <RoleSelectionStep
+        mockData={{
+          name: userData.display_name || 'User',
+          age: 25,
+          nric: userData.nric_hash || '',
+          address: userData.mobile || ''
+        }}
+        onComplete={() => navigate('/home')}
+        onBack={() => navigate('/auth/complete-profile')}
+      />
+    );
+  };
+
   return (
     <NotificationProvider>
       <TopNotificationBar />
@@ -207,6 +240,42 @@ export default function App() {
         <Route
           path="/auth/singpass-callback"
           element={<SingPassCallbackPage onLogin={handleLogin} />}
+        />
+
+        {/* Verification Step - Criminal screening form (after SingPass) */}
+        <Route
+          path="/auth/verification"
+          element={
+            isAuthenticated ? (
+              <VerificationStepRouteWrapper />
+            ) : (
+              <Navigate to="/auth" replace />
+            )
+          }
+        />
+
+        {/* Complete Profile Step - Confirm SingPass data */}
+        <Route
+          path="/auth/complete-profile"
+          element={
+            isAuthenticated ? (
+              <BeforeYouGetStartedPage />
+            ) : (
+              <Navigate to="/auth" replace />
+            )
+          }
+        />
+
+        {/* Role Selection Step - Choose individual or company */}
+        <Route
+          path="/auth/role-selection"
+          element={
+            isAuthenticated ? (
+              <RoleSelectionStepRouteWrapper />
+            ) : (
+              <Navigate to="/auth" replace />
+            )
+          }
         />
 
         {/* Safety Declaration - Mandatory pre-access gate */}
