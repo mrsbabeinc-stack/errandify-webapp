@@ -39,12 +39,12 @@ router.post('/seed', authMiddleware, async (_req: AuthRequest, res: Response) =>
     );
     const companyId = companyRes.rows[0].id;
 
-    // Add owner to company_employees as owner role
+    // Add owner to employees as owner role
     await db.query(
-      `INSERT INTO company_employees (company_id, user_id, role, status, date_joined)
-       VALUES ($1, $2, $3, $4, NOW())
+      `INSERT INTO employees (company_id, user_id, role, skills, status, hire_date)
+       VALUES ($1, $2, $3, $4, $5, NOW())
        ON CONFLICT (company_id, user_id) DO UPDATE SET role = EXCLUDED.role`,
-      [companyId, ownerId, 'owner', 'active']
+      [companyId, ownerId, 'owner', 'Company Management', 'active']
     );
 
     // Create demo manager & staff accounts
@@ -56,19 +56,19 @@ router.post('/seed', authMiddleware, async (_req: AuthRequest, res: Response) =>
 
     for (const emp of employees) {
       const empRes = await db.query(
-        `INSERT INTO users (name, email, phone, user_type, email_verified, phone_verified, average_rating, skills)
-         VALUES ($1, $2, $3, $4, true, true, $5, $6)
-         ON CONFLICT (phone) DO UPDATE SET name = EXCLUDED.name
+        `INSERT INTO users (nric_hash, display_name, email, mobile, user_type, email_verified, phone_verified, average_rating, skills)
+         VALUES ($1, $2, $3, $4, $5, true, true, $6, $7)
+         ON CONFLICT (email) DO UPDATE SET display_name = EXCLUDED.display_name
          RETURNING id`,
-        [emp.name, emp.email, emp.phone, 'user', 4.8, emp.skills]
+        [`hash_${emp.phone}`, emp.name, emp.email, emp.phone, 'user', 4.8, emp.skills]
       );
 
       // Tag to company as staff member
       await db.query(
-        `INSERT INTO company_employees (company_id, user_id, role, status, date_joined)
-         VALUES ($1, $2, $3, $4, NOW())
+        `INSERT INTO employees (company_id, user_id, role, skills, status, hire_date)
+         VALUES ($1, $2, $3, $4, $5, NOW())
          ON CONFLICT (company_id, user_id) DO UPDATE SET role = EXCLUDED.role`,
-        [companyId, empRes.rows[0].id, emp.role, 'active']
+        [companyId, empRes.rows[0].id, emp.role, emp.skills, 'active']
       );
     }
 
