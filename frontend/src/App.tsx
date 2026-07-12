@@ -6,6 +6,7 @@ import FloatingHana from './components/FloatingHana';
 import NotificationListener from './components/NotificationListener';
 import { NotificationProvider } from './context/NotificationContext';
 import NotificationToastContainer from './components/NotificationToastContainer';
+import TopNotificationBar from './components/TopNotificationBar';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import SingPassSimulator from './pages/SingPassSimulator';
@@ -66,6 +67,15 @@ import AdminErrandifyPointsPage from './pages/admin/ErrandifyPoints';
 import EmailPage from './pages/admin/Email';
 import GrantPointsPage from './pages/admin/GrantPoints';
 import PointEarningRulesPage from './pages/admin/PointEarningRules';
+import CompanyManagement from './pages/admin/CompanyManagement';
+import SubscriptionPackages from './pages/admin/SubscriptionPackages';
+import AdvertisingApproval from './pages/admin/AdvertisingApproval';
+import PartnerTiers from './pages/admin/PartnerTiers';
+import CompanyRegistrationPage from './pages/CompanyRegistrationPage';
+import MyCompanyDashboard from './pages/MyCompanyDashboard';
+import CompanyStaffManagement from './pages/CompanyStaffManagement';
+import CompanyPostErrandPage from './pages/CompanyPostErrandPage';
+import CompanyDashboardNew from './pages/CompanyDashboardNew';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -148,6 +158,7 @@ export default function App() {
 
   return (
     <NotificationProvider>
+      <TopNotificationBar />
       <Router>
         {isAuthenticated && !isStaff && <FloatingHana />}
         {isAuthenticated && <NotificationListener />}
@@ -322,6 +333,19 @@ export default function App() {
         <Route path="/admin/manage/discounts" element={isAuthenticated && isAdmin ? <DiscountCodesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/comms/email" element={isAuthenticated && isAdmin ? <EmailPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/reports" element={isAuthenticated && isAdmin ? <ReportsPage /> : <Navigate to="/login" replace />} />
+
+        {/* Company Management Routes */}
+        <Route path="/admin/company/management" element={isAuthenticated && isAdmin ? <CompanyManagement /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/company/subscriptions" element={isAuthenticated && isAdmin ? <SubscriptionPackages /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/company/advertising" element={isAuthenticated && isAdmin ? <AdvertisingApproval /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/company/partner-tiers" element={isAuthenticated && isAdmin ? <PartnerTiers /> : <Navigate to="/login" replace />} />
+
+        {/* Company Registration and Dashboard Routes */}
+        <Route path="/company/register" element={isAuthenticated ? <CompanyRegistrationPage /> : <Navigate to="/login" replace />} />
+        <Route path="/company/dashboard" element={isAuthenticated ? <MyCompanyDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/company/dashboard-new" element={isAuthenticated ? <CompanyDashboardNew /> : <Navigate to="/login" replace />} />
+        <Route path="/company/staff" element={isAuthenticated ? <CompanyStaffManagement /> : <Navigate to="/login" replace />} />
+        <Route path="/company/post-errand" element={isAuthenticated ? <CompanyPostErrandPage /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout - for asker/doer AND admin users */}
         <Route
