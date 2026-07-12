@@ -92,9 +92,10 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       paramIndex = 2;
     } else if (isAccepted) {
       // Show errands accepted by current user (for doers) - join with assignments
+      // Include all active assignment statuses: accepted (allocated to staff), completed (work done)
       query = `SELECT e.* FROM errands e
                INNER JOIN errand_assignments ea ON e.id = ea.errand_id
-               WHERE ea.doer_id = $1 AND ea.status = 'accepted'`;
+               WHERE ea.doer_id = $1 AND ea.status IN ('accepted', 'completed')`;
       params.push(currentUserId);
       paramIndex = 2;
     } else if (isRecommended) {
