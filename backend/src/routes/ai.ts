@@ -22,32 +22,51 @@ function fallbackTitleClean(title: string): string {
   cleaned = cleaned.replace(/,?\s*budget\s*\$?\s*\d+(?:\.\d{2})?/gi, '');
   cleaned = cleaned.replace(/,?\s*\$\s*\d+(?:\.\d{2})?(?:\s+budget)?/gi, '');
 
+  // Remove time ranges like "2pm-5pm", "from 2pm-5pm"
+  cleaned = cleaned.replace(/\s+(?:from\s+)?\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)?\s*[-–]\s*\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)?/gi, '');
+
   // Remove postal codes with "at": "at 680433"
   cleaned = cleaned.replace(/\s+at\s+\d{6}\b/gi, '');
 
   // Remove postal codes at end
   cleaned = cleaned.replace(/\s+\d{6}\s*$/g, '');
 
-  // Remove time patterns like "tomorrow 9am", "next monday 2pm"
-  cleaned = cleaned.replace(/\s+(?:tomorrow|today|tonight|next|this)\s+\w+\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)?/gi, '');
+  // Remove "at <number>" time patterns (e.g., "at 3pm")
+  cleaned = cleaned.replace(/\s+at\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)/gi, '');
+
+  // Remove time patterns like "tomorrow 9am", "next monday 2pm", "on Saturday 3pm"
+  cleaned = cleaned.replace(/\s+(?:on|at)?\s+(?:tomorrow|today|tonight|next|this)\s+\w+\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)?/gi, '');
   cleaned = cleaned.replace(/\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)/gi, '');
 
-  // Remove day names
-  cleaned = cleaned.replace(/\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)/gi, '');
+  // Remove day names with optional "on"
+  cleaned = cleaned.replace(/\s+(?:on\s+)?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\b/gi, '');
 
-  // Remove "tomorrow", "today", date patterns
-  cleaned = cleaned.replace(/\s+(?:tomorrow|today|next\s+\w+|in\s+\d+\s+days?)/gi, '');
+  // Remove "tomorrow", "today", "next <word>", "in X days", date patterns
+  cleaned = cleaned.replace(/\s+(?:tomorrow|today|tonight)\b/gi, '');
+  cleaned = cleaned.replace(/\s+next\s+\w+/gi, ''); // "next Tuesday", etc
+  cleaned = cleaned.replace(/\s+in\s+\d+\s+days?\b/gi, '');
 
-  // Remove duration like "2 hours", "30 mins"
-  cleaned = cleaned.replace(/,?\s+\d+\s*(?:hours?|hrs?|h|mins?|m|days?)/gi, '');
+  // Remove duration like "2 hours", "30 mins", "4 hours"
+  cleaned = cleaned.replace(/,?\s+\d+\s*(?:hours?|hrs?|h|mins?|m|days?)\b/gi, '');
+
+  // Remove "from", "to", comma separators
+  cleaned = cleaned.replace(/\s+from\b/gi, '');
+  cleaned = cleaned.replace(/\s+to\b/gi, '');
 
   // Remove "at" followed by generic location (after postal code is removed)
   cleaned = cleaned.replace(/\s+at\s+[\w\s]+/gi, '');
 
-  // Remove leading/trailing commas and spaces
+  // Remove leading/trailing commas, spaces, hyphens
   cleaned = cleaned.replace(/^\s*,\s*/, '').replace(/\s*,\s*$/, '');
   cleaned = cleaned.replace(/\s+at\s*$/gi, ''); // Remove trailing "at"
-  cleaned = cleaned.replace(/,\s*$/g, ''); // Remove trailing comma
+  cleaned = cleaned.replace(/\s+(?:on|from|to|next)\s*$/gi, ''); // Remove trailing keywords
+  cleaned = cleaned.replace(/[,\-\s]+$/g, ''); // Remove trailing punctuation
+
+  // Remove commas that are followed by metadata (keep commas in titles like "Boxes, Bags")
+  cleaned = cleaned.replace(/,\s*(?:next|tomorrow|today|on|at|from)\b/gi, '');
+
+  // Collapse multiple spaces
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
   // Title case
   cleaned = cleaned
