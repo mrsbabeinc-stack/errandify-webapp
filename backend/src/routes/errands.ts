@@ -712,13 +712,13 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
       }
     }
 
-    // Mark as completed
+    // Mark as pending_review (awaiting owner/manager approval for company doers, or asker approval for individuals)
     const result = await db.query(
       'UPDATE errands SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, status',
-      ['completed', id]
+      ['pending_review', id]
     );
 
-    // Log activity: Job completed
+    // Log activity: Job submitted for review
     const doerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [doerId]);
     const doerName = doerResult.rows[0]?.display_name || 'Unknown User';
     await activityLogService.logCompleted(id, doerName, doerId);
@@ -1857,6 +1857,181 @@ router.post('/:id/confirm-completion', authMiddleware, async (req: AuthRequest, 
   } catch (error) {
     console.error('[ConfirmCompletion] Error confirming completion:', error);
     res.status(500).json({ error: 'Failed to confirm completion', details: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// POST /api/errands/:id/approve-completion - Manager/Owner approves completed work
+router.post('/:id/approve-completion', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const managerId = parseInt(req.userId || '0', 10);
+
+    // Get errand details
+    const errandResult = await db.query(
+      'SELECT id, status, asker_id, accepted_bid_id FROM errands WHERE id = $1',
+      [id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    // Verify the requester is the asker (for company context, asker_id is the company manager/owner)
+    if (errand.asker_id !== managerId) {
+      return res.status(403).json({ error: 'Only the asker/manager can approve completion' });
+    }
+
+    // Verify errand is in pending_review status
+    if (errand.status !== 'pending_review') {
+      return res.status(400).json({ error: 'Errand must be pending review to approve' });
+    }
+
+    // Get doer info for notification
+    const bidResult = await db.query(
+      'SELECT doer_id FROM bids WHERE id = $1',
+      [errand.accepted_bid_id]
+    );
+    const doerId = bidResult.rows[0]?.doer_id;
+
+    // Approve and mark as completed
+    await db.query(
+      'UPDATE errands SET status = $1, updated_at = NOW() WHERE id = $2',
+      ['completed', id]
+    );
+
+    // Notify doer that completion was approved
+    try {
+      const errandData = await db.query(
+        'SELECT errand_id, title FROM errands WHERE id = $1',
+        [id]
+      );
+      const errandTitle = errandData.rows[0]?.title || 'Your task';
+      const formattedErrandId = errandData.rows[0]?.errand_id || `ER26-${id}`;
+
+      if (doerId) {
+        await db.query(
+          `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
+           VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
+          [
+            doerId,
+            'completion_approved',
+            '✅ Work Approved',
+            `${formattedErrandId}: "${errandTitle}" - Your work has been approved! Payment is being processed.`,
+            id,
+          ]
+        );
+      }
+    } catch (notifErr) {
+      console.warn('[Errands] Failed to notify doer of approval:', notifErr);
+    }
+
+    // Log activity
+    const managerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [managerId]);
+    const managerName = managerResult.rows[0]?.display_name || 'Manager';
+    try {
+      await activityLogService.logActivity(id, 'completion_approved', managerId, managerName, 'asker');
+    } catch (activityErr) {
+      console.warn('[Errands] Failed to log activity:', activityErr);
+    }
+
+    res.json({
+      success: true,
+      message: 'Completion approved. Payment released.',
+      data: { id, status: 'completed' },
+    });
+  } catch (error) {
+    console.error('[ApproveCompletion] Error approving completion:', error);
+    res.status(500).json({ error: 'Failed to approve completion', details: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// POST /api/errands/:id/reject-completion - Manager/Owner rejects completed work
+router.post('/:id/reject-completion', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const managerId = parseInt(req.userId || '0', 10);
+
+    // Get errand details
+    const errandResult = await db.query(
+      'SELECT id, status, asker_id, accepted_bid_id FROM errands WHERE id = $1',
+      [id]
+    );
+
+    if (errandResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Errand not found' });
+    }
+
+    const errand = errandResult.rows[0];
+
+    // Verify the requester is the asker (manager/owner)
+    if (errand.asker_id !== managerId) {
+      return res.status(403).json({ error: 'Only the asker/manager can reject completion' });
+    }
+
+    // Verify errand is in pending_review status
+    if (errand.status !== 'pending_review') {
+      return res.status(400).json({ error: 'Errand must be pending review to reject' });
+    }
+
+    // Get doer info
+    const bidResult = await db.query(
+      'SELECT doer_id FROM bids WHERE id = $1',
+      [errand.accepted_bid_id]
+    );
+    const doerId = bidResult.rows[0]?.doer_id;
+
+    // Reject and revert to in_progress so doer can revise
+    await db.query(
+      'UPDATE errands SET status = $1, updated_at = NOW() WHERE id = $2',
+      ['in_progress', id]
+    );
+
+    // Notify doer that work was rejected
+    try {
+      const errandData = await db.query(
+        'SELECT errand_id, title FROM errands WHERE id = $1',
+        [id]
+      );
+      const errandTitle = errandData.rows[0]?.title || 'Your task';
+      const formattedErrandId = errandData.rows[0]?.errand_id || `ER26-${id}`;
+
+      if (doerId) {
+        await db.query(
+          `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
+           VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
+          [
+            doerId,
+            'completion_rejected',
+            '⚠️ Work Needs Revision',
+            `${formattedErrandId}: "${errandTitle}" - Please revise and resubmit. Reason: ${reason || 'See chat for details'}`,
+            id,
+          ]
+        );
+      }
+    } catch (notifErr) {
+      console.warn('[Errands] Failed to notify doer of rejection:', notifErr);
+    }
+
+    // Log activity
+    const managerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [managerId]);
+    const managerName = managerResult.rows[0]?.display_name || 'Manager';
+    try {
+      await activityLogService.logActivity(id, 'completion_rejected', managerId, managerName, 'asker', { reason });
+    } catch (activityErr) {
+      console.warn('[Errands] Failed to log activity:', activityErr);
+    }
+
+    res.json({
+      success: true,
+      message: 'Completion rejected. Errand returned to in_progress for revision.',
+      data: { id, status: 'in_progress' },
+    });
+  } catch (error) {
+    console.error('[RejectCompletion] Error rejecting completion:', error);
+    res.status(500).json({ error: 'Failed to reject completion', details: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
