@@ -103,6 +103,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       query = `SELECT e.* FROM errands e
                WHERE e.status = $1
                AND e.asker_id != $2
+               AND (e.deadline IS NULL OR e.deadline > NOW())
                AND (
                  -- Match user's category preferences if set
                  e.category = ANY(
@@ -125,8 +126,8 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       params.push('open', currentUserId);
       paramIndex = 3;
     } else {
-      // Show all open errands excluding ones posted by current user
-      query = 'SELECT * FROM errands WHERE status = $1 AND asker_id != $2';
+      // Show all open errands excluding ones posted by current user and those past deadline
+      query = 'SELECT * FROM errands WHERE status = $1 AND asker_id != $2 AND (deadline IS NULL OR deadline > NOW())';
       params.push('open', currentUserId);
       paramIndex = 3;
     }
