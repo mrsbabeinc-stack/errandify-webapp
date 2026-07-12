@@ -557,22 +557,22 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
               <div className="quick-actions">
                 <h2>Quick Actions</h2>
                 <div className="actions-grid">
-                  <button className="action-card">
+                  <button className="action-card" onClick={() => setActiveSection('asker-post')}>
                     <span className="action-icon">📝</span>
                     <span className="action-name">Post Errand</span>
-                    <span className="action-desc">Create new task</span>
+                    <span className="action-desc">Create new errand</span>
                   </button>
-                  <button className="action-card">
+                  <button className="action-card" onClick={() => setActiveSection('staff')}>
                     <span className="action-icon">👥</span>
                     <span className="action-name">Add Staff</span>
                     <span className="action-desc">Invite team member</span>
                   </button>
-                  <button className="action-card">
+                  <button className="action-card" onClick={() => setActiveSection('reports')}>
                     <span className="action-icon">📊</span>
                     <span className="action-name">View Reports</span>
                     <span className="action-desc">Analytics</span>
                   </button>
-                  <button className="action-card">
+                  <button className="action-card" onClick={() => setActiveSection('messages')}>
                     <span className="action-icon">💬</span>
                     <span className="action-name">Messages</span>
                     <span className="action-desc">12 unread</span>
