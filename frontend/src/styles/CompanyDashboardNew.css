@@ -308,14 +308,14 @@ body {
 /* ===== MAIN CONTENT ===== */
 .main-content {
   flex: 1;
-  padding: 32px 40px;
+  padding: 20px 24px;
   overflow-y: auto;
 }
 
 .section-content {
   background: white;
   border-radius: 12px;
-  padding: 32px;
+  padding: 20px;
   box-shadow: var(--shadow-sm);
 }
 
@@ -329,7 +329,7 @@ body {
 .section-dashboard {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 /* KPI CARDS */
