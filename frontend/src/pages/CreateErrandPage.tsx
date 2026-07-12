@@ -223,12 +223,12 @@ export default function CreateErrandPage() {
               error: '',
             });
           } else if (newFormData.title) {
-            // If description came from Hana (AI tips), use it directly without refetching
-            if (prefilledData.description) {
-              console.log('[CreateErrand] Using AI tips from Hana:', prefilledData.description);
+            // If suggestedDescription came from Hana (AI tips), use it directly without refetching
+            if (prefilledData.suggestedDescription) {
+              console.log('[CreateErrand] Using AI tips from Hana:', prefilledData.suggestedDescription);
               setAiSuggestions((prev) => ({
                 ...prev,
-                suggestedDescription: prefilledData.description,
+                suggestedDescription: prefilledData.suggestedDescription,
               }));
             } else {
               // Fetch suggestions for any title to get AI category recommendation (even if category is empty)

@@ -273,11 +273,12 @@ export default function HanaTaskCreation({
         return;
       }
 
-      // Keep AI-generated description and skills from extraction
-      // These are intelligent tips related to the title based on Qwen AI analysis
+      // Keep AI-generated tips and skills from extraction
+      // Description field stays EMPTY - tips show as suggestion below form field
       const enhancedTaskData = {
         ...updatedTaskData,
-        description: extracted.description || '', // AI tips based on title (e.g., "Pet care service. Specify pet type, breed...")
+        description: '', // Keep empty for user to fill manually
+        suggestedDescription: extracted.description || '', // AI tips based on title (e.g., "Pet care service. Specify pet type, breed...")
         suggestedCertifications: extracted.suggestedSkills || [], // Suggested skills/certifications
         notes: extracted.notes || '',
       };

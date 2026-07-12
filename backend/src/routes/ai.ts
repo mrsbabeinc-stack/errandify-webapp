@@ -494,10 +494,13 @@ RULES:
 2. Include ONLY the ACTION and WHAT (verb + object)
 3. Keep important context like: AMOUNTS ($500), TYPE (ringgit), SKILL (fade)
 4. REMOVE EVERYTHING ELSE: dates, times, days, locations, addresses, postal codes, durations, budget, explanations
-5. Start with action verb (Change, Fix, Deliver, Clean, Walk, Tutor, Cut, etc)
-6. NO metadata like "I need to", "Can you", "Please", "on Saturday", "at salon", "for 1 hour"
+5. Start with action verb (Decorate, Clean, Fix, Deliver, Walk, Tutor, Cut, etc)
+6. NO metadata like "I need to", "Can you", "Please", "tomorrow", "at salon", "for 1 hour", "at 238857"
 
 EXAMPLES:
+- Input: "Decorate Apartment For Party At 238857, Tomorrow 9am, 2 Hours"
+  Output: Decorate Apartment For Party
+
 - Input: "i need to change 500 dollars sgd to ringgit. i am flying off tomorrow. i need this to be done today"
   Output: Change $500 SGD To Ringgit
 
