@@ -20,9 +20,10 @@ interface TaskData {
 
 interface AskerPostErrandProps {
   onClose?: () => void;
+  onPostComplete?: () => void;
 }
 
-const AskerPostErrand: React.FC<AskerPostErrandProps> = ({ onClose }) => {
+const AskerPostErrand: React.FC<AskerPostErrandProps> = ({ onClose, onPostComplete }) => {
   const navigate = useNavigate();
   const [isOpen] = useState(true);
 
@@ -30,7 +31,10 @@ const AskerPostErrand: React.FC<AskerPostErrandProps> = ({ onClose }) => {
     console.log('[AskerPostErrand] handleComplete called with:', taskData);
     // Navigate to create errand with prefilled data
     const prefilledJson = encodeURIComponent(JSON.stringify(taskData));
-    const targetUrl = `/create-errand?prefilled=${prefilledJson}`;
+    let targetUrl = `/create-errand?prefilled=${prefilledJson}`;
+    if (onPostComplete) {
+      targetUrl += '&onPostComplete=true';
+    }
     console.log('[AskerPostErrand] Navigating to:', targetUrl);
     navigate(targetUrl);
   };

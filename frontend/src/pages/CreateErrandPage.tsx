@@ -952,6 +952,18 @@ export default function CreateErrandPage() {
         if (errandId) {
           setSuccessErrandId(errandId);
           setShowSuccess(true);
+
+          // Auto-redirect after 2 seconds
+          setTimeout(() => {
+            const onPostComplete = searchParams.get('onPostComplete');
+            if (onPostComplete) {
+              // Close modal and return to parent (company dashboard)
+              navigate(-1);
+            } else {
+              // Regular user - go to My Errands
+              navigate('/my-errands');
+            }
+          }, 2000);
         } else {
           console.log('[DEBUG] No errandId found, redirecting to home');
           navigate('/my-errands');
