@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 interface ErrandData {
@@ -16,6 +17,7 @@ interface ErrandData {
 type CollectionStep = 'input' | 'complete';
 
 const AskerPostErrand: React.FC = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState<'hana' | 'form'>('hana');
   const [currentStep, setCurrentStep] = useState<CollectionStep>('input');
   const [input, setInput] = useState('');
@@ -180,24 +182,23 @@ const AskerPostErrand: React.FC = () => {
   };
 
   const handleReviewAndPost = () => {
-    setStep('form');
-  };
+    // Convert extracted data to CreateErrandPage format
+    const prefilledData = {
+      title: errandData.title,
+      description: errandData.description,
+      category: errandData.category,
+      budget: errandData.budget,
+      location: errandData.location,
+      date: errandData.deadline?.split('T')[0] || '',
+      time: errandData.deadline?.split('T')[1]?.substring(0, 5) || '',
+      notes: errandData.notes,
+      fullAddress: errandData.fullAddress || errandData.location,
+      area: errandData.area,
+    };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Posting errand:', errandData);
-    alert('Errand posted successfully!');
-
-    // Reset
-    setErrandData({ title: '', description: '', category: '', budget: '', location: '', deadline: '', notes: '' });
-    setInput('');
-    setHanaMessage(`Hi! What errand do you need help with?\n\nExample:\n'Clean my office at 238857 tomorrow 2pm 2 hours budget $150'`);
-    setCurrentStep('input');
-    setStep('hana');
-  };
-
-  const handleFormBack = () => {
-    setStep('hana');
+    // Navigate to CreateErrandPage with prefilled data
+    const prefilledJson = encodeURIComponent(JSON.stringify(prefilledData));
+    navigate(`/create-errand?prefilled=${prefilledJson}`);
   };
 
   return (
@@ -257,96 +258,6 @@ const AskerPostErrand: React.FC = () => {
         </div>
       )}
 
-      {/* STANDARD FORM */}
-      {step === 'form' && (
-        <form onSubmit={handleFormSubmit} className="post-form">
-          <div className="form-group">
-            <label>Errand Title *</label>
-            <input
-              type="text"
-              value={errandData.title}
-              onChange={(e) => setErrandData({ ...errandData, title: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Description *</label>
-            <textarea
-              placeholder="Describe what needs to be done..."
-              value={errandData.description}
-              onChange={(e) => setErrandData({ ...errandData, description: e.target.value })}
-              rows={4}
-              required
-            />
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Category *</label>
-              <select
-                value={errandData.category}
-                onChange={(e) => setErrandData({ ...errandData, category: e.target.value })}
-                required
-              >
-                <option value="">Select Category</option>
-                <option>Cleaning</option>
-                <option>Delivery</option>
-                <option>Handyman</option>
-                <option>Admin</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Budget (SGD) *</label>
-              <input
-                type="number"
-                placeholder="e.g., 150"
-                value={errandData.budget}
-                onChange={(e) => setErrandData({ ...errandData, budget: e.target.value })}
-                min="10"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Location *</label>
-            <input
-              type="text"
-              placeholder="e.g., 123 Main Street or Postal Code"
-              value={errandData.location}
-              onChange={(e) => setErrandData({ ...errandData, location: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Deadline *</label>
-            <input
-              type="datetime-local"
-              value={errandData.deadline}
-              onChange={(e) => setErrandData({ ...errandData, deadline: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Notes (Optional)</label>
-            <textarea
-              placeholder="Any special requirements..."
-              value={errandData.notes}
-              onChange={(e) => setErrandData({ ...errandData, notes: e.target.value })}
-              rows={3}
-            />
-          </div>
-
-          <div className="form-actions">
-            <button type="submit" className="btn-primary">📤 Post Errand</button>
-            <button type="button" className="btn-secondary" onClick={handleFormBack}>← Back to Hana</button>
-          </div>
-        </form>
-      )}
 
       <style>{`
         .post-errand-container {
