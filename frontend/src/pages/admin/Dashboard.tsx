@@ -179,28 +179,6 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* STARTUP METRICS - KEY INDICATORS */}
-        <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>📊 Startup Metrics (Growth)</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-            {startupMetrics.map((m, i) => (
-              <div key={i} style={{
-                background: m.bg,
-                border: `2px solid ${m.color}`,
-                borderRadius: '8px',
-                padding: '14px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '20px', marginBottom: '6px' }}>{m.icon}</div>
-                <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px', fontWeight: 600 }}>{m.label}</div>
-                <div style={{ fontSize: '20px', fontWeight: 700, color: m.color, marginBottom: '4px' }}>{m.value}</div>
-                <div style={{ fontSize: '12px', color: m.color, fontWeight: 600, marginBottom: '8px' }}>{m.trend}</div>
-                <div style={{ fontSize: '11px', color: '#666', fontStyle: 'italic' }}>{m.context}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* OPERATIONS STATUS - ACTIONABLE */}
         <div style={{ marginBottom: '20px' }}>
           <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>⚙️ Operations & Safety (Action Required)</h2>
@@ -246,6 +224,28 @@ export const AdminDashboard: React.FC = () => {
                 >
                   {item.action} →
                 </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* STARTUP METRICS - KEY INDICATORS */}
+        <div style={{ marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>📊 Startup Metrics (Growth)</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+            {startupMetrics.map((m, i) => (
+              <div key={i} style={{
+                background: m.bg,
+                border: `2px solid ${m.color}`,
+                borderRadius: '8px',
+                padding: '14px',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '20px', marginBottom: '6px' }}>{m.icon}</div>
+                <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px', fontWeight: 600 }}>{m.label}</div>
+                <div style={{ fontSize: '20px', fontWeight: 700, color: m.color, marginBottom: '4px' }}>{m.value}</div>
+                <div style={{ fontSize: '12px', color: m.color, fontWeight: 600, marginBottom: '8px' }}>{m.trend}</div>
+                <div style={{ fontSize: '11px', color: '#666', fontStyle: 'italic' }}>{m.context}</div>
               </div>
             ))}
           </div>
