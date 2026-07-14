@@ -819,153 +819,153 @@ Next: Generate image in the Image Generator, then select a text variant to load.
 
       {activeTab === 'campaigns' && (
         <>
-        <div style={{ marginBottom: '24px' }}>
-        <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
-          Create New Campaign
-        </div>
-        <div style={{ display: 'grid', gap: '12px' }}>
-          <input
-            type="text"
-            placeholder="Campaign name"
-            value={newCampaignName}
-            onChange={(e) => setNewCampaignName(e.target.value)}
-            style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
-          />
-          <input
-            type="text"
-            placeholder="Email subject line"
-            value={newCampaignSubject}
-            onChange={(e) => setNewCampaignSubject(e.target.value)}
-            style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
-          />
-          <textarea
-            placeholder="Email content/body"
-            value={newCampaignContent}
-            onChange={(e) => setNewCampaignContent(e.target.value)}
-            rows={4}
-            style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit' }}
-          />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <input
-              type="text"
-              placeholder="From Name"
-              value={newCampaignFromName}
-              onChange={(e) => setNewCampaignFromName(e.target.value)}
-              style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
-            />
-            <input
-              type="email"
-              placeholder="From Email"
-              value={newCampaignFromEmail}
-              onChange={(e) => setNewCampaignFromEmail(e.target.value)}
-              style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
-            />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-            <select
-              value={newCampaignRecipients}
-              onChange={(e) => setNewCampaignRecipients(e.target.value)}
-              style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}
-            >
-              <option value="all-users">All Users</option>
-              <option value="doers">Doers Only</option>
-              <option value="askers">Askers Only</option>
-              <option value="vip">VIP Only</option>
-            </select>
-            <select
-              value={newCampaignTemplate}
-              onChange={(e) => setNewCampaignTemplate(e.target.value)}
-              style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}
-            >
-              <option value="promotional">Promotional</option>
-              <option value="announcement">Announcement</option>
-              <option value="reminder">Reminder</option>
-              <option value="transactional">Transactional</option>
-            </select>
-            <input
-              type="date"
-              placeholder="Schedule (optional)"
-              value={newCampaignScheduled}
-              onChange={(e) => setNewCampaignScheduled(e.target.value)}
-              style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
-            />
-          </div>
-
-          <div style={{ padding: '12px', background: '#FFF8F5', borderRadius: '6px', border: '1px solid #FFD9B3' }}>
-            <div style={{ fontSize: '12px', fontWeight: '600', color: '#FF6B35', marginBottom: '8px' }}>
-              🖼️ Campaign Image (Optional)
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
+              Create New Campaign
             </div>
-            {newCampaignImageUrl && (
-              <div style={{ marginBottom: '12px' }}>
-                <img
-                  src={newCampaignImageUrl}
-                  alt={newCampaignImageAlt}
-                  style={{
-                    maxWidth: '100%',
-                    height: 'auto',
-                    borderRadius: '4px',
-                    maxHeight: '150px',
-                    objectFit: 'cover'
-                  }}
+            <div style={{ display: 'grid', gap: '12px' }}>
+              <input
+                type="text"
+                placeholder="Campaign name"
+                value={newCampaignName}
+                onChange={(e) => setNewCampaignName(e.target.value)}
+                style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+              />
+              <input
+                type="text"
+                placeholder="Email subject line"
+                value={newCampaignSubject}
+                onChange={(e) => setNewCampaignSubject(e.target.value)}
+                style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+              />
+              <textarea
+                placeholder="Email content/body"
+                value={newCampaignContent}
+                onChange={(e) => setNewCampaignContent(e.target.value)}
+                rows={4}
+                style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit' }}
+              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <input
+                  type="text"
+                  placeholder="From Name"
+                  value={newCampaignFromName}
+                  onChange={(e) => setNewCampaignFromName(e.target.value)}
+                  style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+                />
+                <input
+                  type="email"
+                  placeholder="From Email"
+                  value={newCampaignFromEmail}
+                  onChange={(e) => setNewCampaignFromEmail(e.target.value)}
+                  style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
                 />
               </div>
-            )}
-            <div style={{ display: 'grid', gap: '8px' }}>
-              <input
-                type="text"
-                placeholder="Image URL (or use AI Image Generator tab)"
-                value={newCampaignImageUrl}
-                onChange={(e) => setNewCampaignImageUrl(e.target.value)}
-                style={{ padding: '8px 10px', border: '1px solid #FFD9B3', borderRadius: '4px', fontSize: '12px' }}
-              />
-              <input
-                type="text"
-                placeholder="Image alt text (for accessibility)"
-                value={newCampaignImageAlt}
-                onChange={(e) => setNewCampaignImageAlt(e.target.value)}
-                style={{ padding: '8px 10px', border: '1px solid #FFD9B3', borderRadius: '4px', fontSize: '12px' }}
-              />
-              {!newCampaignImageUrl && (
-                <button
-                  onClick={() => setActiveTab('ai-assist')}
-                  style={{
-                    padding: '6px',
-                    background: '#FFF0E6',
-                    color: '#FF6B35',
-                    border: '1px solid #FFD9B3',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    cursor: 'pointer'
-                  }}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                <select
+                  value={newCampaignRecipients}
+                  onChange={(e) => setNewCampaignRecipients(e.target.value)}
+                  style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}
                 >
-                  🎨 Go to AI Image Generator
-                </button>
-              )}
+                  <option value="all-users">All Users</option>
+                  <option value="doers">Doers Only</option>
+                  <option value="askers">Askers Only</option>
+                  <option value="vip">VIP Only</option>
+                </select>
+                <select
+                  value={newCampaignTemplate}
+                  onChange={(e) => setNewCampaignTemplate(e.target.value)}
+                  style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}
+                >
+                  <option value="promotional">Promotional</option>
+                  <option value="announcement">Announcement</option>
+                  <option value="reminder">Reminder</option>
+                  <option value="transactional">Transactional</option>
+                </select>
+                <input
+                  type="date"
+                  placeholder="Schedule (optional)"
+                  value={newCampaignScheduled}
+                  onChange={(e) => setNewCampaignScheduled(e.target.value)}
+                  style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+                />
+              </div>
+
+              <div style={{ padding: '12px', background: '#FFF8F5', borderRadius: '6px', border: '1px solid #FFD9B3' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: '#FF6B35', marginBottom: '8px' }}>
+                  🖼️ Campaign Image (Optional)
+                </div>
+                {newCampaignImageUrl && (
+                  <div style={{ marginBottom: '12px' }}>
+                    <img
+                      src={newCampaignImageUrl}
+                      alt={newCampaignImageAlt}
+                      style={{
+                        maxWidth: '100%',
+                        height: 'auto',
+                        borderRadius: '4px',
+                        maxHeight: '150px',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  </div>
+                )}
+                <div style={{ display: 'grid', gap: '8px' }}>
+                  <input
+                    type="text"
+                    placeholder="Image URL (or use AI Image Generator tab)"
+                    value={newCampaignImageUrl}
+                    onChange={(e) => setNewCampaignImageUrl(e.target.value)}
+                    style={{ padding: '8px 10px', border: '1px solid #FFD9B3', borderRadius: '4px', fontSize: '12px' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Image alt text (for accessibility)"
+                    value={newCampaignImageAlt}
+                    onChange={(e) => setNewCampaignImageAlt(e.target.value)}
+                    style={{ padding: '8px 10px', border: '1px solid #FFD9B3', borderRadius: '4px', fontSize: '12px' }}
+                  />
+                  {!newCampaignImageUrl && (
+                    <button
+                      onClick={() => setActiveTab('ai-assist')}
+                      style={{
+                        padding: '6px',
+                        background: '#FFF0E6',
+                        color: '#FF6B35',
+                        border: '1px solid #FFD9B3',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      🎨 Go to AI Image Generator
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={handleCreateCampaign}
+                style={{
+                  padding: '10px',
+                  background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                + Create Campaign
+              </button>
             </div>
           </div>
-
-          <button
-            onClick={handleCreateCampaign}
-            style={{
-              padding: '10px',
-              background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontWeight: '600',
-              cursor: 'pointer',
-            }}
-          >
-            + Create Campaign
-          </button>
-        </div>
-      </div>
+        </>
       )}
 
       {activeTab === 'campaigns' && (
-        <>
-          <div style={{ display: 'grid', gap: '12px' }}>
+        <div style={{ display: 'grid', gap: '12px' }}>
             {campaigns.map(campaign => (
               <div key={campaign.id} style={{
                 padding: '16px',
@@ -1148,7 +1148,6 @@ Next: Generate image in the Image Generator, then select a text variant to load.
               </div>
             ))}
           </div>
-        </>
       )}
       </div>
     </AdminLayout>
