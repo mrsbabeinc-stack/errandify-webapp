@@ -134,19 +134,12 @@ const menuItems: MenuItem[] = [
           { id: 'expense-claims', label: 'Expense Claims', icon: '📝', path: '/admin/expense-claims' },
           { id: 'invoicing', label: 'Invoicing & Billing', icon: '📋', path: '/admin/invoicing' },
           { id: 'financial-reports', label: 'Financial Reports', icon: '📊', path: '/admin/financial-reports' },
+          { id: 'vendors', label: 'Vendor Management', icon: '💳', path: '/admin/vendors' },
+          { id: 'clients', label: 'Client Management', icon: '👥', path: '/admin/clients' },
         ]
       },
       { id: 'integration', label: 'Integration Dashboard', icon: '📊', path: '/admin/accounts-hr-integration' },
       { id: 'ai-reports', label: 'AI Reports', icon: '🤖', path: '/admin/ai-reports' },
-    ]
-  },
-  {
-    id: 'vendor-client',
-    label: 'Vendor & Client',
-    icon: '🤝',
-    children: [
-      { id: 'vendors', label: 'Vendor Management', icon: '💳', path: '/admin/vendors' },
-      { id: 'clients', label: 'Client Management', icon: '👥', path: '/admin/clients' },
     ]
   },
 ];
