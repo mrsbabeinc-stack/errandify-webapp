@@ -107,6 +107,15 @@ const menuItems: MenuItem[] = [
       { id: 'demographics', label: 'Demographics', icon: '👥', path: '/admin/reports/demographics' },
     ]
   },
+  {
+    id: 'accounts-hr',
+    label: 'Accounts & HR',
+    icon: '💼',
+    children: [
+      { id: 'accounts', label: 'Accounts', icon: '💰', path: '/admin/accounts' },
+      { id: 'hr', label: 'HR', icon: '👥', path: '/admin/hr' },
+    ]
+  },
 ];
 
 export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) => {
