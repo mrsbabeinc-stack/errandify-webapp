@@ -1020,7 +1020,7 @@ const RecruitmentDashboard: React.FC = () => {
                     <strong style={{ color: '#FF9800' }}>{applications.filter(a => a.score && a.score >= 50 && a.score < 75).length}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Rejected (<50%):</span>
+                    <span>Rejected (Less than 50%):</span>
                     <strong style={{ color: '#F44336' }}>{applications.filter(a => a.score && a.score < 50).length}</strong>
                   </div>
                 </div>
