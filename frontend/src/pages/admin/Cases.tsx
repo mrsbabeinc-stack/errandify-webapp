@@ -1115,82 +1115,86 @@ export const CasesPage: React.FC = () => {
                         Total: SGD $0.00
                       </div>
 
-                      {/* Fee Allocation - Compact Version */}
-                      <div style={{ marginTop: '12px', padding: '10px', background: '#f5f3ff', borderRadius: '6px', border: '1px solid #a78bfa' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                          <label style={{ fontSize: '13px', fontWeight: '600', color: '#333' }}>
-                            Fee Allocation
-                          </label>
-                          <div style={{ fontSize: '11px', background: '#e9d5ff', padding: '3px 6px', borderRadius: '3px', color: '#5b21b6', fontWeight: '500' }}>
-                            💡 Decide who pays each fee (Platform / Stripe / Refund)
+                      {/* Fee Allocation - Clean Professional Design */}
+                      <div style={{ marginTop: '16px', padding: '16px', background: '#fff', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
+                        <div style={{ marginBottom: '16px' }}>
+                          <h4 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0', color: '#333' }}>
+                            💳 Fee Allocation
+                          </h4>
+                          <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>
+                            Define who pays each platform fee. Default: Doer pays all fees.
+                          </p>
+                        </div>
+
+                        {/* Platform Fee Row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #eee' }}>
+                          <div>
+                            <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '10px' }}>
+                              Platform Fee (20%)
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                                <input type="radio" name="platformFeePayer" value="doer" defaultChecked style={{ cursor: 'pointer', width: '18px', height: '18px' }} />
+                                <span>Doer Pays</span>
+                              </label>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                                <input type="radio" name="platformFeePayer" value="asker" style={{ cursor: 'pointer', width: '18px', height: '18px' }} />
+                                <span>Asker Pays</span>
+                              </label>
+                            </div>
+                          </div>
+                          <div style={{ background: '#f9f9f9', padding: '12px', borderRadius: '6px', border: '1px solid #eee' }}>
+                            <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>Amount</div>
+                            <div id="platformFeeAllocDisplay" style={{ fontSize: '20px', fontWeight: '700', color: '#FF6B35' }}>SGD $0.00</div>
+                            <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>Errandify's commission</div>
                           </div>
                         </div>
 
-                        {/* Platform Fee - Compact */}
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Platform</div>
-                          <div style={{ display: 'flex', gap: '3px' }}>
-                            <button onClick={() => { document.getElementById('platformFeeAllocDisplay')!.style.display = 'inline'; document.getElementById('platformFeeAllocInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>%</button>
-                            <button onClick={() => { document.getElementById('platformFeeAllocDisplay')!.style.display = 'none'; document.getElementById('platformFeeAllocInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>$</button>
+                        {/* Stripe Fee Row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #eee' }}>
+                          <div>
+                            <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '10px' }}>
+                              Stripe Fee (3%)
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                                <input type="radio" name="stripFeePayer" value="doer" defaultChecked style={{ cursor: 'pointer', width: '18px', height: '18px' }} />
+                                <span>Doer Pays</span>
+                              </label>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                                <input type="radio" name="stripFeePayer" value="asker" style={{ cursor: 'pointer', width: '18px', height: '18px' }} />
+                                <span>Asker Pays</span>
+                              </label>
+                            </div>
                           </div>
-                          <div id="platformFeeAllocDisplay" style={{ fontSize: '11px', fontWeight: '600', color: '#333', minWidth: '50px' }}>20%</div>
-                          <input type="number" id="platformFeeAllocInput" defaultValue="7.70" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '11px', width: '60px' }} />
-                          <div style={{ display: 'flex', gap: '8px', fontSize: '11px', flex: '1', justifyContent: 'flex-end' }}>
-                            <label><input type="radio" name="platformFeePayer" value="doer" defaultChecked /> Doer</label>
-                            <label><input type="radio" name="platformFeePayer" value="asker" /> Asker</label>
-                            <label><input type="radio" name="platformFeePayer" value="er" /> ER</label>
-                          </div>
-                        </div>
-
-                        {/* Stripe Fee - Compact */}
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Stripe</div>
-                          <div style={{ display: 'flex', gap: '3px' }}>
-                            <button onClick={() => { document.getElementById('stripeFeeAllocDisplay')!.style.display = 'inline'; document.getElementById('stripeFeeAllocInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>%</button>
-                            <button onClick={() => { document.getElementById('stripeFeeAllocDisplay')!.style.display = 'none'; document.getElementById('stripeFeeAllocInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>$</button>
-                          </div>
-                          <div id="stripeFeeAllocDisplay" style={{ fontSize: '11px', fontWeight: '600', color: '#333', minWidth: '50px' }}>3%</div>
-                          <input type="number" id="stripeFeeAllocInput" defaultValue="1.50" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '11px', width: '60px' }} />
-                          <div style={{ display: 'flex', gap: '8px', fontSize: '11px', flex: '1', justifyContent: 'flex-end' }}>
-                            <label><input type="radio" name="stripFeePayer" value="doer" defaultChecked /> Doer</label>
-                            <label><input type="radio" name="stripFeePayer" value="asker" /> Asker</label>
-                            <label><input type="radio" name="stripFeePayer" value="er" /> ER</label>
+                          <div style={{ background: '#f9f9f9', padding: '12px', borderRadius: '6px', border: '1px solid #eee' }}>
+                            <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>Amount</div>
+                            <div id="stripeFeeAllocDisplay" style={{ fontSize: '20px', fontWeight: '700', color: '#FF6B35' }}>SGD $0.00</div>
+                            <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>Payment processing</div>
                           </div>
                         </div>
 
-                        {/* Asker Refund Portion - Compact */}
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Asker</div>
-                          <div style={{ display: 'flex', gap: '3px' }}>
-                            <button onClick={() => { document.getElementById('askerAllocDisplay')!.style.display = 'inline'; document.getElementById('askerAllocInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>%</button>
-                            <button onClick={() => { document.getElementById('askerAllocDisplay')!.style.display = 'none'; document.getElementById('askerAllocInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>$</button>
+                        {/* Asker Refund Method Row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                          <div>
+                            <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '10px' }}>
+                              Asker Refund Method
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                                <input type="radio" name="askerRefundPayer" value="bank" defaultChecked style={{ cursor: 'pointer', width: '18px', height: '18px' }} />
+                                <span>Back to Bank</span>
+                              </label>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                                <input type="radio" name="askerRefundPayer" value="wallet" style={{ cursor: 'pointer', width: '18px', height: '18px' }} />
+                                <span>To Wallet</span>
+                              </label>
+                            </div>
                           </div>
-                          <div id="askerAllocDisplay" style={{ fontSize: '11px', fontWeight: '600', color: '#333', minWidth: '50px' }}>40%</div>
-                          <input type="number" id="askerAllocInput" defaultValue="20.00" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '11px', width: '60px' }} />
-                          <div style={{ display: 'flex', gap: '8px', fontSize: '11px', flex: '1', justifyContent: 'flex-end' }}>
-                            <label><input type="radio" name="askerRefundPayer" value="bank" defaultChecked /> Back to Bank</label>
-                            <label><input type="radio" name="askerRefundPayer" value="wallet" /> Wallet</label>
-                          </div>
-                        </div>
-
-                        {/* Compensation Fee - Compact */}
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>
-                          <input type="checkbox" id="compensationFeeCheckbox" onChange={(e) => document.getElementById('compensationFeeSection')!.style.display = e.target.checked ? 'flex' : 'none'} style={{ cursor: 'pointer' }} />
-                          Compensation Fee
-                        </label>
-
-                        <div id="compensationFeeSection" style={{ display: 'none', gap: '8px', marginTop: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Custom</div>
-                          <div style={{ display: 'flex', gap: '3px' }}>
-                            <button onClick={() => { document.getElementById('compFeePercentDisplay')!.style.display = 'inline'; document.getElementById('compFeeAmountInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>%</button>
-                            <button onClick={() => { document.getElementById('compFeePercentDisplay')!.style.display = 'none'; document.getElementById('compFeeAmountInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>$</button>
-                          </div>
-                          <input type="number" id="compFeePercentDisplay" placeholder="10" defaultValue="10" step="0.01" min="0" style={{ padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '11px', width: '60px' }} />
-                          <input type="number" id="compFeeAmountInput" placeholder="0.00" defaultValue="0.00" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '11px', width: '60px' }} />
-                          <div style={{ display: 'flex', gap: '8px', fontSize: '11px', flex: '1', justifyContent: 'flex-end' }}>
-                            <label><input type="radio" name="compFeePayer" value="doer" defaultChecked /> Doer</label>
-                            <label><input type="radio" name="compFeePayer" value="asker" /> Asker</label>
-                            <label><input type="radio" name="compFeePayer" value="er" /> ER</label>
+                          <div style={{ background: '#f9f9f9', padding: '12px', borderRadius: '6px', border: '1px solid #eee' }}>
+                            <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>Refund</div>
+                            <div id="askerRefundDisplay" style={{ fontSize: '20px', fontWeight: '700', color: '#3b82f6' }}>SGD $0.00</div>
+                            <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>If case favors asker</div>
                           </div>
                         </div>
                       </div>
