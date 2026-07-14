@@ -373,7 +373,7 @@ const ExpenseClaimsDashboard: React.FC = () => {
 
         {/* Compliance Banner */}
         <div style={{ padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#0D47A1' }}>
-          <strong>🇸🇬 ACRA & MOM Compliance:</strong> All claims with receipts tracked. Workflow: Staff Submit → Manager Approve → Accounts Review → Reimbursement. < $200 auto-flagged for quick processing. All transactions synced to Accounts ledger.
+          <strong>🇸🇬 ACRA & MOM Compliance:</strong> All claims with receipts tracked. Workflow: Staff Submit → Manager Approve → Accounts Review → Reimbursement. All transactions synced to Accounts ledger with full audit trail.
         </div>
 
         {/* KPI Cards */}
