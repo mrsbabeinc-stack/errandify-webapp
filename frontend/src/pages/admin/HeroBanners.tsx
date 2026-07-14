@@ -27,10 +27,9 @@ export default function HeroBanners() {
   const [newCTAText, setNewCTAText] = useState('');
   const [newLocation, setNewLocation] = useState('home');
 
-  // Event banner AI design
-  const [bannerType, setBannerType] = useState<'general' | 'event'>('general');
-  const [eventBannerDesignLoading, setEventBannerDesignLoading] = useState(false);
-  const [generatedEventBannerDesign, setGeneratedEventBannerDesign] = useState('');
+  // Hero banner AI design
+  const [heroBannerDesignLoading, setHeroBannerDesignLoading] = useState(false);
+  const [generatedHeroBannerDesign, setGeneratedHeroBannerDesign] = useState('');
 
   useEffect(() => {
     const saved = localStorage.getItem('heroBanners');
@@ -79,18 +78,18 @@ export default function HeroBanners() {
     }
   }, []);
 
-  const handleGenerateEventBannerDesign = async () => {
+  const handleGenerateHeroBannerDesign = async () => {
     if (!newTitle.trim() || !newSubtitle.trim()) {
       showToast('⚠️ Fill in title and description first', 'error');
       return;
     }
 
-    setEventBannerDesignLoading(true);
+    setHeroBannerDesignLoading(true);
 
     try {
-      const prompt = `You are a professional event banner designer. Create a detailed visual design description for an event hero banner.
+      const prompt = `You are a professional hero banner designer. Create a detailed visual design description for a promotional hero banner.
 
-Event Banner: "${newTitle}"
+Banner: "${newTitle}"
 Description: "${newSubtitle}"
 Location: ${newLocation}
 CTA Button: "${newCTAText}"
@@ -100,6 +99,7 @@ Generate a vivid design description for a 1200x400px hero banner that includes:
 1. **Color Scheme**: Suggest 2-3 primary colors (hex codes)
    - Use bold, eye-catching colors
    - Ensure good contrast with white text
+   - Consider brand consistency
 
 2. **Layout Elements**:
    - Hero headline positioning (banner title)
@@ -109,7 +109,7 @@ Generate a vivid design description for a 1200x400px hero banner that includes:
 
 3. **Style & Mood**:
    - Professional vs casual tone?
-   - Modern, vibrant, celebratory?
+   - Modern, vibrant, playful?
    - Special design elements (shapes, patterns, decorations)
 
 4. **Typography**:
@@ -146,13 +146,13 @@ Format as detailed, actionable design brief. Be specific about colors, placement
       );
 
       const bannerDesign = response.data.output?.text || 'Unable to generate banner design';
-      setGeneratedEventBannerDesign(bannerDesign);
-      showToast('✅ Event banner design created!', 'success');
+      setGeneratedHeroBannerDesign(bannerDesign);
+      showToast('✅ Hero banner design created!', 'success');
     } catch (error) {
-      console.error('Failed to generate event banner:', error);
+      console.error('Failed to generate hero banner:', error);
       showToast('⚠️ Failed to generate banner design', 'error');
     }
-    setEventBannerDesignLoading(false);
+    setHeroBannerDesignLoading(false);
   };
 
   const handleCreateBanner = () => {
@@ -176,7 +176,7 @@ Format as detailed, actionable design brief. Be specific about colors, placement
     setNewTitle('');
     setNewSubtitle('');
     setNewCTAText('');
-    setGeneratedEventBannerDesign('');
+    setGeneratedHeroBannerDesign('');
     showToast('✅ Banner created!', 'success');
   };
 
@@ -221,44 +221,10 @@ Format as detailed, actionable design brief. Be specific about colors, placement
           Create Banner
         </div>
 
-        {/* Banner Type Selector */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '16px' }}>
-          <button
-            onClick={() => setBannerType('general')}
-            style={{
-              padding: '10px 12px',
-              background: bannerType === 'general' ? '#FF6B35' : '#FFE4C4',
-              color: bannerType === 'general' ? 'white' : '#333',
-              border: `2px solid ${bannerType === 'general' ? '#FF6B35' : '#FFD9B3'}`,
-              borderRadius: '6px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              fontSize: '13px',
-            }}
-          >
-            📢 General Promotion
-          </button>
-          <button
-            onClick={() => setBannerType('event')}
-            style={{
-              padding: '10px 12px',
-              background: bannerType === 'event' ? '#FF6B35' : '#FFE4C4',
-              color: bannerType === 'event' ? 'white' : '#333',
-              border: `2px solid ${bannerType === 'event' ? '#FF6B35' : '#FFD9B3'}`,
-              borderRadius: '6px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              fontSize: '13px',
-            }}
-          >
-            🎉 Event Banner
-          </button>
-        </div>
-
         <div style={{ display: 'grid', gap: '12px' }}>
           <input
             type="text"
-            placeholder={bannerType === 'event' ? "Event name (e.g., Community Networking Breakfast)" : "Banner title"}
+            placeholder="Banner title (e.g., Summer Promotion, Refer & Earn)"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
@@ -288,63 +254,61 @@ Format as detailed, actionable design brief. Be specific about colors, placement
             <option value="browse">Browse Page</option>
           </select>
 
-          {/* AI Banner Design Section - Only for Event Banners */}
-          {bannerType === 'event' && (
-            <div style={{ padding: '16px', background: '#E8F5E9', borderRadius: '8px', border: '2px solid #81C784' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '10px' }}>
-                🎨 AI Banner Designer
-              </div>
-              <p style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
-                Generate professional event banner design specifications before creating.
-              </p>
-
-              <button
-                onClick={handleGenerateEventBannerDesign}
-                disabled={eventBannerDesignLoading || !newTitle.trim() || !newSubtitle.trim()}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  background: eventBannerDesignLoading ? '#ddd' : 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: '600',
-                  cursor: eventBannerDesignLoading ? 'wait' : 'pointer',
-                  fontSize: '14px',
-                  boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)',
-                  transform: 'translateY(0)',
-                  transition: 'all 0.2s',
-                  marginBottom: '12px',
-                }}
-                onMouseDown={(e) => {
-                  if (!eventBannerDesignLoading) {
-                    (e.target as HTMLButtonElement).style.transform = 'translateY(2px)';
-                  }
-                }}
-                onMouseUp={(e) => {
-                  if (!eventBannerDesignLoading) {
-                    (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
-                  }
-                }}
-              >
-                {eventBannerDesignLoading ? '🎨 Designing Banner...' : '✨ Design Banner'}
-              </button>
-
-              {generatedEventBannerDesign && (
-                <div style={{ padding: '12px', background: 'white', borderRadius: '6px', border: '1px solid #81C784', marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#1B5E20', marginBottom: '8px' }}>
-                    ✓ Banner Design Guide
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#333', lineHeight: '1.6', whiteSpace: 'pre-wrap', maxHeight: '250px', overflow: 'auto' }}>
-                    {generatedEventBannerDesign}
-                  </div>
-                  <p style={{ fontSize: '11px', color: '#666', marginTop: '8px', fontStyle: 'italic' }}>
-                    💡 Use this design guide in Canva, Photoshop, or any design tool (1200x400px)
-                  </p>
-                </div>
-              )}
+          {/* AI Hero Banner Design Section */}
+          <div style={{ padding: '16px', background: '#E8F5E9', borderRadius: '8px', border: '2px solid #81C784' }}>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '10px' }}>
+              🎨 AI Hero Banner Designer
             </div>
-          )}
+            <p style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+              Generate professional hero banner (1200x400px) design specifications before creating.
+            </p>
+
+            <button
+              onClick={handleGenerateHeroBannerDesign}
+              disabled={heroBannerDesignLoading || !newTitle.trim() || !newSubtitle.trim()}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: heroBannerDesignLoading ? '#ddd' : 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '600',
+                cursor: heroBannerDesignLoading ? 'wait' : 'pointer',
+                fontSize: '14px',
+                boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)',
+                transform: 'translateY(0)',
+                transition: 'all 0.2s',
+                marginBottom: '12px',
+              }}
+              onMouseDown={(e) => {
+                if (!heroBannerDesignLoading) {
+                  (e.target as HTMLButtonElement).style.transform = 'translateY(2px)';
+                }
+              }}
+              onMouseUp={(e) => {
+                if (!heroBannerDesignLoading) {
+                  (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+                }
+              }}
+            >
+              {heroBannerDesignLoading ? '🎨 Designing Banner...' : '✨ Design Banner'}
+            </button>
+
+            {generatedHeroBannerDesign && (
+              <div style={{ padding: '12px', background: 'white', borderRadius: '6px', border: '1px solid #81C784', marginBottom: '12px' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: '#1B5E20', marginBottom: '8px' }}>
+                  ✓ Banner Design Guide (1200x400px)
+                </div>
+                <div style={{ fontSize: '12px', color: '#333', lineHeight: '1.6', whiteSpace: 'pre-wrap', maxHeight: '250px', overflow: 'auto' }}>
+                  {generatedHeroBannerDesign}
+                </div>
+                <p style={{ fontSize: '11px', color: '#666', marginTop: '8px', fontStyle: 'italic' }}>
+                  💡 Use this design guide in Canva, Photoshop, Figma, or any design tool
+                </p>
+              </div>
+            )}
+          </div>
 
           <button
             onClick={handleCreateBanner}
