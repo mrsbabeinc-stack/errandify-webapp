@@ -10,8 +10,8 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { id: 'home', label: 'Home', icon: '🏠', path: '/admin/dashboard' },
-  { id: 'users-safety', label: 'Users & Safety', icon: '👥', path: '/admin/dashboard/users' },
+  { id: 'home', label: 'Dashboard', icon: '🏠', path: '/admin/dashboard' },
+  { id: 'users-safety', label: 'Safety Monitoring', icon: '👥', path: '/admin/dashboard/users' },
   {
     id: 'management',
     label: 'User & Admin Management',
