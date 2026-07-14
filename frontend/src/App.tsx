@@ -102,6 +102,7 @@ import HeroBanners from './pages/admin/HeroBanners';
 import CompanyClientIntelligence from './pages/admin/CompanyClientIntelligence';
 import AccountsDashboard from './pages/admin/AccountsDashboard';
 import HRDashboard from './pages/admin/HRDashboard';
+import PayrollDashboard from './pages/admin/PayrollDashboard';
 import CompanyRegistrationPage from './pages/CompanyRegistrationPage';
 import MyCompanyDashboard from './pages/MyCompanyDashboard';
 import CompanyStaffManagement from './pages/CompanyStaffManagement';
@@ -476,6 +477,7 @@ export default function App() {
         {/* Accounts & HR Routes */}
         <Route path="/admin/accounts" element={isAuthenticated && isAdmin ? <AccountsDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/hr" element={isAuthenticated && isAdmin ? <HRDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/payroll" element={isAuthenticated && isAdmin ? <PayrollDashboard /> : <Navigate to="/login" replace />} />
 
         {/* Company Registration and Dashboard Routes */}
         <Route path="/company/register" element={isAuthenticated ? <CompanyRegistrationPage /> : <Navigate to="/login" replace />} />

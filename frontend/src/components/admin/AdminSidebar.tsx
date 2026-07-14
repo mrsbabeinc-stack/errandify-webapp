@@ -114,6 +114,7 @@ const menuItems: MenuItem[] = [
     children: [
       { id: 'accounts', label: 'Accounts', icon: '💰', path: '/admin/accounts' },
       { id: 'hr', label: 'HR', icon: '👥', path: '/admin/hr' },
+      { id: 'payroll', label: 'Payroll', icon: '💵', path: '/admin/payroll' },
     ]
   },
 ];
