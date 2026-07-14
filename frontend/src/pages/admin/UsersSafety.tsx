@@ -23,7 +23,7 @@ export const UsersSafetyPage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 8px 0', color: '#333' }}>
-              👥 Users & Safety
+              🛡️ Safety Monitoring
             </h1>
             <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
               Monitor user activity, verify accounts, and resolve safety concerns
@@ -55,7 +55,7 @@ export const UsersSafetyPage: React.FC = () => {
 
         {/* SAFETY ALERTS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#333' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#FF6B35' }}>
             🛡️ Safety Alerts
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
@@ -121,7 +121,7 @@ export const UsersSafetyPage: React.FC = () => {
 
         {/* USERS TABLE */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#333' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#FF6B35' }}>
             👤 Active Users
           </h2>
           <div style={{ overflowX: 'auto', borderRadius: '8px', border: '2px solid #FFD9B3', background: 'white' }}>

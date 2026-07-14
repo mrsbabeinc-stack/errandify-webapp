@@ -97,13 +97,13 @@ export const AdminDashboard: React.FC = () => {
       <div style={{ padding: '20px', background: '#fff', minHeight: '100vh' }}>
         {/* HEADER */}
         <div style={{ marginBottom: '20px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#333' }}>Admin Command Center</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#333' }}>📊 Dashboard</h1>
           <p style={{ fontSize: '13px', color: '#666', margin: '4px 0 0 0' }}>Growth tracking • Operations • Safety & Disputes</p>
         </div>
 
         {/* CRITICAL ALERTS - REVENUE/PAYMENT */}
         <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 12px 0', color: '#333', letterSpacing: '0px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 12px 0', color: '#FF6B35', letterSpacing: '0px' }}>
             🔴 Critical Blockers - Act Now
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
