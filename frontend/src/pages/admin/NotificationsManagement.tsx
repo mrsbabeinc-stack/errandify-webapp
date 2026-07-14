@@ -664,65 +664,65 @@ export default function NotificationsManagement() {
             </>
           )}
 
-          {activeTab === 'create' && (
+          {activeTab === 'groups' && (
             <>
-            {/* Search & Filter */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
-            <input
-              type="text"
-              placeholder="Search notifications..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                padding: '8px 12px',
-                border: '2px solid #FFD9B3',
-                borderRadius: '6px',
-                fontSize: '13px',
-              }}
-            />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value as any)}
-              style={{
-                padding: '8px 12px',
-                border: '2px solid #FFD9B3',
-                borderRadius: '6px',
-                fontSize: '13px',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="all">All Statuses</option>
-              <option value="draft">📝 Draft</option>
-              <option value="scheduled">📅 Scheduled</option>
-              <option value="sent">✓ Sent</option>
-              <option value="error">⚠️ Error</option>
-            </select>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value as any)}
-              style={{
-                padding: '8px 12px',
-                border: '2px solid #FFD9B3',
-                borderRadius: '6px',
-                fontSize: '13px',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="all">All Types</option>
-              <option value="announcement">📢 Announcement</option>
-              <option value="alert">🚨 Alert</option>
-              <option value="reminder">⏰ Reminder</option>
-              <option value="promotion">🎁 Promotion</option>
-            </select>
-            </div>
+              {/* Search & Filter */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+                <input
+                  type="text"
+                  placeholder="Search notifications..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{
+                    padding: '8px 12px',
+                    border: '2px solid #FFD9B3',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                  }}
+                />
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value as any)}
+                  style={{
+                    padding: '8px 12px',
+                    border: '2px solid #FFD9B3',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="draft">📝 Draft</option>
+                  <option value="scheduled">📅 Scheduled</option>
+                  <option value="sent">✓ Sent</option>
+                  <option value="error">⚠️ Error</option>
+                </select>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value as any)}
+                  style={{
+                    padding: '8px 12px',
+                    border: '2px solid #FFD9B3',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="all">All Types</option>
+                  <option value="announcement">📢 Announcement</option>
+                  <option value="alert">🚨 Alert</option>
+                  <option value="reminder">⏰ Reminder</option>
+                  <option value="promotion">🎁 Promotion</option>
+                </select>
+              </div>
 
-            {/* Notifications List */}
-            <div style={{
-              maxHeight: '600px',
-              overflowY: 'auto',
-              display: 'grid',
-              gap: '12px',
-            }}>
+              {/* Notifications List */}
+              <div style={{
+                maxHeight: '600px',
+                overflowY: 'auto',
+                display: 'grid',
+                gap: '12px',
+              }}>
               {filtered.length === 0 ? (
                 <div style={{
                   padding: '32px',
@@ -817,8 +817,8 @@ export default function NotificationsManagement() {
                   </div>
                 );
               })
-            )}
-            </div>
+              )}
+              </div>
             </>
           )}
         </div>
