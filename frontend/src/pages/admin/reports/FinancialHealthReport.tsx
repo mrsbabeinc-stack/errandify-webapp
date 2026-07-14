@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import AIAnalysisPanel from '../../../components/admin/reports/AIAnalysisPanel';
 
 export const FinancialHealthReport: React.FC = () => {
   const [timeRange, setTimeRange] = useState('month');
@@ -110,6 +111,52 @@ export const FinancialHealthReport: React.FC = () => {
             <text x="780" y="275" fontSize="11" textAnchor="middle" fill="#999">Oct</text>
           </svg>
         </div>
+
+        {/* AI Analysis Section */}
+        <AIAnalysisPanel
+          healthScore={92}
+          healthLabel="Financial Health Score"
+          healthSentiment="Revenue growth outpacing expenses. Profit margin of 59% indicates healthy unit economics. Sustainability high."
+          riskLevel={{
+            level: 'low',
+            description: 'Consistent revenue trends. No volatility spikes. Expense growth controlled at 5% vs revenue 12%.'
+          }}
+          safety="All transactions compliant with payment regulations. No fraud detected in automated screening."
+          legal="Revenue recognition aligned with IFRS 15. Expense categorization audit-compliant. No regulatory violations."
+          bias="Revenue distribution neutral across customer segments. Pricing fair and transparent. No algorithmic bias detected."
+          findings={[
+            {
+              title: 'Growth Acceleration',
+              description: 'Revenue up 12% YoY; on track to exceed Q3 targets by 8%'
+            },
+            {
+              title: 'Operational Efficiency',
+              description: 'Expense control excellent; COGS decreased 5% through platform optimization'
+            },
+            {
+              title: 'Profitability Trend',
+              description: 'Net profit margin improving; suggests scalable business model'
+            },
+            {
+              title: 'Transaction Volume',
+              description: '1,234 active txns indicates stable customer base retention'
+            }
+          ]}
+          relatedLinks={[
+            {
+              text: 'Industry Report: Gig Economy Growth +23% in SE Asia',
+              url: '#'
+            },
+            {
+              text: 'Marketplace Benchmark: Profitability at 45-60% margin',
+              url: '#'
+            },
+            {
+              text: 'Analysis: Payment Processing Efficiency Gains',
+              url: '#'
+            }
+          ]}
+        />
       </div>
     </AdminLayout>
   );
