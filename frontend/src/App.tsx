@@ -77,7 +77,7 @@ import UsersSafetyPage from './pages/admin/UsersSafety';
 import DisputesPage from './pages/admin/Disputes';
 import OperationsPage from './pages/admin/Operations';
 import DiscountCodesPage from './pages/admin/DiscountCodesPage';
-import AdminErrandifyPointsPage from './pages/admin/ErrandifyPoints';
+import { ErrandifyPointsEnhancedPage as AdminErrandifyPointsPage } from './pages/admin/ErrandifyPointsEnhanced';
 import EmailPage from './pages/admin/Email';
 import GrantPointsPage from './pages/admin/GrantPoints';
 import PointEarningRulesPage from './pages/admin/PointEarningRules';
