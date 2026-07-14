@@ -1204,7 +1204,7 @@ export const CasesPage: React.FC = () => {
                           background: '#fef2f2',
                           borderRadius: '6px',
                           border: '2px solid #ef4444',
-                          fontSize: '11px',
+                          fontSize: '13px',
                           color: '#dc2626',
                           fontWeight: '600',
                           display: 'none',
@@ -1216,36 +1216,36 @@ export const CasesPage: React.FC = () => {
                       {/* Payment Breakdown Summary */}
                       <div style={{ marginTop: '12px', padding: '12px', background: '#fff', borderRadius: '6px', border: '1px solid #ddd' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                          <div style={{ fontWeight: '600', color: '#333', fontSize: '11px' }}>Payment Breakdown</div>
-                          <div style={{ fontSize: '11px', background: '#dbeafe', padding: '3px 6px', borderRadius: '3px', color: '#075985', fontWeight: '500' }}>
+                          <div style={{ fontWeight: '600', color: '#333', fontSize: '14px' }}>Payment Breakdown</div>
+                          <div style={{ fontSize: '12px', background: '#dbeafe', padding: '3px 6px', borderRadius: '3px', color: '#075985', fontWeight: '500' }}>
                             💡 What each party pays and receives after all fees
                           </div>
                         </div>
 
                         {/* Doer Breakdown */}
                         <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #eee' }}>
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#10b981', marginBottom: '6px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#10b981', marginBottom: '6px' }}>
                             ✅ DOER RECEIVES
-                            <span style={{ fontSize: '11px', color: '#059669', fontWeight: '400', marginLeft: '6px', background: '#d1fae5', padding: '2px 4px', borderRadius: '2px' }}>What they get paid</span>
+                            <span style={{ fontSize: '12px', color: '#059669', fontWeight: '400', marginLeft: '6px', background: '#d1fae5', padding: '2px 4px', borderRadius: '2px' }}>What they get paid</span>
                           </div>
-                          <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Gross Amount: SGD <span id="doerPaymentDisplay">0.00</span> <span style={{ fontSize: '11px', color: '#999' }}>(before fees)</span></div>
-                          <div style={{ fontSize: '10px', color: '#666', marginBottom: '6px' }}>Platform Fee (20%): -SGD <span id="platformFeeDisplay">0.00</span> <span style={{ fontSize: '11px', color: '#999' }}>(Errandify takes this)</span></div>
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#10b981' }}>Net to Doer: SGD <span id="doerNetDisplay">0.00</span> <span style={{ fontSize: '11px', color: '#059669', fontWeight: '400' }}>(lands in their wallet)</span></div>
+                          <div style={{ fontSize: '13px', color: '#666', marginBottom: '2px' }}>Gross Amount: SGD <span id="doerPaymentDisplay">0.00</span> <span style={{ fontSize: '12px', color: '#999' }}>(before fees)</span></div>
+                          <div style={{ fontSize: '13px', color: '#666', marginBottom: '6px' }}>Platform Fee (20%): -SGD <span id="platformFeeDisplay">0.00</span> <span style={{ fontSize: '12px', color: '#999' }}>(Errandify takes this)</span></div>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#10b981' }}>Net to Doer: SGD <span id="doerNetDisplay">0.00</span> <span style={{ fontSize: '12px', color: '#059669', fontWeight: '400' }}>(lands in their wallet)</span></div>
                         </div>
 
                         {/* Asker Breakdown */}
                         <div>
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#ef4444', marginBottom: '6px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#ef4444', marginBottom: '6px' }}>
                             💰 ASKER PAYS/RECEIVES
-                            <span style={{ fontSize: '11px', color: '#991b1b', fontWeight: '400', marginLeft: '6px', background: '#fee2e2', padding: '2px 4px', borderRadius: '2px' }}>Refund or additional charge</span>
+                            <span style={{ fontSize: '12px', color: '#991b1b', fontWeight: '400', marginLeft: '6px', background: '#fee2e2', padding: '2px 4px', borderRadius: '2px' }}>Refund or additional charge</span>
                           </div>
-                          <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Refund Amount: SGD <span id="askerRefundDisplay">0.00</span> <span style={{ fontSize: '11px', color: '#999' }}>(if decision favors them)</span></div>
-                          <div id="askerStripeLine" style={{ fontSize: '10px', color: '#666', marginBottom: '2px', display: 'none' }}>Stripe Fee: +SGD <span id="askerStripeFeeDisplay">0.00</span> <span style={{ fontSize: '11px', color: '#999' }}>(payment processing cost)</span></div>
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#ef4444' }}>Total Asker Pays: SGD <span id="askerTotalDisplay">0.00</span> <span style={{ fontSize: '11px', color: '#991b1b', fontWeight: '400' }}>(their net cost)</span></div>
+                          <div style={{ fontSize: '13px', color: '#666', marginBottom: '2px' }}>Refund Amount: SGD <span id="askerRefundDisplay">0.00</span> <span style={{ fontSize: '12px', color: '#999' }}>(if decision favors them)</span></div>
+                          <div id="askerStripeLine" style={{ fontSize: '13px', color: '#666', marginBottom: '2px', display: 'none' }}>Stripe Fee: +SGD <span id="askerStripeFeeDisplay">0.00</span> <span style={{ fontSize: '12px', color: '#999' }}>(payment processing cost)</span></div>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#ef4444' }}>Total Asker Pays: SGD <span id="askerTotalDisplay">0.00</span> <span style={{ fontSize: '12px', color: '#991b1b', fontWeight: '400' }}>(their net cost)</span></div>
                         </div>
 
                         {/* Mode Badge */}
-                        <div style={{ marginTop: '8px', fontSize: '11px', fontWeight: '600', color: '#7c3aed', background: '#f3e8ff', padding: '4px 8px', borderRadius: '3px', display: 'inline-block' }}>
+                        <div style={{ marginTop: '8px', fontSize: '12px', fontWeight: '600', color: '#7c3aed', background: '#f3e8ff', padding: '4px 8px', borderRadius: '3px', display: 'inline-block' }}>
                           Mode: <span id="feeAssignmentMode">Auto</span>
                         </div>
                       </div>
@@ -1312,7 +1312,7 @@ export const CasesPage: React.FC = () => {
                           borderRadius: '4px',
                           cursor: 'pointer',
                           fontWeight: '600',
-                          fontSize: '11px',
+                          fontSize: '13px',
                         }}
                       >
                         To Asker
@@ -1321,11 +1321,11 @@ export const CasesPage: React.FC = () => {
 
                     {/* Message to Doer */}
                     <div id="doerMessagePanel" style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #eee' }}>
-                      <div style={{ fontSize: '10px', fontWeight: '600', color: '#2e7d32', marginBottom: '6px' }}>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: '#2e7d32', marginBottom: '6px' }}>
                         Message to Doer (Service Provider)
                       </div>
                       <div style={{ marginBottom: '8px' }}>
-                        <label style={{ fontSize: '10px', color: '#666', fontWeight: '600' }}>Subject Line:</label>
+                        <label style={{ fontSize: '13px', color: '#666', fontWeight: '600' }}>Subject Line:</label>
                         <input
                           id="doerSubject"
                           type="text"
@@ -1335,7 +1335,7 @@ export const CasesPage: React.FC = () => {
                             padding: '8px',
                             border: '2px solid #FFD9B3',
                             borderRadius: '4px',
-                            fontSize: '11px',
+                            fontSize: '13px',
                             marginBottom: '8px',
                             fontFamily: 'inherit',
                           }}
@@ -1375,7 +1375,7 @@ Errandify Resolution Team`}
                           padding: '10px',
                           border: '2px solid #FFD9B3',
                           borderRadius: '4px',
-                          fontSize: '11px',
+                          fontSize: '13px',
                           fontFamily: 'monospace',
                           minHeight: '200px',
                           marginBottom: '8px',
@@ -1390,7 +1390,7 @@ Errandify Resolution Team`}
                           border: 'none',
                           borderRadius: '4px',
                           cursor: 'pointer',
-                          fontSize: '11px',
+                          fontSize: '13px',
                           fontWeight: '600',
                         }}
                       >
@@ -1400,11 +1400,11 @@ Errandify Resolution Team`}
 
                     {/* Message to Asker */}
                     <div id="askerMessagePanel" style={{ display: 'none' }}>
-                      <div style={{ fontSize: '10px', fontWeight: '600', color: '#3b82f6', marginBottom: '6px' }}>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: '#3b82f6', marginBottom: '6px' }}>
                         Message to Asker (Customer)
                       </div>
                       <div style={{ marginBottom: '8px' }}>
-                        <label style={{ fontSize: '10px', color: '#666', fontWeight: '600' }}>Subject Line:</label>
+                        <label style={{ fontSize: '13px', color: '#666', fontWeight: '600' }}>Subject Line:</label>
                         <input
                           id="askerSubject"
                           type="text"
@@ -1414,7 +1414,7 @@ Errandify Resolution Team`}
                             padding: '8px',
                             border: '2px solid #FFD9B3',
                             borderRadius: '4px',
-                            fontSize: '11px',
+                            fontSize: '13px',
                             marginBottom: '8px',
                             fontFamily: 'inherit',
                           }}
@@ -1454,7 +1454,7 @@ Errandify Resolution Team`}
                           padding: '10px',
                           border: '2px solid #FFD9B3',
                           borderRadius: '4px',
-                          fontSize: '11px',
+                          fontSize: '13px',
                           fontFamily: 'monospace',
                           minHeight: '200px',
                           marginBottom: '8px',
@@ -1469,7 +1469,7 @@ Errandify Resolution Team`}
                           border: 'none',
                           borderRadius: '4px',
                           cursor: 'pointer',
-                          fontSize: '11px',
+                          fontSize: '13px',
                           fontWeight: '600',
                         }}
                       >
@@ -1579,7 +1579,7 @@ Errandify Resolution Team`}
                       borderRadius: '6px',
                       cursor: 'pointer',
                       fontWeight: '600',
-                      fontSize: '12px',
+                      fontSize: '14px',
                       opacity: isSubmittingResolution ? 0.7 : 1,
                     }}
                   >
@@ -1599,7 +1599,7 @@ Errandify Resolution Team`}
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontWeight: '600',
-                  fontSize: '12px',
+                  fontSize: '14px',
                   color: '#333',
                 }}
               >
