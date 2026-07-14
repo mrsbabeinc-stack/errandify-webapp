@@ -587,40 +587,41 @@ Next: Generate image in the Image Generator, then select a text variant to load.
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', borderBottom: '2px solid #f0f0f0', paddingBottom: '12px' }}>
-        <button
-          onClick={() => setActiveTab('campaigns')}
-          style={{
-            padding: '8px 16px',
-            background: activeTab === 'campaigns' ? '#FF6B35' : 'transparent',
-            color: activeTab === 'campaigns' ? 'white' : '#666',
-            border: 'none',
-            borderRadius: '6px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            fontSize: '14px'
-          }}
-        >
-          📧 Campaigns
-        </button>
-        <button
-          onClick={() => setActiveTab('ai-assist')}
-          style={{
-            padding: '8px 16px',
-            background: activeTab === 'ai-assist' ? '#FF6B35' : 'transparent',
-            color: activeTab === 'ai-assist' ? 'white' : '#666',
-            border: 'none',
-            borderRadius: '6px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            fontSize: '14px'
-          }}
-        >
-          🤖 AI Assist
-        </button>
-      </div>
+      <>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', borderBottom: '2px solid #f0f0f0', paddingBottom: '12px' }}>
+          <button
+            onClick={() => setActiveTab('campaigns')}
+            style={{
+              padding: '8px 16px',
+              background: activeTab === 'campaigns' ? '#FF6B35' : 'transparent',
+              color: activeTab === 'campaigns' ? 'white' : '#666',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            📧 Campaigns
+          </button>
+          <button
+            onClick={() => setActiveTab('ai-assist')}
+            style={{
+              padding: '8px 16px',
+              background: activeTab === 'ai-assist' ? '#FF6B35' : 'transparent',
+              color: activeTab === 'ai-assist' ? 'white' : '#666',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🤖 AI Assist
+          </button>
+        </div>
 
-      {activeTab === 'ai-assist' && (
+        {activeTab === 'ai-assist' && (
         <>
         <div style={{ marginBottom: '24px', padding: '16px', background: '#F0E6FF', borderRadius: '8px', border: '2px solid #D4B5FF' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
@@ -1148,7 +1149,8 @@ Next: Generate image in the Image Generator, then select a text variant to load.
               </div>
             ))}
           </div>
-      )}
+        )}
+      </>
       </div>
     </AdminLayout>
   );
