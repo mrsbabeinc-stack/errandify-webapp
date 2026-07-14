@@ -251,7 +251,7 @@ export default function EventReminders() {
                     </div>
 
                     <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
-                      ⏰ Scheduled: {new Date(reminder.scheduledDateTime).toLocaleString()} • Timing: {reminder.reminderTime.replace('-', ' ')}
+                      ⏰ Scheduled: {new Date(reminder.scheduledDateTime).toLocaleString()} • Timing: {(reminder.reminderTime || 'custom').replace('-', ' ')}
                     </div>
                     <div style={{ fontSize: '11px', color: '#999', marginBottom: '12px' }}>
                       👥 Audience: {reminder.audience}
