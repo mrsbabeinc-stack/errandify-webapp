@@ -1,0 +1,829 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast, ToastContainer } from '../../components/Toast';
+import AdminLayout from '../../components/admin/AdminLayout';
+
+interface LeaveBalance {
+  staffId: string;
+  staffName: string;
+  year: number;
+  annualLeaveEntitlement: number;
+  annualLeaveUsed: number;
+  annualLeaveRemaining: number;
+  sickLeaveEntitlement: number;
+  sickLeaveUsed: number;
+  sickLeaveRemaining: number;
+}
+
+interface LeaveRequest {
+  id: string;
+  staffId: string;
+  staffName: string;
+  leaveType: 'annual' | 'sick' | 'unpaid' | 'compassionate';
+  startDate: string;
+  endDate: string;
+  daysRequested: number;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  approvedBy?: string;
+  approvalDate?: string;
+  notes?: string;
+  createdDate: string;
+  lastModified: string;
+}
+
+interface PublicHoliday {
+  date: string;
+  name: string;
+}
+
+const LeaveManagementDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const { toasts, showToast, removeToast } = useToast();
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'requests' | 'calendar' | 'balances' | 'holidays'>('dashboard');
+
+  // State
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [leaveBalances, setLeaveBalances] = useState<LeaveBalance[]>([]);
+  const [publicHolidays, setPublicHolidays] = useState<PublicHoliday[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().split('-').slice(0, 2).join('-'));
+
+  // New request form
+  const [showNewRequestForm, setShowNewRequestForm] = useState(false);
+  const [selectedStaffId, setSelectedStaffId] = useState('');
+  const [requestForm, setRequestForm] = useState({
+    leaveType: 'annual' as const,
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
+    reason: '',
+  });
+
+  // Demo data
+  useEffect(() => {
+    // Demo leave balances
+    const demoBalances: LeaveBalance[] = [
+      {
+        staffId: 'S001',
+        staffName: 'John Tan',
+        year: 2026,
+        annualLeaveEntitlement: 12,
+        annualLeaveUsed: 3,
+        annualLeaveRemaining: 9,
+        sickLeaveEntitlement: 4,
+        sickLeaveUsed: 1,
+        sickLeaveRemaining: 3,
+      },
+      {
+        staffId: 'S002',
+        staffName: 'Sarah Lim',
+        year: 2026,
+        annualLeaveEntitlement: 12,
+        annualLeaveUsed: 5,
+        annualLeaveRemaining: 7,
+        sickLeaveEntitlement: 4,
+        sickLeaveUsed: 0,
+        sickLeaveRemaining: 4,
+      },
+      {
+        staffId: 'S003',
+        staffName: 'Mike Wong',
+        year: 2026,
+        annualLeaveEntitlement: 12,
+        annualLeaveUsed: 2,
+        annualLeaveRemaining: 10,
+        sickLeaveEntitlement: 4,
+        sickLeaveUsed: 2,
+        sickLeaveRemaining: 2,
+      },
+    ];
+
+    // Demo leave requests
+    const demoRequests: LeaveRequest[] = [
+      {
+        id: 'lr_1',
+        staffId: 'S001',
+        staffName: 'John Tan',
+        leaveType: 'annual',
+        startDate: '2026-07-13',
+        endDate: '2026-07-15',
+        daysRequested: 3,
+        reason: 'Family vacation',
+        status: 'approved',
+        approvedBy: 'Admin',
+        approvalDate: '2026-07-10',
+        createdDate: '2026-07-08',
+        lastModified: '2026-07-10',
+      },
+      {
+        id: 'lr_2',
+        staffId: 'S002',
+        staffName: 'Sarah Lim',
+        leaveType: 'sick',
+        startDate: '2026-07-20',
+        endDate: '2026-07-20',
+        daysRequested: 1,
+        reason: 'Medical appointment',
+        status: 'pending',
+        createdDate: '2026-07-19',
+        lastModified: '2026-07-19',
+      },
+      {
+        id: 'lr_3',
+        staffId: 'S003',
+        staffName: 'Mike Wong',
+        leaveType: 'annual',
+        startDate: '2026-08-01',
+        endDate: '2026-08-05',
+        daysRequested: 5,
+        reason: 'Holiday trip to Japan',
+        status: 'pending',
+        createdDate: '2026-07-15',
+        lastModified: '2026-07-15',
+      },
+    ];
+
+    // Singapore Public Holidays 2026
+    const demoPublicHolidays: PublicHoliday[] = [
+      { date: '2026-01-01', name: 'New Year Day' },
+      { date: '2026-01-29', name: 'Chinese New Year' },
+      { date: '2026-01-30', name: 'Chinese New Year (Replacement)' },
+      { date: '2026-04-10', name: 'Good Friday' },
+      { date: '2026-05-01', name: 'Labour Day' },
+      { date: '2026-05-24', name: 'Vesak Day' },
+      { date: '2026-07-07', name: 'Hari Raya Puasa' },
+      { date: '2026-08-09', name: 'National Day' },
+      { date: '2026-09-16', name: 'Malaysia Day' },
+      { date: '2026-10-24', name: 'Deepavali' },
+      { date: '2026-12-25', name: 'Christmas Day' },
+    ];
+
+    setLeaveBalances(demoBalances);
+    setLeaveRequests(demoRequests);
+    setPublicHolidays(demoPublicHolidays);
+    setSelectedStaffId(demoBalances[0]?.staffId || '');
+  }, []);
+
+  // Calculate days between dates
+  const calculateDays = (start: string, end: string): number => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    return Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  };
+
+  // Handle new leave request
+  const handleSubmitLeaveRequest = () => {
+    if (!selectedStaffId || !requestForm.startDate || !requestForm.endDate) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+
+    const staff = leaveBalances.find(s => s.staffId === selectedStaffId);
+    if (!staff) {
+      showToast('Staff member not found', 'error');
+      return;
+    }
+
+    const daysRequested = calculateDays(requestForm.startDate, requestForm.endDate);
+
+    // Check leave balance
+    if (requestForm.leaveType === 'annual' && daysRequested > staff.annualLeaveRemaining) {
+      showToast(`Insufficient annual leave balance. Remaining: ${staff.annualLeaveRemaining} days`, 'error');
+      return;
+    }
+
+    if (requestForm.leaveType === 'sick' && daysRequested > staff.sickLeaveRemaining) {
+      showToast(`Insufficient sick leave balance. Remaining: ${staff.sickLeaveRemaining} days`, 'error');
+      return;
+    }
+
+    const newRequest: LeaveRequest = {
+      id: `lr_${Date.now()}`,
+      staffId: selectedStaffId,
+      staffName: staff.staffName,
+      leaveType: requestForm.leaveType,
+      startDate: requestForm.startDate,
+      endDate: requestForm.endDate,
+      daysRequested,
+      reason: requestForm.reason,
+      status: 'pending',
+      createdDate: new Date().toISOString(),
+      lastModified: new Date().toISOString(),
+    };
+
+    setLeaveRequests([...leaveRequests, newRequest]);
+    setRequestForm({
+      leaveType: 'annual',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
+      reason: '',
+    });
+    setShowNewRequestForm(false);
+    showToast(`✅ Leave request submitted for ${staff.staffName}`, 'success');
+  };
+
+  // Approve leave request
+  const handleApproveRequest = (requestId: string) => {
+    const request = leaveRequests.find(r => r.id === requestId);
+    if (!request) return;
+
+    // Update leave balances
+    const updatedBalances = leaveBalances.map(balance => {
+      if (balance.staffId === request.staffId && request.leaveType === 'annual') {
+        return {
+          ...balance,
+          annualLeaveUsed: balance.annualLeaveUsed + request.daysRequested,
+          annualLeaveRemaining: balance.annualLeaveRemaining - request.daysRequested,
+        };
+      }
+      if (balance.staffId === request.staffId && request.leaveType === 'sick') {
+        return {
+          ...balance,
+          sickLeaveUsed: balance.sickLeaveUsed + request.daysRequested,
+          sickLeaveRemaining: balance.sickLeaveRemaining - request.daysRequested,
+        };
+      }
+      return balance;
+    });
+
+    // Update request
+    setLeaveRequests(
+      leaveRequests.map(r =>
+        r.id === requestId
+          ? {
+              ...r,
+              status: 'approved' as const,
+              approvedBy: 'Admin',
+              approvalDate: new Date().toISOString().split('T')[0],
+              lastModified: new Date().toISOString(),
+            }
+          : r
+      )
+    );
+
+    setLeaveBalances(updatedBalances);
+    showToast(`✅ Leave request approved for ${request.staffName}`, 'success');
+  };
+
+  // Reject leave request
+  const handleRejectRequest = (requestId: string) => {
+    setLeaveRequests(
+      leaveRequests.map(r =>
+        r.id === requestId
+          ? {
+              ...r,
+              status: 'rejected' as const,
+              lastModified: new Date().toISOString(),
+            }
+          : r
+      )
+    );
+    const request = leaveRequests.find(r => r.id === requestId);
+    showToast(`✅ Leave request rejected for ${request?.staffName}`, 'success');
+  };
+
+  // Get pending requests count
+  const pendingCount = leaveRequests.filter(r => r.status === 'pending').length;
+
+  // Get total used leave days
+  const totalUsedDays = leaveBalances.reduce((sum, b) => sum + b.annualLeaveUsed + b.sickLeaveUsed, 0);
+
+  return (
+    <AdminLayout>
+      <div style={{ padding: '16px', background: '#fff', minHeight: '100vh' }}>
+        <ToastContainer toasts={toasts} onClose={removeToast} />
+
+        {/* Header */}
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#333', margin: 0 }}>
+              🏖️ Leave Management
+            </h1>
+            <button
+              onClick={() => navigate(-1)}
+              style={{
+                fontSize: '20px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#FF6B35',
+                fontWeight: '700',
+              }}
+              title="Go back"
+            >
+              ←
+            </button>
+          </div>
+          <p style={{ fontSize: '14px', color: '#666', margin: '8px 0 0 0' }}>
+            Leave Requests, Approvals, Balances & Calendar
+          </p>
+        </div>
+
+        {/* Compliance Banner */}
+        <div style={{ padding: '12px 16px', background: '#E8F5E9', border: '2px solid #388E3C', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#1B5E20' }}>
+          <strong>🇸🇬 MOM Compliance:</strong> Annual Leave: 12 days/year (no carry-over). Sick Leave: 4 days/year (medical cert after 2 consecutive days). All requests tracked with approval audit trail.
+        </div>
+
+        {/* KPI Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+          <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
+            <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Pending Requests</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#FF6B35' }}>{pendingCount}</div>
+            <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>Awaiting approval</div>
+          </div>
+          <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
+            <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Total Leave Taken</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#4CAF50' }}>{totalUsedDays} days</div>
+            <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>Year to date</div>
+          </div>
+          <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
+            <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Total Available</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#2196F3' }}>
+              {leaveBalances.reduce((sum, b) => sum + b.annualLeaveEntitlement + b.sickLeaveEntitlement, 0)} days
+            </div>
+            <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>For all staff</div>
+          </div>
+          <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
+            <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Public Holidays (SG)</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#9C27B0' }}>{publicHolidays.length}</div>
+            <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>In 2026</div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: '2px solid #FFD9B3' }}>
+          {(['dashboard', 'requests', 'calendar', 'balances', 'holidays'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                padding: '12px 16px',
+                background: activeTab === tab ? '#FFD9B3' : 'transparent',
+                color: activeTab === tab ? '#333' : '#999',
+                border: 'none',
+                borderBottom: activeTab === tab ? '3px solid #FF6B35' : 'none',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '14px',
+                transition: 'all 0.2s',
+              }}
+            >
+              {tab === 'dashboard' && '📊 Dashboard'}
+              {tab === 'requests' && '📝 Requests'}
+              {tab === 'calendar' && '📅 Calendar'}
+              {tab === 'balances' && '⚖️ Balances'}
+              {tab === 'holidays' && '🎉 Holidays'}
+            </button>
+          ))}
+        </div>
+
+        {/* DASHBOARD TAB */}
+        {activeTab === 'dashboard' && (
+          <div>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: '#333' }}>Team Leave Overview</h3>
+
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {leaveBalances.map(balance => (
+                <div key={balance.staffId} style={{ padding: '16px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '8px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '12px' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', fontSize: '14px', color: '#333', marginBottom: '4px' }}>
+                        {balance.staffName}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#666' }}>({balance.staffId})</div>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>Annual Leave</div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div style={{ flex: 1, height: '8px', background: '#FFD9B3', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div
+                            style={{
+                              height: '100%',
+                              background: '#4CAF50',
+                              width: `${(balance.annualLeaveRemaining / balance.annualLeaveEntitlement) * 100}%`,
+                            }}
+                          />
+                        </div>
+                        <div style={{ fontSize: '11px', fontWeight: '600', color: '#333', minWidth: '50px', textAlign: 'right' }}>
+                          {balance.annualLeaveRemaining}/{balance.annualLeaveEntitlement}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>Sick Leave</div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div style={{ flex: 1, height: '8px', background: '#FFD9B3', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div
+                            style={{
+                              height: '100%',
+                              background: '#2196F3',
+                              width: `${(balance.sickLeaveRemaining / balance.sickLeaveEntitlement) * 100}%`,
+                            }}
+                          />
+                        </div>
+                        <div style={{ fontSize: '11px', fontWeight: '600', color: '#333', minWidth: '50px', textAlign: 'right' }}>
+                          {balance.sickLeaveRemaining}/{balance.sickLeaveEntitlement}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ fontSize: '11px', color: '#999', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <div>AL Used: {balance.annualLeaveUsed} days</div>
+                    <div>SL Used: {balance.sickLeaveUsed} days</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* REQUESTS TAB */}
+        {activeTab === 'requests' && (
+          <div>
+            <button
+              onClick={() => setShowNewRequestForm(!showNewRequestForm)}
+              style={{
+                padding: '10px 16px',
+                background: '#FF6B35',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                marginBottom: '16px',
+                fontSize: '14px',
+              }}
+            >
+              + New Leave Request
+            </button>
+
+            {showNewRequestForm && (
+              <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3', marginBottom: '16px' }}>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#333' }}>Submit Leave Request</h3>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#666', display: 'block', marginBottom: '4px' }}>
+                      Staff Member
+                    </label>
+                    <select
+                      value={selectedStaffId}
+                      onChange={(e) => setSelectedStaffId(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #FFD9B3',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      {leaveBalances.map(b => (
+                        <option key={b.staffId} value={b.staffId}>
+                          {b.staffName} ({b.staffId})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#666', display: 'block', marginBottom: '4px' }}>
+                      Leave Type
+                    </label>
+                    <select
+                      value={requestForm.leaveType}
+                      onChange={(e) => setRequestForm({ ...requestForm, leaveType: e.target.value as any })}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #FFD9B3',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      <option value="annual">Annual Leave (12 days/year)</option>
+                      <option value="sick">Sick Leave (4 days/year)</option>
+                      <option value="unpaid">Unpaid Leave</option>
+                      <option value="compassionate">Compassionate Leave</option>
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#666', display: 'block', marginBottom: '4px' }}>
+                        Start Date
+                      </label>
+                      <input
+                        type="date"
+                        value={requestForm.startDate}
+                        onChange={(e) => setRequestForm({ ...requestForm, startDate: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          border: '2px solid #FFD9B3',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#666', display: 'block', marginBottom: '4px' }}>
+                        End Date
+                      </label>
+                      <input
+                        type="date"
+                        value={requestForm.endDate}
+                        onChange={(e) => setRequestForm({ ...requestForm, endDate: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          border: '2px solid #FFD9B3',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {requestForm.startDate && requestForm.endDate && (
+                    <div style={{ padding: '10px 12px', background: '#E8F5E9', borderRadius: '6px', fontSize: '12px', color: '#2E7D32', fontWeight: '600' }}>
+                      📅 {calculateDays(requestForm.startDate, requestForm.endDate)} day(s)
+                    </div>
+                  )}
+
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#666', display: 'block', marginBottom: '4px' }}>
+                      Reason
+                    </label>
+                    <textarea
+                      placeholder="e.g., Family vacation, Medical appointment..."
+                      value={requestForm.reason}
+                      onChange={(e) => setRequestForm({ ...requestForm, reason: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #FFD9B3',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        minHeight: '60px',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                      onClick={handleSubmitLeaveRequest}
+                      style={{
+                        flex: 1,
+                        padding: '10px',
+                        background: '#4CAF50',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                      }}
+                    >
+                      Submit Request
+                    </button>
+                    <button
+                      onClick={() => setShowNewRequestForm(false)}
+                      style={{
+                        flex: 1,
+                        padding: '10px',
+                        background: '#f5f5f5',
+                        color: '#333',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Leave Requests List */}
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: '#333' }}>All Leave Requests</h3>
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {leaveRequests.map(request => (
+                <div key={request.id} style={{ padding: '16px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '8px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '16px', alignItems: 'start', marginBottom: '12px' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', fontSize: '14px', color: '#333', marginBottom: '4px' }}>
+                        {request.staffName} - {request.leaveType.toUpperCase()}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                        {request.reason}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#999', display: 'grid', gap: '2px' }}>
+                        <div>📅 {new Date(request.startDate).toLocaleDateString('en-SG')} - {new Date(request.endDate).toLocaleDateString('en-SG')}</div>
+                        <div>📊 {request.daysRequested} day(s)</div>
+                        {request.approvalDate && <div>✓ Approved: {new Date(request.approvalDate).toLocaleDateString('en-SG')}</div>}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{
+                        display: 'inline-block',
+                        padding: '6px 10px',
+                        borderRadius: '3px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        background:
+                          request.status === 'approved' ? '#E8F5E9' : request.status === 'pending' ? '#E3F2FD' : '#FFEBEE',
+                        color:
+                          request.status === 'approved' ? '#2E7D32' : request.status === 'pending' ? '#0D47A1' : '#C62828',
+                        marginBottom: '8px',
+                      }}>
+                        {request.status === 'approved' && '✓ APPROVED'}
+                        {request.status === 'pending' && '⏳ PENDING'}
+                        {request.status === 'rejected' && '✗ REJECTED'}
+                        {request.status === 'cancelled' && '⚪ CANCELLED'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {request.status === 'pending' && (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => handleApproveRequest(request.id)}
+                        style={{
+                          flex: 1,
+                          padding: '6px 12px',
+                          background: '#4CAF50',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                        }}
+                      >
+                        ✓ Approve
+                      </button>
+                      <button
+                        onClick={() => handleRejectRequest(request.id)}
+                        style={{
+                          flex: 1,
+                          padding: '6px 12px',
+                          background: '#F44336',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                        }}
+                      >
+                        ✗ Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* CALENDAR TAB */}
+        {activeTab === 'calendar' && (
+          <div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#666', display: 'block', marginBottom: '8px' }}>
+                Select Month
+              </label>
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                style={{
+                  maxWidth: '200px',
+                  padding: '10px 12px',
+                  border: '2px solid #FFD9B3',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                }}
+              />
+            </div>
+
+            <div style={{ padding: '16px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '8px' }}>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: '#333' }}>
+                {new Date(`${selectedMonth}-01`).toLocaleDateString('en-SG', { month: 'long', year: 'numeric' })}
+              </h3>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', fontSize: '12px' }}>
+                {/* Day headers */}
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} style={{ fontWeight: '700', textAlign: 'center', color: '#666', paddingBottom: '8px' }}>
+                    {day}
+                  </div>
+                ))}
+
+                {/* Calendar grid (simplified - just showing structure) */}
+                {Array.from({ length: 35 }).map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      padding: '8px',
+                      background: '#F5F5F5',
+                      borderRadius: '4px',
+                      minHeight: '40px',
+                      textAlign: 'center',
+                      fontSize: '11px',
+                      color: '#999',
+                    }}
+                  >
+                    {i + 1 <= 31 ? i + 1 : ''}
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ marginTop: '16px', fontSize: '12px', color: '#666', display: 'grid', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div style={{ width: '12px', height: '12px', background: '#4CAF50', borderRadius: '2px' }} />
+                  <span>Approved Leave</span>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div style={{ width: '12px', height: '12px', background: '#9C27B0', borderRadius: '2px' }} />
+                  <span>Public Holiday</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BALANCES TAB */}
+        {activeTab === 'balances' && (
+          <div>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: '#333' }}>Leave Balances (2026)</h3>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ background: '#FFF8F5', borderBottom: '2px solid #FFD9B3' }}>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#333' }}>Staff</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#333' }}>AL Entl.</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#333' }}>AL Used</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#333' }}>AL Remaining</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#333' }}>SL Entl.</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#333' }}>SL Used</th>
+                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#333' }}>SL Remaining</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leaveBalances.map(balance => (
+                    <tr key={balance.staffId} style={{ borderBottom: '1px solid #FFD9B3' }}>
+                      <td style={{ padding: '12px', fontWeight: '600', color: '#333' }}>{balance.staffName}</td>
+                      <td style={{ padding: '12px', textAlign: 'center' }}>{balance.annualLeaveEntitlement}</td>
+                      <td style={{ padding: '12px', textAlign: 'center', color: '#666' }}>{balance.annualLeaveUsed}</td>
+                      <td style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#4CAF50' }}>
+                        {balance.annualLeaveRemaining}
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'center' }}>{balance.sickLeaveEntitlement}</td>
+                      <td style={{ padding: '12px', textAlign: 'center', color: '#666' }}>{balance.sickLeaveUsed}</td>
+                      <td style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#2196F3' }}>
+                        {balance.sickLeaveRemaining}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* HOLIDAYS TAB */}
+        {activeTab === 'holidays' && (
+          <div>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: '#333' }}>Singapore Public Holidays 2026</h3>
+            <div style={{ display: 'grid', gap: '8px' }}>
+              {publicHolidays.map(holiday => (
+                <div key={holiday.date} style={{ padding: '12px 16px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontWeight: '600', fontSize: '13px', color: '#333' }}>
+                    {holiday.name}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666' }}>
+                    {new Date(holiday.date).toLocaleDateString('en-SG', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </AdminLayout>
+  );
+};
+
+export default LeaveManagementDashboard;
