@@ -1,13 +1,11 @@
 import { useNotificationToast } from '../context/NotificationContext';
-import { useNavigate } from 'react-router-dom';
 
 export default function NotificationToastContainer() {
   const { toasts, removeToast } = useNotificationToast();
-  const navigate = useNavigate();
 
   const handleAction = (actionUrl?: string, toastId?: string) => {
     if (actionUrl) {
-      navigate(actionUrl);
+      window.location.href = actionUrl;
     }
     if (toastId) {
       removeToast(toastId);
