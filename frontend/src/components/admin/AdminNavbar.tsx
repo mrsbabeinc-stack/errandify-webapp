@@ -52,7 +52,20 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
 
         <div className="navbar-center">
           <div className="breadcrumb">
-            Dashboard → Overview
+            {(() => {
+              const path = location.pathname;
+              if (path === '/admin/dashboard') return 'Home';
+              if (path === '/admin/dashboard/users') return 'Users & Safety';
+              if (path === '/admin/operations/auth-management') return 'Admin Users';
+              if (path === '/admin/operations/user-management') return 'User Management';
+              if (path === '/admin/dashboard/disputes') return 'Disputes (L1/L2/L3)';
+              if (path === '/admin/cases') return 'Cases Management';
+              if (path === '/admin/operations/errand-management') return 'Errand Management';
+              if (path === '/admin/operations/payments') return 'Payments & Refunds';
+              if (path === '/admin/config/audit-compliance') return 'Audit & Compliance';
+              if (path === '/admin/config/alerts-notifications') return 'Alerts & Notifications';
+              return 'Admin';
+            })()}
           </div>
         </div>
 
