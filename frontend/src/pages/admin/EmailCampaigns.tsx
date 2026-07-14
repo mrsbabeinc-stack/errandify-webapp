@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { campaignNotificationService } from '../../utils/campaignNotificationService';
 
 interface Campaign {
   id: string;
@@ -111,6 +112,17 @@ export default function EmailCampaigns() {
     setCampaigns(updated);
     localStorage.setItem('emailCampaigns', JSON.stringify(updated));
 
+    // Send notifications
+    campaignNotificationService.showCampaignCreatedToast();
+
+    const token = localStorage.getItem('token') || '';
+    if (token) {
+      campaignNotificationService.notifyCampaignCreated(newCampaign, token);
+      if (scheduledDate) {
+        campaignNotificationService.notifyScheduledCampaign(newCampaign, token);
+      }
+    }
+
     setName('');
     setSubject('');
     setContent('');
@@ -122,7 +134,7 @@ export default function EmailCampaigns() {
     setImageUrl('');
     setImageAlt('');
 
-    alert('✅ Campaign created!');
+    alert('✅ Campaign created! Notifications sent.');
   };
 
   const handleEditCampaign = (campaign: Campaign) => {
@@ -154,6 +166,8 @@ export default function EmailCampaigns() {
     const updated = campaigns.filter(c => c.id !== campaignId);
     setCampaigns(updated);
     localStorage.setItem('emailCampaigns', JSON.stringify(updated));
+
+    campaignNotificationService.showCampaignDeletedToast();
     alert('✅ Campaign deleted!');
   };
 
