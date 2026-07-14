@@ -76,7 +76,7 @@ import { RegionalPerformanceReport } from './pages/admin/reports/RegionalPerform
 import UsersSafetyPage from './pages/admin/UsersSafety';
 import DisputesPage from './pages/admin/Disputes';
 import OperationsPage from './pages/admin/Operations';
-import DiscountCodesPage from './pages/admin/DiscountCodes';
+import DiscountCodesPage from './pages/admin/DiscountCodesPage';
 import AdminErrandifyPointsPage from './pages/admin/ErrandifyPoints';
 import EmailPage from './pages/admin/Email';
 import GrantPointsPage from './pages/admin/GrantPoints';
