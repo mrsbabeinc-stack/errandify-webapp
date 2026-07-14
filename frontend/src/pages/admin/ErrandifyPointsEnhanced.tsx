@@ -23,7 +23,19 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
     pointsIssuedToday: 340,
     pointsIssuedThisWeek: 2150,
     pointsIssuedThisMonth: 8950,
-    redemptionRate: 43.5
+    redemptionRate: 43.5,
+    // Financial metrics (1 EP = SGD $0.05)
+    epToSgd: 0.05,
+    costTodayIssued: 340 * 0.05, // $17
+    costWeekIssued: 2150 * 0.05, // $107.50
+    costMonthIssued: 8950 * 0.05, // $447.50
+    costTotalIssued: 12450 * 0.05, // $622.50
+    spentTodayRedeemed: 1240 * 0.05, // $62
+    spentWeekRedeemed: 8450 * 0.05, // $422.50
+    spentMonthRedeemed: 28950 * 0.05, // $1,447.50
+    spentTotalRedeemed: 108450 * 0.05, // $5,422.50
+    netSpendToday: -45, // $45 net spending today
+    netSpendMonth: -1000 // $1000 net spending this month
   });
 
   // Analytics data
@@ -83,49 +95,133 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
           </button>
         </div>
 
-        {/* KPI Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr 1fr', gap: '8px' }}>
-          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Today Issued</div>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: '#FF6B35' }}>{stats.pointsIssuedToday}</div>
+        {/* Financial KPI Cards - Top Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+          <div style={{ background: '#FFF3E0', padding: '10px', borderRadius: '6px', border: '2px solid #FF6B35' }}>
+            <div style={{ fontSize: '10px', color: '#E65100', fontWeight: '600', marginBottom: '2px' }}>💸 Cost Issued Today</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#FF6B35' }}>SGD ${stats.costTodayIssued.toFixed(2)}</div>
+            <div style={{ fontSize: '9px', color: '#E65100', marginTop: '2px' }}>({stats.pointsIssuedToday} EP @ ${stats.epToSgd}/EP)</div>
           </div>
-          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>This Week</div>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: '#666' }}>{stats.pointsIssuedThisWeek}</div>
+          <div style={{ background: '#FFF3E0', padding: '10px', borderRadius: '6px', border: '2px solid #FF6B35' }}>
+            <div style={{ fontSize: '10px', color: '#E65100', fontWeight: '600', marginBottom: '2px' }}>💳 Spent/Redeemed Today</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#2196F3' }}>SGD ${stats.spentTodayRedeemed.toFixed(2)}</div>
+            <div style={{ fontSize: '9px', color: '#0D47A1', marginTop: '2px' }}>User redemptions</div>
           </div>
-          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>This Month</div>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: '#666' }}>{stats.pointsIssuedThisMonth}</div>
-          </div>
-          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Total Points</div>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: '#666' }}>{stats.totalPoints.toLocaleString()}</div>
-          </div>
-          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Active Users</div>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: '#666' }}>{stats.activeUsers.toLocaleString()}</div>
-          </div>
-          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Redemption Rate</div>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: '#4CAF50' }}>{stats.redemptionRate}%</div>
+          <div style={{ background: '#E8F5E9', padding: '10px', borderRadius: '6px', border: '2px solid #4CAF50' }}>
+            <div style={{ fontSize: '10px', color: '#2E7D32', fontWeight: '600', marginBottom: '2px' }}>📊 Net Spend Today</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#4CAF50' }}>SGD -${Math.abs(stats.netSpendToday).toFixed(2)}</div>
+            <div style={{ fontSize: '9px', color: '#2E7D32', marginTop: '2px' }}>Profit (more spent than issued)</div>
           </div>
         </div>
 
-        {/* Charts Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '12px', flex: 1, minHeight: 0 }}>
+        {/* Volume KPI Cards - Middle Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
+          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>This Week Issued</div>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: '#FF6B35' }}>{stats.pointsIssuedThisWeek} EP</div>
+            <div style={{ fontSize: '9px', color: '#999' }}>SGD ${stats.costWeekIssued.toFixed(2)}</div>
+          </div>
+          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>This Month Issued</div>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: '#FF6B35' }}>{stats.pointsIssuedThisMonth} EP</div>
+            <div style={{ fontSize: '9px', color: '#999' }}>SGD ${stats.costMonthIssued.toFixed(2)}</div>
+          </div>
+          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Total Issued (All Time)</div>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: '#FF6B35' }}>{stats.totalPoints.toLocaleString()} EP</div>
+            <div style={{ fontSize: '9px', color: '#999' }}>SGD ${stats.costTotalIssued.toFixed(2)}</div>
+          </div>
+          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Redemption Rate</div>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: '#4CAF50' }}>{stats.redemptionRate}%</div>
+            <div style={{ fontSize: '9px', color: '#999' }}>${stats.spentTotalRedeemed.toFixed(2)} redeemed</div>
+          </div>
+        </div>
+
+        {/* Financial Breakdown Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>📈 Issuance Cost Breakdown</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '6px', borderBottom: '1px solid #f5f5f5' }}>
+                <span style={{ fontSize: '11px', color: '#666' }}>Today</span>
+                <span style={{ fontSize: '11px', fontWeight: '600', color: '#FF6B35' }}>SGD ${stats.costTodayIssued.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '6px', borderBottom: '1px solid #f5f5f5' }}>
+                <span style={{ fontSize: '11px', color: '#666' }}>This Week</span>
+                <span style={{ fontSize: '11px', fontWeight: '600', color: '#FF6B35' }}>SGD ${stats.costWeekIssued.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '6px', borderBottom: '1px solid #f5f5f5' }}>
+                <span style={{ fontSize: '11px', color: '#666' }}>This Month</span>
+                <span style={{ fontSize: '11px', fontWeight: '600', color: '#FF6B35' }}>SGD ${stats.costMonthIssued.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '6px', borderTop: '2px solid #FF6B35' }}>
+                <span style={{ fontSize: '11px', fontWeight: '600', color: '#333' }}>All Time Total</span>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: '#FF6B35' }}>SGD ${stats.costTotalIssued.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>💰 Redemption Spending Breakdown</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '6px', borderBottom: '1px solid #f5f5f5' }}>
+                <span style={{ fontSize: '11px', color: '#666' }}>Today</span>
+                <span style={{ fontSize: '11px', fontWeight: '600', color: '#2196F3' }}>SGD ${stats.spentTodayRedeemed.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '6px', borderBottom: '1px solid #f5f5f5' }}>
+                <span style={{ fontSize: '11px', color: '#666' }}>This Week</span>
+                <span style={{ fontSize: '11px', fontWeight: '600', color: '#2196F3' }}>SGD ${stats.spentWeekRedeemed.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '6px', borderBottom: '1px solid #f5f5f5' }}>
+                <span style={{ fontSize: '11px', color: '#666' }}>This Month</span>
+                <span style={{ fontSize: '11px', fontWeight: '600', color: '#2196F3' }}>SGD ${stats.spentMonthRedeemed.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '6px', borderTop: '2px solid #2196F3' }}>
+                <span style={{ fontSize: '11px', fontWeight: '600', color: '#333' }}>All Time Total</span>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: '#2196F3' }}>SGD ${stats.spentTotalRedeemed.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Charts Row 1: Issuance & Spending Charts */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', flex: 1, minHeight: 0 }}>
           {/* Daily Issuance Chart */}
           <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>📈 Daily Points Issuance (7-day trend)</h3>
+            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>📈 Daily Points Issued (7-day)</h3>
             <Chart3DBar
               data={dailyData.map((d, idx) => ({
                 label: d.day,
                 value: d.issued,
                 color: ['#FF6B35', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#E91E63', '#00BCD4'][idx]
               }))}
-              height={200}
+              height={180}
             />
+            <div style={{ fontSize: '9px', color: '#666', marginTop: '8px', textAlign: 'center' }}>
+              SGD ${dailyData.reduce((sum, d) => sum + d.issued, 0) * 0.05} total this week
+            </div>
           </div>
 
+          {/* Daily Spending Chart */}
+          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto' }}>
+            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>💳 Daily Points Redeemed (7-day)</h3>
+            <Chart3DBar
+              data={dailyData.map((d, idx) => ({
+                label: d.day,
+                value: d.redeemed,
+                color: ['#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#E91E63', '#00BCD4', '#FF6B35'][idx]
+              }))}
+              height={180}
+            />
+            <div style={{ fontSize: '9px', color: '#666', marginTop: '8px', textAlign: 'center' }}>
+              SGD ${dailyData.reduce((sum, d) => sum + d.redeemed, 0) * 0.05} total this week
+            </div>
+          </div>
+        </div>
+
+        {/* Charts Row 2: Issuance by Type & Peak Hours */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', flex: 1, minHeight: 0 }}>
           {/* Issuance by Type */}
           <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto' }}>
             <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>🎯 Issuance by Type</h3>
@@ -133,7 +229,7 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
               <div key={item.type} style={{ marginBottom: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                   <span style={{ fontSize: '11px', color: '#333', fontWeight: '500' }}>{item.type}</span>
-                  <span style={{ fontSize: '11px', fontWeight: '600', color: '#FF6B35' }}>{item.points} ({item.percentage}%)</span>
+                  <span style={{ fontSize: '11px', fontWeight: '600', color: '#FF6B35' }}>{item.points} EP (${(item.points * 0.05).toFixed(2)})</span>
                 </div>
                 <div style={{ height: '8px', background: '#f5f5f5', borderRadius: '4px', overflow: 'hidden' }}>
                   <div style={{ height: '100%', background: '#FF6B35', width: `${item.percentage}%` }} />
@@ -141,11 +237,8 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
 
-        {/* Peak Hours & Recent Transactions Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', flex: 1, minHeight: 0, marginBottom: '12px' }}>
-          {/* Peak Hours */}
+          {/* Peak Engagement Hours */}
           <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto' }}>
             <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>⏰ Peak Issuance Hours</h3>
             {peakHours.map(item => (
@@ -154,25 +247,30 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
                 <div style={{ flex: 1, height: '6px', background: '#f5f5f5', borderRadius: '3px', overflow: 'hidden' }}>
                   <div style={{ height: '100%', background: '#2196F3', width: `${(item.points / 420) * 100}%` }} />
                 </div>
-                <span style={{ fontSize: '10px', color: '#666', minWidth: '25px', textAlign: 'right' }}>{item.points}</span>
+                <span style={{ fontSize: '10px', color: '#666', minWidth: '35px', textAlign: 'right', fontWeight: '500' }}>{item.points} EP</span>
               </div>
             ))}
           </div>
+        </div>
 
-          {/* Recent Transactions */}
-          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>📋 Recent Transactions</h3>
+        {/* Recent Transactions Row */}
+        <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto', flex: 1, minHeight: 0, marginBottom: '12px' }}>
+          <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>📋 Recent Transactions</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
             {transactions.slice(0, 5).map(t => (
-              <div key={t.id} style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #f5f5f5' }}>
+              <div key={t.id} style={{ background: '#f9f9f9', padding: '8px', borderRadius: '4px', border: '1px solid #f0f0f0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                   <span style={{ fontSize: '11px', fontWeight: '600', color: '#333' }}>{t.user}</span>
                   <span style={{ fontSize: '11px', fontWeight: '600', color: t.points > 0 ? '#4CAF50' : '#F44336' }}>
-                    {t.points > 0 ? '+' : ''}{t.points}
+                    {t.points > 0 ? '+' : ''}{t.points} EP
                   </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                   <span style={{ fontSize: '10px', color: '#666' }}>{t.action}</span>
                   <span style={{ fontSize: '10px', color: '#999' }}>{t.date}</span>
+                </div>
+                <div style={{ fontSize: '9px', color: '#2196F3', fontWeight: '600', paddingTop: '4px', borderTop: '1px solid #e0e0e0' }}>
+                  Balance: {t.balance} EP
                 </div>
               </div>
             ))}
@@ -195,20 +293,20 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
               bias="Point distribution fair across all user segments. No demographic bias detected in issuance patterns."
               findings={[
                 {
-                  title: 'Peak Engagement Window',
-                  description: '6pm shows highest point issuance (420 EP/hour). Evening users most active in completing tasks.'
+                  title: 'Financial Health: Profitable Rewards Program',
+                  description: 'SGD $622.50 issued vs SGD $5,422.50 redeemed = 8.7x return. Points drive user engagement while maintaining profitability.'
                 },
                 {
-                  title: 'Primary Reward Driver',
-                  description: 'Task completion generates 58% of all points (5,240 EP). Core mechanic working as intended.'
+                  title: 'Peak Engagement & Spending Window',
+                  description: '6pm shows highest issuance (420 EP/hour = SGD $21/hour). This peak correlates with highest user activity and redemptions.'
                 },
                 {
-                  title: 'Strong Redemption',
-                  description: '43.5% redemption rate exceeds industry average (30-35%). Users value the rewards program.'
+                  title: 'Task Completion ROI',
+                  description: 'Task completion is primary driver (58% of issuance, SGD $311.25 cost). Generates highest user engagement and retention.'
                 },
                 {
-                  title: 'User Engagement Multiplier',
-                  description: 'Referral & streak bonuses add 38% to total issuance. Secondary incentives effective.'
+                  title: 'Strong Redemption Economics',
+                  description: '43.5% redemption rate (SGD $2,359.71 redeemed this month) exceeds industry average. Users value rewards, improving stickiness.'
                 }
               ]}
               relatedLinks={[
