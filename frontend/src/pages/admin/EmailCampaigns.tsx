@@ -196,7 +196,9 @@ export default function EmailCampaigns() {
       };
 
       for (const segment of segments) {
-        const prompt = `Create an email for ${segmentDescriptions[segment]}. Campaign: ${aiPrompt}\n\nRespond with JSON: {"subject":"...", "content":"...", "template":"promotional"|"announcement"|"reminder"|"transactional"}`;
+        const brandVoice = `Brand: Errandify - a warm, engaging, happy, and community-focused (kampung) service that brings neighbors together to help each other.`;
+        const segmentContext = segmentDescriptions[segment];
+        const prompt = `${brandVoice}\n\nGenerate a warm, engaging email for: ${segmentContext}\n\nCampaign: ${aiPrompt}\n\nRequirements:\n- Warm and friendly tone, like talking to a neighbor\n- Engaging and celebratory language\n- Emphasize community and mutual help (kampung spirit)\n- Use conversational language, avoid corporate speak\n- Include emoji if appropriate\n\nRespond ONLY with valid JSON (no markdown): {"subject":"...", "content":"...", "template":"promotional"|"announcement"|"reminder"|"transactional"}`;
 
         const response = await fetch('https://api.anthropic.com/messages', {
           method: 'POST',
@@ -207,7 +209,7 @@ export default function EmailCampaigns() {
           },
           body: JSON.stringify({
             model: 'claude-opus',
-            max_tokens: 500,
+            max_tokens: 600,
             messages: [{ role: 'user', content: prompt }]
           })
         }).catch(() => null);
@@ -223,26 +225,66 @@ export default function EmailCampaigns() {
             template: parsed.template || 'promotional'
           });
         } else {
+          const templateVariants = {
+            'all-users': {
+              subject: '👋 Hey! We\'re so glad you\'re here - join our Errandify kampung today!',
+              content: `We're all about helping each other out - just like neighbors do. Whether you need help or want to earn by helping others, you're in the right place! ${aiPrompt}`,
+              template: 'promotional' as const
+            },
+            'doers': {
+              subject: '💪 Ready to help neighbors and earn? Let\'s make a difference together!',
+              content: `As part of our kampung, your skills matter. Help neighbors with tasks and earn rewards. ${aiPrompt} Join us in building a community where everyone looks out for each other!`,
+              template: 'promotional' as const
+            },
+            'askers': {
+              subject: '🤝 Neighbors are ready to help - let us ease your load!',
+              content: `Life\'s busy! Our friendly helpers are ready to support you. From errands to tasks, we\'ve got your back. ${aiPrompt} Because in Errandify, we\'re all in this together!`,
+              template: 'promotional' as const
+            },
+            'vip': {
+              subject: '🌟 Exclusive: Premium perks for our VIP neighbors!',
+              content: `You\'re a valued member of our kampung! As a VIP, enjoy special treatment. ${aiPrompt} Thank you for being part of our warm and caring community!`,
+              template: 'promotional' as const
+            }
+          };
+          const template = templateVariants[segment];
           variants.push({
             segment,
-            subject: `${aiPrompt} - For ${segment.replace('-', ' ')}`,
-            content: `Personalized message for ${segment.replace('-', ' ')} users about: ${aiPrompt}`,
-            template: 'promotional'
+            subject: template.subject,
+            content: template.content,
+            template: template.template
           });
         }
       }
 
       setAiVariants(variants);
-      alert('✅ Generated AI variants for all segments!');
+      alert('✅ Generated warm, engaging variants for all segments!');
     } catch (error) {
       alert('Error generating variants. Using template variants.');
       const segments: Array<'all-users' | 'doers' | 'askers' | 'vip'> = ['all-users', 'doers', 'askers', 'vip'];
-      const variants = segments.map(segment => ({
-        segment,
-        subject: `${aiPrompt} - For ${segment.replace('-', ' ')}`,
-        content: `Personalized message for ${segment.replace('-', ' ')} users.`,
-        template: 'promotional' as const
-      }));
+      const templateVariants = {
+        'all-users': {
+          subject: '👋 Hey! We\'re so glad you\'re here - join our Errandify kampung!',
+          content: `We're all about helping each other out, just like neighbors do. ${aiPrompt}`,
+          template: 'promotional' as const
+        },
+        'doers': {
+          subject: '💪 Ready to help neighbors and earn? Let\'s make a difference!',
+          content: `As part of our kampung, your skills matter. Help neighbors and earn rewards. ${aiPrompt}`,
+          template: 'promotional' as const
+        },
+        'askers': {
+          subject: '🤝 Neighbors are ready to help - let us ease your load!',
+          content: `Our friendly helpers are ready to support you. ${aiPrompt}`,
+          template: 'promotional' as const
+        },
+        'vip': {
+          subject: '🌟 Exclusive: Premium perks for our VIP neighbors!',
+          content: `You're a valued member of our kampung! Enjoy special treatment. ${aiPrompt}`,
+          template: 'promotional' as const
+        }
+      };
+      const variants = segments.map(segment => templateVariants[segment]);
       setAiVariants(variants);
     } finally {
       setAiLoading(false);
@@ -330,10 +372,13 @@ export default function EmailCampaigns() {
       {activeTab === 'ai-assist' && (
         <div style={{ marginBottom: '24px', padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
-            🤖 AI Campaign Generator - Segment-Optimized Variants
+            🤖 AI Campaign Generator - Errandify Brand Voice
           </h3>
-          <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>
-            Describe your campaign and AI will create optimized versions for each user segment (All Users, Doers, Askers, VIP)
+          <p style={{ fontSize: '13px', color: '#666', marginBottom: '6px' }}>
+            <strong>Describe your campaign</strong> and AI will create <strong>warm, engaging, and community-focused</strong> versions for each segment
+          </p>
+          <p style={{ fontSize: '12px', color: '#999', marginBottom: '12px' }}>
+            📍 Brand voice: Warm, engaging, happy, and kampung (community-centered) • Tailored for All Users, Doers, Askers, VIP
           </p>
           <div style={{ display: 'grid', gap: '12px' }}>
             <textarea
