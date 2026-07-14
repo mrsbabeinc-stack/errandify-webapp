@@ -23,6 +23,9 @@ export default function EmailCampaigns() {
   const [newCampaignName, setNewCampaignName] = useState('');
   const [newCampaignSubject, setNewCampaignSubject] = useState('');
   const [newCampaignRecipients, setNewCampaignRecipients] = useState('all-users');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editSubject, setEditSubject] = useState('');
 
   useEffect(() => {
     const saved = localStorage.getItem('emailCampaigns');
@@ -69,7 +72,10 @@ export default function EmailCampaigns() {
   }, []);
 
   const handleCreateCampaign = () => {
-    if (!newCampaignName.trim() || !newCampaignSubject.trim()) return;
+    if (!newCampaignName.trim() || !newCampaignSubject.trim()) {
+      showToast('Please fill in campaign name and subject', 'error');
+      return;
+    }
 
     const newCampaign: Campaign = {
       id: `c_${Date.now()}`,
@@ -87,6 +93,37 @@ export default function EmailCampaigns() {
     localStorage.setItem('emailCampaigns', JSON.stringify(updated));
     setNewCampaignName('');
     setNewCampaignSubject('');
+    showToast('✅ Campaign created successfully!', 'success');
+  };
+
+  const handleEditCampaign = (campaign: Campaign) => {
+    setEditingId(campaign.id);
+    setEditName(campaign.name);
+    setEditSubject(campaign.subject);
+  };
+
+  const handleSaveEdit = (campaignId: string) => {
+    if (!editName.trim() || !editSubject.trim()) {
+      showToast('Please fill in name and subject', 'error');
+      return;
+    }
+
+    const updated = campaigns.map(c =>
+      c.id === campaignId
+        ? { ...c, name: editName, subject: editSubject }
+        : c
+    );
+    setCampaigns(updated);
+    localStorage.setItem('emailCampaigns', JSON.stringify(updated));
+    setEditingId(null);
+    showToast('✅ Campaign updated successfully!', 'success');
+  };
+
+  const handleDeleteCampaign = (campaignId: string) => {
+    const updated = campaigns.filter(c => c.id !== campaignId);
+    setCampaigns(updated);
+    localStorage.setItem('emailCampaigns', JSON.stringify(updated));
+    showToast('✅ Campaign deleted!', 'success');
   };
 
   const statusColors = {
@@ -179,55 +216,141 @@ export default function EmailCampaigns() {
             border: `2px solid ${statusColors[campaign.status]}`,
             borderRadius: '8px',
           }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'start', marginBottom: '12px' }}>
-              <div>
-                <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
-                  {campaign.name}
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
-                  "{campaign.subject}"
+            {editingId === campaign.id ? (
+              // Edit Mode
+              <div style={{ display: 'grid', gap: '12px' }}>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+                  placeholder="Campaign name"
+                />
+                <input
+                  type="text"
+                  value={editSubject}
+                  onChange={(e) => setEditSubject(e.target.value)}
+                  style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+                  placeholder="Email subject"
+                />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <button
+                    onClick={() => handleSaveEdit(campaign.id)}
+                    style={{
+                      padding: '10px',
+                      background: '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ✅ Save
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    style={{
+                      padding: '10px',
+                      background: '#f0f0f0',
+                      color: '#333',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ❌ Cancel
+                  </button>
                 </div>
               </div>
-              <span style={{
-                padding: '6px 10px',
-                background: statusColors[campaign.status],
-                color: 'white',
-                borderRadius: '4px',
-                fontSize: '11px',
-                fontWeight: '600',
-                height: 'fit-content',
-                whiteSpace: 'nowrap',
-              }}>
-                {campaign.status.toUpperCase()}
-              </span>
-            </div>
+            ) : (
+              // Display Mode
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'start', marginBottom: '12px' }}>
+                  <div>
+                    <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
+                      {campaign.name}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>
+                      "{campaign.subject}"
+                    </div>
+                  </div>
+                  <span style={{
+                    padding: '6px 10px',
+                    background: statusColors[campaign.status],
+                    color: 'white',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    height: 'fit-content',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {campaign.status.toUpperCase()}
+                  </span>
+                </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', fontSize: '12px' }}>
-              <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                <div style={{ fontSize: '11px', color: '#999' }}>Recipients</div>
-                <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '16px' }}>
-                  {campaign.recipientCount.toLocaleString()}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', fontSize: '12px', marginBottom: '12px' }}>
+                  <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
+                    <div style={{ fontSize: '11px', color: '#999' }}>Recipients</div>
+                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '16px' }}>
+                      {campaign.recipientCount.toLocaleString()}
+                    </div>
+                  </div>
+                  <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
+                    <div style={{ fontSize: '11px', color: '#999' }}>Open Rate</div>
+                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '16px' }}>
+                      {campaign.openRate}%
+                    </div>
+                  </div>
+                  <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
+                    <div style={{ fontSize: '11px', color: '#999' }}>Click Rate</div>
+                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '16px' }}>
+                      {campaign.clickRate}%
+                    </div>
+                  </div>
+                  <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
+                    <div style={{ fontSize: '11px', color: '#999' }}>Created</div>
+                    <div style={{ fontWeight: '700', color: '#333', fontSize: '13px' }}>
+                      {new Date(campaign.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                <div style={{ fontSize: '11px', color: '#999' }}>Open Rate</div>
-                <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '16px' }}>
-                  {campaign.openRate}%
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <button
+                    onClick={() => handleEditCampaign(campaign)}
+                    style={{
+                      padding: '8px',
+                      background: '#2196F3',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontSize: '12px'
+                    }}
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteCampaign(campaign.id)}
+                    style={{
+                      padding: '8px',
+                      background: '#F44336',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontSize: '12px'
+                    }}
+                  >
+                    🗑️ Delete
+                  </button>
                 </div>
-              </div>
-              <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                <div style={{ fontSize: '11px', color: '#999' }}>Click Rate</div>
-                <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '16px' }}>
-                  {campaign.clickRate}%
-                </div>
-              </div>
-              <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                <div style={{ fontSize: '11px', color: '#999' }}>Created</div>
-                <div style={{ fontWeight: '700', color: '#333', fontSize: '13px' }}>
-                  {new Date(campaign.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         ))}
       </div>
