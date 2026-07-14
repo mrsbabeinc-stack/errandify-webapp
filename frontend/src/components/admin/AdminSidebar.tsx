@@ -113,6 +113,7 @@ const menuItems: MenuItem[] = [
     icon: '💼',
     children: [
       { id: 'rbac', label: 'Access Control', icon: '🔐', path: '/admin/rbac' },
+      { id: 'staff-salary', label: 'Staff Salary & Benefits', icon: '💰', path: '/admin/staff-salary-benefits' },
       { id: 'integration', label: 'Integration Dashboard', icon: '📊', path: '/admin/accounts-hr-integration' },
       { id: 'accounts', label: 'Accounts', icon: '💰', path: '/admin/accounts' },
       { id: 'recruitment', label: 'Recruitment & Hiring', icon: '🎯', path: '/admin/recruitment' },
