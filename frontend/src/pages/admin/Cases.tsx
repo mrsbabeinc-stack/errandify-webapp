@@ -825,139 +825,365 @@ export const CasesPage: React.FC = () => {
                     </ul>
                   </div>
 
-                  {/* Unified Decision & Fee Assignment Cards */}
+                  {/* Resolution Decision - Unified Cards with Tips */}
                   <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '10px', color: '#333' }}>
-                      Decision & Fee Assignment (Select One)
-                    </label>
-
-                    {/* Decision + Fee Cards - Each Shows Both */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#333' }}>
+                        Resolution Decision
+                      </label>
+                      <div style={{ fontSize: '10px', background: '#fffbeb', padding: '4px 8px', borderRadius: '4px', color: '#92400e', fontWeight: '500' }}>
+                        💡 Select one decision below. Amounts and fees will update automatically.
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px' }}>
                       {[
-                        {
-                          key: 'full',
-                          label: 'Full Payment',
-                          color: '#10b981',
-                          feeDisplay: (amount: number) => `Gross: $${amount.toFixed(2)} | Platform: -$${(amount*0.20).toFixed(2)} | Stripe: -$${(amount*0.03).toFixed(2)} = $${(amount*0.77).toFixed(2)}`
-                        },
-                        {
-                          key: 'partial',
-                          label: 'Split 60/40',
-                          color: '#f59e0b',
-                          feeDisplay: (amount: number) => `Doer 60%: $${(amount*0.60).toFixed(2)} - fees = $${((amount*0.60)*0.77).toFixed(2)} | Asker 40%: $${(amount*0.40).toFixed(2)} refund`
-                        },
-                        {
-                          key: 'refund',
-                          label: 'Full Refund',
-                          color: '#3b82f6',
-                          feeDisplay: (amount: number) => `Asker refund: $${amount.toFixed(2)} | Doer: $0 | No Stripe fee (escrow release)`
-                        },
-                        {
-                          key: 'escalate',
-                          label: 'Escalate L3',
-                          color: '#6366f1',
-                          feeDisplay: () => `No decision yet. Senior admin review required.`
-                        },
+                        { key: 'full', label: 'Full Payment', color: '#10b981', tip: 'Doer receives 100% of errand amount', detail: 'Asker pays all fees' },
+                        { key: 'partial', label: 'Split 60/40', color: '#f59e0b', tip: 'Doer receives 60%, Asker refunded 40%', detail: 'Both parties pay proportional fees' },
+                        { key: 'refund', label: 'Full Refund', color: '#3b82f6', tip: 'Doer receives $0, Asker gets 100% back', detail: 'No Stripe fee (escrow release)' },
+                        { key: 'escalate', label: 'Escalate L3', color: '#6366f1', tip: 'Cannot decide now, needs senior review', detail: 'Case remains open' },
                       ].map(option => (
-                        <button
+                        <div
                           key={option.key}
                           onClick={() => {
                             setSelectedResolution(option.key as any);
                             (document.getElementById('compensationType') as HTMLInputElement).value = option.key;
-                            showToast(`${option.label} selected`, 'success');
+
+                            const originalAmount = 50;
+                            let doerCompensation = 0;
+                            let askerRefund = 0;
+
+                            if (option.key === 'full') {
+                              doerCompensation = originalAmount;
+                              askerRefund = 0;
+                            } else if (option.key === 'partial') {
+                              doerCompensation = originalAmount * 0.60;
+                              askerRefund = originalAmount * 0.40;
+                            } else if (option.key === 'refund') {
+                              doerCompensation = 0;
+                              askerRefund = originalAmount;
+                            } else if (option.key === 'escalate') {
+                              doerCompensation = 0;
+                              askerRefund = 0;
+                            }
+
+                            (document.getElementById('doerAmount') as HTMLInputElement).value = doerCompensation.toFixed(2);
+                            (document.getElementById('askerAmount') as HTMLInputElement).value = askerRefund.toFixed(2);
+
+                            const platformFee = doerCompensation * 0.20;
+                            const stripeFee = doerCompensation > 0 ? doerCompensation * 0.03 : 0;
+                            const netToDoer = doerCompensation - platformFee;
+
+                            (document.getElementById('totalAmount') as HTMLElement).textContent = `Total: SGD $${(doerCompensation + askerRefund).toFixed(2)}`;
+                            (document.getElementById('doerPaymentDisplay') as HTMLElement).textContent = doerCompensation.toFixed(2);
+                            (document.getElementById('platformFeeDisplay') as HTMLElement).textContent = platformFee.toFixed(2);
+                            (document.getElementById('stripeFeeDisplay') as HTMLElement).textContent = stripeFee.toFixed(2);
+                            (document.getElementById('doerNetDisplay') as HTMLElement).textContent = netToDoer.toFixed(2);
+                            (document.getElementById('askerRefundDisplay') as HTMLElement).textContent = askerRefund.toFixed(2);
+
+                            if (stripeFee > 0) {
+                              (document.getElementById('askerStripeLine') as HTMLElement).style.display = 'block';
+                              (document.getElementById('askerStripeFeeDisplay') as HTMLElement).textContent = stripeFee.toFixed(2);
+                              (document.getElementById('askerTotalDisplay') as HTMLElement).textContent = (askerRefund + stripeFee).toFixed(2);
+                            } else {
+                              (document.getElementById('askerStripeLine') as HTMLElement).style.display = 'none';
+                              (document.getElementById('askerTotalDisplay') as HTMLElement).textContent = askerRefund.toFixed(2);
+                            }
+                            (document.getElementById('feeAssignmentMode') as HTMLElement).textContent = 'Auto';
+
+                            showToast(`${option.label} selected - Amounts updated`, 'success');
                           }}
                           style={{
                             padding: '12px',
-                            background: selectedResolution === option.key ? option.color : '#fff',
+                            background: selectedResolution === option.key ? option.color : '#f9f9f9',
                             color: selectedResolution === option.key ? 'white' : '#333',
-                            border: `2px solid ${selectedResolution === option.key ? option.color : '#ddd'}`,
+                            border: `2px solid ${selectedResolution === option.key ? option.color : '#e5e7eb'}`,
                             borderRadius: '8px',
                             cursor: 'pointer',
-                            fontWeight: '600',
-                            fontSize: '12px',
-                            textAlign: 'left',
                             transition: 'all 0.2s',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '6px',
+                            minHeight: '80px',
+                            justifyContent: 'space-between',
                           }}
                         >
-                          <div style={{ fontWeight: '700', marginBottom: '4px' }}>
-                            {option.label}
+                          <div style={{ fontWeight: '600', fontSize: '12px' }}>{option.label}</div>
+                          <div style={{ fontSize: '11px', lineHeight: '1.3', opacity: selectedResolution === option.key ? 0.95 : 0.8 }}>
+                            {option.tip}
                           </div>
-                          <div style={{ fontSize: '10px', opacity: 0.9 }}>
-                            {option.feeDisplay(50)}
+                          <div style={{ fontSize: '10px', opacity: selectedResolution === option.key ? 0.85 : 0.6, fontStyle: 'italic' }}>
+                            {option.detail}
                           </div>
-                        </button>
+                        </div>
                       ))}
                     </div>
 
                     {/* Hidden input */}
                     <input type="hidden" id="compensationType" defaultValue="" />
 
-                    {/* Real-time Fee Breakdown Display */}
-                    <div id="feeBreakdown" style={{
-                      minHeight: '60px',
-                      padding: '10px',
-                      background: '#f9f9f9',
-                      borderRadius: '6px',
-                      fontSize: '11px',
-                      color: '#666',
-                      border: '1px solid #eee',
-                      textAlign: 'center',
-                    }}>
-                      Select a decision to see fee breakdown
-                    </div>
-
-                    {/* Custom Amount Input (for split adjustments) */}
-                    <div style={{ marginTop: '12px' }}>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
-                        Adjust Amount (for split decisions)
+                    {/* Resolution & Compensation - Simple Layout */}
+                    <div style={{ marginTop: '16px', padding: '12px', background: '#f9f9f9', borderRadius: '6px', border: '2px solid #FFD9B3' }}>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '12px', color: '#333' }}>
+                        Resolution & Compensation
                       </label>
-                      <input
-                        type="number"
-                        placeholder="e.g., 50.00"
-                        id="compensationAmount"
-                        onChange={(e) => {
-                          const amount = parseFloat(e.target.value) || 0;
-                          const type = (document.getElementById('compensationType') as HTMLInputElement).value;
 
-                          if (type === 'full') {
-                            const platformFee = amount * 0.20;
-                            const stripeFee = amount * 0.03;
-                            const netAmount = amount - platformFee - stripeFee;
-                            document.getElementById('feeBreakdown')!.innerHTML = `
-                              <div style="font-size: 11px; color: #2e7d32; padding: 10px; background: #E8F5E9; border: 1px solid #10b981; border-radius: 4px;">
-                                <strong>Full Payment to Doer</strong><br/>
-                                Gross: SGD $${amount.toFixed(2)}<br/>
-                                Platform Fee (20%): -SGD $${platformFee.toFixed(2)}<br/>
-                                Stripe Fee (3%): -SGD $${stripeFee.toFixed(2)}<br/>
-                                <strong style="border-top: 1px solid #10b981; padding-top: 6px; margin-top: 6px; display: block;">
-                                  Net to Doer: SGD $${netAmount.toFixed(2)}
-                                </strong>
-                              </div>
-                            `;
-                          } else if (type === 'partial') {
-                            const doerPercent = 60;
-                            const doerAmount = (amount * doerPercent) / 100;
-                            const askerAmount = amount - doerAmount;
-                            const platformFee = doerAmount * 0.20;
-                            const stripeFee = doerAmount * 0.03;
-                            const netDoer = doerAmount - platformFee - stripeFee;
-                            document.getElementById('feeBreakdown')!.innerHTML = `
-                              <div style="font-size: 11px; color: #333; padding: 10px; background: #FFF3E0; border: 1px solid #FFB74D; border-radius: 4px;">
-                                <strong>Split (60/40)</strong><br/>
-                                Doer: SGD $${doerAmount.toFixed(2)} - Platform/Stripe fees = SGD $${netDoer.toFixed(2)}<br/>
-                                Asker Refund: SGD $${askerAmount.toFixed(2)}
-                              </div>
-                            `;
-                          }
-                        }}
+                      {/* Doer & Asker Amounts - Side by Side */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
+                            Doer Receives (SGD)
+                          </label>
+                          <input
+                            type="number"
+                            placeholder="e.g., 38.50"
+                            id="doerAmount"
+                            defaultValue="0.00"
+                            step="0.01"
+                            min="0"
+                            onChange={(e) => {
+                              const doerAmt = parseFloat(e.target.value) || 0;
+                              const askerAmt = parseFloat((document.getElementById('askerAmount') as HTMLInputElement).value) || 0;
+                              const totalAmt = doerAmt + askerAmt;
+                              const originalAmount = 50;
+
+                              // Platform fee (20%) deducted from Doer's compensation
+                              // Stripe fee (3%) on Doer compensation - paid by Asker
+                              // If no Doer compensation (Full Refund): NO Stripe fee (escrow release)
+                              const platformFee = doerAmt * 0.20;
+                              const stripeFee = doerAmt > 0 ? doerAmt * 0.03 : 0;
+                              const netToDoer = doerAmt - platformFee;
+
+                              (document.getElementById('totalAmount') as HTMLElement).textContent = `Total: SGD $${totalAmt.toFixed(2)}`;
+                              (document.getElementById('doerPaymentDisplay') as HTMLElement).textContent = doerAmt.toFixed(2);
+                              (document.getElementById('platformFeeDisplay') as HTMLElement).textContent = platformFee.toFixed(2);
+                              (document.getElementById('stripeFeeDisplay') as HTMLElement).textContent = stripeFee.toFixed(2);
+                              (document.getElementById('doerNetDisplay') as HTMLElement).textContent = netToDoer.toFixed(2);
+                              (document.getElementById('askerRefundDisplay') as HTMLElement).textContent = askerAmt.toFixed(2);
+                              // Stripe fee only deducted from Asker refund if there's a transaction (Doer compensation > 0)
+                              if (stripeFee > 0) {
+                                (document.getElementById('askerStripeLine') as HTMLElement).style.display = 'block';
+                                (document.getElementById('askerStripeFeeDisplay') as HTMLElement).textContent = stripeFee.toFixed(2);
+                                (document.getElementById('askerTotalDisplay') as HTMLElement).textContent = (askerAmt - stripeFee).toFixed(2);
+                              } else {
+                                (document.getElementById('askerStripeLine') as HTMLElement).style.display = 'none';
+                                (document.getElementById('askerTotalDisplay') as HTMLElement).textContent = askerAmt.toFixed(2);
+                              }
+                              (document.getElementById('feeAssignmentMode') as HTMLElement).textContent = 'Manual';
+
+                              if (Math.abs((doerAmt + askerAmt) - originalAmount) > 0.01) {
+                                (document.getElementById('totalAddUpWarning') as HTMLElement).style.display = 'block';
+                              } else {
+                                (document.getElementById('totalAddUpWarning') as HTMLElement).style.display = 'none';
+                              }
+                            }}
+                            style={{ width: '100%', padding: '8px', border: '2px solid #10b981', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
+                            Asker Refund (SGD)
+                          </label>
+                          <input
+                            type="number"
+                            placeholder="e.g., 20.00"
+                            id="askerAmount"
+                            defaultValue="0.00"
+                            step="0.01"
+                            min="0"
+                            onChange={(e) => {
+                              const doerAmt = parseFloat((document.getElementById('doerAmount') as HTMLInputElement).value) || 0;
+                              const askerAmt = parseFloat(e.target.value) || 0;
+                              const totalAmt = doerAmt + askerAmt;
+                              const originalAmount = 50;
+
+                              // Platform fee (20%) deducted from Doer's compensation
+                              // Stripe fee (3%) on Doer compensation - paid by Asker
+                              // If no Doer compensation (Full Refund): NO Stripe fee (escrow release)
+                              const platformFee = doerAmt * 0.20;
+                              const stripeFee = doerAmt > 0 ? doerAmt * 0.03 : 0;
+                              const netToDoer = doerAmt - platformFee;
+
+                              (document.getElementById('totalAmount') as HTMLElement).textContent = `Total: SGD $${totalAmt.toFixed(2)}`;
+                              (document.getElementById('doerPaymentDisplay') as HTMLElement).textContent = doerAmt.toFixed(2);
+                              (document.getElementById('platformFeeDisplay') as HTMLElement).textContent = platformFee.toFixed(2);
+                              (document.getElementById('stripeFeeDisplay') as HTMLElement).textContent = stripeFee.toFixed(2);
+                              (document.getElementById('doerNetDisplay') as HTMLElement).textContent = netToDoer.toFixed(2);
+                              (document.getElementById('askerRefundDisplay') as HTMLElement).textContent = askerAmt.toFixed(2);
+                              // Stripe fee only deducted from Asker refund if there's a transaction (Doer compensation > 0)
+                              if (stripeFee > 0) {
+                                (document.getElementById('askerStripeLine') as HTMLElement).style.display = 'block';
+                                (document.getElementById('askerStripeFeeDisplay') as HTMLElement).textContent = stripeFee.toFixed(2);
+                                (document.getElementById('askerTotalDisplay') as HTMLElement).textContent = (askerAmt - stripeFee).toFixed(2);
+                              } else {
+                                (document.getElementById('askerStripeLine') as HTMLElement).style.display = 'none';
+                                (document.getElementById('askerTotalDisplay') as HTMLElement).textContent = askerAmt.toFixed(2);
+                              }
+                              (document.getElementById('feeAssignmentMode') as HTMLElement).textContent = 'Manual';
+
+                              if (Math.abs((doerAmt + askerAmt) - originalAmount) > 0.01) {
+                                (document.getElementById('totalAddUpWarning') as HTMLElement).style.display = 'block';
+                              } else {
+                                (document.getElementById('totalAddUpWarning') as HTMLElement).style.display = 'none';
+                              }
+                            }}
+                            style={{ width: '100%', padding: '8px', border: '2px solid #ef4444', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Total Summary */}
+                      <div
+                        id="totalAmount"
                         style={{
-                          width: '100%',
-                          padding: '8px',
-                          border: '2px solid #FFD9B3',
+                          padding: '10px',
+                          background: '#fff',
                           borderRadius: '6px',
+                          border: '1px solid #ddd',
                           fontSize: '12px',
+                          fontWeight: '600',
+                          color: '#333',
+                          textAlign: 'center',
+                          marginBottom: '12px',
                         }}
-                      />
+                      >
+                        Total: SGD $0.00
+                      </div>
+
+                      {/* Fee Allocation - Compact Version */}
+                      <div style={{ marginTop: '12px', padding: '10px', background: '#f5f3ff', borderRadius: '6px', border: '1px solid #a78bfa' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                          <label style={{ fontSize: '11px', fontWeight: '600', color: '#333' }}>
+                            Fee Allocation
+                          </label>
+                          <div style={{ fontSize: '9px', background: '#e9d5ff', padding: '3px 6px', borderRadius: '3px', color: '#5b21b6', fontWeight: '500' }}>
+                            💡 Decide who pays each fee (Platform / Stripe / Refund)
+                          </div>
+                        </div>
+
+                        {/* Platform Fee - Compact */}
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Platform</div>
+                          <div style={{ display: 'flex', gap: '3px' }}>
+                            <button onClick={() => { document.getElementById('platformFeeAllocDisplay')!.style.display = 'inline'; document.getElementById('platformFeeAllocInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>%</button>
+                            <button onClick={() => { document.getElementById('platformFeeAllocDisplay')!.style.display = 'none'; document.getElementById('platformFeeAllocInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>$</button>
+                          </div>
+                          <div id="platformFeeAllocDisplay" style={{ fontSize: '9px', fontWeight: '600', color: '#333', minWidth: '50px' }}>20%</div>
+                          <input type="number" id="platformFeeAllocInput" defaultValue="7.70" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '9px', width: '60px' }} />
+                          <div style={{ display: 'flex', gap: '8px', fontSize: '9px', flex: '1', justifyContent: 'flex-end' }}>
+                            <label><input type="radio" name="platformFeePayer" value="doer" defaultChecked /> Doer</label>
+                            <label><input type="radio" name="platformFeePayer" value="asker" /> Asker</label>
+                            <label><input type="radio" name="platformFeePayer" value="er" /> ER</label>
+                          </div>
+                        </div>
+
+                        {/* Stripe Fee - Compact */}
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Stripe</div>
+                          <div style={{ display: 'flex', gap: '3px' }}>
+                            <button onClick={() => { document.getElementById('stripeFeeAllocDisplay')!.style.display = 'inline'; document.getElementById('stripeFeeAllocInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>%</button>
+                            <button onClick={() => { document.getElementById('stripeFeeAllocDisplay')!.style.display = 'none'; document.getElementById('stripeFeeAllocInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>$</button>
+                          </div>
+                          <div id="stripeFeeAllocDisplay" style={{ fontSize: '9px', fontWeight: '600', color: '#333', minWidth: '50px' }}>3%</div>
+                          <input type="number" id="stripeFeeAllocInput" defaultValue="1.50" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '9px', width: '60px' }} />
+                          <div style={{ display: 'flex', gap: '8px', fontSize: '9px', flex: '1', justifyContent: 'flex-end' }}>
+                            <label><input type="radio" name="stripFeePayer" value="doer" defaultChecked /> Doer</label>
+                            <label><input type="radio" name="stripFeePayer" value="asker" /> Asker</label>
+                            <label><input type="radio" name="stripFeePayer" value="er" /> ER</label>
+                          </div>
+                        </div>
+
+                        {/* Asker Refund Portion - Compact */}
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Asker</div>
+                          <div style={{ display: 'flex', gap: '3px' }}>
+                            <button onClick={() => { document.getElementById('askerAllocDisplay')!.style.display = 'inline'; document.getElementById('askerAllocInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>%</button>
+                            <button onClick={() => { document.getElementById('askerAllocDisplay')!.style.display = 'none'; document.getElementById('askerAllocInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>$</button>
+                          </div>
+                          <div id="askerAllocDisplay" style={{ fontSize: '9px', fontWeight: '600', color: '#333', minWidth: '50px' }}>40%</div>
+                          <input type="number" id="askerAllocInput" defaultValue="20.00" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '9px', width: '60px' }} />
+                          <div style={{ display: 'flex', gap: '8px', fontSize: '9px', flex: '1', justifyContent: 'flex-end' }}>
+                            <label><input type="radio" name="askerRefundPayer" value="bank" defaultChecked /> Back to Bank</label>
+                            <label><input type="radio" name="askerRefundPayer" value="wallet" /> Wallet</label>
+                          </div>
+                        </div>
+
+                        {/* Compensation Fee - Compact */}
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '10px', fontWeight: '600' }}>
+                          <input type="checkbox" id="compensationFeeCheckbox" onChange={(e) => document.getElementById('compensationFeeSection')!.style.display = e.target.checked ? 'flex' : 'none'} style={{ cursor: 'pointer' }} />
+                          Compensation Fee
+                        </label>
+
+                        <div id="compensationFeeSection" style={{ display: 'none', gap: '8px', marginTop: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Custom</div>
+                          <div style={{ display: 'flex', gap: '3px' }}>
+                            <button onClick={() => { document.getElementById('compFeePercentDisplay')!.style.display = 'inline'; document.getElementById('compFeeAmountInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>%</button>
+                            <button onClick={() => { document.getElementById('compFeePercentDisplay')!.style.display = 'none'; document.getElementById('compFeeAmountInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>$</button>
+                          </div>
+                          <input type="number" id="compFeePercentDisplay" placeholder="10" defaultValue="10" step="0.01" min="0" style={{ padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '9px', width: '60px' }} />
+                          <input type="number" id="compFeeAmountInput" placeholder="0.00" defaultValue="0.00" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '9px', width: '60px' }} />
+                          <div style={{ display: 'flex', gap: '8px', fontSize: '9px', flex: '1', justifyContent: 'flex-end' }}>
+                            <label><input type="radio" name="compFeePayer" value="doer" defaultChecked /> Doer</label>
+                            <label><input type="radio" name="compFeePayer" value="asker" /> Asker</label>
+                            <label><input type="radio" name="compFeePayer" value="er" /> ER</label>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Warning if totals don't add up */}
+                      <div
+                        id="totalAddUpWarning"
+                        style={{
+                          marginTop: '12px',
+                          padding: '10px',
+                          background: '#fef2f2',
+                          borderRadius: '6px',
+                          border: '2px solid #ef4444',
+                          fontSize: '11px',
+                          color: '#dc2626',
+                          fontWeight: '600',
+                          display: 'none',
+                        }}
+                      >
+                        ⚠️ Warning: Doer + Asker amounts do NOT add up to original amount. Please verify totals.
+                      </div>
+
+                      {/* Payment Breakdown Summary */}
+                      <div style={{ marginTop: '12px', padding: '12px', background: '#fff', borderRadius: '6px', border: '1px solid #ddd' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                          <div style={{ fontWeight: '600', color: '#333', fontSize: '11px' }}>Payment Breakdown</div>
+                          <div style={{ fontSize: '9px', background: '#dbeafe', padding: '3px 6px', borderRadius: '3px', color: '#075985', fontWeight: '500' }}>
+                            💡 What each party pays and receives after all fees
+                          </div>
+                        </div>
+
+                        {/* Doer Breakdown */}
+                        <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #eee' }}>
+                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#10b981', marginBottom: '6px' }}>
+                            ✅ DOER RECEIVES
+                            <span style={{ fontSize: '9px', color: '#059669', fontWeight: '400', marginLeft: '6px', background: '#d1fae5', padding: '2px 4px', borderRadius: '2px' }}>What they get paid</span>
+                          </div>
+                          <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Gross Amount: SGD <span id="doerPaymentDisplay">0.00</span> <span style={{ fontSize: '9px', color: '#999' }}>(before fees)</span></div>
+                          <div style={{ fontSize: '10px', color: '#666', marginBottom: '6px' }}>Platform Fee (20%): -SGD <span id="platformFeeDisplay">0.00</span> <span style={{ fontSize: '9px', color: '#999' }}>(Errandify takes this)</span></div>
+                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#10b981' }}>Net to Doer: SGD <span id="doerNetDisplay">0.00</span> <span style={{ fontSize: '9px', color: '#059669', fontWeight: '400' }}>(lands in their wallet)</span></div>
+                        </div>
+
+                        {/* Asker Breakdown */}
+                        <div>
+                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#ef4444', marginBottom: '6px' }}>
+                            💰 ASKER PAYS/RECEIVES
+                            <span style={{ fontSize: '9px', color: '#991b1b', fontWeight: '400', marginLeft: '6px', background: '#fee2e2', padding: '2px 4px', borderRadius: '2px' }}>Refund or additional charge</span>
+                          </div>
+                          <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Refund Amount: SGD <span id="askerRefundDisplay">0.00</span> <span style={{ fontSize: '9px', color: '#999' }}>(if decision favors them)</span></div>
+                          <div id="askerStripeLine" style={{ fontSize: '10px', color: '#666', marginBottom: '2px', display: 'none' }}>Stripe Fee: +SGD <span id="askerStripeFeeDisplay">0.00</span> <span style={{ fontSize: '9px', color: '#999' }}>(payment processing cost)</span></div>
+                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#ef4444' }}>Total Asker Pays: SGD <span id="askerTotalDisplay">0.00</span> <span style={{ fontSize: '9px', color: '#991b1b', fontWeight: '400' }}>(their net cost)</span></div>
+                        </div>
+
+                        {/* Mode Badge */}
+                        <div style={{ marginTop: '8px', fontSize: '9px', fontWeight: '600', color: '#7c3aed', background: '#f3e8ff', padding: '4px 8px', borderRadius: '3px', display: 'inline-block' }}>
+                          Mode: <span id="feeAssignmentMode">Auto</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -1209,131 +1435,6 @@ Errandify Resolution Team`}
                     />
                   </div>
 
-                  {/* Fee Assignment - Separate for each fee type */}
-                  <div style={{ marginBottom: '12px', background: '#f9f9f9', padding: '12px', borderRadius: '6px', border: '2px solid #FFD9B3' }}>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '12px', color: '#333' }}>
-                      Fee Assignment - Who Pays Each Fee?
-                    </label>
-
-                    {/* Platform Fee Assignment */}
-                    <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #ddd' }}>
-                      <div style={{ fontSize: '11px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>
-                        Platform Fee (5% = SGD 2.50)
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                        <button
-                          id="platformFeeDoerBtn"
-                          onClick={() => {
-                            (document.getElementById('platformFeeAssignment') as HTMLInputElement).value = 'doer';
-                            document.getElementById('platformFeeDoerBtn')!.style.background = '#10b981';
-                            document.getElementById('platformFeeDoerBtn')!.style.color = 'white';
-                            document.getElementById('platformFeeAskerBtn')!.style.background = '#e5e7eb';
-                            document.getElementById('platformFeeAskerBtn')!.style.color = '#333';
-                            showToast('Doer pays platform fee', 'info');
-                          }}
-                          style={{
-                            padding: '8px',
-                            background: '#10b981',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontWeight: '600',
-                            fontSize: '11px',
-                          }}
-                        >
-                          Doer Pays
-                        </button>
-                        <button
-                          id="platformFeeAskerBtn"
-                          onClick={() => {
-                            (document.getElementById('platformFeeAssignment') as HTMLInputElement).value = 'asker';
-                            document.getElementById('platformFeeDoerBtn')!.style.background = '#e5e7eb';
-                            document.getElementById('platformFeeDoerBtn')!.style.color = '#333';
-                            document.getElementById('platformFeeAskerBtn')!.style.background = '#ef4444';
-                            document.getElementById('platformFeeAskerBtn')!.style.color = 'white';
-                            showToast('Asker pays platform fee', 'info');
-                          }}
-                          style={{
-                            padding: '8px',
-                            background: '#e5e7eb',
-                            color: '#333',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontWeight: '600',
-                            fontSize: '11px',
-                          }}
-                        >
-                          Asker Pays
-                        </button>
-                      </div>
-                      <input type="hidden" id="platformFeeAssignment" defaultValue="doer" />
-                    </div>
-
-                    {/* Stripe Fee Assignment */}
-                    <div style={{ marginBottom: '0' }}>
-                      <div style={{ fontSize: '11px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>
-                        Stripe Processing Fee (3% = SGD 1.50)
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                        <button
-                          id="stripeFeeDoerBtn"
-                          onClick={() => {
-                            (document.getElementById('stripeFeeAssignment') as HTMLInputElement).value = 'doer';
-                            document.getElementById('stripeFeeDoerBtn')!.style.background = '#10b981';
-                            document.getElementById('stripeFeeDoerBtn')!.style.color = 'white';
-                            document.getElementById('stripeFeeAskerBtn')!.style.background = '#e5e7eb';
-                            document.getElementById('stripeFeeAskerBtn')!.style.color = '#333';
-                            showToast('Doer pays Stripe fee', 'info');
-                          }}
-                          style={{
-                            padding: '8px',
-                            background: '#10b981',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontWeight: '600',
-                            fontSize: '11px',
-                          }}
-                        >
-                          Doer Pays
-                        </button>
-                        <button
-                          id="stripeFeeAskerBtn"
-                          onClick={() => {
-                            (document.getElementById('stripeFeeAssignment') as HTMLInputElement).value = 'asker';
-                            document.getElementById('stripeFeeDoerBtn')!.style.background = '#e5e7eb';
-                            document.getElementById('stripeFeeDoerBtn')!.style.color = '#333';
-                            document.getElementById('stripeFeeAskerBtn')!.style.background = '#ef4444';
-                            document.getElementById('stripeFeeAskerBtn')!.style.color = 'white';
-                            showToast('Asker pays Stripe fee', 'info');
-                          }}
-                          style={{
-                            padding: '8px',
-                            background: '#e5e7eb',
-                            color: '#333',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontWeight: '600',
-                            fontSize: '11px',
-                          }}
-                        >
-                          Asker Pays
-                        </button>
-                      </div>
-                      <input type="hidden" id="stripeFeeAssignment" defaultValue="doer" />
-                    </div>
-
-                    <div style={{ fontSize: '10px', color: '#666', marginTop: '12px', background: '#fff', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}>
-                      <strong>Options:</strong><br/>
-                      • Both Doer: Standard case (doer earned it, pays fees)<br/>
-                      • Both Asker: Refund case (asker error, loses fees)<br/>
-                      • Mixed: Platform on Doer, Stripe on Asker (special cases)
-                    </div>
-                  </div>
 
                   <button
                     onClick={async () => {
