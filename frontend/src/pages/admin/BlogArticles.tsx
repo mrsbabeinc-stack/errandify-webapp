@@ -669,51 +669,96 @@ CRITICAL: Ensure diverse representation, inclusive imagery, no stereotypes.`;
               {plannerLoading ? '⏳ Generating...' : '🎯 Generate Article'}
             </button>
 
-            {/* Thumbnail Section */}
-            {thumbnailPrompt && (
-              <div style={{ marginTop: '16px', padding: '12px', background: 'white', borderRadius: '6px', border: '1px solid #FFD9B3' }}>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>
-                  🎨 Generate Thumbnail
-                </div>
-                <textarea
-                  placeholder="Image description for thumbnail generation"
-                  value={thumbnailPrompt}
-                  onChange={(e) => setThumbnailPrompt(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '2px solid #FFD9B3',
-                    borderRadius: '4px',
-                    fontSize: '13px',
-                    minHeight: '60px',
-                    marginBottom: '8px',
-                    resize: 'vertical',
-                  }}
-                />
-                <button
-                  onClick={handleGenerateThumbnail}
-                  disabled={thumbnailLoading}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    background: thumbnailLoading ? '#ccc' : '#FF6B35',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontWeight: '600',
-                    cursor: thumbnailLoading ? 'wait' : 'pointer',
-                    fontSize: '13px',
-                  }}
-                >
-                  {thumbnailLoading ? '⏳ Generating...' : '🎨 Generate Image'}
-                </button>
+            {/* Thumbnail Section - Always Visible */}
+            <div style={{ marginTop: '16px', padding: '12px', background: 'white', borderRadius: '6px', border: '2px solid #FFD9B3' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>
+                🎨 Generate Thumbnail/Banner
               </div>
-            )}
+              <textarea
+                placeholder={thumbnailPrompt ? thumbnailPrompt : "E.g., 'Professional workspace with diverse people collaborating, warm lighting, modern office' or paste Qwen-generated prompt"}
+                value={thumbnailPrompt}
+                onChange={(e) => setThumbnailPrompt(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  border: `2px solid ${thumbnailPrompt ? '#FF6B35' : '#FFD9B3'}`,
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  minHeight: '80px',
+                  marginBottom: '8px',
+                  resize: 'vertical',
+                  fontFamily: 'system-ui',
+                }}
+              />
+              <button
+                onClick={handleGenerateThumbnail}
+                disabled={thumbnailLoading || !thumbnailPrompt.trim()}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  background: !thumbnailPrompt.trim() ? '#ccc' : thumbnailLoading ? '#ccc' : '#FF6B35',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontWeight: '600',
+                  cursor: (!thumbnailPrompt.trim() || thumbnailLoading) ? 'not-allowed' : 'pointer',
+                  fontSize: '13px',
+                }}
+              >
+                {thumbnailLoading ? '⏳ Generating...' : '🎨 Generate 1200x600 Image'}
+              </button>
+              <div style={{ fontSize: '11px', color: '#999', marginTop: '6px' }}>
+                💡 Tip: Enter a detailed description for best results. Use keywords from your article for consistency.
+              </div>
+            </div>
 
             {/* Generated Image Preview */}
             {generatedImageUrl && (
-              <div style={{ marginTop: '16px', borderRadius: '6px', overflow: 'hidden', border: '2px solid #FFD9B3' }}>
-                <img src={generatedImageUrl} alt="Generated thumbnail" style={{ width: '100%', height: 'auto' }} />
+              <div style={{ marginTop: '16px', padding: '12px', background: 'white', borderRadius: '6px', border: '2px solid #FF6B35' }}>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>
+                  ✓ Generated Thumbnail Preview
+                </div>
+                <div style={{ borderRadius: '4px', overflow: 'hidden', border: '1px solid #FFD9B3', marginBottom: '8px' }}>
+                  <img src={generatedImageUrl} alt={thumbnailAlt || 'Generated thumbnail'} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                </div>
+                <div style={{ fontSize: '11px', color: '#666', marginBottom: '8px', lineHeight: '1.4' }}>
+                  <strong>Description:</strong> {thumbnailAlt || 'Professional blog thumbnail image'}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <button
+                    onClick={() => {
+                      setActiveTab('articles');
+                      window.scrollTo(0, 0);
+                    }}
+                    style={{
+                      padding: '8px',
+                      background: '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                    }}
+                  >
+                    ✅ Use This Image
+                  </button>
+                  <button
+                    onClick={() => setGeneratedImageUrl('')}
+                    style={{
+                      padding: '8px',
+                      background: '#999',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                    }}
+                  >
+                    ❌ Regenerate
+                  </button>
+                </div>
               </div>
             )}
 
