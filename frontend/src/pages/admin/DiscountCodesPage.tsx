@@ -18,6 +18,7 @@ interface DiscountCode {
 
 export const DiscountCodesPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [codes, setCodes] = useState<DiscountCode[]>([
     {
       id: 1,
@@ -105,32 +106,89 @@ export const DiscountCodesPage: React.FC = () => {
     }
   };
 
-  const handleCreateCode = () => {
+  const handleSaveCode = () => {
     if (!formData.code || !formData.value || !formData.maxUses) {
       alert('Please fill all fields');
       return;
     }
 
-    const newCode: DiscountCode = {
-      id: codes.length + 1,
-      code: formData.code.toUpperCase(),
-      type: formData.type,
-      value: formData.value,
-      maxUses: formData.maxUses,
-      usedCount: 0,
-      expiresAt: formData.expiresAt,
-      status: 'active',
-      createdAt: new Date().toISOString().split('T')[0],
-      description: formData.description,
-      influencer: formData.influencer,
-      tags: formData.tags
-    };
+    if (editingId) {
+      // Update existing code
+      setCodes(codes.map(c =>
+        c.id === editingId
+          ? {
+              ...c,
+              code: formData.code.toUpperCase(),
+              type: formData.type,
+              value: formData.value,
+              maxUses: formData.maxUses,
+              expiresAt: formData.expiresAt,
+              description: formData.description,
+              influencer: formData.influencer,
+              tags: formData.tags
+            }
+          : c
+      ));
+      setEditingId(null);
+    } else if (duplicateFromId) {
+      // Create duplicate
+      const newCode: DiscountCode = {
+        id: codes.length + 1,
+        code: formData.code.toUpperCase(),
+        type: formData.type,
+        value: formData.value,
+        maxUses: formData.maxUses,
+        usedCount: 0,
+        expiresAt: formData.expiresAt,
+        status: 'active',
+        createdAt: new Date().toISOString().split('T')[0],
+        description: formData.description,
+        influencer: formData.influencer,
+        tags: formData.tags
+      };
+      setCodes([...codes, newCode]);
+      setDuplicateFromId(null);
+    } else {
+      // Create new code
+      const newCode: DiscountCode = {
+        id: codes.length + 1,
+        code: formData.code.toUpperCase(),
+        type: formData.type,
+        value: formData.value,
+        maxUses: formData.maxUses,
+        usedCount: 0,
+        expiresAt: formData.expiresAt,
+        status: 'active',
+        createdAt: new Date().toISOString().split('T')[0],
+        description: formData.description,
+        influencer: formData.influencer,
+        tags: formData.tags
+      };
+      setCodes([...codes, newCode]);
+    }
 
-    setCodes([...codes, newCode]);
     setFormData({ code: '', type: 'percentage', value: 0, maxUses: 0, expiresAt: '', description: '', influencer: '', tags: [] });
     setTagInput('');
-    setDuplicateFromId(null);
     setShowModal(false);
+  };
+
+  const handleEditCode = (id: number) => {
+    const code = codes.find(c => c.id === id);
+    if (code) {
+      setFormData({
+        code: code.code,
+        type: code.type,
+        value: code.value,
+        maxUses: code.maxUses,
+        expiresAt: code.expiresAt,
+        description: code.description,
+        influencer: code.influencer || '',
+        tags: code.tags || []
+      });
+      setTagInput(code.tags ? code.tags.join(', ') : '');
+      setEditingId(id);
+      setShowModal(true);
+    }
   };
 
   const handleDeleteCode = (id: number) => {
@@ -324,7 +382,23 @@ export const DiscountCodesPage: React.FC = () => {
                     </span>
                   </td>
                   <td style={{ padding: '12px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => handleEditCode(code.id)}
+                        style={{
+                          padding: '6px 10px',
+                          background: '#FFF3E0',
+                          color: '#E65100',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          cursor: 'pointer'
+                        }}
+                        title="Edit code"
+                      >
+                        ✏️ Edit
+                      </button>
                       <button
                         onClick={() => duplicateCode(code.id)}
                         style={{
@@ -390,7 +464,7 @@ export const DiscountCodesPage: React.FC = () => {
             overflowY: 'auto'
           }}>
             <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700', color: '#333' }}>
-              {duplicateFromId ? '📋 Duplicate Discount Code' : '✨ Create New Code / E-Voucher'}
+              {editingId ? '✏️ Edit Discount Code' : duplicateFromId ? '📋 Duplicate Discount Code' : '✨ Create New Code / E-Voucher'}
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
@@ -601,7 +675,13 @@ export const DiscountCodesPage: React.FC = () => {
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingId(null);
+                  setDuplicateFromId(null);
+                  setFormData({ code: '', type: 'percentage', value: 0, maxUses: 0, expiresAt: '', description: '', influencer: '', tags: [] });
+                  setTagInput('');
+                }}
                 style={{
                   padding: '10px 16px',
                   background: '#f5f5f5',
@@ -616,7 +696,7 @@ export const DiscountCodesPage: React.FC = () => {
                 Cancel
               </button>
               <button
-                onClick={handleCreateCode}
+                onClick={handleSaveCode}
                 style={{
                   padding: '10px 16px',
                   background: '#FF6B35',
@@ -628,7 +708,7 @@ export const DiscountCodesPage: React.FC = () => {
                   cursor: 'pointer'
                 }}
               >
-                {duplicateFromId ? '📋 Create Duplicate' : '✨ Create Code'}
+                {editingId ? '💾 Save Changes' : duplicateFromId ? '📋 Create Duplicate' : '✨ Create Code'}
               </button>
             </div>
           </div>
