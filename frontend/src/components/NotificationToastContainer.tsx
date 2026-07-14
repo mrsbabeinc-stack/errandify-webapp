@@ -15,7 +15,7 @@ export default function NotificationToastContainer() {
   };
 
   return (
-    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[9999] flex flex-col gap-3 max-w-lg pointer-events-none">
+    <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-3 max-w-lg pointer-events-none" style={{ zIndex: 99999 }}>
       {toasts.map((toast) => (
         <div
           key={toast.id}
