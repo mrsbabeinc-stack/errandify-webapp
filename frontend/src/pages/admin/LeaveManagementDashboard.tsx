@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { leaveAPI } from '../../services/adminAPI';
 
 interface LeaveBalance {
   staffId: string;
@@ -209,6 +210,24 @@ const LeaveManagementDashboard: React.FC = () => {
       createdDate: new Date().toISOString(),
       lastModified: new Date().toISOString(),
     };
+
+    // Try to submit via API
+    leaveAPI.create({
+      staff_id: selectedStaffId,
+      staff_name: staff.staffName,
+      leave_type: requestForm.leaveType === 'annual' ? 'Annual Leave' :
+                 requestForm.leaveType === 'sick' ? 'Sick Leave' :
+                 requestForm.leaveType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+      start_date: requestForm.startDate,
+      end_date: requestForm.endDate,
+      reason: requestForm.reason,
+      is_recurring: false,
+      period: 'full-day',
+    }).then(() => {
+      console.log('[LeaveManagementDashboard] Leave request saved to API');
+    }).catch((error) => {
+      console.log('[LeaveManagementDashboard] API save failed, using local storage only:', error);
+    });
 
     setLeaveRequests([...leaveRequests, newRequest]);
     setRequestForm({
