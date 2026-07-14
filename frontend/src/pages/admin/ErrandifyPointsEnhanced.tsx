@@ -67,7 +67,7 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div style={{ padding: '12px 16px', height: '100vh', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ padding: '12px 16px', height: '100vh', display: 'flex', flexDirection: 'column', gap: '10px', overflow: 'hidden' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
           <div>
@@ -116,34 +116,36 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
 
 
         {/* Charts Row: 3 Columns */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '12px', flex: 1, minHeight: 0 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '12px', flex: '1 1 280px', minHeight: 0 }}>
           {/* Daily Issuance Chart */}
-          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto' }}>
+          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', display: 'flex', flexDirection: 'column' }}>
             <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>📈 Daily Issuance (7-day)</h3>
-            <Chart3DBar
-              data={dailyData.map((d, idx) => ({
-                label: d.day,
-                value: d.issued,
-                color: ['#FF6B35', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#E91E63', '#00BCD4'][idx]
-              }))}
-              height={150}
-            />
+            <div style={{ flex: 1, minHeight: 0 }}>
+              <Chart3DBar
+                data={dailyData.map((d, idx) => ({
+                  label: d.day,
+                  value: d.issued,
+                  color: ['#FF6B35', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#E91E63', '#00BCD4'][idx]
+                }))}
+                height={180}
+              />
+            </div>
             <div style={{ fontSize: '8px', color: '#666', marginTop: '6px', textAlign: 'center' }}>
               SGD ${(dailyData.reduce((sum, d) => sum + d.issued, 0) * 0.05).toFixed(2)} total
             </div>
           </div>
 
           {/* Issuance by Type */}
-          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', display: 'flex', flexDirection: 'column' }}>
             <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>🎯 By Type</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
               {issuanceByType.map(item => (
                 <div key={item.type}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                    <span style={{ fontSize: '9px', color: '#333', fontWeight: '500' }}>{item.type}</span>
-                    <span style={{ fontSize: '9px', fontWeight: '600', color: '#FF6B35' }}>{item.percentage}%</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                    <span style={{ fontSize: '10px', color: '#333', fontWeight: '500' }}>{item.type}</span>
+                    <span style={{ fontSize: '10px', fontWeight: '600', color: '#FF6B35' }}>{item.percentage}%</span>
                   </div>
-                  <div style={{ height: '5px', background: '#f5f5f5', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ height: '6px', background: '#f5f5f5', borderRadius: '2px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', background: '#FF6B35', width: `${item.percentage}%` }} />
                   </div>
                 </div>
@@ -152,16 +154,16 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
           </div>
 
           {/* Peak Hours */}
-          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', display: 'flex', flexDirection: 'column' }}>
             <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>⏰ Peak Hours</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
               {peakHours.map(item => (
-                <div key={item.hour} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '8px', color: '#666', minWidth: '24px', fontWeight: '500' }}>{item.hour}</span>
-                  <div style={{ flex: 1, height: '3px', background: '#f5f5f5', borderRadius: '1px', overflow: 'hidden' }}>
+                <div key={item.hour} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ fontSize: '9px', color: '#666', minWidth: '28px', fontWeight: '500' }}>{item.hour}</span>
+                  <div style={{ flex: 1, height: '4px', background: '#f5f5f5', borderRadius: '2px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', background: '#2196F3', width: `${(item.points / 420) * 100}%` }} />
                   </div>
-                  <span style={{ fontSize: '8px', color: '#666', minWidth: '22px', textAlign: 'right', fontWeight: '500' }}>{item.points}</span>
+                  <span style={{ fontSize: '9px', color: '#666', minWidth: '24px', textAlign: 'right', fontWeight: '500' }}>{item.points}</span>
                 </div>
               ))}
             </div>
