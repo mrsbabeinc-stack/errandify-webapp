@@ -316,13 +316,14 @@ const CompanyClientIntelligence: React.FC = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
+              disabled={tab !== 'portfolio' && !selectedCompany}
               style={{
                 padding: '12px 16px',
                 background: activeTab === tab ? '#FFD9B3' : 'transparent',
-                color: activeTab === tab ? '#333' : '#999',
+                color: activeTab === tab ? '#333' : (tab !== 'portfolio' && !selectedCompany) ? '#ccc' : '#999',
                 border: 'none',
                 borderBottom: activeTab === tab ? '3px solid #FF6B35' : 'none',
-                cursor: 'pointer',
+                cursor: (tab !== 'portfolio' && !selectedCompany) ? 'not-allowed' : 'pointer',
                 fontWeight: '600',
                 fontSize: '14px',
                 transition: 'all 0.2s',
@@ -335,7 +336,7 @@ const CompanyClientIntelligence: React.FC = () => {
 
         {/* PORTFOLIO TAB */}
         {activeTab === 'portfolio' && (
-          <div>
+          <div style={{ minHeight: '100vh' }}>
             {/* Search & Sort */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', marginBottom: '16px' }}>
               <input
@@ -452,7 +453,7 @@ const CompanyClientIntelligence: React.FC = () => {
 
         {/* DETAIL TAB */}
         {activeTab === 'detail' && selectedCompany && selectedInsight && (
-          <div style={{ display: 'grid', gap: '20px' }}>
+          <div style={{ display: 'grid', gap: '20px', minHeight: '100vh' }}>
             {/* Company Header */}
             <div style={{ padding: '20px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '20px', alignItems: 'start' }}>
@@ -668,7 +669,7 @@ const CompanyClientIntelligence: React.FC = () => {
 
         {/* INSIGHTS TAB */}
         {activeTab === 'insights' && selectedCompany && selectedInsight && (
-          <div style={{ display: 'grid', gap: '20px' }}>
+          <div style={{ display: 'grid', gap: '20px', minHeight: '100vh' }}>
             <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3', textAlign: 'center' }}>
               <div style={{ fontSize: '28px', fontWeight: '700', color: '#FF6B35', marginBottom: '8px' }}>
                 {selectedCompany.name}
