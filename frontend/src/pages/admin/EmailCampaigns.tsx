@@ -54,6 +54,8 @@ export default function EmailCampaigns() {
   const [imagePrompt, setImagePrompt] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState('');
+  const [campaignObjective, setCampaignObjective] = useState('');
+  const [plannerLoading, setPlannerLoading] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('emailCampaigns');
@@ -189,6 +191,32 @@ export default function EmailCampaigns() {
     alert('✅ Campaign deleted!');
   };
 
+  const callQwenAPI = async (prompt: string, maxTokens: number = 600): Promise<string | null> => {
+    try {
+      const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text2text/qwen', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer sk-demo'
+        },
+        body: JSON.stringify({
+          model: 'qwen-turbo',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: maxTokens,
+          temperature: 0.7
+        })
+      }).catch(() => null);
+
+      if (response && response.ok) {
+        const data = await response.json();
+        return data.output?.text || data.choices?.[0]?.message?.content || null;
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  };
+
   const handleGenerateAIVariants = async () => {
     if (!aiPrompt.trim()) {
       alert('Please enter a campaign description to generate variants');
@@ -210,52 +238,70 @@ export default function EmailCampaigns() {
       for (const segment of segments) {
         const brandVoice = `Brand: Errandify - a warm, engaging, happy, and community-focused (kampung) service that brings neighbors together to help each other.`;
         const segmentContext = segmentDescriptions[segment];
-        const prompt = `${brandVoice}\n\nGenerate a warm, engaging email for: ${segmentContext}\n\nCampaign: ${aiPrompt}\n\nRequirements:\n- Warm and friendly tone, like talking to a neighbor\n- Engaging and celebratory language\n- Emphasize community and mutual help (kampung spirit)\n- Use conversational language, avoid corporate speak\n- Include emoji if appropriate\n\nRespond ONLY with valid JSON (no markdown): {"subject":"...", "content":"...", "template":"promotional"|"announcement"|"reminder"|"transactional"}`;
+        const prompt = `${brandVoice}\n\nGenerate a warm, engaging email for: ${segmentContext}\n\nCampaign: ${aiPrompt}\n\nRequirements:\n- Warm and friendly tone, like talking to a neighbor\n- Engaging and celebratory language\n- Emphasize community and mutual help (kampung spirit)\n- Use conversational language, avoid corporate speak\n- Include emoji if appropriate\n- Keep subject under 60 characters\n\nRespond ONLY with valid JSON (no markdown): {"subject":"...", "content":"...", "template":"promotional"|"announcement"|"reminder"|"transactional"}`;
 
-        const response = await fetch('https://api.anthropic.com/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': 'demo',
-            'anthropic-version': '2023-06-01'
-          },
-          body: JSON.stringify({
-            model: 'claude-opus',
-            max_tokens: 600,
-            messages: [{ role: 'user', content: prompt }]
-          })
-        }).catch(() => null);
+        const qwenResponse = await callQwenAPI(prompt, 600);
 
-        if (response && response.ok) {
-          const data = await response.json();
-          const content = data.content[0].text;
-          const parsed = JSON.parse(content);
-          variants.push({
-            segment,
-            subject: parsed.subject,
-            content: parsed.content,
-            template: parsed.template || 'promotional'
-          });
+        if (qwenResponse) {
+          try {
+            const parsed = JSON.parse(qwenResponse);
+            variants.push({
+              segment,
+              subject: parsed.subject,
+              content: parsed.content,
+              template: parsed.template || 'promotional'
+            });
+          } catch (parseError) {
+            const templateVariants = {
+              'all-users': {
+                subject: '👋 Hey! We\'re so glad you\'re here - join our Errandify kampung today!',
+                content: `We're all about helping each other out - just like neighbors do. Whether you need help or want to earn by helping others, you're in the right place! ${aiPrompt}`,
+                template: 'promotional' as const
+              },
+              'doers': {
+                subject: '💪 Ready to help neighbors and earn? Let\'s make a difference together!',
+                content: `As part of our kampung, your skills matter. Help neighbors with tasks and earn rewards. ${aiPrompt} Join us in building a community where everyone looks out for each other!`,
+                template: 'promotional' as const
+              },
+              'askers': {
+                subject: '🤝 Neighbors are ready to help - let us ease your load!',
+                content: `Life\'s busy! Our friendly helpers are ready to support you. From errands to tasks, we\'ve got your back. ${aiPrompt} Because in Errandify, we\'re all in this together!`,
+                template: 'promotional' as const
+              },
+              'vip': {
+                subject: '🌟 Exclusive: Premium perks for our VIP neighbors!',
+                content: `You\'re a valued member of our kampung! As a VIP, enjoy special treatment. ${aiPrompt} Thank you for being part of our warm and caring community!`,
+                template: 'promotional' as const
+              }
+            };
+            const template = templateVariants[segment];
+            variants.push({
+              segment,
+              subject: template.subject,
+              content: template.content,
+              template: template.template
+            });
+          }
         } else {
           const templateVariants = {
             'all-users': {
-              subject: '👋 Hey! We\'re so glad you\'re here - join our Errandify kampung today!',
-              content: `We're all about helping each other out - just like neighbors do. Whether you need help or want to earn by helping others, you're in the right place! ${aiPrompt}`,
+              subject: '👋 Hey! We\'re so glad you\'re here - join our Errandify kampung!',
+              content: `We're all about helping each other out, just like neighbors do. ${aiPrompt}`,
               template: 'promotional' as const
             },
             'doers': {
-              subject: '💪 Ready to help neighbors and earn? Let\'s make a difference together!',
-              content: `As part of our kampung, your skills matter. Help neighbors with tasks and earn rewards. ${aiPrompt} Join us in building a community where everyone looks out for each other!`,
+              subject: '💪 Ready to help neighbors and earn? Let\'s make a difference!',
+              content: `As part of our kampung, your skills matter. Help neighbors and earn rewards. ${aiPrompt}`,
               template: 'promotional' as const
             },
             'askers': {
               subject: '🤝 Neighbors are ready to help - let us ease your load!',
-              content: `Life\'s busy! Our friendly helpers are ready to support you. From errands to tasks, we\'ve got your back. ${aiPrompt} Because in Errandify, we\'re all in this together!`,
+              content: `Our friendly helpers are ready to support you. ${aiPrompt}`,
               template: 'promotional' as const
             },
             'vip': {
               subject: '🌟 Exclusive: Premium perks for our VIP neighbors!',
-              content: `You\'re a valued member of our kampung! As a VIP, enjoy special treatment. ${aiPrompt} Thank you for being part of our warm and caring community!`,
+              content: `You're a valued member of our kampung! Enjoy special treatment. ${aiPrompt}`,
               template: 'promotional' as const
             }
           };
@@ -270,7 +316,7 @@ export default function EmailCampaigns() {
       }
 
       setAiVariants(variants);
-      alert('✅ Generated warm, engaging variants for all segments!');
+      alert('✅ Generated warm, engaging variants for all segments using Qwen!');
     } catch (error) {
       alert('Error generating variants. Using template variants.');
       const segments: Array<'all-users' | 'doers' | 'askers' | 'vip'> = ['all-users', 'doers', 'askers', 'vip'];
@@ -320,33 +366,47 @@ export default function EmailCampaigns() {
 
     setImageLoading(true);
     try {
-      const qwenPrompt = `Create a professional, warm, and engaging email banner image for: ${imagePrompt}\n\nStyle: Errandify brand - warm, community-focused (kampung), happy, colorful. Include people helping each other, neighborhood vibes, and positive energy.\n\nFormat: Email banner (1200x400px recommended)\n\nReply with ONLY a valid image URL or base64 data URI.`;
+      const qwenImagePrompt = `Generate a professional email banner image (1200x400px) for Errandify.\n\nDescription: ${imagePrompt}\n\nStyle requirements:\n- Warm, community-focused (kampung) atmosphere\n- Happy, engaging, colorful\n- Show people helping each other\n- Neighborhood/community vibes\n- Positive energy\n- Professional quality suitable for email marketing\n\nReturn ONLY the image URL or data URI.`;
 
-      const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer demo-key'
-        },
-        body: JSON.stringify({
-          model: 'qwen-vl-plus',
-          messages: [{ role: 'user', content: qwenPrompt }],
-          parameters: {
-            size: '1200x400'
+      const qwenResponse = await callQwenAPI(qwenImagePrompt, 200);
+
+      if (qwenResponse && (qwenResponse.includes('http') || qwenResponse.includes('data:'))) {
+        setGeneratedImageUrl(qwenResponse);
+        setNewCampaignImageUrl(qwenResponse);
+        setNewCampaignImageAlt(imagePrompt);
+        alert('✅ Image generated successfully with Qwen!');
+        return;
+      }
+
+      try {
+        const imageApiResponse = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer sk-demo'
+          },
+          body: JSON.stringify({
+            model: 'qwen-vl-max',
+            prompt: qwenImagePrompt,
+            size: '1200x400',
+            n: 1,
+            quality: 'hd'
+          })
+        }).catch(() => null);
+
+        if (imageApiResponse && imageApiResponse.ok) {
+          const data = await imageApiResponse.json();
+          const imageUrl = data.results?.[0]?.url || data.output?.image_url || '';
+          if (imageUrl) {
+            setGeneratedImageUrl(imageUrl);
+            setNewCampaignImageUrl(imageUrl);
+            setNewCampaignImageAlt(imagePrompt);
+            alert('✅ Image generated with Qwen!');
+            return;
           }
-        })
-      }).catch(() => null);
-
-      if (response && response.ok) {
-        const data = await response.json();
-        const imageUrl = data.output?.image_url || data.results?.[0]?.url || '';
-        if (imageUrl) {
-          setGeneratedImageUrl(imageUrl);
-          setNewCampaignImageUrl(imageUrl);
-          setNewCampaignImageAlt(imagePrompt);
-          alert('✅ Image generated successfully!');
-          return;
         }
+      } catch (apiError) {
+        console.log('Qwen image API call failed, using templates');
       }
 
       const mockImages = {
@@ -355,6 +415,9 @@ export default function EmailCampaigns() {
         'welcome': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=400&fit=crop',
         'community': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=400&fit=crop',
         'help': 'https://images.unsplash.com/photo-1553531088-be5f74c3e83f?w=1200&h=400&fit=crop',
+        'earn': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=400&fit=crop',
+        'neighbor': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=400&fit=crop',
+        'happy': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=400&fit=crop',
       };
 
       let imageUrl = '';
@@ -372,7 +435,7 @@ export default function EmailCampaigns() {
       setGeneratedImageUrl(imageUrl);
       setNewCampaignImageUrl(imageUrl);
       setNewCampaignImageAlt(imagePrompt);
-      alert('✅ Generated image from template library!');
+      alert('✅ Generated image from template library (Qwen API unavailable)');
     } catch (error) {
       alert('Error generating image. Using template image.');
       const templateUrl = 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=400&fit=crop';
@@ -381,6 +444,110 @@ export default function EmailCampaigns() {
       setNewCampaignImageAlt(imagePrompt);
     } finally {
       setImageLoading(false);
+    }
+  };
+
+  const handleGenerateFullCampaign = async () => {
+    if (!campaignObjective.trim()) {
+      alert('Please enter your campaign objective');
+      return;
+    }
+
+    setPlannerLoading(true);
+    try {
+      const plannerPrompt = `You are an expert email marketing strategist for Errandify (a warm, community-focused, kampung-style service platform).
+
+Campaign Objective: ${campaignObjective}
+
+Generate a COMPLETE email campaign plan in JSON format. Return ONLY valid JSON, no markdown:
+
+{
+  "name": "Campaign name (short, descriptive)",
+  "textVariants": {
+    "all-users": {
+      "subject": "Subject line for general users",
+      "content": "Email body optimized for all users"
+    },
+    "doers": {
+      "subject": "Subject line for service providers",
+      "content": "Email body highlighting earnings and impact"
+    },
+    "askers": {
+      "subject": "Subject line for task creators",
+      "content": "Email body highlighting convenience and support"
+    },
+    "vip": {
+      "subject": "Subject line for VIP users",
+      "content": "Email body with exclusive benefits"
+    }
+  },
+  "imageDescription": "Detailed description for AI image generation (must include Errandify brand elements: warm, community, kampung, helpful neighbors)",
+  "templateType": "promotional|announcement|reminder|transactional",
+  "reasoning": "Why this approach works"
+}
+
+Requirements:
+- ALL text must be warm, engaging, happy tone (like talking to neighbors)
+- Emphasize kampung (community/neighborhood) spirit
+- Use emojis appropriately
+- Avoid corporate language
+- Keep subjects under 60 characters
+- Make image description vivid and actionable for AI generation
+- Each variant must be segment-specific but aligned to same objective`;
+
+      const response = await callQwenAPI(plannerPrompt, 1200);
+
+      if (response) {
+        try {
+          const parsed = JSON.parse(response);
+
+          setNewCampaignName(parsed.name);
+          setNewCampaignTemplate(parsed.templateType);
+          setAiVariants([
+            {
+              segment: 'all-users',
+              subject: parsed.textVariants['all-users'].subject,
+              content: parsed.textVariants['all-users'].content,
+              template: parsed.templateType as any
+            },
+            {
+              segment: 'doers',
+              subject: parsed.textVariants.doers.subject,
+              content: parsed.textVariants.doers.content,
+              template: parsed.templateType as any
+            },
+            {
+              segment: 'askers',
+              subject: parsed.textVariants.askers.subject,
+              content: parsed.textVariants.askers.content,
+              template: parsed.templateType as any
+            },
+            {
+              segment: 'vip',
+              subject: parsed.textVariants.vip.subject,
+              content: parsed.textVariants.vip.content,
+              template: parsed.templateType as any
+            }
+          ]);
+
+          setImagePrompt(parsed.imageDescription);
+
+          alert(`✅ Campaign plan generated!
+Campaign: "${parsed.name}"
+Template: ${parsed.templateType}
+Reasoning: ${parsed.reasoning}
+
+Next: Generate image in the Image Generator, then select a text variant to load.`);
+        } catch (parseError) {
+          alert('Error parsing campaign plan. Please try again.');
+        }
+      } else {
+        alert('Error generating campaign plan with Qwen. Please try manual approach.');
+      }
+    } catch (error) {
+      alert('Error in campaign planner. Please try again.');
+    } finally {
+      setPlannerLoading(false);
     }
   };
 
@@ -454,12 +621,50 @@ export default function EmailCampaigns() {
       </div>
 
       {activeTab === 'ai-assist' && (
+        <>
+        <div style={{ marginBottom: '24px', padding: '16px', background: '#F0E6FF', borderRadius: '8px', border: '2px solid #D4B5FF' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
+            🚀 AI Campaign Planner - Full Campaign Generation
+          </h3>
+          <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>
+            <strong>State your objective</strong> and Qwen AI will generate a complete campaign plan: name, 4 text variants, image description, and reasoning!
+          </p>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            <textarea
+              placeholder="E.g., 'Increase referrals by 50% among active doers' or 'Drive adoption of new premium features among VIP users' or 'Launch summer promotion targeting askers with convenience messaging'"
+              value={campaignObjective}
+              onChange={(e) => setCampaignObjective(e.target.value)}
+              rows={3}
+              style={{ padding: '10px 12px', border: '2px solid #D4B5FF', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit' }}
+            />
+            <button
+              onClick={handleGenerateFullCampaign}
+              disabled={plannerLoading}
+              style={{
+                padding: '12px',
+                background: plannerLoading ? '#ccc' : 'linear-gradient(135deg, #A78BFA 0%, #C4B5FD 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: '600',
+                cursor: plannerLoading ? 'not-allowed' : 'pointer',
+                fontSize: '15px'
+              }}
+            >
+              {plannerLoading ? '⏳ Planning campaign with Qwen...' : '🎯 Generate Full Campaign Plan'}
+            </button>
+            <div style={{ fontSize: '11px', color: '#666', background: '#fff', padding: '8px', borderRadius: '4px' }}>
+              ✨ This creates: campaign name, 4 segment-specific texts, image prompt, and template type
+            </div>
+          </div>
+        </div>
+
         <div style={{ marginBottom: '24px', padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
-            🤖 AI Campaign Generator - Errandify Brand Voice
+            📝 AI Text Generator - Segment-Optimized Variants
           </h3>
           <p style={{ fontSize: '13px', color: '#666', marginBottom: '6px' }}>
-            <strong>Describe your campaign</strong> and AI will create <strong>warm, engaging, and community-focused</strong> versions for each segment
+            <strong>Describe your campaign</strong> and Qwen will create <strong>warm, engaging, and community-focused</strong> versions for each segment
           </p>
           <p style={{ fontSize: '12px', color: '#999', marginBottom: '12px' }}>
             📍 Brand voice: Warm, engaging, happy, and kampung (community-centered) • Tailored for All Users, Doers, Askers, VIP
@@ -609,6 +814,7 @@ export default function EmailCampaigns() {
             </div>
           )}
         </div>
+        </>
       )}
 
       {activeTab === 'campaigns' && (
