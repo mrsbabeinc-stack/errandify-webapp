@@ -19,7 +19,7 @@ interface LeaveRequest {
   id: string;
   staffId: string;
   staffName: string;
-  leaveType: 'annual' | 'sick' | 'unpaid' | 'compassionate';
+  leaveType: 'annual' | 'sick' | 'medical-cert' | 'unpaid' | 'compassionate' | 'maternity' | 'paternity' | 'childcare' | 'marriage' | 'examination' | 'voluntary-absence';
   startDate: string;
   endDate: string;
   daysRequested: number;
