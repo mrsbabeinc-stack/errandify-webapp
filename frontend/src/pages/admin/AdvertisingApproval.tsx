@@ -144,22 +144,21 @@ export const AdvertisingApproval: React.FC = () => {
     <AdminLayout>
       <div className="advertising-approval-page">
       <ToastContainer toasts={toasts} onClose={removeToast} />
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px' }}>
         <div>
-          <h1 style={{ margin: 0 }}>📸 Advertising Approval</h1>
-          <p style={{ margin: '8px 0 0 0' }}>Review and approve company advertisements</p>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#333', margin: '0 0 8px 0' }}>📸 Advertising Approval</h1>
+          <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>Review and approve company advertisements</p>
         </div>
         <button
           onClick={() => navigate(-1)}
           style={{
-            fontSize: '20px',
+            fontSize: '24px',
             background: 'none',
             border: 'none',
             cursor: 'pointer',
             color: '#FF6B35',
             fontWeight: '700',
             padding: '0 8px',
-            marginBottom: '20px',
           }}
           title="Go back"
         >
@@ -443,36 +442,21 @@ export const AdvertisingApproval: React.FC = () => {
       <style>{`
         .advertising-approval-page {
           padding: 30px;
-          background: #fafafa;
+          background: #FFF8F5;
           min-height: 100vh;
-        }
-
-        .page-header {
-          margin-bottom: 30px;
-        }
-
-        .page-header h1 {
-          font-size: 32px;
-          color: #333;
-          margin: 0 0 8px 0;
-        }
-
-        .page-header p {
-          color: #666;
-          margin: 0;
         }
 
         .happy-box {
           display: flex;
           align-items: center;
           gap: 12px;
-          background: linear-gradient(135deg, #fff5f0 0%, #fffbf7 100%);
-          border: 2px solid #ffb88c;
+          background: white;
+          border: 2px solid #FFD9B3;
           border-radius: 12px;
           padding: 16px 20px;
           margin-bottom: 30px;
           font-size: 14px;
-          color: #666;
+          color: #555;
         }
 
         .happy-box span {
@@ -489,24 +473,25 @@ export const AdvertisingApproval: React.FC = () => {
 
         .filter-btn {
           padding: 10px 20px;
-          border: 2px solid #e0e0e0;
+          border: 2px solid #FFD9B3;
           background: white;
           border-radius: 8px;
           cursor: pointer;
           font-size: 14px;
           font-weight: 600;
+          color: #333;
           transition: all 0.2s;
         }
 
         .filter-btn:hover {
-          border-color: #ff6b35;
-          color: #ff6b35;
+          border-color: #FF6B35;
+          color: #FF6B35;
         }
 
         .filter-btn.active {
-          background: #ff6b35;
+          background: #FF6B35;
           color: white;
-          border-color: #ff6b35;
+          border-color: #FF6B35;
         }
 
         .ads-list {
@@ -518,7 +503,7 @@ export const AdvertisingApproval: React.FC = () => {
 
         .ad-card {
           background: white;
-          border: 2px solid #f0f0f0;
+          border: 2px solid #FFD9B3;
           border-radius: 12px;
           overflow: hidden;
           display: flex;
@@ -527,8 +512,8 @@ export const AdvertisingApproval: React.FC = () => {
         }
 
         .ad-card:hover {
-          border-color: #ff6b35;
-          box-shadow: 0 4px 16px rgba(255, 107, 53, 0.1);
+          border-color: #FF6B35;
+          box-shadow: 0 4px 16px rgba(255, 107, 53, 0.15);
         }
 
         .ad-card-image {
@@ -537,7 +522,7 @@ export const AdvertisingApproval: React.FC = () => {
           height: 160px;
           position: relative;
           overflow: hidden;
-          background: #f5f5f5;
+          background: #FFF8F5;
         }
 
         .ad-card-image img {
@@ -576,6 +561,7 @@ export const AdvertisingApproval: React.FC = () => {
         .ad-header h3 {
           margin: 0 0 4px 0;
           font-size: 18px;
+          font-weight: bold;
           color: #333;
         }
 
@@ -586,9 +572,10 @@ export const AdvertisingApproval: React.FC = () => {
         }
 
         .duration {
-          background: #f5f5f5;
+          background: #FFF8F5;
           padding: 8px 12px;
           border-radius: 6px;
+          border: 1px solid #FFD9B3;
           font-size: 12px;
           font-weight: 600;
           color: #666;
@@ -598,7 +585,7 @@ export const AdvertisingApproval: React.FC = () => {
         .description {
           margin: 0;
           font-size: 14px;
-          color: #666;
+          color: #555;
           line-height: 1.4;
         }
 
@@ -614,16 +601,17 @@ export const AdvertisingApproval: React.FC = () => {
           justify-content: space-between;
           align-items: center;
           padding: 8px 0;
-          border-bottom: 1px solid #f5f5f5;
+          border-bottom: 1px solid #FFD9B3;
         }
 
         .meta-item.error {
-          color: #f44336;
+          color: #F44336;
         }
 
         .meta-item .label {
           color: #999;
           font-weight: 500;
+          font-size: 12px;
         }
 
         .meta-item .value {
@@ -636,7 +624,8 @@ export const AdvertisingApproval: React.FC = () => {
           display: flex;
           gap: 10px;
           flex-wrap: wrap;
-          border-left: 2px solid #f5f5f5;
+          border-left: 2px solid #FFD9B3;
+          background: #FFF8F5;
         }
 
         .ad-card-actions button {
@@ -650,17 +639,20 @@ export const AdvertisingApproval: React.FC = () => {
         }
 
         .btn-info {
-          background: #f0f0f0;
+          background: white;
           color: #333;
+          border: 2px solid #FFD9B3;
         }
 
         .btn-info:hover {
-          background: #e0e0e0;
+          border-color: #FF6B35;
+          color: #FF6B35;
         }
 
         .btn-success {
-          background: #4caf50;
+          background: #4CAF50;
           color: white;
+          border: none;
         }
 
         .btn-success:hover {
@@ -668,8 +660,9 @@ export const AdvertisingApproval: React.FC = () => {
         }
 
         .btn-danger {
-          background: #f44336;
+          background: #F44336;
           color: white;
+          border: none;
         }
 
         .btn-danger:hover {
@@ -704,6 +697,7 @@ export const AdvertisingApproval: React.FC = () => {
         .modal-content {
           background: white;
           border-radius: 12px;
+          border: 2px solid #FFD9B3;
           max-width: 700px;
           width: 90%;
           max-height: 80vh;
@@ -720,12 +714,14 @@ export const AdvertisingApproval: React.FC = () => {
           justify-content: space-between;
           align-items: center;
           padding: 20px;
-          border-bottom: 2px solid #f5f5f5;
+          border-bottom: 2px solid #FFD9B3;
+          background: #FFF8F5;
         }
 
         .modal-header h2 {
           margin: 0;
-          font-size: 20px;
+          font-size: 18px;
+          font-weight: bold;
           color: #333;
         }
 
@@ -745,6 +741,7 @@ export const AdvertisingApproval: React.FC = () => {
         .modal-image {
           width: 100%;
           border-radius: 8px;
+          border: 2px solid #FFD9B3;
           margin-bottom: 20px;
         }
 
@@ -754,9 +751,9 @@ export const AdvertisingApproval: React.FC = () => {
 
         .detail-section h3 {
           margin: 0 0 12px 0;
-          font-size: 14px;
+          font-size: 12px;
           font-weight: 700;
-          color: #ff6b35;
+          color: #FF6B35;
           text-transform: uppercase;
         }
 
@@ -767,7 +764,7 @@ export const AdvertisingApproval: React.FC = () => {
         }
 
         .detail-section.error h3 {
-          color: #f44336;
+          color: #F44336;
         }
 
         .detail-section.error p {
@@ -811,8 +808,9 @@ export const AdvertisingApproval: React.FC = () => {
         }
 
         .placement-badge {
-          background: #f0f0f0;
+          background: #FFF8F5;
           padding: 6px 12px;
+          border: 1px solid #FFD9B3;
           border-radius: 6px;
           font-size: 13px;
           font-weight: 600;
@@ -822,22 +820,26 @@ export const AdvertisingApproval: React.FC = () => {
         .reason-textarea {
           width: 100%;
           padding: 12px;
-          border: 2px solid #e0e0e0;
+          border: 2px solid #FFD9B3;
+          background: white;
           border-radius: 6px;
           font-family: inherit;
           font-size: 14px;
+          color: #333;
           resize: vertical;
           transition: border-color 0.2s;
         }
 
         .reason-textarea:focus {
           outline: none;
-          border-color: #ff6b35;
+          border-color: #FF6B35;
+          background: #FFF8F5;
         }
 
         .modal-footer {
           padding: 20px;
-          border-top: 2px solid #f5f5f5;
+          border-top: 2px solid #FFD9B3;
+          background: #FFF8F5;
           display: flex;
           gap: 12px;
           justify-content: flex-end;
@@ -854,12 +856,14 @@ export const AdvertisingApproval: React.FC = () => {
         }
 
         .btn-secondary {
-          background: #f0f0f0;
+          background: white;
           color: #333;
+          border: 2px solid #FFD9B3;
         }
 
         .btn-secondary:hover {
-          background: #e0e0e0;
+          border-color: #FF6B35;
+          color: #FF6B35;
         }
       `}</style>
     </div>

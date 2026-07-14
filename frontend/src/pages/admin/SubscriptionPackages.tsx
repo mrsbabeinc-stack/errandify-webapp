@@ -138,22 +138,21 @@ export const SubscriptionPackages: React.FC = () => {
     <AdminLayout>
       <div className="subscription-packages-page">
       <ToastContainer toasts={toasts} onClose={removeToast} />
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px' }}>
         <div>
-          <h1 style={{ margin: 0 }}>💳 Subscription Packages</h1>
-          <p style={{ margin: '8px 0 0 0' }}>Create and manage subscription tiers for companies</p>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#333', margin: '0 0 8px 0' }}>💳 Subscription Packages</h1>
+          <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>Create and manage subscription tiers for companies</p>
         </div>
         <button
           onClick={() => navigate(-1)}
           style={{
-            fontSize: '20px',
+            fontSize: '24px',
             background: 'none',
             border: 'none',
             cursor: 'pointer',
             color: '#FF6B35',
             fontWeight: '700',
             padding: '0 8px',
-            marginBottom: '20px',
           }}
           title="Go back"
         >
@@ -392,36 +391,21 @@ export const SubscriptionPackages: React.FC = () => {
       <style>{`
         .subscription-packages-page {
           padding: 30px;
-          background: #fafafa;
+          background: #FFF8F5;
           min-height: 100vh;
-        }
-
-        .page-header {
-          margin-bottom: 30px;
-        }
-
-        .page-header h1 {
-          font-size: 32px;
-          color: #333;
-          margin: 0 0 8px 0;
-        }
-
-        .page-header p {
-          color: #666;
-          margin: 0;
         }
 
         .happy-box {
           display: flex;
           align-items: center;
           gap: 12px;
-          background: linear-gradient(135deg, #fff5f0 0%, #fffbf7 100%);
-          border: 2px solid #ffb88c;
+          background: white;
+          border: 2px solid #FFD9B3;
           border-radius: 12px;
           padding: 16px 20px;
           margin-bottom: 30px;
           font-size: 14px;
-          color: #666;
+          color: #555;
         }
 
         .happy-box span {
@@ -430,7 +414,7 @@ export const SubscriptionPackages: React.FC = () => {
         }
 
         .btn-primary {
-          background: #ff6b35;
+          background: #FF6B35;
           color: white;
           border: none;
           padding: 12px 24px;
@@ -457,21 +441,21 @@ export const SubscriptionPackages: React.FC = () => {
 
         .package-card {
           background: white;
-          border: 2px solid #f0f0f0;
+          border: 2px solid #FFD9B3;
           border-radius: 12px;
           overflow: hidden;
           transition: all 0.3s;
         }
 
         .package-card:hover {
-          border-color: #ff6b35;
-          box-shadow: 0 4px 16px rgba(255, 107, 53, 0.1);
+          border-color: #FF6B35;
+          box-shadow: 0 4px 16px rgba(255, 107, 53, 0.15);
         }
 
         .card-header {
           padding: 20px;
-          background: linear-gradient(135deg, #fff5f0 0%, #fffbf7 100%);
-          border-bottom: 2px solid #f5f5f5;
+          background: #FFF8F5;
+          border-bottom: 2px solid #FFD9B3;
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
@@ -479,15 +463,16 @@ export const SubscriptionPackages: React.FC = () => {
 
         .card-header h3 {
           margin: 0 0 8px 0;
-          font-size: 20px;
+          font-size: 18px;
+          font-weight: bold;
           color: #333;
         }
 
         .pricing {
           margin: 0;
-          font-size: 24px;
+          font-size: 20px;
           font-weight: 700;
-          color: #ff6b35;
+          color: #FF6B35;
         }
 
         .status-toggle {
@@ -533,7 +518,7 @@ export const SubscriptionPackages: React.FC = () => {
         }
 
         .toggle-switch input:checked + .toggle-slider {
-          background-color: #4caf50;
+          background-color: #4CAF50;
         }
 
         .toggle-switch input:checked + .toggle-slider:before {
@@ -552,7 +537,7 @@ export const SubscriptionPackages: React.FC = () => {
           margin: 0 0 12px 0;
           font-size: 12px;
           font-weight: 700;
-          color: #ff6b35;
+          color: #FF6B35;
           text-transform: uppercase;
         }
 
@@ -568,7 +553,7 @@ export const SubscriptionPackages: React.FC = () => {
           align-items: center;
           font-size: 14px;
           padding: 8px 0;
-          border-bottom: 1px solid #f5f5f5;
+          border-bottom: 1px solid #FFD9B3;
         }
 
         .feature:last-child {
@@ -578,6 +563,8 @@ export const SubscriptionPackages: React.FC = () => {
         .feature .label {
           color: #666;
           font-weight: 500;
+          font-size: 12px;
+          text-transform: uppercase;
         }
 
         .feature .value {
@@ -586,7 +573,7 @@ export const SubscriptionPackages: React.FC = () => {
         }
 
         .pricing-info {
-          background: #f9f9f9;
+          background: #FFF8F5;
           border-radius: 8px;
           padding: 12px;
           margin-top: 16px;
@@ -602,6 +589,7 @@ export const SubscriptionPackages: React.FC = () => {
 
         .price-item .label {
           color: #666;
+          font-size: 12px;
         }
 
         .price-item .value {
@@ -611,8 +599,8 @@ export const SubscriptionPackages: React.FC = () => {
 
         .card-actions {
           padding: 12px 20px;
-          background: #f9f9f9;
-          border-top: 2px solid #f5f5f5;
+          background: #FFF8F5;
+          border-top: 2px solid #FFD9B3;
           display: flex;
           gap: 8px;
         }
@@ -622,19 +610,24 @@ export const SubscriptionPackages: React.FC = () => {
           padding: 8px 12px;
           font-size: 12px;
           font-weight: 600;
-          border: none;
+          border: 2px solid #FFD9B3;
+          background: white;
           border-radius: 6px;
           cursor: pointer;
           transition: all 0.2s;
-        }
-
-        .btn-secondary {
-          background: #f0f0f0;
           color: #333;
         }
 
+        .btn-secondary {
+          background: white;
+          color: #333;
+          border: 2px solid #FFD9B3;
+        }
+
         .btn-secondary:hover {
-          background: #e0e0e0;
+          background: #FFF8F5;
+          border-color: #FF6B35;
+          color: #FF6B35;
         }
 
         /* Modal Styles */
@@ -654,6 +647,7 @@ export const SubscriptionPackages: React.FC = () => {
         .modal-content {
           background: white;
           border-radius: 12px;
+          border: 2px solid #FFD9B3;
           max-width: 600px;
           width: 90%;
           max-height: 80vh;
@@ -666,12 +660,14 @@ export const SubscriptionPackages: React.FC = () => {
           justify-content: space-between;
           align-items: center;
           padding: 20px;
-          border-bottom: 2px solid #f5f5f5;
+          border-bottom: 2px solid #FFD9B3;
+          background: #FFF8F5;
         }
 
         .modal-header h2 {
           margin: 0;
-          font-size: 20px;
+          font-size: 18px;
+          font-weight: bold;
           color: #333;
         }
 
@@ -681,6 +677,7 @@ export const SubscriptionPackages: React.FC = () => {
           font-size: 24px;
           cursor: pointer;
           color: #999;
+          padding: 0;
         }
 
         .modal-body {
@@ -694,9 +691,10 @@ export const SubscriptionPackages: React.FC = () => {
         .form-group label {
           display: block;
           margin-bottom: 8px;
-          font-size: 14px;
-          font-weight: 600;
-          color: #333;
+          font-size: 12px;
+          font-weight: 700;
+          color: #666;
+          text-transform: uppercase;
         }
 
         .form-group input[type="text"],
@@ -704,15 +702,18 @@ export const SubscriptionPackages: React.FC = () => {
         .form-group input[type="email"] {
           width: 100%;
           padding: 10px 12px;
-          border: 2px solid #e0e0e0;
+          border: 2px solid #FFD9B3;
+          background: white;
           border-radius: 6px;
           font-size: 14px;
+          color: #333;
           transition: border-color 0.2s;
         }
 
         .form-group input:focus {
           outline: none;
-          border-color: #ff6b35;
+          border-color: #FF6B35;
+          background: #FFF8F5;
         }
 
         .form-group small {
@@ -753,7 +754,8 @@ export const SubscriptionPackages: React.FC = () => {
 
         .modal-footer {
           padding: 20px;
-          border-top: 2px solid #f5f5f5;
+          border-top: 2px solid #FFD9B3;
+          background: #FFF8F5;
           display: flex;
           gap: 12px;
           justify-content: flex-end;

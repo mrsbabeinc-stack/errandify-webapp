@@ -202,22 +202,21 @@ export const PartnerTiers: React.FC = () => {
     <AdminLayout>
       <div className="partner-tiers-page">
       <ToastContainer toasts={toasts} onClose={removeToast} />
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px' }}>
         <div>
-          <h1 style={{ margin: 0 }}>👑 Partner Tiers</h1>
-          <p style={{ margin: '8px 0 0 0' }}>Manage tier qualifications and view company progress</p>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#333', margin: '0 0 8px 0' }}>👑 Partner Tiers</h1>
+          <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>Manage tier qualifications and view company progress</p>
         </div>
         <button
           onClick={() => navigate(-1)}
           style={{
-            fontSize: '20px',
+            fontSize: '24px',
             background: 'none',
             border: 'none',
             cursor: 'pointer',
             color: '#FF6B35',
             fontWeight: '700',
             padding: '0 8px',
-            marginBottom: '20px',
           }}
           title="Go back"
         >
@@ -527,36 +526,21 @@ export const PartnerTiers: React.FC = () => {
       <style>{`
         .partner-tiers-page {
           padding: 30px;
-          background: #fafafa;
+          background: #FFF8F5;
           min-height: 100vh;
-        }
-
-        .page-header {
-          margin-bottom: 30px;
-        }
-
-        .page-header h1 {
-          font-size: 32px;
-          color: #333;
-          margin: 0 0 8px 0;
-        }
-
-        .page-header p {
-          color: #666;
-          margin: 0;
         }
 
         .happy-box {
           display: flex;
           align-items: center;
           gap: 12px;
-          background: linear-gradient(135deg, #fff5f0 0%, #fffbf7 100%);
-          border: 2px solid #ffb88c;
+          background: white;
+          border: 2px solid #FFD9B3;
           border-radius: 12px;
           padding: 16px 20px;
           margin-bottom: 30px;
           font-size: 14px;
-          color: #666;
+          color: #555;
         }
 
         .happy-box span {
@@ -573,7 +557,7 @@ export const PartnerTiers: React.FC = () => {
 
         .tier-card {
           background: white;
-          border: 2px solid #f0f0f0;
+          border: 2px solid #FFD9B3;
           border-top: 4px solid;
           border-radius: 12px;
           padding: 20px;
@@ -582,7 +566,7 @@ export const PartnerTiers: React.FC = () => {
         }
 
         .tier-card:hover {
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 4px 16px rgba(255, 107, 53, 0.15);
           transform: translateY(-4px);
         }
 
@@ -599,7 +583,8 @@ export const PartnerTiers: React.FC = () => {
 
         .tier-header h3 {
           margin: 0;
-          font-size: 20px;
+          font-size: 18px;
+          font-weight: bold;
           color: #333;
         }
 
@@ -622,6 +607,7 @@ export const PartnerTiers: React.FC = () => {
 
         .stat .label {
           color: #666;
+          font-size: 12px;
         }
 
         .stat .value {
@@ -630,7 +616,8 @@ export const PartnerTiers: React.FC = () => {
         }
 
         .tier-requirements {
-          background: #f9f9f9;
+          background: #FFF8F5;
+          border: 1px solid #FFD9B3;
           border-radius: 8px;
           padding: 12px;
           margin-bottom: 16px;
@@ -640,7 +627,7 @@ export const PartnerTiers: React.FC = () => {
           margin: 0 0 8px 0;
           font-size: 12px;
           font-weight: 700;
-          color: #ff6b35;
+          color: #FF6B35;
           text-transform: uppercase;
         }
 
@@ -659,8 +646,8 @@ export const PartnerTiers: React.FC = () => {
         .btn-view {
           width: 100%;
           padding: 10px;
-          background: #f0f0f0;
-          border: none;
+          background: white;
+          border: 2px solid #FFD9B3;
           border-radius: 6px;
           font-size: 13px;
           font-weight: 600;
@@ -670,7 +657,8 @@ export const PartnerTiers: React.FC = () => {
         }
 
         .btn-view:hover {
-          background: #e0e0e0;
+          border-color: #FF6B35;
+          color: #FF6B35;
         }
 
         .companies-section {
@@ -680,6 +668,7 @@ export const PartnerTiers: React.FC = () => {
         .companies-section h2 {
           margin: 0 0 20px 0;
           font-size: 24px;
+          font-weight: bold;
           color: #333;
         }
 
@@ -691,7 +680,7 @@ export const PartnerTiers: React.FC = () => {
 
         .company-status-card {
           background: white;
-          border: 2px solid #f0f0f0;
+          border: 2px solid #FFD9B3;
           border-radius: 12px;
           padding: 20px;
           cursor: pointer;
@@ -699,8 +688,8 @@ export const PartnerTiers: React.FC = () => {
         }
 
         .company-status-card:hover {
-          border-color: #ff6b35;
-          box-shadow: 0 4px 16px rgba(255, 107, 53, 0.1);
+          border-color: #FF6B35;
+          box-shadow: 0 4px 16px rgba(255, 107, 53, 0.15);
         }
 
         .company-header {
@@ -713,29 +702,31 @@ export const PartnerTiers: React.FC = () => {
         .company-header h3 {
           margin: 0 0 4px 0;
           font-size: 16px;
+          font-weight: bold;
           color: #333;
         }
 
         .current-tier {
           margin: 0;
           font-size: 13px;
-          color: #ff6b35;
+          color: #FF6B35;
           font-weight: 600;
         }
 
         .next-tier {
-          background: #fff5f0;
+          background: #FFF8F5;
+          border: 1px solid #FFD9B3;
           padding: 6px 12px;
           border-radius: 6px;
           font-size: 12px;
           font-weight: 600;
-          color: #ff6b35;
+          color: #FF6B35;
         }
 
         .progress-bar {
           width: 100%;
           height: 8px;
-          background: #f0f0f0;
+          background: #FFD9B3;
           border-radius: 4px;
           overflow: hidden;
           margin-bottom: 12px;
@@ -744,7 +735,7 @@ export const PartnerTiers: React.FC = () => {
 
         .progress-fill {
           height: 100%;
-          background: linear-gradient(90deg, #ff6b35, #ff8c42);
+          background: linear-gradient(90deg, #FF6B35, #ff8c42);
           border-radius: 4px;
           transition: width 0.3s;
         }
@@ -777,6 +768,7 @@ export const PartnerTiers: React.FC = () => {
         .detail-item .label {
           color: #999;
           font-weight: 500;
+          font-size: 12px;
         }
 
         .detail-item .value {
@@ -821,6 +813,7 @@ export const PartnerTiers: React.FC = () => {
         .modal-content {
           background: white;
           border-radius: 12px;
+          border: 2px solid #FFD9B3;
           max-width: 600px;
           width: 90%;
           max-height: 80vh;
@@ -833,12 +826,14 @@ export const PartnerTiers: React.FC = () => {
           justify-content: space-between;
           align-items: center;
           padding: 20px;
-          border-bottom: 2px solid #f5f5f5;
+          border-bottom: 2px solid #FFD9B3;
+          background: #FFF8F5;
         }
 
         .modal-header h2 {
           margin: 0;
-          font-size: 20px;
+          font-size: 18px;
+          font-weight: bold;
           color: #333;
         }
 
@@ -861,9 +856,9 @@ export const PartnerTiers: React.FC = () => {
 
         .detail-section h3 {
           margin: 0 0 12px 0;
-          font-size: 14px;
+          font-size: 12px;
           font-weight: 700;
-          color: #ff6b35;
+          color: #FF6B35;
           text-transform: uppercase;
         }
 
@@ -878,7 +873,8 @@ export const PartnerTiers: React.FC = () => {
           flex-direction: column;
           gap: 8px;
           padding: 12px;
-          background: #f9f9f9;
+          background: #FFF8F5;
+          border: 1px solid #FFD9B3;
           border-radius: 6px;
         }
 
@@ -899,12 +895,13 @@ export const PartnerTiers: React.FC = () => {
           display: flex;
           justify-content: space-between;
           padding: 12px 0;
-          border-bottom: 1px solid #f5f5f5;
+          border-bottom: 1px solid #FFD9B3;
         }
 
         .status-item .label {
           font-weight: 600;
           color: #666;
+          font-size: 12px;
         }
 
         .status-item .value {
@@ -926,7 +923,8 @@ export const PartnerTiers: React.FC = () => {
 
         .modal-footer {
           padding: 20px;
-          border-top: 2px solid #f5f5f5;
+          border-top: 2px solid #FFD9B3;
+          background: #FFF8F5;
           display: flex;
           gap: 12px;
           justify-content: flex-end;
@@ -943,12 +941,14 @@ export const PartnerTiers: React.FC = () => {
         }
 
         .btn-secondary {
-          background: #f0f0f0;
+          background: white;
           color: #333;
+          border: 2px solid #FFD9B3;
         }
 
         .btn-secondary:hover {
-          background: #e0e0e0;
+          border-color: #FF6B35;
+          color: #FF6B35;
         }
       `}</style>
     </div>
