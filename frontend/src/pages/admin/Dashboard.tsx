@@ -182,7 +182,7 @@ export const AdminDashboard: React.FC = () => {
         {/* OPERATIONS STATUS - ACTIONABLE */}
         <div style={{ marginBottom: '20px' }}>
           <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>⚙️ Operations & Safety (Action Required)</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
             {operationsStatus.map((item, i) => (
               <div key={i} style={{
                 background: item.bg,
