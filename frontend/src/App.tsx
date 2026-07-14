@@ -410,7 +410,7 @@ export default function App() {
         <Route path="/safety-resources" element={<SafetyResourcesPage />} />
 
         {/* Admin Dashboard Routes */}
-        <Route path="/admin/dashboard" element={isAuthenticated && isAdmin ? <Navigate to="/admin/dashboard/overview" replace /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/dashboard" element={isAuthenticated && isAdmin ? <AdminDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/overview" element={isAuthenticated && isAdmin ? <OverviewPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/users" element={isAuthenticated && isAdmin ? <UsersSafetyPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/disputes" element={isAuthenticated && isAdmin ? <DisputesPage /> : <Navigate to="/login" replace />} />

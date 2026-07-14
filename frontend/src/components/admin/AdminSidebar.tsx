@@ -10,13 +10,13 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
+  { id: 'home', label: 'Home', icon: '🏠', path: '/admin/dashboard' },
   {
     id: 'dashboard',
     label: 'Dashboard',
     icon: '📊',
-    path: '/admin/dashboard/overview',
     children: [
-      { id: 'overview', label: 'Overview', icon: '🎯', path: '/admin/dashboard/overview' },
+      { id: 'overview', label: 'Overview', icon: '🏠', path: '/admin/dashboard/overview' },
       { id: 'users-safety', label: 'Users & Safety', icon: '👥', path: '/admin/dashboard/users' },
     ]
   },
