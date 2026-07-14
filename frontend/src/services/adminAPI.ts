@@ -67,6 +67,26 @@ export interface Role {
   permissions?: string[];
 }
 
+export interface LeaveRequest {
+  id?: number;
+  staff_id: string;
+  staff_name?: string;
+  leave_type: string;
+  start_date: string;
+  end_date?: string;
+  period?: string;
+  reason?: string;
+  notes?: string;
+  is_recurring?: boolean;
+  recurring_pattern?: any;
+  days_count?: number;
+  status?: string;
+  approved_by?: string;
+  approval_notes?: string;
+  created_at?: string;
+  last_modified?: string;
+}
+
 // Staff Management APIs
 export const staffAPI = {
   async getAll() {
@@ -286,6 +306,63 @@ export const rbacAPI = {
       body: JSON.stringify({ userId, permissionCode }),
     });
     if (!response.ok) throw new Error('Failed to check permission');
+    return response.json();
+  },
+};
+
+// Leave Management APIs
+export const leaveAPI = {
+  async getAll(status?: string, staffId?: string, startDate?: string, endDate?: string) {
+    let url = `${API_BASE}/leaves`;
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (staffId) params.append('staffId', staffId);
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    if (params.toString()) url += `?${params.toString()}`;
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch leave requests');
+    return response.json();
+  },
+
+  async getById(id: number) {
+    const response = await fetch(`${API_BASE}/leaves/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch leave request');
+    return response.json();
+  },
+
+  async create(leave: LeaveRequest) {
+    const response = await fetch(`${API_BASE}/leaves`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(leave),
+    });
+    if (!response.ok) throw new Error('Failed to create leave request');
+    return response.json();
+  },
+
+  async update(id: number, leave: Partial<LeaveRequest>) {
+    const response = await fetch(`${API_BASE}/leaves/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(leave),
+    });
+    if (!response.ok) throw new Error('Failed to update leave request');
+    return response.json();
+  },
+
+  async delete(id: number) {
+    const response = await fetch(`${API_BASE}/leaves/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete leave request');
+    return response.json();
+  },
+
+  async getLeaveBalance(staffId: string) {
+    const response = await fetch(`${API_BASE}/leave-balance/${staffId}`);
+    if (!response.ok) throw new Error('Failed to fetch leave balance');
     return response.json();
   },
 };

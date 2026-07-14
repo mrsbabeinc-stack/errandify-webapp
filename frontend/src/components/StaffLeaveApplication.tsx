@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { leaveAPI } from '../services/adminAPI';
 
 interface RecurringPattern {
   type: 'weekly' | 'bi-weekly' | 'monthly';
@@ -112,7 +113,7 @@ const StaffLeaveApplication: React.FC = () => {
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!startDate || !reason) {
       alert('Please fill in required fields');
       return;
@@ -123,41 +124,52 @@ const StaffLeaveApplication: React.FC = () => {
       return;
     }
 
-    const newApp: LeaveApplication = {
-      id: applications.length + 1,
-      staffName: 'Current User',
-      isRecurring,
-      startDate,
-      endDate: endDate || startDate,
-      period,
-      reason,
-      notes,
-      status: 'pending',
-      ...(isRecurring && {
-        recurringPattern: {
+    try {
+      // Get current staff ID from localStorage or user context
+      const staffId = localStorage.getItem('staffId') || 'S001';
+      const staffName = localStorage.getItem('staffName') || 'Current User';
+
+      const leaveData = {
+        staff_id: staffId,
+        staff_name: staffName,
+        leave_type: reason,
+        start_date: startDate,
+        end_date: endDate || startDate,
+        period,
+        reason,
+        notes,
+        is_recurring: isRecurring,
+        recurring_pattern: isRecurring ? {
           type: recurringType,
           daysOfWeek: selectedDays,
           effectiveFrom: startDate,
           effectiveUntil: !isOngoing ? recurringUntil : undefined,
-        },
-      }),
-    };
+        } : null,
+      };
 
-    setApplications([...applications, newApp]);
-    setSubmitted(true);
-    setStartDate('');
-    setEndDate('');
-    setPeriod('full-day');
-    setReason('');
-    setNotes('');
-    setIsRecurring(false);
-    setSelectedDays([0]);
-    setRecurringUntil('');
-    setIsOngoing(true);
+      const response = await leaveAPI.create(leaveData);
 
-    setTimeout(() => {
-      navigate('/staff/dashboard');
-    }, 2000);
+      if (response.success) {
+        setApplications([...applications, response.data]);
+        setSubmitted(true);
+        setStartDate('');
+        setEndDate('');
+        setPeriod('full-day');
+        setReason('');
+        setNotes('');
+        setIsRecurring(false);
+        setSelectedDays([0]);
+        setRecurringUntil('');
+        setIsOngoing(true);
+
+        setTimeout(() => {
+          navigate('/staff/dashboard');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error submitting leave request:', error);
+      alert('Failed to submit leave request. Please try again.');
+    }
   };
 
   return (
