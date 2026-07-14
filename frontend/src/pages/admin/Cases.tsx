@@ -800,19 +800,41 @@ export const CasesPage: React.FC = () => {
                     </ul>
                   </div>
 
-                  {/* Compensation Type */}
+                  {/* Integrated Compensation & Fee Assignment */}
                   <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
-                      Compensation Decision
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '10px', color: '#333' }}>
+                      Decision & Fee Assignment (Combined)
                     </label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+
+                    {/* Preset Decision Options with Fee Breakdown */}
+                    <div style={{ display: 'grid', gap: '10px', marginBottom: '16px' }}>
+                      {/* Full Payment to Doer */}
                       <button
                         onClick={() => {
                           (document.getElementById('compensationType') as HTMLInputElement).value = 'full';
-                          showToast('Full compensation selected', 'success');
+                          const amount = 50; // Example
+                          const platformFee = amount * 0.20;
+                          const stripeFee = amount * 0.03;
+                          const netAmount = amount - platformFee - stripeFee;
+
+                          const breakdown = document.getElementById('feeBreakdown');
+                          if (breakdown) {
+                            breakdown.innerHTML = `
+                              <div style="font-size: 11px; color: #2e7d32; margin-top: 8px; padding: 10px; background: #E8F5E9; border: 1px solid #10b981; border-radius: 4px;">
+                                <strong>Full Payment to Doer</strong><br/>
+                                Gross Amount: SGD $${amount.toFixed(2)}<br/>
+                                Platform Fee (20%): -SGD $${platformFee.toFixed(2)} (Doer pays)<br/>
+                                Stripe Fee (3%): -SGD $${stripeFee.toFixed(2)} (Doer pays)<br/>
+                                <strong style="border-top: 1px solid #10b981; padding-top: 6px; margin-top: 6px; display: block;">
+                                  Net to Doer: SGD $${netAmount.toFixed(2)}
+                                </strong>
+                              </div>
+                            `;
+                          }
+                          showToast('Full payment selected - Doer pays platform & Stripe fees', 'success');
                         }}
                         style={{
-                          padding: '10px',
+                          padding: '12px',
                           background: '#10b981',
                           color: 'white',
                           border: 'none',
@@ -820,17 +842,45 @@ export const CasesPage: React.FC = () => {
                           cursor: 'pointer',
                           fontWeight: '600',
                           fontSize: '12px',
+                          textAlign: 'left',
                         }}
                       >
-                        💰 Full Payment to Doer
+                        💰 Full Payment to Doer<br/>
+                        <span style={{ fontSize: '10px', fontWeight: '400' }}>Doer pays 20% platform + 3% Stripe fee</span>
                       </button>
+
+                      {/* Split Payment */}
                       <button
                         onClick={() => {
                           (document.getElementById('compensationType') as HTMLInputElement).value = 'partial';
-                          showToast('Partial compensation selected', 'success');
+                          const amount = 50;
+                          const doerPercent = 60;
+                          const doerAmount = (amount * doerPercent) / 100;
+                          const askerAmount = amount - doerAmount;
+                          const platformFee = doerAmount * 0.20;
+                          const stripeFee = doerAmount * 0.03;
+                          const netDoer = doerAmount - platformFee - stripeFee;
+
+                          const breakdown = document.getElementById('feeBreakdown');
+                          if (breakdown) {
+                            breakdown.innerHTML = `
+                              <div style="font-size: 11px; color: #333; margin-top: 8px; padding: 10px; background: #FFF3E0; border: 1px solid #FFB74D; border-radius: 4px;">
+                                <strong>Split Payment (60% Doer / 40% Asker)</strong><br/>
+                                <strong style="color: #2e7d32;">Doer portion:</strong><br/>
+                                  Amount: SGD $${doerAmount.toFixed(2)}<br/>
+                                  Platform Fee (20%): -SGD $${platformFee.toFixed(2)}<br/>
+                                  Stripe Fee (3%): -SGD $${stripeFee.toFixed(2)}<br/>
+                                  Net to Doer: SGD $${netDoer.toFixed(2)}<br/>
+                                <br/>
+                                <strong style="color: #0288d1;">Asker refund:</strong><br/>
+                                  Amount: SGD $${askerAmount.toFixed(2)} (no fees on refund)
+                              </div>
+                            `;
+                          }
+                          showToast('Split payment selected - Each side gets percentage', 'success');
                         }}
                         style={{
-                          padding: '10px',
+                          padding: '12px',
                           background: '#f59e0b',
                           color: 'white',
                           border: 'none',
@@ -838,17 +888,34 @@ export const CasesPage: React.FC = () => {
                           cursor: 'pointer',
                           fontWeight: '600',
                           fontSize: '12px',
+                          textAlign: 'left',
                         }}
                       >
-                        🤝 Split Payment
+                        🤝 Split Payment<br/>
+                        <span style={{ fontSize: '10px', fontWeight: '400' }}>Customize split % below</span>
                       </button>
+
+                      {/* Full Refund to Asker */}
                       <button
                         onClick={() => {
                           (document.getElementById('compensationType') as HTMLInputElement).value = 'refund';
-                          showToast('Refund selected', 'success');
+                          const amount = 50;
+
+                          const breakdown = document.getElementById('feeBreakdown');
+                          if (breakdown) {
+                            breakdown.innerHTML = `
+                              <div style="font-size: 11px; color: #0284c7; margin-top: 8px; padding: 10px; background: #E3F2FD; border: 1px solid #3b82f6; border-radius: 4px;">
+                                <strong>Full Refund to Asker</strong><br/>
+                                Refund Amount: SGD $${amount.toFixed(2)}<br/>
+                                <span style="font-size: 10px; color: #666;">(No fees deducted from refund)<br/>
+                                Doer receives: SGD $0.00</span>
+                              </div>
+                            `;
+                          }
+                          showToast('Full refund selected - Asker refunded, Doer gets nothing', 'success');
                         }}
                         style={{
-                          padding: '10px',
+                          padding: '12px',
                           background: '#3b82f6',
                           color: 'white',
                           border: 'none',
@@ -856,17 +923,31 @@ export const CasesPage: React.FC = () => {
                           cursor: 'pointer',
                           fontWeight: '600',
                           fontSize: '12px',
+                          textAlign: 'left',
                         }}
                       >
-                        💵 Full Refund to Asker
+                        💵 Full Refund to Asker<br/>
+                        <span style={{ fontSize: '10px', fontWeight: '400' }}>Doer receives nothing</span>
                       </button>
+
+                      {/* Escalate L3 */}
                       <button
                         onClick={() => {
                           (document.getElementById('compensationType') as HTMLInputElement).value = 'escalate';
-                          showToast('Escalation selected', 'success');
+                          const breakdown = document.getElementById('feeBreakdown');
+                          if (breakdown) {
+                            breakdown.innerHTML = `
+                              <div style="font-size: 11px; color: #6366f1; margin-top: 8px; padding: 10px; background: #EDE7F6; border: 1px solid #6366f1; border-radius: 4px;">
+                                <strong>Escalate to L3 Senior Admin</strong><br/>
+                                <span style="font-size: 10px; color: #666;">This case requires senior review.<br/>
+                                No payment decision made yet.</span>
+                              </div>
+                            `;
+                          }
+                          showToast('Escalated to L3 - Senior admin will review', 'warning');
                         }}
                         style={{
-                          padding: '10px',
+                          padding: '12px',
                           background: '#6366f1',
                           color: 'white',
                           border: 'none',
@@ -874,53 +955,84 @@ export const CasesPage: React.FC = () => {
                           cursor: 'pointer',
                           fontWeight: '600',
                           fontSize: '12px',
+                          textAlign: 'left',
                         }}
                       >
-                        🚀 Escalate L3
+                        🚀 Escalate to L3<br/>
+                        <span style={{ fontSize: '10px', fontWeight: '400' }}>Senior admin review needed</span>
                       </button>
                     </div>
+
+                    {/* Hidden input */}
                     <input type="hidden" id="compensationType" defaultValue="" />
-                  </div>
 
-                  {/* Compensation Amount (if partial) */}
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
-                      Amount to Doer (SGD) - Before Fees
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="e.g., 50.00"
-                      id="compensationAmount"
-                      onChange={(e) => {
-                        const amount = parseFloat(e.target.value) || 0;
-                        const platformFee = amount * 0.20;
-                        const stripeFee = amount * 0.03;
-                        const netAmount = amount - platformFee - stripeFee;
+                    {/* Real-time Fee Breakdown Display */}
+                    <div id="feeBreakdown" style={{
+                      minHeight: '60px',
+                      padding: '10px',
+                      background: '#f9f9f9',
+                      borderRadius: '6px',
+                      fontSize: '11px',
+                      color: '#666',
+                      border: '1px solid #eee',
+                      textAlign: 'center',
+                    }}>
+                      Select a decision to see fee breakdown
+                    </div>
 
-                        // Update breakdown display
-                        const breakdown = document.getElementById('feeBreakdown');
-                        if (breakdown) {
-                          breakdown.innerHTML = `
-                            <div style="font-size: 11px; color: #666; margin-top: 8px; padding: 8px; background: #fff; border-radius: 4px;">
-                              Gross: SGD $${amount.toFixed(2)}<br/>
-                              Platform Fee (20%): -SGD $${platformFee.toFixed(2)}<br/>
-                              Stripe Fee (3%): -SGD $${stripeFee.toFixed(2)}<br/>
-                              <strong style="color: #333; border-top: 1px solid #eee; padding-top: 6px; margin-top: 6px; display: block;">
-                                Net to Doer: SGD $${netAmount.toFixed(2)}
-                              </strong>
-                            </div>
-                          `;
-                        }
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '8px',
-                        border: '2px solid #FFD9B3',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                      }}
-                    />
-                    <div id="feeBreakdown"></div>
+                    {/* Custom Amount Input (for split adjustments) */}
+                    <div style={{ marginTop: '12px' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
+                        Adjust Amount (for split decisions)
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="e.g., 50.00"
+                        id="compensationAmount"
+                        onChange={(e) => {
+                          const amount = parseFloat(e.target.value) || 0;
+                          const type = (document.getElementById('compensationType') as HTMLInputElement).value;
+
+                          if (type === 'full') {
+                            const platformFee = amount * 0.20;
+                            const stripeFee = amount * 0.03;
+                            const netAmount = amount - platformFee - stripeFee;
+                            document.getElementById('feeBreakdown')!.innerHTML = `
+                              <div style="font-size: 11px; color: #2e7d32; padding: 10px; background: #E8F5E9; border: 1px solid #10b981; border-radius: 4px;">
+                                <strong>Full Payment to Doer</strong><br/>
+                                Gross: SGD $${amount.toFixed(2)}<br/>
+                                Platform Fee (20%): -SGD $${platformFee.toFixed(2)}<br/>
+                                Stripe Fee (3%): -SGD $${stripeFee.toFixed(2)}<br/>
+                                <strong style="border-top: 1px solid #10b981; padding-top: 6px; margin-top: 6px; display: block;">
+                                  Net to Doer: SGD $${netAmount.toFixed(2)}
+                                </strong>
+                              </div>
+                            `;
+                          } else if (type === 'partial') {
+                            const doerPercent = 60;
+                            const doerAmount = (amount * doerPercent) / 100;
+                            const askerAmount = amount - doerAmount;
+                            const platformFee = doerAmount * 0.20;
+                            const stripeFee = doerAmount * 0.03;
+                            const netDoer = doerAmount - platformFee - stripeFee;
+                            document.getElementById('feeBreakdown')!.innerHTML = `
+                              <div style="font-size: 11px; color: #333; padding: 10px; background: #FFF3E0; border: 1px solid #FFB74D; border-radius: 4px;">
+                                <strong>Split (60/40)</strong><br/>
+                                Doer: SGD $${doerAmount.toFixed(2)} - Platform/Stripe fees = SGD $${netDoer.toFixed(2)}<br/>
+                                Asker Refund: SGD $${askerAmount.toFixed(2)}
+                              </div>
+                            `;
+                          }
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          border: '2px solid #FFD9B3',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                        }}
+                      />
+                    </div>
                   </div>
 
                   {/* Resolution Notes */}
