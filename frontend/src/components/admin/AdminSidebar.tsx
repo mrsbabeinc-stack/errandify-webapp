@@ -119,6 +119,7 @@ const menuItems: MenuItem[] = [
       { id: 'expense-claims', label: 'Expense Claims', icon: '💼', path: '/admin/expense-claims' },
       { id: 'financial-reports', label: 'Financial Reports', icon: '📊', path: '/admin/financial-reports' },
       { id: 'invoicing', label: 'Invoicing', icon: '📋', path: '/admin/invoicing' },
+      { id: 'ai-reports', label: 'AI Reports', icon: '🤖', path: '/admin/ai-reports' },
     ]
   },
 ];
