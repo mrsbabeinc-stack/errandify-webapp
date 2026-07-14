@@ -59,7 +59,7 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div style={{ padding: '12px 16px', height: '100vh', display: 'flex', flexDirection: 'column', gap: '10px', overflow: 'hidden' }}>
+      <div style={{ padding: '12px 16px', height: '100vh', display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
           <div>
@@ -132,7 +132,7 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
 
 
         {/* Charts Row: 3 Columns */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '12px', flex: '1 1 280px', minHeight: 0 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '12px', height: '280px' }}>
           {/* Daily Issuance Chart */}
           <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', display: 'flex', flexDirection: 'column' }}>
             <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>📈 Daily Issuance (7-day)</h3>
@@ -238,7 +238,7 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
         )}
 
         {/* EP Transactions Table with Filters & Export */}
-        <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', height: '300px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: 0 }}>📊 EP Transactions</h3>
             <div style={{ display: 'flex', gap: '8px' }}>
