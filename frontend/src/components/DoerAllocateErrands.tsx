@@ -54,10 +54,11 @@ const DoerAllocateErrands: React.FC = () => {
 
         // Filter for confirmed status errands that have user's accepted bid
         // These are errands ready to be allocated to company staff
+        // Exclude errands that already have assignments
         const confirmedErrands = errandsResponse.data.data
           .filter((e: any) => {
-            console.log(`[DoerAllocateErrands] Checking errand ${e.id}: status=${e.status}, acceptedBidId=${e.acceptedBidId}`);
-            return e.status === 'confirmed' && e.acceptedBidId;
+            console.log(`[DoerAllocateErrands] Checking errand ${e.id}: status=${e.status}, acceptedBidId=${e.acceptedBidId}, hasAssignment=${e.hasAssignment}`);
+            return e.status === 'confirmed' && e.acceptedBidId && !e.hasAssignment;
           })
           .map((e: any) => ({
             id: e.id,
@@ -77,33 +78,47 @@ const DoerAllocateErrands: React.FC = () => {
 
         // Fetch real company staff members
         try {
-          const staffResponse = await axios.get(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/company/staff`,
+          // First get the user's company
+          const companyResponse = await axios.get(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/user/my-company`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          if (staffResponse.data.data && Array.isArray(staffResponse.data.data)) {
-            const realStaff = staffResponse.data.data.map((s: any) => ({
-              id: s.id,
-              display_name: s.display_name || s.name,
-              alias: s.alias,
-              role: s.role || 'Staff',
-            }));
-            setStaff(realStaff);
+          const companyId = companyResponse.data.data?.id;
 
-            // AI Recommendation: suggest staff based on errand category and their skills
-            if (confirmedErrands.length > 0 && realStaff.length > 0) {
-              // For now, recommend the first available staff (in future: use AI to match skills)
-              setRecommendedStaffId(realStaff[0].id);
+          if (companyId) {
+            // Fetch employees for this company
+            const staffResponse = await axios.get(
+              `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${companyId}/employees`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (staffResponse.data.data && Array.isArray(staffResponse.data.data)) {
+              const realStaff = staffResponse.data.data.map((emp: any) => ({
+                id: emp.user_id,
+                display_name: emp.user_name || emp.name || 'Staff Member',
+                alias: emp.alias,
+                role: emp.position || emp.role || 'Staff',
+              }));
+
+              if (realStaff.length > 0) {
+                setStaff(realStaff);
+                // AI Recommendation: suggest the first available staff
+                setRecommendedStaffId(realStaff[0].id);
+              } else {
+                throw new Error('No employees found');
+              }
             }
           }
         } catch (err) {
           console.warn('Failed to fetch real staff, using demo:', err);
-          // Fallback to demo staff if API fails
-          setStaff([
-            { id: 11, display_name: 'Support L3 Senior', alias: 'Support L3', role: 'Senior Staff' },
-            { id: 12, display_name: 'Support L2 Agent', alias: 'Support L2', role: 'Support Agent' },
-            { id: 13, display_name: 'Operations Lead', alias: 'Ops', role: 'Operations' },
-          ]);
+          // Fallback to demo staff if API fails - use real demo account IDs
+          const demoStaff = [
+            { id: 13, display_name: 'Demo Staff 1', alias: 'Staff 1', role: 'Staff Member' },
+            { id: 14, display_name: 'Demo Staff 2', alias: 'Staff 2', role: 'Staff Member' },
+          ];
+          setStaff(demoStaff);
+          // Recommend Demo Staff 1 (ID: 13)
+          setRecommendedStaffId(13);
         }
 
       } catch (err) {
@@ -125,7 +140,21 @@ const DoerAllocateErrands: React.FC = () => {
 
   const handleAllocate = async () => {
     if (!selectedErrandId || !selectedStaffId) {
-      alert('Please select both an errand and a staff member');
+      const modal = document.createElement('div');
+      modal.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;" id="warn-modal">
+          <div style="background: white; border-radius: 12px; padding: 32px; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+            <h2 style="color: #8B4513; font-size: 24px; margin-bottom: 8px; font-weight: bold;">Selection Required</h2>
+            <p style="color: #666; margin-bottom: 24px; line-height: 1.5;">Please select both an errand and a staff member</p>
+            <button id="warn-ok" style="width: 100%; background: #FF9800; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">OK</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      document.getElementById('warn-ok')?.addEventListener('click', () => {
+        modal.remove();
+      });
       return;
     }
 
@@ -134,16 +163,32 @@ const DoerAllocateErrands: React.FC = () => {
 
       // Create errand assignment
       await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errand-assignments`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/errand-assignments`,
         {
           errandId: selectedErrandId,
           doerId: selectedStaffId,
-          status: 'allocated',
+          status: 'accepted',
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert('Errand allocated successfully!');
+      // Show success modal with Errandify theme
+      const modal = document.createElement('div');
+      modal.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;" id="alloc-modal">
+          <div style="background: white; border-radius: 12px; padding: 32px; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+            <h2 style="color: #8B4513; font-size: 24px; margin-bottom: 8px; font-weight: bold;">Errand Allocated!</h2>
+            <p style="color: #666; margin-bottom: 24px; line-height: 1.5;">Staff member has been assigned to this errand and will receive a notification.</p>
+            <button id="alloc-ok" style="width: 100%; background: #FF9800; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">OK</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      document.getElementById('alloc-ok')?.addEventListener('click', () => {
+        modal.remove();
+      });
+
       setSelectedErrandId(null);
       setSelectedStaffId(null);
 
@@ -151,7 +196,22 @@ const DoerAllocateErrands: React.FC = () => {
       setErrands(errands.filter(e => e.id !== selectedErrandId));
     } catch (err: any) {
       console.error('Failed to allocate:', err);
-      alert(err.response?.data?.error || 'Failed to allocate errand');
+      const errorMsg = err.response?.data?.error || 'Failed to allocate errand';
+      const modal = document.createElement('div');
+      modal.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;" id="error-modal">
+          <div style="background: white; border-radius: 12px; padding: 32px; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+            <h2 style="color: #8B4513; font-size: 24px; margin-bottom: 8px; font-weight: bold;">Allocation Failed</h2>
+            <p style="color: #d9534f; margin-bottom: 24px; line-height: 1.5;">${errorMsg}</p>
+            <button id="error-ok" style="width: 100%; background: #8B4513; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">OK</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      document.getElementById('error-ok')?.addEventListener('click', () => {
+        modal.remove();
+      });
     }
   };
 

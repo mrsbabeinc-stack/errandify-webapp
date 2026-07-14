@@ -9,6 +9,7 @@ import ProfilePlaque from '../components/ProfilePlaque';
 import BottomNav from '../components/BottomNav';
 import HanaCustomerService from '../components/HanaCustomerService';
 import AccountPauseModal from '../components/AccountPauseModal';
+import StaffLeaveApplication from '../components/StaffLeaveApplication';
 
 interface UserProfile {
   id?: number;
@@ -44,7 +45,7 @@ interface MyAccountPageProps {
 
 export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'safety' | 'notify' | 'categories'>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'safety' | 'notify' | 'categories' | 'availability'>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [safetyTab, setSafetyTab] = useState<'blocked' | 'resources' | 'pause'>('resources');
   const [showAccountPauseModal, setShowAccountPauseModal] = useState(false);
@@ -1290,6 +1291,16 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
               }`}
             >
               🎯 Categories
+            </button>
+            <button
+              onClick={() => setActiveSection('availability')}
+              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
+                activeSection === 'availability'
+                  ? 'bg-errandify-orange text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
+            >
+              📅 My Availability
             </button>
           </div>
         </div>
@@ -3347,6 +3358,11 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
               </button>
             </div>
           </div>
+        )}
+
+        {/* AVAILABILITY SECTION - Staff apply for unavailability */}
+        {activeSection === 'availability' && (
+          <StaffLeaveApplication />
         )}
 
         {/* FAQ SECTION */}

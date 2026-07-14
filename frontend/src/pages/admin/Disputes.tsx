@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { useToast, ToastContainer } from '../../components/Toast';
 
 interface Dispute {
   id: number;
@@ -25,6 +27,8 @@ interface SafetyAnalysis {
 }
 
 export const DisputesPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { toasts, showToast, removeToast } = useToast();
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'level_1' | 'level_2' | 'level_3' | 'resolved'>('all');
@@ -55,20 +59,62 @@ export const DisputesPage: React.FC = () => {
       setError('');
     } catch (err) {
       console.error('Failed to fetch disputes:', err);
-      setError('Failed to load disputes');
       // Mock data for demo
-      setDisputes([
+      const mockDisputes: Dispute[] = [
         {
           id: 1,
           errand_id: 123,
           filed_by_user_id: 5,
           dispute_type: 'work_not_completed',
           description: 'Doer did not complete the cleaning in two rooms as agreed.',
-          status: 'level_2',
+          status: 'level_1',
           priority: 'normal',
           created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
         },
-      ]);
+        {
+          id: 2,
+          errand_id: 124,
+          filed_by_user_id: 8,
+          dispute_type: 'low_quality',
+          description: 'Cleaning quality was poor, many areas were missed.',
+          status: 'level_2',
+          priority: 'normal',
+          created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+        },
+        {
+          id: 3,
+          errand_id: 125,
+          filed_by_user_id: 12,
+          dispute_type: 'payment_not_released',
+          description: 'Payment was promised but not released after task completion.',
+          status: 'level_2',
+          priority: 'high',
+          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        },
+        {
+          id: 4,
+          errand_id: 126,
+          filed_by_user_id: 15,
+          dispute_type: 'safety_concern',
+          description: 'Doer behaved inappropriately during the errand.',
+          status: 'level_3',
+          priority: 'critical',
+          created_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+        },
+        {
+          id: 5,
+          errand_id: 127,
+          filed_by_user_id: 3,
+          dispute_type: 'work_not_completed',
+          description: 'Only partial work was completed.',
+          status: 'resolved',
+          priority: 'normal',
+          created_at: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+          resolved_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        },
+      ];
+      setDisputes(mockDisputes);
+      setError('');
     } finally {
       setLoading(false);
     }
@@ -178,10 +224,28 @@ export const DisputesPage: React.FC = () => {
 
   return (
     <AdminLayout>
+      <ToastContainer toasts={toasts} onClose={removeToast} />
       <div className="admin-page">
-        <div className="page-header mb-6">
-          <h1>⚖️ Dispute Resolution Center</h1>
-          <p>Review and resolve disputes across all levels</p>
+        <div className="page-header mb-6" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1>⚖️ Dispute Resolution Center</h1>
+            <p>Review and resolve disputes across all levels</p>
+          </div>
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              fontSize: '20px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#FF6B35',
+              fontWeight: '700',
+              padding: '0 8px',
+            }}
+            title="Go back"
+          >
+            ←
+          </button>
         </div>
 
         {/* Stats */}

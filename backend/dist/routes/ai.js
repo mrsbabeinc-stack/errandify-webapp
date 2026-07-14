@@ -8,6 +8,55 @@ import * as contentMod from '../modules/content-moderation.js';
 import * as privacyLogger from '../modules/privacy-logger.js';
 import * as explainability from '../modules/explainability.js';
 const router = Router();
+// Helper: Fast regex-based title cleaning (fallback for when Qwen is unavailable)
+function fallbackTitleClean(title) {
+    let cleaned = title;
+    // IMPORTANT: Remove metadata BEFORE we do case normalization
+    // Order matters - remove specific patterns first
+    // Remove budget patterns: "budget 300", "$300", ", 300"
+    cleaned = cleaned.replace(/,?\s*budget\s*\$?\s*\d+(?:\.\d{2})?/gi, '');
+    cleaned = cleaned.replace(/,?\s*\$\s*\d+(?:\.\d{2})?(?:\s+budget)?/gi, '');
+    // Remove time ranges like "2pm-5pm", "from 2pm-5pm"
+    cleaned = cleaned.replace(/\s+(?:from\s+)?\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)?\s*[-–]\s*\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)?/gi, '');
+    // Remove postal codes with "at": "at 680433"
+    cleaned = cleaned.replace(/\s+at\s+\d{6}\b/gi, '');
+    // Remove postal codes at end
+    cleaned = cleaned.replace(/\s+\d{6}\s*$/g, '');
+    // Remove "at <number>" time patterns (e.g., "at 3pm")
+    cleaned = cleaned.replace(/\s+at\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)/gi, '');
+    // Remove time patterns like "tomorrow 9am", "next monday 2pm", "on Saturday 3pm"
+    cleaned = cleaned.replace(/\s+(?:on|at)?\s+(?:tomorrow|today|tonight|next|this)\s+\w+\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)?/gi, '');
+    cleaned = cleaned.replace(/\s+\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)/gi, '');
+    // Remove day names with optional "on"
+    cleaned = cleaned.replace(/\s+(?:on\s+)?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\b/gi, '');
+    // Remove "tomorrow", "today", "next <word>", "in X days", date patterns
+    cleaned = cleaned.replace(/\s+(?:tomorrow|today|tonight)\b/gi, '');
+    cleaned = cleaned.replace(/\s+next\s+\w+/gi, ''); // "next Tuesday", etc
+    cleaned = cleaned.replace(/\s+in\s+\d+\s+days?\b/gi, '');
+    // Remove duration like "2 hours", "30 mins", "4 hours"
+    cleaned = cleaned.replace(/,?\s+\d+\s*(?:hours?|hrs?|h|mins?|m|days?)\b/gi, '');
+    // Remove "from", "to", comma separators
+    cleaned = cleaned.replace(/\s+from\b/gi, '');
+    cleaned = cleaned.replace(/\s+to\b/gi, '');
+    // Remove "at" followed by generic location (after postal code is removed)
+    cleaned = cleaned.replace(/\s+at\s+[\w\s]+/gi, '');
+    // Remove leading/trailing commas, spaces, hyphens
+    cleaned = cleaned.replace(/^\s*,\s*/, '').replace(/\s*,\s*$/, '');
+    cleaned = cleaned.replace(/\s+at\s*$/gi, ''); // Remove trailing "at"
+    cleaned = cleaned.replace(/\s+(?:on|from|to|next)\s*$/gi, ''); // Remove trailing keywords
+    cleaned = cleaned.replace(/[,\-\s]+$/g, ''); // Remove trailing punctuation
+    // Remove commas that are followed by metadata (keep commas in titles like "Boxes, Bags")
+    cleaned = cleaned.replace(/,\s*(?:next|tomorrow|today|on|at|from)\b/gi, '');
+    // Collapse multiple spaces
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    // Title case
+    cleaned = cleaned
+        .split(/\s+/)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ')
+        .trim();
+    return cleaned || title;
+}
 // POST /api/ai/verify-chas-eligibility - Verify CHAS eligibility with AI check
 router.post('/verify-chas-eligibility', authMiddleware, async (req, res) => {
     try {
@@ -404,41 +453,20 @@ router.post('/extract-task-info', async (req, res) => {
         let cleanedTitle = title;
         const qwenApiKey = process.env.QWEN_API_KEY;
         console.log('[Extract] Qwen API Key available:', !!qwenApiKey);
-        if (qwenApiKey) {
+        // Always use regex fallback first for faster processing
+        // Only try Qwen if fallback didn't work well
+        const regexCleanedTitle = fallbackTitleClean(title);
+        if (qwenApiKey && (!regexCleanedTitle || regexCleanedTitle.length < 5)) {
             try {
-                console.log('[Extract] ✓ Using Qwen to clean title...');
+                console.log('[Extract] ✓ Trying Qwen to clean title (regex fallback failed)...');
                 const titleCleanResponse = await axios.post(`${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`, {
                     model: 'qwen-max',
                     messages: [
                         {
                             role: 'system',
-                            content: `You are a task title extractor. Extract ONLY the core action + what needs to be done.
+                            content: `Extract only the core action + what needs to be done. Keep SHORT (3-8 words max). REMOVE dates, times, locations, postal codes. OUTPUT ONLY the title, nothing else.
 
-RULES:
-1. Keep it SHORT and MEANINGFUL (3-8 words max)
-2. Include ONLY the ACTION and WHAT (verb + object)
-3. Keep important context like: AMOUNTS ($500), TYPE (ringgit), SKILL (fade)
-4. REMOVE EVERYTHING ELSE: dates, times, days, locations, addresses, postal codes, durations, budget, explanations
-5. Start with action verb (Change, Fix, Deliver, Clean, Walk, Tutor, Cut, etc)
-6. NO metadata like "I need to", "Can you", "Please", "on Saturday", "at salon", "for 1 hour"
-
-EXAMPLES:
-- Input: "i need to change 500 dollars sgd to ringgit. i am flying off tomorrow. i need this to be done today"
-  Output: Change $500 SGD To Ringgit
-
-- Input: "walk my dog every friday. 1 hour at 32 flora drive. budget $150"
-  Output: Walk My Dog
-
-- Input: "Fix my leaky tap on Saturday at 2pm near the kitchen. It's dripping"
-  Output: Fix Leaky Kitchen Tap
-
-- Input: "Tutor My Daughter P6 In Math. 489223. 7-9pm. monday. budget 70"
-  Output: Tutor My Daughter P6 In Math
-
-- Input: "Cut my hair at salon. Need fade haircut"
-  Output: Cut Hair With Fade
-
-OUTPUT ONLY THE TITLE, nothing else.`,
+Example: "Decorate Apartment For Party At 238857, Tomorrow 9am" → "Decorate Apartment For Party"`,
                         },
                         {
                             role: 'user',
@@ -450,20 +478,22 @@ OUTPUT ONLY THE TITLE, nothing else.`,
                         'Authorization': `Bearer ${qwenApiKey}`,
                         'Content-Type': 'application/json',
                     },
-                    timeout: 5000,
+                    timeout: 3000,
                 });
                 const qwenTitle = titleCleanResponse.data?.choices?.[0]?.message?.content?.trim();
-                if (qwenTitle && qwenTitle.length > 0 && qwenTitle.length < 80) {
+                if (qwenTitle && qwenTitle.length > 0 && qwenTitle.length < 100) {
                     cleanedTitle = qwenTitle;
                     console.log('[Extract] ✅ Qwen cleaned title:', cleanedTitle);
                 }
-                else {
-                    console.warn('[Extract] Qwen title too long or empty:', qwenTitle);
-                }
             }
             catch (error) {
-                console.warn('[Extract] Qwen title cleaning failed, using fallback:', error instanceof Error ? error.message : error);
+                console.warn('[Extract] Qwen title cleaning skipped (using regex):', error instanceof Error ? error.message : '');
+                cleanedTitle = regexCleanedTitle;
             }
+        }
+        else if (regexCleanedTitle) {
+            cleanedTitle = regexCleanedTitle;
+            console.log('[Extract] ✓ Using regex-cleaned title:', cleanedTitle);
         }
         // Fallback: basic cleanup if Qwen not available
         if (cleanedTitle === title) {
@@ -507,8 +537,11 @@ OUTPUT ONLY THE TITLE, nothing else.`,
         let category = 'homehelp'; // Default fallback
         const lowerInput = input.toLowerCase();
         // Map keywords to categories (order matters - check specific before general)
-        // Check creative-arts FIRST before other generic keywords like "post", "write", "design"
-        if (lowerInput.includes('social media') || lowerInput.includes('content') || lowerInput.includes('graphic') || lowerInput.includes('video') || lowerInput.includes('photo') || lowerInput.includes('photography') || lowerInput.includes('art') || lowerInput.includes('illustration') || lowerInput.includes('creative') || lowerInput.includes('design')) {
+        // Check event/party FIRST (before creative-arts which includes "design")
+        if (lowerInput.includes('event') || lowerInput.includes('party') || lowerInput.includes('decorate') || lowerInput.includes('decoration') || lowerInput.includes('setup') || lowerInput.includes('wedding') || lowerInput.includes('celebration')) {
+            category = 'eventhelp';
+        }
+        else if (lowerInput.includes('social media') || lowerInput.includes('content') || lowerInput.includes('graphic') || lowerInput.includes('video') || lowerInput.includes('photo') || lowerInput.includes('photography') || lowerInput.includes('art') || lowerInput.includes('illustration') || lowerInput.includes('creative') || lowerInput.includes('design')) {
             category = 'creative-arts';
         }
         else if (lowerInput.includes('walk') || lowerInput.includes('dog') || lowerInput.includes('pet') || lowerInput.includes('cat')) {
@@ -789,36 +822,86 @@ OUTPUT ONLY the category name, nothing else.`,
             fullAddress = detectedArea;
         }
         console.log('[Extract] Final - area:', area, 'fullAddress:', fullAddress);
-        // Extract certification/skill keywords from title and remove them from title
-        const skillKeywords = {
-            childcare: ['certified', 'certification', 'cpr', 'first aid', 'trained', 'professional'],
-            eldercare: ['certified', 'certification', 'cpr', 'first aid', 'trained', 'professional', 'dementia'],
-            petcare: ['certified', 'grooming', 'professional', 'experienced', 'trained'],
-        };
+        // Suggest relevant skills based on category and title keywords
         let suggestedSkills = [];
+        // Build keyword-based suggestions (works even without Qwen)
+        const categorySkillMap = {
+            'eventhelp': ['Event Planning', 'Interior Design', 'Decoration', 'Vendor Coordination'],
+            'petcare': ['Pet Care', 'Dog Handling', 'Pet Grooming', 'Animal Health'],
+            'childcare': ['Childcare', 'CPR/First Aid', 'Child Development', 'Education'],
+            'eldercare': ['Elder Care', 'Patient Care', 'Compassion', 'Health Awareness'],
+            'homehelp': ['Cleaning', 'Organization', 'Maintenance', 'Problem Solving'],
+            'food-beverage': ['Cooking', 'Food Safety', 'Meal Planning', 'Nutrition'],
+            'travel-mobility': ['Navigation', 'Driving', 'Customer Service', 'Reliability'],
+            'delivery-moving': ['Physical Fitness', 'Organization', 'Driving', 'Customer Service'],
+            'creative-arts': ['Design', 'Creativity', 'Visual Communication', 'Software Skills'],
+            'shopping-errands': ['Organization', 'Attention to Detail', 'Communication', 'Time Management'],
+        };
+        const baseSkills = categorySkillMap[category] || ['Reliability', 'Communication', 'Attention to Detail'];
+        // Add title-specific skills
         const titleLower = title.toLowerCase();
-        // Check for skill-related keywords in the title
-        if (category === 'childcare' && (titleLower.includes('certified') || titleLower.includes('certification'))) {
-            suggestedSkills.push('Childcare Certification');
-            title = title.replace(/\b(certified|certification)\b/gi, '').replace(/\s+/g, ' ').trim();
+        if (titleLower.includes('math') || titleLower.includes('tutor')) {
+            suggestedSkills.push('Math Expertise');
         }
-        if (category === 'childcare' && (titleLower.includes('cpr') || titleLower.includes('first aid'))) {
-            suggestedSkills.push('First Aid/CPR');
-            title = title.replace(/\b(cpr|first\s+aid)\b/gi, '').replace(/\s+/g, ' ').trim();
+        if (titleLower.includes('english') || titleLower.includes('language')) {
+            suggestedSkills.push('Language Skills');
         }
-        if (category === 'eldercare' && (titleLower.includes('certified') || titleLower.includes('certification'))) {
-            suggestedSkills.push('Basic Elder Care Certification');
-            title = title.replace(/\b(certified|certification)\b/gi, '').replace(/\s+/g, ' ').trim();
+        if (titleLower.includes('plumb') || titleLower.includes('tap') || titleLower.includes('pipe')) {
+            suggestedSkills.push('Plumbing');
         }
-        if (category === 'eldercare' && (titleLower.includes('dementia') || titleLower.includes('alzheimer'))) {
-            suggestedSkills.push('Dementia Care');
-            title = title.replace(/\b(dementia|alzheimer)\b/gi, '').replace(/\s+/g, ' ').trim();
+        if (titleLower.includes('electric') || titleLower.includes('wire')) {
+            suggestedSkills.push('Electrical Work');
         }
-        if (category === 'petcare' && (titleLower.includes('grooming') || titleLower.includes('groom'))) {
+        if (titleLower.includes('deep clean') || titleLower.includes('spring clean')) {
+            suggestedSkills.push('Deep Cleaning');
+        }
+        if (titleLower.includes('groom') || titleLower.includes('pet')) {
             suggestedSkills.push('Pet Grooming');
-            title = title.replace(/\b(groom|grooming)\b/gi, '').replace(/\s+/g, ' ').trim();
         }
-        console.log('[Extract] Extracted skills:', suggestedSkills);
+        if (titleLower.includes('hair') || titleLower.includes('salon') || titleLower.includes('cut')) {
+            suggestedSkills.push('Hair Styling');
+        }
+        // Add 2-3 skills from category base list
+        for (const skill of baseSkills) {
+            if (!suggestedSkills.includes(skill) && suggestedSkills.length < 4) {
+                suggestedSkills.push(skill);
+            }
+        }
+        console.log('[Extract] Suggested skills (fallback):', suggestedSkills);
+        // Extract certifications needed based on category and title
+        let suggestedCertifications = [];
+        const categoryCertifications = {
+            'childcare': ['Childcare Certification', 'First Aid/CPR', 'Child Protection'],
+            'eldercare': ['Elder Care Certification', 'Health & Safety', 'Patient Care'],
+            'petcare': ['Animal Care Certificate', 'Pet First Aid'],
+            'food-beverage': ['Food Hygiene', 'Food Handling Certificate'],
+            'travel-mobility': ['Driving License', 'Vehicle Insurance'],
+        };
+        const titleLowerCert = title.toLowerCase();
+        // Add title-specific certifications
+        if (titleLowerCert.includes('tutor') || titleLowerCert.includes('teach')) {
+            suggestedCertifications.push('Teaching Certification');
+        }
+        if (titleLowerCert.includes('babysit') || titleLowerCert.includes('childcare')) {
+            suggestedCertifications.push('CPR/First Aid');
+        }
+        if (titleLowerCert.includes('elderly') || titleLowerCert.includes('elder')) {
+            suggestedCertifications.push('Elder Care Certification');
+        }
+        if (titleLowerCert.includes('plumb')) {
+            suggestedCertifications.push('Plumbing License');
+        }
+        if (titleLowerCert.includes('electric')) {
+            suggestedCertifications.push('Electrical License');
+        }
+        // Add category-based certifications
+        const baseCerts = categoryCertifications[category] || [];
+        for (const cert of baseCerts) {
+            if (!suggestedCertifications.includes(cert) && suggestedCertifications.length < 2) {
+                suggestedCertifications.push(cert);
+            }
+        }
+        console.log('[Extract] Suggested certifications:', suggestedCertifications);
         // Extract recurring pattern from input (e.g., "every 2 weeks", "weekly", "monthly")
         let isRecurring = false;
         let repeatEvery = 1;
@@ -859,59 +942,140 @@ OUTPUT ONLY the category name, nothing else.`,
                 }
             }
         }
-        // Generate AI-based description suggestion based on title keywords
-        // This creates context-aware descriptions tied to what the user actually typed
+        // Use Qwen to generate smart, task-specific tips for the description field
         let description = '';
-        const titleLowercase = title.toLowerCase();
-        // Check title for specific keywords and generate relevant descriptions
-        if (titleLowercase.includes('hair') || titleLowercase.includes('salon') || titleLowercase.includes('cut')) {
-            description = `Provide hair cutting/styling service. Specify hair type, length, style preference, and any special requirements.`;
+        if (qwenApiKey) {
+            try {
+                console.log('[Extract] ✓ Using Qwen to generate task-specific tips...');
+                const tipsResponse = await axios.post(`${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`, {
+                    model: 'qwen-max',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `You are a helpful task description assistant. Given a task title, generate a SHORT and PRACTICAL tip that guides the doer on what details to include.
+
+RULES:
+1. Keep it SHORT (1-2 sentences max, under 120 chars)
+2. Be SPECIFIC to the task title, not generic
+3. Ask for ACTIONABLE details only (what matters for doing the task)
+4. Be warm and helpful, not robotic
+5. Focus on WHAT information is needed, not generic instructions
+
+EXAMPLES:
+- Title: "Decorate Apartment For Party" → "Let me know party size, theme/style, and which rooms to decorate. Do you have specific colors or decorations in mind?"
+- Title: "Walk My Dog" → "Tell me about your dog's size, temperament, and if there are any health issues or areas to avoid."
+- Title: "Clean My House" → "Which areas need most attention? Do you prefer eco-friendly products or have any cleaning preferences?"
+- Title: "Fix Leaky Kitchen Tap" → "Describe the issue in detail - is it dripping constantly or leaking under the sink? Any previous repair attempts?"
+- Title: "Tutor My Daughter P6 Math" → "What's her current level and which topics need focus? Do you have specific materials or exams to prepare for?"
+- Title: "Babysit 2 Kids Ages 3-5" → "Any dietary restrictions, allergies, or bedtime routines I should know about? What activities do they enjoy?"
+
+Output ONLY the tip (1-2 sentences), nothing else.`,
+                        },
+                        {
+                            role: 'user',
+                            content: `Task: "${title}"`,
+                        },
+                    ],
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${qwenApiKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                    timeout: 5000,
+                });
+                const tipsText = tipsResponse.data?.choices?.[0]?.message?.content?.trim();
+                if (tipsText && tipsText.length > 0 && tipsText.length < 250) {
+                    description = tipsText;
+                    console.log('[Extract] ✅ Qwen generated tips:', description);
+                }
+            }
+            catch (error) {
+                console.warn('[Extract] Qwen tips generation failed, using fallback:', error instanceof Error ? error.message : error);
+            }
         }
-        else if (titleLowercase.includes('cleaning') || titleLowercase.includes('clean')) {
-            description = `Professional cleaning service. Specify areas to clean (bedroom, kitchen, bathroom), type (deep clean, regular maintenance), and any allergies/sensitivities.`;
-        }
-        else if (titleLowercase.includes('dog') || titleLowercase.includes('walk') || titleLowercase.includes('pet')) {
-            description = `Pet care service. Specify pet type, breed, size, temperament, health needs, and what's needed (walking, sitting, grooming, feeding).`;
-        }
-        else if (titleLowercase.includes('babysit') || titleLowercase.includes('childcare') || titleLowercase.includes('child')) {
-            description = `Childcare service. Specify child age, activities to do, any allergies/dietary restrictions, bedtime routine, emergency contacts.`;
-        }
-        else if (titleLowercase.includes('elderly') || titleLowercase.includes('elder') || titleLowercase.includes('senior')) {
-            description = `Elder care and companionship. Specify mobility needs, meal preparation, medication assistance, activities preferred, emergency contacts.`;
-        }
-        else if (titleLowercase.includes('delivery') || titleLowercase.includes('send') || titleLowercase.includes('deliver')) {
-            description = `Delivery service. Specify what item(s) to deliver, pickup location, destination, size/weight, special handling needs, preferred timing.`;
-        }
-        else if (titleLowercase.includes('event') || titleLowercase.includes('party') || titleLowercase.includes('setup')) {
-            description = `Event assistance. Specify event type, date, location, number of guests, setup/decoration needs, timeline, special requirements.`;
-        }
-        else if (titleLowercase.includes('teach') || titleLowercase.includes('tutor') || titleLowercase.includes('lesson')) {
-            description = `Tutoring/teaching service. Specify subject, student age/level, learning goals, lesson frequency, duration per session, teaching style preference.`;
-        }
-        else if (titleLowercase.includes('repair') || titleLowercase.includes('fix')) {
-            description = `Repair service. Specify what needs repair, issue/problem, preferred solution, timeline, budget constraints, any special requirements.`;
-        }
-        else if (titleLowercase.includes('move') || titleLowercase.includes('carry') || titleLowercase.includes('transport')) {
-            description = `Moving/transport assistance. Specify items to move, pickup location, destination, timeline, equipment needed, help required (packing, lifting, driving).`;
-        }
-        else if (titleLowercase.includes('shop') || titleLowercase.includes('grocery') || titleLowercase.includes('buy') || titleLowercase.includes('purchasing')) {
-            description = `Shopping/errand assistance. Specify what items to buy/shop for, stores to visit, budget, special requirements, and any dietary/preference restrictions.`;
-        }
-        else if (titleLowercase.includes('design') || titleLowercase.includes('logo') || titleLowercase.includes('graphic') || titleLowercase.includes('art') || titleLowercase.includes('creative')) {
-            description = `Design/creative service. Specify what design is needed (logo, poster, social media, etc.), style preference, brand colors, target audience, and any specific requirements.`;
-        }
-        else {
-            // Fallback: use category-based description with title reference
-            const categoryDescriptions = {
-                'homehelp': 'Household assistance needed. Specify the task, areas involved, any materials needed, and timeline.',
-                'petcare': 'Pet care needed. Specify pet type, requirements, and what care is needed.',
-                'delivery': 'Delivery service needed. Specify items and destination.',
-                'eventhelp': 'Event support needed. Specify event type and requirements.',
-                'childcare': 'Childcare needed. Specify child age and requirements.',
-                'eldercare': 'Elder care needed. Specify care requirements.',
-                'wellness': 'Wellness support needed. Specify the type of assistance.',
-            };
-            description = categoryDescriptions[category] || `Help needed: ${title}. Please provide more details about the task, timeline, and specific requirements.`;
+        // Fallback if Qwen not available or failed
+        if (!description) {
+            const titleLowercase = title.toLowerCase();
+            // Task-specific fallback tips
+            if (titleLowercase.includes('decorate') && titleLowercase.includes('party')) {
+                description = `Need: party size, theme/colors, which rooms, and any rental constraints?`;
+            }
+            else if (titleLowercase.includes('hair') || titleLowercase.includes('salon') || titleLowercase.includes('cut')) {
+                description = `Need: hair type, desired length/style, face shape, and previous color?`;
+            }
+            else if (titleLowercase.includes('deep clean') || titleLowercase.includes('spring clean')) {
+                description = `Need: sq footage, which rooms prioritized, inside cabinets/fridge, eco-friendly?`;
+            }
+            else if (titleLowercase.includes('office') && titleLowercase.includes('clean')) {
+                description = `Need: size, how many rooms, high-touch areas, eco-friendly products?`;
+            }
+            else if (titleLowercase.includes('clean') && titleLowercase.includes('house')) {
+                description = `Need: rooms prioritized, deep areas (behind furniture), pet-friendly products?`;
+            }
+            else if (titleLowercase.includes('walk') && (titleLowercase.includes('dog') || titleLowercase.includes('pet'))) {
+                description = `Need: dog size/breed, temperament with strangers, areas to avoid, health issues?`;
+            }
+            else if (titleLowercase.includes('pet') && titleLowercase.includes('care')) {
+                description = `Need: pet type/size, medical conditions, diet, favorite toys, anxiety triggers?`;
+            }
+            else if (titleLowercase.includes('babysit') && (titleLowercase.includes('twins') || titleLowercase.includes('ages'))) {
+                description = `Need: nap times, food allergies, screen time, emergency contacts, bedtime?`;
+            }
+            else if (titleLowercase.includes('babysit') || titleLowercase.includes('childcare')) {
+                description = `Need: child age(s), allergies, bedtime routine, favorite activities, screen time?`;
+            }
+            else if (titleLowercase.includes('tutor') && titleLowercase.includes('math')) {
+                description = `Need: student level, weaknesses, exam date, learning pace, materials?`;
+            }
+            else if (titleLowercase.includes('tutor') || titleLowercase.includes('teach')) {
+                description = `Need: subject, student level, weak areas, exam coming, teaching style?`;
+            }
+            else if (titleLowercase.includes('fix') && titleLowercase.includes('tap')) {
+                description = `Need: dripping or spraying? Under-sink leaks? Faucet type? Previous repairs?`;
+            }
+            else if (titleLowercase.includes('repair') && titleLowercase.includes('washing')) {
+                description = `Need: error codes shown? Sounds/smells? Repair history? Budget for parts?`;
+            }
+            else if (titleLowercase.includes('repair') || titleLowercase.includes('fix')) {
+                description = `Need: what's broken exactly? When stopped working? Repair history? Budget?`;
+            }
+            else if (titleLowercase.includes('elderly') || titleLowercase.includes('elder')) {
+                description = `Need: mobility level, medications to manage, meals to prep, activities?`;
+            }
+            else if (titleLowercase.includes('deliver') && titleLowercase.includes('fragile')) {
+                description = `Need: item description, weight/size, destination, time window, insurance?`;
+            }
+            else if (titleLowercase.includes('deliver') || titleLowercase.includes('delivery')) {
+                description = `Need: item type, weight/size, pickup location, destination, time window?`;
+            }
+            else if (titleLowercase.includes('move') || titleLowercase.includes('moving')) {
+                description = `Need: how many rooms/items, fragile items, packing help, destination floor?`;
+            }
+            else if (titleLowercase.includes('shop') && titleLowercase.includes('grocery')) {
+                description = `Need: stores to visit, dietary restrictions/allergies, budget, brands?`;
+            }
+            else if (titleLowercase.includes('shop') || titleLowercase.includes('grocery')) {
+                description = `Need: specific items list, stores, budget limit, dietary restrictions?`;
+            }
+            else if (titleLowercase.includes('design') || titleLowercase.includes('logo')) {
+                description = `Need: style/mood, brand colors, target audience, deadline, revision rounds?`;
+            }
+            else {
+                // Generic by category with specific prompts
+                const categoryDescriptions = {
+                    'homehelp': 'Need: which areas/rooms, materials available, allergies/sensitivities?',
+                    'petcare': 'Need: pet type/size/age, health issues, diet, temperament?',
+                    'delivery': 'Need: what item, weight/size, pickup location, destination, timeframe?',
+                    'eventhelp': 'Need: party size, theme/style, which rooms, budget for decorations?',
+                    'childcare': 'Need: child age, allergies, bedtime, activities, emergency contacts?',
+                    'eldercare': 'Need: mobility level, medications, meal prep, preferred activities?',
+                    'wellness': 'Need: specific wellness goal, health conditions, availability, budget?',
+                    'food-beverage': 'Need: guest count, dietary restrictions, cuisine, serving style?',
+                    'travel-mobility': 'Need: destination, timeframe, luggage amount, accessibility needs?',
+                    'creative-arts': 'Need: style preference, target audience, brand colors, deadline?',
+                };
+                description = categoryDescriptions[category] || `Need: more details about what's required?`;
+            }
         }
         res.json({
             success: true,
@@ -934,6 +1098,7 @@ OUTPUT ONLY the category name, nothing else.`,
                 repeatUnit,
                 occurrences,
                 suggestedSkills,
+                suggestedCertifications,
                 needsAreaConfirmation, // Flag to ask user to confirm area if OneMap failed
             },
         });

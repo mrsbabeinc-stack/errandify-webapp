@@ -490,7 +490,7 @@ export default function HanaTaskCreation({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-end justify-center p-0">
+    <div className="fixed inset-0 bg-black bg-opacity-40 z-40 flex items-end justify-center p-0">
       {/* Compact Half-Page Modal */}
       <div className="bg-white rounded-t-3xl shadow-2xl w-full h-[95vh] max-w-2xl flex flex-col overflow-hidden">
         {/* Header - Compact */}

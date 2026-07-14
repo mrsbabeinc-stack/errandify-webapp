@@ -132,6 +132,79 @@
   opacity: 0.9;
 }
 
+.task-status-badge {
+  display: inline-block;
+  background: #FFC107;
+  color: #333;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.task-status-badge.completed {
+  background: #4CAF50;
+  color: white;
+}
+
+.review-text {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.review-label {
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 8px 0;
+  font-size: 0.9em;
+}
+
+.review-text p {
+  color: #666;
+  font-size: 0.9em;
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}
+
+.btn-accept {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #4CAF50;
+  color: white;
+}
+
+.btn-accept:hover {
+  background: #45a049;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.btn-decline {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #f44336;
+  color: white;
+}
+
+.btn-decline:hover {
+  background: #da190b;
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
 .task-header {
   display: flex;
   justify-content: space-between;

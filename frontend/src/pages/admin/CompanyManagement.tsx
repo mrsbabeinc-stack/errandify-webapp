@@ -1,4 +1,8 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useToast, ToastContainer } from '../../components/Toast';
+import AdminLayout from '../../components/admin/AdminLayout';
 
 interface Company {
   id: string;
@@ -124,11 +128,37 @@ export const CompanyManagement: React.FC = () => {
     return colors[status] || '#999';
   };
 
+  const navigate = useNavigate();
+  const { toasts, showToast, removeToast } = useToast();
+
   return (
-    <div className="company-management-page">
+    <AdminLayout>
+      <div className="company-management-page">
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1>🏢 Company Management</h1>
+          <p>Manage all company accounts, subscriptions, and status</p>
+        </div>
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            fontSize: '20px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: '#FF6B35',
+            fontWeight: '700',
+            padding: '0 8px',
+          }}
+          title="Go back"
+        >
+          ←
+        </button>
+      </div>
       <div className="page-header">
-        <h1>🏢 Company Management</h1>
-        <p>Manage all company accounts, subscriptions, and status</p>
+        <h1 style={{ display: 'none' }}>🏢 Company Management</h1>
+        <p style={{ display: 'none' }}>Manage all company accounts, subscriptions, and status</p>
       </div>
 
       <div className="happy-box">
@@ -717,6 +747,7 @@ export const CompanyManagement: React.FC = () => {
         }
       `}</style>
     </div>
+    </AdminLayout>
   );
 };
 

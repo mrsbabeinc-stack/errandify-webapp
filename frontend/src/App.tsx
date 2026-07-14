@@ -76,12 +76,30 @@ import CompanyManagement from './pages/admin/CompanyManagement';
 import SubscriptionPackages from './pages/admin/SubscriptionPackages';
 import AdvertisingApproval from './pages/admin/AdvertisingApproval';
 import PartnerTiers from './pages/admin/PartnerTiers';
+import AdminAuthManagement from './pages/admin/AdminAuthManagement';
+import AdminUserManagement from './pages/admin/AdminUserManagement';
+import AdminPaymentsManagement from './pages/admin/AdminPaymentsManagement';
+import AdminErrandManagement from './pages/admin/AdminErrandManagement';
+import AdminCompanyDeepManagement from './pages/admin/AdminCompanyDeepManagement';
+import AdminSystemConfiguration from './pages/admin/AdminSystemConfiguration';
+import AdminAuditCompliance from './pages/admin/AdminAuditCompliance';
+import AdminAlertsNotifications from './pages/admin/AdminAlertsNotifications';
+import EmailCampaigns from './pages/admin/EmailCampaigns';
+import NotificationsManagement from './pages/admin/NotificationsManagement';
+import EventReminders from './pages/admin/EventReminders';
+import BlogArticles from './pages/admin/BlogArticles';
+import Recognition from './pages/admin/Recognition';
+import CommunityFeed from './pages/admin/CommunityFeed';
+import HeroBanners from './pages/admin/HeroBanners';
 import CompanyRegistrationPage from './pages/CompanyRegistrationPage';
 import MyCompanyDashboard from './pages/MyCompanyDashboard';
 import CompanyStaffManagement from './pages/CompanyStaffManagement';
 import CompanyPostErrandPage from './pages/CompanyPostErrandPage';
 import CompanyDashboardNew from './pages/CompanyDashboardNew';
+import StripeCheckoutDummy from './pages/StripeCheckoutDummy';
 import StaffDashboard from './pages/StaffDashboard';
+import DoerActiveErrands from './components/DoerActiveErrands';
+import StaffLeaveApplication from './components/StaffLeaveApplication';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -392,7 +410,7 @@ export default function App() {
         <Route path="/safety-resources" element={<SafetyResourcesPage />} />
 
         {/* Admin Dashboard Routes */}
-        <Route path="/admin/dashboard" element={isAuthenticated && isAdmin ? <AdminDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/dashboard" element={isAuthenticated && isAdmin ? <Navigate to="/admin/dashboard/overview" replace /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/overview" element={isAuthenticated && isAdmin ? <OverviewPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/users" element={isAuthenticated && isAdmin ? <UsersSafetyPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/disputes" element={isAuthenticated && isAdmin ? <DisputesPage /> : <Navigate to="/login" replace />} />
@@ -408,6 +426,27 @@ export default function App() {
         <Route path="/admin/comms/email" element={isAuthenticated && isAdmin ? <EmailPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/reports" element={isAuthenticated && isAdmin ? <ReportsPage /> : <Navigate to="/login" replace />} />
 
+        {/* Operations & Management Routes (TIER 1) */}
+        <Route path="/admin/operations/auth-management" element={isAuthenticated && isAdmin ? <AdminAuthManagement /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/operations/user-management" element={isAuthenticated && isAdmin ? <AdminUserManagement /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/operations/payments" element={isAuthenticated && isAdmin ? <AdminPaymentsManagement /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/operations/errand-management" element={isAuthenticated && isAdmin ? <AdminErrandManagement /> : <Navigate to="/login" replace />} />
+
+        {/* Configuration & Compliance Routes (TIER 2) */}
+        <Route path="/admin/config/company-management" element={isAuthenticated && isAdmin ? <AdminCompanyDeepManagement /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/config/system-configuration" element={isAuthenticated && isAdmin ? <AdminSystemConfiguration /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/config/audit-compliance" element={isAuthenticated && isAdmin ? <AdminAuditCompliance /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/config/alerts-notifications" element={isAuthenticated && isAdmin ? <AdminAlertsNotifications /> : <Navigate to="/login" replace />} />
+
+        {/* Communications Routes */}
+        <Route path="/admin/comms/email" element={isAuthenticated && isAdmin ? <EmailCampaigns /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/comms/notifications" element={isAuthenticated && isAdmin ? <NotificationsManagement /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/comms/events" element={isAuthenticated && isAdmin ? <EventReminders /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/comms/blog" element={isAuthenticated && isAdmin ? <BlogArticles /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/comms/recognition" element={isAuthenticated && isAdmin ? <Recognition /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/comms/feed" element={isAuthenticated && isAdmin ? <CommunityFeed /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/comms/banners" element={isAuthenticated && isAdmin ? <HeroBanners /> : <Navigate to="/login" replace />} />
+
         {/* Company Management Routes */}
         <Route path="/admin/company/management" element={isAuthenticated && isAdmin ? <CompanyManagement /> : <Navigate to="/login" replace />} />
         <Route path="/admin/company/subscriptions" element={isAuthenticated && isAdmin ? <SubscriptionPackages /> : <Navigate to="/login" replace />} />
@@ -418,9 +457,13 @@ export default function App() {
         <Route path="/company/register" element={isAuthenticated ? <CompanyRegistrationPage /> : <Navigate to="/login" replace />} />
         <Route path="/company/dashboard" element={isAuthenticated ? <CompanyDashboardNew /> : <Navigate to="/login" replace />} />
         <Route path="/company/dashboard-new" element={isAuthenticated ? <CompanyDashboardNew /> : <Navigate to="/login" replace />} />
-        <Route path="/staff/dashboard" element={isAuthenticated ? <StaffDashboard /> : <Navigate to="/login" replace />} />
+
+        {/* Stripe Checkout (Dummy for testing) */}
+        <Route path="/stripe-checkout" element={<StripeCheckoutDummy />} />
         <Route path="/company/staff" element={isAuthenticated ? <CompanyStaffManagement /> : <Navigate to="/login" replace />} />
         <Route path="/company/post-errand" element={isAuthenticated ? <CompanyPostErrandPage /> : <Navigate to="/login" replace />} />
+        <Route path="/staff/dashboard" element={isAuthenticated ? <DoerActiveErrands /> : <Navigate to="/login" replace />} />
+        <Route path="/apply-leave" element={isAuthenticated ? <StaffLeaveApplication /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout - for asker/doer AND admin users */}
         <Route

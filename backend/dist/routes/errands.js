@@ -79,9 +79,10 @@ router.get('/', authMiddleware, async (req, res) => {
         }
         else if (isAccepted) {
             // Show errands accepted by current user (for doers) - join with assignments
+            // Include all active assignment statuses: accepted (allocated to staff), completed (work done)
             query = `SELECT e.* FROM errands e
                INNER JOIN errand_assignments ea ON e.id = ea.errand_id
-               WHERE ea.doer_id = $1 AND ea.status = 'accepted'`;
+               WHERE ea.doer_id = $1 AND ea.status IN ('accepted', 'completed')`;
             params.push(currentUserId);
             paramIndex = 2;
         }
@@ -91,6 +92,7 @@ router.get('/', authMiddleware, async (req, res) => {
             query = `SELECT e.* FROM errands e
                WHERE e.status = $1
                AND e.asker_id != $2
+               AND (e.deadline IS NULL OR e.deadline > NOW())
                AND (
                  -- Match user's category preferences if set
                  e.category = ANY(
@@ -114,10 +116,23 @@ router.get('/', authMiddleware, async (req, res) => {
             paramIndex = 3;
         }
         else {
-            // Show all open errands excluding ones posted by current user
-            query = 'SELECT * FROM errands WHERE status = $1 AND asker_id != $2';
-            params.push('open', currentUserId);
-            paramIndex = 3;
+            // Show all open and confirmed errands (for browsing and allocation)
+            // Exclude errands posted by current user, those past deadline, and those already allocated
+            query = `SELECT e.*,
+                      CASE WHEN EXISTS (
+                        SELECT 1 FROM errand_assignments
+                        WHERE errand_id = e.id AND status = 'accepted'
+                      ) THEN true ELSE false END as hasAssignment
+               FROM errands e
+               WHERE (e.status = $1 OR e.status = $2)
+               AND e.asker_id != $3
+               AND (e.deadline IS NULL OR e.deadline > NOW())
+               AND NOT EXISTS (
+                 SELECT 1 FROM errand_assignments
+                 WHERE errand_id = e.id AND status = 'accepted'
+               )`;
+            params.push('open', 'confirmed', currentUserId);
+            paramIndex = 4;
         }
         // Filter by category
         if (category) {
@@ -128,15 +143,17 @@ router.get('/', authMiddleware, async (req, res) => {
         }
         // Filter by status (additional status filter for myOnly)
         if (status && isMyOnly) {
-            query += ` AND status = $${paramIndex}`;
+            const statusPrefix = isAccepted ? 'e.' : '';
+            query += ` AND ${statusPrefix}status = $${paramIndex}`;
             params.push(status);
             paramIndex++;
         }
         // Exclude expired errands for doers without bids (but show if they have a bid on it)
         if (!isMyOnly) {
             // For doers: exclude expired errands UNLESS they have made a bid on it
-            query += ` AND (status != 'expired' OR EXISTS (
-        SELECT 1 FROM bids WHERE bids.errand_id = errands.id AND bids.doer_id = $${paramIndex}
+            const tablePrefix = isAccepted ? 'e.' : '';
+            query += ` AND (${tablePrefix}status != 'expired' OR EXISTS (
+        SELECT 1 FROM bids WHERE bids.errand_id = ${tablePrefix}id AND bids.doer_id = $${paramIndex}
       ))`;
             params.push(currentUserId);
             paramIndex++;
@@ -185,6 +202,31 @@ router.get('/', authMiddleware, async (req, res) => {
             if (bidResult.rows.length > 0) {
                 doerName = bidResult.rows[0]?.display_name || 'Doer';
             }
+            // Get allocated staff name from errand_assignments
+            let allocatedStaffName = undefined;
+            let allocatedBy = undefined;
+            const assignmentResult = await db.query(`SELECT u.display_name, ea.created_at FROM errand_assignments ea
+           LEFT JOIN users u ON ea.doer_id = u.id
+           WHERE ea.errand_id = $1 AND ea.status = 'accepted'
+           LIMIT 1`, [errand.id]);
+            if (assignmentResult.rows.length > 0) {
+                allocatedStaffName = assignmentResult.rows[0]?.display_name;
+                // Get who allocated it (the manager/owner who created the assignment)
+                const allocatorResult = await db.query(`SELECT c.owner_user_id FROM errand_assignments ea
+             LEFT JOIN companies c ON c.id = (
+               SELECT company_id FROM company_staff
+               WHERE user_id = ea.doer_id AND role IN ('owner', 'manager')
+               LIMIT 1
+             )
+             WHERE ea.errand_id = $1 AND ea.status = 'accepted'
+             LIMIT 1`, [errand.id]);
+                if (allocatorResult.rows.length > 0 && allocatorResult.rows[0]?.owner_user_id) {
+                    const ownerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [allocatorResult.rows[0].owner_user_id]);
+                    if (ownerResult.rows.length > 0) {
+                        allocatedBy = ownerResult.rows[0]?.display_name;
+                    }
+                }
+            }
             // Get bid count and unviewed count for this errand
             const bidCountResult = await db.query(`SELECT
              COUNT(*) as bid_count,
@@ -207,10 +249,13 @@ router.get('/', authMiddleware, async (req, res) => {
                 deadline: errand.deadline,
                 isRecurring: errand.is_recurring || false,
                 askerName: askerResult.rows[0]?.display_name || 'Anonymous',
+                allocatedStaffName: allocatedStaffName,
+                allocatedBy: allocatedBy,
                 doerName: doerName,
                 askerRating: 4.8, // TODO: Calculate from ratings table
                 bidCount: bidCount,
                 unviewedBidCount: unviewedCount,
+                acceptedBidId: errand.accepted_bid_id,
                 createdAt: errand.created_at,
                 updatedAt: errand.updated_at,
             };
@@ -269,6 +314,9 @@ router.get('/:id', authMiddleware, async (req, res) => {
         }
         const askerData = askerResult.rows[0];
         const isAsker = userId === errand.asker_id;
+        // Get bid count for this errand
+        const bidCountResult = await db.query('SELECT COUNT(*) as bid_count FROM bids WHERE errand_id = $1', [errandDatabaseId]);
+        const bidCount = parseInt(bidCountResult.rows[0]?.bid_count || '0', 10);
         res.json({
             success: true,
             data: {
@@ -292,6 +340,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
                 doerId: doerId,
                 doer_alias: doerData?.alias || null,
                 acceptedBidId: errand.accepted_bid_id,
+                bidCount: bidCount,
                 asker: askerData,
                 doer: doerData,
                 createdAt: errand.created_at,
@@ -537,10 +586,16 @@ router.post('/', authMiddleware, async (req, res) => {
                 // Don't fail the errand creation if notifications fail
             }
             // Log activity: Errand posted
-            const askerResult = await db.query('SELECT display_name, alias FROM users WHERE id = $1', [askerId]);
-            const askerName = askerResult.rows[0]?.display_name || 'Unknown User';
-            const askerAlias = askerResult.rows[0]?.alias || undefined;
-            await activityLogService.logPosted(errand.id, askerName, askerId, askerAlias);
+            try {
+                const askerResult = await db.query('SELECT display_name, alias FROM users WHERE id = $1', [askerId]);
+                const askerName = askerResult.rows[0]?.display_name || 'Unknown User';
+                const askerAlias = askerResult.rows[0]?.alias || undefined;
+                await activityLogService.logPosted(errand.id, askerName, askerId, askerAlias);
+            }
+            catch (activityErr) {
+                console.error('[DEBUG] Activity logging error (non-blocking):', activityErr);
+                // Don't fail the errand creation if activity logging fails
+            }
             res.status(201).json({
                 success: true,
                 data: {
@@ -599,9 +654,9 @@ router.post('/:id/complete', authMiddleware, async (req, res) => {
                 return res.status(403).json({ error: 'Only the assigned doer can mark as completed' });
             }
         }
-        // Mark as completed
-        const result = await db.query('UPDATE errands SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, status', ['completed', id]);
-        // Log activity: Job completed
+        // Mark as pending_review (awaiting owner/manager approval for company doers, or asker approval for individuals)
+        const result = await db.query('UPDATE errands SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, status', ['pending_review', id]);
+        // Log activity: Job submitted for review
         const doerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [doerId]);
         const doerName = doerResult.rows[0]?.display_name || 'Unknown User';
         await activityLogService.logCompleted(id, doerName, doerId);
@@ -723,11 +778,20 @@ router.put('/:id', authMiddleware, async (req, res) => {
         if (errand.asker_id !== parseInt(req.userId || '0', 10)) {
             return res.status(403).json({ error: 'Not authorized to update this errand' });
         }
-        // Prevent editing once offer is confirmed
+        // Prevent editing once any offer is received
         if (errand.status !== 'open') {
             return res.status(403).json({
                 error: 'Cannot edit errand once an offer is confirmed',
                 message: 'This errand has been accepted and is no longer editable. You can only update the status.'
+            });
+        }
+        // Check if there are any bids/offers on this errand
+        const bidCheckResult = await db.query('SELECT COUNT(*) as bid_count FROM bids WHERE errand_id = $1', [id]);
+        const bidCount = parseInt(bidCheckResult.rows[0]?.bid_count || '0', 10);
+        if (bidCount > 0) {
+            return res.status(403).json({
+                error: 'Cannot edit errand once offers are received',
+                message: 'This errand has received offers and cannot be edited to ensure fairness. You can cancel the errand and post a new one if needed.'
             });
         }
         // Update fields
@@ -1439,6 +1503,323 @@ router.post('/:id/confirm-completion', authMiddleware, async (req, res) => {
     catch (error) {
         console.error('[ConfirmCompletion] Error confirming completion:', error);
         res.status(500).json({ error: 'Failed to confirm completion', details: error instanceof Error ? error.message : 'Unknown error' });
+    }
+});
+// POST /api/errands/:id/approve-completion - Manager/Owner approves completed work
+router.post('/:id/approve-completion', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const managerId = parseInt(req.userId || '0', 10);
+        // Get errand details
+        const errandResult = await db.query('SELECT id, status, asker_id, accepted_bid_id FROM errands WHERE id = $1', [id]);
+        if (errandResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Errand not found' });
+        }
+        const errand = errandResult.rows[0];
+        // Verify the requester is the asker (for company context, asker_id is the company manager/owner)
+        if (errand.asker_id !== managerId) {
+            return res.status(403).json({ error: 'Only the asker/manager can approve completion' });
+        }
+        // Verify errand is in pending_review status
+        if (errand.status !== 'pending_review') {
+            return res.status(400).json({ error: 'Errand must be pending review to approve' });
+        }
+        // Get doer info for notification
+        const bidResult = await db.query('SELECT doer_id FROM bids WHERE id = $1', [errand.accepted_bid_id]);
+        const doerId = bidResult.rows[0]?.doer_id;
+        // Approve and mark as completed
+        await db.query('UPDATE errands SET status = $1, updated_at = NOW() WHERE id = $2', ['completed', id]);
+        // Notify doer that completion was approved
+        try {
+            const errandData = await db.query('SELECT errand_id, title FROM errands WHERE id = $1', [id]);
+            const errandTitle = errandData.rows[0]?.title || 'Your task';
+            const formattedErrandId = errandData.rows[0]?.errand_id || `ER26-${id}`;
+            if (doerId) {
+                await db.query(`INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
+           VALUES ($1, $2, $3, $4, $5, NOW(), false)`, [
+                    doerId,
+                    'completion_approved',
+                    '✅ Work Approved',
+                    `${formattedErrandId}: "${errandTitle}" - Your work has been approved! Payment is being processed.`,
+                    id,
+                ]);
+            }
+        }
+        catch (notifErr) {
+            console.warn('[Errands] Failed to notify doer of approval:', notifErr);
+        }
+        // Log activity
+        const managerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [managerId]);
+        const managerName = managerResult.rows[0]?.display_name || 'Manager';
+        try {
+            await activityLogService.logActivity(id, 'completion_approved', managerId, managerName, 'asker');
+        }
+        catch (activityErr) {
+            console.warn('[Errands] Failed to log activity:', activityErr);
+        }
+        res.json({
+            success: true,
+            message: 'Completion approved. Payment released.',
+            data: { id, status: 'completed' },
+        });
+    }
+    catch (error) {
+        console.error('[ApproveCompletion] Error approving completion:', error);
+        res.status(500).json({ error: 'Failed to approve completion', details: error instanceof Error ? error.message : 'Unknown error' });
+    }
+});
+// POST /api/errands/:id/reject-completion - Manager/Owner rejects completed work
+router.post('/:id/reject-completion', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+        const managerId = parseInt(req.userId || '0', 10);
+        // Get errand details
+        const errandResult = await db.query('SELECT id, status, asker_id, accepted_bid_id FROM errands WHERE id = $1', [id]);
+        if (errandResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Errand not found' });
+        }
+        const errand = errandResult.rows[0];
+        // Verify the requester is the asker (manager/owner)
+        if (errand.asker_id !== managerId) {
+            return res.status(403).json({ error: 'Only the asker/manager can reject completion' });
+        }
+        // Verify errand is in pending_review status
+        if (errand.status !== 'pending_review') {
+            return res.status(400).json({ error: 'Errand must be pending review to reject' });
+        }
+        // Get doer info
+        const bidResult = await db.query('SELECT doer_id FROM bids WHERE id = $1', [errand.accepted_bid_id]);
+        const doerId = bidResult.rows[0]?.doer_id;
+        // Reject and revert to in_progress so doer can revise
+        await db.query('UPDATE errands SET status = $1, updated_at = NOW() WHERE id = $2', ['in_progress', id]);
+        // Notify doer that work was rejected
+        try {
+            const errandData = await db.query('SELECT errand_id, title FROM errands WHERE id = $1', [id]);
+            const errandTitle = errandData.rows[0]?.title || 'Your task';
+            const formattedErrandId = errandData.rows[0]?.errand_id || `ER26-${id}`;
+            if (doerId) {
+                await db.query(`INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
+           VALUES ($1, $2, $3, $4, $5, NOW(), false)`, [
+                    doerId,
+                    'completion_rejected',
+                    '⚠️ Work Needs Revision',
+                    `${formattedErrandId}: "${errandTitle}" - Please revise and resubmit. Reason: ${reason || 'See chat for details'}`,
+                    id,
+                ]);
+            }
+        }
+        catch (notifErr) {
+            console.warn('[Errands] Failed to notify doer of rejection:', notifErr);
+        }
+        // Log activity
+        const managerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [managerId]);
+        const managerName = managerResult.rows[0]?.display_name || 'Manager';
+        try {
+            await activityLogService.logActivity(id, 'completion_rejected', managerId, managerName, 'asker', { reason });
+        }
+        catch (activityErr) {
+            console.warn('[Errands] Failed to log activity:', activityErr);
+        }
+        res.json({
+            success: true,
+            message: 'Completion rejected. Errand returned to in_progress for revision.',
+            data: { id, status: 'in_progress' },
+        });
+    }
+    catch (error) {
+        console.error('[RejectCompletion] Error rejecting completion:', error);
+        res.status(500).json({ error: 'Failed to reject completion', details: error instanceof Error ? error.message : 'Unknown error' });
+    }
+});
+// POST /api/errands/:id/acknowledge - Staff acknowledges receipt of errand
+router.post('/:id/acknowledge', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const staffId = parseInt(req.userId || '0', 10);
+        // Get errand details
+        const errandResult = await db.query('SELECT id, status, accepted_bid_id, title, formatted_id, asker_id FROM errands WHERE id = $1', [id]);
+        if (errandResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Errand not found' });
+        }
+        const errand = errandResult.rows[0];
+        // Verify the requester is the assigned doer (check errand_assignments for company staff)
+        const assignmentResult = await db.query('SELECT doer_id FROM errand_assignments WHERE errand_id = $1 AND status = $2', [id, 'accepted']);
+        if (assignmentResult.rows.length > 0) {
+            // Company staff - verify it's the assigned staff
+            if (assignmentResult.rows[0]?.doer_id !== staffId) {
+                return res.status(403).json({ error: 'Only the assigned staff can acknowledge this errand' });
+            }
+        }
+        else if (errand.accepted_bid_id) {
+            // Individual doer - verify from bids table
+            const bidResult = await db.query('SELECT doer_id FROM bids WHERE id = $1', [errand.accepted_bid_id]);
+            if (bidResult.rows[0]?.doer_id !== staffId) {
+                return res.status(403).json({ error: 'Only the assigned doer can acknowledge this errand' });
+            }
+        }
+        else {
+            return res.status(403).json({ error: 'Only the assigned doer can acknowledge this errand' });
+        }
+        // Update status to acknowledged
+        await db.query('UPDATE errands SET status = $1, updated_at = NOW() WHERE id = $2', ['acknowledged', id]);
+        // Notify manager/owner if this is company staff, or asker if individual doer
+        try {
+            const staffResult = await db.query('SELECT display_name FROM users WHERE id = $1', [staffId]);
+            const staffName = staffResult.rows[0]?.display_name || 'Staff member';
+            const errandTitle = errand.title || 'Your task';
+            const errandId = errand.formatted_id || `ER26-${id}`;
+            // Check if this is company staff (has errand_assignments)
+            if (assignmentResult.rows.length > 0) {
+                // Notify company owner/manager
+                const companyResult = await db.query(`SELECT c.owner_user_id FROM companies c
+           INNER JOIN company_staff cs ON c.id = cs.company_id
+           WHERE cs.user_id = $1 AND cs.role IN ('owner', 'manager')
+           LIMIT 1`, [staffId]);
+                if (companyResult.rows.length > 0 && companyResult.rows[0]?.owner_user_id) {
+                    await db.query(`INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
+             VALUES ($1, $2, $3, $4, $5, NOW(), false)`, [
+                        companyResult.rows[0].owner_user_id,
+                        'errand_acknowledged',
+                        '✅ Errand Acknowledged by Staff',
+                        `${errandId}: "${errandTitle}" - ${staffName} has acknowledged receipt. Please confirm within 24 hours.`,
+                        id,
+                    ]);
+                }
+            }
+            else {
+                // Notify asker for individual doer
+                if (errand.asker_id) {
+                    await db.query(`INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
+             VALUES ($1, $2, $3, $4, $5, NOW(), false)`, [
+                        errand.asker_id,
+                        'errand_acknowledged',
+                        '✅ Errand Acknowledged',
+                        `${errandId}: "${errandTitle}" - ${staffName} has received the errand and is ready to proceed.`,
+                        id,
+                    ]);
+                }
+            }
+        }
+        catch (notifErr) {
+            console.warn('[Errands] Failed to notify of acknowledgement:', notifErr);
+        }
+        res.json({
+            success: true,
+            message: 'Errand acknowledged. Awaiting manager confirmation.',
+            data: { id, status: 'acknowledged' },
+        });
+    }
+    catch (error) {
+        console.error('[AcknowledgeErrand] Error acknowledging errand:', error);
+        res.status(500).json({ error: 'Failed to acknowledge errand', details: error instanceof Error ? error.message : 'Unknown error' });
+    }
+});
+// POST /api/errands/:id/confirm-start - Manager/Owner confirms staff can start (within 24h)
+router.post('/:id/confirm-start', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const managerId = parseInt(req.userId || '0', 10);
+        // Get errand details
+        const errandResult = await db.query('SELECT id, status, asker_id, accepted_bid_id FROM errands WHERE id = $1', [id]);
+        if (errandResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Errand not found' });
+        }
+        const errand = errandResult.rows[0];
+        // Verify the requester is the asker (manager/owner)
+        if (errand.asker_id !== managerId) {
+            return res.status(403).json({ error: 'Only the manager/owner can confirm start' });
+        }
+        // Verify errand is in acknowledged status
+        if (errand.status !== 'acknowledged') {
+            return res.status(400).json({ error: 'Errand must be acknowledged before manager confirmation' });
+        }
+        // Update status to confirmed_awaiting_start with 24h confirmation deadline
+        await db.query('UPDATE errands SET status = $1, confirmation_expires_at = NOW() + INTERVAL \'24 hours\', updated_at = NOW() WHERE id = $2', ['confirmed_awaiting_start', id]);
+        // Get doer info and notify them
+        const bidResult = await db.query('SELECT doer_id FROM bids WHERE id = $1', [errand.accepted_bid_id]);
+        const doerId = bidResult.rows[0]?.doer_id;
+        if (doerId) {
+            await db.query(`INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
+         VALUES ($1, $2, $3, $4, $5, NOW(), false)`, [
+                doerId,
+                'confirmed_ready_start',
+                '✅ Confirmed - Ready to Start!',
+                `Manager has confirmed. You can now start the errand whenever you're ready. You have 24 hours to begin.`,
+                id,
+            ]);
+        }
+        // Log activity
+        const managerResult = await db.query('SELECT display_name FROM users WHERE id = $1', [managerId]);
+        const managerName = managerResult.rows[0]?.display_name || 'Manager';
+        try {
+            await activityLogService.logActivity(id, 'confirmed_awaiting_start', managerId, managerName, 'asker');
+        }
+        catch (activityErr) {
+            console.warn('[Errands] Failed to log activity:', activityErr);
+        }
+        res.json({
+            success: true,
+            message: 'Start confirmed. Staff can now begin the errand (24 hour window).',
+            data: { id, status: 'confirmed_awaiting_start' },
+        });
+    }
+    catch (error) {
+        console.error('[ConfirmStart] Error confirming start:', error);
+        res.status(500).json({ error: 'Failed to confirm start', details: error instanceof Error ? error.message : 'Unknown error' });
+    }
+});
+// POST /api/errand-assignments - Create errand assignment (allocate to staff)
+router.post('/errand-assignments', authMiddleware, async (req, res) => {
+    try {
+        const { errandId, doerId, status } = req.body;
+        if (!errandId || !doerId) {
+            return res.status(400).json({ error: 'Missing required fields: errandId, doerId' });
+        }
+        // Check if assignment already exists
+        const existingResult = await db.query('SELECT id FROM errand_assignments WHERE errand_id = $1 AND doer_id = $2', [errandId, doerId]);
+        if (existingResult.rows.length > 0) {
+            return res.status(400).json({ error: 'Assignment already exists for this errand and doer' });
+        }
+        // Create the assignment
+        const result = await db.query(`INSERT INTO errand_assignments (errand_id, doer_id, status, created_at, updated_at)
+       VALUES ($1, $2, $3, NOW(), NOW())
+       RETURNING id, errand_id, doer_id, status`, [errandId, doerId, status || 'accepted']);
+        // Update errand status if needed
+        try {
+            await db.query('UPDATE errands SET updated_at = NOW() WHERE id = $1', [errandId]);
+        }
+        catch (updateErr) {
+            console.warn('[ErrandAssignment] Failed to update errand timestamp:', updateErr);
+        }
+        res.json({
+            success: true,
+            message: 'Errand allocated successfully',
+            data: result.rows[0],
+        });
+    }
+    catch (error) {
+        console.error('[ErrandAssignment] Error creating assignment:', error);
+        res.status(500).json({ error: 'Failed to create errand assignment', details: error instanceof Error ? error.message : 'Unknown error' });
+    }
+});
+// DELETE /api/errands/:id/clear-allocation - Clear allocation for testing
+router.delete('/:id/clear-allocation', authMiddleware, async (req, res) => {
+    try {
+        const errandId = parseInt(req.params.id, 10);
+        if (!errandId) {
+            return res.status(400).json({ error: 'Invalid errand ID' });
+        }
+        // Delete the allocation
+        await db.query('DELETE FROM errand_assignments WHERE errand_id = $1', [errandId]);
+        res.json({
+            success: true,
+            message: 'Allocation cleared successfully',
+        });
+    }
+    catch (error) {
+        console.error('[ErrandAllocationClear] Error:', error);
+        res.status(500).json({ error: 'Failed to clear allocation', details: error instanceof Error ? error.message : 'Unknown error' });
     }
 });
 export default router;

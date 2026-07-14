@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { db } from '../db';
+import db from '../db.js';
 import { authMiddleware } from '../middleware/auth';
 const router = Router();
 // POST /api/verification/check-criminal-records

@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useToast, ToastContainer } from '../../components/Toast';
+import AdminLayout from '../../components/admin/AdminLayout';
 
 interface Package {
   id: string;
@@ -127,11 +131,34 @@ export const SubscriptionPackages: React.FC = () => {
     );
   };
 
+  const navigate = useNavigate();
+  const { toasts, showToast, removeToast } = useToast();
+
   return (
-    <div className="subscription-packages-page">
-      <div className="page-header">
-        <h1>💳 Subscription Packages</h1>
-        <p>Create and manage subscription tiers for companies</p>
+    <AdminLayout>
+      <div className="subscription-packages-page">
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 style={{ margin: 0 }}>💳 Subscription Packages</h1>
+          <p style={{ margin: '8px 0 0 0' }}>Create and manage subscription tiers for companies</p>
+        </div>
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            fontSize: '20px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: '#FF6B35',
+            fontWeight: '700',
+            padding: '0 8px',
+            marginBottom: '20px',
+          }}
+          title="Go back"
+        >
+          ←
+        </button>
       </div>
 
       <div className="happy-box">
@@ -743,6 +770,7 @@ export const SubscriptionPackages: React.FC = () => {
         }
       `}</style>
     </div>
+    </AdminLayout>
   );
 };
 

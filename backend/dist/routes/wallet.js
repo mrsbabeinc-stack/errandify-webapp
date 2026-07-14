@@ -290,14 +290,17 @@ router.post('/gift-points', authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Failed to send points' });
     }
 });
-// POST /api/wallet/redeem - Redeem a reward
+// POST /api/wallet/redeem - Redeem a reward (supports both individual users and companies)
 router.post('/redeem', authMiddleware, async (req, res) => {
     try {
         const userId = parseInt(req.userId || '0', 10);
-        const { rewardId, points } = req.body;
-        console.log('Redeem API - userId:', userId, 'rewardId:', rewardId, 'points:', points);
-        if (!rewardId || !points || points <= 0) {
-            return res.status(400).json({ error: 'Invalid reward or points' });
+        const { points, code, amount, name } = req.body;
+        console.log('Redeem API - userId:', userId, 'code:', code, 'points:', points, 'amount:', amount);
+        if (!points || points <= 0) {
+            return res.status(400).json({ error: 'Invalid points amount' });
+        }
+        if (!code) {
+            return res.status(400).json({ error: 'Missing redemption code' });
         }
         // Get user's current points
         const userResult = await db.query(`SELECT errandify_points FROM users WHERE id = $1`, [userId]);
@@ -307,28 +310,48 @@ router.post('/redeem', authMiddleware, async (req, res) => {
         const currentPoints = userResult.rows[0].errandify_points || 0;
         console.log('Redeem API - currentPoints:', currentPoints);
         if (currentPoints < points) {
-            return res.status(400).json({ error: 'Insufficient points' });
+            return res.status(400).json({ error: `Insufficient points. You need ${points} EP but have ${currentPoints} EP` });
         }
-        // Deduct points
+        // Deduct points from user account
         console.log('Redeem API - attempting to deduct', points, 'from user', userId);
         const updateResult = await db.query(`UPDATE users SET errandify_points = errandify_points - $1 WHERE id = $2 RETURNING errandify_points`, [points, userId]);
         console.log('Redeem API - updated points:', updateResult.rows[0]?.errandify_points);
-        // Log redemption transaction
+        // Also deduct from company if user is part of a company (optional)
+        try {
+            const companyResult = await db.query(`SELECT company_id FROM users WHERE id = $1`, [userId]);
+            if (companyResult.rows.length > 0 && companyResult.rows[0].company_id) {
+                const companyId = companyResult.rows[0].company_id;
+                console.log('Redeem API - also deducting from company', companyId);
+                try {
+                    await db.query(`UPDATE companies SET ep_balance = ep_balance - $1 WHERE id = $2`, [points, companyId]);
+                }
+                catch (balanceErr) {
+                    console.log('Redeem API - company ep_balance update skipped (column may not exist)');
+                }
+            }
+        }
+        catch (companyErr) {
+            console.log('Redeem API - error querying company:', companyErr);
+        }
+        // Log redemption transaction with details
         console.log('Redeem API - logging transaction for user', userId);
         await db.query(`INSERT INTO point_transactions (user_id, points, type, description, created_at)
-       VALUES ($1, $2, 'redemption', $3, NOW())`, [userId, -points, `Redeemed reward #${rewardId}`]);
+       VALUES ($1, $2, 'redemption', $3, NOW())`, [userId, -points, `Redeemed: ${name || code} (Code: ${code}, SGD $${amount || 0})`]);
         console.log('Redeem API - transaction logged successfully');
         res.json({
             success: true,
-            message: 'Reward redeemed successfully!',
+            message: `✅ Success! You redeemed ${name || code}`,
             data: {
-                remainingPoints: currentPoints - points,
+                remainingPoints: updateResult.rows[0]?.errandify_points || 0,
+                code: code,
+                amount: amount,
+                name: name,
             },
         });
     }
     catch (error) {
         console.error('Redeem error:', error);
-        res.status(500).json({ error: 'Failed to redeem reward' });
+        res.status(500).json({ error: 'Failed to redeem reward. Please try again.' });
     }
 });
 // GET /api/wallet/point-history - Get user's point transaction history

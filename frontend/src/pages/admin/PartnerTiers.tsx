@@ -1,4 +1,8 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useToast, ToastContainer } from '../../components/Toast';
+import AdminLayout from '../../components/admin/AdminLayout';
 
 interface TierRequirement {
   minTasks: number;
@@ -191,11 +195,34 @@ export const PartnerTiers: React.FC = () => {
     return Math.min(Math.max(...scores.map(s => s > 100 ? 100 : s), 0), 100);
   };
 
+  const navigate = useNavigate();
+  const { toasts, showToast, removeToast } = useToast();
+
   return (
-    <div className="partner-tiers-page">
-      <div className="page-header">
-        <h1>👑 Partner Tiers</h1>
-        <p>Manage tier qualifications and view company progress</p>
+    <AdminLayout>
+      <div className="partner-tiers-page">
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 style={{ margin: 0 }}>👑 Partner Tiers</h1>
+          <p style={{ margin: '8px 0 0 0' }}>Manage tier qualifications and view company progress</p>
+        </div>
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            fontSize: '20px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: '#FF6B35',
+            fontWeight: '700',
+            padding: '0 8px',
+            marginBottom: '20px',
+          }}
+          title="Go back"
+        >
+          ←
+        </button>
       </div>
 
       <div className="happy-box">
@@ -925,6 +952,7 @@ export const PartnerTiers: React.FC = () => {
         }
       `}</style>
     </div>
+    </AdminLayout>
   );
 };
 

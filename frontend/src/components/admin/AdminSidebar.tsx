@@ -10,35 +10,44 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { id: 'home', label: 'Home', icon: '🏠', path: '/admin/dashboard' },
   {
     id: 'dashboard',
     label: 'Dashboard',
     icon: '📊',
+    path: '/admin/dashboard/overview',
     children: [
-      { id: 'overview', label: 'Overview', icon: '🏠', path: '/admin/dashboard/overview' },
-      { id: 'users', label: 'Users & Safety', icon: '👥', path: '/admin/dashboard/users' },
-      { id: 'disputes', label: 'Disputes (L1/L2/L3)', icon: '💬', path: '/admin/dashboard/disputes' },
-      { id: 'operations', label: 'Operations', icon: '📊', path: '/admin/dashboard/operations' },
-      { id: 'regional', label: 'Regional', icon: '🌍', path: '/admin/dashboard/regional' },
+      { id: 'overview', label: 'Overview', icon: '🎯', path: '/admin/dashboard/overview' },
+      { id: 'users-safety', label: 'Users & Safety', icon: '👥', path: '/admin/dashboard/users' },
     ]
   },
   {
-    id: 'company',
-    label: 'Company',
-    icon: '🏢',
+    id: 'user-admin',
+    label: 'User & Admin Management',
+    icon: '👥',
     children: [
-      { id: 'company-mgmt', label: 'Company Management', icon: '👔', path: '/admin/company/management' },
-      { id: 'subscriptions', label: 'Subscription Packages', icon: '💳', path: '/admin/company/subscriptions' },
-      { id: 'advertising', label: 'Advertising Approval', icon: '📸', path: '/admin/company/advertising' },
-      { id: 'partner-tiers', label: 'Partner Tiers', icon: '👑', path: '/admin/company/partner-tiers' },
+      { id: 'admin-users', label: 'Admin Users', icon: '🔐', path: '/admin/operations/auth-management' },
+      { id: 'user-management', label: 'User Management', icon: '🚫', path: '/admin/operations/user-management' },
+      { id: 'disputes', label: 'Disputes (L1/L2/L3)', icon: '⚖️', path: '/admin/dashboard/disputes' },
     ]
   },
   {
-    id: 'manage',
-    label: 'Manage',
-    icon: '🛠️',
+    id: 'operations-issues',
+    label: 'Operations & Issues',
+    icon: '📦',
     children: [
+      { id: 'errand-management', label: 'Errand Management', icon: '📦', path: '/admin/operations/errand-management' },
+      { id: 'payments', label: 'Payments & Refunds', icon: '💳', path: '/admin/operations/payments' },
+      { id: 'audit-compliance', label: 'Audit & Compliance', icon: '📋', path: '/admin/config/audit-compliance' },
+      { id: 'alerts-notifications', label: 'Alerts & Notifications', icon: '🔔', path: '/admin/config/alerts-notifications' },
+    ]
+  },
+  {
+    id: 'system-setup',
+    label: 'System Setup',
+    icon: '⚙️',
+    children: [
+      { id: 'system-config', label: 'System Configuration', icon: '⚙️', path: '/admin/config/system-configuration' },
+      { id: 'company-deep', label: 'Company Deep Management', icon: '🏭', path: '/admin/config/company-management' },
       { id: 'categories', label: 'Categories', icon: '🏷️', path: '/admin/manage/categories' },
       { id: 'vouchers', label: 'Vouchers', icon: '🎟️', path: '/admin/manage/vouchers' },
       {
@@ -52,6 +61,17 @@ const menuItems: MenuItem[] = [
         ]
       },
       { id: 'discounts', label: 'Discount Codes', icon: '🏷️', path: '/admin/manage/discounts' },
+    ]
+  },
+  {
+    id: 'company-management',
+    label: 'B2B Company Management',
+    icon: '🏢',
+    children: [
+      { id: 'company-mgmt', label: 'Company Management', icon: '👔', path: '/admin/company/management' },
+      { id: 'subscriptions', label: 'Subscription Packages', icon: '📦', path: '/admin/company/subscriptions' },
+      { id: 'advertising', label: 'Advertising Approval', icon: '📸', path: '/admin/company/advertising' },
+      { id: 'partner-tiers', label: 'Partner Tiers', icon: '👑', path: '/admin/company/partner-tiers' },
     ]
   },
   {
@@ -73,9 +93,7 @@ const menuItems: MenuItem[] = [
     label: 'Cases',
     icon: '📋',
     children: [
-      { id: 'case-create', label: 'Case Creation', icon: '📋', path: '/admin/cases/create' },
-      { id: 'case-detail', label: 'Case Details', icon: '🔍', path: '/admin/cases/detail' },
-      { id: 'case-analytics', label: 'Case Analytics', icon: '📊', path: '/admin/cases/analytics' },
+      { id: 'case-create', label: 'Case Management', icon: '📋', path: '/admin/cases' },
     ]
   },
   {
@@ -83,6 +101,7 @@ const menuItems: MenuItem[] = [
     label: 'Reports',
     icon: '📊',
     children: [
+      { id: 'regional', label: 'Regional Performance', icon: '🌍', path: '/admin/dashboard/regional' },
       { id: 'financial', label: 'Financial Health', icon: '💰', path: '/admin/reports/financial' },
       { id: 'user-behavior', label: 'User Behavior', icon: '👥', path: '/admin/reports/user-behavior' },
       { id: 'market', label: 'Market Analysis', icon: '📈', path: '/admin/reports/market' },
@@ -98,20 +117,43 @@ const menuItems: MenuItem[] = [
 ];
 
 export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) => {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['dashboard', 'reports', 'company'])
-  );
   const location = useLocation();
   const navigate = useNavigate();
 
-  const toggleSection = (id: string) => {
-    const newExpanded = new Set(expandedSections);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
+  // Determine which section should be expanded based on current route
+  const getActiveSection = () => {
+    const pathname = location.pathname;
+
+    for (const item of menuItems) {
+      if (item.children) {
+        // Check if any child matches current path
+        const hasActiveChild = item.children.some(child => child.path && pathname.includes(child.path));
+        if (hasActiveChild) {
+          return item.id;
+        }
+      }
     }
-    setExpandedSections(newExpanded);
+    return 'dashboard'; // Default to dashboard
+  };
+
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set([getActiveSection()])
+  );
+
+  // Update expanded section when route changes
+  React.useEffect(() => {
+    setExpandedSections(new Set([getActiveSection()]));
+  }, [location.pathname]);
+
+  const toggleSection = (id: string) => {
+    // Accordion mode: only one section expanded at a time
+    // If clicking the same section, collapse it
+    // If clicking a different section, close current and open new one
+    if (expandedSections.has(id)) {
+      setExpandedSections(new Set());
+    } else {
+      setExpandedSections(new Set([id]));
+    }
   };
 
   const isActive = (path?: string) => path && location.pathname === path;
@@ -192,17 +234,13 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
 
       <style>{`
         .admin-sidebar {
-          width: 280px;
-          height: 100vh;
+          width: 240px;
           background: linear-gradient(180deg, #fff5f0 0%, #fffbf7 100%);
           color: #333;
           border-right: 2px solid #ffb88c;
           overflow-y: auto;
           transition: width 0.3s ease;
-          position: fixed;
-          left: 0;
-          top: 60px;
-          z-index: 100;
+          flex-shrink: 0;
           box-shadow: 2px 0 8px rgba(255, 107, 53, 0.08);
         }
 
@@ -212,7 +250,7 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
         }
 
         .sidebar-content {
-          padding: 20px 0;
+          padding: 12px 0;
         }
 
         .sidebar-nav {
@@ -231,7 +269,7 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
           align-items: center;
           gap: 12px;
           width: 100%;
-          padding: 12px 20px;
+          padding: 10px 16px;
           border: none;
           background: none;
           color: #ff6b35;
@@ -285,7 +323,7 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
           align-items: center;
           gap: 12px;
           width: 100%;
-          padding: 10px 20px 10px 28px;
+          padding: 8px 16px 8px 24px;
           border: none;
           background: none;
           color: #666;
@@ -297,7 +335,7 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
         }
 
         .menu-item.has-submenu {
-          padding: 10px 20px 10px 28px;
+          padding: 8px 16px 8px 24px;
           font-weight: 600;
           color: #ff6b35;
         }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import CampaignWizard from './CampaignWizard';
 
 interface Advertisement {
   id: number;
@@ -23,7 +24,7 @@ const CompanyAdvertisingManagement: React.FC = () => {
       id: 1,
       type: 'profile-banner',
       title: 'Premium Partner Showcase',
-      imageUrl: 'banner1.jpg',
+      imageUrl: 'https://via.placeholder.com/1200x400/FF6B35/ffffff?text=Premium+Partner+Showcase',
       url: 'https://errandify.com/company/rumah-emas',
       budget: 500,
       spent: 320,
@@ -38,6 +39,7 @@ const CompanyAdvertisingManagement: React.FC = () => {
       id: 2,
       type: 'in-feed-ads',
       title: 'Summer Cleaning Special',
+      imageUrl: 'https://via.placeholder.com/500x300/FF8C5A/ffffff?text=Summer+Cleaning',
       url: 'https://errandify.com/cleaning-offer',
       budget: 300,
       spent: 180,
@@ -51,6 +53,8 @@ const CompanyAdvertisingManagement: React.FC = () => {
   ]);
 
   const [showNewAdModal, setShowNewAdModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAd, setEditingAd] = useState<Advertisement | null>(null);
   const [newAdType, setNewAdType] = useState<'profile-banner' | 'in-feed-ads'>('profile-banner');
 
   const filteredAds = advertisements.filter(ad => ad.type === activeTab);
@@ -58,17 +62,121 @@ const CompanyAdvertisingManagement: React.FC = () => {
   const totalSpent = filteredAds.reduce((sum, ad) => sum + ad.spent, 0);
   const totalImpressions = filteredAds.reduce((sum, ad) => sum + ad.impressions, 0);
 
+  const handlePauseAd = (id: number) => {
+    setAdvertisements(advertisements.map(ad =>
+      ad.id === id ? { ...ad, status: ad.status === 'active' ? 'scheduled' : 'active' } : ad
+    ));
+  };
+
+  const handleDeleteAd = (id: number) => {
+    setAdvertisements(advertisements.filter(ad => ad.id !== id));
+  };
+
+  const handleEditAd = (ad: Advertisement) => {
+    setEditingAd(ad);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingAd) {
+      setAdvertisements(advertisements.map(ad =>
+        ad.id === editingAd.id ? editingAd : ad
+      ));
+      setShowEditModal(false);
+      setEditingAd(null);
+    }
+  };
+
+  const handleCampaignSubmit = (campaignData: any) => {
+    // Convert campaign wizard data to advertisement format
+    const newAds = campaignData.map((campaign: any, index: number) => ({
+      id: Date.now() + index,
+      type: campaign.type === 'hero-banner' ? 'profile-banner' : 'in-feed-ads',
+      title: campaign.title,
+      imageUrl: campaign.imageUrl,
+      url: campaign.url,
+      budget: campaign.budget,
+      spent: 0,
+      impressions: 0,
+      clicks: 0,
+      startDate: campaign.startDate,
+      endDate: campaign.endDate,
+      status: 'scheduled' as const,
+      ctr: 0,
+    }));
+
+    setAdvertisements([...advertisements, ...newAds]);
+    setShowNewAdModal(false);
+  };
+
   return (
     <div className="advertising-management">
-      {/* Header */}
-      <div className="ads-header">
-        <div>
-          <h2>Advertising Management</h2>
-          <p className="subtitle">Track and manage your advertising campaigns</p>
+      {/* Hero Section */}
+      <div style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)', borderRadius: '16px', padding: '40px', marginBottom: '32px', color: 'white', boxShadow: '0 8px 24px rgba(255,107,53,0.2)'}}>
+        <div style={{maxWidth: '600px'}}>
+          <div style={{fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.9, marginBottom: '12px'}}>🚀 Grow Your Business</div>
+          <h1 style={{margin: '0 0 12px 0', fontSize: '36px', fontWeight: '800', lineHeight: '1.2'}}>
+            Boost Your Visibility
+          </h1>
+          <p style={{margin: '0 0 20px 0', fontSize: '16px', opacity: 0.95, lineHeight: '1.6'}}>
+            Reach active users and grow your business. Our AI optimizes every aspect of your campaign for maximum impact.
+          </p>
+          <button onClick={() => setShowNewAdModal(true)} style={{padding: '14px 28px', background: 'white', color: '#FF6B35', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '14px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', transition: 'all 0.3s ease'}}>
+            ✨ Start Your First Campaign
+          </button>
         </div>
-        <button className="btn-primary" onClick={() => setShowNewAdModal(true)}>
+      </div>
+
+      {/* Header */}
+      <div className="ads-header" style={{marginBottom: '24px'}}>
+        <div>
+          <h2 style={{margin: '0 0 4px 0', fontSize: '28px', fontWeight: '800'}}>Your Campaigns</h2>
+          <p className="subtitle" style={{margin: 0, fontSize: '14px', color: '#666'}}>Manage and optimize your active advertising</p>
+        </div>
+        <button className="btn-primary" onClick={() => setShowNewAdModal(true)} style={{padding: '12px 24px', background: 'linear-gradient(135deg, #FF6B35, #FF8C5A)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', fontSize: '14px', boxShadow: '0 4px 12px rgba(255,107,53,0.2)'}}>
           + New Campaign
         </button>
+      </div>
+
+      {/* Advertising Opportunities */}
+      <div className="advertising-opportunities" style={{marginBottom: '32px'}}>
+        <h3 style={{margin: '0 0 16px 0', fontSize: '16px', fontWeight: '700'}}>🎯 Start Advertising</h3>
+        <div className="opportunities-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '16px'}}>
+          <div className="opportunity-card" style={{padding: '16px', background: 'white', border: '2px solid #FFE5D9', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.3s ease', position: 'relative'}}>
+            <div className="opp-icon" style={{fontSize: '24px', marginBottom: '8px'}}>🎯</div>
+            <div className="opp-title" style={{fontSize: '14px', fontWeight: '700', marginBottom: '8px'}}>Featured Ads</div>
+            <div style={{fontSize: '12px', color: '#666', marginBottom: '4px', lineHeight: '1.5'}}>Get featured prominently across the app. AI places your ad where active users are most likely to see and engage.</div>
+            <div style={{fontSize: '11px', color: '#999', marginBottom: '12px', fontStyle: 'italic'}}>📍 Appears on browse pages & search results</div>
+            <div className="opp-price" style={{fontSize: '13px', fontWeight: '700', color: '#FF6B35'}}>SGD $280/week</div>
+          </div>
+          <div className="opportunity-card" style={{padding: '16px', background: 'white', border: '2px solid #FFE5D9', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.3s ease', position: 'relative'}}>
+            <div className="opp-icon" style={{fontSize: '24px', marginBottom: '8px'}}>📰</div>
+            <div className="opp-title" style={{fontSize: '14px', fontWeight: '700', marginBottom: '8px'}}>In-Feed Ads</div>
+            <div style={{fontSize: '12px', color: '#666', marginBottom: '12px', lineHeight: '1.5'}}>Subtle banner between tasks. AI picks the best time & position to show your ad. Learns from engagement patterns to reach active users.</div>
+            <div className="opp-price" style={{fontSize: '13px', fontWeight: '700', color: '#FF6B35'}}>SGD $180/week</div>
+          </div>
+        </div>
+
+        {/* Coming Soon - Full Cards */}
+        <div style={{background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '10px', padding: '16px'}}>
+          <div style={{fontSize: '12px', fontWeight: '700', color: '#666', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px'}}>
+            <span>🔮</span> Coming Soon
+          </div>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px'}}>
+            <div style={{padding: '12px', background: 'white', borderRadius: '8px', opacity: 0.7}}>
+              <div style={{fontSize: '13px', fontWeight: '600', color: '#666', marginBottom: '4px'}}>📍 Browse Hero</div>
+              <div style={{fontSize: '12px', color: '#999', lineHeight: '1.4'}}>AI prioritizes your ad among competitors. Rotates best-performing creatives.</div>
+            </div>
+            <div style={{padding: '12px', background: 'white', borderRadius: '8px', opacity: 0.7}}>
+              <div style={{fontSize: '13px', fontWeight: '600', color: '#666', marginBottom: '4px'}}>📧 Email Newsletter</div>
+              <div style={{fontSize: '12px', color: '#999', lineHeight: '1.4'}}>AI crafts personalized subject lines & send times. Generates compelling copy automatically.</div>
+            </div>
+            <div style={{padding: '12px', background: 'white', borderRadius: '8px', opacity: 0.7}}>
+              <div style={{fontSize: '13px', fontWeight: '600', color: '#666', marginBottom: '4px'}}>🎯 Smart Matching</div>
+              <div style={{fontSize: '12px', color: '#999', lineHeight: '1.4'}}>AI shows your ad to intent-matched users. Predicts high-intent searchers automatically.</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -87,26 +195,112 @@ const CompanyAdvertisingManagement: React.FC = () => {
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="ads-stats">
-        <div className="stat-box">
-          <span className="stat-label">Total Budget</span>
-          <span className="stat-value">SGD ${totalBudget}</span>
+
+      {/* Empty State - No campaigns yet */}
+      {filteredAds.length === 0 && (
+        <div style={{background: 'linear-gradient(135deg, #FFF8F5 0%, #FFE5D9 100%)', borderRadius: '16px', padding: '48px', textAlign: 'center', marginBottom: '32px'}}>
+          <div style={{fontSize: '64px', marginBottom: '16px'}}>📢</div>
+          <h2 style={{margin: '0 0 12px 0', fontSize: '28px', fontWeight: '800', color: '#333'}}>No campaigns yet</h2>
+          <p style={{margin: '0 0 24px 0', fontSize: '16px', color: '#666', lineHeight: '1.6', maxWidth: '450px', marginLeft: 'auto', marginRight: 'auto'}}>
+            Start advertising today and reach thousands of active users looking for services like yours.
+          </p>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto'}}>
+            <div style={{background: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center'}}>
+              <div style={{fontSize: '28px', marginBottom: '8px'}}>⚡</div>
+              <div style={{fontSize: '12px', fontWeight: '700', color: '#333'}}>Quick Setup</div>
+              <div style={{fontSize: '11px', color: '#666', marginTop: '4px'}}>3 mins to launch</div>
+            </div>
+            <div style={{background: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center'}}>
+              <div style={{fontSize: '28px', marginBottom: '8px'}}>🤖</div>
+              <div style={{fontSize: '12px', fontWeight: '700', color: '#333'}}>AI Optimized</div>
+              <div style={{fontSize: '11px', color: '#666', marginTop: '4px'}}>Auto-improve</div>
+            </div>
+            <div style={{background: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center'}}>
+              <div style={{fontSize: '28px', marginBottom: '8px'}}>📊</div>
+              <div style={{fontSize: '12px', fontWeight: '700', color: '#333'}}>Real Results</div>
+              <div style={{fontSize: '11px', color: '#666', marginTop: '4px'}}>50K+ reach</div>
+            </div>
+          </div>
+          <button onClick={() => setShowNewAdModal(true)} style={{padding: '16px 32px', background: 'linear-gradient(135deg, #FF6B35, #FF8C5A)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '800', fontSize: '16px', cursor: 'pointer', boxShadow: '0 8px 24px rgba(255,107,53,0.3)', transition: 'all 0.3s ease'}}>
+            🚀 Create Your First Campaign
+          </button>
         </div>
-        <div className="stat-box">
-          <span className="stat-label">Spent</span>
-          <span className="stat-value">SGD ${totalSpent}</span>
-          <span className="stat-percent">{Math.round((totalSpent / totalBudget) * 100)}%</span>
+      )}
+
+      {/* AI Effectiveness Insights - Only show if they have campaigns */}
+      {filteredAds.length > 0 && (
+        <div style={{background: 'linear-gradient(135deg, #FFF8F5 0%, #FFE5D9 100%)', border: '1px solid #FFD5C0', borderRadius: '12px', padding: '20px', marginBottom: '24px'}}>
+          <div style={{display: 'flex', alignItems: 'start', gap: '12px', marginBottom: '16px'}}>
+            <div style={{fontSize: '24px'}}>🤖</div>
+            <div>
+              <h3 style={{margin: '0 0 8px 0', fontSize: '16px', fontWeight: '700'}}>AI Performance Insights</h3>
+              <p style={{margin: 0, fontSize: '13px', color: '#666'}}>Based on your {filteredAds.length} active campaign(s)</p>
+            </div>
+          </div>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px'}}>
+            <div style={{background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #FFE5D9'}}>
+              <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>AI Recommendation</div>
+              <div style={{fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>Increase Browse Hero rotation by 30%</div>
+              <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>Your CTR is 20% above average</div>
+            </div>
+            <div style={{background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #FFE5D9'}}>
+              <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>Next Best Action</div>
+              <div style={{fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>Test Email Newsletter this week</div>
+              <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>Haven't tried yet • High ROI potential</div>
+            </div>
+            <div style={{background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #FFE5D9'}}>
+              <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>Estimated Monthly ROI</div>
+              <div style={{fontSize: '13px', fontWeight: '600', color: '#27AE60'}}>+$4,200 revenue</div>
+              <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>Based on 2-week performance trend</div>
+            </div>
+            <div style={{background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #FFE5D9'}}>
+              <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>Budget Efficiency</div>
+              <div style={{fontSize: '13px', fontWeight: '600', color: '#5BA3D0'}}>97% optimized</div>
+              <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>Bid strategy is working well</div>
+            </div>
+          </div>
+          <button style={{width: '100%', marginTop: '12px', padding: '10px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer'}}>
+            💡 View Full AI Analysis & Recommendations
+          </button>
         </div>
-        <div className="stat-box">
-          <span className="stat-label">Impressions</span>
-          <span className="stat-value">{totalImpressions.toLocaleString()}</span>
+      )}
+
+      {/* Performance Summary - Only show if they have campaigns */}
+      {filteredAds.length > 0 && (
+        <div style={{marginBottom: '32px'}}>
+          <h3 style={{margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#333'}}>📊 Performance Overview</h3>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, minmax(150px, 1fr))', gap: '12px'}}>
+            <div style={{padding: '16px', background: 'white', borderRadius: '12px', border: '1px solid #e0e0e0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
+              <div style={{fontSize: '10px', color: '#999', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px'}}>Total Invested</div>
+              <div style={{fontSize: '20px', fontWeight: '800', color: '#FF6B35', marginBottom: '6px', lineHeight: '1.1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                SGD {totalBudget}
+              </div>
+              <div style={{fontSize: '11px', color: '#999'}}>all campaigns</div>
+            </div>
+            <div style={{padding: '16px', background: 'white', borderRadius: '12px', border: '1px solid #e0e0e0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
+              <div style={{fontSize: '10px', color: '#999', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px'}}>Total Spent</div>
+              <div style={{fontSize: '20px', fontWeight: '800', color: '#27AE60', marginBottom: '6px', lineHeight: '1.1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                SGD {totalSpent}
+              </div>
+              <div style={{fontSize: '11px', color: '#999'}}>{totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0}% used</div>
+            </div>
+            <div style={{padding: '16px', background: 'white', borderRadius: '12px', border: '1px solid #e0e0e0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
+              <div style={{fontSize: '10px', color: '#999', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px'}}>Total Reach</div>
+              <div style={{fontSize: '20px', fontWeight: '800', color: '#667EEA', marginBottom: '6px', lineHeight: '1.1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                {totalImpressions.toLocaleString()}
+              </div>
+              <div style={{fontSize: '11px', color: '#999'}}>impressions</div>
+            </div>
+            <div style={{padding: '16px', background: 'white', borderRadius: '12px', border: '1px solid #e0e0e0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
+              <div style={{fontSize: '10px', color: '#999', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px'}}>Avg CTR</div>
+              <div style={{fontSize: '20px', fontWeight: '800', color: '#FF9800', marginBottom: '6px', lineHeight: '1.1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                {(filteredAds.reduce((sum, ad) => sum + ad.ctr, 0) / (filteredAds.length || 1)).toFixed(1)}%
+              </div>
+              <div style={{fontSize: '11px', color: '#999'}}>engagement</div>
+            </div>
+          </div>
         </div>
-        <div className="stat-box">
-          <span className="stat-label">Avg CTR</span>
-          <span className="stat-value">{(filteredAds.reduce((sum, ad) => sum + ad.ctr, 0) / (filteredAds.length || 1)).toFixed(1)}%</span>
-        </div>
-      </div>
+      )}
 
       {/* Ad List */}
       <div className="ads-list">
@@ -124,45 +318,55 @@ const CompanyAdvertisingManagement: React.FC = () => {
               <button className="btn-menu">⋮</button>
             </div>
 
-            <div className="ad-content">
-              {ad.imageUrl && activeTab === 'profile-banner' && (
-                <div className="ad-preview">
-                  <div className="preview-placeholder">📷 Banner Preview</div>
-                </div>
-              )}
-              <div className="ad-details">
-                <div className="detail-row">
-                  <span className="label">Campaign URL</span>
-                  <span className="value url">{ad.url}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="label">Duration</span>
-                  <span className="value">{ad.startDate} to {ad.endDate}</span>
-                </div>
-                <div className="ad-metrics">
-                  <div className="metric">
-                    <span className="metric-label">Budget</span>
-                    <span className="metric-value">SGD ${ad.budget}</span>
+            {activeTab === 'profile-banner' ? (
+              <div className="ad-hero-preview" style={{width: '100%', height: '300px', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '600', fontSize: '16px', overflow: 'hidden'}}>
+                {ad.imageUrl ? (
+                  <img src={ad.imageUrl} alt={ad.title} onError={(e) => {e.target.style.display = 'none'}} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : null}
+                <span style={{position: 'absolute', textAlign: 'center'}}>Your Banner Ad (1200×300px)</span>
+              </div>
+            ) : (
+              <div className="ad-content">
+                {ad.imageUrl && (
+                  <div className="ad-preview-small" style={{width: '100%', height: '250px', background: 'linear-gradient(135deg, #FF8C5A 0%, #FFAA7A 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '600', borderRadius: '8px', marginBottom: '12px', overflow: 'hidden'}}>
+                    <img src={ad.imageUrl} alt={ad.title} onError={(e) => {e.target.style.display = 'none'}} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <span style={{position: 'absolute', textAlign: 'center'}}>Your Ad (500×250px)</span>
                   </div>
-                  <div className="metric">
-                    <span className="metric-label">Spent</span>
-                    <span className="metric-value">SGD ${ad.spent}</span>
+                )}
+                <div className="ad-details">
+                  <div className="detail-row">
+                    <span className="label">Campaign URL</span>
+                    <span className="value url">{ad.url}</span>
                   </div>
-                  <div className="metric">
-                    <span className="metric-label">Impressions</span>
-                    <span className="metric-value">{ad.impressions.toLocaleString()}</span>
+                  <div className="detail-row">
+                    <span className="label">Duration</span>
+                    <span className="value">{ad.startDate} to {ad.endDate}</span>
                   </div>
-                  <div className="metric">
-                    <span className="metric-label">Clicks</span>
-                    <span className="metric-value">{ad.clicks}</span>
-                  </div>
-                  <div className="metric">
-                    <span className="metric-label">CTR</span>
-                    <span className="metric-value">{ad.ctr}%</span>
+                  <div className="ad-metrics">
+                    <div className="metric">
+                      <span className="metric-label">Budget</span>
+                      <span className="metric-value">SGD ${ad.budget}</span>
+                    </div>
+                    <div className="metric">
+                      <span className="metric-label">Spent</span>
+                      <span className="metric-value">SGD ${ad.spent}</span>
+                    </div>
+                    <div className="metric">
+                      <span className="metric-label">Impressions</span>
+                      <span className="metric-value">{ad.impressions.toLocaleString()}</span>
+                    </div>
+                    <div className="metric">
+                      <span className="metric-label">Clicks</span>
+                      <span className="metric-value">{ad.clicks}</span>
+                    </div>
+                    <div className="metric">
+                      <span className="metric-label">CTR</span>
+                      <span className="metric-value">{ad.ctr}%</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="ad-progress">
               <span className="progress-label">Budget Used</span>
@@ -173,16 +377,25 @@ const CompanyAdvertisingManagement: React.FC = () => {
             </div>
 
             <div className="ad-actions">
-              <button className="btn-edit">Edit</button>
-              <button className="btn-pause">Pause</button>
-              <button className="btn-delete">Delete</button>
+              <button className="btn-edit" onClick={() => handleEditAd(ad)}>✏️ Edit</button>
+              <button className="btn-pause" onClick={() => handlePauseAd(ad.id)}>
+                {ad.status === 'active' ? '⏸ Pause' : '▶ Resume'}
+              </button>
+              <button className="btn-delete" onClick={() => handleDeleteAd(ad.id)}>🗑 Delete</button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* New Ad Modal */}
-      {showNewAdModal && (
+      {/* Campaign Wizard - Intuitive multi-step flow */}
+      <CampaignWizard
+        isOpen={showNewAdModal}
+        onClose={() => setShowNewAdModal(false)}
+        onCampaignSubmit={handleCampaignSubmit}
+      />
+
+      {/* Old Modal - Hidden for now */}
+      {false && showNewAdModal && (
         <div className="modal-overlay" onClick={() => setShowNewAdModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
@@ -261,60 +474,147 @@ const CompanyAdvertisingManagement: React.FC = () => {
         </div>
       )}
 
+      {/* Edit Ad Modal */}
+      {showEditModal && editingAd && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Edit Campaign: {editingAd.title}</h3>
+              <button className="close-btn" onClick={() => setShowEditModal(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Campaign Title</label>
+                <input
+                  type="text"
+                  value={editingAd.title}
+                  onChange={(e) => setEditingAd({...editingAd, title: e.target.value})}
+                  placeholder="E.g., Summer Cleaning Special"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Campaign URL</label>
+                <input
+                  type="url"
+                  value={editingAd.url}
+                  onChange={(e) => setEditingAd({...editingAd, url: e.target.value})}
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Start Date</label>
+                  <input
+                    type="date"
+                    value={editingAd.startDate}
+                    onChange={(e) => setEditingAd({...editingAd, startDate: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>End Date</label>
+                  <input
+                    type="date"
+                    value={editingAd.endDate}
+                    onChange={(e) => setEditingAd({...editingAd, endDate: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Daily Budget (SGD)</label>
+                <input
+                  type="number"
+                  value={editingAd.budget}
+                  onChange={(e) => setEditingAd({...editingAd, budget: parseInt(e.target.value)})}
+                  placeholder="SGD $"
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button className="btn-primary" onClick={handleSaveEdit}>Save Changes</button>
+                <button className="btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         .advertising-management {
-          background: #fff;
-          border-radius: 12px;
-          padding: 24px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          background: linear-gradient(135deg, #fff 0%, #fff9f5 100%);
+          border-radius: 16px;
+          padding: 32px;
+          box-shadow: 0 4px 16px rgba(255, 107, 53, 0.08);
         }
 
         .ads-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 28px;
+          margin-bottom: 32px;
           gap: 16px;
         }
 
         .ads-header h2 {
           margin: 0 0 4px 0;
-          font-size: 24px;
+          font-size: 28px;
+          background: linear-gradient(135deg, #FF6B35, #FF8C5A);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          font-weight: 700;
         }
 
         .subtitle {
           margin: 0;
-          font-size: 13px;
-          color: #999;
+          font-size: 14px;
+          color: #FF8C5A;
+          font-weight: 500;
         }
 
         .btn-primary {
-          padding: 10px 16px;
-          background: #FF6B35;
+          padding: 12px 24px;
+          background: linear-gradient(135deg, #FF6B35, #FF8C5A);
           color: #fff;
           border: none;
-          border-radius: 6px;
+          border-radius: 8px;
           cursor: pointer;
-          font-weight: 600;
+          font-weight: 700;
           white-space: nowrap;
+          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+          transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
         }
 
         .ads-tabs {
           display: flex;
-          gap: 16px;
-          margin-bottom: 24px;
-          border-bottom: 2px solid #e0e0e0;
+          gap: 24px;
+          margin-bottom: 32px;
+          border-bottom: 2px solid rgba(255, 107, 53, 0.1);
+          padding-bottom: 12px;
         }
 
         .tab {
-          padding: 12px 16px;
+          padding: 8px 0;
           background: none;
           border: none;
           border-bottom: 3px solid transparent;
           cursor: pointer;
-          font-weight: 600;
+          font-weight: 700;
           color: #999;
-          transition: all 0.2s;
+          font-size: 15px;
+          transition: all 0.3s;
+          position: relative;
+        }
+
+        .tab:hover {
+          color: #FF8C5A;
         }
 
         .tab.active {
@@ -324,65 +624,103 @@ const CompanyAdvertisingManagement: React.FC = () => {
 
         .ads-stats {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
           gap: 16px;
-          margin-bottom: 28px;
+          margin-bottom: 32px;
         }
 
         .stat-box {
-          background: linear-gradient(135deg, #f5f5f5, #efefef);
-          padding: 16px;
-          border-radius: 8px;
+          background: linear-gradient(135deg, #FF6B35, #FF8C5A);
+          border: none;
+          padding: 24px;
+          border-radius: 14px;
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 12px;
+          transition: all 0.3s;
+          box-shadow: 0 6px 20px rgba(255, 107, 53, 0.25);
+          color: white;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .stat-box::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          right: -50%;
+          width: 200%;
+          height: 200%;
+          background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+          pointer-events: none;
+        }
+
+        .stat-box:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 12px 28px rgba(255, 107, 53, 0.35);
         }
 
         .stat-label {
           font-size: 12px;
-          color: #999;
-          font-weight: 600;
+          color: rgba(255, 255, 255, 0.9);
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          position: relative;
+          z-index: 1;
         }
 
         .stat-value {
-          font-size: 18px;
-          font-weight: 700;
-          color: #333;
+          font-size: 32px;
+          font-weight: 900;
+          color: white;
+          position: relative;
+          z-index: 1;
         }
 
         .stat-percent {
-          font-size: 12px;
-          color: #FF6B35;
+          font-size: 13px;
+          color: rgba(255, 255, 255, 0.85);
+          font-weight: 700;
+          position: relative;
+          z-index: 1;
         }
 
         .ads-list {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 18px;
         }
 
         .ad-card {
-          border: 1px solid #e0e0e0;
-          border-radius: 8px;
+          border: 2px solid #FFE5D9;
+          border-radius: 12px;
           overflow: hidden;
-          transition: all 0.2s;
+          transition: all 0.3s;
+          background: linear-gradient(135deg, #fff9f5, #fffaf7);
+          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.1);
         }
 
         .ad-card.active {
+          border: 2px solid #FF6B35;
           border-left: 4px solid #FF6B35;
+          box-shadow: 0 4px 16px rgba(255, 107, 53, 0.2);
         }
 
         .ad-card:hover {
-          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+          border-color: #FF8C5A;
+          box-shadow: 0 6px 20px rgba(255, 107, 53, 0.15);
+          transform: translateY(-2px);
         }
 
         .ad-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          padding: 16px;
-          border-bottom: 1px solid #f0f0f0;
+          padding: 20px;
+          border-bottom: 2px solid #FFE5D9;
           gap: 12px;
+          background: linear-gradient(135deg, rgba(255, 107, 53, 0.02), rgba(255, 140, 90, 0.02));
         }
 
         .ad-title {
@@ -391,17 +729,19 @@ const CompanyAdvertisingManagement: React.FC = () => {
 
         .ad-title h3 {
           margin: 0 0 8px 0;
-          font-size: 15px;
-          font-weight: 600;
+          font-size: 16px;
+          font-weight: 700;
+          color: #333;
         }
 
         .status-badge {
           display: inline-block;
-          font-size: 11px;
-          padding: 4px 8px;
-          background: #e0e0e0;
-          border-radius: 4px;
-          font-weight: 600;
+          font-size: 12px;
+          padding: 6px 12px;
+          background: #FFE5D9;
+          border-radius: 6px;
+          font-weight: 700;
+          color: #FF6B35;
         }
 
         .status-badge.active {
@@ -418,24 +758,39 @@ const CompanyAdvertisingManagement: React.FC = () => {
         }
 
         .ad-content {
-          padding: 16px;
+          padding: 20px;
           display: grid;
           grid-template-columns: 1fr 2fr;
-          gap: 16px;
+          gap: 20px;
         }
 
-        .ad-preview {
-          background: #f5f5f5;
-          border-radius: 6px;
-          min-height: 150px;
+        .ad-preview-hero {
+          background: linear-gradient(135deg, #FF6B35, #FF8C5A);
+          border-radius: 10px;
+          min-height: 180px;
           display: flex;
           align-items: center;
           justify-content: center;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
         }
 
-        .preview-placeholder {
-          color: #999;
-          font-size: 14px;
+        .ad-preview-small {
+          background: linear-gradient(135deg, #FF8C5A, #FFB399);
+          border-radius: 10px;
+          min-height: 140px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+        }
+
+        .ad-preview-hero img,
+        .ad-preview-small img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
 
         .detail-row {
@@ -466,93 +821,115 @@ const CompanyAdvertisingManagement: React.FC = () => {
           display: grid;
           grid-template-columns: repeat(5, 1fr);
           gap: 12px;
-          margin-top: 12px;
+          margin-top: 16px;
         }
 
         .metric {
           text-align: center;
-          padding: 8px;
-          background: #f5f5f5;
-          border-radius: 6px;
+          padding: 12px;
+          background: linear-gradient(135deg, #fff5f0, #fff9f5);
+          border: 1.5px solid #FFE5D9;
+          border-radius: 8px;
+          transition: all 0.3s;
+        }
+
+        .metric:hover {
+          border-color: #FF8C5A;
+          background: linear-gradient(135deg, #fff0e6, #fffbf7);
         }
 
         .metric-label {
           display: block;
           font-size: 11px;
-          color: #999;
-          margin-bottom: 4px;
+          color: #FF8C5A;
+          margin-bottom: 6px;
+          font-weight: 700;
+          text-transform: uppercase;
         }
 
         .metric-value {
           display: block;
-          font-size: 14px;
-          font-weight: 700;
-          color: #333;
+          font-size: 16px;
+          font-weight: 800;
+          color: #FF6B35;
         }
 
         .ad-progress {
-          padding: 16px;
-          border-top: 1px solid #f0f0f0;
+          padding: 20px;
+          border-top: 2px solid #FFE5D9;
+          background: linear-gradient(135deg, rgba(255, 107, 53, 0.02), rgba(255, 140, 90, 0.02));
         }
 
         .progress-label {
           display: block;
-          font-size: 12px;
-          color: #999;
-          margin-bottom: 8px;
+          font-size: 13px;
+          color: #FF6B35;
+          margin-bottom: 10px;
+          font-weight: 700;
         }
 
         .progress-bar {
-          height: 8px;
-          background: #e0e0e0;
-          border-radius: 4px;
+          height: 10px;
+          background: #FFE5D9;
+          border-radius: 6px;
           overflow: hidden;
-          margin-bottom: 6px;
+          margin-bottom: 8px;
+          box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
         }
 
         .progress-fill {
           height: 100%;
           background: linear-gradient(90deg, #FF6B35, #FF8C5A);
           transition: width 0.3s;
+          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
         }
 
         .progress-value {
           display: block;
-          font-size: 11px;
+          font-size: 12px;
           color: #FF6B35;
-          font-weight: 600;
+          font-weight: 700;
         }
 
         .ad-actions {
           display: flex;
-          gap: 8px;
-          padding: 12px 16px;
-          background: #fafafa;
-          border-top: 1px solid #f0f0f0;
+          gap: 12px;
+          padding: 16px 20px;
+          background: linear-gradient(135deg, rgba(255, 107, 53, 0.02), rgba(255, 140, 90, 0.02));
+          border-top: 2px solid #FFE5D9;
         }
 
         .btn-edit,
         .btn-pause,
         .btn-delete {
           flex: 1;
-          padding: 8px;
-          border: 1px solid #ddd;
+          padding: 10px 12px;
+          border: 2px solid #FFE5D9;
           background: #fff;
-          border-radius: 6px;
+          border-radius: 8px;
           cursor: pointer;
-          font-size: 12px;
-          font-weight: 600;
-          color: #333;
-          transition: all 0.2s;
+          font-size: 13px;
+          font-weight: 700;
+          color: #FF6B35;
+          transition: all 0.3s;
         }
 
         .btn-edit:hover {
-          background: #f0f0f0;
+          background: #FFF5F0;
+          border-color: #FF8C5A;
+          color: #FF8C5A;
+        }
+
+        .btn-pause:hover {
+          background: #FFF5F0;
+          border-color: #FF8C5A;
+          color: #FF8C5A;
         }
 
         .btn-delete:hover {
           color: #E74C3C;
           border-color: #E74C3C;
+          background: #fff0f0;
         }
 
         .modal-overlay {
@@ -731,6 +1108,172 @@ const CompanyAdvertisingManagement: React.FC = () => {
           border-radius: 6px;
           cursor: pointer;
           font-weight: 600;
+        }
+
+        .placement-guide {
+          background: linear-gradient(135deg, rgba(255, 107, 53, 0.05), rgba(255, 140, 90, 0.05));
+          border: 2px solid #FFE5D9;
+          border-radius: 14px;
+          padding: 24px;
+          margin-bottom: 32px;
+        }
+
+        .placement-guide h3 {
+          margin: 0 0 8px 0;
+          color: #FF6B35;
+          font-size: 18px;
+        }
+
+        .placement-guide p {
+          margin: 0 0 16px 0;
+          color: #666;
+          font-size: 14px;
+        }
+
+        .preview-hero-placement {
+          background: #f9f9f9;
+          border-radius: 10px;
+          padding: 20px;
+          overflow-x: auto;
+        }
+
+        .hero-banner-full {
+          background: linear-gradient(135deg, #FF6B35, #FF8C5A);
+          width: 100%;
+          height: 300px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 18px;
+          font-weight: 700;
+          box-shadow: 0 4px 16px rgba(255, 107, 53, 0.2);
+          flex-shrink: 0;
+          min-width: 1200px;
+        }
+
+        .hero-content {
+          text-align: center;
+        }
+
+        .hero-content span {
+          display: block;
+          font-size: 14px;
+          opacity: 0.9;
+          margin-bottom: 8px;
+        }
+
+        .preview-infeed-placement {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .errand-card {
+          background: white;
+          border: 2px solid #e0e0e0;
+          border-radius: 8px;
+          padding: 16px;
+          font-weight: 600;
+          color: #333;
+          font-size: 14px;
+        }
+
+        .in-feed-ad-preview {
+          background: white;
+          border-radius: 8px;
+          overflow: hidden;
+          max-height: 300px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+        }
+
+        .in-feed-ad-preview img {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+
+        .ad-hero-preview {
+          width: 100%;
+          height: 200px;
+          border-radius: 10px;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #FF6B35, #FF8C5A);
+          margin-bottom: 16px;
+        }
+
+        .ad-hero-preview img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .advertising-opportunities {
+          background: linear-gradient(135deg, rgba(255, 107, 53, 0.08), rgba(255, 140, 90, 0.08));
+          border: 2px solid #FFE5D9;
+          border-radius: 14px;
+          padding: 24px;
+          margin-bottom: 32px;
+        }
+
+        .advertising-opportunities h3 {
+          margin: 0 0 16px 0;
+          color: #FF6B35;
+          font-size: 18px;
+        }
+
+        .opportunities-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+        }
+
+        .opportunity-card {
+          background: white;
+          border: 2px solid #FFE5D9;
+          border-radius: 10px;
+          padding: 16px;
+          transition: all 0.3s;
+        }
+
+        .opportunity-card:hover {
+          border-color: #FF8C5A;
+          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+        }
+
+        .opp-icon {
+          font-size: 28px;
+          margin-bottom: 8px;
+        }
+
+        .opp-title {
+          font-weight: 700;
+          color: #FF6B35;
+          font-size: 13px;
+          margin-bottom: 4px;
+        }
+
+        .opp-desc {
+          font-size: 12px;
+          color: #666;
+          line-height: 1.4;
+          margin-bottom: 8px;
+          flex-grow: 1;
+        }
+
+        .opp-price {
+          font-size: 12px;
+          font-weight: 700;
+          color: #FF6B35;
+          padding-top: 8px;
+          border-top: 1px solid #FFE5D9;
         }
       `}</style>
     </div>

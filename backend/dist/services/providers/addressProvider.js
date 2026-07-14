@@ -39,6 +39,45 @@ export async function lookupAddress(postalCode) {
             const addressData = await enrichWithAreaAndCache(mapboxResult);
             return addressData;
         }
+        console.log('[AddressProvider] Mapbox failed, trying fallback with local database...');
+        // Fallback: Query local singapore_postcodes table for full address
+        try {
+            const dbResult = await db.query(`SELECT postal_code, full_address, area, latitude, longitude
+         FROM singapore_postcodes
+         WHERE postal_code = $1`, [normalized]);
+            if (dbResult.rows.length > 0) {
+                const row = dbResult.rows[0];
+                console.log('[AddressProvider] ✅ Fallback: Found in local database:', row.full_address);
+                const fallbackResult = {
+                    postal_code: row.postal_code,
+                    formatted_address: row.full_address,
+                    area: row.area,
+                    latitude: parseFloat(row.latitude) || 0,
+                    longitude: parseFloat(row.longitude) || 0,
+                    provider: 'local_database',
+                    confidence: 0.95,
+                };
+                return fallbackResult;
+            }
+            // If not in local database, use postal code sector mapping
+            const area = getPlanningAreaFromPostalCode(normalized);
+            if (area) {
+                console.log('[AddressProvider] ✅ Fallback: Using postal code sector mapping:', area);
+                const fallbackResult = {
+                    postal_code: normalized,
+                    formatted_address: `Singapore ${normalized}`,
+                    area: area,
+                    latitude: 0,
+                    longitude: 0,
+                    provider: 'postal_code_lookup',
+                    confidence: 0.8,
+                };
+                return fallbackResult;
+            }
+        }
+        catch (dbErr) {
+            console.warn('[AddressProvider] Database lookup failed:', dbErr instanceof Error ? dbErr.message : '');
+        }
         console.log('[AddressProvider] All providers failed for', normalized);
         return null;
     }

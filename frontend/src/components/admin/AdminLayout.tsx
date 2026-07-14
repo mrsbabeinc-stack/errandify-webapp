@@ -42,28 +42,27 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           display: flex;
           flex: 1;
           margin-top: 60px;
-          margin-bottom: 50px;
+          margin-bottom: 40px;
         }
 
         .admin-main {
           flex: 1;
-          transition: margin-left 0.3s ease;
-          margin-left: 280px;
           overflow-y: auto;
+          overflow-x: hidden;
           background: linear-gradient(135deg, #fff9f5 0%, #fffbf7 100%);
         }
 
         .admin-main.full-width {
-          margin-left: 0;
+          width: 100%;
         }
 
         .admin-main.with-sidebar {
-          margin-left: 280px;
+          width: 100%;
         }
 
         .admin-content {
-          padding: 32px;
-          min-height: calc(100vh - 140px);
+          padding: 20px;
+          font-size: 14px;
         }
 
         /* Scrollbar styling */
@@ -102,7 +101,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         @media (max-width: 768px) {
           .admin-content {
             padding: 16px;
-            min-height: calc(100vh - 100px);
           }
 
           .admin-main {

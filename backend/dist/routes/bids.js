@@ -296,9 +296,10 @@ router.post('/:id/accept', authMiddleware, async (req, res) => {
         }
         // Send notification to doer that their bid was accepted
         try {
-            const errandData = await db.query('SELECT title, errand_id FROM errands WHERE id = $1', [bid.errand_id]);
+            const errandData = await db.query('SELECT title, errand_id, asker_id FROM errands WHERE id = $1', [bid.errand_id]);
             const errandTitle = errandData.rows[0]?.title || 'Your task';
             const formattedErrandId = errandData.rows[0]?.errand_id || `ER26-${bid.errand_id}`;
+            const askerId = errandData.rows[0]?.asker_id;
             await db.query(`INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
          VALUES ($1, $2, $3, $4, $5, NOW(), false)`, [
                 bid.doer_id,
@@ -307,6 +308,24 @@ router.post('/:id/accept', authMiddleware, async (req, res) => {
                 `${formattedErrandId}: Your offer of $${bid.amount} for "${errandTitle}" was accepted! Please confirm you're ready to help.`,
                 bid.errand_id,
             ]);
+            // If doer is part of a company, notify the company owner
+            try {
+                const companyCheckResult = await db.query('SELECT owner_user_id FROM company_staff WHERE user_id = $1 LIMIT 1', [bid.doer_id]);
+                if (companyCheckResult.rows.length > 0) {
+                    const companyOwnerId = companyCheckResult.rows[0].owner_user_id;
+                    await db.query(`INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
+             VALUES ($1, $2, $3, $4, $5, NOW(), false)`, [
+                        companyOwnerId,
+                        'company_offer_accepted',
+                        '🎉 Your Offer Was Accepted!',
+                        `${formattedErrandId}: "${errandTitle}" - Your team's offer accepted! Go to "Allocate Errands" to assign to staff.`,
+                        bid.errand_id,
+                    ]);
+                }
+            }
+            catch (companyNotifErr) {
+                console.warn('[Bids] Failed to notify company owner:', companyNotifErr);
+            }
         }
         catch (notifErr) {
             console.warn('[Bids] Failed to send bid accepted notification:', notifErr);
