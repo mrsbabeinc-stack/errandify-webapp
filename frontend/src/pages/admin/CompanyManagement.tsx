@@ -72,7 +72,6 @@ export const CompanyManagement: React.FC = () => {
   const [selectedTier, setSelectedTier] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
   const [actionType, setActionType] = useState<'suspend' | 'ban' | 'restore'>('suspend');
 
@@ -195,168 +194,78 @@ export const CompanyManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="companies-grid">
-        {filteredCompanies.length > 0 ? (
-          filteredCompanies.map((company) => (
-            <div key={company.id} className="company-card">
-              <div className="card-header">
-                <div className="company-info">
-                  <h3>{company.name}</h3>
-                  <p className="uen">UEN: {company.uen}</p>
-                </div>
-                <div className="badges">
-                  <span className="tier-badge" style={{ backgroundColor: getTierColor(company.tier) }}>
-                    {company.tier}
-                  </span>
-                  <span className="status-badge" style={{ backgroundColor: getStatusColor(company.status) }}>
-                    {company.status.toUpperCase()}
-                  </span>
-                </div>
-              </div>
-
-              <div className="card-body">
-                <div className="stat">
-                  <span className="label">Tasks:</span>
-                  <span className="value">{company.tasksCompleted}</span>
-                </div>
-                <div className="stat">
-                  <span className="label">Rating:</span>
-                  <span className="value">{company.rating.toFixed(1)}⭐</span>
-                </div>
-                <div className="stat">
-                  <span className="label">Contact:</span>
-                  <span className="value">{company.contactPerson.name}</span>
-                </div>
-                <div className="stat">
-                  <span className="label">Plan:</span>
-                  <span className="value">{company.subscription.plan}</span>
-                </div>
-                <div className="stat">
-                  <span className="label">Registered:</span>
-                  <span className="value">{new Date(company.registeredAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-
-              <div className="card-actions">
-                <button
-                  className="btn-secondary"
-                  onClick={() => {
-                    setSelectedCompany(company);
-                    setShowDetailModal(true);
-                  }}
-                >
-                  View Details
-                </button>
-                {company.status === 'active' && (
-                  <button
-                    className="btn-warning"
-                    onClick={() => handleAction(company, 'suspend')}
-                  >
-                    Suspend
-                  </button>
-                )}
-                {company.status !== 'active' && (
-                  <button
-                    className="btn-success"
-                    onClick={() => handleAction(company, 'restore')}
-                  >
-                    Restore
-                  </button>
-                )}
-                {company.status !== 'banned' && (
-                  <button
-                    className="btn-danger"
-                    onClick={() => handleAction(company, 'ban')}
-                  >
-                    Ban
-                  </button>
-                )}
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="empty-state">
-            <p>No companies found matching your filters.</p>
-          </div>
-        )}
+      <div className="companies-table-wrapper">
+        <table className="companies-table">
+          <thead>
+            <tr>
+              <th>Company Name</th>
+              <th>UEN</th>
+              <th>Tier</th>
+              <th>Status</th>
+              <th>Registered</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredCompanies.length > 0 ? (
+              filteredCompanies.map((company) => (
+                <tr key={company.id}>
+                  <td>
+                    <div className="company-name">{company.name}</div>
+                  </td>
+                  <td>{company.uen}</td>
+                  <td>
+                    <span className="tier-badge" style={{ backgroundColor: getTierColor(company.tier) }}>
+                      {company.tier}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="status-badge" style={{ backgroundColor: getStatusColor(company.status) }}>
+                      {company.status.toUpperCase()}
+                    </span>
+                  </td>
+                  <td>{new Date(company.registeredAt).toLocaleDateString()}</td>
+                  <td>
+                    <div className="action-buttons">
+                      {company.status === 'active' && (
+                        <button
+                          className="btn-warning"
+                          onClick={() => handleAction(company, 'suspend')}
+                        >
+                          Suspend
+                        </button>
+                      )}
+                      {company.status !== 'active' && (
+                        <button
+                          className="btn-success"
+                          onClick={() => handleAction(company, 'restore')}
+                        >
+                          Restore
+                        </button>
+                      )}
+                      {company.status !== 'banned' && (
+                        <button
+                          className="btn-danger"
+                          onClick={() => handleAction(company, 'ban')}
+                        >
+                          Ban
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="empty-state">
+                  <p>No companies found matching your filters.</p>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {showDetailModal && selectedCompany && (
-        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{selectedCompany.name}</h2>
-              <button className="close-btn" onClick={() => setShowDetailModal(false)}>✕</button>
-            </div>
-
-            <div className="modal-body">
-              <div className="detail-section">
-                <h3>Company Information</h3>
-                <div className="detail-grid">
-                  <div className="detail-item">
-                    <span className="label">UEN:</span>
-                    <span className="value">{selectedCompany.uen}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="label">Website:</span>
-                    <span className="value">{selectedCompany.website || 'N/A'}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="label">Registered:</span>
-                    <span className="value">{new Date(selectedCompany.registeredAt).toLocaleDateString()}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="label">Status:</span>
-                    <span className="value" style={{ color: getStatusColor(selectedCompany.status) }}>
-                      {selectedCompany.status.toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="detail-section">
-                <h3>Contact Person</h3>
-                <div className="detail-grid">
-                  <div className="detail-item">
-                    <span className="label">Name:</span>
-                    <span className="value">{selectedCompany.contactPerson.name}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="label">Email:</span>
-                    <span className="value">{selectedCompany.contactPerson.email}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="detail-section">
-                <h3>Performance</h3>
-                <div className="detail-grid">
-                  <div className="detail-item">
-                    <span className="label">Tasks Completed:</span>
-                    <span className="value">{selectedCompany.tasksCompleted}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="label">Rating:</span>
-                    <span className="value">{selectedCompany.rating}⭐</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="label">Tier:</span>
-                    <span className="value">{selectedCompany.tier}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="label">Subscription:</span>
-                    <span className="value">{selectedCompany.subscription.plan}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowDetailModal(false)}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showActionModal && selectedCompany && (
         <div className="modal-overlay" onClick={() => setShowActionModal(false)}>
@@ -473,11 +382,61 @@ export const CompanyManagement: React.FC = () => {
           border-color: #ff6b35;
         }
 
-        .companies-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 20px;
+        .companies-table-wrapper {
+          background: white;
+          border-radius: 8px;
+          border: 2px solid #ffb88c;
+          overflow-x: auto;
+          margin-top: 20px;
           margin-bottom: 40px;
+        }
+
+        .companies-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        .companies-table thead {
+          background: #fff8f5;
+          border-bottom: 2px solid #ffb88c;
+        }
+
+        .companies-table th {
+          padding: 16px;
+          text-align: left;
+          font-size: 12px;
+          font-weight: 700;
+          color: #666;
+          text-transform: uppercase;
+        }
+
+        .companies-table tbody tr {
+          border-bottom: 1px solid #f5f5f5;
+          transition: all 0.2s;
+        }
+
+        .companies-table tbody tr:hover {
+          background: #fff8f5;
+        }
+
+        .companies-table td {
+          padding: 16px;
+          font-size: 14px;
+          color: #333;
+        }
+
+        .company-name {
+          font-weight: 600;
+        }
+
+        .action-buttons {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .companies-grid {
+          display: none;
         }
 
         .company-card {
