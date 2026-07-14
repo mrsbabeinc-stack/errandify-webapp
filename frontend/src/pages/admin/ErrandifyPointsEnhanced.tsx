@@ -236,6 +236,68 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
             />
           </div>
         )}
+
+        {/* EP Transactions Table with Filters & Export */}
+        <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: 0 }}>📊 EP Transactions</h3>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <select style={{ padding: '6px 8px', fontSize: '11px', border: '1px solid #ddd', borderRadius: '4px', background: '#fff' }}>
+                <option>All Periods</option>
+                <option>Today</option>
+                <option>This Week</option>
+                <option>This Month</option>
+                <option>Last 3 Months</option>
+                <option>Last 6 Months</option>
+                <option>This Year</option>
+              </select>
+              <select style={{ padding: '6px 8px', fontSize: '11px', border: '1px solid #ddd', borderRadius: '4px', background: '#fff' }}>
+                <option>All Types</option>
+                <option>Task Completed</option>
+                <option>Referral Bonus</option>
+                <option>Streak Bonus</option>
+                <option>Rating Bonus</option>
+                <option>Redemption</option>
+              </select>
+              <button style={{ padding: '6px 12px', fontSize: '11px', fontWeight: '600', background: '#FF6B35', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                📥 Export Excel
+              </button>
+            </div>
+          </div>
+
+          {/* Table Header */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.8fr 0.8fr 0.8fr', gap: '8px', paddingBottom: '8px', borderBottom: '2px solid #ffb88c', fontSize: '10px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>
+            <div>User</div>
+            <div>Description</div>
+            <div style={{ textAlign: 'right' }}>Points</div>
+            <div style={{ textAlign: 'right' }}>SGD Value</div>
+            <div style={{ textAlign: 'right' }}>Date</div>
+          </div>
+
+          {/* Table Rows */}
+          <div style={{ overflowY: 'auto', flex: 1 }}>
+            {[
+              { user: 'Sarah Tan', desc: 'Task Completed', points: 25, date: '2026-07-14' },
+              { user: 'John Lee', desc: 'Referral Bonus', points: 50, date: '2026-07-14' },
+              { user: 'Alice Wong', desc: 'Rating Bonus', points: 10, date: '2026-07-14' },
+              { user: 'Bob Chen', desc: 'Redemption', points: -100, date: '2026-07-13' },
+              { user: 'Eve Kumar', desc: 'Streak Bonus', points: 75, date: '2026-07-13' },
+              { user: 'David Lim', desc: 'Task Completed', points: 30, date: '2026-07-13' },
+              { user: 'Maya Patel', desc: 'Referral Bonus', points: 50, date: '2026-07-12' },
+              { user: 'Chris Wong', desc: 'Task Completed', points: 20, date: '2026-07-12' },
+            ].map((row, idx) => (
+              <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.8fr 0.8fr 0.8fr', gap: '8px', paddingTop: '8px', paddingBottom: '8px', borderBottom: '1px solid #f5f5f5', fontSize: '10px', alignItems: 'center' }}>
+                <div style={{ fontWeight: '500', color: '#333' }}>{row.user}</div>
+                <div style={{ color: '#666' }}>{row.desc}</div>
+                <div style={{ textAlign: 'right', fontWeight: '600', color: row.points > 0 ? '#4CAF50' : '#F44336' }}>
+                  {row.points > 0 ? '+' : ''}{row.points}
+                </div>
+                <div style={{ textAlign: 'right', fontWeight: '500', color: '#666' }}>SGD ${(Math.abs(row.points) * 0.05).toFixed(2)}</div>
+                <div style={{ textAlign: 'right', color: '#999', fontSize: '9px' }}>{row.date}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </AdminLayout>
   );
