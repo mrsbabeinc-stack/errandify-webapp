@@ -237,7 +237,13 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
                             <>
                               <button
                                 className={`menu-item has-submenu ${expandedSections.has(child.id) ? 'open' : ''}`}
-                                onClick={() => toggleSection(child.id)}
+                                onClick={() => {
+                                  toggleSection(child.id);
+                                }}
+                                style={{
+                                  userSelect: 'none',
+                                  transition: 'all 0.2s'
+                                }}
                               >
                                 <span className="icon">{child.icon}</span>
                                 <span className="label">{child.label}</span>
@@ -392,10 +398,15 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
           padding: 8px 16px 8px 24px;
           font-weight: 600;
           color: #ff6b35;
+          background: rgba(255, 107, 53, 0.05);
         }
 
         .menu-item.has-submenu:hover {
           background: rgba(255, 107, 53, 0.15);
+        }
+
+        .menu-item.has-submenu.open {
+          background: rgba(255, 107, 53, 0.1);
         }
 
         .menu-item.has-submenu .arrow {
