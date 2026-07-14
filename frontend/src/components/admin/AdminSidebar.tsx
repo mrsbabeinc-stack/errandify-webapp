@@ -123,6 +123,15 @@ const menuItems: MenuItem[] = [
       { id: 'ai-reports', label: 'AI Reports', icon: '🤖', path: '/admin/ai-reports' },
     ]
   },
+  {
+    id: 'vendor-client',
+    label: 'Vendor & Client',
+    icon: '🤝',
+    children: [
+      { id: 'vendors', label: 'Vendor Management', icon: '💳', path: '/admin/vendors' },
+      { id: 'clients', label: 'Client Management', icon: '👥', path: '/admin/clients' },
+    ]
+  },
 ];
 
 export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) => {
