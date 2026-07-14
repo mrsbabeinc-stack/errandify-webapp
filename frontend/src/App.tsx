@@ -79,7 +79,7 @@ import OperationsPage from './pages/admin/Operations';
 import DiscountCodesPage from './pages/admin/DiscountCodesPage';
 import { ErrandifyPointsEnhancedPage as AdminErrandifyPointsPage } from './pages/admin/ErrandifyPointsEnhanced';
 import EmailPage from './pages/admin/Email';
-import GrantPointsPage from './pages/admin/GrantPoints';
+import { GrantPointsEnhancedPage as GrantPointsPage } from './pages/admin/GrantPointsEnhanced';
 import PointEarningRulesPage from './pages/admin/PointEarningRules';
 import CompanyManagement from './pages/admin/CompanyManagement';
 import SubscriptionPackages from './pages/admin/SubscriptionPackages';
