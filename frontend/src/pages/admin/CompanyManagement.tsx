@@ -132,121 +132,161 @@ export const CompanyManagement: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="company-management-page">
+      <div style={{ padding: '16px', background: '#fff', minHeight: '100vh' }}>
       <ToastContainer toasts={toasts} onClose={removeToast} />
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1>🏢 Company Management</h1>
-          <p>Manage all company accounts, subscriptions, and status</p>
+
+      {/* Header */}
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#333', margin: 0 }}>
+            👔 Client Management
+          </h1>
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              fontSize: '20px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#FF6B35',
+              fontWeight: '700',
+            }}
+            title="Go back"
+          >
+            ←
+          </button>
         </div>
-        <button
-          onClick={() => navigate(-1)}
+        <p style={{ fontSize: '14px', color: '#666', margin: '8px 0 0 0' }}>
+          Manage company accounts, status, and admin actions
+        </p>
+      </div>
+
+      {/* Stats Box */}
+      <div style={{ padding: '12px 16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3', marginBottom: '20px', fontSize: '14px', color: '#555' }}>
+        😊 You have <strong>{companies.length}</strong> companies registered • <strong>{companies.filter(c => c.status === 'active').length}</strong> active
+      </div>
+
+      {/* Search & Filter */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '12px', marginBottom: '16px' }}>
+        <input
+          type="text"
+          placeholder="Search by name, UEN, or email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
           style={{
-            fontSize: '20px',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: '#FF6B35',
-            fontWeight: '700',
-            padding: '0 8px',
+            padding: '10px 12px',
+            border: '2px solid #FFD9B3',
+            borderRadius: '6px',
+            fontSize: '14px',
           }}
-          title="Go back"
-        >
-          ←
-        </button>
-      </div>
-      <div className="page-header">
-        <h1 style={{ display: 'none' }}>🏢 Company Management</h1>
-        <p style={{ display: 'none' }}>Manage all company accounts, subscriptions, and status</p>
-      </div>
+        />
 
-      <div className="happy-box">
-        <span>😊</span>
-        <p>You have <strong>{companies.length}</strong> companies registered. <strong>{companies.filter(c => c.status === 'active').length}</strong> active.</p>
-      </div>
+        <select value={selectedTier} onChange={(e) => setSelectedTier(e.target.value)} style={{
+          padding: '10px 12px',
+          border: '2px solid #FFD9B3',
+          borderRadius: '6px',
+          fontSize: '14px',
+          cursor: 'pointer',
+        }}>
+          <option value="">All Tiers</option>
+          <option value="Silver">Silver</option>
+          <option value="Gold">Gold</option>
+          <option value="Platinum">Platinum</option>
+          <option value="Star">Star</option>
+        </select>
 
-      <div className="search-filters">
-        <div className="search-box">
-          <input
-            type="text"
-            placeholder="Search by name, UEN, or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-        </div>
-
-        <div className="filter-group">
-          <select value={selectedTier} onChange={(e) => setSelectedTier(e.target.value)} className="filter-select">
-            <option value="">All Tiers</option>
-            <option value="Silver">Silver</option>
-            <option value="Gold">Gold</option>
-            <option value="Platinum">Platinum</option>
-            <option value="Star">Star</option>
-          </select>
-
-          <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="filter-select">
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
-            <option value="banned">Banned</option>
-          </select>
-        </div>
+        <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} style={{
+          padding: '10px 12px',
+          border: '2px solid #FFD9B3',
+          borderRadius: '6px',
+          fontSize: '14px',
+          cursor: 'pointer',
+        }}>
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+          <option value="banned">Banned</option>
+        </select>
       </div>
 
-      <div className="companies-table-wrapper">
-        <table className="companies-table">
+      <div style={{ background: 'white', borderRadius: '8px', border: '2px solid #FFD9B3', overflow: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr>
-              <th>Company Name</th>
-              <th>UEN</th>
-              <th>Tier</th>
-              <th>Status</th>
-              <th>Registered</th>
-              <th>Actions</th>
+            <tr style={{ background: '#FFF8F5', borderBottom: '2px solid #FFD9B3' }}>
+              <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>Company Name</th>
+              <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>UEN</th>
+              <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>Tier</th>
+              <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>Status</th>
+              <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>Registered</th>
+              <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredCompanies.length > 0 ? (
               filteredCompanies.map((company) => (
-                <tr key={company.id}>
-                  <td>
-                    <div className="company-name">{company.name}</div>
-                  </td>
-                  <td>{company.uen}</td>
-                  <td>
-                    <span className="tier-badge" style={{ backgroundColor: getTierColor(company.tier) }}>
+                <tr key={company.id} style={{ borderBottom: '1px solid #f5f5f5', transition: 'all 0.2s' }} onMouseEnter={(e) => (e.currentTarget.style.background = '#FFF8F5')} onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}>
+                  <td style={{ padding: '16px', fontSize: '14px', color: '#333', fontWeight: '600' }}>{company.name}</td>
+                  <td style={{ padding: '16px', fontSize: '14px', color: '#333' }}>{company.uen}</td>
+                  <td style={{ padding: '16px' }}>
+                    <span style={{ padding: '6px 10px', backgroundColor: getTierColor(company.tier), color: 'white', fontSize: '11px', fontWeight: '600', borderRadius: '3px' }}>
                       {company.tier}
                     </span>
                   </td>
-                  <td>
-                    <span className="status-badge" style={{ backgroundColor: getStatusColor(company.status) }}>
+                  <td style={{ padding: '16px' }}>
+                    <span style={{ padding: '6px 10px', backgroundColor: getStatusColor(company.status), color: 'white', fontSize: '11px', fontWeight: '600', borderRadius: '3px' }}>
                       {company.status.toUpperCase()}
                     </span>
                   </td>
-                  <td>{new Date(company.registeredAt).toLocaleDateString()}</td>
-                  <td>
-                    <div className="action-buttons">
+                  <td style={{ padding: '16px', fontSize: '14px', color: '#333' }}>{new Date(company.registeredAt).toLocaleDateString()}</td>
+                  <td style={{ padding: '16px' }}>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                       {company.status === 'active' && (
                         <button
-                          className="btn-warning"
                           onClick={() => handleAction(company, 'suspend')}
+                          style={{
+                            padding: '6px 10px',
+                            background: '#FF9800',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            fontSize: '11px',
+                          }}
                         >
                           Suspend
                         </button>
                       )}
                       {company.status !== 'active' && (
                         <button
-                          className="btn-success"
                           onClick={() => handleAction(company, 'restore')}
+                          style={{
+                            padding: '6px 10px',
+                            background: '#4CAF50',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            fontSize: '11px',
+                          }}
                         >
                           Restore
                         </button>
                       )}
                       {company.status !== 'banned' && (
                         <button
-                          className="btn-danger"
                           onClick={() => handleAction(company, 'ban')}
+                          style={{
+                            padding: '6px 10px',
+                            background: '#F44336',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            fontSize: '11px',
+                          }}
                         >
                           Ban
                         </button>
@@ -257,8 +297,8 @@ export const CompanyManagement: React.FC = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="empty-state">
-                  <p>No companies found matching your filters.</p>
+                <td colSpan={6} style={{ padding: '40px 16px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
+                  No companies found matching your filters.
                 </td>
               </tr>
             )}
@@ -268,26 +308,41 @@ export const CompanyManagement: React.FC = () => {
 
 
       {showActionModal && selectedCompany && (
-        <div className="modal-overlay" onClick={() => setShowActionModal(false)}>
-          <div className="modal-content confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Confirm Action</h2>
-              <button className="close-btn" onClick={() => setShowActionModal(false)}>✕</button>
-            </div>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowActionModal(false)}>
+          <div style={{ background: 'white', borderRadius: '8px', padding: '24px', maxWidth: '400px', width: '90%', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }} onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#333', margin: '0 0 16px 0' }}>Confirm Action</h2>
 
-            <div className="modal-body">
-              <p>
-                {actionType === 'suspend' && `Suspend company "${selectedCompany.name}"? They can reactivate later.`}
-                {actionType === 'ban' && `Ban company "${selectedCompany.name}"? This is permanent.`}
-                {actionType === 'restore' && `Restore company "${selectedCompany.name}" to active status?`}
-              </p>
-            </div>
+            <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.6', marginBottom: '24px' }}>
+              {actionType === 'suspend' && `Suspend company "${selectedCompany.name}"? They can reactivate later.`}
+              {actionType === 'ban' && `Ban company "${selectedCompany.name}"? This is permanent.`}
+              {actionType === 'restore' && `Restore company "${selectedCompany.name}" to active status?`}
+            </p>
 
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowActionModal(false)}>Cancel</button>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowActionModal(false)} style={{
+                padding: '10px 16px',
+                background: '#f5f5f5',
+                color: '#333',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontSize: '13px',
+              }}>
+                Cancel
+              </button>
               <button
-                className={actionType === 'ban' ? 'btn-danger' : actionType === 'suspend' ? 'btn-warning' : 'btn-success'}
                 onClick={confirmAction}
+                style={{
+                  padding: '10px 16px',
+                  background: actionType === 'ban' ? '#F44336' : actionType === 'suspend' ? '#FF9800' : '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                }}
               >
                 Confirm
               </button>
