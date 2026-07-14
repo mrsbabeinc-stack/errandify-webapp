@@ -11,22 +11,23 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { id: 'home', label: 'Home', icon: '🏠', path: '/admin/dashboard' },
+  { id: 'users-safety', label: 'Users & Safety', icon: '👥', path: '/admin/dashboard/users' },
   {
-    id: 'dashboard',
-    label: 'Dashboard',
-    icon: '📊',
-    children: [
-      { id: 'users-safety', label: 'Users & Safety', icon: '👥', path: '/admin/dashboard/users' },
-    ]
-  },
-  {
-    id: 'user-admin',
+    id: 'management',
     label: 'User & Admin Management',
     icon: '👥',
     children: [
       { id: 'admin-users', label: 'Admin Users', icon: '🔐', path: '/admin/operations/auth-management' },
       { id: 'user-management', label: 'User Management', icon: '🚫', path: '/admin/operations/user-management' },
+    ]
+  },
+  {
+    id: 'disputes-cases',
+    label: 'Disputes & Cases',
+    icon: '⚖️',
+    children: [
       { id: 'disputes', label: 'Disputes (L1/L2/L3)', icon: '⚖️', path: '/admin/dashboard/disputes' },
+      { id: 'cases', label: 'Cases Management', icon: '📋', path: '/admin/cases' },
     ]
   },
   {
@@ -85,14 +86,6 @@ const menuItems: MenuItem[] = [
       { id: 'recognition', label: 'Recognition', icon: '🏆', path: '/admin/comms/recognition' },
       { id: 'feed', label: 'Community Feed', icon: '📰', path: '/admin/comms/feed' },
       { id: 'banners', label: 'Hero Banners', icon: '🎨', path: '/admin/comms/banners' },
-    ]
-  },
-  {
-    id: 'cases',
-    label: 'Cases',
-    icon: '📋',
-    children: [
-      { id: 'case-create', label: 'Case Management', icon: '📋', path: '/admin/cases' },
     ]
   },
   {
