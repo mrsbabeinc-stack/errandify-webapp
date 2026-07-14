@@ -213,10 +213,10 @@ export default function App() {
     <NotificationProvider>
       <TopNotificationBar />
       <NotificationPanel />
+      <NotificationToastContainer />
       <Router>
         {isAuthenticated && !isStaff && <FloatingHana />}
         {isAuthenticated && <NotificationListener />}
-        <NotificationToastContainer />
         <Routes>
         {/* Landing/Home page - shown first to unauthenticated users */}
         <Route
