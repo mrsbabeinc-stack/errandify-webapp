@@ -2,19 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { holidayAPI } from '../../services/adminAPI';
 
 interface Holiday {
-  id: string;
-  date: string; // YYYY-MM-DD
+  id?: number;
+  date: string;
   name: string;
-  emoji: string;
-  type: 'public-holiday' | 'company-holiday' | 'special-event';
+  emoji?: string;
+  holiday_type?: string;
   description?: string;
-  appliesTo: 'all-staff' | 'specific-staff';
-  specificStaff?: string[];
-  isActive: boolean;
-  createdDate: string;
-  lastModified: string;
+  apply_to_staff?: string;
+  created_at?: string;
+  last_modified?: string;
 }
 
 const HolidayManager: React.FC = () => {
@@ -23,21 +22,47 @@ const HolidayManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'list' | 'add' | 'edit'>('list');
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
-  const [filterType, setFilterType] = useState<'all' | 'public-holiday' | 'company-holiday' | 'special-event'>('all');
+  const [filterType, setFilterType] = useState<string>('all');
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, public_holidays: 0, company_holidays: 0, special_events: 0 });
 
   const [formData, setFormData] = useState({
     date: '',
     name: '',
     emoji: '🎉',
-    type: 'public-holiday' as const,
+    holiday_type: 'Public Holiday',
     description: '',
-    appliesTo: 'all-staff' as const,
+    apply_to_staff: 'all',
   });
 
-  // Demo holidays
+  // Load holidays from API
   useEffect(() => {
-    const demoHolidays: Holiday[] = [
+    const loadHolidays = async () => {
+      try {
+        setLoading(true);
+        const response = await holidayAPI.getAll(filterYear, filterType === 'all' ? undefined : filterType);
+        if (response.success) {
+          setHolidays(response.data || []);
+        }
+
+        const statsResponse = await holidayAPI.getStats();
+        if (statsResponse.success) {
+          setStats(statsResponse.data);
+        }
+      } catch (error) {
+        console.error('Failed to load holidays:', error);
+        showToast('⚠️ Error loading holidays', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHolidays();
+  }, [filterYear, filterType]);
+
+  // Legacy demo for reference (keeping structure)
+  const demoHolidays: Holiday[] = [
       {
         id: 'h_1',
         date: '2026-01-26',
@@ -176,67 +201,88 @@ const HolidayManager: React.FC = () => {
     setHolidays(demoHolidays);
   }, []);
 
-  const handleAddHoliday = () => {
+  const handleAddHoliday = async () => {
     if (!formData.date || !formData.name) {
       showToast('❌ Please fill in all required fields', 'error');
       return;
     }
 
-    const newHoliday: Holiday = {
-      id: `h_${Date.now()}`,
-      date: formData.date,
-      name: formData.name,
-      emoji: formData.emoji,
-      type: formData.type,
-      description: formData.description || undefined,
-      appliesTo: formData.appliesTo,
-      isActive: true,
-      createdDate: new Date().toISOString(),
-      lastModified: new Date().toISOString(),
-    };
+    try {
+      setLoading(true);
+      const response = await holidayAPI.create({
+        date: formData.date,
+        name: formData.name,
+        emoji: formData.emoji,
+        holiday_type: formData.holiday_type,
+        description: formData.description,
+        apply_to_staff: formData.apply_to_staff,
+      });
 
-    setHolidays([...holidays, newHoliday]);
-    showToast(`✅ Holiday "${formData.name}" added on ${new Date(formData.date).toLocaleDateString('en-SG')}`, 'success');
-    resetForm();
-    setActiveTab('list');
+      if (response.success) {
+        setHolidays([...holidays, response.data]);
+        showToast(`✅ Holiday "${formData.name}" added on ${new Date(formData.date).toLocaleDateString('en-SG')}`, 'success');
+        resetForm();
+        setActiveTab('list');
+      }
+    } catch (error) {
+      console.error('Error adding holiday:', error);
+      showToast('❌ Failed to add holiday', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleUpdateHoliday = () => {
-    if (!selectedHoliday || !formData.date || !formData.name) {
+  const handleUpdateHoliday = async () => {
+    if (!selectedHoliday || !selectedHoliday.id || !formData.date || !formData.name) {
       showToast('❌ Please fill in all required fields', 'error');
       return;
     }
 
-    const updated = holidays.map(h =>
-      h.id === selectedHoliday.id
-        ? {
-            ...h,
-            date: formData.date,
-            name: formData.name,
-            emoji: formData.emoji,
-            type: formData.type,
-            description: formData.description || undefined,
-            appliesTo: formData.appliesTo,
-            lastModified: new Date().toISOString(),
-          }
-        : h
-    );
+    try {
+      setLoading(true);
+      const response = await holidayAPI.update(selectedHoliday.id, {
+        date: formData.date,
+        name: formData.name,
+        emoji: formData.emoji,
+        holiday_type: formData.holiday_type,
+        description: formData.description,
+        apply_to_staff: formData.apply_to_staff,
+      });
 
-    setHolidays(updated);
-    showToast(`✅ Holiday "${formData.name}" updated`, 'success');
-    resetForm();
-    setActiveTab('list');
+      if (response.success) {
+        setHolidays(holidays.map(h => h.id === selectedHoliday.id ? response.data : h));
+        showToast(`✅ Holiday "${formData.name}" updated`, 'success');
+        resetForm();
+        setActiveTab('list');
+      }
+    } catch (error) {
+      console.error('Error updating holiday:', error);
+      showToast('❌ Failed to update holiday', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteHoliday = (id: string) => {
+  const handleDeleteHoliday = async (id: number | undefined) => {
     const holiday = holidays.find(h => h.id === id);
-    if (!holiday || !window.confirm(`Delete ${holiday.name}? This action cannot be undone.`)) {
+    if (!holiday || !id || !window.confirm(`Delete ${holiday.name}? This action cannot be undone.`)) {
       return;
     }
 
-    setHolidays(holidays.filter(h => h.id !== id));
-    showToast(`✅ Holiday deleted`, 'success');
-    setSelectedHoliday(null);
+    try {
+      setLoading(true);
+      const response = await holidayAPI.delete(id);
+      if (response.success) {
+        setHolidays(holidays.filter(h => h.id !== id));
+        showToast(`✅ Holiday deleted`, 'success');
+        setSelectedHoliday(null);
+      }
+    } catch (error) {
+      console.error('Error deleting holiday:', error);
+      showToast('❌ Failed to delete holiday', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSelectHoliday = (holiday: Holiday) => {
@@ -244,10 +290,10 @@ const HolidayManager: React.FC = () => {
     setFormData({
       date: holiday.date,
       name: holiday.name,
-      emoji: holiday.emoji,
-      type: holiday.type,
+      emoji: holiday.emoji || '🎉',
+      holiday_type: holiday.holiday_type || 'Public Holiday',
       description: holiday.description || '',
-      appliesTo: holiday.appliesTo,
+      apply_to_staff: holiday.apply_to_staff || 'all',
     });
     setActiveTab('edit');
   };
@@ -257,9 +303,9 @@ const HolidayManager: React.FC = () => {
       date: '',
       name: '',
       emoji: '🎉',
-      type: 'public-holiday',
+      holiday_type: 'Public Holiday',
       description: '',
-      appliesTo: 'all-staff',
+      apply_to_staff: 'all',
     });
     setSelectedHoliday(null);
   };
@@ -272,23 +318,10 @@ const HolidayManager: React.FC = () => {
   });
 
   const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'public-holiday':
-        return '🇸🇬 Public Holiday';
-      case 'company-holiday':
-        return '🏢 Company Holiday';
-      case 'special-event':
-        return '🎉 Special Event';
-      default:
-        return type;
-    }
-  };
-
-  const stats = {
-    totalHolidays: holidays.length,
-    publicHolidays: holidays.filter(h => h.type === 'public-holiday').length,
-    companyHolidays: holidays.filter(h => h.type === 'company-holiday').length,
-    specialEvents: holidays.filter(h => h.type === 'special-event').length,
+    if (type.includes('Public')) return '🇸🇬 Public Holiday';
+    if (type.includes('Company')) return '🏢 Company Holiday';
+    if (type.includes('Event')) return '🎉 Special Event';
+    return type;
   };
 
   return (
@@ -326,19 +359,19 @@ const HolidayManager: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '24px' }}>
           <div style={{ padding: '12px', background: '#E8F5E9', borderRadius: '8px', border: '2px solid #4CAF50' }}>
             <div style={{ fontSize: '11px', color: '#2E7D32', marginBottom: '4px' }}>Total Holidays</div>
-            <div style={{ fontSize: '20px', fontWeight: '700', color: '#4CAF50' }}>{stats.totalHolidays}</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#4CAF50' }}>{stats.total}</div>
           </div>
           <div style={{ padding: '12px', background: '#FCE4EC', borderRadius: '8px', border: '2px solid #E91E63' }}>
             <div style={{ fontSize: '11px', color: '#880E4F', marginBottom: '4px' }}>Public Holidays</div>
-            <div style={{ fontSize: '20px', fontWeight: '700', color: '#E91E63' }}>{stats.publicHolidays}</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#E91E63' }}>{stats.public_holidays}</div>
           </div>
           <div style={{ padding: '12px', background: '#F3E5F5', borderRadius: '8px', border: '2px solid #9C27B0' }}>
             <div style={{ fontSize: '11px', color: '#4A148C', marginBottom: '4px' }}>Company Holidays</div>
-            <div style={{ fontSize: '20px', fontWeight: '700', color: '#9C27B0' }}>{stats.companyHolidays}</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#9C27B0' }}>{stats.company_holidays}</div>
           </div>
           <div style={{ padding: '12px', background: '#FFF3E0', borderRadius: '8px', border: '2px solid #FF9800' }}>
             <div style={{ fontSize: '11px', color: '#E65100', marginBottom: '4px' }}>Special Events</div>
-            <div style={{ fontSize: '20px', fontWeight: '700', color: '#FF9800' }}>{stats.specialEvents}</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#FF9800' }}>{stats.special_events}</div>
           </div>
         </div>
 
@@ -388,9 +421,9 @@ const HolidayManager: React.FC = () => {
                   }}
                 >
                   <option value="all">All Holidays</option>
-                  <option value="public-holiday">Public Holidays</option>
-                  <option value="company-holiday">Company Holidays</option>
-                  <option value="special-event">Special Events</option>
+                  <option value="Public Holiday">Public Holidays</option>
+                  <option value="Company Holiday">Company Holidays</option>
+                  <option value="Special Event">Special Events</option>
                 </select>
               </div>
               <div>
@@ -477,7 +510,7 @@ const HolidayManager: React.FC = () => {
                       })}
                     </div>
                     <div style={{ fontSize: '11px', color: '#999' }}>
-                      {getTypeLabel(holiday.type)} • {holiday.appliesTo === 'all-staff' ? 'All Staff' : 'Specific Staff'}
+                      {getTypeLabel(holiday.holiday_type)} • {holiday.apply_to_staff === 'all-staff' ? 'All Staff' : 'Specific Staff'}
                       {holiday.description && ` • ${holiday.description}`}
                     </div>
                   </div>
@@ -608,8 +641,8 @@ const HolidayManager: React.FC = () => {
                     Holiday Type
                   </label>
                   <select
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                    value={formData.holiday_type}
+                    onChange={(e) => setFormData({ ...formData, holiday_type: e.target.value })}
                     style={{
                       width: '100%',
                       padding: '10px 12px',
@@ -620,9 +653,9 @@ const HolidayManager: React.FC = () => {
                       boxSizing: 'border-box',
                     }}
                   >
-                    <option value="public-holiday">Public Holiday</option>
-                    <option value="company-holiday">Company Holiday</option>
-                    <option value="special-event">Special Event</option>
+                    <option value="Public Holiday">Public Holiday</option>
+                    <option value="Company Holiday">Company Holiday</option>
+                    <option value="Special Event">Special Event</option>
                   </select>
                 </div>
               </div>
@@ -653,7 +686,7 @@ const HolidayManager: React.FC = () => {
                   Applies To
                 </label>
                 <select
-                  value={formData.appliesTo}
+                  value={formData.apply_to_staff}
                   onChange={(e) => setFormData({ ...formData, appliesTo: e.target.value as any })}
                   style={{
                     width: '100%',
