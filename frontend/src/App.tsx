@@ -93,7 +93,6 @@ import AdminCompanyDeepManagement from './pages/admin/AdminCompanyDeepManagement
 import AdminSystemConfiguration from './pages/admin/AdminSystemConfiguration';
 import AdminAuditCompliance from './pages/admin/AdminAuditCompliance';
 import AdminAlertsNotifications from './pages/admin/AdminAlertsNotifications';
-import EmailCampaigns from './pages/admin/EmailCampaigns';
 import NotificationsManagement from './pages/admin/NotificationsManagement';
 import EventReminders from './pages/admin/EventReminders';
 import BlogArticles from './pages/admin/BlogArticles';
