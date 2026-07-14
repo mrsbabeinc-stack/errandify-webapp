@@ -69,10 +69,30 @@ interface AccountReconciliation {
   notes: string;
 }
 
+interface RecurringExpense {
+  id: string;
+  name: string;
+  amount: number;
+  category: string;
+  vendor: string;
+  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'annual';
+  startDate: string;
+  endDate?: string;
+  department: string;
+  description: string;
+  nextDueDate: string;
+  lastProcessedDate?: string;
+  isActive: boolean;
+  approvalStatus: 'pending' | 'approved';
+  createdAt: string;
+  lastModified: string;
+  autoApprove?: boolean;
+}
+
 const AccountsDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { toasts, showToast, removeToast } = useToast();
-  const [activeTab, setActiveTab] = useState<'overview' | 'income' | 'expenses' | 'ledger' | 'reconciliation' | 'tags' | 'reports'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'income' | 'expenses' | 'recurring' | 'ledger' | 'reconciliation' | 'tags' | 'reports'>('overview');
   const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'quarter' | 'year'>('month');
 
   // Income state
@@ -99,6 +119,22 @@ const AccountsDashboard: React.FC = () => {
     vendor: '',
     description: '',
     department: '',
+  });
+
+  // Recurring expenses state
+  const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
+  const [showRecurringForm, setShowRecurringForm] = useState(false);
+  const [recurringForm, setRecurringForm] = useState({
+    name: '',
+    amount: 0,
+    category: '',
+    vendor: '',
+    frequency: 'monthly' as const,
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: '',
+    department: '',
+    description: '',
+    autoApprove: false,
   });
 
   // Ledger & reconciliation
@@ -259,11 +295,123 @@ const AccountsDashboard: React.FC = () => {
       { id: 't8', name: 'HR Team', type: 'staff', value: 'hr' },
     ];
 
+    const demoRecurring: RecurringExpense[] = [
+      {
+        id: 'rec_1',
+        name: 'Office Rent',
+        amount: 5000,
+        category: 'Office & Administration',
+        vendor: 'PropertyCo Singapore',
+        frequency: 'monthly',
+        startDate: '2026-01-01',
+        department: 'Operations',
+        description: 'Monthly office rent at Marina Bay',
+        nextDueDate: '2026-08-01',
+        lastProcessedDate: '2026-07-01',
+        isActive: true,
+        approvalStatus: 'approved',
+        createdAt: '2026-01-01',
+        lastModified: '2026-07-01',
+        autoApprove: true,
+      },
+      {
+        id: 'rec_2',
+        name: 'Utilities',
+        amount: 450,
+        category: 'Utilities',
+        vendor: 'SP Group',
+        frequency: 'monthly',
+        startDate: '2026-02-01',
+        department: 'Operations',
+        description: 'Electricity, water, gas utilities',
+        nextDueDate: '2026-08-11',
+        lastProcessedDate: '2026-07-11',
+        isActive: true,
+        approvalStatus: 'approved',
+        createdAt: '2026-02-01',
+        lastModified: '2026-07-11',
+        autoApprove: true,
+      },
+      {
+        id: 'rec_3',
+        name: 'Internet & Telecoms',
+        amount: 280,
+        category: 'Office & Administration',
+        vendor: 'Singtel',
+        frequency: 'monthly',
+        startDate: '2026-03-01',
+        department: 'Operations',
+        description: 'Broadband and mobile subscriptions',
+        nextDueDate: '2026-08-01',
+        lastProcessedDate: '2026-07-01',
+        isActive: true,
+        approvalStatus: 'approved',
+        createdAt: '2026-03-01',
+        lastModified: '2026-07-01',
+        autoApprove: true,
+      },
+      {
+        id: 'rec_4',
+        name: 'Software Subscription',
+        amount: 150,
+        category: 'Office & Administration',
+        vendor: 'Microsoft/Adobe',
+        frequency: 'monthly',
+        startDate: '2026-04-01',
+        department: 'Operations',
+        description: 'MS Office 365 and Adobe Creative Suite',
+        nextDueDate: '2026-08-01',
+        lastProcessedDate: '2026-07-01',
+        isActive: true,
+        approvalStatus: 'approved',
+        createdAt: '2026-04-01',
+        lastModified: '2026-07-01',
+        autoApprove: true,
+      },
+      {
+        id: 'rec_5',
+        name: 'Marketing Campaign',
+        amount: 2000,
+        category: 'Marketing',
+        vendor: 'Digital Marketing Agency',
+        frequency: 'monthly',
+        startDate: '2026-05-01',
+        department: 'Sales',
+        description: 'Social media and digital marketing',
+        nextDueDate: '2026-08-01',
+        lastProcessedDate: '2026-07-01',
+        isActive: true,
+        approvalStatus: 'pending',
+        createdAt: '2026-05-01',
+        lastModified: '2026-07-01',
+        autoApprove: false,
+      },
+      {
+        id: 'rec_6',
+        name: 'Annual Insurance',
+        amount: 3500,
+        category: 'Insurance',
+        vendor: 'Singapore Insurance Co',
+        frequency: 'annual',
+        startDate: '2026-01-15',
+        department: 'Operations',
+        description: 'Business liability and property insurance',
+        nextDueDate: '2027-01-15',
+        lastProcessedDate: '2026-01-15',
+        isActive: true,
+        approvalStatus: 'approved',
+        createdAt: '2026-01-15',
+        lastModified: '2026-01-15',
+        autoApprove: false,
+      },
+    ];
+
     setIncome(demoIncome);
     setExpenses(demoExpenses);
     setLedger(demoLedger);
     setReconciliations(demoReconciliations);
     setTags(demoTags);
+    setRecurringExpenses(demoRecurring);
   }, []);
 
   // KPI Calculations
@@ -364,6 +512,102 @@ const AccountsDashboard: React.FC = () => {
     showToast('✅ Expense rejected', 'success');
   };
 
+  const handleAddRecurring = () => {
+    if (!recurringForm.name || !recurringForm.amount || !recurringForm.category || !recurringForm.vendor) {
+      showToast('❌ Please fill in all required fields', 'error');
+      return;
+    }
+
+    const nextDueDate = calculateNextDueDate(recurringForm.startDate, recurringForm.frequency);
+
+    const newRecurring: RecurringExpense = {
+      id: `rec_${Date.now()}`,
+      name: recurringForm.name,
+      amount: recurringForm.amount,
+      category: recurringForm.category,
+      vendor: recurringForm.vendor,
+      frequency: recurringForm.frequency,
+      startDate: recurringForm.startDate,
+      endDate: recurringForm.endDate || undefined,
+      department: recurringForm.department,
+      description: recurringForm.description,
+      nextDueDate: nextDueDate,
+      isActive: true,
+      approvalStatus: 'pending',
+      createdAt: new Date().toISOString(),
+      lastModified: new Date().toISOString(),
+      autoApprove: recurringForm.autoApprove,
+    };
+
+    setRecurringExpenses([...recurringExpenses, newRecurring]);
+    showToast('✅ Recurring expense created (awaiting approval)', 'success');
+    setShowRecurringForm(false);
+    setRecurringForm({
+      name: '',
+      amount: 0,
+      category: '',
+      vendor: '',
+      frequency: 'monthly',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: '',
+      department: '',
+      description: '',
+      autoApprove: false,
+    });
+  };
+
+  const calculateNextDueDate = (startDate: string, frequency: string): string => {
+    const date = new Date(startDate);
+    switch (frequency) {
+      case 'daily':
+        date.setDate(date.getDate() + 1);
+        break;
+      case 'weekly':
+        date.setDate(date.getDate() + 7);
+        break;
+      case 'biweekly':
+        date.setDate(date.getDate() + 14);
+        break;
+      case 'monthly':
+        date.setMonth(date.getMonth() + 1);
+        break;
+      case 'quarterly':
+        date.setMonth(date.getMonth() + 3);
+        break;
+      case 'annual':
+        date.setFullYear(date.getFullYear() + 1);
+        break;
+    }
+    return date.toISOString().split('T')[0];
+  };
+
+  const approveRecurring = (recurringId: string) => {
+    setRecurringExpenses(
+      recurringExpenses.map(r =>
+        r.id === recurringId ? { ...r, approvalStatus: 'approved' } : r
+      )
+    );
+    showToast('✅ Recurring expense approved', 'success');
+  };
+
+  const pauseRecurring = (recurringId: string) => {
+    setRecurringExpenses(
+      recurringExpenses.map(r =>
+        r.id === recurringId ? { ...r, isActive: false } : r
+      )
+    );
+    showToast('⏸️ Recurring expense paused', 'success');
+  };
+
+  const resumeRecurring = (recurringId: string) => {
+    setRecurringExpenses(
+      recurringExpenses.map(r =>
+        r.id === recurringId ? { ...r, isActive: true } : r
+      )
+    );
+    showToast('▶️ Recurring expense resumed', 'success');
+  };
+
   return (
     <AdminLayout>
       <div style={{ padding: '16px', background: '#fff', minHeight: '100vh' }}>
@@ -453,7 +697,7 @@ const AccountsDashboard: React.FC = () => {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: '2px solid #FFD9B3', overflowX: 'auto' }}>
-          {(['overview', 'income', 'expenses', 'ledger', 'reconciliation', 'tags', 'reports'] as const).map(tab => (
+          {(['overview', 'income', 'expenses', 'recurring', 'ledger', 'reconciliation', 'tags', 'reports'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -473,6 +717,7 @@ const AccountsDashboard: React.FC = () => {
               {tab === 'overview' && '📊 Overview'}
               {tab === 'income' && '📈 Income'}
               {tab === 'expenses' && '📉 Expenses'}
+              {tab === 'recurring' && '🔄 Recurring'}
               {tab === 'ledger' && '📋 Ledger'}
               {tab === 'reconciliation' && '✓ Reconciliation'}
               {tab === 'tags' && '🏷️ Tags'}
@@ -764,6 +1009,263 @@ const AccountsDashboard: React.FC = () => {
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* RECURRING EXPENSES TAB */}
+        {activeTab === 'recurring' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#333' }}>Recurring Expenses</h3>
+              <button
+                onClick={() => setShowRecurringForm(!showRecurringForm)}
+                style={{
+                  padding: '8px 16px',
+                  background: '#9C27B0',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                }}
+              >
+                {showRecurringForm ? '✕ Cancel' : '+ New Recurring'}
+              </button>
+            </div>
+
+            {/* KPI Cards for Recurring */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ padding: '12px 16px', background: '#F3E5F5', borderRadius: '6px', border: '1px solid #9C27B0' }}>
+                <div style={{ fontSize: '11px', color: '#4A148C', marginBottom: '2px' }}>Total Recurring</div>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: '#9C27B0' }}>{recurringExpenses.length}</div>
+                <div style={{ fontSize: '10px', color: '#4A148C' }}>expenses</div>
+              </div>
+              <div style={{ padding: '12px 16px', background: '#E8F5E9', borderRadius: '6px', border: '1px solid #4CAF50' }}>
+                <div style={{ fontSize: '11px', color: '#2E7D32', marginBottom: '2px' }}>Active</div>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: '#4CAF50' }}>{recurringExpenses.filter(r => r.isActive).length}</div>
+                <div style={{ fontSize: '10px', color: '#2E7D32' }}>running</div>
+              </div>
+              <div style={{ padding: '12px 16px', background: '#FFF3E0', borderRadius: '6px', border: '1px solid #FF9800' }}>
+                <div style={{ fontSize: '11px', color: '#E65100', marginBottom: '2px' }}>Pending Approval</div>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: '#FF9800' }}>{recurringExpenses.filter(r => r.approvalStatus === 'pending').length}</div>
+                <div style={{ fontSize: '10px', color: '#E65100' }}>awaiting</div>
+              </div>
+              <div style={{ padding: '12px 16px', background: '#FCE4EC', borderRadius: '6px', border: '1px solid #E91E63' }}>
+                <div style={{ fontSize: '11px', color: '#880E4F', marginBottom: '2px' }}>Monthly Impact</div>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: '#E91E63' }}>SGD {recurringExpenses.filter(r => r.frequency === 'monthly' && r.isActive).reduce((s, r) => s + r.amount, 0).toLocaleString()}</div>
+                <div style={{ fontSize: '10px', color: '#880E4F' }}>monthly</div>
+              </div>
+            </div>
+
+            {showRecurringForm && (
+              <div style={{ padding: '16px', background: '#F5F5F5', borderRadius: '8px', marginBottom: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px' }}>
+                <input
+                  type="text"
+                  placeholder="Expense Name (e.g., Office Rent)"
+                  value={recurringForm.name}
+                  onChange={e => setRecurringForm({ ...recurringForm, name: e.target.value })}
+                  style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd', gridColumn: '1 / -1' }}
+                />
+                <input
+                  type="number"
+                  placeholder="Amount (SGD)"
+                  value={recurringForm.amount}
+                  onChange={e => setRecurringForm({ ...recurringForm, amount: parseFloat(e.target.value) || 0 })}
+                  style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+                <select
+                  value={recurringForm.category}
+                  onChange={e => setRecurringForm({ ...recurringForm, category: e.target.value })}
+                  style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                >
+                  <option value="">Select Category</option>
+                  <option value="Office & Administration">Office & Administration</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Insurance">Insurance</option>
+                  <option value="Travel & Transport">Travel & Transport</option>
+                  <option value="Professional Services">Professional Services</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Vendor Name"
+                  value={recurringForm.vendor}
+                  onChange={e => setRecurringForm({ ...recurringForm, vendor: e.target.value })}
+                  style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+                <select
+                  value={recurringForm.frequency}
+                  onChange={e => setRecurringForm({ ...recurringForm, frequency: e.target.value as any })}
+                  style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="biweekly">Bi-weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="annual">Annual</option>
+                </select>
+                <input
+                  type="date"
+                  value={recurringForm.startDate}
+                  onChange={e => setRecurringForm({ ...recurringForm, startDate: e.target.value })}
+                  style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+                <input
+                  type="date"
+                  placeholder="End Date (optional)"
+                  value={recurringForm.endDate}
+                  onChange={e => setRecurringForm({ ...recurringForm, endDate: e.target.value })}
+                  style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+                <input
+                  type="text"
+                  placeholder="Department"
+                  value={recurringForm.department}
+                  onChange={e => setRecurringForm({ ...recurringForm, department: e.target.value })}
+                  style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                />
+                <input
+                  type="text"
+                  placeholder="Description"
+                  value={recurringForm.description}
+                  onChange={e => setRecurringForm({ ...recurringForm, description: e.target.value })}
+                  style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd', gridColumn: '1 / -1' }}
+                />
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', gridColumn: '1 / -1' }}>
+                  <input
+                    type="checkbox"
+                    checked={recurringForm.autoApprove}
+                    onChange={e => setRecurringForm({ ...recurringForm, autoApprove: e.target.checked })}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  <span>Auto-approve on processing</span>
+                </label>
+                <button
+                  onClick={handleAddRecurring}
+                  style={{
+                    gridColumn: '1 / -1',
+                    padding: '10px',
+                    background: '#9C27B0',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ✓ Create Recurring Expense
+                </button>
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {recurringExpenses.map(rec => (
+                <div key={rec.id} style={{ padding: '12px 16px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', fontSize: '14px', color: '#333', marginBottom: '2px' }}>{rec.name}</div>
+                      <div style={{ fontSize: '12px', color: '#666' }}>{rec.vendor} • {rec.description}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <div style={{
+                        display: 'inline-block',
+                        padding: '4px 8px',
+                        background: rec.isActive ? '#E8F5E9' : '#F5F5F5',
+                        color: rec.isActive ? '#2E7D32' : '#999',
+                        borderRadius: '3px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                      }}>
+                        {rec.isActive ? '▶️ Active' : '⏸️ Paused'}
+                      </div>
+                      <div style={{
+                        display: 'inline-block',
+                        padding: '4px 8px',
+                        background: rec.approvalStatus === 'approved' ? '#E8F5E9' : '#FFF3E0',
+                        color: rec.approvalStatus === 'approved' ? '#2E7D32' : '#E65100',
+                        borderRadius: '3px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                      }}>
+                        {rec.approvalStatus === 'approved' ? '✓ Approved' : '⏳ Pending'}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                    <div>Amount: <strong style={{ color: '#E91E63' }}>SGD {rec.amount.toLocaleString()}</strong></div>
+                    <div>Frequency: <strong>{rec.frequency.toUpperCase()}</strong></div>
+                    <div>Category: <strong>{rec.category}</strong></div>
+                    <div>Next Due: <strong>{rec.nextDueDate}</strong></div>
+                    {rec.lastProcessedDate && <div>Last Processed: <strong>{rec.lastProcessedDate}</strong></div>}
+                    <div>Department: <strong>{rec.department}</strong></div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {rec.approvalStatus === 'pending' && (
+                      <button
+                        onClick={() => approveRecurring(rec.id)}
+                        style={{
+                          flex: 1,
+                          minWidth: '120px',
+                          padding: '6px 12px',
+                          background: '#4CAF50',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '3px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                        }}
+                      >
+                        ✓ Approve
+                      </button>
+                    )}
+                    {rec.isActive ? (
+                      <button
+                        onClick={() => pauseRecurring(rec.id)}
+                        style={{
+                          flex: 1,
+                          minWidth: '120px',
+                          padding: '6px 12px',
+                          background: '#FF9800',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '3px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                        }}
+                      >
+                        ⏸️ Pause
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => resumeRecurring(rec.id)}
+                        style={{
+                          flex: 1,
+                          minWidth: '120px',
+                          padding: '6px 12px',
+                          background: '#2196F3',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '3px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                        }}
+                      >
+                        ▶️ Resume
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: '16px', padding: '12px', background: '#F3E5F5', borderRadius: '4px', fontSize: '11px', color: '#4A148C' }}>
+              <strong>💡 Recurring Expenses:</strong> Automatically process on schedule. Pending approvals must be approved first. Paused expenses won't be processed until resumed.
             </div>
           </div>
         )}
