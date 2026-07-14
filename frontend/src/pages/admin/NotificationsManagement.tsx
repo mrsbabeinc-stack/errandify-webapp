@@ -661,13 +661,13 @@ export default function NotificationsManagement() {
                   </div>
                 ))}
               </div>
-            </div>
             </>
           )}
 
-          {/* Search & Filter */}
           {activeTab === 'create' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+            <>
+            {/* Search & Filter */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
             <input
               type="text"
               placeholder="Search notifications..."
@@ -714,30 +714,30 @@ export default function NotificationsManagement() {
               <option value="reminder">⏰ Reminder</option>
               <option value="promotion">🎁 Promotion</option>
             </select>
-          </div>
+            </div>
 
-          {/* Notifications List */}
-          <div style={{
-            maxHeight: '600px',
-            overflowY: 'auto',
-            display: 'grid',
-            gap: '12px',
-          }}>
-            {filtered.length === 0 ? (
-              <div style={{
-                padding: '32px',
-                textAlign: 'center',
-                color: '#999',
-              }}>
-                No notifications found
-              </div>
-            ) : (
-              filtered.map(notif => {
-                const group = groups.find(g => g.id === notif.groupId);
-                return (
-                  <div
-                    key={notif.id}
-                    onClick={() => setSelectedNotif(notif)}
+            {/* Notifications List */}
+            <div style={{
+              maxHeight: '600px',
+              overflowY: 'auto',
+              display: 'grid',
+              gap: '12px',
+            }}>
+              {filtered.length === 0 ? (
+                <div style={{
+                  padding: '32px',
+                  textAlign: 'center',
+                  color: '#999',
+                }}>
+                  No notifications found
+                </div>
+              ) : (
+                filtered.map(notif => {
+                  const group = groups.find(g => g.id === notif.groupId);
+                  return (
+                    <div
+                      key={notif.id}
+                      onClick={() => setSelectedNotif(notif)}
                     style={{
                       padding: '16px',
                       background: selectedNotif?.id === notif.id ? '#FFF8F5' : 'white',
@@ -818,7 +818,8 @@ export default function NotificationsManagement() {
                 );
               })
             )}
-          </div>
+            </div>
+            </>
           )}
         </div>
 
