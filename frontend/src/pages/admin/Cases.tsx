@@ -838,7 +838,7 @@ export const CasesPage: React.FC = () => {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px' }}>
                       {[
                         { key: 'full', label: 'Full Payment', color: '#10b981', tip: 'Doer receives 100% of errand amount', detail: 'Asker pays all fees' },
-                        { key: 'partial', label: 'Split 60/40', color: '#f59e0b', tip: 'Doer receives 60%, Asker refunded 40%', detail: 'Both parties pay proportional fees' },
+                        { key: 'partial', label: 'Fair Split 50/50', color: '#f59e0b', tip: 'Split payment evenly between parties', detail: 'Customize % in amount fields' },
                         { key: 'refund', label: 'Full Refund', color: '#3b82f6', tip: 'Doer receives $0, Asker gets 100% back', detail: 'No Stripe fee (escrow release)' },
                         { key: 'escalate', label: 'Escalate L3', color: '#6366f1', tip: 'Cannot decide now, needs senior review', detail: 'Case remains open' },
                       ].map(option => (
@@ -856,8 +856,9 @@ export const CasesPage: React.FC = () => {
                               doerCompensation = originalAmount;
                               askerRefund = 0;
                             } else if (option.key === 'partial') {
-                              doerCompensation = originalAmount * 0.60;
-                              askerRefund = originalAmount * 0.40;
+                              // Split 50/50 - staff can adjust amounts in input fields
+                              doerCompensation = originalAmount * 0.50;
+                              askerRefund = originalAmount * 0.50;
                             } else if (option.key === 'refund') {
                               doerCompensation = 0;
                               askerRefund = originalAmount;
