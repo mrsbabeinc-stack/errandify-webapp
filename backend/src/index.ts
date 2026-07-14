@@ -45,6 +45,10 @@ import companyRoutes from './routes/companyRoutes.js';
 import acraRoutes from './routes/acraRoutes.js';
 // import companyErrandOperations from "./routes/companyErrandOperations.js"; // Merged into companyRoutes
 import demoRoutes from './routes/demo.js';
+import staffManagementRoutes from './routes/staffManagement.js';
+import salaryBenefitsRoutes from './routes/salaryBenefits.js';
+import holidaysRoutes from './routes/holidays.js';
+import rbacRoutes from './routes/rbac.js';
 import { startCrons } from './cron.js';
 import db from './db.js';
 
@@ -253,6 +257,10 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/user-profile', userProfileRoutes);
 app.use('/api/user-data', userDataExportRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin', staffManagementRoutes);
+app.use('/api/admin', salaryBenefitsRoutes);
+app.use('/api/admin', holidaysRoutes);
+app.use('/api/admin', rbacRoutes);
 app.use('/api/speech', speechRoutes);
 app.use('/api/questions', questionsRoutes);
 // app.use('/api/email', emailRoutes); // TODO: Fix email module imports

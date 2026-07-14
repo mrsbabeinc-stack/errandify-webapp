@@ -2,26 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { staffAPI } from '../../services/adminAPI';
 
 interface Staff {
-  id: string;
-  staffId: string;
-  firstName: string;
-  lastName: string;
+  id?: number;
+  staff_id?: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  phone: string;
+  phone?: string;
   nric?: string;
-  department: string;
-  position: string;
-  hireDate: string;
-  employmentType: 'permanent' | 'contract' | 'part-time' | 'temporary';
-  status: 'active' | 'inactive' | 'on-leave' | 'terminated';
-  baseSalary?: number;
-  annualLeaveEntitlement: number;
-  sickLeaveEntitlement: number;
-  cpfMembershipNo?: string;
-  createdAt: string;
-  lastModified: string;
+  department?: string;
+  position?: string;
+  hire_date?: string;
+  employment_type?: string;
+  status?: string;
+  base_salary?: number;
+  annual_leave_entitlement?: number;
+  sick_leave_entitlement?: number;
+  cpf_membership_no?: string;
+  created_at?: string;
+  last_modified?: string;
 }
 
 const DEPARTMENTS = [
@@ -41,75 +42,29 @@ const StaffInfoEditor: React.FC = () => {
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [showNewForm, setShowNewForm] = useState(false);
-
+  const [loading, setLoading] = useState(true);
   const [editForm, setEditForm] = useState<Partial<Staff>>({});
 
-  // Demo data
+  // Load staff from API
   useEffect(() => {
-    const demoStaff: Staff[] = [
-      {
-        id: 'staff_1',
-        staffId: 'S001',
-        firstName: 'John',
-        lastName: 'Tan',
-        email: 'john.tan@errandify.sg',
-        phone: '+65 9123 4567',
-        nric: 'S1234567A',
-        department: 'Operations',
-        position: 'Operations Manager',
-        employmentType: 'permanent',
-        hireDate: '2023-06-15',
-        status: 'active',
-        baseSalary: 4500,
-        annualLeaveEntitlement: 12,
-        sickLeaveEntitlement: 4,
-        cpfMembershipNo: 'S1234567A',
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-      },
-      {
-        id: 'staff_2',
-        staffId: 'S002',
-        firstName: 'Sarah',
-        lastName: 'Lim',
-        email: 'sarah.lim@errandify.sg',
-        phone: '+65 8765 4321',
-        nric: 'S2345678B',
-        department: 'Finance',
-        position: 'Accounts Manager',
-        employmentType: 'permanent',
-        hireDate: '2024-01-10',
-        status: 'active',
-        baseSalary: 5000,
-        annualLeaveEntitlement: 12,
-        sickLeaveEntitlement: 4,
-        cpfMembershipNo: 'S2345678B',
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-      },
-      {
-        id: 'staff_3',
-        staffId: 'S003',
-        firstName: 'Mike',
-        lastName: 'Wong',
-        email: 'mike.wong@errandify.sg',
-        phone: '+65 9876 5432',
-        nric: 'S3456789C',
-        department: 'HR',
-        position: 'HR Manager',
-        employmentType: 'permanent',
-        hireDate: '2022-03-20',
-        status: 'active',
-        baseSalary: 4800,
-        annualLeaveEntitlement: 12,
-        sickLeaveEntitlement: 4,
-        cpfMembershipNo: 'S3456789C',
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-      },
-    ];
+    const loadStaff = async () => {
+      try {
+        setLoading(true);
+        const response = await staffAPI.getAll();
+        if (response.success) {
+          setStaffList(response.data || []);
+        } else {
+          showToast('⚠️ Failed to load staff', 'error');
+        }
+      } catch (error) {
+        console.error('Failed to load staff:', error);
+        showToast('⚠️ Error loading staff data', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    setStaffList(demoStaff);
+    loadStaff();
   }, []);
 
   const handleSelectStaff = (staff: Staff) => {
@@ -121,78 +76,80 @@ const StaffInfoEditor: React.FC = () => {
   const handleNewStaff = () => {
     setSelectedStaff(null);
     setEditForm({
-      firstName: '',
-      lastName: '',
+      first_name: '',
+      last_name: '',
       email: '',
       phone: '',
       nric: '',
       department: 'Operations',
       position: '',
-      employmentType: 'permanent',
-      hireDate: new Date().toISOString().split('T')[0],
+      employment_type: 'permanent',
+      hire_date: new Date().toISOString().split('T')[0],
       status: 'active',
-      baseSalary: 0,
-      annualLeaveEntitlement: 12,
-      sickLeaveEntitlement: 4,
-      cpfMembershipNo: '',
+      base_salary: 0,
+      annual_leave_entitlement: 12,
+      sick_leave_entitlement: 4,
+      cpf_membership_no: '',
     });
     setShowNewForm(true);
   };
 
-  const handleSaveStaff = () => {
-    if (!editForm.firstName || !editForm.lastName || !editForm.email || !editForm.position) {
+  const handleSaveStaff = async () => {
+    if (!editForm.first_name || !editForm.last_name || !editForm.email || !editForm.position) {
       showToast('❌ Please fill in all required fields', 'error');
       return;
     }
 
-    if (selectedStaff) {
-      // Update existing
-      const updated = staffList.map(s =>
-        s.id === selectedStaff.id
-          ? { ...editForm, lastModified: new Date().toISOString() } as Staff
-          : s
-      );
-      setStaffList(updated);
-      setSelectedStaff(updated.find(s => s.id === selectedStaff.id) || null);
-      showToast(`✅ Staff information updated for ${editForm.firstName} ${editForm.lastName}`, 'success');
-    } else {
-      // Create new
-      const newStaff: Staff = {
-        id: `staff_${Date.now()}`,
-        staffId: `S${String(staffList.length + 1).padStart(3, '0')}`,
-        firstName: editForm.firstName || '',
-        lastName: editForm.lastName || '',
-        email: editForm.email || '',
-        phone: editForm.phone || '',
-        nric: editForm.nric || '',
-        department: editForm.department || 'Operations',
-        position: editForm.position || '',
-        employmentType: editForm.employmentType || 'permanent',
-        hireDate: editForm.hireDate || new Date().toISOString().split('T')[0],
-        status: editForm.status || 'active',
-        baseSalary: editForm.baseSalary || 0,
-        annualLeaveEntitlement: editForm.annualLeaveEntitlement || 12,
-        sickLeaveEntitlement: editForm.sickLeaveEntitlement || 4,
-        cpfMembershipNo: editForm.cpfMembershipNo || '',
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-      };
-      setStaffList([...staffList, newStaff]);
-      showToast(`✅ New staff ${newStaff.firstName} ${newStaff.lastName} (${newStaff.staffId}) created`, 'success');
-      setShowNewForm(false);
+    try {
+      setLoading(true);
+      if (selectedStaff && selectedStaff.id) {
+        // Update existing
+        const response = await staffAPI.update(selectedStaff.id, editForm);
+        if (response.success) {
+          setStaffList(staffList.map(s => s.id === selectedStaff.id ? response.data : s));
+          showToast(`✅ Staff information updated for ${editForm.first_name} ${editForm.last_name}`, 'success');
+        }
+      } else {
+        // Create new
+        const response = await staffAPI.create(editForm as Staff);
+        if (response.success) {
+          setStaffList([...staffList, response.data]);
+          showToast(`✅ New staff ${response.data.first_name} ${response.data.last_name} (${response.data.staff_id}) created`, 'success');
+          setShowNewForm(false);
+        }
+      }
+      setSelectedStaff(null);
+      setEditForm({});
+    } catch (error) {
+      console.error('Error saving staff:', error);
+      showToast('❌ Failed to save staff', 'error');
+    } finally {
+      setLoading(false);
     }
-    setSelectedStaff(null);
-    setEditForm({});
   };
 
-  const handleDeleteStaff = () => {
-    if (!selectedStaff || !window.confirm(`Delete ${selectedStaff.firstName} ${selectedStaff.lastName}? This action cannot be undone.`)) {
+  const handleDeleteStaff = async () => {
+    if (!selectedStaff || !window.confirm(`Delete ${selectedStaff.first_name} ${selectedStaff.last_name}? This action cannot be undone.`)) {
       return;
     }
-    setStaffList(staffList.filter(s => s.id !== selectedStaff.id));
-    showToast(`✅ Staff member deleted`, 'success');
-    setSelectedStaff(null);
-    setEditForm({});
+
+    try {
+      setLoading(true);
+      if (selectedStaff.id) {
+        const response = await staffAPI.delete(selectedStaff.id);
+        if (response.success) {
+          setStaffList(staffList.filter(s => s.id !== selectedStaff.id));
+          showToast(`✅ Staff member deleted`, 'success');
+          setSelectedStaff(null);
+          setEditForm({});
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting staff:', error);
+      showToast('❌ Failed to delete staff', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -230,7 +187,9 @@ const StaffInfoEditor: React.FC = () => {
           {/* STAFF LIST SIDEBAR */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#333' }}>Staff Members ({staffList.length})</h3>
+              <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#333' }}>
+                Staff Members {loading ? '⏳' : `(${staffList.length})`}
+              </h3>
               <button
                 onClick={handleNewStaff}
                 style={{
@@ -274,10 +233,10 @@ const StaffInfoEditor: React.FC = () => {
                   }}
                 >
                   <div style={{ fontWeight: '600', fontSize: '12px', color: '#333', marginBottom: '2px' }}>
-                    {staff.firstName} {staff.lastName}
+                    {staff.first_name} {staff.last_name}
                   </div>
                   <div style={{ fontSize: '11px', color: '#666', marginBottom: '2px' }}>
-                    {staff.staffId} • {staff.position}
+                    {staff.staff_id} • {staff.position}
                   </div>
                   <div style={{
                     display: 'inline-block',
@@ -288,7 +247,7 @@ const StaffInfoEditor: React.FC = () => {
                     fontSize: '10px',
                     fontWeight: '600',
                   }}>
-                    {staff.status}
+                    {staff.status || 'active'}
                   </div>
                 </div>
               ))}
@@ -300,7 +259,7 @@ const StaffInfoEditor: React.FC = () => {
             {selectedStaff || showNewForm ? (
               <div style={{ padding: '20px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '8px' }}>
                 <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: '#333' }}>
-                  {showNewForm ? '➕ New Staff Member' : `✏️ Edit ${editForm.firstName} ${editForm.lastName}`}
+                  {showNewForm ? '➕ New Staff Member' : `✏️ Edit ${editForm.first_name} ${editForm.last_name}`}
                 </h3>
 
                 <div style={{ display: 'grid', gap: '12px' }}>
@@ -314,8 +273,8 @@ const StaffInfoEditor: React.FC = () => {
                         </label>
                         <input
                           type="text"
-                          value={editForm.firstName || ''}
-                          onChange={e => setEditForm({ ...editForm, firstName: e.target.value })}
+                          value={editForm.first_name || ''}
+                          onChange={e => setEditForm({ ...editForm, first_name: e.target.value })}
                           style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px', boxSizing: 'border-box' }}
                         />
                       </div>
@@ -325,8 +284,8 @@ const StaffInfoEditor: React.FC = () => {
                         </label>
                         <input
                           type="text"
-                          value={editForm.lastName || ''}
-                          onChange={e => setEditForm({ ...editForm, lastName: e.target.value })}
+                          value={editForm.last_name || ''}
+                          onChange={e => setEditForm({ ...editForm, last_name: e.target.value })}
                           style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px', boxSizing: 'border-box' }}
                         />
                       </div>
@@ -401,8 +360,8 @@ const StaffInfoEditor: React.FC = () => {
                           Employment Type
                         </label>
                         <select
-                          value={editForm.employmentType || 'permanent'}
-                          onChange={e => setEditForm({ ...editForm, employmentType: e.target.value as any })}
+                          value={editForm.employment_type || 'permanent'}
+                          onChange={e => setEditForm({ ...editForm, employment_type: e.target.value as any })}
                           style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px', boxSizing: 'border-box' }}
                         >
                           <option value="permanent">Permanent</option>
@@ -432,8 +391,8 @@ const StaffInfoEditor: React.FC = () => {
                         </label>
                         <input
                           type="date"
-                          value={editForm.hireDate || ''}
-                          onChange={e => setEditForm({ ...editForm, hireDate: e.target.value })}
+                          value={editForm.hire_date || ''}
+                          onChange={e => setEditForm({ ...editForm, hire_date: e.target.value })}
                           style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px', boxSizing: 'border-box' }}
                         />
                       </div>
@@ -450,8 +409,8 @@ const StaffInfoEditor: React.FC = () => {
                         </label>
                         <input
                           type="number"
-                          value={editForm.annualLeaveEntitlement || 12}
-                          onChange={e => setEditForm({ ...editForm, annualLeaveEntitlement: parseInt(e.target.value) || 12 })}
+                          value={editForm.annual_leave_entitlement || 12}
+                          onChange={e => setEditForm({ ...editForm, annual_leave_entitlement: parseInt(e.target.value) || 12 })}
                           style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px', boxSizing: 'border-box' }}
                         />
                       </div>
@@ -461,8 +420,8 @@ const StaffInfoEditor: React.FC = () => {
                         </label>
                         <input
                           type="number"
-                          value={editForm.sickLeaveEntitlement || 4}
-                          onChange={e => setEditForm({ ...editForm, sickLeaveEntitlement: parseInt(e.target.value) || 4 })}
+                          value={editForm.sick_leave_entitlement || 4}
+                          onChange={e => setEditForm({ ...editForm, sick_leave_entitlement: parseInt(e.target.value) || 4 })}
                           style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px', boxSizing: 'border-box' }}
                         />
                       </div>
@@ -472,8 +431,8 @@ const StaffInfoEditor: React.FC = () => {
                         </label>
                         <input
                           type="text"
-                          value={editForm.cpfMembershipNo || ''}
-                          onChange={e => setEditForm({ ...editForm, cpfMembershipNo: e.target.value })}
+                          value={editForm.cpf_membership_no || ''}
+                          onChange={e => setEditForm({ ...editForm, cpf_membership_no: e.target.value })}
                           style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px', boxSizing: 'border-box' }}
                         />
                       </div>
