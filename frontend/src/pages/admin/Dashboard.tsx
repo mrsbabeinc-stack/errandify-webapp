@@ -3,53 +3,61 @@ import AdminLayout from '../../components/admin/AdminLayout';
 
 export const AdminDashboard: React.FC = () => {
   const [criticalAlerts] = useState([
-    { id: 1, severity: 'critical', icon: '⚠️', title: 'Overdue Cases (>4h)', metric: '5', impact: 'SGD $450', action: 'Resolve', color: '#dc2626', bg: '#fee2e2' },
-    { id: 2, severity: 'critical', icon: '🚨', title: 'Payment Failed', metric: '3', impact: 'SGD $890', action: 'Fix', color: '#dc2626', bg: '#fee2e2' },
+    { id: 1, severity: 'critical', icon: '⚠️', title: 'Revenue at Risk', metric: '5', impact: 'SGD $450 blocked', action: 'Resolve', color: '#dc2626', bg: '#fee2e2' },
+    { id: 2, severity: 'critical', icon: '🚨', title: 'Payment System Down', metric: '3', impact: 'Losing SGD $12/min', action: 'Fix Now', color: '#dc2626', bg: '#fee2e2' },
   ]);
 
-  const [metrics] = useState([
-    { label: 'Health', value: '98.5%', trend: '+2.1%', icon: '💚', color: '#0891b2', bg: '#cffafe' },
-    { label: 'Revenue', value: 'SGD $2.4K', trend: '+18%', icon: '💰', color: '#0891b2', bg: '#cffafe' },
-    { label: 'Signups', value: '87', trend: '+15%', icon: '👤', color: '#0891b2', bg: '#cffafe' },
-    { label: 'Rating', value: '4.8★', trend: '+0.3', icon: '⭐', color: '#0891b2', bg: '#cffafe' },
+  const [startupMetrics] = useState([
+    { label: 'MRR', value: 'SGD $24K', trend: '+18%', icon: '💰', color: '#0891b2', bg: '#cffafe', context: 'Monthly Recurring' },
+    { label: 'Active Users', value: '2.8K', trend: '+12%', icon: '👥', color: '#0891b2', bg: '#cffafe', context: 'DAU this week' },
+    { label: 'Churn Rate', value: '3.2%', trend: '-0.8%', icon: '📊', color: '#0891b2', bg: '#cffafe', context: 'Monthly (lower is better)' },
+    { label: 'Signups', value: '87/day', trend: '+15%', icon: '📈', color: '#0891b2', bg: '#cffafe', context: 'New users today' },
   ]);
 
-  const [qwenInsights] = useState([
+  const [operationsStatus] = useState([
+    { label: 'Pending Cases', value: '12', icon: '📋', color: '#f59e0b', bg: '#fef3c7', action: 'Review Now', link: '/admin/cases' },
+    { label: 'Failed Payments', value: '8', icon: '💳', color: '#dc2626', bg: '#fee2e2', action: 'Fix Now', link: '/admin/operations/payments' },
+    { label: 'Active Disputes', value: '3', icon: '⚖️', color: '#f59e0b', bg: '#fef3c7', action: 'Resolve', link: '/admin/dashboard/disputes' },
+    { label: 'Pending Signups', value: '15', icon: '🔐', color: '#0891b2', bg: '#cffafe', action: 'Verify', link: '/admin/operations/user-management' },
+  ]);
+
+  const [fundingContext] = useState([
+    { metric: 'Burn Rate', value: 'SGD $1.2K/day', status: 'Sustainable', color: '#0891b2' },
+    { metric: 'Cash Runway', value: '14 months', status: 'Healthy', color: '#0891b2' },
+    { metric: 'Unit Economics', value: 'LTV:CAC = 3.2:1', status: 'Strong', color: '#0891b2' },
+  ]);
+
+  const [growthInsights] = useState([
     {
       period: '📅 TODAY',
       insights: [
-        { id: 1, category: 'ALERT', title: 'Suspicious User #4521', desc: '15 disputes filed (2h window)', action: 'Review', color: '#dc2626', bg: '#fee2e2', icon: '🚩' },
-        { id: 2, category: 'TREND', title: 'Payment Errors +8% (vs yesterday)', desc: 'Method X: rejection rate 8.3%', action: 'Investigate', color: '#f59e0b', bg: '#fef3c7', icon: '📊' },
+        { id: 1, category: 'REVENUE', title: 'Revenue On Track', desc: 'SGD $850 processed (daily avg: $730)', action: 'Monitor', color: '#dc2626', bg: '#fee2e2', icon: '💵' },
+        { id: 2, category: 'CHURN', title: '2 Users Churned', desc: 'Both payment method issues (recoverable)', action: 'Reach Out', color: '#f59e0b', bg: '#fef3c7', icon: '📉' },
       ]
     },
     {
       period: '📊 WEEKLY',
       insights: [
-        { id: 3, category: 'PATTERN', title: 'Refund Spike +23% Week-over-Week', desc: 'Avg refund value: SGD $65 (was $53)', action: 'Analyze', color: '#f59e0b', bg: '#fef3c7', icon: '📈' },
-        { id: 4, category: 'OPPORTUNITY', title: '24 Premium Doers (50+ 5-stars)', desc: 'Avg rating: 4.9★ | Completion: 98%', action: 'Engage', color: '#0891b2', bg: '#cffafe', icon: '👑' },
-        { id: 5, category: 'QUALITY', title: 'Top Doer: ProHelper_John', desc: 'Week: 28 tasks • 4.95★ avg • $1,240 earned', action: 'Recognize', color: '#0891b2', bg: '#cffafe', icon: '⭐' },
+        { id: 3, category: 'GROWTH', title: 'Signup Velocity +23%', desc: 'Up from 71/day last week → 87/day now', action: 'Analyze', color: '#0891b2', bg: '#cffafe', icon: '📈' },
+        { id: 4, category: 'ENGAGEMENT', title: 'Task Completion Rate 87%', desc: 'Users completing tasks at high rate (healthy)', action: 'Maintain', color: '#0891b2', bg: '#cffafe', icon: '⭐' },
+        { id: 5, category: 'MONETIZATION', title: 'ARPU Growth +$3.50', desc: 'Avg Revenue Per User: $28.50 → $32.00', action: 'Celebrate', color: '#0891b2', bg: '#cffafe', icon: '🎯' },
       ]
     },
     {
       period: '📆 MONTHLY',
       insights: [
-        { id: 6, category: 'BUSINESS', title: 'Platform Growth: +18% MoM', desc: 'Users: +2.1K | Revenue: +SGD $8.4K | Disputes: -12%', action: 'Report', color: '#0891b2', bg: '#cffafe', icon: '🎯' },
-        { id: 7, category: 'RISK', title: 'Churn Alert: Support Avg -15%', desc: 'Users citing slow responses. SLA compliance: 89% (target: 95%)', action: 'Action', color: '#f59e0b', bg: '#fef3c7', icon: '⚡' },
-        { id: 8, category: 'FORECAST', title: 'July Projection: SGD $28K Revenue', desc: 'Based on current velocity & historical patterns', action: 'Plan', color: '#0891b2', bg: '#cffafe', icon: '🔮' },
+        { id: 6, category: 'BUSINESS', title: 'MRR: +18% This Month', desc: 'SGD $24K revenue | Runway: 14 months @ current burn', action: 'Plan Spend', color: '#0891b2', bg: '#cffafe', icon: '🏦' },
+        { id: 7, category: 'RISK', title: 'Payment Disputes +12%', desc: 'Monthly disputes: 8 → 9. Mostly false alerts (recoverable)', action: 'Fix SOS', color: '#f59e0b', bg: '#fef3c7', icon: '⚡' },
+        { id: 8, category: 'FORECAST', title: 'Projected MRR in 60 days', desc: 'At +15% growth: SGD $28.2K | Runway extends to 16 months', action: 'Plan', color: '#0891b2', bg: '#cffafe', icon: '🔮' },
       ]
     }
   ]);
 
-  const [operationalStatus] = useState([
-    { area: 'Cases', pending: 12, inProgress: 28, completed: 340, sla: '96%', color: '#f59e0b' },
-    { area: 'Payments', pending: 2, inProgress: 15, completed: 892, sla: '99.2%', color: '#dc2626' },
-    { area: 'Support', pending: 8, inProgress: 19, completed: 156, sla: '2.1h', color: '#0891b2' },
-  ]);
-
   const [recentActivity] = useState([
-    { id: 1, icon: '✅', title: 'Case #D26-4521 Resolved', detail: 'SGD $45.20 → Doer', time: '12m', color: '#0891b2' },
-    { id: 2, icon: '⚠️', title: 'User #7814 Warned', detail: 'False alert #2', time: '28m', color: '#f59e0b' },
-    { id: 3, icon: '🔴', title: 'Payment Issue Detected', detail: 'Method X rejection 8.3%', time: '1h', color: '#dc2626' },
+    { id: 1, icon: '🎉', title: 'New User Milestone', detail: '2,800 total active users reached', time: '2h', color: '#0891b2' },
+    { id: 2, icon: '⚖️', title: 'Dispute Resolved (L2)', detail: 'Case #7814 settled 50/50 split', time: '3h', color: '#0891b2' },
+    { id: 3, icon: '⚠️', title: 'Payment Failed', detail: '8 users have payment retry pending', time: '4h', color: '#f59e0b' },
+    { id: 4, icon: '💳', title: 'Stripe Connection OK', detail: 'Last check: 6m ago, all systems nominal', time: '6h', color: '#0891b2' },
   ]);
 
   return (
@@ -89,14 +97,14 @@ export const AdminDashboard: React.FC = () => {
       <div style={{ padding: '20px', background: '#f8f9fa', minHeight: '100vh' }}>
         {/* HEADER */}
         <div style={{ marginBottom: '20px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0, color: '#0f172a' }}>Command Center</h1>
-          <p style={{ fontSize: '13px', color: '#666', margin: '4px 0 0 0' }}>Real-time operations • AI insights • Action required</p>
+          <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0, color: '#0f172a' }}>Admin Command Center</h1>
+          <p style={{ fontSize: '13px', color: '#666', margin: '4px 0 0 0' }}>Growth tracking • Operations • Safety & Disputes</p>
         </div>
 
-        {/* CRITICAL ALERTS - HIGHLY ANIMATED */}
+        {/* CRITICAL ALERTS - REVENUE/PAYMENT */}
         <div style={{ marginBottom: '20px' }}>
           <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            🔴 CRITICAL - ACT NOW
+            🔴 CRITICAL BLOCKERS - ACT NOW
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
             {criticalAlerts.map(alert => (
@@ -111,7 +119,6 @@ export const AdminDashboard: React.FC = () => {
                 position: 'relative',
                 overflow: 'hidden'
               }}>
-                {/* Animated background glow */}
                 <div style={{
                   position: 'absolute',
                   top: 0,
@@ -123,18 +130,17 @@ export const AdminDashboard: React.FC = () => {
                   pointerEvents: 'none'
                 }} />
 
-                {/* Blinking urgent indicator */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative', zIndex: 1 }}>
                   <span className="critical-blink" style={{ fontSize: '13px', fontWeight: 700, color: alert.color }}>● URGENT</span>
-                  <span style={{ fontSize: '13px', color: '#666', fontWeight: 600 }}>Action required immediately</span>
+                  <span style={{ fontSize: '12px', color: '#666', fontWeight: 600 }}>Losing money right now</span>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
                   <div style={{ flex: 1 }}>
-                    <div className="critical-bounce" style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '2px', display: 'inline-block' }}>
+                    <div className="critical-bounce" style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '2px', display: 'inline-block' }}>
                       {alert.icon} {alert.title}
                     </div>
-                    <div style={{ fontSize: '13px', color: '#666' }}>Impact: <strong>{alert.impact}</strong></div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>Impact: <strong>{alert.impact}</strong></div>
                   </div>
                   <div className="critical-shake" style={{ fontSize: '24px', fontWeight: 700, color: alert.color, minWidth: '35px', textAlign: 'right', lineHeight: 1 }}>
                     {alert.metric}
@@ -173,94 +179,140 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* KPI METRICS */}
+        {/* STARTUP METRICS - KEY INDICATORS */}
         <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>📊 Key Metrics</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
-            {metrics.map((m, i) => (
+          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>📊 Startup Metrics (Growth)</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+            {startupMetrics.map((m, i) => (
               <div key={i} style={{
                 background: m.bg,
                 border: `2px solid ${m.color}`,
                 borderRadius: '8px',
-                padding: '12px',
+                padding: '14px',
                 textAlign: 'center'
               }}>
-                <div style={{ fontSize: '18px', marginBottom: '4px' }}>{m.icon}</div>
-                <div style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>{m.label}</div>
-                <div style={{ fontSize: '18px', fontWeight: 700, color: m.color, marginBottom: '2px' }}>{m.value}</div>
-                <div style={{ fontSize: '13px', color: m.color, fontWeight: 600 }}>{m.trend}</div>
+                <div style={{ fontSize: '20px', marginBottom: '6px' }}>{m.icon}</div>
+                <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px', fontWeight: 600 }}>{m.label}</div>
+                <div style={{ fontSize: '20px', fontWeight: 700, color: m.color, marginBottom: '4px' }}>{m.value}</div>
+                <div style={{ fontSize: '12px', color: m.color, fontWeight: 600, marginBottom: '8px' }}>{m.trend}</div>
+                <div style={{ fontSize: '11px', color: '#666', fontStyle: 'italic' }}>{m.context}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* OPERATIONS STATUS */}
+        {/* OPERATIONS STATUS - ACTIONABLE */}
         <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>🏢 Operations</h2>
+          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>⚙️ Operations & Safety (Action Required)</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-            {operationalStatus.map((item, i) => (
+            {operationsStatus.map((item, i) => (
+              <div key={i} style={{
+                background: item.bg,
+                border: `2px solid ${item.color}`,
+                borderRadius: '8px',
+                padding: '14px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ fontSize: '20px' }}>{item.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#666' }}>{item.label}</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: item.color }}>{item.value}</div>
+                  </div>
+                </div>
+                <button style={{
+                  background: item.color,
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  width: '100%',
+                  transition: 'all 0.2s'
+                }}
+                onClick={() => window.location.href = item.link}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.9';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+                >
+                  {item.action} →
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* FUNDING & RUNWAY */}
+        <div style={{ marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>🏦 Funding & Runway</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+            {fundingContext.map((item, i) => (
               <div key={i} style={{
                 background: '#fff',
                 border: `2px solid ${item.color}`,
                 borderRadius: '8px',
-                padding: '12px',
+                padding: '14px',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>{item.area}</div>
-                  <div style={{ fontSize: '13px', color: '#666', marginTop: '2px' }}>
-                    <span style={{ color: item.color, fontWeight: 600 }}>{item.completed}</span> done
-                  </div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>{item.metric}</div>
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '4px', fontWeight: 600 }}>{item.value}</div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: item.color, marginBottom: '2px' }}>
-                    {item.pending} ⏳
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#666' }}>SLA {item.sla}</div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: item.color, background: item.color + '15', padding: '4px 8px', borderRadius: '4px' }}>
+                  {item.status}
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* QWEN AI INSIGHTS - DAILY/WEEKLY/MONTHLY */}
+        {/* GROWTH INSIGHTS - DAILY/WEEKLY/MONTHLY */}
         <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>🤖 AI Highlights (Qwen)</h2>
+          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>🚀 Growth Insights (Qwen)</h2>
           
-          {qwenInsights.map((periodGroup, periodIdx) => (
+          {growthInsights.map((periodGroup, periodIdx) => (
             <div key={periodIdx} style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: '#666', marginBottom: '8px', paddingLeft: '4px', borderLeft: '3px solid #0891b2' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#666', marginBottom: '8px', paddingLeft: '4px', borderLeft: '3px solid #0891b2' }}>
                 {periodGroup.period}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
                 {periodGroup.insights.map(insight => (
                   <div key={insight.id} style={{
                     background: insight.bg,
                     border: `2px solid ${insight.color}`,
                     borderRadius: '8px',
-                    padding: '10px'
+                    padding: '11px'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '14px' }}>{insight.icon}</span>
+                      <span style={{ fontSize: '16px' }}>{insight.icon}</span>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '13px', fontWeight: 700, color: insight.color, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: insight.color, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                           {insight.category}
                         </div>
-                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', marginTop: '2px', lineHeight: 1.2 }}>
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', marginTop: '2px', lineHeight: 1.2 }}>
                           {insight.title}
                         </div>
                       </div>
                     </div>
-                    <div style={{ fontSize: '13px', color: '#666', marginBottom: '6px', lineHeight: 1.3 }}>{insight.desc}</div>
+                    <div style={{ fontSize: '11px', color: '#666', marginBottom: '6px', lineHeight: 1.3 }}>{insight.desc}</div>
                     <button style={{
                       background: insight.color,
                       color: 'white',
                       border: 'none',
                       padding: '5px 8px',
                       borderRadius: '4px',
-                      fontSize: '13px',
+                      fontSize: '11px',
                       fontWeight: 600,
                       cursor: 'pointer',
                       width: '100%'
@@ -276,23 +328,23 @@ export const AdminDashboard: React.FC = () => {
 
         {/* ACTIVITY LOG */}
         <div>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>📋 Activity</h2>
+          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>📋 Recent Activity</h2>
           <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
             {recentActivity.map((item, i) => (
               <div key={item.id} style={{
-                padding: '12px',
+                padding: '13px',
                 borderBottom: i < recentActivity.length - 1 ? '1px solid #f1f5f9' : 'none',
                 display: 'flex',
                 gap: '10px',
                 alignItems: 'center',
                 background: item.color + '08'
               }}>
-                <div style={{ fontSize: '16px' }}>{item.icon}</div>
+                <div style={{ fontSize: '18px' }}>{item.icon}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>{item.title}</div>
-                  <div style={{ fontSize: '13px', color: '#666', marginTop: '1px' }}>{item.detail}</div>
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '1px' }}>{item.detail}</div>
                 </div>
-                <div style={{ fontSize: '13px', color: '#999', fontWeight: 600 }}>{item.time}</div>
+                <div style={{ fontSize: '11px', color: '#999', fontWeight: 600 }}>{item.time}</div>
               </div>
             ))}
           </div>
