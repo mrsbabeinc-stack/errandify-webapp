@@ -68,8 +68,8 @@ const menuItems: MenuItem[] = [
     label: 'B2B Company Management',
     icon: '🏢',
     children: [
-      { id: 'company-intelligence', label: 'Company Client Intelligence', icon: '🎯', path: '/admin/company/intelligence' },
-      { id: 'company-mgmt', label: 'Company Management', icon: '👔', path: '/admin/company/management' },
+      { id: 'company-intelligence', label: 'Client Intelligence', icon: '🎯', path: '/admin/company/intelligence' },
+      { id: 'company-mgmt', label: 'Client Management', icon: '👔', path: '/admin/company/management' },
       { id: 'subscriptions', label: 'Subscription Packages', icon: '📦', path: '/admin/company/subscriptions' },
       { id: 'advertising', label: 'Advertising Approval', icon: '📸', path: '/admin/company/advertising' },
       { id: 'partner-tiers', label: 'Partner Tiers', icon: '👑', path: '/admin/company/partner-tiers' },
