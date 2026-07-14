@@ -265,11 +265,13 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
           border: none;
           background: none;
           color: #ff6b35;
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 700;
           cursor: pointer;
           transition: all 0.2s;
           text-align: left;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
 
         .menu-header:hover {
@@ -315,12 +317,12 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
           align-items: center;
           gap: 12px;
           width: 100%;
-          padding: 8px 16px 8px 24px;
+          padding: 10px 16px 10px 24px;
           border: none;
           background: none;
           color: #666;
           font-size: 13px;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
           text-align: left;
