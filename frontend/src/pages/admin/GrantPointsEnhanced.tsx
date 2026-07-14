@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 
-export const GrantPointsEnhancedPage: React.FC = () => {
+export const GrantEPEnhancedPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'grant' | 'history' | 'campaigns' | 'groups'>('grant');
   const [grantTarget, setGrantTarget] = useState<'individual' | 'company' | 'group'>('individual');
   const [searchQuery, setSearchQuery] = useState('');
@@ -206,10 +206,10 @@ export const GrantPointsEnhancedPage: React.FC = () => {
         {/* Header */}
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 4px 0', color: '#333' }}>
-            🎁 Grant Errandify Points
+            🎁 Grant EP
           </h1>
           <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>
-            Award points to individuals, groups, or companies with personalized campaigns and animated notifications
+            Award EP to individuals, groups, or companies with personalized campaigns and animated notifications
           </p>
         </div>
 
@@ -232,7 +232,7 @@ export const GrantPointsEnhancedPage: React.FC = () => {
                 textTransform: 'capitalize'
               }}
             >
-              {tab === 'grant' && '✏️ Grant Points'}
+              {tab === 'grant' && '✏️ Grant EP'}
               {tab === 'groups' && '👥 Saved Groups'}
               {tab === 'campaigns' && '📋 Campaigns'}
               {tab === 'history' && '📊 History'}
@@ -463,7 +463,7 @@ export const GrantPointsEnhancedPage: React.FC = () => {
               {/* Right: Grant Form */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '700', color: '#333', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Points to Grant *</label>
+                  <label style={{ fontSize: '11px', fontWeight: '700', color: '#333', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>EP to Grant *</label>
                   <input
                     type="number"
                     name="pointAmount"
@@ -564,7 +564,7 @@ export const GrantPointsEnhancedPage: React.FC = () => {
                     onClick={handleGrantPoints}
                     style={{ flex: 1, padding: '10px', background: '#FF6B35', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '700' }}
                   >
-                    🎁 Grant Points
+                    🎁 Grant EP
                   </button>
                 </div>
               </div>
@@ -627,7 +627,7 @@ export const GrantPointsEnhancedPage: React.FC = () => {
                           fontWeight: '600'
                         }}
                       >
-                        Load for Grant
+                        Load for Grant EP
                       </button>
                       <button
                         onClick={() => handleDeleteGroup(group.id)}
@@ -894,4 +894,4 @@ export const GrantPointsEnhancedPage: React.FC = () => {
   );
 };
 
-export default GrantPointsEnhancedPage;
+export default GrantEPEnhancedPage;
