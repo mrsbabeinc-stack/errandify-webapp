@@ -421,14 +421,14 @@ export const CasesPage: React.FC = () => {
             <div style={{
               background: '#fff',
               borderRadius: '12px',
-              maxWidth: '600px',
+              maxWidth: '900px',
               width: '90%',
               maxHeight: '90vh',
               overflow: 'auto',
               padding: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#333', margin: 0 }}>
+                <h3 style={{ fontSize: '22px', fontWeight: '700', color: '#333', margin: 0 }}>
                   {selectedCase.case_id}: {selectedCase.subject}
                 </h3>
                 <button
@@ -447,17 +447,17 @@ export const CasesPage: React.FC = () => {
 
               {/* Dispute Notes - Submitted Evidence */}
               <div style={{ marginBottom: '16px', background: '#FFF5F0', border: '2px solid #FF6B35', borderRadius: '8px', padding: '12px' }}>
-                <h4 style={{ fontSize: '12px', fontWeight: '700', marginBottom: '12px', color: '#333', margin: '0 0 12px 0' }}>
+                <h4 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', color: '#333', margin: '0 0 12px 0' }}>
                   Dispute Submission - Original Complaint
                 </h4>
                 <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #FFD9B3' }}>
                   {selectedCase.dispute_claim ? (
                     <>
-                      <div style={{ fontSize: '11px', fontWeight: '600', color: '#FF6B35', marginBottom: '8px' }}>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#FF6B35', marginBottom: '8px' }}>
                         What the Dispute Filer Submitted:
                       </div>
                       <div style={{
-                        fontSize: '11px',
+                        fontSize: '14px',
                         color: '#333',
                         lineHeight: '1.6',
                         whiteSpace: 'pre-wrap',
@@ -471,7 +471,7 @@ export const CasesPage: React.FC = () => {
                       </div>
                     </>
                   ) : (
-                    <div style={{ fontSize: '11px', color: '#999', fontStyle: 'italic' }}>
+                    <div style={{ fontSize: '14px', color: '#999', fontStyle: 'italic' }}>
                       No dispute notes submitted
                     </div>
                   )}
@@ -480,16 +480,16 @@ export const CasesPage: React.FC = () => {
 
               {/* Dispute Details & AI Analysis */}
               <div style={{ marginBottom: '16px', background: '#f9f9f9', border: '2px solid #FFD9B3', borderRadius: '8px', padding: '12px' }}>
-                <h4 style={{ fontSize: '12px', fontWeight: '700', marginBottom: '12px', color: '#333', margin: '0 0 12px 0' }}>
+                <h4 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', color: '#333', margin: '0 0 12px 0' }}>
                   Dispute Response & AI Analysis
                 </h4>
 
                 {selectedCase.dispute_defense && (
                   <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #ddd' }}>
-                    <div style={{ fontSize: '11px', fontWeight: '600', color: '#333', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '4px' }}>
                       Response from Other Party:
                     </div>
-                    <div style={{ fontSize: '11px', color: '#666', paddingLeft: '12px', borderLeft: '3px solid #3b82f6', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '14px', color: '#666', paddingLeft: '12px', borderLeft: '3px solid #3b82f6', marginBottom: '8px' }}>
                       "{selectedCase.dispute_defense}"
                     </div>
                   </div>
@@ -497,22 +497,22 @@ export const CasesPage: React.FC = () => {
 
                 {selectedCase.ai_analysis && (
                   <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #ddd', background: '#FFF5F0', padding: '12px', borderRadius: '6px', border: '2px solid #FF6B35' }}>
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: '#FF6B35', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '15px', fontWeight: '700', color: '#FF6B35', marginBottom: '8px' }}>
                       AI Analysis & Recommendation
                     </div>
 
-                    <div style={{ fontSize: '10px', color: '#666', marginBottom: '10px', background: '#fff', padding: '8px', borderRadius: '4px', borderLeft: '3px solid #3b82f6' }}>
+                    <div style={{ fontSize: '13px', color: '#666', marginBottom: '10px', background: '#fff', padding: '8px', borderRadius: '4px', borderLeft: '3px solid #3b82f6' }}>
                       <strong>Considered from original dispute:</strong><br/>
                       "{selectedCase.dispute_claim}"
                     </div>
 
-                    <div style={{ fontSize: '10px', color: '#666', marginBottom: '10px', background: '#fff', padding: '8px', borderRadius: '4px', borderLeft: '3px solid #666' }}>
+                    <div style={{ fontSize: '13px', color: '#666', marginBottom: '10px', background: '#fff', padding: '8px', borderRadius: '4px', borderLeft: '3px solid #666' }}>
                       <strong>Considered from response:</strong><br/>
                       "{selectedCase.dispute_defense}"
                     </div>
 
                     <div style={{
-                      fontSize: '11px',
+                      fontSize: '14px',
                       color: '#333',
                       background: '#fff',
                       padding: '10px',
@@ -527,12 +527,12 @@ export const CasesPage: React.FC = () => {
 
                 {/* AI Recommendation with Sentiment */}
                 <div style={{ background: '#E8F5E9', padding: '12px', borderRadius: '4px', border: '2px solid #10b981', marginBottom: '12px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#2e7d32', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: '700', color: '#2e7d32', marginBottom: '8px' }}>
                     🎯 AI Analysis & Recommendation
                   </div>
 
                   {/* Sentiment Analysis */}
-                  <div style={{ fontSize: '10px', color: '#333', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #10b981' }}>
+                  <div style={{ fontSize: '13px', color: '#333', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #10b981' }}>
                     <div style={{ marginBottom: '4px' }}>
                       <strong>Sentiment Analysis:</strong>
                     </div>
@@ -543,25 +543,25 @@ export const CasesPage: React.FC = () => {
                   </div>
 
                   {/* Recommendation */}
-                  <div style={{ fontSize: '11px', color: '#2e7d32', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '14px', color: '#2e7d32', marginBottom: '8px' }}>
                     <strong>Recommendation:</strong> FAVOR DOER (87% confidence)
                   </div>
 
                   {/* Proposed Compensation */}
-                  <div style={{ fontSize: '11px', color: '#2e7d32', marginBottom: '8px', background: '#fff', padding: '8px', borderRadius: '3px', border: '1px solid #10b981' }}>
+                  <div style={{ fontSize: '14px', color: '#2e7d32', marginBottom: '8px', background: '#fff', padding: '8px', borderRadius: '3px', border: '1px solid #10b981' }}>
                     <strong>Proposed Compensation:</strong><br/>
                     Full Payment to Doer: SGD $50.00<br/>
-                    <span style={{ fontSize: '10px', color: '#666' }}>Net after fees: SGD $38.50</span>
+                    <span style={{ fontSize: '12px', color: '#666' }}>Net after fees: SGD $38.50</span>
                   </div>
 
                   {/* Reasoning */}
-                  <div style={{ fontSize: '10px', color: '#666', lineHeight: '1.5' }}>
+                  <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.5' }}>
                     <strong>Why:</strong> Strong evidence (GPS ±25m, 3 dated photos, 35min wait) shows genuine effort. Work inability due to customer unavailability, not doer fault.
                   </div>
                 </div>
 
                 {/* Confidence Meter */}
-                <div style={{ fontSize: '11px', color: '#666' }}>
+                <div style={{ fontSize: '14px', color: '#666' }}>
                   Confidence Level: <strong>{(selectedCase.ai_confidence * 100).toFixed(0)}%</strong>
                   <div style={{
                     width: '100%',
@@ -581,7 +581,7 @@ export const CasesPage: React.FC = () => {
               </div>
 
               {/* Participants */}
-              <div style={{ background: '#f9f9f9', padding: '12px', borderRadius: '6px', marginBottom: '16px', fontSize: '12px' }}>
+              <div style={{ background: '#f9f9f9', padding: '12px', borderRadius: '6px', marginBottom: '16px', fontSize: '14px' }}>
                 <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #ddd' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <div>
@@ -596,7 +596,7 @@ export const CasesPage: React.FC = () => {
                       title: selectedCase.asker_online ? 'Online' : 'Offline'
                     }}></span>
                   </div>
-                  <span style={{ fontSize: '10px', color: selectedCase.asker_online ? '#10b981' : '#999' }}>
+                  <span style={{ fontSize: '12px', color: selectedCase.asker_online ? '#10b981' : '#999' }}>
                     {selectedCase.asker_online ? '🟢 Online' : '⚫ Offline'}
                   </span>
                   <button
@@ -609,7 +609,7 @@ export const CasesPage: React.FC = () => {
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer',
-                      fontSize: '11px',
+                      fontSize: '13px',
                       fontWeight: '600',
                     }}
                   >
@@ -630,7 +630,7 @@ export const CasesPage: React.FC = () => {
                       title: selectedCase.doer_online ? 'Online' : 'Offline'
                     }}></span>
                   </div>
-                  <span style={{ fontSize: '10px', color: selectedCase.doer_online ? '#10b981' : '#999' }}>
+                  <span style={{ fontSize: '12px', color: selectedCase.doer_online ? '#10b981' : '#999' }}>
                     {selectedCase.doer_online ? '🟢 Online' : '⚫ Offline'}
                   </span>
                   <button
@@ -660,23 +660,48 @@ export const CasesPage: React.FC = () => {
                 <select
                   id="statusSelect"
                   value={selectedCase.status}
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const newStatus = e.target.value;
-                    setCaseTimeline([...caseTimeline, {
-                      timestamp: new Date().toISOString(),
-                      action: `Status changed to ${newStatus}`,
-                      handler: 'Admin User',
-                    }]);
-                    showToast(`Case status updated to ${newStatus}`, 'success');
 
-                    // Show AI prompt suggestion
-                    const prompts: { [key: string]: string } = {
-                      'in_progress': '💡 AI Suggestion: You\'re now investigating. Consider: Have you reviewed all chat messages? Do you have GPS data? Are there photos? Do you need to contact either party?',
-                      'resolved': '💡 AI Suggestion: Time to resolve! Did you: Review all evidence? Determine fair compensation (full/partial/refund)? Prepare reasoning for transparency? Consider platform & Stripe fees?',
-                      'appealed': '💡 AI Suggestion: Case appealed to L3. This needs senior review. Escalate to senior admin team with full case context.',
-                    };
-                    if (prompts[newStatus]) {
-                      showToast(prompts[newStatus], 'info');
+                    // Update local state
+                    const updatedCase = { ...selectedCase, status: newStatus };
+                    setSelectedCase(updatedCase);
+                    setCases(cases.map(c => c.id === selectedCase.id ? updatedCase : c));
+
+                    // Save to database
+                    try {
+                      const token = localStorage.getItem('token');
+                      await fetch(`/api/cases/${selectedCase.id}`, {
+                        method: 'PATCH',
+                        headers: {
+                          'Authorization': `Bearer ${token}`,
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: newStatus })
+                      });
+
+                      setCaseTimeline([...caseTimeline, {
+                        timestamp: new Date().toISOString(),
+                        action: `Status changed to ${newStatus}`,
+                        handler: 'Admin User',
+                      }]);
+                      showToast(`Case status updated to ${newStatus}`, 'success');
+
+                      // Show AI prompt suggestion
+                      const prompts: { [key: string]: string } = {
+                        'in_progress': '💡 AI Suggestion: You\'re now investigating. Consider: Have you reviewed all chat messages? Do you have GPS data? Are there photos? Do you need to contact either party?',
+                        'resolved': '💡 AI Suggestion: Time to resolve! Did you: Review all evidence? Determine fair compensation (full/partial/refund)? Prepare reasoning for transparency? Consider platform & Stripe fees?',
+                        'appealed': '💡 AI Suggestion: Case appealed to L3. This needs senior review. Escalate to senior admin team with full case context.',
+                      };
+                      if (prompts[newStatus]) {
+                        showToast(prompts[newStatus], 'info');
+                      }
+                    } catch (error) {
+                      console.error('Failed to update case status:', error);
+                      showToast('Failed to update case status', 'error');
+                      // Revert the UI change
+                      setSelectedCase(selectedCase);
+                      setCases(cases);
                     }
                   }}
                   style={{
@@ -1493,6 +1518,30 @@ Errandify Resolution Team`}
 
                       setIsSubmittingResolution(true);
                       try {
+                        const token = localStorage.getItem('token');
+                        const resolutionData = {
+                          status: 'resolved',
+                          resolution_type: compensationType,
+                          compensation_amount: amount ? parseFloat(amount) : 0,
+                          fee_assignment: feeAssignment,
+                          resolution_notes: resolution,
+                          resolved_at: new Date().toISOString(),
+                        };
+
+                        // Save to database
+                        const response = await fetch(`/api/cases/${selectedCase.id}`, {
+                          method: 'PATCH',
+                          headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify(resolutionData)
+                        });
+
+                        if (!response.ok) {
+                          throw new Error('Failed to save resolution');
+                        }
+
                         const resolutionText = `Decision: ${compensationType.toUpperCase()}${amount ? ` | Amount: SGD $${amount}` : ''}\nFees Paid By: ${feeAssignment === 'doer' ? 'Doer' : 'Asker'}\nReasoning: ${resolution}`;
                         const newEntry = {
                           timestamp: new Date().toISOString(),
@@ -1501,6 +1550,11 @@ Errandify Resolution Team`}
                           note: resolutionText,
                         };
                         setCaseTimeline([...caseTimeline, newEntry]);
+
+                        // Update local state
+                        const updatedCase = { ...selectedCase, status: 'resolved' };
+                        setCases(cases.map(c => c.id === selectedCase.id ? updatedCase : c));
+
                         showToast(`Case resolved: ${compensationType.toUpperCase()} (Fees: ${feeAssignment})`, 'success');
                         setResolution('');
                         (document.getElementById('compensationType') as HTMLInputElement).value = '';
@@ -1509,8 +1563,8 @@ Errandify Resolution Team`}
                           setShowCaseDetail(false);
                           fetchCases();
                         }, 1500);
-                      } catch (err) {
-                        showToast('Failed to resolve case', 'error');
+                      } catch (err: any) {
+                        showToast(err.message || 'Failed to resolve case', 'error');
                       } finally {
                         setIsSubmittingResolution(false);
                       }

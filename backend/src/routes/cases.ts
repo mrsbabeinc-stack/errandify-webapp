@@ -365,4 +365,94 @@ router.get('/stats/summary', async (req: Request, res: Response) => {
   }
 });
 
+// PATCH /api/cases/:id - Update case status or resolution
+router.patch('/:id', async (req: Request, res: Response) => {
+  try {
+    const userId = extractUserId(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { id } = req.params;
+    const {
+      status,
+      resolution_type,
+      compensation_amount,
+      fee_assignment,
+      resolution_notes,
+      resolved_at
+    } = req.body;
+
+    // Build the update query dynamically
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramCount = 1;
+
+    if (status) {
+      updates.push(`status = $${paramCount}`);
+      values.push(status);
+      paramCount++;
+    }
+
+    if (resolution_type) {
+      updates.push(`resolution_type = $${paramCount}`);
+      values.push(resolution_type);
+      paramCount++;
+    }
+
+    if (compensation_amount !== undefined) {
+      updates.push(`compensation_amount = $${paramCount}`);
+      values.push(compensation_amount);
+      paramCount++;
+    }
+
+    if (fee_assignment) {
+      updates.push(`fee_assignment = $${paramCount}`);
+      values.push(fee_assignment);
+      paramCount++;
+    }
+
+    if (resolution_notes) {
+      updates.push(`resolution_notes = $${paramCount}`);
+      values.push(resolution_notes);
+      paramCount++;
+    }
+
+    if (resolved_at) {
+      updates.push(`resolved_at = $${paramCount}`);
+      values.push(resolved_at);
+      paramCount++;
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    updates.push(`updated_at = NOW()`);
+    values.push(id);
+
+    const query = `
+      UPDATE cases
+      SET ${updates.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *
+    `;
+
+    const result = await db.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Case not found' });
+    }
+
+    res.json({
+      success: true,
+      case: result.rows[0],
+      message: 'Case updated successfully'
+    });
+  } catch (error) {
+    console.error('Update case error:', error);
+    res.status(500).json({ error: 'Failed to update case' });
+  }
+});
+
 export default router;
