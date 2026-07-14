@@ -597,77 +597,73 @@ export default function NotificationsManagement() {
               </button>
             </div>
           </div>
-
-            </>
+          </>
           )}
 
           {activeTab === 'groups' && (
             <>
-            {/* Groups Management */}
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#333', marginBottom: '16px' }}>
-                👥 Notification Groups
-              </h3>
-              <div style={{ display: 'grid', gap: '12px' }}>
-                {groups.map(group => (
-                  <div key={group.id} style={{
-                    padding: '16px',
-                    background: 'white',
-                    border: '2px solid #FFD9B3',
-                    borderRadius: '8px',
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                      <div>
-                        <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
-                          {group.name}
+              {/* Groups Management */}
+              <div>
+                <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#333', marginBottom: '16px' }}>
+                  👥 Notification Groups
+                </h3>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  {groups.map(group => (
+                    <div key={group.id} style={{
+                      padding: '16px',
+                      background: 'white',
+                      border: '2px solid #FFD9B3',
+                      borderRadius: '8px',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                        <div>
+                          <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
+                            {group.name}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>
+                            {group.description}
+                          </div>
                         </div>
-                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>
-                          {group.description}
+                        <div style={{ fontSize: '13px', fontWeight: '700', color: '#FF6B35' }}>
+                          {group.userCount.toLocaleString()} users
                         </div>
                       </div>
-                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#FF6B35' }}>
-                        {group.userCount.toLocaleString()} users
+                      <div style={{ fontSize: '11px', color: '#999', marginBottom: '8px' }}>
+                        Channels: {(group.channels || []).join(', ').toUpperCase()}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <button style={{
+                          padding: '6px 12px',
+                          background: '#2196F3',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                        }}>
+                          ✏️ Edit
+                        </button>
+                        <button style={{
+                          padding: '6px 12px',
+                          background: '#F44336',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                        }}>
+                          🗑️ Delete
+                        </button>
                       </div>
                     </div>
-                    <div style={{ fontSize: '11px', color: '#999', marginBottom: '8px' }}>
-                      Channels: {(group.channels || []).join(', ').toUpperCase()}
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                      <button style={{
-                        padding: '6px 12px',
-                        background: '#2196F3',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                      }}>
-                        ✏️ Edit
-                      </button>
-                      <button style={{
-                        padding: '6px 12px',
-                        background: '#F44336',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                      }}>
-                        🗑️ Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </>
-          )}
 
-          {activeTab === 'groups' && (
-            <>
-              {/* Search & Filter */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+              {/* Search & Filter for Notifications */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px', marginTop: '24px' }}>
                 <input
                   type="text"
                   placeholder="Search notifications..."
