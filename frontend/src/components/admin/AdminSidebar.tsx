@@ -113,29 +113,46 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
   const navigate = useNavigate();
 
   // Determine which section should be expanded based on current route
-  const getActiveSection = () => {
+  const getActiveSections = () => {
     const pathname = location.pathname;
+    const activeSections = new Set<string>();
 
     for (const item of menuItems) {
       if (item.children) {
         // Check if any child matches current path
-        const hasActiveChild = item.children.some(child => child.path && pathname.includes(child.path));
+        const hasActiveChild = item.children.some(child => {
+          if (child.children) {
+            // Check grandchildren too (level-2 subsections)
+            return child.children.some(grandchild => grandchild.path && pathname.includes(grandchild.path));
+          }
+          return child.path && pathname.includes(child.path);
+        });
         if (hasActiveChild) {
-          return item.id;
+          activeSections.add(item.id);
+          // Also add the active child section
+          const activeChild = item.children.find(child => {
+            if (child.children) {
+              return child.children.some(grandchild => grandchild.path && pathname.includes(grandchild.path));
+            }
+            return child.path && pathname.includes(child.path);
+          });
+          if (activeChild) {
+            activeSections.add(activeChild.id);
+          }
         }
       }
     }
-    return 'dashboard'; // Default to dashboard
+    return activeSections;
   };
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set([getActiveSection()])
+    new Set(getActiveSections())
   );
 
-  // Update expanded section when route changes - add to existing instead of replacing
+  // Keep sections expanded when route changes - don't collapse
   React.useEffect(() => {
-    const activeSection = getActiveSection();
-    setExpandedSections(prev => new Set([...prev, activeSection]));
+    const activeSections = getActiveSections();
+    setExpandedSections(prev => new Set([...prev, ...activeSections]));
   }, [location.pathname]);
 
   const toggleSection = (id: string) => {
