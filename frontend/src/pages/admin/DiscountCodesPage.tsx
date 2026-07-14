@@ -347,14 +347,17 @@ export const DiscountCodesPage: React.FC = () => {
                     <td style={{ padding: '6px 8px', textAlign: 'center' }}>
                       <span style={{
                         display: 'inline-block',
-                        padding: '2px 6px',
-                        background: getStatusColor(code.status) + '30',
+                        padding: '3px 6px',
+                        background: getStatusColor(code.status) + '20',
                         color: getStatusColor(code.status),
                         borderRadius: '3px',
-                        fontSize: '9px',
-                        fontWeight: '600'
-                      }}>
-                        {code.status === 'active' ? '✓' : code.status === 'expired' ? '✕' : '○'}
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        whiteSpace: 'nowrap'
+                      }}
+                      title={code.status === 'active' ? 'Active - code is usable' : code.status === 'expired' ? 'Expired - no longer valid' : 'Inactive - paused or not started'}
+                      >
+                        {code.status === 'active' ? '✓ Active' : code.status === 'expired' ? '✕ Expired' : '○ Inactive'}
                       </span>
                     </td>
                     <td style={{ padding: '6px 4px', textAlign: 'center' }}>
