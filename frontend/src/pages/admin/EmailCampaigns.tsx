@@ -814,9 +814,8 @@ Next: Generate image in the Image Generator, then select a text variant to load.
               </button>
             </div>
           )}
-            </div>
-          )}
         </div>
+      )}
 
       {activeTab === 'campaigns' && (
         <div style={{ marginBottom: '24px' }}>
