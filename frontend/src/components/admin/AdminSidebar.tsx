@@ -27,7 +27,8 @@ const menuItems: MenuItem[] = [
     icon: '⚖️',
     children: [
       { id: 'disputes', label: 'Disputes (L1/L2/L3)', icon: '⚖️', path: '/admin/dashboard/disputes' },
-      { id: 'cases', label: 'Cases Management', icon: '📋', path: '/admin/cases' },
+      { id: 'cases-money', label: 'Case Management ($$$)', icon: '💰', path: '/admin/cases' },
+      { id: 'cases-rest', label: 'Case Management (Rest)', icon: '🔧', path: '/admin/cases/rest' },
     ]
   },
   {

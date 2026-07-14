@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { useToast, ToastContainer } from '../../components/Toast';
 import { CaseDisputeService } from '../../services/CaseDisputeService';
@@ -36,7 +36,9 @@ interface LinkedDispute {
 
 export const CasesPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toasts, showToast, removeToast } = useToast();
+  const isRestCases = location.pathname.includes('/rest');
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -197,7 +199,18 @@ export const CasesPage: React.FC = () => {
     }
   };
 
-  const filteredCases = filter === 'all' ? cases : cases.filter(c => c.status === filter);
+  // Case types involving money/compensation
+  const moneyCaseTypes = ['payment_dispute', 'refund_request', 'compensation_claim'];
+
+  // Filter by status and by case type (money vs rest)
+  let displayCases = filter === 'all' ? cases : cases.filter(c => c.status === filter);
+
+  // Apply money vs rest filter based on route
+  displayCases = isRestCases
+    ? displayCases.filter(c => !moneyCaseTypes.includes(c.case_type))
+    : displayCases.filter(c => moneyCaseTypes.includes(c.case_type));
+
+  const filteredCases = displayCases;
 
   return (
     <AdminLayout>
@@ -206,10 +219,10 @@ export const CasesPage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
             <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#333', marginBottom: '4px' }}>
-              📋 Case Management
+              {isRestCases ? '🔧 Case Management (Rest)' : '💰 Case Management ($$$)'}
             </h2>
             <p style={{ fontSize: '14px', color: '#666' }}>
-              Track and manage disputes with auto-generated case IDs
+              {isRestCases ? 'Manage non-payment related cases and issues' : 'Track and manage payment-related disputes with compensation'}
             </p>
           </div>
           <button

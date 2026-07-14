@@ -415,6 +415,7 @@ export default function App() {
         <Route path="/admin/dashboard/operations" element={isAuthenticated && isAdmin ? <OperationsPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/regional" element={isAuthenticated && isAdmin ? <RegionalPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/cases" element={isAuthenticated && isAdmin ? <CasesPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/cases/rest" element={isAuthenticated && isAdmin ? <CasesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/categories" element={isAuthenticated && isAdmin ? <CategoriesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/vouchers" element={isAuthenticated && isAdmin ? <VouchersPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/points" element={isAuthenticated && isAdmin ? <AdminErrandifyPointsPage /> : <Navigate to="/login" replace />} />
