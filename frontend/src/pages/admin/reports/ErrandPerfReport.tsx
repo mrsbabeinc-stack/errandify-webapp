@@ -95,33 +95,45 @@ export const ErrandPerfReport: React.FC = () => {
           </div>
 
           <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>Top Categories</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '12px', color: '#333' }}>Cleaning</span>
-                  <span style={{ fontSize: '12px', fontWeight: '600' }}>850</span>
-                </div>
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '12px', color: '#333' }}>Delivery</span>
-                  <span style={{ fontSize: '12px', fontWeight: '600' }}>720</span>
-                </div>
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '12px', color: '#333' }}>Shopping</span>
-                  <span style={{ fontSize: '12px', fontWeight: '600' }}>540</span>
-                </div>
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '12px', color: '#333' }}>Education</span>
-                  <span style={{ fontSize: '12px', fontWeight: '600' }}>380</span>
-                </div>
-              </div>
-            </div>
+            <h3 style={{ marginTop: 0, marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>Top Categories (Bar Chart)</h3>
+            <svg width="100%" height="240" viewBox="0 0 500 240" style={{ marginTop: '12px' }}>
+              {/* Y-axis */}
+              <line x1="40" y1="20" x2="40" y2="200" stroke="#ddd" strokeWidth="2"/>
+              {/* X-axis */}
+              <line x1="40" y1="200" x2="480" y2="200" stroke="#ddd" strokeWidth="2"/>
+
+              {/* Y-axis labels */}
+              <text x="35" y="205" fontSize="10" textAnchor="end" fill="#999">0</text>
+              <text x="35" y="155" fontSize="10" textAnchor="end" fill="#999">300</text>
+              <text x="35" y="105" fontSize="10" textAnchor="end" fill="#999">600</text>
+              <text x="35" y="55" fontSize="10" textAnchor="end" fill="#999">900</text>
+
+              {/* Bars */}
+              {/* Cleaning - 850 */}
+              <rect x="70" y="72" width="60" height="128" fill="#FF6B35" opacity="0.8" rx="4"/>
+              <text x="100" y="215" fontSize="11" textAnchor="middle" fill="#333" fontWeight="500">Cleaning</text>
+              <text x="100" y="60" fontSize="12" textAnchor="middle" fill="#FF6B35" fontWeight="700">850</text>
+
+              {/* Delivery - 720 */}
+              <rect x="150" y="92" width="60" height="108" fill="#2196F3" opacity="0.8" rx="4"/>
+              <text x="180" y="215" fontSize="11" textAnchor="middle" fill="#333" fontWeight="500">Delivery</text>
+              <text x="180" y="80" fontSize="12" textAnchor="middle" fill="#2196F3" fontWeight="700">720</text>
+
+              {/* Shopping - 540 */}
+              <rect x="230" y="118" width="60" height="82" fill="#4CAF50" opacity="0.8" rx="4"/>
+              <text x="260" y="215" fontSize="11" textAnchor="middle" fill="#333" fontWeight="500">Shopping</text>
+              <text x="260" y="106" fontSize="12" textAnchor="middle" fill="#4CAF50" fontWeight="700">540</text>
+
+              {/* Education - 380 */}
+              <rect x="310" y="144" width="60" height="56" fill="#FFC107" opacity="0.8" rx="4"/>
+              <text x="340" y="215" fontSize="11" textAnchor="middle" fill="#333" fontWeight="500">Education</text>
+              <text x="340" y="132" fontSize="12" textAnchor="middle" fill="#FFC107" fontWeight="700">380</text>
+
+              {/* Others - 280 */}
+              <rect x="390" y="158" width="60" height="42" fill="#9C27B0" opacity="0.8" rx="4"/>
+              <text x="420" y="215" fontSize="11" textAnchor="middle" fill="#333" fontWeight="500">Others</text>
+              <text x="420" y="146" fontSize="12" textAnchor="middle" fill="#9C27B0" fontWeight="700">280</text>
+            </svg>
           </div>
         </div>
       </div>

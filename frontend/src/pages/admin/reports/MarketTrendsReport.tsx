@@ -79,11 +79,75 @@ export const MarketTrendsReport: React.FC = () => {
           ))}
         </div>
 
-        <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c', minHeight: '300px' }}>
-          <h3 style={{ marginTop: 0, marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>Trend Timeline</h3>
-          <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>
-            [Timeline visualization]
-          </div>
+        <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c', minHeight: '350px' }}>
+          <h3 style={{ marginTop: 0, marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>6-Month Trend Timeline</h3>
+          <svg width="100%" height="280" viewBox="0 0 800 280" style={{ marginTop: '12px' }}>
+            {/* Grid */}
+            <defs>
+              <pattern id="trendGrid" width="100" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 100 0 L 0 0 0 40" fill="none" stroke="#f0f0f0" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="800" height="280" fill="url(#trendGrid)" />
+
+            {/* Axes */}
+            <line x1="40" y1="260" x2="780" y2="260" stroke="#ddd" strokeWidth="2"/>
+            <line x1="40" y1="20" x2="40" y2="260" stroke="#ddd" strokeWidth="2"/>
+
+            {/* Y-axis labels */}
+            <text x="30" y="265" fontSize="11" textAnchor="end" fill="#999">0%</text>
+            <text x="30" y="195" fontSize="11" textAnchor="end" fill="#999">10%</text>
+            <text x="30" y="125" fontSize="11" textAnchor="end" fill="#999">20%</text>
+            <text x="30" y="55" fontSize="11" textAnchor="end" fill="#999">30%</text>
+
+            {/* Trend line 1 - Cleaning */}
+            <polyline
+              points="80,210 160,180 240,150 320,130 400,110 480,90 560,70"
+              fill="none"
+              stroke="#FF6B35"
+              strokeWidth="2.5"
+            />
+
+            {/* Trend line 2 - Delivery */}
+            <polyline
+              points="80,240 160,220 240,200 320,190 400,180 480,170 560,160"
+              fill="none"
+              stroke="#2196F3"
+              strokeWidth="2.5"
+            />
+
+            {/* Trend line 3 - Education */}
+            <polyline
+              points="80,250 160,240 240,225 320,210 400,195 480,180 560,165"
+              fill="none"
+              stroke="#4CAF50"
+              strokeWidth="2.5"
+            />
+
+            {/* Data points for Cleaning */}
+            {[80, 160, 240, 320, 400, 480, 560].map(x => (
+                <circle key={`c${x}`} cx={x} cy={[210, 180, 150, 130, 110, 90, 70][[80, 160, 240, 320, 400, 480, 560].indexOf(x)]} r="3" fill="#FF6B35" />
+              ))}
+
+            {/* X-axis labels */}
+            <text x="80" y="275" fontSize="11" textAnchor="middle" fill="#999">Feb</text>
+            <text x="160" y="275" fontSize="11" textAnchor="middle" fill="#999">Mar</text>
+            <text x="240" y="275" fontSize="11" textAnchor="middle" fill="#999">Apr</text>
+            <text x="320" y="275" fontSize="11" textAnchor="middle" fill="#999">May</text>
+            <text x="400" y="275" fontSize="11" textAnchor="middle" fill="#999">Jun</text>
+            <text x="480" y="275" fontSize="11" textAnchor="middle" fill="#999">Jul</text>
+            <text x="560" y="275" fontSize="11" textAnchor="middle" fill="#999">Aug</text>
+
+            {/* Legend */}
+            <circle cx="620" cy="100" r="3" fill="#FF6B35"/>
+            <text x="630" y="104" fontSize="11" fill="#333">Cleaning (↑23%)</text>
+
+            <circle cx="620" cy="130" r="3" fill="#2196F3"/>
+            <text x="630" y="134" fontSize="11" fill="#333">Delivery (↑18%)</text>
+
+            <circle cx="620" cy="160" r="3" fill="#4CAF50"/>
+            <text x="630" y="164" fontSize="11" fill="#333">Education (↑12%)</text>
+          </svg>
         </div>
       </div>
     </AdminLayout>
