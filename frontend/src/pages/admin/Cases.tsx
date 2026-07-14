@@ -1000,9 +1000,9 @@ export const CasesPage: React.FC = () => {
                           </label>
                           <input
                             type="number"
-                            placeholder="e.g., 38.50"
+                            placeholder=""
                             id="doerAmount"
-                            defaultValue="0.00"
+                            defaultValue=""
                             step="0.01"
                             min="0"
                             onChange={(e) => {
@@ -1041,19 +1041,19 @@ export const CasesPage: React.FC = () => {
                                 (document.getElementById('totalAddUpWarning') as HTMLElement).style.display = 'none';
                               }
                             }}
-                            style={{ width: '100%', padding: '8px', border: '2px solid #10b981', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}
+                            style={{ width: '100%', padding: '8px', border: '2px solid #10b981', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#999' }}
                           />
                         </div>
 
                         <div>
-                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
+                          <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
                             Asker Refund (SGD)
                           </label>
                           <input
                             type="number"
-                            placeholder="e.g., 20.00"
+                            placeholder=""
                             id="askerAmount"
-                            defaultValue="0.00"
+                            defaultValue=""
                             step="0.01"
                             min="0"
                             onChange={(e) => {
@@ -1092,7 +1092,7 @@ export const CasesPage: React.FC = () => {
                                 (document.getElementById('totalAddUpWarning') as HTMLElement).style.display = 'none';
                               }
                             }}
-                            style={{ width: '100%', padding: '8px', border: '2px solid #ef4444', borderRadius: '6px', fontSize: '14px', fontWeight: '600' }}
+                            style={{ width: '100%', padding: '8px', border: '2px solid #ef4444', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#999' }}
                           />
                         </div>
                       </div>
@@ -1105,14 +1105,14 @@ export const CasesPage: React.FC = () => {
                           background: '#fff',
                           borderRadius: '6px',
                           border: '1px solid #ddd',
-                          fontSize: '14px',
+                          fontSize: '13px',
                           fontWeight: '600',
-                          color: '#333',
+                          color: '#999',
                           textAlign: 'center',
                           marginBottom: '12px',
                         }}
                       >
-                        Total: SGD $0.00
+                        SGD 0.00
                       </div>
 
                       {/* Fee Allocation - Compact Design */}
