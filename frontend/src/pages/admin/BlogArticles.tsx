@@ -848,10 +848,10 @@ CRITICAL: Ensure diverse representation, inclusive imagery, no stereotypes.`;
                           👁️ {article.views.toLocaleString()} views
                         </div>
                         <div style={{ background: '#FFF8F5', padding: '6px', borderRadius: '4px' }}>
-                          🔍 {article.seoKeywords.split(',').length} keywords
+                          🔍 {(article.seoKeywords || '').split(',').filter(k => k.trim()).length} keywords
                         </div>
                         <div style={{ background: '#FFF8F5', padding: '6px', borderRadius: '4px' }}>
-                          📝 {article.content.split(' ').length} words
+                          📝 {(article.content || '').split(' ').length} words
                         </div>
                       </div>
                     </div>
