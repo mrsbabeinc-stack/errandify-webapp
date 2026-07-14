@@ -825,99 +825,66 @@ export const CasesPage: React.FC = () => {
                     </ul>
                   </div>
 
-                  {/* Tab-Style Resolution Selection (Compact) */}
+                  {/* Unified Decision & Fee Assignment Cards */}
                   <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#333' }}>
-                      Decision & Fees (Tab Style)
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '10px', color: '#333' }}>
+                      Decision & Fee Assignment (Select One)
                     </label>
 
-                    {/* Tab Buttons - Single Line Compact */}
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', borderBottom: '2px solid #eee', paddingBottom: '8px' }}>
+                    {/* Decision + Fee Cards - Each Shows Both */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
                       {[
-                        { key: 'full', label: 'Full Payment', color: '#10b981' },
-                        { key: 'partial', label: 'Split', color: '#f59e0b' },
-                        { key: 'refund', label: 'Refund', color: '#3b82f6' },
-                        { key: 'escalate', label: 'Escalate L3', color: '#6366f1' },
+                        {
+                          key: 'full',
+                          label: 'Full Payment',
+                          color: '#10b981',
+                          feeDisplay: (amount: number) => `Gross: $${amount.toFixed(2)} | Platform: -$${(amount*0.20).toFixed(2)} | Stripe: -$${(amount*0.03).toFixed(2)} = $${(amount*0.77).toFixed(2)}`
+                        },
+                        {
+                          key: 'partial',
+                          label: 'Split 60/40',
+                          color: '#f59e0b',
+                          feeDisplay: (amount: number) => `Doer 60%: $${(amount*0.60).toFixed(2)} - fees = $${((amount*0.60)*0.77).toFixed(2)} | Asker 40%: $${(amount*0.40).toFixed(2)} refund`
+                        },
+                        {
+                          key: 'refund',
+                          label: 'Full Refund',
+                          color: '#3b82f6',
+                          feeDisplay: (amount: number) => `Asker refund: $${amount.toFixed(2)} | Doer: $0 | No Stripe fee (escrow release)`
+                        },
+                        {
+                          key: 'escalate',
+                          label: 'Escalate L3',
+                          color: '#6366f1',
+                          feeDisplay: () => `No decision yet. Senior admin review required.`
+                        },
                       ].map(option => (
                         <button
                           key={option.key}
                           onClick={() => {
                             setSelectedResolution(option.key as any);
                             (document.getElementById('compensationType') as HTMLInputElement).value = option.key;
-
-                            // Update fee breakdown based on selection
-                            const amount = 50;
-                            const breakdown = document.getElementById('feeBreakdown');
-
-                            if (option.key === 'full') {
-                              const platformFee = amount * 0.20;
-                              const stripeFee = amount * 0.03;
-                              const netAmount = amount - platformFee - stripeFee;
-                              if (breakdown) {
-                                breakdown.innerHTML = `
-                                  <div style="font-size: 11px; color: #2e7d32; padding: 10px; background: #E8F5E9; border: 1px solid #10b981; border-radius: 4px;">
-                                    <strong>Full Payment to Doer</strong><br/>
-                                    Gross: SGD $${amount.toFixed(2)}<br/>
-                                    Platform Fee (20%): -SGD $${platformFee.toFixed(2)}<br/>
-                                    Stripe Fee (3%): -SGD $${stripeFee.toFixed(2)} (Charged - transaction processed)<br/>
-                                    <strong style="border-top: 1px solid #10b981; padding-top: 6px; margin-top: 6px; display: block;">
-                                      Net to Doer: SGD $${netAmount.toFixed(2)}
-                                    </strong>
-                                  </div>
-                                `;
-                              }
-                            } else if (option.key === 'partial') {
-                              const doerAmount = (amount * 60) / 100;
-                              const askerAmount = amount - doerAmount;
-                              const platformFee = doerAmount * 0.20;
-                              const stripeFee = doerAmount * 0.03;
-                              const netDoer = doerAmount - platformFee - stripeFee;
-                              if (breakdown) {
-                                breakdown.innerHTML = `
-                                  <div style="font-size: 11px; color: #333; padding: 10px; background: #FFF3E0; border: 1px solid #FFB74D; border-radius: 4px;">
-                                    <strong>Split (60% Doer / 40% Asker)</strong><br/>
-                                    Doer: SGD $${doerAmount.toFixed(2)} - Fees = SGD $${netDoer.toFixed(2)}<br/>
-                                    Asker refund: SGD $${askerAmount.toFixed(2)} (no fees)
-                                  </div>
-                                `;
-                              }
-                            } else if (option.key === 'refund') {
-                              if (breakdown) {
-                                breakdown.innerHTML = `
-                                  <div style="font-size: 11px; color: #0284c7; padding: 10px; background: #E3F2FD; border: 1px solid #3b82f6; border-radius: 4px;">
-                                    <strong>Full Refund to Asker</strong><br/>
-                                    Refund: SGD $${amount.toFixed(2)}<br/>
-                                    <span style="font-size: 10px; color: #666;">(No Stripe fee - escrow released, not charged)</span>
-                                  </div>
-                                `;
-                              }
-                            } else if (option.key === 'escalate') {
-                              if (breakdown) {
-                                breakdown.innerHTML = `
-                                  <div style="font-size: 11px; color: #6366f1; padding: 10px; background: #EDE7F6; border: 1px solid #6366f1; border-radius: 4px;">
-                                    <strong>Escalate to L3 Senior Admin</strong><br/>
-                                    <span style="font-size: 10px; color: #666;">Case requires senior review. No payment decision made.</span>
-                                  </div>
-                                `;
-                              }
-                            }
-
                             showToast(`${option.label} selected`, 'success');
                           }}
                           style={{
-                            padding: '8px 14px',
-                            background: selectedResolution === option.key ? option.color : '#f5f5f5',
+                            padding: '12px',
+                            background: selectedResolution === option.key ? option.color : '#fff',
                             color: selectedResolution === option.key ? 'white' : '#333',
-                            border: 'none',
-                            borderRadius: '4px',
+                            border: `2px solid ${selectedResolution === option.key ? option.color : '#ddd'}`,
+                            borderRadius: '8px',
                             cursor: 'pointer',
                             fontWeight: '600',
                             fontSize: '12px',
-                            whiteSpace: 'nowrap',
+                            textAlign: 'left',
                             transition: 'all 0.2s',
                           }}
                         >
-                          {option.label}
+                          <div style={{ fontWeight: '700', marginBottom: '4px' }}>
+                            {option.label}
+                          </div>
+                          <div style={{ fontSize: '10px', opacity: 0.9 }}>
+                            {option.feeDisplay(50)}
+                          </div>
                         </button>
                       ))}
                     </div>
