@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 
 export const GrantPointsEnhancedPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'grant' | 'history' | 'campaigns'>('grant');
+  const [activeTab, setActiveTab] = useState<'grant' | 'history' | 'campaigns' | 'groups'>('grant');
   const [grantTarget, setGrantTarget] = useState<'individual' | 'company' | 'group'>('individual');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
   const [selectedUsers, setSelectedUsers] = useState<Set<number>>(new Set());
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupDescription, setNewGroupDescription] = useState('');
 
   const [formData, setFormData] = useState({
     pointAmount: '',
@@ -16,6 +19,7 @@ export const GrantPointsEnhancedPage: React.FC = () => {
     startDate: '',
     endDate: '',
     groupName: '',
+    grantDate: '',
   });
 
   const [showCelebration, setShowCelebration] = useState(false);
@@ -42,6 +46,11 @@ export const GrantPointsEnhancedPage: React.FC = () => {
     { id: 1, name: 'Super Nanny Reward Q3', targetGroup: 'super_nanny', pointAmount: 100, startDate: '2026-07-01', endDate: '2026-09-30', usersReached: 234, status: 'active' },
     { id: 2, name: 'New User Welcome Bonus', targetGroup: 'new_users', pointAmount: 50, startDate: '2026-06-01', endDate: '2026-12-31', usersReached: 512, status: 'active' },
     { id: 3, name: 'Summer Campaign 2026', targetGroup: 'all', pointAmount: 75, startDate: '2026-06-21', endDate: '2026-08-31', usersReached: 1200, status: 'scheduled' },
+  ]);
+
+  const [savedGroups, setSavedGroups] = useState([
+    { id: 1, name: 'Q3 Super Nannies', description: 'All super nanny users for Q3 bonus', userIds: [1, 3, 5], createdDate: '2026-07-10' },
+    { id: 2, name: 'Premium Members', description: 'Premium tier users', userIds: [1, 3], createdDate: '2026-07-09' },
   ]);
 
   const filteredUsers = users.filter(u => {
@@ -102,6 +111,52 @@ export const GrantPointsEnhancedPage: React.FC = () => {
     setTimeout(() => setShowCelebration(false), 4000);
   };
 
+  const handleCreateGroup = () => {
+    if (!newGroupName.trim()) {
+      alert('🔔 Please enter a group name.');
+      return;
+    }
+
+    if (selectedUsers.size === 0) {
+      alert('🔔 Please select users for this group.');
+      return;
+    }
+
+    const newGroup = {
+      id: Math.max(...savedGroups.map(g => g.id), 0) + 1,
+      name: newGroupName,
+      description: newGroupDescription,
+      userIds: Array.from(selectedUsers),
+      createdDate: new Date().toISOString().split('T')[0]
+    };
+
+    setSavedGroups([...savedGroups, newGroup]);
+    alert(`✅ Group "${newGroupName}" created with ${selectedUsers.size} users!`);
+
+    setNewGroupName('');
+    setNewGroupDescription('');
+    setShowCreateGroupModal(false);
+    setSelectedUsers(new Set());
+    setSearchQuery('');
+  };
+
+  const handleLoadSavedGroup = (groupId: number) => {
+    const group = savedGroups.find(g => g.id === groupId);
+    if (group) {
+      setSelectedUsers(new Set(group.userIds));
+      setFormData(prev => ({ ...prev, groupName: group.name }));
+      alert(`✅ Loaded group "${group.name}" with ${group.userIds.length} users`);
+    }
+  };
+
+  const handleDeleteGroup = (groupId: number) => {
+    const group = savedGroups.find(g => g.id === groupId);
+    if (window.confirm(`Delete group "${group?.name}"?`)) {
+      setSavedGroups(savedGroups.filter(g => g.id !== groupId));
+      alert('✅ Group deleted');
+    }
+  };
+
   const handleGrantPoints = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -135,12 +190,14 @@ export const GrantPointsEnhancedPage: React.FC = () => {
       triggerCelebration(selectedUser.name, Number(formData.pointAmount));
     } else if (grantTarget === 'company') {
       triggerCelebration(`${selectedCompany.name} (${selectedUsers.size || selectedCompany.users} users)`, Number(formData.pointAmount));
+    } else if (grantTarget === 'group') {
+      triggerCelebration(`${formData.groupName || 'Group'} (${selectedUsers.size} users)`, Number(formData.pointAmount));
     }
 
     setSelectedUser(null);
     setSelectedCompany(null);
     setSelectedUsers(new Set());
-    setFormData({ pointAmount: '', description: '', message: '', startDate: '', endDate: '', groupName: '' });
+    setFormData({ pointAmount: '', description: '', message: '', startDate: '', endDate: '', groupName: '', grantDate: '' });
   };
 
   return (
@@ -158,7 +215,7 @@ export const GrantPointsEnhancedPage: React.FC = () => {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid #ffe6d9', paddingBottom: '0' }}>
-          {['grant', 'campaigns', 'history'].map(tab => (
+          {['grant', 'groups', 'campaigns', 'history'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
@@ -176,6 +233,7 @@ export const GrantPointsEnhancedPage: React.FC = () => {
               }}
             >
               {tab === 'grant' && '✏️ Grant Points'}
+              {tab === 'groups' && '👥 Saved Groups'}
               {tab === 'campaigns' && '📋 Campaigns'}
               {tab === 'history' && '📊 History'}
             </button>
@@ -455,6 +513,18 @@ export const GrantPointsEnhancedPage: React.FC = () => {
                   </div>
                 )}
 
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: '700', color: '#333', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Grant Date (Optional - schedule for later)</label>
+                  <input
+                    type="date"
+                    name="grantDate"
+                    value={formData.grantDate}
+                    onChange={handleInputChange}
+                    style={{ width: '100%', padding: '10px', border: '1px solid #ffb88c', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }}
+                  />
+                  <div style={{ fontSize: '10px', color: '#999', marginTop: '4px' }}>Leave blank to grant immediately</div>
+                </div>
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
                     <label style={{ fontSize: '11px', fontWeight: '700', color: '#333', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Valid From</label>
@@ -495,6 +565,233 @@ export const GrantPointsEnhancedPage: React.FC = () => {
                     style={{ flex: 1, padding: '10px', background: '#FF6B35', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '700' }}
                   >
                     🎁 Grant Points
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Saved Groups Tab */}
+        {activeTab === 'groups' && (
+          <div style={{ background: '#fff', border: '1px solid #ffb88c', borderRadius: '8px', padding: '20px', flex: 1, minHeight: 0, overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#333', margin: 0 }}>👥 Saved User Groups</h3>
+              <button
+                onClick={() => {
+                  setShowCreateGroupModal(true);
+                  setSelectedUsers(new Set());
+                  setSearchQuery('');
+                }}
+                style={{
+                  padding: '8px 16px',
+                  background: '#FF6B35',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '12px'
+                }}
+              >
+                + Create New Group
+              </button>
+            </div>
+
+            {savedGroups.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+                {savedGroups.map(group => (
+                  <div key={group.id} style={{ background: '#f9f9f9', border: '1px solid #ffe6d9', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#333' }}>{group.name}</div>
+                      <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>{group.description}</div>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#999' }}>
+                      👥 {group.userIds.length} user{group.userIds.length !== 1 ? 's' : ''} • Created {group.createdDate}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => {
+                          handleLoadSavedGroup(group.id);
+                          setActiveTab('grant');
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '8px',
+                          background: '#4CAF50',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                          fontWeight: '600'
+                        }}
+                      >
+                        Load for Grant
+                      </button>
+                      <button
+                        onClick={() => handleDeleteGroup(group.id)}
+                        style={{
+                          padding: '8px 12px',
+                          background: '#fff',
+                          color: '#FF6B35',
+                          border: '1px solid #FF6B35',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                          fontWeight: '600'
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
+                <div style={{ fontSize: '48px', marginBottom: '12px' }}>👥</div>
+                <div style={{ fontSize: '12px', color: '#666' }}>No saved groups yet</div>
+                <div style={{ fontSize: '11px', color: '#999', marginTop: '8px' }}>Create a group to save users for future campaigns</div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Create Group Modal */}
+        {showCreateGroupModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999
+          }}>
+            <div style={{
+              background: '#fff',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '500px',
+              width: '90%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            }}>
+              <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#333', margin: '0 0 16px 0' }}>Create New Group</h2>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: '700', color: '#333', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Group Name *</label>
+                  <input
+                    type="text"
+                    value={newGroupName}
+                    onChange={(e) => setNewGroupName(e.target.value)}
+                    placeholder="e.g., Q3 Super Nannies"
+                    style={{ width: '100%', padding: '10px', border: '1px solid #ffb88c', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: '700', color: '#333', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Description (Optional)</label>
+                  <textarea
+                    value={newGroupDescription}
+                    onChange={(e) => setNewGroupDescription(e.target.value)}
+                    placeholder="e.g., All super nanny users for Q3 bonus campaign"
+                    rows={2}
+                    style={{ width: '100%', padding: '10px', border: '1px solid #ffb88c', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: '700', color: '#333', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Select Users *</label>
+                  <input
+                    type="text"
+                    placeholder="🔍 Search users..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ width: '100%', padding: '10px', border: '1px solid #ffb88c', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box', marginBottom: '8px' }}
+                  />
+
+                  {searchQuery && filteredUsers.length > 0 && (
+                    <div style={{ padding: '10px 12px', background: '#fff9f5', border: '1px solid #ffe6d9', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', marginBottom: '8px' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.size === filteredUsers.length && filteredUsers.length > 0}
+                        onChange={handleSelectAllUsers}
+                        id="group-select-all"
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <label htmlFor="group-select-all" style={{ fontWeight: '600', color: '#FF6B35', margin: 0, cursor: 'pointer' }}>
+                        Select All ({filteredUsers.length})
+                      </label>
+                    </div>
+                  )}
+
+                  <div style={{ border: '1px solid #ffe6d9', borderRadius: '6px', maxHeight: '250px', overflowY: 'auto' }}>
+                    {searchQuery && filteredUsers.length > 0 ? (
+                      filteredUsers.map(user => (
+                        <div
+                          key={user.id}
+                          onClick={() => handleToggleUserSelection(user.id)}
+                          style={{
+                            padding: '10px',
+                            borderBottom: '1px solid #ffe6d9',
+                            cursor: 'pointer',
+                            background: selectedUsers.has(user.id) ? '#fff5f0' : '#fff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            transition: 'background 0.2s'
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedUsers.has(user.id)}
+                            onChange={() => {}}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                          />
+                          <div style={{ fontSize: '12px', fontWeight: '600', color: '#333', flex: 1 }}>{user.name}</div>
+                          <div style={{ fontSize: '10px', color: '#666' }}>ID: {user.id}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{ padding: '20px', textAlign: 'center', color: '#999', fontSize: '12px' }}>
+                        {searchQuery ? 'No users found' : 'Search to select users'}
+                      </div>
+                    )}
+                  </div>
+
+                  {selectedUsers.size > 0 && (
+                    <div style={{ marginTop: '8px', padding: '8px 12px', background: '#E8F5E9', border: '1px solid #4CAF50', borderRadius: '4px', fontSize: '11px', color: '#2E7D32', fontWeight: '600' }}>
+                      ✓ {selectedUsers.size} user{selectedUsers.size !== 1 ? 's' : ''} selected
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                  <button
+                    onClick={() => {
+                      setShowCreateGroupModal(false);
+                      setNewGroupName('');
+                      setNewGroupDescription('');
+                      setSelectedUsers(new Set());
+                      setSearchQuery('');
+                    }}
+                    style={{ flex: 1, padding: '10px', background: '#f0f0f0', color: '#333', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreateGroup}
+                    style={{ flex: 1, padding: '10px', background: '#FF6B35', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '700' }}
+                  >
+                    Create Group
                   </button>
                 </div>
               </div>
