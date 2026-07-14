@@ -8,56 +8,56 @@ export const AdminDashboard: React.FC = () => {
   ]);
 
   const [startupMetrics] = useState([
-    { label: 'MRR', value: 'SGD $24K', trend: '+18%', icon: '💰', color: '#0891b2', bg: '#cffafe', context: 'Monthly Recurring' },
-    { label: 'Active Users', value: '2.8K', trend: '+12%', icon: '👥', color: '#0891b2', bg: '#cffafe', context: 'DAU this week' },
-    { label: 'Churn Rate', value: '3.2%', trend: '-0.8%', icon: '📊', color: '#0891b2', bg: '#cffafe', context: 'Monthly (lower is better)' },
-    { label: 'Signups', value: '87/day', trend: '+15%', icon: '📈', color: '#0891b2', bg: '#cffafe', context: 'New users today' },
+    { label: 'MRR', value: 'SGD $24K', trend: '+18%', icon: '💰', color: '#FF6B35', bg: '#FFF8F5', context: 'Monthly Recurring' },
+    { label: 'Active Users', value: '2.8K', trend: '+12%', icon: '👥', color: '#FF6B35', bg: '#FFF8F5', context: 'DAU this week' },
+    { label: 'Churn Rate', value: '3.2%', trend: '-0.8%', icon: '📊', color: '#FF6B35', bg: '#FFF8F5', context: 'Monthly (lower is better)' },
+    { label: 'Signups', value: '87/day', trend: '+15%', icon: '📈', color: '#FF6B35', bg: '#FFF8F5', context: 'New users today' },
   ]);
 
   const [operationsStatus] = useState([
-    { label: 'Pending Cases', value: '12', icon: '📋', color: '#f59e0b', bg: '#fef3c7', action: 'Review Now', link: '/admin/cases' },
-    { label: 'Failed Payments', value: '8', icon: '💳', color: '#dc2626', bg: '#fee2e2', action: 'Fix Now', link: '/admin/operations/payments' },
-    { label: 'Active Disputes', value: '3', icon: '⚖️', color: '#f59e0b', bg: '#fef3c7', action: 'Resolve', link: '/admin/dashboard/disputes' },
-    { label: 'Pending Signups', value: '15', icon: '🔐', color: '#0891b2', bg: '#cffafe', action: 'Verify', link: '/admin/operations/user-management' },
+    { label: 'Pending Cases', value: '12', icon: '📋', color: '#FF9800', bg: '#FFF3E0', action: 'Review Now', link: '/admin/cases' },
+    { label: 'Failed Payments', value: '8', icon: '💳', color: '#F44336', bg: '#FFEBEE', action: 'Fix Now', link: '/admin/operations/payments' },
+    { label: 'Active Disputes', value: '3', icon: '⚖️', color: '#FF9800', bg: '#FFF3E0', action: 'Resolve', link: '/admin/dashboard/disputes' },
+    { label: 'Pending Signups', value: '15', icon: '🔐', color: '#FF6B35', bg: '#FFF8F5', action: 'Verify', link: '/admin/operations/user-management' },
   ]);
 
   const [fundingContext] = useState([
-    { metric: 'Burn Rate', value: 'SGD $1.2K/day', status: 'Sustainable', color: '#0891b2' },
-    { metric: 'Cash Runway', value: '14 months', status: 'Healthy', color: '#0891b2' },
-    { metric: 'Unit Economics', value: 'LTV:CAC = 3.2:1', status: 'Strong', color: '#0891b2' },
+    { metric: 'Burn Rate', value: 'SGD $1.2K/day', status: 'Sustainable', color: '#FF6B35' },
+    { metric: 'Cash Runway', value: '14 months', status: 'Healthy', color: '#FF6B35' },
+    { metric: 'Unit Economics', value: 'LTV:CAC = 3.2:1', status: 'Strong', color: '#FF6B35' },
   ]);
 
   const [growthInsights] = useState([
     {
       period: '📅 TODAY',
       insights: [
-        { id: 1, category: 'REVENUE', title: 'Revenue On Track', desc: 'SGD $850 processed (daily avg: $730)', action: 'Monitor', color: '#dc2626', bg: '#fee2e2', icon: '💵' },
-        { id: 2, category: 'CHURN', title: '2 Users Churned', desc: 'Both payment method issues (recoverable)', action: 'Reach Out', color: '#f59e0b', bg: '#fef3c7', icon: '📉' },
+        { id: 1, category: 'REVENUE', title: 'Revenue On Track', desc: 'SGD $850 processed (daily avg: $730)', action: 'Monitor', color: '#F44336', bg: '#FFEBEE', icon: '💵' },
+        { id: 2, category: 'CHURN', title: '2 Users Churned', desc: 'Both payment method issues (recoverable)', action: 'Reach Out', color: '#FF9800', bg: '#FFF3E0', icon: '📉' },
       ]
     },
     {
       period: '📊 WEEKLY',
       insights: [
-        { id: 3, category: 'GROWTH', title: 'Signup Velocity +23%', desc: 'Up from 71/day last week → 87/day now', action: 'Analyze', color: '#0891b2', bg: '#cffafe', icon: '📈' },
-        { id: 4, category: 'ENGAGEMENT', title: 'Task Completion Rate 87%', desc: 'Users completing tasks at high rate (healthy)', action: 'Maintain', color: '#0891b2', bg: '#cffafe', icon: '⭐' },
-        { id: 5, category: 'MONETIZATION', title: 'ARPU Growth +$3.50', desc: 'Avg Revenue Per User: $28.50 → $32.00', action: 'Celebrate', color: '#0891b2', bg: '#cffafe', icon: '🎯' },
+        { id: 3, category: 'GROWTH', title: 'Signup Velocity +23%', desc: 'Up from 71/day last week → 87/day now', action: 'Analyze', color: '#FF6B35', bg: '#FFF8F5', icon: '📈' },
+        { id: 4, category: 'ENGAGEMENT', title: 'Task Completion Rate 87%', desc: 'Users completing tasks at high rate (healthy)', action: 'Maintain', color: '#FF6B35', bg: '#FFF8F5', icon: '⭐' },
+        { id: 5, category: 'MONETIZATION', title: 'ARPU Growth +$3.50', desc: 'Avg Revenue Per User: $28.50 → $32.00', action: 'Celebrate', color: '#FF6B35', bg: '#FFF8F5', icon: '🎯' },
       ]
     },
     {
       period: '📆 MONTHLY',
       insights: [
-        { id: 6, category: 'BUSINESS', title: 'MRR: +18% This Month', desc: 'SGD $24K revenue | Runway: 14 months @ current burn', action: 'Plan Spend', color: '#0891b2', bg: '#cffafe', icon: '🏦' },
-        { id: 7, category: 'RISK', title: 'Payment Disputes +12%', desc: 'Monthly disputes: 8 → 9. Mostly false alerts (recoverable)', action: 'Fix SOS', color: '#f59e0b', bg: '#fef3c7', icon: '⚡' },
-        { id: 8, category: 'FORECAST', title: 'Projected MRR in 60 days', desc: 'At +15% growth: SGD $28.2K | Runway extends to 16 months', action: 'Plan', color: '#0891b2', bg: '#cffafe', icon: '🔮' },
+        { id: 6, category: 'BUSINESS', title: 'MRR: +18% This Month', desc: 'SGD $24K revenue | Runway: 14 months @ current burn', action: 'Plan Spend', color: '#FF6B35', bg: '#FFF8F5', icon: '🏦' },
+        { id: 7, category: 'RISK', title: 'Payment Disputes +12%', desc: 'Monthly disputes: 8 → 9. Mostly false alerts (recoverable)', action: 'Fix SOS', color: '#FF9800', bg: '#FFF3E0', icon: '⚡' },
+        { id: 8, category: 'FORECAST', title: 'Projected MRR in 60 days', desc: 'At +15% growth: SGD $28.2K | Runway extends to 16 months', action: 'Plan', color: '#FF6B35', bg: '#FFF8F5', icon: '🔮' },
       ]
     }
   ]);
 
   const [recentActivity] = useState([
-    { id: 1, icon: '🎉', title: 'New User Milestone', detail: '2,800 total active users reached', time: '2h', color: '#0891b2' },
-    { id: 2, icon: '⚖️', title: 'Dispute Resolved (L2)', detail: 'Case #7814 settled 50/50 split', time: '3h', color: '#0891b2' },
-    { id: 3, icon: '⚠️', title: 'Payment Failed', detail: '8 users have payment retry pending', time: '4h', color: '#f59e0b' },
-    { id: 4, icon: '💳', title: 'Stripe Connection OK', detail: 'Last check: 6m ago, all systems nominal', time: '6h', color: '#0891b2' },
+    { id: 1, icon: '🎉', title: 'New User Milestone', detail: '2,800 total active users reached', time: '2h', color: '#FF6B35' },
+    { id: 2, icon: '⚖️', title: 'Dispute Resolved (L2)', detail: 'Case #7814 settled 50/50 split', time: '3h', color: '#FF6B35' },
+    { id: 3, icon: '⚠️', title: 'Payment Failed', detail: '8 users have payment retry pending', time: '4h', color: '#FF9800' },
+    { id: 4, icon: '💳', title: 'Stripe Connection OK', detail: 'Last check: 6m ago, all systems nominal', time: '6h', color: '#FF6B35' },
   ]);
 
   return (
@@ -94,17 +94,17 @@ export const AdminDashboard: React.FC = () => {
         }
       `}</style>
 
-      <div style={{ padding: '20px', background: '#f8f9fa', minHeight: '100vh' }}>
+      <div style={{ padding: '20px', background: '#fff', minHeight: '100vh' }}>
         {/* HEADER */}
         <div style={{ marginBottom: '20px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0, color: '#0f172a' }}>Admin Command Center</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#333' }}>Admin Command Center</h1>
           <p style={{ fontSize: '13px', color: '#666', margin: '4px 0 0 0' }}>Growth tracking • Operations • Safety & Disputes</p>
         </div>
 
         {/* CRITICAL ALERTS - REVENUE/PAYMENT */}
         <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            🔴 CRITICAL BLOCKERS - ACT NOW
+          <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 12px 0', color: '#333', letterSpacing: '0px' }}>
+            🔴 Critical Blockers - Act Now
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
             {criticalAlerts.map(alert => (
@@ -181,7 +181,7 @@ export const AdminDashboard: React.FC = () => {
 
         {/* OPERATIONS STATUS - ACTIONABLE */}
         <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>⚙️ Operations & Safety (Action Required)</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 12px 0', color: '#333', whiteSpace: 'nowrap' }}>⚙️ Operations & Safety (Action Required)</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
             {operationsStatus.map((item, i) => (
               <div key={i} style={{
@@ -231,7 +231,7 @@ export const AdminDashboard: React.FC = () => {
 
         {/* STARTUP METRICS - KEY INDICATORS */}
         <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>📊 Startup Metrics (Growth)</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 12px 0', color: '#333' }}>📊 Startup Metrics (Growth)</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
             {startupMetrics.map((m, i) => (
               <div key={i} style={{
@@ -253,7 +253,7 @@ export const AdminDashboard: React.FC = () => {
 
         {/* FUNDING & RUNWAY */}
         <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>🏦 Funding & Runway</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 12px 0', color: '#333' }}>🏦 Funding & Runway</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
             {fundingContext.map((item, i) => (
               <div key={i} style={{
@@ -279,11 +279,11 @@ export const AdminDashboard: React.FC = () => {
 
         {/* GROWTH INSIGHTS - DAILY/WEEKLY/MONTHLY */}
         <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>🚀 Growth Insights (Qwen)</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 12px 0', color: '#333' }}>🚀 Growth Insights (Qwen)</h2>
           
           {growthInsights.map((periodGroup, periodIdx) => (
             <div key={periodIdx} style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#666', marginBottom: '8px', paddingLeft: '4px', borderLeft: '3px solid #0891b2' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#666', marginBottom: '8px', paddingLeft: '4px', borderLeft: '3px solid #FF6B35' }}>
                 {periodGroup.period}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
@@ -328,7 +328,7 @@ export const AdminDashboard: React.FC = () => {
 
         {/* ACTIVITY LOG */}
         <div>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>📋 Recent Activity</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 12px 0', color: '#333' }}>📋 Recent Activity</h2>
           <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
             {recentActivity.map((item, i) => (
               <div key={item.id} style={{
