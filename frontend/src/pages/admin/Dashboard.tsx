@@ -2,383 +2,194 @@ import React, { useState } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 
 export const AdminDashboard: React.FC = () => {
-  const [actionItems] = useState([
-    { id: 1, priority: 'critical', title: '5 Disputes Need Review', desc: 'Urgent action required', icon: '🚨', action: 'Review Now' },
-    { id: 2, priority: 'high', title: '12 New User Reports', desc: 'Safety issues flagged', icon: '👁️', action: 'Check Now' },
-    { id: 3, priority: 'high', title: 'Payment Processing Failed', desc: '3 transactions stuck', icon: '💳', action: 'Resolve' },
+  const [criticalAlerts] = useState([
+    { id: 1, severity: 'critical', title: '⚠️ 5 Disputes Overdue (>4h)', desc: 'Urgent resolution needed', impact: '2 cases risking auto-refund', action: 'Resolve Now', bgColor: '#fee2e2', borderColor: '#dc2626' },
+    { id: 2, severity: 'critical', title: '🚨 Payment Processing Failed', desc: '3 transactions stuck', impact: 'SGD $450 at risk', action: 'Fix Now', bgColor: '#fef2f2', borderColor: '#991b1b' },
   ]);
 
-  const [kpis] = useState([
-    { title: 'Health', value: '98.5%', icon: '💚', sparkline: [95, 96, 97, 98, 98.5] },
-    { title: 'Revenue', value: '$24.5K', icon: '💰', sparkline: [20, 21, 22, 23, 24.5] },
-    { title: 'Users', value: '2.8K', icon: '👥', sparkline: [2.5, 2.6, 2.65, 2.7, 2.8] },
-    { title: 'Rating', value: '4.8★', icon: '⭐', sparkline: [4.6, 4.65, 4.7, 4.75, 4.8] },
+  const [highPriority] = useState([
+    { id: 3, severity: 'high', title: '⚡ 12 New Safety Reports', desc: 'Potential harassment/threats', impact: '3 users flagged', action: 'Review', bgColor: '#fef3c7', borderColor: '#f59e0b' },
+    { id: 4, severity: 'high', title: '📱 New Feature Bugs (8)', desc: 'Users reporting app crashes', impact: '180 affected users', action: 'Triage', bgColor: '#fef3c7', borderColor: '#d97706' },
   ]);
 
-  const [recentActivity] = useState([
-    { id: 1, event: '✅ Task Completed', user: 'Sarah → John', time: '2m' },
-    { id: 2, event: '💬 Dispute Filed', user: 'Incomplete work', time: '15m' },
-    { id: 3, event: '👤 New User', user: 'Alice joined', time: '1h' },
+  const [stats] = useState([
+    { label: 'Platform Health', value: '98.5%', trend: '+2.1%', icon: '💚', color: '#10b981', detail: 'Excellent' },
+    { label: 'Revenue (24h)', value: '$2,450', trend: '+18%', icon: '💰', color: '#f59e0b', detail: 'Above target' },
+    { label: 'Active Users', value: '2.8K', trend: '+5.2%', icon: '👥', color: '#3b82f6', detail: 'Growing steady' },
+    { label: 'Avg Rating', value: '4.8★', trend: '+0.3', icon: '⭐', color: '#8b5cf6', detail: 'Excellent service' },
   ]);
 
-  // Simple sparkline SVG generator
-  const Sparkline = ({ data }: { data: number[] }) => {
-    const minVal = Math.min(...data);
-    const maxVal = Math.max(...data);
-    const range = maxVal - minVal || 1;
-    const width = 60;
-    const height = 24;
-    const padding = 2;
-    const pointWidth = (width - padding * 2) / (data.length - 1);
+  const [aiInsights] = useState([
+    { id: 1, type: 'pattern', title: 'Surge in Refund Requests', desc: 'Recent 23% increase in refunds (vs. 8% historical)', action: 'Investigate', icon: '📈', color: '#ef4444' },
+    { id: 2, type: 'anomaly', title: 'Suspicious User: ID #4521', desc: '15 disputes filed in 48h (avg: 0.3/month)', action: 'Flag', icon: '🚩', color: '#f97316' },
+    { id: 3, type: 'opportunity', title: 'High-Value Doers', desc: '24 doers with 50+ 5-star reviews = premium tier eligible', action: 'Engage', icon: '👑', color: '#06b6d4' },
+  ]);
 
-    const points = data.map((val, i) => {
-      const x = padding + i * pointWidth;
-      const y = height - padding - ((val - minVal) / range) * (height - padding * 2);
-      return `${x},${y}`;
-    }).join(' ');
-
-    return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="sparkline">
-        <polyline points={points} fill="none" stroke="#ff6b35" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    );
-  };
+  const [recentActions] = useState([
+    { id: 1, action: '✅ Case #D26-A1B2 Resolved', time: '2m ago', by: 'Sarah Chen', status: 'Sent $38.50 to doer', color: '#10b981' },
+    { id: 2, action: '⚠️ User #3421 Warned', time: '8m ago', by: 'Admin', status: 'False report #2 - escalate next', color: '#f59e0b' },
+    { id: 3, action: '🔒 User #7890 Suspended', time: '14m ago', by: 'System', status: '3 false emergency alerts', color: '#ef4444' },
+    { id: 4, action: '💳 Refund Processed', time: '22m ago', by: 'Auto', status: 'SGD $120 → User #2891', color: '#3b82f6' },
+  ]);
 
   return (
     <AdminLayout>
-      <div className="dashboard">
-        <div className="dashboard-header">
-          <h1>🎯 Action Center</h1>
-          <p>Focus on what matters most right now</p>
+      <div style={{ padding: '24px', background: '#fafafa', minHeight: '100vh' }}>
+        {/* HEADER */}
+        <div style={{ marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 700, margin: '0 0 4px 0', color: '#1f2937' }}>
+            🎯 Command Center
+          </h1>
+          <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
+            Real-time platform monitoring • AI-powered insights • Action queue
+          </p>
         </div>
 
-        {/* CRITICAL ACTIONS - Top Priority */}
-        <div className="actions-box">
-          <h2>⚡ Urgent Actions</h2>
-          <div className="actions-list">
-            {actionItems.map((item) => (
-              <div key={item.id} className={`action-card priority-${item.priority}`}>
-                <div className="action-icon">{item.icon}</div>
-                <div className="action-content">
-                  <div className="action-title">{item.title}</div>
-                  <div className="action-desc">{item.desc}</div>
+        {/* CRITICAL ALERTS - TOP PRIORITY */}
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+            <h2 style={{ fontSize: '14px', fontWeight: 700, margin: 0, color: '#dc2626' }}>🔴 CRITICAL - MUST ACT NOW</h2>
+            <span style={{ background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>
+              {criticalAlerts.length} items
+            </span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '12px' }}>
+            {criticalAlerts.map(alert => (
+              <div key={alert.id} style={{ background: alert.bgColor, border: `2px solid ${alert.borderColor}`, borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#1f2937' }}>{alert.title}</div>
+                    <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>{alert.desc}</div>
+                  </div>
+                  <button style={{
+                    background: alert.borderColor,
+                    color: 'white',
+                    border: 'none',
+                    padding: '6px 12px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {alert.action}
+                  </button>
                 </div>
-                <button className="action-btn">{item.action}</button>
+                <div style={{ background: 'rgba(0,0,0,0.05)', padding: '8px', borderRadius: '4px', fontSize: '11px', color: '#333', fontWeight: 600 }}>
+                  💥 Impact: {alert.impact}
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* COMPACT KPI SECTION WITH SPARKLINES */}
-        <div className="kpi-compact-section">
-          <h2>📊 Key Metrics</h2>
-          <div className="kpi-compact-grid">
-            {kpis.map((kpi) => (
-              <div key={kpi.title} className="kpi-compact-card">
-                <div className="kpi-header">
-                  <span className="kpi-icon">{kpi.icon}</span>
-                  <span className="kpi-title">{kpi.title}</span>
+        {/* HIGH PRIORITY */}
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+            <h2 style={{ fontSize: '14px', fontWeight: 700, margin: 0, color: '#f59e0b' }}>⚡ HIGH PRIORITY</h2>
+            <span style={{ background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>
+              {highPriority.length} items
+            </span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '12px' }}>
+            {highPriority.map(item => (
+              <div key={item.id} style={{ background: '#fff', border: `1px solid #fed7aa`, borderRadius: '6px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#1f2937' }}>{item.title}</div>
+                  <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>{item.desc} • <strong>{item.impact}</strong></div>
                 </div>
-                <div className="kpi-body">
-                  <div className="kpi-value-big">{kpi.value}</div>
-                  <Sparkline data={kpi.sparkline} />
-                </div>
+                <button style={{
+                  background: '#f59e0b',
+                  color: 'white',
+                  border: 'none',
+                  padding: '6px 12px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  marginLeft: '12px'
+                }}>
+                  {item.action}
+                </button>
               </div>
             ))}
           </div>
         </div>
 
-        {/* QUICK ACTIVITY - Ultra Compact */}
-        <div className="quick-activity">
-          <h2>📈 Recent</h2>
-          <div className="activity-list">
-            {recentActivity.map((item) => (
-              <div key={item.id} className="activity-compact-row">
-                <span className="activity-emoji">{item.event.split(' ')[0]}</span>
-                <div className="activity-text">
-                  <span className="activity-title">{item.event}</span>
-                  <span className="activity-sub">{item.user}</span>
+        {/* KEY METRICS - COMPACT */}
+        <div style={{ marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '12px', fontWeight: 700, margin: '0 0 12px 0', color: '#666', textTransform: 'uppercase' }}>📊 Key Metrics</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+            {stats.map((stat, i) => (
+              <div key={i} style={{ background: stat.color, color: 'white', padding: '16px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ fontSize: '24px' }}>{stat.icon}</div>
+                <div style={{ fontSize: '11px', opacity: 0.9 }}>{stat.label}</div>
+                <div style={{ fontSize: '20px', fontWeight: 700 }}>{stat.value}</div>
+                <div style={{ fontSize: '10px', opacity: 0.8 }}>{stat.trend} • {stat.detail}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* AI INSIGHTS & ANOMALIES */}
+        <div style={{ marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '12px', fontWeight: 700, margin: '0 0 12px 0', color: '#666', textTransform: 'uppercase' }}>🤖 AI Analysis & Alerts</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '12px' }}>
+            {aiInsights.map(insight => (
+              <div key={insight.id} style={{ background: '#fff', border: `2px solid ${insight.color}`, borderRadius: '8px', padding: '12px', display: 'flex', gap: '12px' }}>
+                <div style={{ fontSize: '20px', minWidth: '30px' }}>{insight.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#1f2937' }}>{insight.title}</div>
+                  <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>{insight.desc}</div>
                 </div>
-                <span className="activity-time">{item.time}</span>
+                <button style={{
+                  background: insight.color,
+                  color: 'white',
+                  border: 'none',
+                  padding: '6px 10px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  height: 'fit-content'
+                }}>
+                  {insight.action}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* RECENT ACTIONS AUDIT TRAIL */}
+        <div>
+          <h2 style={{ fontSize: '12px', fontWeight: 700, margin: '0 0 12px 0', color: '#666', textTransform: 'uppercase' }}>📋 Action Log (Last 24h)</h2>
+          <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+            {recentActions.map((item, i) => (
+              <div key={item.id} style={{
+                padding: '12px 16px',
+                borderBottom: i < recentActions.length - 1 ? '1px solid #f3f4f6' : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <div style={{
+                  width: '4px',
+                  height: '40px',
+                  background: item.color,
+                  borderRadius: '2px'
+                }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#1f2937' }}>{item.action}</div>
+                  <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>by {item.by} • {item.status}</div>
+                </div>
+                <div style={{ fontSize: '11px', color: '#999', whiteSpace: 'nowrap' }}>{item.time}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
-
-      <style>{`
-        .dashboard {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          padding: 0;
-        }
-
-        .dashboard-header {
-          margin-bottom: 4px;
-        }
-
-        .dashboard-header h1 {
-          font-size: 26px;
-          font-weight: 700;
-          margin: 0 0 2px 0;
-          color: #ff6b35;
-        }
-
-        .dashboard-header p {
-          font-size: 13px;
-          color: #888;
-          margin: 0;
-        }
-
-        /* ACTION ITEMS - URGENT */
-        .actions-box {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .actions-box h2 {
-          font-size: 13px;
-          font-weight: 700;
-          margin: 0;
-          color: #ff6b35;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .actions-list {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .action-card {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px;
-          border-radius: 8px;
-          border-left: 4px solid;
-          transition: all 0.2s;
-        }
-
-        .action-card.priority-critical {
-          background: #fff4f0;
-          border-left-color: #ff3333;
-        }
-
-        .action-card.priority-critical:hover {
-          background: #ffebeb;
-          box-shadow: 0 2px 8px rgba(255, 51, 51, 0.15);
-        }
-
-        .action-card.priority-high {
-          background: #fff9f5;
-          border-left-color: #ff6b35;
-        }
-
-        .action-card.priority-high:hover {
-          background: #fff0e6;
-          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.15);
-        }
-
-        .action-icon {
-          font-size: 20px;
-          min-width: 20px;
-        }
-
-        .action-content {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .action-title {
-          font-size: 13px;
-          font-weight: 600;
-          color: #333;
-          margin-bottom: 2px;
-        }
-
-        .action-desc {
-          font-size: 11px;
-          color: #999;
-        }
-
-        .action-btn {
-          padding: 6px 12px;
-          background: #ff6b35;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          font-size: 11px;
-          font-weight: 600;
-          cursor: pointer;
-          white-space: nowrap;
-          transition: all 0.2s;
-        }
-
-        .action-btn:hover {
-          background: #ff5722;
-          box-shadow: 0 2px 6px rgba(255, 107, 53, 0.3);
-        }
-
-        /* COMPACT KPI SECTION */
-        .kpi-compact-section {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .kpi-compact-section h2 {
-          font-size: 13px;
-          font-weight: 700;
-          margin: 0;
-          color: #333;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .kpi-compact-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: 8px;
-        }
-
-        .kpi-compact-card {
-          background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
-          border-radius: 8px;
-          padding: 12px;
-          color: white;
-          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.15);
-          transition: all 0.2s;
-        }
-
-        .kpi-compact-card:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);
-        }
-
-        .kpi-header {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          margin-bottom: 8px;
-        }
-
-        .kpi-icon {
-          font-size: 16px;
-        }
-
-        .kpi-title {
-          font-size: 11px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.3px;
-          opacity: 0.9;
-        }
-
-        .kpi-body {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
-        }
-
-        .kpi-value-big {
-          font-size: 18px;
-          font-weight: 700;
-        }
-
-        .sparkline {
-          filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.2));
-        }
-
-        /* QUICK ACTIVITY */
-        .quick-activity {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .quick-activity h2 {
-          font-size: 13px;
-          font-weight: 700;
-          margin: 0;
-          color: #333;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .activity-list {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .activity-compact-row {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 8px;
-          background: linear-gradient(135deg, rgba(255, 107, 53, 0.06), rgba(255, 140, 66, 0.04));
-          border-radius: 6px;
-          border: 1px solid rgba(255, 107, 53, 0.1);
-          font-size: 12px;
-        }
-
-        .activity-emoji {
-          font-size: 14px;
-          min-width: 14px;
-        }
-
-        .activity-text {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 1px;
-        }
-
-        .activity-title {
-          font-weight: 600;
-          color: #333;
-          font-size: 12px;
-        }
-
-        .activity-sub {
-          font-size: 11px;
-          color: #888;
-        }
-
-        .activity-time {
-          font-size: 10px;
-          color: #aaa;
-          white-space: nowrap;
-        }
-
-        /* Mobile - Stack vertically */
-        @media (max-width: 768px) {
-          .dashboard {
-            gap: 12px;
-          }
-
-          .kpi-compact-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-
-          .dashboard-header h1 {
-            font-size: 20px;
-          }
-
-          .action-card {
-            flex-wrap: wrap;
-          }
-
-          .action-btn {
-            width: 100%;
-          }
-        }
-      `}</style>
     </AdminLayout>
   );
 };
