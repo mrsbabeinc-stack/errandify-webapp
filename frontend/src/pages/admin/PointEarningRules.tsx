@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 
-export const PointEarningRulesPage: React.FC = () => {
+export const EPRulesPage: React.FC = () => {
   const [selectedRule, setSelectedRule] = useState<any>(null);
   const [editMode, setEditMode] = useState(false);
   const [editedRule, setEditedRule] = useState<any>(null);
@@ -299,8 +299,8 @@ export const PointEarningRulesPage: React.FC = () => {
       <div className="admin-page">
         {/* Header */}
         <div className="page-header">
-          <h1>📊 Point-Earning Rules</h1>
-          <p>Configure and manage all point earning rules for the platform</p>
+          <h1>📊 EP Rules</h1>
+          <p>Configure and manage all EP earning rules for the platform</p>
         </div>
 
         {/* Happy Message Box */}
@@ -945,4 +945,4 @@ export const PointEarningRulesPage: React.FC = () => {
   );
 };
 
-export default PointEarningRulesPage;
+export default EPRulesPage;

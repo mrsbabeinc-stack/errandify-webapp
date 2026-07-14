@@ -57,7 +57,7 @@ const menuItems: MenuItem[] = [
         children: [
           { id: 'points', label: 'EP Ledger', icon: '📊', path: '/admin/manage/points' },
           { id: 'grant-points', label: 'Grant EP', icon: '✨', path: '/admin/manage/grant-points' },
-          { id: 'point-rules', label: 'Point Rules', icon: '📋', path: '/admin/manage/point-rules' },
+          { id: 'point-rules', label: 'EP Rules', icon: '📋', path: '/admin/manage/point-rules' },
         ]
       },
       { id: 'discounts', label: 'Discount Codes', icon: '🏷️', path: '/admin/manage/discounts' },
