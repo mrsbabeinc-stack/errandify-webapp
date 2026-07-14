@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { useToast, ToastContainer } from '../../components/Toast';
+import { CaseDisputeService } from '../../services/CaseDisputeService';
 
 interface Case {
   id: number;
@@ -26,6 +27,13 @@ interface Case {
   ai_analysis?: string;
 }
 
+interface LinkedDispute {
+  id: number;
+  status: string;
+  dispute_type: string;
+  priority: string;
+}
+
 export const CasesPage: React.FC = () => {
   const navigate = useNavigate();
   const { toasts, showToast, removeToast } = useToast();
@@ -33,6 +41,7 @@ export const CasesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [linkedDisputes, setLinkedDisputes] = useState<LinkedDispute[]>([]);
   const [showCaseDetail, setShowCaseDetail] = useState(false);
   const [caseTimeline, setCaseTimeline] = useState<any[]>([]);
   const [resolution, setResolution] = useState('');
@@ -146,6 +155,16 @@ export const CasesPage: React.FC = () => {
       setCases(mockCases);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLinkedDisputes = async (caseId: string) => {
+    try {
+      const disputes = await CaseDisputeService.getDisputesByCase(caseId);
+      setLinkedDisputes(disputes?.data || []);
+    } catch (err) {
+      console.error('Failed to fetch linked disputes:', err);
+      setLinkedDisputes([]);
     }
   };
 
@@ -300,11 +319,31 @@ export const CasesPage: React.FC = () => {
                   </div>
                 )}
 
+                {/* Linked Disputes Banner */}
+                {linkedDisputes.length > 0 && (
+                  <div style={{
+                    background: '#fef3c7',
+                    border: '1px solid #fcd34d',
+                    borderRadius: '6px',
+                    padding: '8px 12px',
+                    marginBottom: '12px',
+                    fontSize: '12px'
+                  }}>
+                    <strong>⚖️ {linkedDisputes.length} linked dispute{linkedDisputes.length !== 1 ? 's' : ''}</strong>
+                    {linkedDisputes.map(d => (
+                      <div key={d.id} style={{ marginTop: '4px', fontSize: '11px', color: '#666' }}>
+                        Dispute #{d.id} ({d.status}) - {d.dispute_type}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     onClick={() => {
                       setSelectedCase(caseItem);
+                      fetchLinkedDisputes(caseItem.case_id);
                       setCaseTimeline([
                         { timestamp: caseItem.created_at, action: 'Case Created', handler: 'System' },
                       ]);

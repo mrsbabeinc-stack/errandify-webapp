@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { useToast, ToastContainer } from '../../components/Toast';
+import { CaseDisputeService } from '../../services/CaseDisputeService';
 
 interface Dispute {
   id: number;
@@ -16,6 +17,7 @@ interface Dispute {
   created_at: string;
   resolved_at?: string;
   resolution?: string;
+  case_id?: string;
 }
 
 interface SafetyAnalysis {
@@ -26,6 +28,17 @@ interface SafetyAnalysis {
   recommendation?: string;
 }
 
+interface LinkedCaseContext {
+  case_id: string;
+  case_type: string;
+  severity: string;
+  status: string;
+  subject: string;
+  asker_alias: string;
+  doer_alias: string;
+  ai_analysis?: string;
+}
+
 export const DisputesPage: React.FC = () => {
   const navigate = useNavigate();
   const { toasts, showToast, removeToast } = useToast();
@@ -33,6 +46,7 @@ export const DisputesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'level_1' | 'level_2' | 'level_3' | 'resolved'>('all');
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
+  const [linkedCaseContext, setLinkedCaseContext] = useState<LinkedCaseContext | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [resolution, setResolution] = useState<'approve' | 'reject' | 'partial'>('approve');
   const [notes, setNotes] = useState('');
@@ -137,6 +151,18 @@ export const DisputesPage: React.FC = () => {
     }
   };
 
+  const fetchLinkedCaseContext = async (disputeId: number) => {
+    try {
+      const caseContext = await CaseDisputeService.getCaseContextForDispute(disputeId);
+      if (caseContext?.data) {
+        setLinkedCaseContext(caseContext.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch linked case context:', err);
+      setLinkedCaseContext(null);
+    }
+  };
+
   const handleResolveDispute = async () => {
     if (!selectedDispute || !notes.trim()) {
       setError('Please provide resolution notes');
@@ -160,9 +186,24 @@ export const DisputesPage: React.FC = () => {
         }
       );
 
-      alert(`✅ Dispute #${selectedDispute.id} resolved as "${resolution}". Parties notified.`);
+      // Update linked case with dispute resolution
+      if (linkedCaseContext?.case_id) {
+        await CaseDisputeService.updateCaseFromDisputeResolution(
+          linkedCaseContext.case_id,
+          selectedDispute.id,
+          {
+            resolution_type: resolution === 'approve' ? 'full_payment' : resolution === 'reject' ? 'full_refund' : 'split',
+            doer_amount: 0,
+            asker_amount: 0,
+            notes: notes
+          }
+        );
+      }
+
+      alert(`✅ Dispute #${selectedDispute.id} resolved as "${resolution}". Case & parties updated.`);
       setShowReviewModal(false);
       setSelectedDispute(null);
+      setLinkedCaseContext(null);
       setResolution('approve');
       setNotes('');
       setSafetyAnalysis(null);
@@ -356,6 +397,7 @@ export const DisputesPage: React.FC = () => {
                               setSelectedDispute(dispute);
                               setShowReviewModal(true);
                               fetchSafetyAnalysis(dispute.id);
+                              fetchLinkedCaseContext(dispute.id);
                             }}
                             className="text-orange-600 hover:text-orange-800 font-semibold text-sm"
                           >
@@ -422,6 +464,49 @@ export const DisputesPage: React.FC = () => {
                   </p>
                 </div>
               </div>
+
+              {/* Linked Case Context */}
+              {linkedCaseContext && (
+                <div className="bg-blue-50 border border-blue-300 rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-xs font-bold text-blue-900 uppercase">📋 Linked Case</p>
+                      <p className="text-lg font-bold text-blue-800">{linkedCaseContext.case_id}</p>
+                      <p className="text-xs text-blue-700 mt-1">{linkedCaseContext.subject}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                        linkedCaseContext.severity === 'critical' ? 'bg-red-200 text-red-900' :
+                        linkedCaseContext.severity === 'high' ? 'bg-orange-200 text-orange-900' :
+                        'bg-yellow-200 text-yellow-900'
+                      }`}>
+                        {linkedCaseContext.severity?.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className="text-blue-700 font-semibold">Asker</p>
+                      <p className="text-blue-600">{linkedCaseContext.asker_alias}</p>
+                    </div>
+                    <div>
+                      <p className="text-blue-700 font-semibold">Doer</p>
+                      <p className="text-blue-600">{linkedCaseContext.doer_alias}</p>
+                    </div>
+                  </div>
+                  {linkedCaseContext.ai_analysis && (
+                    <div className="bg-white rounded p-2 text-xs text-gray-700 border-l-2 border-blue-500">
+                      <strong>AI Analysis:</strong> {linkedCaseContext.ai_analysis}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => navigate(`/admin/cases/${linkedCaseContext.case_id}`)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded transition"
+                  >
+                    View Full Case →
+                  </button>
+                </div>
+              )}
 
               {/* Description */}
               <div>
