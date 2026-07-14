@@ -138,14 +138,14 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
   }, [location.pathname]);
 
   const toggleSection = (id: string) => {
-    // Accordion mode: only one section expanded at a time
-    // If clicking the same section, collapse it
-    // If clicking a different section, close current and open new one
-    if (expandedSections.has(id)) {
-      setExpandedSections(new Set());
+    // Allow multiple sections to be open at the same time
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
     } else {
-      setExpandedSections(new Set([id]));
+      newExpanded.add(id);
     }
+    setExpandedSections(newExpanded);
   };
 
   const isActive = (path?: string) => path && location.pathname === path;
