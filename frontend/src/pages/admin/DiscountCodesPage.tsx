@@ -12,6 +12,8 @@ interface DiscountCode {
   status: 'active' | 'expired' | 'inactive';
   createdAt: string;
   description: string;
+  influencer?: string;
+  tags?: string[];
 }
 
 export const DiscountCodesPage: React.FC = () => {
@@ -27,7 +29,9 @@ export const DiscountCodesPage: React.FC = () => {
       expiresAt: '2026-12-31',
       status: 'active',
       createdAt: '2026-06-01',
-      description: 'Welcome offer for new users'
+      description: 'Welcome offer for new users',
+      influencer: '',
+      tags: ['new-user', 'welcome']
     },
     {
       id: 2,
@@ -39,7 +43,9 @@ export const DiscountCodesPage: React.FC = () => {
       expiresAt: '2026-08-31',
       status: 'active',
       createdAt: '2026-07-01',
-      description: 'Summer seasonal promotion'
+      description: 'Summer seasonal promotion',
+      influencer: '',
+      tags: ['seasonal', 'summer']
     },
     {
       id: 3,
@@ -51,7 +57,9 @@ export const DiscountCodesPage: React.FC = () => {
       expiresAt: '2026-07-15',
       status: 'expired',
       createdAt: '2026-07-01',
-      description: 'Fixed SGD 100 discount'
+      description: 'Fixed SGD 100 discount',
+      influencer: 'Sarah Chen',
+      tags: ['influencer', 'partnership']
     },
   ]);
 
@@ -61,8 +69,41 @@ export const DiscountCodesPage: React.FC = () => {
     value: 0,
     maxUses: 0,
     expiresAt: '',
-    description: ''
+    description: '',
+    influencer: '',
+    tags: [] as string[]
   });
+
+  const [duplicateFromId, setDuplicateFromId] = useState<number | null>(null);
+  const [tagInput, setTagInput] = useState('');
+
+  const generateRandomCode = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setFormData({ ...formData, code });
+  };
+
+  const duplicateCode = (sourceId: number) => {
+    const source = codes.find(c => c.id === sourceId);
+    if (source) {
+      setFormData({
+        code: '',
+        type: source.type,
+        value: source.value,
+        maxUses: source.maxUses,
+        expiresAt: source.expiresAt,
+        description: source.description,
+        influencer: '',
+        tags: source.tags ? [...source.tags] : []
+      });
+      setTagInput(source.tags ? source.tags.join(', ') : '');
+      setDuplicateFromId(sourceId);
+      setShowModal(true);
+    }
+  };
 
   const handleCreateCode = () => {
     if (!formData.code || !formData.value || !formData.maxUses) {
@@ -80,16 +121,27 @@ export const DiscountCodesPage: React.FC = () => {
       expiresAt: formData.expiresAt,
       status: 'active',
       createdAt: new Date().toISOString().split('T')[0],
-      description: formData.description
+      description: formData.description,
+      influencer: formData.influencer,
+      tags: formData.tags
     };
 
     setCodes([...codes, newCode]);
-    setFormData({ code: '', type: 'percentage', value: 0, maxUses: 0, expiresAt: '', description: '' });
+    setFormData({ code: '', type: 'percentage', value: 0, maxUses: 0, expiresAt: '', description: '', influencer: '', tags: [] });
+    setTagInput('');
+    setDuplicateFromId(null);
     setShowModal(false);
   };
 
   const handleDeleteCode = (id: number) => {
     setCodes(codes.filter(c => c.id !== id));
+  };
+
+  const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    alert('Excel import ready! Formats supported:\n- Code (column A)\n- Type (column B): percentage/fixed\n- Value (column C)\n- Max Uses (column D)\n- Expires (column E): YYYY-MM-DD\n- Description (column F)\n- Influencer (column G)\n- Tags (column H): comma-separated\n\nFeature coming soon!');
   };
 
   const getStatusColor = (status: string) => {
@@ -106,18 +158,17 @@ export const DiscountCodesPage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
             <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#333', marginBottom: '4px' }}>
-              🏷️ Discount Codes
+              🏷️ Discount Codes & E-Vouchers
             </h1>
             <p style={{ fontSize: '14px', color: '#666' }}>
-              Create and manage promotional discount codes
+              Create and manage promotional codes, influencer partnerships, and digital vouchers
             </p>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            style={{
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <label style={{
               padding: '10px 16px',
-              background: '#FF6B35',
-              color: 'white',
+              background: '#E3F2FD',
+              color: '#1976D2',
               border: 'none',
               borderRadius: '6px',
               fontWeight: '600',
@@ -125,19 +176,55 @@ export const DiscountCodesPage: React.FC = () => {
               cursor: 'pointer',
               transition: 'all 0.2s'
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#ff5722')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = '#FF6B35')}
-          >
-            + Create Code
-          </button>
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#BBDEFB')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = '#E3F2FD')}
+            >
+              📊 Upload Excel
+              <input
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleExcelUpload}
+                style={{ display: 'none' }}
+              />
+            </label>
+            <button
+              onClick={() => {
+                setFormData({ code: '', type: 'percentage', value: 0, maxUses: 0, expiresAt: '', description: '', influencer: '', tags: [] });
+                setTagInput('');
+                setDuplicateFromId(null);
+                setShowModal(true);
+              }}
+              style={{
+                padding: '10px 16px',
+                background: '#FF6B35',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: '600',
+                fontSize: '13px',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#ff5722')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#FF6B35')}
+            >
+              + Create Code
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px', marginBottom: '20px' }}>
           <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c' }}>
             <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Active Codes</div>
             <div style={{ fontSize: '24px', fontWeight: '700', color: '#FF6B35' }}>
               {codes.filter(c => c.status === 'active').length}
+            </div>
+          </div>
+          <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c' }}>
+            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Influencer Codes</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#666' }}>
+              {codes.filter(c => c.influencer).length}
             </div>
           </div>
           <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c' }}>
@@ -153,14 +240,15 @@ export const DiscountCodesPage: React.FC = () => {
         </div>
 
         {/* Codes Table */}
-        <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #ffb88c', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #ffb88c', overflow: 'hidden', overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
             <thead>
               <tr style={{ background: '#fff5f0', borderBottom: '1px solid #ffb88c' }}>
                 <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#666' }}>Code</th>
                 <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#666' }}>Discount</th>
                 <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#666' }}>Usage</th>
-                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#666' }}>Expires</th>
+                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#666' }}>Influencer</th>
+                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#666' }}>Tags</th>
                 <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#666' }}>Status</th>
                 <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#666' }}>Actions</th>
               </tr>
@@ -188,7 +276,37 @@ export const DiscountCodesPage: React.FC = () => {
                     </div>
                   </td>
                   <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', color: '#666' }}>
-                    {new Date(code.expiresAt).toLocaleDateString()}
+                    {code.influencer ? (
+                      <span style={{ display: 'inline-block', background: '#FFE0D3', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', color: '#FF6B35' }}>
+                        👤 {code.influencer}
+                      </span>
+                    ) : (
+                      <span style={{ color: '#ccc' }}>—</span>
+                    )}
+                  </td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                      {code.tags && code.tags.length > 0 ? (
+                        code.tags.map(tag => (
+                          <span
+                            key={tag}
+                            style={{
+                              display: 'inline-block',
+                              background: '#E3F2FD',
+                              color: '#1976D2',
+                              padding: '2px 6px',
+                              borderRadius: '3px',
+                              fontSize: '10px',
+                              fontWeight: '600'
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))
+                      ) : (
+                        <span style={{ color: '#ccc' }}>—</span>
+                      )}
+                    </div>
                   </td>
                   <td style={{ padding: '12px', textAlign: 'center' }}>
                     <span
@@ -206,21 +324,39 @@ export const DiscountCodesPage: React.FC = () => {
                     </span>
                   </td>
                   <td style={{ padding: '12px', textAlign: 'center' }}>
-                    <button
-                      onClick={() => handleDeleteCode(code.id)}
-                      style={{
-                        padding: '6px 12px',
-                        background: '#ffebee',
-                        color: '#C62828',
-                        border: 'none',
-                        borderRadius: '4px',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Delete
-                    </button>
+                    <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                      <button
+                        onClick={() => duplicateCode(code.id)}
+                        style={{
+                          padding: '6px 10px',
+                          background: '#E3F2FD',
+                          color: '#1976D2',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          cursor: 'pointer'
+                        }}
+                        title="Duplicate with same settings"
+                      >
+                        📋 Dup
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCode(code.id)}
+                        style={{
+                          padding: '6px 10px',
+                          background: '#ffebee',
+                          color: '#C62828',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        🗑️ Del
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -249,31 +385,53 @@ export const DiscountCodesPage: React.FC = () => {
             padding: '24px',
             maxWidth: '500px',
             width: '90%',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.15)'
+            boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+            maxHeight: '90vh',
+            overflowY: 'auto'
           }}>
             <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700', color: '#333' }}>
-              Create New Discount Code
+              {duplicateFromId ? '📋 Duplicate Discount Code' : '✨ Create New Code / E-Voucher'}
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#666', display: 'block', marginBottom: '4px' }}>
-                  Code
-                </label>
-                <input
-                  type="text"
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  placeholder="e.g., SUMMER20"
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    border: '1px solid #ddd',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    boxSizing: 'border-box'
-                  }}
-                />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#666', display: 'block', marginBottom: '4px' }}>
+                      Code
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.code}
+                      onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                      placeholder="e.g., SUMMER20"
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: '1px solid #ddd',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={generateRandomCode}
+                    style={{
+                      padding: '8px 12px',
+                      background: '#f5f5f5',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      color: '#666'
+                    }}
+                    title="Generate random 8-character code"
+                  >
+                    🎲 Random
+                  </button>
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -292,8 +450,8 @@ export const DiscountCodesPage: React.FC = () => {
                       fontSize: '13px'
                     }}
                   >
-                    <option value="percentage">Percentage</option>
-                    <option value="fixed">Fixed Amount</option>
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="fixed">Fixed Amount (SGD)</option>
                   </select>
                 </div>
 
@@ -376,6 +534,69 @@ export const DiscountCodesPage: React.FC = () => {
                   }}
                 />
               </div>
+
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#666', display: 'block', marginBottom: '4px' }}>
+                  👤 Influencer / Partner Name (optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.influencer}
+                  onChange={(e) => setFormData({ ...formData, influencer: e.target.value })}
+                  placeholder="e.g., Sarah Chen, TikTok Handle, @username"
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#666', display: 'block', marginBottom: '4px' }}>
+                  Tags (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => {
+                    setTagInput(e.target.value);
+                    setFormData({ ...formData, tags: e.target.value.split(',').map(t => t.trim()).filter(t => t) });
+                  }}
+                  placeholder="e.g., influencer, summer, partnership, tiktok, youtube"
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+                {formData.tags.length > 0 && (
+                  <div style={{ display: 'flex', gap: '4px', marginTop: '8px', flexWrap: 'wrap' }}>
+                    {formData.tags.map(tag => (
+                      <span
+                        key={tag}
+                        style={{
+                          display: 'inline-block',
+                          background: '#E3F2FD',
+                          color: '#1976D2',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '600'
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
@@ -407,7 +628,7 @@ export const DiscountCodesPage: React.FC = () => {
                   cursor: 'pointer'
                 }}
               >
-                Create Code
+                {duplicateFromId ? '📋 Create Duplicate' : '✨ Create Code'}
               </button>
             </div>
           </div>
