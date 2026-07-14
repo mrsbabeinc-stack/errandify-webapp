@@ -289,8 +289,6 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
           cursor: pointer;
           transition: all 0.2s;
           text-align: left;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
         }
 
         .menu-header:hover {
