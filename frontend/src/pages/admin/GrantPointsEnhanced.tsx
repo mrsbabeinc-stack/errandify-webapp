@@ -332,7 +332,7 @@ export const GrantPointsEnhancedPage: React.FC = () => {
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: '12px', fontWeight: '600', color: '#333' }}>{user.name}</div>
-                            <div style={{ fontSize: '10px', color: '#666' }}>{user.username}</div>
+                            <div style={{ fontSize: '10px', color: '#666' }}>ID: {user.id} • {user.username}</div>
                             <div style={{ fontSize: '10px', color: '#FF6B35', fontWeight: '600', marginTop: '2px' }}>Balance: {user.currentPoints} EP</div>
                           </div>
                         </div>
@@ -364,7 +364,7 @@ export const GrantPointsEnhancedPage: React.FC = () => {
                           </div>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '12px', fontWeight: '600', color: '#333' }}>{company.name}</div>
-                            <div style={{ fontSize: '10px', color: '#666' }}>{company.contactPerson} • {company.users} users</div>
+                            <div style={{ fontSize: '10px', color: '#666' }}>ID: {company.id} • {company.contactPerson} • {company.users} users</div>
                             <div style={{ fontSize: '10px', color: '#4CAF50', fontWeight: '600', marginTop: '2px' }}>Balance: {company.currentPoints} EP</div>
                           </div>
                         </div>
