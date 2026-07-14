@@ -158,10 +158,16 @@ const LeaveManagementDashboard: React.FC = () => {
       { date: '2026-12-25', name: 'Christmas Day' },
     ];
 
+    console.log('[LeaveManagementDashboard] 📊 Initializing demo data');
+    console.log('[LeaveManagementDashboard] Demo balances:', demoBalances);
+    console.log('[LeaveManagementDashboard] Demo requests:', demoRequests);
+
     setLeaveBalances(demoBalances);
     setLeaveRequests(demoRequests);
     setPublicHolidays(demoPublicHolidays);
     setSelectedStaffId(demoBalances[0]?.staffId || '');
+
+    console.log('[LeaveManagementDashboard] ✅ Initial state set with', demoBalances.length, 'staff members');
   }, []);
 
   // Calculate days between dates
