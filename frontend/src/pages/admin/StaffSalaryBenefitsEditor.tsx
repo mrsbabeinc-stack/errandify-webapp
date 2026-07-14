@@ -53,6 +53,7 @@ const STANDARD_BENEFITS = [
   { name: 'Gym Membership', type: 'benefit' as const },
   { name: 'Professional Development Fund', type: 'benefit' as const },
   { name: 'Annual Bonus', type: 'benefit' as const },
+  { name: 'Errandify Points (EP)', type: 'benefit' as const },
 ];
 
 const STANDARD_DEDUCTIONS = [
@@ -129,6 +130,7 @@ const StaffSalaryBenefitsEditor: React.FC = () => {
         benefits: [
           { id: 'ben_2', name: 'Health Insurance', type: 'benefit', amount: 200, frequency: 'monthly', description: '' },
           { id: 'ben_3', name: 'Annual Bonus', type: 'benefit', amount: 5000, frequency: 'annually', description: 'Performance bonus' },
+          { id: 'ben_4', name: 'Errandify Points (EP)', type: 'benefit', amount: 500, frequency: 'monthly', description: 'EP allocation as employee benefit' },
         ],
         totalAllowances: 1100,
         grossSalary: 6100,

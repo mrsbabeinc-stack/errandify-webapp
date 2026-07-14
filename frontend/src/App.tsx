@@ -114,6 +114,7 @@ import ClientManagementDashboard from './pages/admin/ClientManagementDashboard';
 import RecruitmentDashboard from './pages/admin/RecruitmentDashboard';
 import RBACManagementDashboard from './pages/admin/RBACManagementDashboard';
 import StaffSalaryBenefitsEditor from './pages/admin/StaffSalaryBenefitsEditor';
+import StaffInfoEditor from './pages/admin/StaffInfoEditor';
 import CompanyRegistrationPage from './pages/CompanyRegistrationPage';
 import MyCompanyDashboard from './pages/MyCompanyDashboard';
 import CompanyStaffManagement from './pages/CompanyStaffManagement';
@@ -499,6 +500,7 @@ export default function App() {
         <Route path="/admin/clients" element={isAuthenticated && isAdmin ? <ClientManagementDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/recruitment" element={isAuthenticated && isAdmin ? <RecruitmentDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/rbac" element={isAuthenticated && isAdmin ? <RBACManagementDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/staff-info" element={isAuthenticated && isAdmin ? <StaffInfoEditor /> : <Navigate to="/login" replace />} />
         <Route path="/admin/staff-salary-benefits" element={isAuthenticated && isAdmin ? <StaffSalaryBenefitsEditor /> : <Navigate to="/login" replace />} />
 
         {/* Company Registration and Dashboard Routes */}
