@@ -54,6 +54,38 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <AdminLayout>
+      <style>{`
+        @keyframes pulse-glow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+          50% { box-shadow: 0 0 20px 10px rgba(220, 38, 38, 0); }
+        }
+        @keyframes bounce-alert {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-2px); }
+          75% { transform: translateX(2px); }
+        }
+        @keyframes blink {
+          0%, 49% { opacity: 1; }
+          50%, 100% { opacity: 0.6; }
+        }
+        .critical-pulse {
+          animation: pulse-glow 2s infinite;
+        }
+        .critical-bounce {
+          animation: bounce-alert 1s infinite;
+        }
+        .critical-shake {
+          animation: shake 0.5s infinite;
+        }
+        .critical-blink {
+          animation: blink 1s infinite;
+        }
+      `}</style>
+
       <div style={{ padding: '20px', background: '#f8f9fa', minHeight: '100vh' }}>
         {/* HEADER */}
         <div style={{ marginBottom: '20px' }}>
@@ -61,44 +93,79 @@ export const AdminDashboard: React.FC = () => {
           <p style={{ fontSize: '12px', color: '#666', margin: '4px 0 0 0' }}>Real-time operations • AI insights • Action required</p>
         </div>
 
-        {/* CRITICAL ALERTS */}
+        {/* CRITICAL ALERTS - HIGHLY ANIMATED */}
         <div style={{ marginBottom: '20px' }}>
           <h2 style={{ fontSize: '11px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            🔴 Critical - Act Now
+            🔴 CRITICAL - ACT NOW
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
             {criticalAlerts.map(alert => (
-              <div key={alert.id} style={{
+              <div key={alert.id} className="critical-pulse" style={{
                 background: alert.bg,
-                border: `2px solid ${alert.color}`,
+                border: `3px solid ${alert.color}`,
                 borderRadius: '8px',
                 padding: '14px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '10px'
+                gap: '10px',
+                position: 'relative',
+                overflow: 'hidden'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                {/* Animated background glow */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: `linear-gradient(45deg, transparent, ${alert.color}20, transparent)`,
+                  animation: 'slideGradient 3s infinite',
+                  pointerEvents: 'none'
+                }} />
+
+                {/* Blinking urgent indicator */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative', zIndex: 1 }}>
+                  <span className="critical-blink" style={{ fontSize: '12px', fontWeight: 700, color: alert.color }}>● URGENT</span>
+                  <span style={{ fontSize: '10px', color: '#666', fontWeight: 600 }}>Action required immediately</span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '2px' }}>
+                    <div className="critical-bounce" style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '2px', display: 'inline-block' }}>
                       {alert.icon} {alert.title}
                     </div>
                     <div style={{ fontSize: '11px', color: '#666' }}>Impact: <strong>{alert.impact}</strong></div>
                   </div>
-                  <div style={{ fontSize: '20px', fontWeight: 700, color: alert.color, minWidth: '30px', textAlign: 'right' }}>
+                  <div className="critical-shake" style={{ fontSize: '24px', fontWeight: 700, color: alert.color, minWidth: '35px', textAlign: 'right', lineHeight: 1 }}>
                     {alert.metric}
                   </div>
                 </div>
+
                 <button style={{
                   background: alert.color,
                   color: 'white',
                   border: 'none',
-                  padding: '8px 12px',
+                  padding: '10px 12px',
                   borderRadius: '6px',
-                  fontSize: '12px',
-                  fontWeight: 600,
+                  fontSize: '13px',
+                  fontWeight: 700,
                   cursor: 'pointer',
-                  width: '100%'
-                }}>
+                  width: '100%',
+                  position: 'relative',
+                  zIndex: 1,
+                  transition: 'all 0.2s',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = `0 0 20px ${alert.color}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                >
                   ➜ {alert.action}
                 </button>
               </div>
