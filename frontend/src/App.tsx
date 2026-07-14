@@ -99,6 +99,7 @@ import BlogArticles from './pages/admin/BlogArticles';
 import Recognition from './pages/admin/Recognition';
 import CommunityFeed from './pages/admin/CommunityFeed';
 import HeroBanners from './pages/admin/HeroBanners';
+import CompanyClientIntelligence from './pages/admin/CompanyClientIntelligence';
 import CompanyRegistrationPage from './pages/CompanyRegistrationPage';
 import MyCompanyDashboard from './pages/MyCompanyDashboard';
 import CompanyStaffManagement from './pages/CompanyStaffManagement';
@@ -464,6 +465,7 @@ export default function App() {
         <Route path="/admin/comms/banners" element={isAuthenticated && isAdmin ? <HeroBanners /> : <Navigate to="/login" replace />} />
 
         {/* Company Management Routes */}
+        <Route path="/admin/company/intelligence" element={isAuthenticated && isAdmin ? <CompanyClientIntelligence /> : <Navigate to="/login" replace />} />
         <Route path="/admin/company/management" element={isAuthenticated && isAdmin ? <CompanyManagement /> : <Navigate to="/login" replace />} />
         <Route path="/admin/company/subscriptions" element={isAuthenticated && isAdmin ? <SubscriptionPackages /> : <Navigate to="/login" replace />} />
         <Route path="/admin/company/advertising" element={isAuthenticated && isAdmin ? <AdvertisingApproval /> : <Navigate to="/login" replace />} />
