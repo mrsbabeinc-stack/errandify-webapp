@@ -12,6 +12,12 @@ interface Campaign {
   sentAt?: string;
   openRate: number;
   clickRate: number;
+  content?: string;
+  recipientSegment: 'all-users' | 'doers' | 'askers' | 'vip';
+  scheduledDate?: string;
+  templateType: 'promotional' | 'announcement' | 'reminder' | 'transactional';
+  fromName: string;
+  fromEmail: string;
 }
 
 export default function EmailCampaigns() {
@@ -19,10 +25,16 @@ export default function EmailCampaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [newCampaignName, setNewCampaignName] = useState('');
   const [newCampaignSubject, setNewCampaignSubject] = useState('');
+  const [newCampaignContent, setNewCampaignContent] = useState('');
   const [newCampaignRecipients, setNewCampaignRecipients] = useState('all-users');
+  const [newCampaignTemplate, setNewCampaignTemplate] = useState('promotional');
+  const [newCampaignFromName, setNewCampaignFromName] = useState('Errandify');
+  const [newCampaignFromEmail, setNewCampaignFromEmail] = useState('noreply@errandify.com');
+  const [newCampaignScheduled, setNewCampaignScheduled] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editSubject, setEditSubject] = useState('');
+  const [editContent, setEditContent] = useState('');
 
   useEffect(() => {
     const saved = localStorage.getItem('emailCampaigns');
@@ -34,33 +46,49 @@ export default function EmailCampaigns() {
           id: 'c_1',
           name: 'Welcome New Users',
           subject: 'Welcome to Errandify! Get Started Today',
+          content: 'Hi there! Welcome to Errandify. Here\'s how to get started...',
           recipientCount: 2345,
           status: 'sent',
           createdAt: new Date(Date.now() - 604800000).toISOString(),
           sentAt: new Date(Date.now() - 604800000).toISOString(),
           openRate: 42,
           clickRate: 18,
+          recipientSegment: 'all-users',
+          templateType: 'promotional',
+          fromName: 'Errandify',
+          fromEmail: 'noreply@errandify.com',
         },
         {
           id: 'c_2',
           name: 'Referral Program Launch',
           subject: 'Invite Friends and Earn Rewards!',
+          content: 'Earn 50 EP when you refer a friend. Share your unique link today!',
           recipientCount: 5234,
           status: 'sent',
           createdAt: new Date(Date.now() - 1296000000).toISOString(),
           sentAt: new Date(Date.now() - 1296000000).toISOString(),
           openRate: 35,
           clickRate: 12,
+          recipientSegment: 'doers',
+          templateType: 'promotional',
+          fromName: 'Errandify Growth',
+          fromEmail: 'growth@errandify.com',
         },
         {
           id: 'c_3',
           name: 'Q3 Summer Promotion',
           subject: 'Limited Time: 20% Off First Order',
+          content: 'This summer, enjoy 20% off your first errand! Use code SUMMER20.',
           recipientCount: 8901,
           status: 'scheduled',
           createdAt: new Date(Date.now() - 86400000).toISOString(),
+          scheduledDate: new Date(Date.now() + 259200000).toISOString(),
           openRate: 0,
           clickRate: 0,
+          recipientSegment: 'all-users',
+          templateType: 'promotional',
+          fromName: 'Errandify Promotions',
+          fromEmail: 'promos@errandify.com',
         },
       ];
       setCampaigns(demoCampaigns);
@@ -69,8 +97,8 @@ export default function EmailCampaigns() {
   }, []);
 
   const handleCreateCampaign = () => {
-    if (!newCampaignName.trim() || !newCampaignSubject.trim()) {
-      alert('Please fill in campaign name and subject');
+    if (!newCampaignName.trim() || !newCampaignSubject.trim() || !newCampaignContent.trim()) {
+      alert('Please fill in all required fields (name, subject, content)');
       return;
     }
 
@@ -78,11 +106,17 @@ export default function EmailCampaigns() {
       id: `c_${Date.now()}`,
       name: newCampaignName,
       subject: newCampaignSubject,
-      recipientCount: newCampaignRecipients === 'all-users' ? 12450 : 5000,
-      status: 'draft',
+      content: newCampaignContent,
+      recipientCount: newCampaignRecipients === 'all-users' ? 12450 : newCampaignRecipients === 'doers' ? 5234 : 7216,
+      status: newCampaignScheduled ? 'scheduled' : 'draft',
       createdAt: new Date().toISOString(),
+      scheduledDate: newCampaignScheduled || undefined,
       openRate: 0,
       clickRate: 0,
+      recipientSegment: newCampaignRecipients as any,
+      templateType: newCampaignTemplate as any,
+      fromName: newCampaignFromName,
+      fromEmail: newCampaignFromEmail,
     };
 
     const updated = [...campaigns, newCampaign];
@@ -90,6 +124,10 @@ export default function EmailCampaigns() {
     localStorage.setItem('emailCampaigns', JSON.stringify(updated));
     setNewCampaignName('');
     setNewCampaignSubject('');
+    setNewCampaignContent('');
+    setNewCampaignRecipients('all-users');
+    setNewCampaignTemplate('promotional');
+    setNewCampaignScheduled('');
     alert('✅ Campaign created successfully!');
   };
 
@@ -97,17 +135,18 @@ export default function EmailCampaigns() {
     setEditingId(campaign.id);
     setEditName(campaign.name);
     setEditSubject(campaign.subject);
+    setEditContent(campaign.content || '');
   };
 
   const handleSaveEdit = (campaignId: string) => {
-    if (!editName.trim() || !editSubject.trim()) {
-      alert('Please fill in name and subject');
+    if (!editName.trim() || !editSubject.trim() || !editContent.trim()) {
+      alert('Please fill in all fields (name, subject, content)');
       return;
     }
 
     const updated = campaigns.map(c =>
       c.id === campaignId
-        ? { ...c, name: editName, subject: editSubject }
+        ? { ...c, name: editName, subject: editSubject, content: editContent }
         : c
     );
     setCampaigns(updated);
@@ -181,15 +220,58 @@ export default function EmailCampaigns() {
             onChange={(e) => setNewCampaignSubject(e.target.value)}
             style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
           />
-          <select
-            value={newCampaignRecipients}
-            onChange={(e) => setNewCampaignRecipients(e.target.value)}
-            style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}
-          >
-            <option value="all-users">All Users (12,450)</option>
-            <option value="doers">Doers Only (5,234)</option>
-            <option value="askers">Askers Only (7,216)</option>
-          </select>
+          <textarea
+            placeholder="Email content/body"
+            value={newCampaignContent}
+            onChange={(e) => setNewCampaignContent(e.target.value)}
+            rows={4}
+            style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit' }}
+          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <input
+              type="text"
+              placeholder="From Name"
+              value={newCampaignFromName}
+              onChange={(e) => setNewCampaignFromName(e.target.value)}
+              style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+            />
+            <input
+              type="email"
+              placeholder="From Email"
+              value={newCampaignFromEmail}
+              onChange={(e) => setNewCampaignFromEmail(e.target.value)}
+              style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+            <select
+              value={newCampaignRecipients}
+              onChange={(e) => setNewCampaignRecipients(e.target.value)}
+              style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}
+            >
+              <option value="all-users">All Users</option>
+              <option value="doers">Doers Only</option>
+              <option value="askers">Askers Only</option>
+              <option value="vip">VIP Only</option>
+            </select>
+            <select
+              value={newCampaignTemplate}
+              onChange={(e) => setNewCampaignTemplate(e.target.value)}
+              style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}
+            >
+              <option value="promotional">Promotional</option>
+              <option value="announcement">Announcement</option>
+              <option value="reminder">Reminder</option>
+              <option value="transactional">Transactional</option>
+            </select>
+            <input
+              type="date"
+              placeholder="Schedule (optional)"
+              value={newCampaignScheduled}
+              onChange={(e) => setNewCampaignScheduled(e.target.value)}
+              style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+            />
+          </div>
           <button
             onClick={handleCreateCampaign}
             style={{
@@ -232,6 +314,13 @@ export default function EmailCampaigns() {
                   style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
                   placeholder="Email subject"
                 />
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  rows={4}
+                  style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit' }}
+                  placeholder="Email content"
+                />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <button
                     onClick={() => handleSaveEdit(campaign.id)}
@@ -271,8 +360,14 @@ export default function EmailCampaigns() {
                     <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
                       {campaign.name}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#666' }}>
-                      "{campaign.subject}"
+                    <div style={{ fontSize: '11px', color: '#999', marginBottom: '4px' }}>
+                      📧 {campaign.fromName} &lt;{campaign.fromEmail}&gt;
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>
+                      Subject: "{campaign.subject}"
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', lineHeight: '1.4' }}>
+                      {campaign.content}
                     </div>
                   </div>
                   <span style={{
@@ -289,29 +384,38 @@ export default function EmailCampaigns() {
                   </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', fontSize: '12px', marginBottom: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', fontSize: '12px', marginBottom: '12px' }}>
                   <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                    <div style={{ fontSize: '11px', color: '#999' }}>Recipients</div>
-                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '16px' }}>
+                    <div style={{ fontSize: '10px', color: '#999' }}>Recipients</div>
+                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
                       {campaign.recipientCount.toLocaleString()}
                     </div>
-                  </div>
-                  <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                    <div style={{ fontSize: '11px', color: '#999' }}>Open Rate</div>
-                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '16px' }}>
-                      {campaign.openRate}%
+                    <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
+                      {campaign.recipientSegment === 'all-users' ? 'All Users' : campaign.recipientSegment === 'doers' ? 'Doers' : campaign.recipientSegment === 'askers' ? 'Askers' : 'VIP'}
                     </div>
                   </div>
                   <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                    <div style={{ fontSize: '11px', color: '#999' }}>Click Rate</div>
-                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '16px' }}>
-                      {campaign.clickRate}%
+                    <div style={{ fontSize: '10px', color: '#999' }}>Template</div>
+                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '13px', textTransform: 'capitalize' }}>
+                      {campaign.templateType}
                     </div>
                   </div>
                   <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                    <div style={{ fontSize: '11px', color: '#999' }}>Created</div>
-                    <div style={{ fontWeight: '700', color: '#333', fontSize: '13px' }}>
-                      {new Date(campaign.createdAt).toLocaleDateString()}
+                    <div style={{ fontSize: '10px', color: '#999' }}>Sent</div>
+                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
+                      {campaign.status === 'sent' ? '✓' : campaign.status === 'scheduled' ? '⏱️' : '—'}
+                    </div>
+                    <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
+                      {campaign.sentAt ? new Date(campaign.sentAt).toLocaleDateString() : 'Pending'}
+                    </div>
+                  </div>
+                  <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
+                    <div style={{ fontSize: '10px', color: '#999' }}>Engagement</div>
+                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
+                      {campaign.openRate}% / {campaign.clickRate}%
+                    </div>
+                    <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
+                      Open / Click
                     </div>
                   </div>
                 </div>
