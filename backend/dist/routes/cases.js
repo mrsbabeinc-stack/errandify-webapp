@@ -17,6 +17,9 @@ const extractUserId = (req) => {
         return null;
     }
 };
+// Case type classification for money ($$$) vs rest
+const MONEY_CASE_TYPES = new Set(['dispute', 'refund_request', 'quality_issue', 'cancellation']);
+const REST_CASE_TYPES = new Set(['app_issue', 'payment_enquiry', 'task_enquiry', 'safety_concern', 'other']);
 // Auto-tagging categories (7 categories)
 const AUTO_TAGS = {
     payment_issue: ['refund', 'payment', 'money', 'charge', 'bill'],
@@ -27,52 +30,76 @@ const AUTO_TAGS = {
     service_incomplete: ['unfinished', 'incomplete', 'partial', 'half-done'],
     other: []
 };
-// AI Recommendation Engine (simple rule-based, 92% confidence)
-const generateAIRecommendation = (tags, description) => {
+// AI Recommendation Engine (rule-based, 92% confidence)
+const generateAIRecommendation = (caseType, tags, description) => {
     const descLower = description.toLowerCase();
-    let score = 0;
-    let reasons = [];
-    // Payment issues
-    if (tags.includes('payment_issue') || /refund|payment|money|charge/.test(descLower)) {
-        score = 90;
-        reasons.push('Payment-related keywords detected');
-        return {
-            recommendation: 'full_refund',
-            confidence: 0.92,
-            reasoning: `${reasons.join('. ')}. Recommend full refund with apology message.`
-        };
+    // Money-involved cases
+    if (MONEY_CASE_TYPES.has(caseType)) {
+        if (caseType === 'dispute') {
+            return {
+                recommendation: 'full_refund',
+                confidence: 0.92,
+                reasoning: 'Dispute case detected. Recommend full refund with compensation.'
+            };
+        }
+        if (caseType === 'refund_request') {
+            return {
+                recommendation: 'full_refund',
+                confidence: 0.90,
+                reasoning: 'Explicit refund request. Process full refund to user account.'
+            };
+        }
+        if (caseType === 'quality_issue') {
+            return {
+                recommendation: 'partial_refund',
+                confidence: 0.88,
+                reasoning: 'Quality issue detected. Recommend partial refund (50%) as compensation.'
+            };
+        }
+        if (caseType === 'cancellation') {
+            return {
+                recommendation: 'full_refund',
+                confidence: 0.85,
+                reasoning: 'Cancellation case. Process full refund to user.'
+            };
+        }
     }
-    // Quality issues
-    if (tags.includes('quality_issue')) {
-        score = 85;
-        reasons.push('Quality concerns noted');
-        return {
-            recommendation: 'partial_refund',
-            confidence: 0.88,
-            reasoning: `${reasons.join('. ')}. Recommend 50% refund as compensation.`
-        };
+    // Rest cases
+    if (REST_CASE_TYPES.has(caseType)) {
+        if (caseType === 'safety_concern') {
+            return {
+                recommendation: 'escalated',
+                confidence: 0.95,
+                reasoning: 'Safety concern detected. Escalate to Level 3 for immediate investigation.'
+            };
+        }
+        if (caseType === 'app_issue') {
+            return {
+                recommendation: 'no_action',
+                confidence: 0.80,
+                reasoning: 'App issue reported. Route to technical support team.'
+            };
+        }
+        if (caseType === 'payment_enquiry') {
+            return {
+                recommendation: 'no_action',
+                confidence: 0.75,
+                reasoning: 'Payment enquiry received. Route to payments support team.'
+            };
+        }
+        if (caseType === 'task_enquiry') {
+            return {
+                recommendation: 'no_action',
+                confidence: 0.75,
+                reasoning: 'Task enquiry received. Provide information and close case.'
+            };
+        }
     }
-    // Safety concerns
-    if (tags.includes('safety_concern')) {
-        return {
-            recommendation: 'escalated',
-            confidence: 0.95,
-            reasoning: 'Safety concern detected. Escalate to Level 3 for investigation.'
-        };
-    }
-    // Schedule/communication issues
-    if (tags.includes('schedule_issue') || tags.includes('communication')) {
-        return {
-            recommendation: 'no_action',
-            confidence: 0.85,
-            reasoning: 'Miscommunication detected. Recommend mediation between parties.'
-        };
-    }
-    // Default
+    // Default fallback
     return {
         recommendation: 'no_action',
         confidence: 0.75,
-        reasoning: 'Insufficient evidence. Recommend manual review.'
+        reasoning: 'Case category unclear. Recommend manual review.'
     };
 };
 // Auto-tag description
@@ -100,8 +127,8 @@ router.post('/', async (req, res) => {
         }
         // Auto-tag based on description
         const autoTags = autoTagDescription(description);
-        // Generate AI recommendation
-        const aiRec = generateAIRecommendation(autoTags, description);
+        // Generate AI recommendation based on case type
+        const aiRec = generateAIRecommendation(case_type, autoTags, description);
         // Insert case
         const result = await db.query(`INSERT INTO cases (
         case_type, severity, status, complainant_user_id, respondent_user_id,
@@ -291,6 +318,193 @@ router.get('/stats/summary', async (req, res) => {
     catch (error) {
         console.error('Get stats error:', error);
         res.status(500).json({ error: 'Failed to get stats' });
+    }
+});
+// PATCH /api/cases/:id - Update case status or resolution
+router.patch('/:id', async (req, res) => {
+    try {
+        const userId = extractUserId(req);
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        const { id } = req.params;
+        const { status, resolution_type, compensation_amount, fee_assignment, resolution_notes, resolved_at } = req.body;
+        // Build the update query dynamically
+        const updates = [];
+        const values = [];
+        let paramCount = 1;
+        if (status) {
+            updates.push(`status = $${paramCount}`);
+            values.push(status);
+            paramCount++;
+        }
+        if (resolution_type) {
+            updates.push(`resolution_type = $${paramCount}`);
+            values.push(resolution_type);
+            paramCount++;
+        }
+        if (compensation_amount !== undefined) {
+            updates.push(`compensation_amount = $${paramCount}`);
+            values.push(compensation_amount);
+            paramCount++;
+        }
+        if (fee_assignment) {
+            updates.push(`fee_assignment = $${paramCount}`);
+            values.push(fee_assignment);
+            paramCount++;
+        }
+        if (resolution_notes) {
+            updates.push(`resolution_notes = $${paramCount}`);
+            values.push(resolution_notes);
+            paramCount++;
+        }
+        if (resolved_at) {
+            updates.push(`resolved_at = $${paramCount}`);
+            values.push(resolved_at);
+            paramCount++;
+        }
+        if (updates.length === 0) {
+            return res.status(400).json({ error: 'No fields to update' });
+        }
+        updates.push(`updated_at = NOW()`);
+        values.push(id);
+        const query = `
+      UPDATE cases
+      SET ${updates.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *
+    `;
+        const result = await db.query(query, values);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Case not found' });
+        }
+        res.json({
+            success: true,
+            case: result.rows[0],
+            message: 'Case updated successfully'
+        });
+    }
+    catch (error) {
+        console.error('Update case error:', error);
+        res.status(500).json({ error: 'Failed to update case' });
+    }
+});
+// POST /api/cases/demo/create-samples - Create sample test cases (dev only)
+router.post('/demo/create-samples', async (req, res) => {
+    try {
+        const sampleCases = [
+            {
+                case_type: 'app_issue',
+                severity: 'high',
+                complainant_user_id: 1,
+                respondent_user_id: 2,
+                errand_id: 101,
+                subject: 'App crashes when uploading photos',
+                description: 'The app freezes and crashes whenever I try to upload multiple photos to an errand. Tried on WiFi and mobile data, same issue.'
+            },
+            {
+                case_type: 'payment_enquiry',
+                severity: 'medium',
+                complainant_user_id: 3,
+                respondent_user_id: 4,
+                errand_id: 102,
+                subject: 'How does payment hold work?',
+                description: 'I want to understand the payment hold process. When does the money get released after completion?'
+            },
+            {
+                case_type: 'task_enquiry',
+                severity: 'low',
+                complainant_user_id: 5,
+                respondent_user_id: 6,
+                errand_id: 103,
+                subject: 'Can I edit task after posting?',
+                description: 'I posted a cleaning task but realized I need to change the location. Can I edit it or do I need to cancel and repost?'
+            },
+            {
+                case_type: 'safety_concern',
+                severity: 'critical',
+                complainant_user_id: 7,
+                respondent_user_id: 8,
+                errand_id: 104,
+                subject: 'Doer made inappropriate comments during task',
+                description: 'During the errand, the doer made offensive comments that made me feel uncomfortable and unsafe.'
+            },
+            {
+                case_type: 'app_issue',
+                severity: 'medium',
+                complainant_user_id: 9,
+                respondent_user_id: 10,
+                errand_id: 105,
+                subject: 'Cannot logout from account',
+                description: 'The logout button does not work. I have tried clearing cache and restarting the app but still unable to logout.'
+            },
+            {
+                case_type: 'task_enquiry',
+                severity: 'low',
+                complainant_user_id: 11,
+                respondent_user_id: 12,
+                errand_id: 106,
+                subject: 'What is the cancellation policy?',
+                description: 'If I cancel a task after a doer accepts it, what are the charges? Will the doer be penalized?'
+            },
+            {
+                case_type: 'safety_concern',
+                severity: 'high',
+                complainant_user_id: 13,
+                respondent_user_id: 14,
+                errand_id: 107,
+                subject: 'Suspicious user activity',
+                description: 'This user has been messaging multiple times trying to arrange meetups outside the app. Very suspicious behavior.'
+            },
+            {
+                case_type: 'payment_enquiry',
+                severity: 'low',
+                complainant_user_id: 15,
+                respondent_user_id: 16,
+                errand_id: 108,
+                subject: 'Do I get points for this task?',
+                description: 'Does completing errands earn Errandify Points? How are they calculated?'
+            }
+        ];
+        const createdCases = [];
+        for (const caseData of sampleCases) {
+            const autoTags = autoTagDescription(caseData.description);
+            const aiRec = generateAIRecommendation(caseData.case_type, autoTags, caseData.description);
+            const result = await db.query(`INSERT INTO cases (
+          case_type, severity, status, complainant_user_id, respondent_user_id,
+          errand_id, subject, description, tags, ai_recommendation, ai_confidence
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        RETURNING *`, [
+                caseData.case_type,
+                caseData.severity,
+                'open',
+                caseData.complainant_user_id,
+                caseData.respondent_user_id,
+                caseData.errand_id,
+                caseData.subject,
+                caseData.description,
+                autoTags,
+                JSON.stringify(aiRec),
+                aiRec.confidence
+            ]);
+            createdCases.push(result.rows[0]);
+        }
+        res.status(201).json({
+            success: true,
+            message: `Created ${createdCases.length} sample test cases`,
+            cases: createdCases.map(c => ({
+                id: c.id,
+                case_id: c.case_id,
+                case_type: c.case_type,
+                severity: c.severity,
+                subject: c.subject,
+                status: c.status
+            }))
+        });
+    }
+    catch (error) {
+        console.error('Create sample cases error:', error);
+        res.status(500).json({ error: 'Failed to create sample cases' });
     }
 });
 export default router;

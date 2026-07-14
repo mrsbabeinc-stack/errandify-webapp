@@ -26,6 +26,7 @@ app.use(express.static(frontendPath));
 
 // Mock database
 const mockData = {
+  cases: [],
   errands: [
     { id: 1, asker_id: 1, formatted_id: 'ER26CL-K9M7', title: 'Deep clean 3-room apartment', description: 'Full house cleaning with attention to detail', category: 'cleaning-household', status: 'open', budget: '150.00', location: 'Tanjong Pagar', postal_code: '150101', full_address: 'Tanjong Pagar Centre', deadline: '2026-07-10T18:00:00Z', created_at: new Date().toISOString() },
     { id: 2, asker_id: 1, formatted_id: 'ER26FR-ABC2', title: 'Assemble IKEA furniture', description: 'Help assembling Billy bookshelf', category: 'furniture-assembly', status: 'open', budget: '60.00', location: 'Clementi', postal_code: '120130', full_address: 'Clementi Green Estate', deadline: '2026-07-11T20:00:00Z', created_at: new Date().toISOString() },
@@ -436,6 +437,141 @@ app.post('/api/ai/check-content', (req, res) => {
       is_safe: true,
       warnings: [],
     },
+  });
+});
+
+// Cases endpoints
+app.get('/api/cases', (req, res) => {
+  res.json({
+    cases: mockData.cases,
+    total: mockData.cases.length,
+    limit: 20,
+    offset: 0
+  });
+});
+
+app.post('/api/cases/demo/create-samples', (req, res) => {
+  const sampleCases = [
+    {
+      case_type: 'app_issue',
+      severity: 'high',
+      complainant_user_id: 1,
+      respondent_user_id: 2,
+      errand_id: 101,
+      subject: 'App crashes when uploading photos',
+      description: 'The app freezes and crashes whenever I try to upload multiple photos to an errand. Tried on WiFi and mobile data, same issue.',
+      status: 'open',
+      ai_confidence: 0.80
+    },
+    {
+      case_type: 'payment_enquiry',
+      severity: 'medium',
+      complainant_user_id: 3,
+      respondent_user_id: 4,
+      errand_id: 102,
+      subject: 'How does payment hold work?',
+      description: 'I want to understand the payment hold process. When does the money get released after completion?',
+      status: 'open',
+      ai_confidence: 0.75
+    },
+    {
+      case_type: 'task_enquiry',
+      severity: 'low',
+      complainant_user_id: 5,
+      respondent_user_id: 6,
+      errand_id: 103,
+      subject: 'Can I edit task after posting?',
+      description: 'I posted a cleaning task but realized I need to change the location. Can I edit it or do I need to cancel and repost?',
+      status: 'open',
+      ai_confidence: 0.75
+    },
+    {
+      case_type: 'safety_concern',
+      severity: 'critical',
+      complainant_user_id: 7,
+      respondent_user_id: 8,
+      errand_id: 104,
+      subject: 'Doer made inappropriate comments during task',
+      description: 'During the errand, the doer made offensive comments that made me feel uncomfortable and unsafe.',
+      status: 'open',
+      ai_confidence: 0.95
+    },
+    {
+      case_type: 'app_issue',
+      severity: 'medium',
+      complainant_user_id: 9,
+      respondent_user_id: 10,
+      errand_id: 105,
+      subject: 'Cannot logout from account',
+      description: 'The logout button does not work. I have tried clearing cache and restarting the app but still unable to logout.',
+      status: 'open',
+      ai_confidence: 0.80
+    },
+    {
+      case_type: 'task_enquiry',
+      severity: 'low',
+      complainant_user_id: 11,
+      respondent_user_id: 12,
+      errand_id: 106,
+      subject: 'What is the cancellation policy?',
+      description: 'If I cancel a task after a doer accepts it, what are the charges? Will the doer be penalized?',
+      status: 'open',
+      ai_confidence: 0.75
+    },
+    {
+      case_type: 'safety_concern',
+      severity: 'high',
+      complainant_user_id: 13,
+      respondent_user_id: 14,
+      errand_id: 107,
+      subject: 'Suspicious user activity',
+      description: 'This user has been messaging multiple times trying to arrange meetups outside the app. Very suspicious behavior.',
+      status: 'open',
+      ai_confidence: 0.90
+    },
+    {
+      case_type: 'payment_enquiry',
+      severity: 'low',
+      complainant_user_id: 15,
+      respondent_user_id: 16,
+      errand_id: 108,
+      subject: 'Do I get points for this task?',
+      description: 'Does completing errands earn Errandify Points? How are they calculated?',
+      status: 'open',
+      ai_confidence: 0.75
+    }
+  ];
+
+  const createdCases = sampleCases.map((caseData, idx) => ({
+    id: mockData.cases.length + idx + 1,
+    case_id: `D26-${Math.random().toString(16).substring(2, 6).toUpperCase()}`,
+    ...caseData,
+    created_at: new Date().toISOString(),
+    asker_alias: `User-${caseData.complainant_user_id}`,
+    doer_alias: `User-${caseData.respondent_user_id}`,
+    asker_online: Math.random() > 0.5,
+    doer_online: Math.random() > 0.5,
+    tags: [],
+    ai_recommendation: {
+      recommendation: caseData.case_type === 'safety_concern' ? 'escalated' : 'no_action',
+      confidence: caseData.ai_confidence,
+      reasoning: 'Sample test case'
+    }
+  }));
+
+  mockData.cases.push(...createdCases);
+
+  res.status(201).json({
+    success: true,
+    message: `Created ${createdCases.length} sample test cases`,
+    cases: createdCases.map(c => ({
+      id: c.id,
+      case_id: c.case_id,
+      case_type: c.case_type,
+      severity: c.severity,
+      subject: c.subject,
+      status: c.status
+    }))
   });
 });
 

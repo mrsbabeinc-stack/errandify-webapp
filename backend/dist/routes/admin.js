@@ -1,481 +1,475 @@
-import { Router } from 'express';
-import { authMiddleware } from '../middleware/auth.js';
-import db from '../db.js';
-const router = Router();
-// Middleware to check if user is admin (TODO: implement proper admin role)
-const adminMiddleware = async (req, res, next) => {
-    // For now, check if user_id is in admin list
-    // In production, implement proper admin role in users table
-    const adminIds = [1]; // TODO: Replace with actual admin check
-    if (!adminIds.includes(parseInt(req.userId || '0', 10))) {
+import express from 'express';
+import { query } from '../db';
+const router = express.Router();
+// Middleware: Check if admin
+const isAdmin = (req, res, next) => {
+    if (req.user?.role !== 'admin' && req.user?.role !== 'super-admin') {
         return res.status(403).json({ error: 'Admin access required' });
     }
     next();
 };
-// GET /api/admin/dashboard - Admin dashboard overview
-router.get('/dashboard', authMiddleware, adminMiddleware, async (req, res) => {
+// ============================================
+// TIER 1: OPERATIONS
+// ============================================
+// CREATE ADMIN USER
+router.post('/admins', isAdmin, async (req, res) => {
     try {
-        // Get platform stats
-        const statsResult = await db.query(`
-      SELECT
-        (SELECT COUNT(*) FROM users) as total_users,
-        (SELECT COUNT(*) FROM errands) as total_tasks,
-        (SELECT COUNT(*) FROM errands WHERE status = 'open') as open_tasks,
-        (SELECT COUNT(*) FROM errands WHERE status IN ('completed_confirmed', 'completed_unconfirmed')) as completed_tasks,
-        (SELECT COUNT(*) FROM bids) as total_bids,
-        (SELECT COUNT(*) FROM disputes WHERE status = 'open') as open_disputes,
-        (SELECT SUM(budget) FROM errands WHERE status IN ('completed_confirmed', 'completed_unconfirmed')) as total_value_completed,
-        (SELECT COUNT(*) FROM ratings) as total_ratings,
-        (SELECT AVG(rating) FROM ratings) as avg_rating
-    `);
-        const stats = statsResult.rows[0];
-        // Get recent activity
-        const activityResult = await db.query(`
-      SELECT
-        'task_created' as event_type,
-        e.title as description,
-        e.created_at as timestamp
-      FROM errands e
-      UNION ALL
-      SELECT
-        'dispute_filed' as event_type,
-        CONCAT('Dispute: ', d.reason) as description,
-        d.created_at as timestamp
-      FROM disputes d
-      ORDER BY timestamp DESC
-      LIMIT 20
-    `);
-        // Get criminal screening stats
-        const screeningResult = await db.query(`
-      SELECT
-        COUNT(*) as total_screenings,
-        COUNT(CASE WHEN cypa_conviction THEN 1 END) as cypa_convictions,
-        COUNT(CASE WHEN womens_charter_conviction THEN 1 END) as womens_charter_convictions,
-        COUNT(CASE WHEN penal_code_conviction THEN 1 END) as penal_code_convictions,
-        COUNT(CASE WHEN elder_abuse_conviction THEN 1 END) as elder_abuse_convictions,
-        COUNT(CASE WHEN dishonesty_conviction THEN 1 END) as dishonesty_convictions
-      FROM screening_declarations
-    `);
-        const screening = screeningResult.rows[0];
-        res.json({
-            success: true,
-            data: {
-                stats: {
-                    totalUsers: parseInt(stats.total_users, 10),
-                    totalTasks: parseInt(stats.total_tasks, 10),
-                    openTasks: parseInt(stats.open_tasks, 10),
-                    completedTasks: parseInt(stats.completed_tasks, 10),
-                    totalBids: parseInt(stats.total_bids, 10),
-                    openDisputes: parseInt(stats.open_disputes, 10),
-                    totalValueCompleted: parseFloat(stats.total_value_completed) || 0,
-                    totalRatings: parseInt(stats.total_ratings, 10),
-                    averageRating: parseFloat(stats.avg_rating) || 0,
-                },
-                screening: {
-                    totalScreenings: parseInt(screening.total_screenings, 10),
-                    cypaConvictions: parseInt(screening.cypa_convictions, 10),
-                    womensCharterConvictions: parseInt(screening.womens_charter_convictions, 10),
-                    penalCodeConvictions: parseInt(screening.penal_code_convictions, 10),
-                    elderAbuseConvictions: parseInt(screening.elder_abuse_convictions, 10),
-                    dishonestyConvictions: parseInt(screening.dishonesty_convictions, 10),
-                },
-                recentActivity: activityResult.rows,
-            },
-        });
+        const { email, name, role, twoFactorEnabled } = req.body;
+        if (!email || !name || !role) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        const result = await query('INSERT INTO admin_users (email, name, role, two_factor_enabled, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())', [email, name, role, twoFactorEnabled ? 1 : 0, 'active']);
+        res.status(201).json({ id: result.insertId, email, name, role, twoFactorEnabled, status: 'active' });
     }
     catch (error) {
-        console.error('Dashboard error:', error);
-        res.status(500).json({ error: 'Failed to get dashboard data' });
+        res.status(500).json({ error: 'Failed to create admin' });
     }
 });
-// GET /api/admin/disputes - Get all disputes for review
-router.get('/disputes', authMiddleware, adminMiddleware, async (req, res) => {
+// GET ALL ADMINS
+router.get('/admins', isAdmin, async (req, res) => {
     try {
-        const { status = 'open', limit = 50, offset = 0 } = req.query;
-        let whereClause = '';
-        if (status !== 'all') {
-            whereClause = `WHERE d.status = '${status}'`;
-        }
-        const result = await db.query(`SELECT
-         d.id,
-         d.task_id,
-         d.reason,
-         d.filed_by,
-         d.status,
-         d.created_at,
-         e.title as task_title,
-         e.budget,
-         u.display_name as filer_name
-       FROM disputes d
-       JOIN errands e ON d.task_id = e.id
-       JOIN users u ON d.filed_by = u.id
-       ${whereClause}
-       ORDER BY d.created_at DESC
-       LIMIT $1 OFFSET $2`, [limit, offset]);
-        res.json({
-            success: true,
-            data: {
-                disputes: result.rows,
-            },
-        });
+        const admins = await query('SELECT id, email, name, role, status, last_login, two_factor_enabled FROM admin_users ORDER BY created_at DESC');
+        res.json(admins);
     }
     catch (error) {
-        console.error('Get disputes error:', error);
-        res.status(500).json({ error: 'Failed to get disputes' });
+        res.status(500).json({ error: 'Failed to fetch admins' });
     }
 });
-// GET /api/admin/screening - Get criminal screening declarations for review
-router.get('/screening', authMiddleware, adminMiddleware, async (req, res) => {
+// DELETE ADMIN
+router.delete('/admins/:id', isAdmin, async (req, res) => {
     try {
-        const { hasConviction, limit = 50, offset = 0 } = req.query;
-        let whereClause = '';
-        if (hasConviction === 'true') {
-            whereClause = `WHERE (cypa_conviction OR womens_charter_conviction OR penal_code_conviction OR elder_abuse_conviction OR dishonesty_conviction)`;
-        }
-        else if (hasConviction === 'false') {
-            whereClause = `WHERE NOT (cypa_conviction OR womens_charter_conviction OR penal_code_conviction OR elder_abuse_conviction OR dishonesty_conviction)`;
-        }
-        const result = await db.query(`SELECT
-         s.id,
-         s.user_id,
-         s.cypa_conviction,
-         s.womens_charter_conviction,
-         s.penal_code_conviction,
-         s.elder_abuse_conviction,
-         s.dishonesty_conviction,
-         s.created_at,
-         u.display_name,
-         u.email
-       FROM screening_declarations s
-       JOIN users u ON s.user_id = u.id
-       ${whereClause}
-       ORDER BY s.created_at DESC
-       LIMIT $1 OFFSET $2`, [limit, offset]);
-        res.json({
-            success: true,
-            data: {
-                declarations: result.rows,
-            },
-        });
+        const { id } = req.params;
+        await query('DELETE FROM admin_users WHERE id = ?', [id]);
+        res.json({ message: 'Admin deleted successfully' });
     }
     catch (error) {
-        console.error('Get screening error:', error);
-        res.status(500).json({ error: 'Failed to get screening declarations' });
+        res.status(500).json({ error: 'Failed to delete admin' });
     }
 });
-// GET /api/admin/users - Get all users with filter
-router.get('/users', authMiddleware, adminMiddleware, async (req, res) => {
+// TOGGLE 2FA
+router.patch('/admins/:id/2fa', isAdmin, async (req, res) => {
     try {
-        const { search, role, limit = 50, offset = 0 } = req.query;
-        let whereClause = 'WHERE 1=1';
-        const params = [];
-        let paramIndex = 1;
-        if (search) {
-            whereClause += ` AND (display_name ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`;
-            params.push(`%${search}%`);
-            paramIndex++;
-        }
-        if (role) {
-            whereClause += ` AND role = $${paramIndex}`;
-            params.push(role);
-            paramIndex++;
-        }
-        const result = await db.query(`SELECT
-         id,
-         display_name,
-         email,
-         role,
-         average_rating,
-         total_ratings,
-         kyc_status,
-         criminal_conviction,
-         created_at
-       FROM users
-       ${whereClause}
-       ORDER BY created_at DESC
-       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`, [...params, limit, offset]);
-        res.json({
-            success: true,
-            data: {
-                users: result.rows,
-            },
-        });
+        const { id } = req.params;
+        const { enabled } = req.body;
+        await query('UPDATE admin_users SET two_factor_enabled = ? WHERE id = ?', [enabled ? 1 : 0, id]);
+        res.json({ message: '2FA toggled successfully' });
     }
     catch (error) {
-        console.error('Get users error:', error);
-        res.status(500).json({ error: 'Failed to get users' });
+        res.status(500).json({ error: 'Failed to update 2FA' });
     }
 });
-// POST /api/admin/disputes/:id/resolve - Admin resolves dispute
-router.post('/disputes/:id/resolve', authMiddleware, adminMiddleware, async (req, res) => {
-    try {
-        const disputeId = parseInt(req.params.id, 10);
-        const { resolution, adminNotes, refundAmount } = req.body;
-        if (!resolution) {
-            return res.status(400).json({ error: 'Resolution required' });
-        }
-        await db.query(`UPDATE disputes
-         SET status = $1, resolution = $2, admin_notes = $3, updated_at = NOW()
-         WHERE id = $4`, ['resolved', resolution, adminNotes, disputeId]);
-        res.json({
-            success: true,
-            message: 'Dispute resolved',
-        });
-    }
-    catch (error) {
-        console.error('Resolve dispute error:', error);
-        res.status(500).json({ error: 'Failed to resolve dispute' });
-    }
-});
-// POST /api/admin/users/:id/restrict - Restrict user from categories
-router.post('/users/:id/restrict', authMiddleware, adminMiddleware, async (req, res) => {
-    try {
-        const userId = parseInt(req.params.id, 10);
-        const { categories, reason } = req.body;
-        if (!categories || !Array.isArray(categories)) {
-            return res.status(400).json({ error: 'Categories array required' });
-        }
-        // Add restrictions
-        for (const category of categories) {
-            const catResult = await db.query('SELECT id FROM restricted_categories WHERE category_name = $1', [category]);
-            if (catResult.rows.length > 0) {
-                await db.query(`INSERT INTO user_category_restrictions (user_id, restricted_category_id, reason)
-             VALUES ($1, $2, $3)
-             ON CONFLICT DO NOTHING`, [userId, catResult.rows[0].id, reason || 'Admin restriction']);
-            }
-        }
-        res.json({
-            success: true,
-            message: `User restricted from ${categories.length} categories`,
-        });
-    }
-    catch (error) {
-        console.error('Restrict user error:', error);
-        res.status(500).json({ error: 'Failed to restrict user' });
-    }
-});
-// GET /api/admin/moderation - Get all moderation notifications
-router.get('/moderation', authMiddleware, adminMiddleware, async (req, res) => {
-    try {
-        const { type } = req.query;
-        let query = `
-      SELECT an.id, an.type, an.severity, an.user_id, an.message, an.details, an.created_at, an.resolved,
-             u.display_name, u.email
-      FROM admin_notifications an
-      JOIN users u ON an.user_id = u.id
-      WHERE an.created_at > NOW() - INTERVAL '30 days'
-    `;
-        const params = [];
-        if (type === 'flagged_message') {
-            query += ` AND an.type = 'flagged_message'`;
-        }
-        else if (type === 'user_suspended') {
-            query += ` AND an.type = 'user_suspended'`;
-        }
-        query += ` ORDER BY an.created_at DESC LIMIT 100`;
-        const result = await db.query(query, params);
-        const notifications = result.rows.map(row => ({
-            id: row.id,
-            type: row.type,
-            severity: row.severity,
-            userId: row.user_id,
-            userName: row.display_name,
-            userEmail: row.email,
-            message: row.message,
-            details: typeof row.details === 'string' ? JSON.parse(row.details) : row.details,
-            createdAt: row.created_at,
-            resolved: row.resolved,
-        }));
-        // Get stats
-        const statsResult = await db.query(`
-      SELECT
-        (SELECT COUNT(*) FROM admin_notifications WHERE type = 'flagged_message' AND created_at > NOW() - INTERVAL '30 days') as total_flagged,
-        (SELECT COUNT(*) FROM admin_notifications WHERE type = 'user_suspended' AND created_at > NOW() - INTERVAL '30 days') as total_suspended,
-        (SELECT COUNT(*) FROM admin_notifications WHERE resolved = false AND created_at > NOW() - INTERVAL '30 days') as active_notifications
-    `);
-        const stats = {
-            totalFlagged: parseInt(statsResult.rows[0].total_flagged),
-            totalSuspended: parseInt(statsResult.rows[0].total_suspended),
-            activeNotifications: parseInt(statsResult.rows[0].active_notifications),
-        };
-        res.json({
-            success: true,
-            data: {
-                notifications,
-                stats,
-            },
-        });
-    }
-    catch (error) {
-        console.error('Moderation fetch error:', error);
-        res.status(500).json({ error: 'Failed to fetch moderation data' });
-    }
-});
-// PUT /api/admin/moderation/:notificationId/resolve - Mark notification as resolved
-router.put('/moderation/:notificationId/resolve', authMiddleware, adminMiddleware, async (req, res) => {
-    try {
-        const { notificationId } = req.params;
-        const adminId = parseInt(req.userId || '0', 10);
-        await db.query(`UPDATE admin_notifications SET resolved = true, resolved_by = $1, resolved_at = NOW() WHERE id = $2`, [adminId, notificationId]);
-        res.json({ success: true, message: 'Notification marked as resolved' });
-    }
-    catch (error) {
-        console.error('Resolve error:', error);
-        res.status(500).json({ error: 'Failed to resolve' });
-    }
-});
-// POST /api/admin/users/:userId/suspend - Manually suspend user
-router.post('/users/:userId/suspend', authMiddleware, adminMiddleware, async (req, res) => {
+// ============================================
+// USER MANAGEMENT
+// ============================================
+// SUSPEND USER
+router.post('/users/:userId/suspend', isAdmin, async (req, res) => {
     try {
         const { userId } = req.params;
-        const { days = 1 } = req.body;
-        const adminId = parseInt(req.userId || '0', 10);
-        const suspendUntil = new Date();
-        suspendUntil.setDate(suspendUntil.getDate() + days);
-        await db.query(`UPDATE users SET suspended_until = $1 WHERE id = $2`, [suspendUntil, userId]);
-        // Create admin notification
-        const userResult = await db.query(`SELECT display_name, email FROM users WHERE id = $1`, [userId]);
-        const user = userResult.rows[0];
-        await db.query(`INSERT INTO admin_notifications (type, severity, user_id, message, details, created_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`, [
-            'user_suspended',
-            'high',
-            userId,
-            `User ${user.display_name} manually suspended for ${days} day(s) by admin`,
-            JSON.stringify({
-                userId,
-                userName: user.display_name,
-                userEmail: user.email,
-                reason: `Manually suspended by admin for ${days} day(s)`,
-                suspendedUntil: suspendUntil.toISOString(),
-                adminId,
-            }),
-        ]);
-        res.json({ success: true, message: `User suspended for ${days} day(s)` });
+        const { reason } = req.body;
+        if (!reason)
+            return res.status(400).json({ error: 'Suspension reason required' });
+        await query('UPDATE users SET status = ?, suspension_reason = ?, suspended_at = NOW() WHERE id = ?', ['suspended', reason, userId]);
+        res.json({ message: 'User suspended successfully' });
     }
     catch (error) {
-        console.error('Suspension error:', error);
         res.status(500).json({ error: 'Failed to suspend user' });
     }
 });
-// POST /api/admin/migrate-formatted-ids - Run migration to populate formatted_id, offer_id, formatted_user_id
-// NOTE: Temporarily removed auth requirement for emergency fix
-router.post('/migrate-formatted-ids', async (req, res) => {
+// BAN USER
+router.post('/users/:userId/ban', isAdmin, async (req, res) => {
     try {
-        console.log('[Admin] Starting formatted ID migration...');
-        // Category code mapping (same as generateErrandId)
-        const categoryCodeMap = {
-            'home-maintenance': 'HM',
-            'cleaning-household': 'CL',
-            'food-beverage': 'FD',
-            'furniture-assembly': 'FR',
-            'shopping-errands': 'SH',
-            'delivery-moving': 'DV',
-            'travel-mobility': 'TR',
-            'event-planning': 'EV',
-            'childcare-education': 'CH',
-            'eldercare-healthcare': 'EL',
-            'pet-care': 'PC',
-            'personal-care': 'PS',
-            'tech-support': 'TC',
-            'creative-arts': 'AR',
-            'admin-business': 'AD',
-            'charity-community': 'CC',
-        };
-        const year = new Date().getFullYear().toString().slice(-2); // '26' for 2026
-        // Helper to generate random hex suffix
-        const generateSuffix = (seed) => {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let suffix = '';
-            for (let i = 0; i < 4; i++) {
-                suffix += chars[Math.floor(Math.random() * chars.length)];
-            }
-            return suffix;
-        };
-        // Migrate errands - generate formatted_id based on category
-        const errandsResult = await db.query('SELECT id, category FROM errands WHERE formatted_id IS NULL');
-        let errandsCount = 0;
-        for (const errand of errandsResult.rows) {
-            const catCode = categoryCodeMap[errand.category.toLowerCase()] || 'XX';
-            const suffix = generateSuffix(errand.id.toString());
-            const formattedId = `ER${year}${catCode}-${suffix}`;
-            await db.query('UPDATE errands SET formatted_id = $1 WHERE id = $2', [formattedId, errand.id]);
-            errandsCount++;
-        }
-        console.log(`[Admin] Migrated ${errandsCount} errand formatted_ids`);
-        // Migrate bids - generate offer_id (including fixing lowercase ones to uppercase)
-        const bidsResult = await db.query('SELECT id, offer_id FROM bids WHERE offer_id IS NULL OR offer_id LIKE \'%[a-z]%\'');
-        let bidsCount = 0;
-        for (const bid of bidsResult.rows) {
-            let offerId;
-            if (bid.offer_id && bid.offer_id.toUpperCase() === bid.offer_id) {
-                // Already uppercase, skip
-                continue;
-            }
-            const suffix = generateSuffix(bid.id.toString());
-            offerId = `OF${year}${suffix}`.toUpperCase();
-            await db.query('UPDATE bids SET offer_id = $1 WHERE id = $2', [offerId, bid.id]);
-            bidsCount++;
-        }
-        // Uppercase ALL existing offer_ids (fix mixed case)
-        const uppercaseResult = await db.query('UPDATE bids SET offer_id = UPPER(offer_id) WHERE offer_id IS NOT NULL AND offer_id != UPPER(offer_id)');
-        console.log(`[Admin] Uppercased ${uppercaseResult.rowCount} existing offer_ids`);
-        console.log(`[Admin] Migrated ${bidsCount} bid offer_ids`);
-        // Fix existing errands: use verified postal code mappings from OneMap
-        // These are corrected values based on actual OneMap lookup results
-        const postalCodeToArea = {
-            '507565': 'Bukit Timah',
-            '469999': 'Bedok',
-            '629652': 'Gul / Tuas / Joo Koon',
-            '680433': 'Choa Chu Kang',
-            '408600': 'Eunos / Paya Lebar',
-            '569957': 'Ang Mo Kio',
-        };
-        // Get errands with bad location data (unit numbers, empty, or generic)
-        const badLocationResult = await db.query(`
-      SELECT id, postal_code, location FROM errands
-      WHERE (location LIKE '#%' OR location = '' OR location IS NULL OR location IN ('Singapore', 'Remote', 'Location'))
-      AND postal_code IS NOT NULL
-      AND status IN ('completed', 'completed_confirmed', 'completed_unconfirmed')
-    `);
-        let locationFixCount = 0;
-        for (const errand of badLocationResult.rows) {
-            const postalStr = String(errand.postal_code).trim().replace(/^S/i, '').replace(/[^0-9]/g, '');
-            const mappedArea = postalCodeToArea[postalStr];
-            if (mappedArea) {
-                await db.query('UPDATE errands SET location = $1 WHERE id = $2', [mappedArea, errand.id]);
-                locationFixCount++;
-            }
-            else {
-                // For unmapped postal codes, mark as "Unable to verify" instead of guessing
-                await db.query('UPDATE errands SET location = $1 WHERE id = $2', ['Unable to verify', errand.id]);
-                locationFixCount++;
-            }
-        }
-        console.log(`[Admin] Fixed ${locationFixCount} errand locations using OneMap verified postal code mappings`);
-        // Migrate users - generate formatted_user_id
-        const usersResult = await db.query('SELECT id FROM users WHERE formatted_user_id IS NULL');
-        let usersCount = 0;
-        for (const user of usersResult.rows) {
-            const suffix = generateSuffix(user.id.toString());
-            const userId = `SG${suffix}`;
-            await db.query('UPDATE users SET formatted_user_id = $1 WHERE id = $2', [userId, user.id]);
-            usersCount++;
-        }
-        console.log(`[Admin] Migrated ${usersCount} user formatted_user_ids`);
-        res.json({
-            success: true,
-            message: 'Migration completed successfully',
-            data: {
-                errandsCount,
-                bidsCount,
-                usersCount,
-            }
-        });
+        const { userId } = req.params;
+        const { reason } = req.body;
+        if (!reason)
+            return res.status(400).json({ error: 'Ban reason required' });
+        await query('UPDATE users SET status = ?, ban_reason = ?, banned_at = NOW() WHERE id = ?', ['banned', reason, userId]);
+        res.json({ message: 'User banned successfully' });
     }
     catch (error) {
-        console.error('Migration error:', error);
-        res.status(500).json({ error: 'Failed to run migration' });
+        res.status(500).json({ error: 'Failed to ban user' });
+    }
+});
+// RESTORE USER
+router.post('/users/:userId/restore', isAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        await query('UPDATE users SET status = ?, suspension_reason = NULL, ban_reason = NULL WHERE id = ?', ['active', userId]);
+        res.json({ message: 'User restored successfully' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to restore user' });
+    }
+});
+// CHANGE USER TIER
+router.patch('/users/:userId/tier', isAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { tier } = req.body;
+        if (!['new', 'trusted', 'vip'].includes(tier)) {
+            return res.status(400).json({ error: 'Invalid tier' });
+        }
+        await query('UPDATE users SET tier = ? WHERE id = ?', [tier, userId]);
+        res.json({ message: 'User tier updated successfully' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to update user tier' });
+    }
+});
+// ============================================
+// PAYMENT MANAGEMENT
+// ============================================
+// PROCESS REFUND
+router.post('/payments/:transactionId/refund', isAdmin, async (req, res) => {
+    try {
+        const { transactionId } = req.params;
+        const { reason, amount } = req.body;
+        if (!reason)
+            return res.status(400).json({ error: 'Refund reason required' });
+        await query('INSERT INTO payment_refunds (transaction_id, amount, reason, admin_id, created_at) VALUES (?, ?, ?, ?, NOW())', [transactionId, amount, reason, req.user?.id]);
+        await query('UPDATE payments SET status = ?, refunded_at = NOW() WHERE id = ?', ['refunded', transactionId]);
+        res.json({ message: 'Refund processed successfully' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to process refund' });
+    }
+});
+// RETRY FAILED PAYMENT
+router.post('/payments/:transactionId/retry', isAdmin, async (req, res) => {
+    try {
+        const { transactionId } = req.params;
+        await query('UPDATE payments SET status = ?, retry_count = retry_count + 1 WHERE id = ?', ['pending', transactionId]);
+        res.json({ message: 'Payment retry initiated' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to retry payment' });
+    }
+});
+// ============================================
+// ERRAND MANAGEMENT
+// ============================================
+// CANCEL ERRAND WITH COMPENSATION
+router.post('/errands/:errandId/cancel', isAdmin, async (req, res) => {
+    try {
+        const { errandId } = req.params;
+        const { reason, compensationAmount } = req.body;
+        if (!reason)
+            return res.status(400).json({ error: 'Cancellation reason required' });
+        await query('UPDATE errands SET status = ?, cancellation_reason = ?, cancelled_at = NOW() WHERE id = ?', ['cancelled', reason, errandId]);
+        if (compensationAmount > 0) {
+            await query('INSERT INTO admin_compensation (errand_id, amount, reason, admin_id, created_at) VALUES (?, ?, ?, ?, NOW())', [errandId, compensationAmount, reason, req.user?.id]);
+        }
+        res.json({ message: 'Errand cancelled with compensation issued' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to cancel errand' });
+    }
+});
+// REASSIGN ERRAND
+router.patch('/errands/:errandId/reassign', isAdmin, async (req, res) => {
+    try {
+        const { errandId } = req.params;
+        const { newDoerId } = req.body;
+        if (!newDoerId)
+            return res.status(400).json({ error: 'New doer ID required' });
+        await query('UPDATE errands SET assigned_to = ? WHERE id = ?', [newDoerId, errandId]);
+        res.json({ message: 'Errand reassigned successfully' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to reassign errand' });
+    }
+});
+// EXTEND DEADLINE
+router.patch('/errands/:errandId/extend', isAdmin, async (req, res) => {
+    try {
+        const { errandId } = req.params;
+        const { newDeadline } = req.body;
+        if (!newDeadline)
+            return res.status(400).json({ error: 'New deadline required' });
+        await query('UPDATE errands SET deadline = ? WHERE id = ?', [newDeadline, errandId]);
+        res.json({ message: 'Errand deadline extended' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to extend deadline' });
+    }
+});
+// FORCE MARK COMPLETE
+router.post('/errands/:errandId/complete', isAdmin, async (req, res) => {
+    try {
+        const { errandId } = req.params;
+        await query('UPDATE errands SET status = ?, completed_at = NOW() WHERE id = ?', ['completed', errandId]);
+        res.json({ message: 'Errand marked as completed' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to mark errand complete' });
+    }
+});
+// ============================================
+// TIER 2: CONFIGURATION
+// ============================================
+// ADD STAFF TO COMPANY
+router.post('/companies/:companyId/staff', isAdmin, async (req, res) => {
+    try {
+        const { companyId } = req.params;
+        const { name, email, role } = req.body;
+        if (!name || !email || !role)
+            return res.status(400).json({ error: 'Missing required fields' });
+        const result = await query('INSERT INTO company_staff (company_id, name, email, role, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())', [companyId, name, email, role, 'active']);
+        res.status(201).json({ id: result.insertId, name, email, role });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to add staff' });
+    }
+});
+// REMOVE STAFF
+router.delete('/companies/:companyId/staff/:staffId', isAdmin, async (req, res) => {
+    try {
+        const { companyId, staffId } = req.params;
+        await query('DELETE FROM company_staff WHERE id = ? AND company_id = ?', [staffId, companyId]);
+        res.json({ message: 'Staff member removed' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to remove staff' });
+    }
+});
+// GENERATE API KEY
+router.post('/companies/:companyId/api-keys', isAdmin, async (req, res) => {
+    try {
+        const { companyId } = req.params;
+        const { name } = req.body;
+        const apiKey = `sk_live_${Math.random().toString(36).substr(2, 20)}`;
+        const result = await query('INSERT INTO api_keys (company_id, name, key, status, created_at) VALUES (?, ?, ?, ?, NOW())', [companyId, name, apiKey, 'active']);
+        res.status(201).json({ id: result.insertId, name, key: apiKey });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to generate API key' });
+    }
+});
+// REVOKE API KEY
+router.patch('/api-keys/:keyId/revoke', isAdmin, async (req, res) => {
+    try {
+        const { keyId } = req.params;
+        await query('UPDATE api_keys SET status = ? WHERE id = ?', ['revoked', keyId]);
+        res.json({ message: 'API key revoked' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to revoke API key' });
+    }
+});
+// CREATE WEBHOOK
+router.post('/companies/:companyId/webhooks', isAdmin, async (req, res) => {
+    try {
+        const { companyId } = req.params;
+        const { url, events } = req.body;
+        if (!url || !events || events.length === 0)
+            return res.status(400).json({ error: 'URL and events required' });
+        const result = await query('INSERT INTO webhooks (company_id, url, events, status, created_at) VALUES (?, ?, ?, ?, NOW())', [companyId, url, JSON.stringify(events), 'active']);
+        res.status(201).json({ id: result.insertId, url, events });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to create webhook' });
+    }
+});
+// TOGGLE WEBHOOK
+router.patch('/webhooks/:webhookId/toggle', isAdmin, async (req, res) => {
+    try {
+        const { webhookId } = req.params;
+        const webhook = await query('SELECT status FROM webhooks WHERE id = ?', [webhookId]);
+        const newStatus = webhook[0]?.status === 'active' ? 'inactive' : 'active';
+        await query('UPDATE webhooks SET status = ? WHERE id = ?', [newStatus, webhookId]);
+        res.json({ message: 'Webhook status updated' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to toggle webhook' });
+    }
+});
+// DELETE WEBHOOK
+router.delete('/webhooks/:webhookId', isAdmin, async (req, res) => {
+    try {
+        const { webhookId } = req.params;
+        await query('DELETE FROM webhooks WHERE id = ?', [webhookId]);
+        res.json({ message: 'Webhook deleted' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to delete webhook' });
+    }
+});
+// TOGGLE FEATURE FLAG
+router.patch('/feature-flags/:flagId', isAdmin, async (req, res) => {
+    try {
+        const { flagId } = req.params;
+        const { enabled } = req.body;
+        await query('UPDATE feature_flags SET enabled = ?, updated_at = NOW() WHERE id = ?', [enabled ? 1 : 0, flagId]);
+        res.json({ message: 'Feature flag updated' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to update feature flag' });
+    }
+});
+// UPDATE ROLLOUT
+router.patch('/feature-flags/:flagId/rollout', isAdmin, async (req, res) => {
+    try {
+        const { flagId } = req.params;
+        const { percentage } = req.body;
+        if (percentage < 0 || percentage > 100)
+            return res.status(400).json({ error: 'Percentage must be 0-100' });
+        await query('UPDATE feature_flags SET rollout_percentage = ?, updated_at = NOW() WHERE id = ?', [percentage, flagId]);
+        res.json({ message: 'Rollout percentage updated' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to update rollout' });
+    }
+});
+// ADD HOLIDAY
+router.post('/holidays', isAdmin, async (req, res) => {
+    try {
+        const { date, name, country } = req.body;
+        if (!date || !name)
+            return res.status(400).json({ error: 'Date and name required' });
+        const result = await query('INSERT INTO holidays (date, name, country, created_at) VALUES (?, ?, ?, NOW())', [date, name, country || 'SG']);
+        res.status(201).json({ id: result.insertId, date, name, country });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to add holiday' });
+    }
+});
+// DELETE HOLIDAY
+router.delete('/holidays/:holidayId', isAdmin, async (req, res) => {
+    try {
+        const { holidayId } = req.params;
+        await query('DELETE FROM holidays WHERE id = ?', [holidayId]);
+        res.json({ message: 'Holiday deleted' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to delete holiday' });
+    }
+});
+// GET AUDIT LOGS
+router.get('/audit-logs', isAdmin, async (req, res) => {
+    try {
+        const logs = await query('SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 100');
+        res.json(logs);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch audit logs' });
+    }
+});
+// PROCESS GDPR REQUEST
+router.post('/gdpr-requests/:requestId/process', isAdmin, async (req, res) => {
+    try {
+        const { requestId } = req.params;
+        const { status } = req.body;
+        if (!['pending', 'processing', 'completed', 'denied'].includes(status)) {
+            return res.status(400).json({ error: 'Invalid status' });
+        }
+        await query('UPDATE gdpr_requests SET status = ?, updated_at = NOW() WHERE id = ?', [status, requestId]);
+        res.json({ message: 'GDPR request updated' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to process GDPR request' });
+    }
+});
+// CREATE ALERT RULE
+router.post('/alert-rules', isAdmin, async (req, res) => {
+    try {
+        const { name, condition, threshold, channels } = req.body;
+        if (!name || !condition || !channels || channels.length === 0) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        const result = await query('INSERT INTO alert_rules (name, condition, threshold, channels, enabled, created_at) VALUES (?, ?, ?, ?, ?, NOW())', [name, condition, threshold, JSON.stringify(channels), 1]);
+        res.status(201).json({ id: result.insertId, name, condition, threshold, channels });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to create alert rule' });
+    }
+});
+// TOGGLE ALERT RULE
+router.patch('/alert-rules/:ruleId', isAdmin, async (req, res) => {
+    try {
+        const { ruleId } = req.params;
+        const { enabled } = req.body;
+        await query('UPDATE alert_rules SET enabled = ? WHERE id = ?', [enabled ? 1 : 0, ruleId]);
+        res.json({ message: 'Alert rule updated' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to update alert rule' });
+    }
+});
+// CREATE EMAIL CAMPAIGN
+router.post('/campaigns/email', isAdmin, async (req, res) => {
+    try {
+        const { name, subject, recipientCount } = req.body;
+        if (!name || !subject)
+            return res.status(400).json({ error: 'Name and subject required' });
+        const result = await query('INSERT INTO email_campaigns (name, subject, recipient_count, status, created_at) VALUES (?, ?, ?, ?, NOW())', [name, subject, recipientCount, 'draft']);
+        res.status(201).json({ id: result.insertId, name, subject, status: 'draft' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to create email campaign' });
+    }
+});
+// SEND NOTIFICATION
+router.post('/notifications/send', isAdmin, async (req, res) => {
+    try {
+        const { title, message, type, targetAudience } = req.body;
+        if (!title || !message)
+            return res.status(400).json({ error: 'Title and message required' });
+        const result = await query('INSERT INTO notifications (title, message, type, target_audience, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())', [title, message, type, targetAudience, 'scheduled']);
+        res.status(201).json({ id: result.insertId, title, message });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to send notification' });
+    }
+});
+// CREATE EVENT REMINDER
+router.post('/event-reminders', isAdmin, async (req, res) => {
+    try {
+        const { eventName, description, scheduledDate, reminderTiming } = req.body;
+        if (!eventName || !scheduledDate)
+            return res.status(400).json({ error: 'Event name and date required' });
+        const result = await query('INSERT INTO event_reminders (event_name, description, scheduled_date, reminder_timing, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())', [eventName, description, scheduledDate, reminderTiming, 'active']);
+        res.status(201).json({ id: result.insertId, eventName, scheduledDate });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to create event reminder' });
+    }
+});
+// CREATE BLOG ARTICLE
+router.post('/blog/articles', isAdmin, async (req, res) => {
+    try {
+        const { title, author, category, content } = req.body;
+        if (!title || !author)
+            return res.status(400).json({ error: 'Title and author required' });
+        const result = await query('INSERT INTO blog_articles (title, author, category, content, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())', [title, author, category, content, 'draft']);
+        res.status(201).json({ id: result.insertId, title, author, status: 'draft' });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to create article' });
+    }
+});
+// AWARD RECOGNITION
+router.post('/recognition/award', isAdmin, async (req, res) => {
+    try {
+        const { userId, award, reason } = req.body;
+        if (!userId || !award)
+            return res.status(400).json({ error: 'User ID and award required' });
+        const result = await query('INSERT INTO recognitions (user_id, award, reason, visibility, awarded_at) VALUES (?, ?, ?, ?, NOW())', [userId, award, reason, 'public']);
+        res.status(201).json({ id: result.insertId, award });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to award recognition' });
+    }
+});
+// CREATE HERO BANNER
+router.post('/banners/hero', isAdmin, async (req, res) => {
+    try {
+        const { title, subtitle, ctaText, ctaLink, displayLocation } = req.body;
+        if (!title || !ctaText)
+            return res.status(400).json({ error: 'Title and CTA text required' });
+        const result = await query('INSERT INTO hero_banners (title, subtitle, cta_text, cta_link, display_location, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())', [title, subtitle, ctaText, ctaLink, displayLocation, 'scheduled']);
+        res.status(201).json({ id: result.insertId, title });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to create banner' });
     }
 });
 export default router;

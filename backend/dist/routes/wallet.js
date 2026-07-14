@@ -243,7 +243,7 @@ router.get('/search-users', authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Failed to search users' });
     }
 });
-// POST /api/wallet/gift-points - Send points to another user
+// POST /api/wallet/gift-points - Send points to single recipient
 router.post('/gift-points', authMiddleware, async (req, res) => {
     try {
         const senderId = parseInt(req.userId || '0', 10);
@@ -253,10 +253,7 @@ router.post('/gift-points', authMiddleware, async (req, res) => {
             return res.status(400).json({ error: 'Invalid recipient or points amount' });
         }
         const pointsAmount = parseInt(points, 10);
-        if (pointsAmount > 25) {
-            return res.status(400).json({ error: 'Cannot send more than 25 points at a time' });
-        }
-        // Get sender's current points (from errandify_points table if it exists, or calculate)
+        // Get sender's current points
         const senderResult = await db.query(`SELECT errandify_points FROM users WHERE id = $1`, [senderId]);
         if (senderResult.rows.length === 0) {
             return res.status(404).json({ error: 'Sender not found' });
@@ -275,8 +272,8 @@ router.post('/gift-points', authMiddleware, async (req, res) => {
         // Update recipient's points (add)
         await db.query(`UPDATE users SET errandify_points = errandify_points + $1 WHERE id = $2`, [pointsAmount, recipientId]);
         // Log the transaction
-        await db.query(`INSERT INTO point_transactions (sender_id, recipient_id, points, type, created_at)
-       VALUES ($1, $2, $3, 'gift', NOW())`, [senderId, recipientId, pointsAmount]);
+        await db.query(`INSERT INTO point_transactions (sender_id, recipient_id, points, type, description, created_at)
+       VALUES ($1, $2, $3, 'gift', $4, NOW())`, [senderId, recipientId, pointsAmount, 'Received gift from sender']);
         res.json({
             success: true,
             message: `Successfully sent ${pointsAmount} EP to recipient!`,
@@ -288,6 +285,61 @@ router.post('/gift-points', authMiddleware, async (req, res) => {
     catch (error) {
         console.error('Gift points error:', error);
         res.status(500).json({ error: 'Failed to send points' });
+    }
+});
+// POST /api/wallet/send-gift - Send gift to multiple recipients (supports groups)
+router.post('/send-gift', authMiddleware, async (req, res) => {
+    try {
+        const senderId = parseInt(req.userId || '0', 10);
+        const { points, recipientIds, message, giftDate } = req.body;
+        // Validate input
+        if (!points || points <= 0) {
+            return res.status(400).json({ error: 'Invalid points amount' });
+        }
+        if (!recipientIds || !Array.isArray(recipientIds) || recipientIds.length === 0) {
+            return res.status(400).json({ error: 'Please select at least one recipient' });
+        }
+        const pointsAmount = parseInt(points, 10);
+        const totalCost = pointsAmount * recipientIds.length;
+        // Get sender's current points
+        const senderResult = await db.query(`SELECT errandify_points FROM users WHERE id = $1`, [senderId]);
+        if (senderResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Sender not found' });
+        }
+        const senderPoints = senderResult.rows[0].errandify_points || 0;
+        if (senderPoints < totalCost) {
+            return res.status(400).json({ error: `Insufficient points. You need ${totalCost} EP but have ${senderPoints} EP` });
+        }
+        // Verify all recipients exist
+        const recipientCheckResult = await db.query(`SELECT id FROM users WHERE id = ANY($1)`, [recipientIds]);
+        if (recipientCheckResult.rows.length !== recipientIds.length) {
+            return res.status(400).json({ error: 'One or more recipients not found' });
+        }
+        // Deduct points from sender once
+        console.log(`Sending gift: Deducting ${totalCost} EP from sender ${senderId}`);
+        const updatedSender = await db.query(`UPDATE users SET errandify_points = errandify_points - $1 WHERE id = $2 RETURNING errandify_points`, [totalCost, senderId]);
+        // Add points to each recipient and log transaction
+        for (const recipientId of recipientIds) {
+            // Add points to recipient
+            await db.query(`UPDATE users SET errandify_points = errandify_points + $1 WHERE id = $2`, [pointsAmount, recipientId]);
+            // Log transaction for each recipient
+            await db.query(`INSERT INTO point_transactions (sender_id, recipient_id, points, type, description, created_at)
+         VALUES ($1, $2, $3, 'gift', $4, NOW())`, [senderId, recipientId, pointsAmount, message || 'Received gift']);
+        }
+        res.json({
+            success: true,
+            message: `✅ Gift sent! ${recipientIds.length} recipient(s) received ${pointsAmount} EP each`,
+            data: {
+                totalSent: totalCost,
+                recipientsCount: recipientIds.length,
+                pointsPerRecipient: pointsAmount,
+                senderRemainingPoints: updatedSender.rows[0]?.errandify_points || 0,
+            },
+        });
+    }
+    catch (error) {
+        console.error('Send gift error:', error);
+        res.status(500).json({ error: 'Failed to send gift' });
     }
 });
 // POST /api/wallet/redeem - Redeem a reward (supports both individual users and companies)
