@@ -108,6 +108,7 @@ import InvoicingDashboard from './pages/admin/InvoicingDashboard';
 import LeaveManagementDashboard from './pages/admin/LeaveManagementDashboard';
 import ExpenseClaimsDashboard from './pages/admin/ExpenseClaimsDashboard';
 import AIReportsDashboard from './pages/admin/AIReportsDashboard';
+import AccountsHRIntegrationDashboard from './pages/admin/AccountsHRIntegrationDashboard';
 import CompanyRegistrationPage from './pages/CompanyRegistrationPage';
 import MyCompanyDashboard from './pages/MyCompanyDashboard';
 import CompanyStaffManagement from './pages/CompanyStaffManagement';
@@ -488,6 +489,7 @@ export default function App() {
         <Route path="/admin/leave-management" element={isAuthenticated && isAdmin ? <LeaveManagementDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/expense-claims" element={isAuthenticated && isAdmin ? <ExpenseClaimsDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/ai-reports" element={isAuthenticated && isAdmin ? <AIReportsDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/accounts-hr-integration" element={isAuthenticated && isAdmin ? <AccountsHRIntegrationDashboard /> : <Navigate to="/login" replace />} />
 
         {/* Company Registration and Dashboard Routes */}
         <Route path="/company/register" element={isAuthenticated ? <CompanyRegistrationPage /> : <Navigate to="/login" replace />} />

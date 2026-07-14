@@ -112,6 +112,7 @@ const menuItems: MenuItem[] = [
     label: 'Accounts & HR',
     icon: '💼',
     children: [
+      { id: 'integration', label: 'Integration Dashboard', icon: '📊', path: '/admin/accounts-hr-integration' },
       { id: 'accounts', label: 'Accounts', icon: '💰', path: '/admin/accounts' },
       { id: 'hr', label: 'HR', icon: '👥', path: '/admin/hr' },
       { id: 'payroll', label: 'Payroll', icon: '💵', path: '/admin/payroll' },
