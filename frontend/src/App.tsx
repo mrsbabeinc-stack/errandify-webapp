@@ -80,7 +80,7 @@ import DiscountCodesPage from './pages/admin/DiscountCodesPage';
 import { ErrandifyPointsEnhancedPage as AdminErrandifyPointsPage } from './pages/admin/ErrandifyPointsEnhanced';
 import EmailPage from './pages/admin/Email';
 import { GrantEPEnhancedPage as GrantPointsPage } from './pages/admin/GrantPointsEnhanced';
-import EPRulesPage from './pages/admin/PointEarningRules';
+import { EPRulesFlexiblePage as EPRulesPage } from './pages/admin/EPRulesFlexible';
 import CompanyManagement from './pages/admin/CompanyManagement';
 import SubscriptionPackages from './pages/admin/SubscriptionPackages';
 import AdvertisingApproval from './pages/admin/AdvertisingApproval';
