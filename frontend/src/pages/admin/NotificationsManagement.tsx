@@ -697,7 +697,7 @@ export default function NotificationsManagement() {
                     </div>
 
                     <div style={{ fontSize: '11px', color: '#999', marginBottom: '8px' }}>
-                      {statusIcons[notif.status]} {notif.status.toUpperCase()} • {group?.name || 'Unknown'} • {notif.channels.join(', ').toUpperCase()}
+                      {statusIcons[notif.status]} {notif.status.toUpperCase()} • {group?.name || 'Unknown'} • {(notif.channels || []).join(', ').toUpperCase()}
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
