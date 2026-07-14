@@ -509,7 +509,7 @@ const RBACManagementDashboard: React.FC = () => {
         )}
 
         {/* PERMISSIONS TAB */}
-        {activeTab === 'permissions' && selectedRole ? (
+        {activeTab === 'permissions' && selectedRole && (
           <div>
             <div style={{ marginBottom: '20px' }}>
               <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600', color: '#333' }}>
@@ -552,46 +552,50 @@ const RBACManagementDashboard: React.FC = () => {
             </div>
 
             <div style={{ display: 'grid', gap: '20px', marginBottom: '24px' }}>
-              {Object.entries(getPermissionsByCategory()).map(([category, perms]) => (
-                <div key={category} style={{ padding: '16px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '8px' }}>
-                  <div style={{ fontWeight: '600', fontSize: '14px', color: '#333', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    📋 {category}
-                    <span style={{ fontSize: '11px', color: '#999', fontWeight: '400' }}>({perms.length} permissions)</span>
+              {Object.entries(getPermissionsByCategory()).map(([category, perms]) => {
+                return (
+                  <div key={category} style={{ padding: '16px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '8px' }}>
+                    <div style={{ fontWeight: '600', fontSize: '14px', color: '#333', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      📋 {category}
+                      <span style={{ fontSize: '11px', color: '#999', fontWeight: '400' }}>({perms.length} permissions)</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '8px' }}>
+                      {perms.map(perm => {
+                        return (
+                          <label
+                            key={perm.id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '8px',
+                              padding: '8px',
+                              background: selectedPermissions.has(perm.id) ? '#FFF8F5' : 'transparent',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              border: selectedPermissions.has(perm.id) ? '1px solid #FFD9B3' : '1px solid transparent',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedPermissions.has(perm.id)}
+                              onChange={() => handlePermissionToggle(perm.id)}
+                              style={{ marginTop: '2px', cursor: 'pointer', width: '16px', height: '16px' }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: '600', fontSize: '12px', color: '#333' }}>
+                                {perm.name}
+                              </div>
+                              <div style={{ fontSize: '11px', color: '#666' }}>
+                                {perm.description}
+                              </div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '8px' }}>
-                    {perms.map(perm => (
-                      <label
-                        key={perm.id}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: '8px',
-                          padding: '8px',
-                          background: selectedPermissions.has(perm.id) ? '#FFF8F5' : 'transparent',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          border: selectedPermissions.has(perm.id) ? '1px solid #FFD9B3' : '1px solid transparent',
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedPermissions.has(perm.id)}
-                          onChange={() => handlePermissionToggle(perm.id)}
-                          style={{ marginTop: '2px', cursor: 'pointer', width: '16px', height: '16px' }}
-                        />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: '600', fontSize: '12px', color: '#333' }}>
-                            {perm.name}
-                          </div>
-                          <div style={{ fontSize: '11px', color: '#666' }}>
-                            {perm.description}
-                          </div>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -635,7 +639,7 @@ const RBACManagementDashboard: React.FC = () => {
         )}
 
         {/* PERMISSIONS TAB - No Role Selected */}
-        {activeTab === 'permissions' && !selectedRole && (
+        {activeTab === 'permissions' && !selectedRole  && (
           <div style={{ padding: '32px', textAlign: 'center', background: '#F5F5F5', borderRadius: '8px' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>👔</div>
             <div style={{ fontSize: '16px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>Select a Role</div>
