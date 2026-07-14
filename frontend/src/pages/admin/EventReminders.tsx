@@ -26,6 +26,8 @@ export default function EventReminders() {
   const [newMaxPax, setNewMaxPax] = useState('50');
   const [eventImageUrl, setEventImageUrl] = useState('');
   const [eventImageAlt, setEventImageAlt] = useState('');
+  const [bannerDesignLoading, setBannerDesignLoading] = useState(false);
+  const [generatedBannerUrl, setGeneratedBannerUrl] = useState('');
 
   // AI assist state
   const [aiTopic, setAiTopic] = useState('');
@@ -280,6 +282,76 @@ Be specific, actionable, and data-driven. Keep it under 200 words.`;
       showToast('⚠️ Failed to generate promotion', 'error');
     }
     setPromotionalLoading(false);
+  };
+
+  const handleGenerateBannerDesign = async () => {
+    if (!newEventName.trim() || !newDescription.trim()) {
+      showToast('⚠️ Fill in event name and description first', 'error');
+      return;
+    }
+
+    setBannerDesignLoading(true);
+
+    try {
+      const prompt = `You are a professional event banner designer. Create a detailed visual design description for an event banner/poster.
+
+Event: "${newEventName}"
+Type: ${newEventType}
+Description: "${newDescription.substring(0, 200)}"
+Cost: ${newCost > 0 ? '$' + newCost : 'FREE'}
+Audience: ${aiAudience || 'Professional community'}
+
+Generate a vivid design description for a 1200x600px banner that includes:
+
+1. **Color Scheme**: Suggest 2-3 primary colors (hex codes)
+   - Use warm, inviting colors (avoid dark/dull)
+   - Consider the event theme
+
+2. **Layout Elements**:
+   - Hero text positioning (event name, date, time)
+   - Visual elements (icons, shapes, patterns)
+   - Where to place location/cost info
+   - CTA button placement
+
+3. **Style & Mood**:
+   - Professional vs casual tone
+   - Modern, playful, corporate, community-focused?
+   - Special design elements (ribbons, badges, ornaments)
+
+4. **Typography**:
+   - Suggest font styles (bold, elegant, friendly)
+   - Text size hierarchy
+   - Emphasis areas
+
+5. **Visual Metaphors**:
+   - Any relevant imagery (networking, growth, celebration)
+   - Icons that represent the event theme
+
+Format as detailed, actionable design brief. Be specific about colors, placement, and visual hierarchy.`;
+
+      const response = await axios.post(
+        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2text/qwen',
+        {
+          model: 'qwen-turbo',
+          input: { messages: [{ role: 'user', content: prompt }] },
+          parameters: { max_tokens: 600, temperature: 0.8 },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.VITE_QWEN_API_KEY || 'demo'}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const bannerDesign = response.data.output?.text || 'Unable to generate banner design';
+      setGeneratedBannerUrl(bannerDesign);
+      showToast('✅ Banner design created!', 'success');
+    } catch (error) {
+      console.error('Failed to generate banner:', error);
+      showToast('⚠️ Failed to generate banner design', 'error');
+    }
+    setBannerDesignLoading(false);
   };
 
   const handleGenerateConversionTips = async (eventId: string) => {
@@ -870,6 +942,62 @@ Format as numbered list with bold headers. Keep it practical and specific to THI
                   </div>
                 </div>
 
+                {/* AI Banner Design Section */}
+                <div style={{ padding: '16px', background: '#E8F5E9', borderRadius: '8px', border: '2px solid #81C784' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
+                    🎨 AI Banner Designer
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+                    Generate a professional event banner/poster design based on your event info.
+                  </p>
+
+                  <button
+                    onClick={handleGenerateBannerDesign}
+                    disabled={bannerDesignLoading || !newEventName.trim() || !newDescription.trim()}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      background: bannerDesignLoading ? '#ddd' : 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      cursor: bannerDesignLoading ? 'wait' : 'pointer',
+                      fontSize: '14px',
+                      boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)',
+                      transform: 'translateY(0)',
+                      transition: 'all 0.2s',
+                      marginBottom: '12px',
+                    }}
+                    onMouseDown={(e) => {
+                      if (!bannerDesignLoading) {
+                        (e.target as HTMLButtonElement).style.transform = 'translateY(2px)';
+                      }
+                    }}
+                    onMouseUp={(e) => {
+                      if (!bannerDesignLoading) {
+                        (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+                      }
+                    }}
+                  >
+                    {bannerDesignLoading ? '🎨 Designing Banner...' : '✨ Design Banner'}
+                  </button>
+
+                  {generatedBannerUrl && (
+                    <div style={{ padding: '12px', background: 'white', borderRadius: '6px', border: '1px solid #81C784' }}>
+                      <div style={{ fontSize: '12px', fontWeight: '600', color: '#1B5E20', marginBottom: '8px' }}>
+                        ✓ Banner Design Guide
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#333', lineHeight: '1.6', whiteSpace: 'pre-wrap', maxHeight: '300px', overflow: 'auto' }}>
+                        {generatedBannerUrl}
+                      </div>
+                      <p style={{ fontSize: '11px', color: '#666', marginTop: '8px', fontStyle: 'italic' }}>
+                        💡 Use this design guide to create your banner in Canva, Photoshop, or any design tool
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <button
                   onClick={handleCreateEvent}
                   style={{
@@ -881,6 +1009,7 @@ Format as numbered list with bold headers. Keep it practical and specific to THI
                     fontWeight: '600',
                     cursor: 'pointer',
                     fontSize: '14px',
+                    marginTop: '12px',
                   }}
                 >
                   ➕ Create Event
