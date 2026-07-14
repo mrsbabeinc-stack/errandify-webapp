@@ -654,7 +654,7 @@ export const CasesPage: React.FC = () => {
 
               {/* Status Update with Descriptions */}
               <div style={{ marginBottom: '16px', background: '#f9f9f9', padding: '12px', borderRadius: '6px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
                   Case Status
                 </label>
                 <select
@@ -709,7 +709,7 @@ export const CasesPage: React.FC = () => {
                     padding: '8px',
                     border: '2px solid #FFD9B3',
                     borderRadius: '6px',
-                    fontSize: '12px',
+                    fontSize: '14px',
                     cursor: 'pointer',
                     marginBottom: '8px',
                   }}
@@ -726,7 +726,7 @@ export const CasesPage: React.FC = () => {
                   background: '#fff',
                   border: '1px solid #FFD9B3',
                   borderRadius: '4px',
-                  fontSize: '11px',
+                  fontSize: '13px',
                   color: '#666',
                   lineHeight: '1.5',
                 }}>
@@ -755,7 +755,7 @@ export const CasesPage: React.FC = () => {
 
               {/* Timeline */}
               <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ fontSize: '13px', fontWeight: '700', marginBottom: '12px', color: '#333' }}>📋 Case Timeline</h4>
+                <h4 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', color: '#333' }}>📋 Case Timeline</h4>
                 <div style={{ maxHeight: '200px', overflow: 'auto' }}>
                   {caseTimeline.map((entry, idx) => (
                     <div key={idx} style={{
@@ -766,15 +766,15 @@ export const CasesPage: React.FC = () => {
                       borderBottom: '1px solid #eee',
                     }}>
                       <div style={{ fontSize: '16px', marginTop: '-2px', minWidth: '16px' }}>📌</div>
-                      <div style={{ fontSize: '12px', flex: 1 }}>
+                      <div style={{ fontSize: '14px', flex: 1 }}>
                         <div style={{ fontWeight: '600', color: '#333', marginBottom: '2px' }}>
                           {entry.action}
                         </div>
-                        <div style={{ color: '#666', fontSize: '11px' }}>
+                        <div style={{ color: '#666', fontSize: '13px' }}>
                           {new Date(entry.timestamp).toLocaleString()} • Handler: <strong>{entry.handler}</strong>
                         </div>
                         {entry.note && (
-                          <div style={{ color: '#666', fontSize: '11px', marginTop: '4px', fontStyle: 'italic' }}>
+                          <div style={{ color: '#666', fontSize: '13px', marginTop: '4px', fontStyle: 'italic' }}>
                             {entry.note}
                           </div>
                         )}
@@ -800,7 +800,7 @@ export const CasesPage: React.FC = () => {
                 padding: '12px',
                 marginBottom: '16px',
               }}>
-                <h4 style={{ fontSize: '12px', fontWeight: '700', margin: '0 0 12px 0', color: '#333' }}>
+                <h4 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 12px 0', color: '#333' }}>
                   💬 Add Case Update
                 </h4>
                 <textarea
@@ -810,7 +810,7 @@ export const CasesPage: React.FC = () => {
                     padding: '10px',
                     border: '2px solid #FFD9B3',
                     borderRadius: '6px',
-                    fontSize: '12px',
+                    fontSize: '14px',
                     fontFamily: 'inherit',
                     marginBottom: '10px',
                     minHeight: '60px',
@@ -820,7 +820,7 @@ export const CasesPage: React.FC = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  style={{ fontSize: '11px', marginBottom: '10px' }}
+                  style={{ fontSize: '13px', marginBottom: '10px' }}
                   id="caseUpdatePhoto"
                 />
                 <button
@@ -846,7 +846,7 @@ export const CasesPage: React.FC = () => {
                     borderRadius: '6px',
                     cursor: 'pointer',
                     fontWeight: '600',
-                    fontSize: '12px',
+                    fontSize: '14px',
                   }}
                 >
                   + Add Update
@@ -862,7 +862,7 @@ export const CasesPage: React.FC = () => {
                   padding: '16px',
                   marginBottom: '16px',
                 }}>
-                  <h4 style={{ fontSize: '13px', fontWeight: '700', margin: '0 0 12px 0', color: '#333' }}>
+                  <h4 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 12px 0', color: '#333' }}>
                     ✓ Case Resolution
                   </h4>
 
@@ -873,7 +873,7 @@ export const CasesPage: React.FC = () => {
                     borderRadius: '6px',
                     padding: '10px',
                     marginBottom: '16px',
-                    fontSize: '11px',
+                    fontSize: '13px',
                     color: '#666',
                   }}>
                     <strong>💡 AI Resolution Guide:</strong>
@@ -892,10 +892,10 @@ export const CasesPage: React.FC = () => {
                   {/* Resolution Decision - Unified Cards with Tips */}
                   <div style={{ marginBottom: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#333' }}>
+                      <label style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
                         Resolution Decision
                       </label>
-                      <div style={{ fontSize: '10px', background: '#fffbeb', padding: '4px 8px', borderRadius: '4px', color: '#92400e', fontWeight: '500' }}>
+                      <div style={{ fontSize: '12px', background: '#fffbeb', padding: '4px 8px', borderRadius: '4px', color: '#92400e', fontWeight: '500' }}>
                         💡 Select one decision below. Amounts and fees will update automatically.
                       </div>
                     </div>
@@ -972,11 +972,11 @@ export const CasesPage: React.FC = () => {
                             justifyContent: 'space-between',
                           }}
                         >
-                          <div style={{ fontWeight: '600', fontSize: '12px' }}>{option.label}</div>
-                          <div style={{ fontSize: '11px', lineHeight: '1.3', opacity: selectedResolution === option.key ? 0.95 : 0.8 }}>
+                          <div style={{ fontWeight: '600', fontSize: '14px' }}>{option.label}</div>
+                          <div style={{ fontSize: '13px', lineHeight: '1.3', opacity: selectedResolution === option.key ? 0.95 : 0.8 }}>
                             {option.tip}
                           </div>
-                          <div style={{ fontSize: '10px', opacity: selectedResolution === option.key ? 0.85 : 0.6, fontStyle: 'italic' }}>
+                          <div style={{ fontSize: '12px', opacity: selectedResolution === option.key ? 0.85 : 0.6, fontStyle: 'italic' }}>
                             {option.detail}
                           </div>
                         </div>
@@ -988,14 +988,14 @@ export const CasesPage: React.FC = () => {
 
                     {/* Resolution & Compensation - Simple Layout */}
                     <div style={{ marginTop: '16px', padding: '12px', background: '#f9f9f9', borderRadius: '6px', border: '2px solid #FFD9B3' }}>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '12px', color: '#333' }}>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#333' }}>
                         Resolution & Compensation
                       </label>
 
                       {/* Doer & Asker Amounts - Side by Side */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                         <div>
-                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
+                          <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
                             Doer Receives (SGD)
                           </label>
                           <input
@@ -1092,7 +1092,7 @@ export const CasesPage: React.FC = () => {
                                 (document.getElementById('totalAddUpWarning') as HTMLElement).style.display = 'none';
                               }
                             }}
-                            style={{ width: '100%', padding: '8px', border: '2px solid #ef4444', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}
+                            style={{ width: '100%', padding: '8px', border: '2px solid #ef4444', borderRadius: '6px', fontSize: '14px', fontWeight: '600' }}
                           />
                         </div>
                       </div>
@@ -1105,7 +1105,7 @@ export const CasesPage: React.FC = () => {
                           background: '#fff',
                           borderRadius: '6px',
                           border: '1px solid #ddd',
-                          fontSize: '12px',
+                          fontSize: '14px',
                           fontWeight: '600',
                           color: '#333',
                           textAlign: 'center',
@@ -1118,24 +1118,24 @@ export const CasesPage: React.FC = () => {
                       {/* Fee Allocation - Compact Version */}
                       <div style={{ marginTop: '12px', padding: '10px', background: '#f5f3ff', borderRadius: '6px', border: '1px solid #a78bfa' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                          <label style={{ fontSize: '11px', fontWeight: '600', color: '#333' }}>
+                          <label style={{ fontSize: '13px', fontWeight: '600', color: '#333' }}>
                             Fee Allocation
                           </label>
-                          <div style={{ fontSize: '9px', background: '#e9d5ff', padding: '3px 6px', borderRadius: '3px', color: '#5b21b6', fontWeight: '500' }}>
+                          <div style={{ fontSize: '11px', background: '#e9d5ff', padding: '3px 6px', borderRadius: '3px', color: '#5b21b6', fontWeight: '500' }}>
                             💡 Decide who pays each fee (Platform / Stripe / Refund)
                           </div>
                         </div>
 
                         {/* Platform Fee - Compact */}
                         <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Platform</div>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Platform</div>
                           <div style={{ display: 'flex', gap: '3px' }}>
-                            <button onClick={() => { document.getElementById('platformFeeAllocDisplay')!.style.display = 'inline'; document.getElementById('platformFeeAllocInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>%</button>
-                            <button onClick={() => { document.getElementById('platformFeeAllocDisplay')!.style.display = 'none'; document.getElementById('platformFeeAllocInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>$</button>
+                            <button onClick={() => { document.getElementById('platformFeeAllocDisplay')!.style.display = 'inline'; document.getElementById('platformFeeAllocInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>%</button>
+                            <button onClick={() => { document.getElementById('platformFeeAllocDisplay')!.style.display = 'none'; document.getElementById('platformFeeAllocInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>$</button>
                           </div>
-                          <div id="platformFeeAllocDisplay" style={{ fontSize: '9px', fontWeight: '600', color: '#333', minWidth: '50px' }}>20%</div>
-                          <input type="number" id="platformFeeAllocInput" defaultValue="7.70" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '9px', width: '60px' }} />
-                          <div style={{ display: 'flex', gap: '8px', fontSize: '9px', flex: '1', justifyContent: 'flex-end' }}>
+                          <div id="platformFeeAllocDisplay" style={{ fontSize: '11px', fontWeight: '600', color: '#333', minWidth: '50px' }}>20%</div>
+                          <input type="number" id="platformFeeAllocInput" defaultValue="7.70" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '11px', width: '60px' }} />
+                          <div style={{ display: 'flex', gap: '8px', fontSize: '11px', flex: '1', justifyContent: 'flex-end' }}>
                             <label><input type="radio" name="platformFeePayer" value="doer" defaultChecked /> Doer</label>
                             <label><input type="radio" name="platformFeePayer" value="asker" /> Asker</label>
                             <label><input type="radio" name="platformFeePayer" value="er" /> ER</label>
@@ -1144,14 +1144,14 @@ export const CasesPage: React.FC = () => {
 
                         {/* Stripe Fee - Compact */}
                         <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Stripe</div>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Stripe</div>
                           <div style={{ display: 'flex', gap: '3px' }}>
-                            <button onClick={() => { document.getElementById('stripeFeeAllocDisplay')!.style.display = 'inline'; document.getElementById('stripeFeeAllocInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>%</button>
-                            <button onClick={() => { document.getElementById('stripeFeeAllocDisplay')!.style.display = 'none'; document.getElementById('stripeFeeAllocInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>$</button>
+                            <button onClick={() => { document.getElementById('stripeFeeAllocDisplay')!.style.display = 'inline'; document.getElementById('stripeFeeAllocInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>%</button>
+                            <button onClick={() => { document.getElementById('stripeFeeAllocDisplay')!.style.display = 'none'; document.getElementById('stripeFeeAllocInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>$</button>
                           </div>
-                          <div id="stripeFeeAllocDisplay" style={{ fontSize: '9px', fontWeight: '600', color: '#333', minWidth: '50px' }}>3%</div>
-                          <input type="number" id="stripeFeeAllocInput" defaultValue="1.50" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '9px', width: '60px' }} />
-                          <div style={{ display: 'flex', gap: '8px', fontSize: '9px', flex: '1', justifyContent: 'flex-end' }}>
+                          <div id="stripeFeeAllocDisplay" style={{ fontSize: '11px', fontWeight: '600', color: '#333', minWidth: '50px' }}>3%</div>
+                          <input type="number" id="stripeFeeAllocInput" defaultValue="1.50" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '11px', width: '60px' }} />
+                          <div style={{ display: 'flex', gap: '8px', fontSize: '11px', flex: '1', justifyContent: 'flex-end' }}>
                             <label><input type="radio" name="stripFeePayer" value="doer" defaultChecked /> Doer</label>
                             <label><input type="radio" name="stripFeePayer" value="asker" /> Asker</label>
                             <label><input type="radio" name="stripFeePayer" value="er" /> ER</label>
@@ -1160,34 +1160,34 @@ export const CasesPage: React.FC = () => {
 
                         {/* Asker Refund Portion - Compact */}
                         <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Asker</div>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Asker</div>
                           <div style={{ display: 'flex', gap: '3px' }}>
-                            <button onClick={() => { document.getElementById('askerAllocDisplay')!.style.display = 'inline'; document.getElementById('askerAllocInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>%</button>
-                            <button onClick={() => { document.getElementById('askerAllocDisplay')!.style.display = 'none'; document.getElementById('askerAllocInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>$</button>
+                            <button onClick={() => { document.getElementById('askerAllocDisplay')!.style.display = 'inline'; document.getElementById('askerAllocInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>%</button>
+                            <button onClick={() => { document.getElementById('askerAllocDisplay')!.style.display = 'none'; document.getElementById('askerAllocInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>$</button>
                           </div>
-                          <div id="askerAllocDisplay" style={{ fontSize: '9px', fontWeight: '600', color: '#333', minWidth: '50px' }}>40%</div>
-                          <input type="number" id="askerAllocInput" defaultValue="20.00" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '9px', width: '60px' }} />
-                          <div style={{ display: 'flex', gap: '8px', fontSize: '9px', flex: '1', justifyContent: 'flex-end' }}>
+                          <div id="askerAllocDisplay" style={{ fontSize: '11px', fontWeight: '600', color: '#333', minWidth: '50px' }}>40%</div>
+                          <input type="number" id="askerAllocInput" defaultValue="20.00" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '11px', width: '60px' }} />
+                          <div style={{ display: 'flex', gap: '8px', fontSize: '11px', flex: '1', justifyContent: 'flex-end' }}>
                             <label><input type="radio" name="askerRefundPayer" value="bank" defaultChecked /> Back to Bank</label>
                             <label><input type="radio" name="askerRefundPayer" value="wallet" /> Wallet</label>
                           </div>
                         </div>
 
                         {/* Compensation Fee - Compact */}
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '10px', fontWeight: '600' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>
                           <input type="checkbox" id="compensationFeeCheckbox" onChange={(e) => document.getElementById('compensationFeeSection')!.style.display = e.target.checked ? 'flex' : 'none'} style={{ cursor: 'pointer' }} />
                           Compensation Fee
                         </label>
 
                         <div id="compensationFeeSection" style={{ display: 'none', gap: '8px', marginTop: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Custom</div>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', minWidth: '60px' }}>Custom</div>
                           <div style={{ display: 'flex', gap: '3px' }}>
-                            <button onClick={() => { document.getElementById('compFeePercentDisplay')!.style.display = 'inline'; document.getElementById('compFeeAmountInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>%</button>
-                            <button onClick={() => { document.getElementById('compFeePercentDisplay')!.style.display = 'none'; document.getElementById('compFeeAmountInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '9px', cursor: 'pointer', fontWeight: '600' }}>$</button>
+                            <button onClick={() => { document.getElementById('compFeePercentDisplay')!.style.display = 'inline'; document.getElementById('compFeeAmountInput')!.style.display = 'none'; }} style={{ padding: '3px 6px', background: '#e0e7ff', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>%</button>
+                            <button onClick={() => { document.getElementById('compFeePercentDisplay')!.style.display = 'none'; document.getElementById('compFeeAmountInput')!.style.display = 'inline'; }} style={{ padding: '3px 6px', background: '#dbeafe', border: 'none', borderRadius: '3px', fontSize: '11px', cursor: 'pointer', fontWeight: '600' }}>$</button>
                           </div>
-                          <input type="number" id="compFeePercentDisplay" placeholder="10" defaultValue="10" step="0.01" min="0" style={{ padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '9px', width: '60px' }} />
-                          <input type="number" id="compFeeAmountInput" placeholder="0.00" defaultValue="0.00" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '9px', width: '60px' }} />
-                          <div style={{ display: 'flex', gap: '8px', fontSize: '9px', flex: '1', justifyContent: 'flex-end' }}>
+                          <input type="number" id="compFeePercentDisplay" placeholder="10" defaultValue="10" step="0.01" min="0" style={{ padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '11px', width: '60px' }} />
+                          <input type="number" id="compFeeAmountInput" placeholder="0.00" defaultValue="0.00" step="0.01" min="0" style={{ display: 'none', padding: '3px', border: '1px solid #ddd', borderRadius: '3px', fontSize: '11px', width: '60px' }} />
+                          <div style={{ display: 'flex', gap: '8px', fontSize: '11px', flex: '1', justifyContent: 'flex-end' }}>
                             <label><input type="radio" name="compFeePayer" value="doer" defaultChecked /> Doer</label>
                             <label><input type="radio" name="compFeePayer" value="asker" /> Asker</label>
                             <label><input type="radio" name="compFeePayer" value="er" /> ER</label>
@@ -1217,7 +1217,7 @@ export const CasesPage: React.FC = () => {
                       <div style={{ marginTop: '12px', padding: '12px', background: '#fff', borderRadius: '6px', border: '1px solid #ddd' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                           <div style={{ fontWeight: '600', color: '#333', fontSize: '11px' }}>Payment Breakdown</div>
-                          <div style={{ fontSize: '9px', background: '#dbeafe', padding: '3px 6px', borderRadius: '3px', color: '#075985', fontWeight: '500' }}>
+                          <div style={{ fontSize: '11px', background: '#dbeafe', padding: '3px 6px', borderRadius: '3px', color: '#075985', fontWeight: '500' }}>
                             💡 What each party pays and receives after all fees
                           </div>
                         </div>
@@ -1226,26 +1226,26 @@ export const CasesPage: React.FC = () => {
                         <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #eee' }}>
                           <div style={{ fontSize: '10px', fontWeight: '600', color: '#10b981', marginBottom: '6px' }}>
                             ✅ DOER RECEIVES
-                            <span style={{ fontSize: '9px', color: '#059669', fontWeight: '400', marginLeft: '6px', background: '#d1fae5', padding: '2px 4px', borderRadius: '2px' }}>What they get paid</span>
+                            <span style={{ fontSize: '11px', color: '#059669', fontWeight: '400', marginLeft: '6px', background: '#d1fae5', padding: '2px 4px', borderRadius: '2px' }}>What they get paid</span>
                           </div>
-                          <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Gross Amount: SGD <span id="doerPaymentDisplay">0.00</span> <span style={{ fontSize: '9px', color: '#999' }}>(before fees)</span></div>
-                          <div style={{ fontSize: '10px', color: '#666', marginBottom: '6px' }}>Platform Fee (20%): -SGD <span id="platformFeeDisplay">0.00</span> <span style={{ fontSize: '9px', color: '#999' }}>(Errandify takes this)</span></div>
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#10b981' }}>Net to Doer: SGD <span id="doerNetDisplay">0.00</span> <span style={{ fontSize: '9px', color: '#059669', fontWeight: '400' }}>(lands in their wallet)</span></div>
+                          <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Gross Amount: SGD <span id="doerPaymentDisplay">0.00</span> <span style={{ fontSize: '11px', color: '#999' }}>(before fees)</span></div>
+                          <div style={{ fontSize: '10px', color: '#666', marginBottom: '6px' }}>Platform Fee (20%): -SGD <span id="platformFeeDisplay">0.00</span> <span style={{ fontSize: '11px', color: '#999' }}>(Errandify takes this)</span></div>
+                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#10b981' }}>Net to Doer: SGD <span id="doerNetDisplay">0.00</span> <span style={{ fontSize: '11px', color: '#059669', fontWeight: '400' }}>(lands in their wallet)</span></div>
                         </div>
 
                         {/* Asker Breakdown */}
                         <div>
                           <div style={{ fontSize: '10px', fontWeight: '600', color: '#ef4444', marginBottom: '6px' }}>
                             💰 ASKER PAYS/RECEIVES
-                            <span style={{ fontSize: '9px', color: '#991b1b', fontWeight: '400', marginLeft: '6px', background: '#fee2e2', padding: '2px 4px', borderRadius: '2px' }}>Refund or additional charge</span>
+                            <span style={{ fontSize: '11px', color: '#991b1b', fontWeight: '400', marginLeft: '6px', background: '#fee2e2', padding: '2px 4px', borderRadius: '2px' }}>Refund or additional charge</span>
                           </div>
-                          <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Refund Amount: SGD <span id="askerRefundDisplay">0.00</span> <span style={{ fontSize: '9px', color: '#999' }}>(if decision favors them)</span></div>
-                          <div id="askerStripeLine" style={{ fontSize: '10px', color: '#666', marginBottom: '2px', display: 'none' }}>Stripe Fee: +SGD <span id="askerStripeFeeDisplay">0.00</span> <span style={{ fontSize: '9px', color: '#999' }}>(payment processing cost)</span></div>
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#ef4444' }}>Total Asker Pays: SGD <span id="askerTotalDisplay">0.00</span> <span style={{ fontSize: '9px', color: '#991b1b', fontWeight: '400' }}>(their net cost)</span></div>
+                          <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Refund Amount: SGD <span id="askerRefundDisplay">0.00</span> <span style={{ fontSize: '11px', color: '#999' }}>(if decision favors them)</span></div>
+                          <div id="askerStripeLine" style={{ fontSize: '10px', color: '#666', marginBottom: '2px', display: 'none' }}>Stripe Fee: +SGD <span id="askerStripeFeeDisplay">0.00</span> <span style={{ fontSize: '11px', color: '#999' }}>(payment processing cost)</span></div>
+                          <div style={{ fontSize: '10px', fontWeight: '600', color: '#ef4444' }}>Total Asker Pays: SGD <span id="askerTotalDisplay">0.00</span> <span style={{ fontSize: '11px', color: '#991b1b', fontWeight: '400' }}>(their net cost)</span></div>
                         </div>
 
                         {/* Mode Badge */}
-                        <div style={{ marginTop: '8px', fontSize: '9px', fontWeight: '600', color: '#7c3aed', background: '#f3e8ff', padding: '4px 8px', borderRadius: '3px', display: 'inline-block' }}>
+                        <div style={{ marginTop: '8px', fontSize: '11px', fontWeight: '600', color: '#7c3aed', background: '#f3e8ff', padding: '4px 8px', borderRadius: '3px', display: 'inline-block' }}>
                           Mode: <span id="feeAssignmentMode">Auto</span>
                         </div>
                       </div>
@@ -1254,7 +1254,7 @@ export const CasesPage: React.FC = () => {
 
                   {/* Resolution Notes */}
                   <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '6px', color: '#333' }}>
                       Resolution Reasoning (AI will generate detailed logic)
                     </label>
                     <textarea
@@ -1266,7 +1266,7 @@ export const CasesPage: React.FC = () => {
                         padding: '10px',
                         border: '2px solid #FFD9B3',
                         borderRadius: '6px',
-                        fontSize: '12px',
+                        fontSize: '14px',
                         fontFamily: 'inherit',
                         minHeight: '80px',
                       }}
@@ -1275,7 +1275,7 @@ export const CasesPage: React.FC = () => {
 
                   {/* AI-Generated Messages Preview & Edit */}
                   <div style={{ marginBottom: '12px', background: '#fff', border: '2px solid #10b981', borderRadius: '6px', padding: '12px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: '#333', marginBottom: '10px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#333', marginBottom: '10px' }}>
                       Edit & Approve Notification Messages
                     </div>
 
@@ -1294,7 +1294,7 @@ export const CasesPage: React.FC = () => {
                           borderRadius: '4px',
                           cursor: 'pointer',
                           fontWeight: '600',
-                          fontSize: '11px',
+                          fontSize: '13px',
                         }}
                       >
                         To Doer
