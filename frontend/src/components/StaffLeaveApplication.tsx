@@ -34,8 +34,10 @@ const StaffLeaveApplication: React.FC = () => {
   const [applications, setApplications] = useState<LeaveApplication[]>(() => {
     try {
       const saved = localStorage.getItem('leaveApplications');
+      console.log('[StaffLeaveApplication] Loaded from localStorage:', saved);
       return saved ? JSON.parse(saved) : [];
-    } catch {
+    } catch (error) {
+      console.error('[StaffLeaveApplication] Error loading from localStorage:', error);
       return [];
     }
   });
@@ -51,6 +53,7 @@ const StaffLeaveApplication: React.FC = () => {
   const dayEmojis = ['🏠', '💼', '💼', '💼', '💼', '💼', '🎉'];
 
   useEffect(() => {
+    console.log('[StaffLeaveApplication] Saving to localStorage:', applications);
     localStorage.setItem('leaveApplications', JSON.stringify(applications));
   }, [applications]);
 
@@ -575,51 +578,64 @@ const StaffLeaveApplication: React.FC = () => {
       {/* My Applications */}
       <div>
         <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#333', marginBottom: '16px' }}>
-          📋 My Applications
+          📋 My Applications ({applications.length})
         </h3>
         <div style={{ display: 'grid', gap: '12px' }}>
-          {applications.map((app) => (
-            <div
-              key={app.id}
-              style={{
-                padding: '16px',
-                background: 'white',
-                border: '2px solid #FFD9B3',
-                borderRadius: '12px',
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr auto',
-                gap: '12px',
-                alignItems: 'center',
-              }}
-            >
-              <div>
-                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#666', fontWeight: '600', textTransform: 'uppercase' }}>
-                  Dates
-                </p>
-                <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#333' }}>
-                  {new Date(app.startDate).toLocaleDateString()} -{' '}
-                  {new Date(app.endDate).toLocaleDateString()}
-                </p>
-              </div>
-              <div>
-                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#666', fontWeight: '600', textTransform: 'uppercase' }}>
-                  Reason
-                </p>
-                <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#333' }}>
-                  {reasonOptions.find((r) => r.value === app.reason)?.label}
-                </p>
-              </div>
-              <div>
-                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#666', fontWeight: '600', textTransform: 'uppercase' }}>
-                  Period
-                </p>
-                <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#333', textTransform: 'capitalize' }}>
-                  {app.period.replace('-', ' ')}
-                </p>
-              </div>
-              <div>{getStatusBadge(app.status)}</div>
+          {applications.length === 0 ? (
+            <div style={{
+              padding: '32px',
+              textAlign: 'center',
+              background: '#f5f5f5',
+              borderRadius: '12px',
+              color: '#999',
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>📭</div>
+              <p style={{ fontSize: '14px', margin: 0 }}>No leave applications yet. Submit one above!</p>
             </div>
-          ))}
+          ) : (
+            applications.map((app) => (
+              <div
+                key={app.id}
+                style={{
+                  padding: '16px',
+                  background: 'white',
+                  border: '2px solid #FFD9B3',
+                  borderRadius: '12px',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr 1fr auto',
+                  gap: '12px',
+                  alignItems: 'center',
+                }}
+              >
+                <div>
+                  <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#666', fontWeight: '600', textTransform: 'uppercase' }}>
+                    Dates
+                  </p>
+                  <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#333' }}>
+                    {new Date(app.startDate).toLocaleDateString()} -{' '}
+                    {new Date(app.endDate).toLocaleDateString()}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#666', fontWeight: '600', textTransform: 'uppercase' }}>
+                    Reason
+                  </p>
+                  <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#333' }}>
+                    {reasonOptions.find((r) => r.value === app.reason)?.label || app.reason}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#666', fontWeight: '600', textTransform: 'uppercase' }}>
+                    Period
+                  </p>
+                  <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#333', textTransform: 'capitalize' }}>
+                    {app.period.replace('-', ' ')}
+                  </p>
+                </div>
+                <div>{getStatusBadge(app.status)}</div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
