@@ -106,6 +106,7 @@ import PayrollDashboard from './pages/admin/PayrollDashboard';
 import FinancialReportsDashboard from './pages/admin/FinancialReportsDashboard';
 import InvoicingDashboard from './pages/admin/InvoicingDashboard';
 import LeaveManagementDashboard from './pages/admin/LeaveManagementDashboard';
+import ExpenseClaimsDashboard from './pages/admin/ExpenseClaimsDashboard';
 import CompanyRegistrationPage from './pages/CompanyRegistrationPage';
 import MyCompanyDashboard from './pages/MyCompanyDashboard';
 import CompanyStaffManagement from './pages/CompanyStaffManagement';
@@ -484,6 +485,7 @@ export default function App() {
         <Route path="/admin/financial-reports" element={isAuthenticated && isAdmin ? <FinancialReportsDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/invoicing" element={isAuthenticated && isAdmin ? <InvoicingDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/leave-management" element={isAuthenticated && isAdmin ? <LeaveManagementDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/expense-claims" element={isAuthenticated && isAdmin ? <ExpenseClaimsDashboard /> : <Navigate to="/login" replace />} />
 
         {/* Company Registration and Dashboard Routes */}
         <Route path="/company/register" element={isAuthenticated ? <CompanyRegistrationPage /> : <Navigate to="/login" replace />} />

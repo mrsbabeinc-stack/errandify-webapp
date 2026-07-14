@@ -116,6 +116,7 @@ const menuItems: MenuItem[] = [
       { id: 'hr', label: 'HR', icon: '👥', path: '/admin/hr' },
       { id: 'payroll', label: 'Payroll', icon: '💵', path: '/admin/payroll' },
       { id: 'leave-management', label: 'Leave Management', icon: '🏖️', path: '/admin/leave-management' },
+      { id: 'expense-claims', label: 'Expense Claims', icon: '💼', path: '/admin/expense-claims' },
       { id: 'financial-reports', label: 'Financial Reports', icon: '📊', path: '/admin/financial-reports' },
       { id: 'invoicing', label: 'Invoicing', icon: '📋', path: '/admin/invoicing' },
     ]
