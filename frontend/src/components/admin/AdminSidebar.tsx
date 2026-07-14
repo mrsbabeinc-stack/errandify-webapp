@@ -113,23 +113,16 @@ const menuItems: MenuItem[] = [
     icon: '💼',
     children: [
       { id: 'rbac', label: 'Access Control', icon: '🔐', path: '/admin/rbac' },
+      { id: 'staff-info', label: 'Staff Info & Profiles', icon: '👤', path: '/admin/staff-info' },
+      { id: 'staff-salary', label: 'Compensation (Salary & Benefits)', icon: '💰', path: '/admin/staff-salary-benefits' },
+      { id: 'recruitment', label: 'Recruitment', icon: '🎯', path: '/admin/recruitment' },
       {
-        id: 'hr-operations',
-        label: 'HR Operations',
-        icon: '👥',
+        id: 'leave-time-off',
+        label: 'Leave & Time Off',
+        icon: '🏖️',
         children: [
-          { id: 'staff-info', label: 'Staff Info & Profiles', icon: '👤', path: '/admin/staff-info' },
-          { id: 'staff-salary', label: 'Compensation (Salary & Benefits)', icon: '💰', path: '/admin/staff-salary-benefits' },
-          { id: 'recruitment', label: 'Recruitment', icon: '🎯', path: '/admin/recruitment' },
-          {
-            id: 'leave-time-off',
-            label: 'Leave & Time Off',
-            icon: '🏖️',
-            children: [
-              { id: 'leave-mgmt', label: 'Leave Requests', icon: '📋', path: '/admin/leave-management' },
-              { id: 'holidays', label: 'Holiday Manager', icon: '📅', path: '/admin/holidays' },
-            ]
-          },
+          { id: 'leave-mgmt', label: 'Leave Requests', icon: '📋', path: '/admin/leave-management' },
+          { id: 'holidays', label: 'Holiday Manager', icon: '📅', path: '/admin/holidays' },
         ]
       },
       {
