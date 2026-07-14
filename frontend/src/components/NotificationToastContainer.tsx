@@ -13,21 +13,63 @@ export default function NotificationToastContainer() {
   };
 
   return (
-    <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-3 max-w-lg pointer-events-none" style={{ zIndex: 99999 }}>
+    <div 
+      style={{
+        position: 'fixed',
+        top: '80px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 999999,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        maxWidth: '448px',
+        pointerEvents: 'none'
+      }}
+    >
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className="pointer-events-auto bg-gradient-to-r from-white to-orange-50 rounded-2xl shadow-2xl border-2 border-errandify-orange p-4 animate-slidedown"
+          style={{
+            pointerEvents: 'auto',
+            background: 'linear-gradient(to right, white, #faf5f0)',
+            borderRadius: '16px',
+            boxShadow: '0 20px 25px -5px rgba(255, 107, 53, 0.2)',
+            border: '2px solid #ff6b35',
+            padding: '16px',
+            animation: 'slidedown 0.3s ease-out'
+          }}
         >
-          <div className="flex items-start gap-3">
-            {toast.icon && <span className="text-3xl flex-shrink-0 animate-bounce">{toast.icon}</span>}
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-errandify-brown text-base">{toast.title}</p>
-              <p className="text-sm text-gray-700 mt-1">{toast.body}</p>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+            {toast.icon && (
+              <span style={{ fontSize: '24px', flexShrink: 0, animation: 'bounce 1s infinite' }}>
+                {toast.icon}
+              </span>
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontWeight: 'bold', color: '#5c4033', fontSize: '16px', margin: '0' }}>
+                {toast.title}
+              </p>
+              <p style={{ fontSize: '14px', color: '#555', marginTop: '4px', margin: '4px 0 0 0' }}>
+                {toast.body}
+              </p>
               {toast.actionUrl && toast.actionLabel && (
                 <button
                   onClick={() => handleAction(toast.actionUrl, toast.id)}
-                  className="text-white font-bold text-sm mt-2 bg-errandify-orange hover:bg-orange-600 px-3 py-1 rounded-lg transition-colors inline-block"
+                  style={{
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    marginTop: '8px',
+                    background: '#ff6b35',
+                    border: 'none',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#e85a25')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = '#ff6b35')}
                 >
                   {toast.actionLabel}
                 </button>
@@ -35,7 +77,19 @@ export default function NotificationToastContainer() {
             </div>
             <button
               onClick={() => removeToast(toast.id)}
-              className="flex-shrink-0 text-errandify-orange hover:text-orange-600 text-lg leading-none font-bold"
+              style={{
+                flexShrink: 0,
+                color: '#ff6b35',
+                background: 'none',
+                border: 'none',
+                fontSize: '18px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                padding: 0,
+                transition: 'color 0.2s'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#e85a25')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#ff6b35')}
             >
               ✕
             </button>
@@ -55,8 +109,13 @@ export default function NotificationToastContainer() {
           }
         }
 
-        .animate-slidedown {
-          animation: slidedown 0.3s ease-out;
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-4px);
+          }
         }
       `}</style>
     </div>
