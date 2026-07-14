@@ -132,9 +132,10 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
     new Set([getActiveSection()])
   );
 
-  // Update expanded section when route changes
+  // Update expanded section when route changes - add to existing instead of replacing
   React.useEffect(() => {
-    setExpandedSections(new Set([getActiveSection()]));
+    const activeSection = getActiveSection();
+    setExpandedSections(prev => new Set([...prev, activeSection]));
   }, [location.pathname]);
 
   const toggleSection = (id: string) => {
