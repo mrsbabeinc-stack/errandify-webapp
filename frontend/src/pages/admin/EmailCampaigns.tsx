@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
 
 interface Campaign {
@@ -18,7 +16,6 @@ interface Campaign {
 
 export default function EmailCampaigns() {
   const navigate = useNavigate();
-  const { toasts, showToast, removeToast } = useToast();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [newCampaignName, setNewCampaignName] = useState('');
   const [newCampaignSubject, setNewCampaignSubject] = useState('');
@@ -73,7 +70,7 @@ export default function EmailCampaigns() {
 
   const handleCreateCampaign = () => {
     if (!newCampaignName.trim() || !newCampaignSubject.trim()) {
-      showToast('Please fill in campaign name and subject', 'error');
+      alert('Please fill in campaign name and subject');
       return;
     }
 
@@ -93,7 +90,7 @@ export default function EmailCampaigns() {
     localStorage.setItem('emailCampaigns', JSON.stringify(updated));
     setNewCampaignName('');
     setNewCampaignSubject('');
-    showToast('✅ Campaign created successfully!', 'success');
+    alert('✅ Campaign created successfully!');
   };
 
   const handleEditCampaign = (campaign: Campaign) => {
@@ -104,7 +101,7 @@ export default function EmailCampaigns() {
 
   const handleSaveEdit = (campaignId: string) => {
     if (!editName.trim() || !editSubject.trim()) {
-      showToast('Please fill in name and subject', 'error');
+      alert('Please fill in name and subject');
       return;
     }
 
@@ -116,14 +113,17 @@ export default function EmailCampaigns() {
     setCampaigns(updated);
     localStorage.setItem('emailCampaigns', JSON.stringify(updated));
     setEditingId(null);
-    showToast('✅ Campaign updated successfully!', 'success');
+    alert('✅ Campaign updated successfully!');
   };
 
   const handleDeleteCampaign = (campaignId: string) => {
+    if (!window.confirm('Are you sure you want to delete this campaign?')) {
+      return;
+    }
     const updated = campaigns.filter(c => c.id !== campaignId);
     setCampaigns(updated);
     localStorage.setItem('emailCampaigns', JSON.stringify(updated));
-    showToast('✅ Campaign deleted!', 'success');
+    alert('✅ Campaign deleted!');
   };
 
   const statusColors = {
@@ -136,7 +136,6 @@ export default function EmailCampaigns() {
   return (
     <AdminLayout>
       <div style={{ padding: '16px', background: '#fff' }}>
-      <ToastContainer toasts={toasts} onClose={removeToast} />
       <div style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#333' }}>
