@@ -28,6 +28,7 @@ export default function EventReminders() {
   const [eventImageAlt, setEventImageAlt] = useState('');
   const [bannerDesignLoading, setBannerDesignLoading] = useState(false);
   const [generatedBannerUrl, setGeneratedBannerUrl] = useState('');
+  const [customEventBannerRequirements, setCustomEventBannerRequirements] = useState('');
 
   // AI assist state
   const [aiTopic, setAiTopic] = useState('');
@@ -192,6 +193,8 @@ export default function EventReminders() {
     setNewMaxPax('50');
     setAiTopic('');
     setSuggestedFeatures([]);
+    setGeneratedBannerUrl('');
+    setCustomEventBannerRequirements('');
 
     showToast('✅ Event created!', 'success');
     setActiveTab('events');
@@ -300,6 +303,7 @@ Type: ${newEventType}
 Description: "${newDescription.substring(0, 200)}"
 Cost: ${newCost > 0 ? '$' + newCost : 'FREE'}
 Audience: ${aiAudience || 'Professional community'}
+${customEventBannerRequirements.trim() ? `Custom Requirements: ${customEventBannerRequirements}` : ''}
 
 Generate a vivid design description for a 1200x600px banner that includes:
 
@@ -950,6 +954,31 @@ Format as numbered list with bold headers. Keep it practical and specific to THI
                   <p style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
                     Generate a professional event banner/poster design based on your event info.
                   </p>
+
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                      💡 Your Design Requirements (Optional)
+                    </label>
+                    <textarea
+                      placeholder="Add your custom requirements or design preferences"
+                      value={customEventBannerRequirements}
+                      onChange={(e) => setCustomEventBannerRequirements(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #81C784',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        minHeight: '60px',
+                        fontFamily: 'system-ui',
+                        resize: 'vertical',
+                      }}
+                      maxLength={300}
+                    />
+                    <div style={{ fontSize: '11px', color: '#666', marginTop: '6px', fontStyle: 'italic' }}>
+                      Examples: "Use vibrant colors", "Modern minimalist style", "Include celebration icons", "Gradient background", "Professional look"
+                    </div>
+                  </div>
 
                   <button
                     onClick={handleGenerateBannerDesign}
