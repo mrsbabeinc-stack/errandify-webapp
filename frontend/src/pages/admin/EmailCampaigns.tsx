@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
+import ScheduleCalendar from '../../components/ScheduleCalendar';
 import { campaignNotificationService } from '../../utils/campaignNotificationService';
 
 interface Campaign {
@@ -16,6 +17,9 @@ interface Campaign {
   clickRate: number;
   recipientSegment: 'all-users' | 'doers' | 'askers' | 'vip';
   scheduledDate?: string;
+  scheduledTime?: string;
+  frequency?: 'weekly' | 'biweekly' | 'monthly';
+  engagementScore?: number;
   templateType: 'promotional' | 'announcement' | 'reminder' | 'transactional';
   fromName: string;
   fromEmail: string;
@@ -26,7 +30,7 @@ interface Campaign {
 export default function EmailCampaigns() {
   const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [activeTab, setActiveTab] = useState<'campaigns' | 'ai-assist'>('campaigns');
+  const [activeTab, setActiveTab] = useState<'campaigns' | 'ai-assist' | 'schedule'>('campaigns');
 
   // Campaign form state
   const [name, setName] = useState('');
@@ -333,6 +337,20 @@ Return ONLY the image URL or base64 data URI.`;
           >
             🤖 AI Assist
           </button>
+          <button
+            onClick={() => setActiveTab('schedule')}
+            style={{
+              padding: '8px 16px',
+              background: activeTab === 'schedule' ? '#FF6B35' : 'transparent',
+              color: activeTab === 'schedule' ? 'white' : '#666',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: '600',
+              cursor: 'pointer',
+            }}
+          >
+            📅 Calendar & Schedule
+          </button>
         </div>
 
         {/* AI ASSIST TAB */}
@@ -634,6 +652,121 @@ Return ONLY the image URL or base64 data URI.`;
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* SCHEDULE & CALENDAR TAB */}
+        {activeTab === 'schedule' && (
+          <div style={{ display: 'grid', gap: '24px' }}>
+            <ScheduleCalendar
+              contentType="email"
+              targetAudience={segment || 'all-users'}
+              contentTopic={name || 'Email Campaign'}
+              onScheduleSelect={(date, time) => {
+                setScheduledDate(date);
+                setActiveTab('campaigns');
+                alert(`✅ Schedule set for ${new Date(`${date}T${time}`).toLocaleString()}`);
+              }}
+            />
+
+            {/* CAMPAIGN HISTORY & REMINDERS */}
+            <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: '#333', marginBottom: '16px' }}>
+                📋 Campaign History & Reminders
+              </div>
+
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {campaigns.length === 0 ? (
+                  <div style={{ padding: '24px', textAlign: 'center', color: '#999' }}>
+                    No campaigns yet. Create one to see history and set reminders.
+                  </div>
+                ) : (
+                  campaigns.map(campaign => (
+                    <div
+                      key={campaign.id}
+                      style={{
+                        padding: '12px',
+                        background: 'white',
+                        borderRadius: '6px',
+                        border: '1px solid #FFD9B3',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                        <div>
+                          <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '4px' }}>
+                            {campaign.name}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                            Subject: "{campaign.subject}"
+                          </div>
+                        </div>
+                        <span
+                          style={{
+                            padding: '4px 8px',
+                            background: statusColors[campaign.status],
+                            color: 'white',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            fontWeight: '600',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {campaign.status.toUpperCase()}
+                        </span>
+                      </div>
+
+                      <div style={{ fontSize: '11px', color: '#999', marginBottom: '8px' }}>
+                        📅 Created: {new Date(campaign.createdAt).toLocaleString()}
+                        {campaign.scheduledDate && (
+                          <>
+                            <br />
+                            ⏰ Scheduled: {new Date(`${campaign.scheduledDate}T${campaign.scheduledTime || '09:00'}`).toLocaleString()}
+                            {campaign.frequency && ` • Frequency: ${campaign.frequency}`}
+                            {campaign.engagementScore && ` • Expected: ${campaign.engagementScore}%`}
+                          </>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', fontSize: '11px' }}>
+                        <div style={{ background: '#FFF8F5', padding: '6px', borderRadius: '4px' }}>
+                          👥 {campaign.recipientCount.toLocaleString()}
+                        </div>
+                        <div style={{ background: '#FFF8F5', padding: '6px', borderRadius: '4px' }}>
+                          📧 {campaign.templateType}
+                        </div>
+                        <div style={{ background: '#FFF8F5', padding: '6px', borderRadius: '4px' }}>
+                          👁️ {campaign.openRate}% open
+                        </div>
+                        <div style={{ background: '#FFF8F5', padding: '6px', borderRadius: '4px' }}>
+                          🔗 {campaign.clickRate}% click
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* REMINDER SETTINGS */}
+              <div style={{ marginTop: '24px', padding: '12px', background: '#F5F5F5', borderRadius: '6px' }}>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>
+                  🔔 Reminder Settings
+                </div>
+                <div style={{ fontSize: '12px', color: '#666', lineHeight: '1.6' }}>
+                  <div style={{ marginBottom: '8px' }}>
+                    ✓ Get notified 1 week before campaign send
+                  </div>
+                  <div style={{ marginBottom: '8px' }}>
+                    ✓ Get notified 2 days before campaign send
+                  </div>
+                  <div style={{ marginBottom: '8px' }}>
+                    ✓ Get notified 1 day before campaign send
+                  </div>
+                  <div>
+                    ✓ Get notified 2 hours before campaign send
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

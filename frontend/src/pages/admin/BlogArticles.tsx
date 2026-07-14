@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import ScheduleCalendar from '../../components/ScheduleCalendar';
 
 interface Article {
   id: string;
@@ -17,6 +18,10 @@ interface Article {
   thumbnailUrl?: string;
   thumbnailAlt?: string;
   publishedAt?: string;
+  scheduledDate?: string;
+  scheduledTime?: string;
+  frequency?: 'weekly' | 'biweekly' | 'monthly';
+  engagementScore?: number;
   createdAt: string;
 }
 
@@ -24,7 +29,7 @@ export default function BlogArticles() {
   const navigate = useNavigate();
   const { toasts, showToast, removeToast } = useToast();
   const [articles, setArticles] = useState<Article[]>([]);
-  const [activeTab, setActiveTab] = useState<'articles' | 'ai-assist'>('articles');
+  const [activeTab, setActiveTab] = useState<'articles' | 'ai-assist' | 'schedule'>('articles');
 
   // Article form state
   const [newTitle, setNewTitle] = useState('');
@@ -357,7 +362,7 @@ CRITICAL: Ensure diverse representation, inclusive imagery, no stereotypes.`;
 
         {/* Tab Navigation */}
         <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: '2px solid #FFD9B3' }}>
-          {(['articles', 'ai-assist'] as const).map(tab => (
+          {(['articles', 'ai-assist', 'schedule'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -373,7 +378,7 @@ CRITICAL: Ensure diverse representation, inclusive imagery, no stereotypes.`;
                 transition: 'all 0.2s',
               }}
             >
-              {tab === 'articles' ? '📰 Articles' : '🤖 AI Assist'}
+              {tab === 'articles' ? '📰 Articles' : tab === 'ai-assist' ? '🤖 AI Assist' : '📅 Calendar & Schedule'}
             </button>
           ))}
         </div>
@@ -755,6 +760,126 @@ CRITICAL: Ensure diverse representation, inclusive imagery, no stereotypes.`;
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* SCHEDULE & CALENDAR TAB */}
+        {activeTab === 'schedule' && (
+          <div style={{ display: 'grid', gap: '24px' }}>
+            <ScheduleCalendar
+              contentType="blog"
+              targetAudience={newCategory || 'all-readers'}
+              contentTopic={newTitle || 'Blog Article'}
+              onScheduleSelect={(date, time) => {
+                // Update the form with scheduled date/time
+                const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement;
+                if (dateInput) dateInput.value = date;
+                setActiveTab('articles');
+                showToast(`✅ Schedule set for ${new Date(`${date}T${time}`).toLocaleString()}`, 'success');
+              }}
+            />
+
+            {/* ARTICLE HISTORY & REMINDERS */}
+            <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: '#333', marginBottom: '16px' }}>
+                📋 Article History & Reminders
+              </div>
+
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {articles.length === 0 ? (
+                  <div style={{ padding: '24px', textAlign: 'center', color: '#999' }}>
+                    No articles yet. Create one to see history and set reminders.
+                  </div>
+                ) : (
+                  articles.map(article => (
+                    <div
+                      key={article.id}
+                      style={{
+                        padding: '12px',
+                        background: 'white',
+                        borderRadius: '6px',
+                        border: '1px solid #FFD9B3',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                        <div>
+                          <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '4px' }}>
+                            {article.title}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                            By {article.author} • {article.category}
+                          </div>
+                        </div>
+                        <span
+                          style={{
+                            padding: '4px 8px',
+                            background: article.status === 'published' ? '#4CAF50' : article.status === 'draft' ? '#2196F3' : '#999',
+                            color: 'white',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            fontWeight: '600',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {article.status.toUpperCase()}
+                        </span>
+                      </div>
+
+                      <div style={{ fontSize: '11px', color: '#999', marginBottom: '8px' }}>
+                        📅 Created: {new Date(article.createdAt).toLocaleString()}
+                        {article.scheduledDate && (
+                          <>
+                            <br />
+                            ⏰ Scheduled: {new Date(`${article.scheduledDate}T${article.scheduledTime || '09:00'}`).toLocaleString()}
+                            {article.frequency && ` • Frequency: ${article.frequency}`}
+                            {article.engagementScore && ` • Expected: ${article.engagementScore}%`}
+                          </>
+                        )}
+                        {article.publishedAt && (
+                          <>
+                            <br />
+                            ✓ Published: {new Date(article.publishedAt).toLocaleString()}
+                          </>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', fontSize: '11px' }}>
+                        <div style={{ background: '#FFF8F5', padding: '6px', borderRadius: '4px' }}>
+                          👁️ {article.views.toLocaleString()} views
+                        </div>
+                        <div style={{ background: '#FFF8F5', padding: '6px', borderRadius: '4px' }}>
+                          🔍 {article.seoKeywords.split(',').length} keywords
+                        </div>
+                        <div style={{ background: '#FFF8F5', padding: '6px', borderRadius: '4px' }}>
+                          📝 {article.content.split(' ').length} words
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* REMINDER SETTINGS */}
+              <div style={{ marginTop: '24px', padding: '12px', background: '#F5F5F5', borderRadius: '6px' }}>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>
+                  🔔 Reminder Settings
+                </div>
+                <div style={{ fontSize: '12px', color: '#666', lineHeight: '1.6' }}>
+                  <div style={{ marginBottom: '8px' }}>
+                    ✓ Get notified 1 week before article publish
+                  </div>
+                  <div style={{ marginBottom: '8px' }}>
+                    ✓ Get notified 2 days before article publish
+                  </div>
+                  <div style={{ marginBottom: '8px' }}>
+                    ✓ Get notified 1 day before article publish
+                  </div>
+                  <div>
+                    ✓ Get notified 2 hours before article publish
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
