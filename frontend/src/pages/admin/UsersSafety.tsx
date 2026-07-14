@@ -18,58 +18,286 @@ export const UsersSafetyPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="admin-page">
-        <div className="page-header">
-          <h1>👥 Users & Safety</h1>
-          <div className="header-buttons">
-            <button className="btn-primary">Export Users</button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* PAGE HEADER */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 8px 0', color: '#333' }}>
+              👥 Users & Safety
+            </h1>
+            <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
+              Monitor user activity, verify accounts, and resolve safety concerns
+            </p>
+          </div>
+          <button style={{
+            padding: '10px 16px',
+            background: '#FF6B35',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            fontWeight: '600',
+            fontSize: '13px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#FF5722';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '#FF6B35';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+          >
+            Export Users
+          </button>
+        </div>
+
+        {/* SAFETY ALERTS */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#333' }}>
+            🛡️ Safety Alerts
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
+            {safetyAlerts.map((alert) => {
+              let bgColor, borderColor;
+              if (alert.severity === 'critical') {
+                bgColor = '#FEE2E2';
+                borderColor = '#F44336';
+              } else if (alert.severity === 'high') {
+                bgColor = '#FFF8F5';
+                borderColor = '#FF6B35';
+              } else {
+                bgColor = '#FFF9F5';
+                borderColor = '#FFD9B3';
+              }
+              return (
+                <div
+                  key={alert.id}
+                  style={{
+                    padding: '16px',
+                    background: bgColor,
+                    border: `2px solid ${borderColor}`,
+                    borderRadius: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                  }}
+                >
+                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#333' }}>
+                    {alert.type}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#666', lineHeight: '1.4' }}>
+                    {alert.desc}
+                  </div>
+                  <button style={{
+                    alignSelf: 'flex-start',
+                    padding: '8px 12px',
+                    background: borderColor,
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = '0.9';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '1';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                  >
+                    {alert.action} →
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Safety Alerts */}
-        <div className="safety-section">
-          <h2>🛡️ Safety Alerts</h2>
-          <div className="alerts-grid">
-            {safetyAlerts.map((alert) => (
-              <div key={alert.id} className={`safety-alert severity-${alert.severity}`}>
-                <div className="alert-type">{alert.type}</div>
-                <div className="alert-desc">{alert.desc}</div>
-                <button className="alert-action">{alert.action}</button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Users Table */}
-        <div className="users-section">
-          <h2>👤 Active Users</h2>
-          <div className="table-container">
-            <table className="admin-table">
+        {/* USERS TABLE */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#333' }}>
+            👤 Active Users
+          </h2>
+          <div style={{ overflowX: 'auto', borderRadius: '8px', border: '2px solid #FFD9B3', background: 'white' }}>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              background: 'white',
+            }}>
               <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Role</th>
-                  <th>Rating</th>
-                  <th>Tasks</th>
-                  <th>Status</th>
-                  <th>Verified</th>
-                  <th>Alert</th>
-                  <th>Action</th>
+                <tr style={{
+                  background: 'linear-gradient(to right, #FFF8F5, #FFFBF7)',
+                  borderBottom: '2px solid #FFD9B3',
+                }}>
+                  <th style={{
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#FF6B35',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>User</th>
+                  <th style={{
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#FF6B35',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>Role</th>
+                  <th style={{
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#FF6B35',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>Rating</th>
+                  <th style={{
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#FF6B35',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>Tasks</th>
+                  <th style={{
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#FF6B35',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>Status</th>
+                  <th style={{
+                    padding: '14px 16px',
+                    textAlign: 'center',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#FF6B35',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>Verified</th>
+                  <th style={{
+                    padding: '14px 16px',
+                    textAlign: 'center',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#FF6B35',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>Alert</th>
+                  <th style={{
+                    padding: '14px 16px',
+                    textAlign: 'center',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#FF6B35',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} className={user.flag ? `flag-${user.flag}` : ''}>
-                    <td className="user-name">{user.name}</td>
-                    <td className="user-role">{user.role}</td>
-                    <td className="rating">{user.rating}★</td>
-                    <td className="tasks">{user.tasks}</td>
-                    <td><span className={`badge badge-${user.status}`}>{user.status}</span></td>
-                    <td className="verified">{user.verified ? '✅' : '⚠️'}</td>
-                    <td className="flag">
-                      {user.flag ? <span className={`flag-badge flag-${user.flag}`}>{user.flag}</span> : '—'}
+                {users.map((user, idx) => (
+                  <tr
+                    key={user.id}
+                    style={{
+                      borderBottom: idx < users.length - 1 ? '1px solid #FFE6D9' : 'none',
+                      background: user.flag === 'critical' ? '#FEE2E2' : user.flag === 'warning' ? '#FFF9F5' : 'white',
+                      transition: 'background 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!user.flag) {
+                        (e.currentTarget as HTMLElement).style.background = '#FFF8F5';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = user.flag === 'critical' ? '#FEE2E2' : user.flag === 'warning' ? '#FFF9F5' : 'white';
+                    }}
+                  >
+                    <td style={{ padding: '14px 16px', fontSize: '14px', fontWeight: '600', color: '#333' }}>
+                      {user.name}
                     </td>
-                    <td><button className="btn-small">View Profile</button></td>
+                    <td style={{ padding: '14px 16px', fontSize: '12px', color: '#666' }}>
+                      {user.role}
+                    </td>
+                    <td style={{ padding: '14px 16px', fontSize: '14px', fontWeight: '600', color: '#FF6B35' }}>
+                      {user.rating}★
+                    </td>
+                    <td style={{ padding: '14px 16px', fontSize: '14px', fontWeight: '600', color: '#333' }}>
+                      {user.tasks}
+                    </td>
+                    <td style={{ padding: '14px 16px', fontSize: '12px' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        textTransform: 'uppercase',
+                        background: user.status === 'active' ? '#E6F9F0' : '#FEE2E2',
+                        color: user.status === 'active' ? '#4CAF50' : '#F44336',
+                      }}>
+                        {user.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center', fontSize: '16px' }}>
+                      {user.verified ? '✅' : '⚠️'}
+                    </td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                      {user.flag ? (
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '3px 8px',
+                          borderRadius: '4px',
+                          fontSize: '10px',
+                          fontWeight: '700',
+                          textTransform: 'uppercase',
+                          background: user.flag === 'critical' ? '#FFD6D6' : '#FFE6CC',
+                          color: user.flag === 'critical' ? '#F44336' : '#FF6B35',
+                        }}>
+                          {user.flag}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                      <button style={{
+                        padding: '6px 10px',
+                        background: '#FFF8F5',
+                        color: '#FF6B35',
+                        border: '1px solid #FFD9B3',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#FF6B35';
+                        e.currentTarget.style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#FFF8F5';
+                        e.currentTarget.style.color = '#FF6B35';
+                      }}
+                      >
+                        View
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -77,286 +305,9 @@ export const UsersSafetyPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <style>{`
-        .admin-page {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-
-        .page-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .page-header h1 {
-          font-size: 24px;
-          font-weight: 700;
-          margin: 0;
-          color: #ff6b35;
-        }
-
-        .header-buttons {
-          display: flex;
-          gap: 8px;
-        }
-
-        .btn-primary {
-          padding: 10px 16px;
-          background: #ff6b35;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          font-weight: 600;
-          font-size: 13px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-primary:hover {
-          background: #ff5722;
-          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
-        }
-
-        /* Safety Section */
-        .safety-section {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .safety-section h2 {
-          font-size: 14px;
-          font-weight: 700;
-          margin: 0;
-          color: #333;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .alerts-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 10px;
-        }
-
-        .safety-alert {
-          padding: 12px;
-          border-radius: 6px;
-          border-left: 4px solid;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .safety-alert.severity-critical {
-          background: #fff4f0;
-          border-left-color: #ff3333;
-        }
-
-        .safety-alert.severity-high {
-          background: #fff9f5;
-          border-left-color: #ff6b35;
-        }
-
-        .safety-alert.severity-medium {
-          background: #fffbf7;
-          border-left-color: #ffb88c;
-        }
-
-        .alert-type {
-          font-size: 12px;
-          font-weight: 700;
-          color: #333;
-        }
-
-        .alert-desc {
-          font-size: 12px;
-          color: #666;
-        }
-
-        .alert-action {
-          align-self: flex-start;
-          padding: 6px 10px;
-          background: rgba(255, 107, 53, 0.1);
-          color: #ff6b35;
-          border: 1px solid #ffb88c;
-          border-radius: 4px;
-          font-size: 11px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .alert-action:hover {
-          background: #ff6b35;
-          color: white;
-          border-color: #ff6b35;
-        }
-
-        /* Users Section */
-        .users-section {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .users-section h2 {
-          font-size: 14px;
-          font-weight: 700;
-          margin: 0;
-          color: #333;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .table-container {
-          overflow-x: auto;
-          border-radius: 8px;
-          border: 1px solid #ffb88c;
-        }
-
-        .admin-table {
-          width: 100%;
-          border-collapse: collapse;
-          background: white;
-        }
-
-        .admin-table thead {
-          background: linear-gradient(to right, #fff5f0, #fffbf7);
-          border-bottom: 2px solid #ffb88c;
-        }
-
-        .admin-table th {
-          padding: 12px;
-          text-align: left;
-          font-size: 11px;
-          font-weight: 700;
-          color: #ff6b35;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .admin-table tbody tr {
-          border-bottom: 1px solid #ffe6d9;
-          transition: background 0.2s;
-        }
-
-        .admin-table tbody tr:hover {
-          background: #fff9f5;
-        }
-
-        .admin-table tbody tr.flag-critical {
-          background: #fff4f0;
-        }
-
-        .admin-table tbody tr.flag-warning {
-          background: #fff9f5;
-        }
-
-        .admin-table td {
-          padding: 12px;
-          font-size: 12px;
-          color: #333;
-        }
-
-        .user-name {
-          font-weight: 600;
-        }
-
-        .user-role {
-          font-size: 11px;
-          color: #666;
-        }
-
-        .rating {
-          font-weight: 600;
-          color: #ff6b35;
-        }
-
-        .tasks {
-          font-weight: 600;
-        }
-
-        .verified {
-          text-align: center;
-        }
-
-        .flag {
-          text-align: center;
-        }
-
-        .flag-badge {
-          display: inline-block;
-          padding: 3px 6px;
-          border-radius: 3px;
-          font-size: 10px;
-          font-weight: 700;
-          text-transform: uppercase;
-        }
-
-        .flag-badge.flag-critical {
-          background: #ffebeb;
-          color: #ff3333;
-        }
-
-        .flag-badge.flag-warning {
-          background: #fff9f5;
-          color: #ff6b35;
-        }
-
-        .badge {
-          display: inline-block;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 11px;
-          font-weight: 600;
-          text-transform: uppercase;
-        }
-
-        .badge-active {
-          background: #e6f9f0;
-          color: #27b55d;
-        }
-
-        .badge-suspended {
-          background: #ffebeb;
-          color: #ff3333;
-        }
-
-        .btn-small {
-          padding: 6px 10px;
-          background: #f0f0f0;
-          color: #333;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          font-size: 11px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-small:hover {
-          background: #ff6b35;
-          color: white;
-          border-color: #ff6b35;
-        }
-
-        @media (max-width: 1024px) {
-          .admin-table {
-            font-size: 11px;
-          }
-
-          .admin-table th,
-          .admin-table td {
-            padding: 8px;
-          }
-        }
-      `}</style>
     </AdminLayout>
   );
 };
 
 export default UsersSafetyPage;
+
