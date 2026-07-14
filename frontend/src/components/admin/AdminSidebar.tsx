@@ -337,7 +337,7 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
           padding: 10px 16px 10px 24px;
           border: none;
           background: none;
-          color: #666;
+          color: #ff6b35;
           font-size: 13px;
           font-weight: 600;
           cursor: pointer;
