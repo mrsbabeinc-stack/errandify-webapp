@@ -818,7 +818,8 @@ Next: Generate image in the Image Generator, then select a text variant to load.
       )}
 
       {activeTab === 'campaigns' && (
-      <div style={{ marginBottom: '24px' }}>
+        <>
+        <div style={{ marginBottom: '24px' }}>
         <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
           Create New Campaign
         </div>
