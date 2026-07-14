@@ -78,9 +78,9 @@ import DisputesPage from './pages/admin/Disputes';
 import OperationsPage from './pages/admin/Operations';
 import DiscountCodesPage from './pages/admin/DiscountCodesPage';
 import { ErrandifyPointsEnhancedPage as AdminErrandifyPointsPage } from './pages/admin/ErrandifyPointsEnhanced';
-import EmailPage from './pages/admin/Email';
 import { GrantEPEnhancedPage as GrantPointsPage } from './pages/admin/GrantPointsEnhanced';
 import { EPRulesFlexiblePage as EPRulesPage } from './pages/admin/EPRulesFlexible';
+import EmailCampaigns from './pages/admin/EmailCampaigns';
 import CompanyManagement from './pages/admin/CompanyManagement';
 import SubscriptionPackages from './pages/admin/SubscriptionPackages';
 import AdvertisingApproval from './pages/admin/AdvertisingApproval';
@@ -441,7 +441,6 @@ export default function App() {
         <Route path="/admin/manage/grant-points" element={isAuthenticated && isAdmin ? <GrantPointsPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/point-rules" element={isAuthenticated && isAdmin ? <EPRulesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/discounts" element={isAuthenticated && isAdmin ? <DiscountCodesPage /> : <Navigate to="/login" replace />} />
-        <Route path="/admin/comms/email" element={isAuthenticated && isAdmin ? <EmailPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/reports" element={isAuthenticated && isAdmin ? <ReportsPage /> : <Navigate to="/login" replace />} />
 
         {/* Operations & Management Routes (TIER 1) */}
