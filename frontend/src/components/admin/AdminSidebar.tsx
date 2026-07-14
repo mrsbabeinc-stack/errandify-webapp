@@ -113,17 +113,30 @@ const menuItems: MenuItem[] = [
     icon: '💼',
     children: [
       { id: 'rbac', label: 'Access Control', icon: '🔐', path: '/admin/rbac' },
-      { id: 'staff-info', label: 'Staff Information', icon: '👥', path: '/admin/staff-info' },
-      { id: 'staff-salary', label: 'Staff Salary & Benefits', icon: '💰', path: '/admin/staff-salary-benefits' },
+      {
+        id: 'hr-operations',
+        label: 'HR Operations',
+        icon: '👥',
+        children: [
+          { id: 'staff-info', label: 'Staff Info & Profiles', icon: '👤', path: '/admin/staff-info' },
+          { id: 'staff-salary', label: 'Compensation (Salary & Benefits)', icon: '💰', path: '/admin/staff-salary-benefits' },
+          { id: 'recruitment', label: 'Recruitment', icon: '🎯', path: '/admin/recruitment' },
+          { id: 'leave-mgmt', label: 'Leave & Time Off', icon: '🏖️', path: '/admin/leave-management' },
+        ]
+      },
+      {
+        id: 'accounting',
+        label: 'Accounting & Finance',
+        icon: '💵',
+        children: [
+          { id: 'accounts', label: 'General Accounts', icon: '💰', path: '/admin/accounts' },
+          { id: 'payroll', label: 'Payroll Processing', icon: '💸', path: '/admin/payroll' },
+          { id: 'expense-claims', label: 'Expense Claims', icon: '📝', path: '/admin/expense-claims' },
+          { id: 'invoicing', label: 'Invoicing & Billing', icon: '📋', path: '/admin/invoicing' },
+          { id: 'financial-reports', label: 'Financial Reports', icon: '📊', path: '/admin/financial-reports' },
+        ]
+      },
       { id: 'integration', label: 'Integration Dashboard', icon: '📊', path: '/admin/accounts-hr-integration' },
-      { id: 'accounts', label: 'Accounts', icon: '💰', path: '/admin/accounts' },
-      { id: 'recruitment', label: 'Recruitment & Hiring', icon: '🎯', path: '/admin/recruitment' },
-      { id: 'hr', label: 'HR', icon: '👥', path: '/admin/hr' },
-      { id: 'payroll', label: 'Payroll', icon: '💵', path: '/admin/payroll' },
-      { id: 'leave-management', label: 'Leave Management', icon: '🏖️', path: '/admin/leave-management' },
-      { id: 'expense-claims', label: 'Expense Claims', icon: '💼', path: '/admin/expense-claims' },
-      { id: 'financial-reports', label: 'Financial Reports', icon: '📊', path: '/admin/financial-reports' },
-      { id: 'invoicing', label: 'Invoicing', icon: '📋', path: '/admin/invoicing' },
       { id: 'ai-reports', label: 'AI Reports', icon: '🤖', path: '/admin/ai-reports' },
     ]
   },
