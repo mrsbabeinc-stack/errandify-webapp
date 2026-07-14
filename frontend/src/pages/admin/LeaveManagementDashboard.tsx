@@ -237,6 +237,7 @@ const LeaveManagementDashboard: React.FC = () => {
       reason: '',
     });
     setShowNewRequestForm(false);
+    setActiveTab('requests'); // Switch to requests tab to show the new request
     showToast(`✅ Leave request submitted for ${staff.staffName}`, 'success');
   };
 
