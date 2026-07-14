@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import DocumentUploadWithOCR from '../../components/DocumentUploadWithOCR';
 
 interface ExpenseClaim {
   id: string;
@@ -686,28 +687,27 @@ const ExpenseClaimsDashboard: React.FC = () => {
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#666', display: 'block', marginBottom: '4px' }}>
-                      Receipt *
-                    </label>
-                    <button
-                      onClick={handleFileUpload}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        background: uploadedFile ? '#E8F5E9' : '#E3F2FD',
-                        color: uploadedFile ? '#2E7D32' : '#0D47A1',
-                        border: `2px solid ${uploadedFile ? '#4CAF50' : '#1976D2'}`,
-                        borderRadius: '6px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        fontSize: '14px',
+                    <DocumentUploadWithOCR
+                      title="Upload Receipt or Invoice"
+                      description="Take a photo with your mobile camera or upload an image. OCR automatically extracts amount, vendor, and date."
+                      allowCamera={true}
+                      maxSize={10}
+                      acceptedFormats={['image/jpeg', 'image/png', 'application/pdf']}
+                      onUpload={(data) => {
+                        setUploadedFile({
+                          name: data.file.name,
+                          size: data.file.size,
+                        });
+                        // Pre-fill amount from OCR if detected
+                        if (data.extractedData.amount) {
+                          setClaimForm({
+                            ...claimForm,
+                            amount: data.extractedData.amount,
+                          });
+                        }
+                        showToast('✅ Receipt uploaded and processed with OCR', 'success');
                       }}
-                    >
-                      {uploadedFile ? `✓ ${uploadedFile.name}` : '📁 Upload Receipt (PDF/Image)'}
-                    </button>
-                    <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
-                      Supports PDF, JPG, PNG. Max 10MB. OCR will extract amount & date.
-                    </div>
+                    />
                   </div>
 
                   <div>

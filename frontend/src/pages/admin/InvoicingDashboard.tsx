@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import DocumentUploadWithOCR from '../../components/DocumentUploadWithOCR';
 
 interface InvoiceLineItem {
   id: string;
