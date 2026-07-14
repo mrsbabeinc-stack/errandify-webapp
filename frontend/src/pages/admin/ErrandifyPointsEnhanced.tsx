@@ -223,33 +223,38 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
         {/* Charts Row 2: Issuance by Type & Peak Hours */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', flex: 1, minHeight: 0 }}>
           {/* Issuance by Type */}
-          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto' }}>
+          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
             <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>🎯 Issuance by Type</h3>
-            {issuanceByType.map(item => (
-              <div key={item.type} style={{ marginBottom: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                  <span style={{ fontSize: '11px', color: '#333', fontWeight: '500' }}>{item.type}</span>
-                  <span style={{ fontSize: '11px', fontWeight: '600', color: '#FF6B35' }}>{item.points} EP (${(item.points * 0.05).toFixed(2)})</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {issuanceByType.map(item => (
+                <div key={item.type}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                    <span style={{ fontSize: '10px', color: '#333', fontWeight: '500' }}>{item.type}</span>
+                    <span style={{ fontSize: '10px', fontWeight: '600', color: '#FF6B35' }}>{item.percentage}%</span>
+                  </div>
+                  <div style={{ height: '6px', background: '#f5f5f5', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', background: '#FF6B35', width: `${item.percentage}%` }} />
+                  </div>
+                  <div style={{ fontSize: '8px', color: '#999', marginTop: '1px' }}>{item.points} EP (${(item.points * 0.05).toFixed(2)})</div>
                 </div>
-                <div style={{ height: '8px', background: '#f5f5f5', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', background: '#FF6B35', width: `${item.percentage}%` }} />
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Peak Engagement Hours */}
-          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto' }}>
+          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
             <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>⏰ Peak Issuance Hours</h3>
-            {peakHours.map(item => (
-              <div key={item.hour} style={{ marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '10px', color: '#666', minWidth: '30px', fontWeight: '500' }}>{item.hour}</span>
-                <div style={{ flex: 1, height: '6px', background: '#f5f5f5', borderRadius: '3px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', background: '#2196F3', width: `${(item.points / 420) * 100}%` }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {peakHours.map(item => (
+                <div key={item.hour} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '9px', color: '#666', minWidth: '28px', fontWeight: '500' }}>{item.hour}</span>
+                  <div style={{ flex: 1, height: '4px', background: '#f5f5f5', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', background: '#2196F3', width: `${(item.points / 420) * 100}%` }} />
+                  </div>
+                  <span style={{ fontSize: '9px', color: '#666', minWidth: '30px', textAlign: 'right', fontWeight: '500' }}>{item.points}</span>
                 </div>
-                <span style={{ fontSize: '10px', color: '#666', minWidth: '35px', textAlign: 'right', fontWeight: '500' }}>{item.points} EP</span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
