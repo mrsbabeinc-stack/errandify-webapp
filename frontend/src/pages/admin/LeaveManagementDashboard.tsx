@@ -173,16 +173,24 @@ const LeaveManagementDashboard: React.FC = () => {
 
   // Handle new leave request
   const handleSubmitLeaveRequest = () => {
+    console.log('[LeaveManagementDashboard] 🚀 Submit clicked!');
+    console.log('[LeaveManagementDashboard] selectedStaffId:', selectedStaffId);
+    console.log('[LeaveManagementDashboard] requestForm:', requestForm);
+    console.log('[LeaveManagementDashboard] leaveRequests count before:', leaveRequests.length);
+
     if (!selectedStaffId || !requestForm.startDate || !requestForm.endDate) {
+      console.log('[LeaveManagementDashboard] ❌ Missing required fields');
       showToast('Please fill in all required fields', 'error');
       return;
     }
 
     const staff = leaveBalances.find(s => s.staffId === selectedStaffId);
     if (!staff) {
+      console.log('[LeaveManagementDashboard] ❌ Staff not found');
       showToast('Staff member not found', 'error');
       return;
     }
+    console.log('[LeaveManagementDashboard] ✓ Staff found:', staff.staffName);
 
     const daysRequested = calculateDays(requestForm.startDate, requestForm.endDate);
 
@@ -229,16 +237,27 @@ const LeaveManagementDashboard: React.FC = () => {
       console.log('[LeaveManagementDashboard] API save failed, using local storage only:', error);
     });
 
+    console.log('[LeaveManagementDashboard] ✅ Creating new request:', newRequest);
     setLeaveRequests([...leaveRequests, newRequest]);
+    console.log('[LeaveManagementDashboard] ✅ Request added to state');
+    console.log('[LeaveManagementDashboard] leaveRequests count after:', leaveRequests.length + 1);
+
     setRequestForm({
       leaveType: 'annual',
       startDate: new Date().toISOString().split('T')[0],
       endDate: new Date().toISOString().split('T')[0],
       reason: '',
     });
+    console.log('[LeaveManagementDashboard] ✅ Form reset');
+
     setShowNewRequestForm(false);
+    console.log('[LeaveManagementDashboard] ✅ Form hidden');
+
     setActiveTab('requests'); // Switch to requests tab to show the new request
+    console.log('[LeaveManagementDashboard] ✅ Switched to requests tab');
+
     showToast(`✅ Leave request submitted for ${staff.staffName}`, 'success');
+    console.log('[LeaveManagementDashboard] ✅ SUCCESS - Request submitted!');
   };
 
   // Approve leave request
