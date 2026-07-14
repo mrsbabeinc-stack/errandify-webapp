@@ -212,32 +212,33 @@ export const DiscountCodesPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div style={{ padding: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div style={{ padding: '12px 16px', height: '100vh', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#333', marginBottom: '4px' }}>
-              🏷️ Discount Codes & E-Vouchers
+            <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#333', marginBottom: '2px' }}>
+              🏷️ Discount Codes
             </h1>
-            <p style={{ fontSize: '14px', color: '#666' }}>
-              Create and manage promotional codes, influencer partnerships, and digital vouchers
+            <p style={{ fontSize: '11px', color: '#666', margin: 0 }}>
+              Manage codes, influencer partnerships & e-vouchers
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
             <label style={{
-              padding: '10px 16px',
+              padding: '8px 12px',
               background: '#E3F2FD',
               color: '#1976D2',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '4px',
               fontWeight: '600',
-              fontSize: '13px',
+              fontSize: '11px',
               cursor: 'pointer',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap'
             }}
             onMouseEnter={(e) => (e.currentTarget.style.background = '#BBDEFB')}
             onMouseLeave={(e) => (e.currentTarget.style.background = '#E3F2FD')}
             >
-              📊 Upload Excel
+              📊 Excel
               <input
                 type="file"
                 accept=".xlsx,.xls,.csv"
@@ -253,189 +254,166 @@ export const DiscountCodesPage: React.FC = () => {
                 setShowModal(true);
               }}
               style={{
-                padding: '10px 16px',
+                padding: '8px 12px',
                 background: '#FF6B35',
                 color: 'white',
                 border: 'none',
-                borderRadius: '6px',
+                borderRadius: '4px',
                 fontWeight: '600',
-                fontSize: '13px',
+                fontSize: '11px',
                 cursor: 'pointer',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                whiteSpace: 'nowrap'
               }}
               onMouseEnter={(e) => (e.currentTarget.style.background = '#ff5722')}
               onMouseLeave={(e) => (e.currentTarget.style.background = '#FF6B35')}
             >
-              + Create Code
+              + Create
             </button>
           </div>
         </div>
 
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-          <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Active Codes</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#FF6B35' }}>
+        {/* Stats - Compact */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
+          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Active</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#FF6B35' }}>
               {codes.filter(c => c.status === 'active').length}
             </div>
           </div>
-          <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Influencer Codes</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#666' }}>
+          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Influencer</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#666' }}>
               {codes.filter(c => c.influencer).length}
             </div>
           </div>
-          <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Total Uses</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#666' }}>
+          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Total Uses</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#666' }}>
               {codes.reduce((sum, c) => sum + c.usedCount, 0)}
             </div>
           </div>
-          <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Total Codes</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#666' }}>{codes.length}</div>
+          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Total</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#666' }}>{codes.length}</div>
           </div>
         </div>
 
-        {/* Codes Table */}
-        <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #ffb88c', overflow: 'hidden', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
-            <thead>
-              <tr style={{ background: '#fff5f0', borderBottom: '1px solid #ffb88c' }}>
-                <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#666' }}>Code</th>
-                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#666' }}>Discount</th>
-                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#666' }}>Usage</th>
-                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#666' }}>Influencer</th>
-                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#666' }}>Tags</th>
-                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#666' }}>Status</th>
-                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#666' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {codes.map(code => (
-                <tr key={code.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
-                  <td style={{ padding: '12px', fontSize: '13px', fontWeight: '600', color: '#333' }}>
-                    <div>{code.code}</div>
-                    <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>{code.description}</div>
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', color: '#666' }}>
-                    {code.type === 'percentage' ? `${code.value}%` : `SGD ${code.value}`}
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', color: '#666' }}>
-                    {code.usedCount} / {code.maxUses}
-                    <div style={{ height: '6px', background: '#f5f5f5', borderRadius: '3px', marginTop: '4px', overflow: 'hidden' }}>
-                      <div
-                        style={{
-                          height: '100%',
-                          background: '#FF6B35',
-                          width: `${(code.usedCount / code.maxUses) * 100}%`
-                        }}
-                      />
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'center', fontSize: '13px', color: '#666' }}>
-                    {code.influencer ? (
-                      <span style={{ display: 'inline-block', background: '#FFE0D3', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', color: '#FF6B35' }}>
-                        👤 {code.influencer}
-                      </span>
-                    ) : (
-                      <span style={{ color: '#ccc' }}>—</span>
-                    )}
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                      {code.tags && code.tags.length > 0 ? (
-                        code.tags.map(tag => (
-                          <span
-                            key={tag}
-                            style={{
-                              display: 'inline-block',
-                              background: '#E3F2FD',
-                              color: '#1976D2',
-                              padding: '2px 6px',
-                              borderRadius: '3px',
-                              fontSize: '10px',
-                              fontWeight: '600'
-                            }}
-                          >
-                            {tag}
-                          </span>
-                        ))
+        {/* Codes Table - Compact & No Scroll */}
+        <div style={{ background: '#fff', borderRadius: '6px', border: '1px solid #ffb88c', overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ overflowY: 'auto', flex: 1 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '100%' }}>
+              <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+                <tr style={{ background: '#fff5f0', borderBottom: '1px solid #ffb88c' }}>
+                  <th style={{ padding: '8px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#666' }}>Code</th>
+                  <th style={{ padding: '8px', textAlign: 'center', fontSize: '11px', fontWeight: '600', color: '#666' }}>Discount</th>
+                  <th style={{ padding: '8px', textAlign: 'center', fontSize: '11px', fontWeight: '600', color: '#666' }}>Used</th>
+                  <th style={{ padding: '8px', textAlign: 'center', fontSize: '11px', fontWeight: '600', color: '#666' }}>Influencer</th>
+                  <th style={{ padding: '8px', textAlign: 'center', fontSize: '11px', fontWeight: '600', color: '#666' }}>Tags</th>
+                  <th style={{ padding: '8px', textAlign: 'center', fontSize: '11px', fontWeight: '600', color: '#666' }}>Status</th>
+                  <th style={{ padding: '8px', textAlign: 'center', fontSize: '11px', fontWeight: '600', color: '#666' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {codes.map(code => (
+                  <tr key={code.id} style={{ borderBottom: '1px solid #f5f5f5', height: '50px' }}>
+                    <td style={{ padding: '6px 8px', fontSize: '12px', fontWeight: '600', color: '#333' }}>
+                      <div>{code.code}</div>
+                    </td>
+                    <td style={{ padding: '6px 8px', textAlign: 'center', fontSize: '12px', color: '#666' }}>
+                      {code.type === 'percentage' ? `${code.value}%` : `SGD ${code.value}`}
+                    </td>
+                    <td style={{ padding: '6px 8px', textAlign: 'center', fontSize: '11px', color: '#666' }}>
+                      {code.usedCount}/{code.maxUses}
+                    </td>
+                    <td style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px' }}>
+                      {code.influencer ? (
+                        <span style={{ background: '#FFE0D3', padding: '2px 6px', borderRadius: '3px', color: '#FF6B35', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                          👤 {code.influencer.substring(0, 10)}
+                        </span>
                       ) : (
                         <span style={{ color: '#ccc' }}>—</span>
                       )}
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'center' }}>
-                    <span
-                      style={{
+                    </td>
+                    <td style={{ padding: '6px 8px', textAlign: 'center' }}>
+                      {code.tags && code.tags.length > 0 ? (
+                        <span style={{ fontSize: '9px', background: '#E3F2FD', color: '#1976D2', padding: '2px 4px', borderRadius: '2px', fontWeight: '600' }}>
+                          {code.tags.length}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#ccc' }}>—</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '6px 8px', textAlign: 'center' }}>
+                      <span style={{
                         display: 'inline-block',
-                        padding: '4px 8px',
-                        background: getStatusColor(code.status) + '20',
+                        padding: '2px 6px',
+                        background: getStatusColor(code.status) + '30',
                         color: getStatusColor(code.status),
-                        borderRadius: '4px',
-                        fontSize: '11px',
+                        borderRadius: '3px',
+                        fontSize: '9px',
                         fontWeight: '600'
-                      }}
-                    >
-                      {getStatusLabel(code.status)}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                      <button
-                        onClick={() => handleEditCode(code.id)}
-                        style={{
-                          padding: '6px 10px',
-                          background: '#FFF3E0',
-                          color: '#E65100',
-                          border: 'none',
-                          borderRadius: '4px',
-                          fontSize: '11px',
-                          fontWeight: '600',
-                          cursor: 'pointer'
-                        }}
-                        title="Edit code"
-                      >
-                        ✏️ Edit
-                      </button>
-                      <button
-                        onClick={() => duplicateCode(code.id)}
-                        style={{
-                          padding: '6px 10px',
-                          background: '#E3F2FD',
-                          color: '#1976D2',
-                          border: 'none',
-                          borderRadius: '4px',
-                          fontSize: '11px',
-                          fontWeight: '600',
-                          cursor: 'pointer'
-                        }}
-                        title="Duplicate with same settings"
-                      >
-                        📋 Dup
-                      </button>
-                      <button
-                        onClick={() => handleDeleteCode(code.id)}
-                        style={{
-                          padding: '6px 10px',
-                          background: '#ffebee',
-                          color: '#C62828',
-                          border: 'none',
-                          borderRadius: '4px',
-                          fontSize: '11px',
-                          fontWeight: '600',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🗑️ Del
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      }}>
+                        {code.status === 'active' ? '✓' : code.status === 'expired' ? '✕' : '○'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '6px 4px', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', gap: '3px', justifyContent: 'center' }}>
+                        <button
+                          onClick={() => handleEditCode(code.id)}
+                          style={{
+                            padding: '4px 6px',
+                            background: '#FFF3E0',
+                            color: '#E65100',
+                            border: 'none',
+                            borderRadius: '3px',
+                            fontSize: '10px',
+                            cursor: 'pointer',
+                            fontWeight: '600'
+                          }}
+                          title="Edit"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => duplicateCode(code.id)}
+                          style={{
+                            padding: '4px 6px',
+                            background: '#E3F2FD',
+                            color: '#1976D2',
+                            border: 'none',
+                            borderRadius: '3px',
+                            fontSize: '10px',
+                            cursor: 'pointer',
+                            fontWeight: '600'
+                          }}
+                          title="Duplicate"
+                        >
+                          📋
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCode(code.id)}
+                          style={{
+                            padding: '4px 6px',
+                            background: '#ffebee',
+                            color: '#C62828',
+                            border: 'none',
+                            borderRadius: '3px',
+                            fontSize: '10px',
+                            cursor: 'pointer',
+                            fontWeight: '600'
+                          }}
+                          title="Delete"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
