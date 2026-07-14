@@ -72,10 +72,10 @@ import { ActionPlansReport } from './pages/admin/reports/ActionPlansReport';
 import { GTMReport } from './pages/admin/reports/GTMReport';
 import { ErrandPerfReport } from './pages/admin/reports/ErrandPerfReport';
 import { DemographicsReport } from './pages/admin/reports/DemographicsReport';
+import { RegionalPerformanceReport } from './pages/admin/reports/RegionalPerformanceReport';
 import UsersSafetyPage from './pages/admin/UsersSafety';
 import DisputesPage from './pages/admin/Disputes';
 import OperationsPage from './pages/admin/Operations';
-import RegionalPage from './pages/admin/Regional';
 import DiscountCodesPage from './pages/admin/DiscountCodes';
 import AdminErrandifyPointsPage from './pages/admin/ErrandifyPoints';
 import EmailPage from './pages/admin/Email';
@@ -423,7 +423,7 @@ export default function App() {
         <Route path="/admin/dashboard/users" element={isAuthenticated && isAdmin ? <UsersSafetyPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/disputes" element={isAuthenticated && isAdmin ? <DisputesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/operations" element={isAuthenticated && isAdmin ? <OperationsPage /> : <Navigate to="/login" replace />} />
-        <Route path="/admin/dashboard/regional" element={isAuthenticated && isAdmin ? <RegionalPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/dashboard/regional" element={isAuthenticated && isAdmin ? <RegionalPerformanceReport /> : <Navigate to="/login" replace />} />
         <Route path="/admin/cases" element={isAuthenticated && isAdmin ? <CasesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/reports/financial" element={isAuthenticated && isAdmin ? <FinancialHealthReport /> : <Navigate to="/login" replace />} />
         <Route path="/admin/reports/user-behavior" element={isAuthenticated && isAdmin ? <UserBehaviorReport /> : <Navigate to="/login" replace />} />
