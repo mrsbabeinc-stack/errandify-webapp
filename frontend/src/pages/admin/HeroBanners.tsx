@@ -30,6 +30,7 @@ export default function HeroBanners() {
   // Hero banner AI design
   const [heroBannerDesignLoading, setHeroBannerDesignLoading] = useState(false);
   const [generatedHeroBannerDesign, setGeneratedHeroBannerDesign] = useState('');
+  const [customBannerRequirements, setCustomBannerRequirements] = useState('');
 
   useEffect(() => {
     const saved = localStorage.getItem('heroBanners');
@@ -93,6 +94,7 @@ Banner: "${newTitle}"
 Description: "${newSubtitle}"
 Location: ${newLocation}
 CTA Button: "${newCTAText}"
+${customBannerRequirements.trim() ? `Custom Requirements: ${customBannerRequirements}` : ''}
 
 Generate a vivid design description for a 1200x400px hero banner that includes:
 
@@ -177,6 +179,7 @@ Format as detailed, actionable design brief. Be specific about colors, placement
     setNewSubtitle('');
     setNewCTAText('');
     setGeneratedHeroBannerDesign('');
+    setCustomBannerRequirements('');
     showToast('✅ Banner created!', 'success');
   };
 
@@ -262,6 +265,31 @@ Format as detailed, actionable design brief. Be specific about colors, placement
             <p style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
               Generate professional hero banner (1200x400px) design specifications before creating.
             </p>
+
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                💡 Your Design Requirements (Optional)
+              </label>
+              <textarea
+                placeholder="Add your custom requirements or design preferences"
+                value={customBannerRequirements}
+                onChange={(e) => setCustomBannerRequirements(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '2px solid #81C784',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  minHeight: '60px',
+                  fontFamily: 'system-ui',
+                  resize: 'vertical',
+                }}
+                maxLength={300}
+              />
+              <div style={{ fontSize: '11px', color: '#666', marginTop: '6px', fontStyle: 'italic' }}>
+                Examples: "Use vibrant colors", "Modern minimalist style", "Include nature icons", "Gradient background", "Professional look", "Playful and fun"
+              </div>
+            </div>
 
             <button
               onClick={handleGenerateHeroBannerDesign}
