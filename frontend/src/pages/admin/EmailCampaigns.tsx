@@ -537,175 +537,179 @@ export default function EmailCampaigns() {
           </button>
         </div>
       </div>
+      )}
 
-        <div style={{ display: 'grid', gap: '12px' }}>
-          {campaigns.map(campaign => (
-            <div key={campaign.id} style={{
-              padding: '16px',
-              background: 'white',
-              border: `2px solid ${statusColors[campaign.status]}`,
-              borderRadius: '8px',
-            }}>
-              {editingId === campaign.id ? (
-                // Edit Mode
-                <div style={{ display: 'grid', gap: '12px' }}>
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
-                    placeholder="Campaign name"
-                  />
-                  <input
-                    type="text"
-                    value={editSubject}
-                    onChange={(e) => setEditSubject(e.target.value)}
-                    style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
-                    placeholder="Email subject"
-                  />
-                  <textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    rows={4}
-                    style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit' }}
-                    placeholder="Email content"
-                  />
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <button
-                      onClick={() => handleSaveEdit(campaign.id)}
-                      style={{
-                        padding: '10px',
-                        background: '#4CAF50',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      ✅ Save
-                    </button>
-                    <button
-                      onClick={() => setEditingId(null)}
-                      style={{
-                        padding: '10px',
-                        background: '#f0f0f0',
-                        color: '#333',
-                        border: 'none',
-                        borderRadius: '6px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      ❌ Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                // Display Mode
-                <>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'start', marginBottom: '12px' }}>
-                    <div>
-                      <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
-                        {campaign.name}
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#999', marginBottom: '4px' }}>
-                        📧 {campaign.fromName} &lt;{campaign.fromEmail}&gt;
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>
-                        Subject: "{campaign.subject}"
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', lineHeight: '1.4' }}>
-                        {campaign.content}
-                      </div>
+      {activeTab === 'campaigns' && (
+        <>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {campaigns.map(campaign => (
+              <div key={campaign.id} style={{
+                padding: '16px',
+                background: 'white',
+                border: `2px solid ${statusColors[campaign.status]}`,
+                borderRadius: '8px',
+              }}>
+                {editingId === campaign.id ? (
+                  // Edit Mode
+                  <div style={{ display: 'grid', gap: '12px' }}>
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+                      placeholder="Campaign name"
+                    />
+                    <input
+                      type="text"
+                      value={editSubject}
+                      onChange={(e) => setEditSubject(e.target.value)}
+                      style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+                      placeholder="Email subject"
+                    />
+                    <textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      rows={4}
+                      style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit' }}
+                      placeholder="Email content"
+                    />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <button
+                        onClick={() => handleSaveEdit(campaign.id)}
+                        style={{
+                          padding: '10px',
+                          background: '#4CAF50',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        ✅ Save
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        style={{
+                          padding: '10px',
+                          background: '#f0f0f0',
+                          color: '#333',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        ❌ Cancel
+                      </button>
                     </div>
-                    <span style={{
-                      padding: '6px 10px',
-                      background: statusColors[campaign.status],
-                      color: 'white',
-                      borderRadius: '4px',
-                      fontSize: '11px',
-                      fontWeight: '600',
-                      height: 'fit-content',
-                      whiteSpace: 'nowrap',
-                    }}>
-                      {campaign.status.toUpperCase()}
-                    </span>
                   </div>
+                ) : (
+                  // Display Mode
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'start', marginBottom: '12px' }}>
+                      <div>
+                        <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
+                          {campaign.name}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#999', marginBottom: '4px' }}>
+                          📧 {campaign.fromName} &lt;{campaign.fromEmail}&gt;
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>
+                          Subject: "{campaign.subject}"
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', lineHeight: '1.4' }}>
+                          {campaign.content}
+                        </div>
+                      </div>
+                      <span style={{
+                        padding: '6px 10px',
+                        background: statusColors[campaign.status],
+                        color: 'white',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        height: 'fit-content',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {campaign.status.toUpperCase()}
+                      </span>
+                    </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', fontSize: '12px', marginBottom: '12px' }}>
-                    <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                      <div style={{ fontSize: '10px', color: '#999' }}>Recipients</div>
-                      <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
-                        {campaign.recipientCount.toLocaleString()}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', fontSize: '12px', marginBottom: '12px' }}>
+                      <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
+                        <div style={{ fontSize: '10px', color: '#999' }}>Recipients</div>
+                        <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
+                          {campaign.recipientCount.toLocaleString()}
+                        </div>
+                        <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
+                          {campaign.recipientSegment === 'all-users' ? 'All Users' : campaign.recipientSegment === 'doers' ? 'Doers' : campaign.recipientSegment === 'askers' ? 'Askers' : 'VIP'}
+                        </div>
                       </div>
-                      <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
-                        {campaign.recipientSegment === 'all-users' ? 'All Users' : campaign.recipientSegment === 'doers' ? 'Doers' : campaign.recipientSegment === 'askers' ? 'Askers' : 'VIP'}
+                      <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
+                        <div style={{ fontSize: '10px', color: '#999' }}>Template</div>
+                        <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '13px', textTransform: 'capitalize' }}>
+                          {campaign.templateType}
+                        </div>
+                      </div>
+                      <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
+                        <div style={{ fontSize: '10px', color: '#999' }}>Sent</div>
+                        <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
+                          {campaign.status === 'sent' ? '✓' : campaign.status === 'scheduled' ? '⏱️' : '—'}
+                        </div>
+                        <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
+                          {campaign.sentAt ? new Date(campaign.sentAt).toLocaleDateString() : 'Pending'}
+                        </div>
+                      </div>
+                      <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
+                        <div style={{ fontSize: '10px', color: '#999' }}>Engagement</div>
+                        <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
+                          {campaign.openRate}% / {campaign.clickRate}%
+                        </div>
+                        <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
+                          Open / Click
+                        </div>
                       </div>
                     </div>
-                    <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                      <div style={{ fontSize: '10px', color: '#999' }}>Template</div>
-                      <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '13px', textTransform: 'capitalize' }}>
-                        {campaign.templateType}
-                      </div>
-                    </div>
-                    <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                      <div style={{ fontSize: '10px', color: '#999' }}>Sent</div>
-                      <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
-                        {campaign.status === 'sent' ? '✓' : campaign.status === 'scheduled' ? '⏱️' : '—'}
-                      </div>
-                      <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
-                        {campaign.sentAt ? new Date(campaign.sentAt).toLocaleDateString() : 'Pending'}
-                      </div>
-                    </div>
-                    <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                      <div style={{ fontSize: '10px', color: '#999' }}>Engagement</div>
-                      <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
-                        {campaign.openRate}% / {campaign.clickRate}%
-                      </div>
-                      <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
-                        Open / Click
-                      </div>
-                    </div>
-                  </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <button
-                      onClick={() => handleEditCampaign(campaign)}
-                      style={{
-                        padding: '8px',
-                        background: '#2196F3',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCampaign(campaign.id)}
-                      style={{
-                        padding: '8px',
-                        background: '#F44336',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <button
+                        onClick={() => handleEditCampaign(campaign)}
+                        style={{
+                          padding: '8px',
+                          background: '#2196F3',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCampaign(campaign.id)}
+                        style={{
+                          padding: '8px',
+                          background: '#F44336',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        🗑️ Delete
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
       </div>
     </AdminLayout>
