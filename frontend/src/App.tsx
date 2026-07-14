@@ -62,6 +62,16 @@ import CasesPage from './pages/admin/Cases';
 import CategoriesPage from './pages/admin/Categories';
 import VouchersPage from './pages/admin/Vouchers';
 import ReportsPage from './pages/admin/Reports';
+import { FinancialHealthReport } from './pages/admin/reports/FinancialHealthReport';
+import { UserBehaviorReport } from './pages/admin/reports/UserBehaviorReport';
+import { MarketAnalysisReport } from './pages/admin/reports/MarketAnalysisReport';
+import { CategoryAnalysisReport } from './pages/admin/reports/CategoryAnalysisReport';
+import { VulnerableUsersReport } from './pages/admin/reports/VulnerableUsersReport';
+import { MarketTrendsReport } from './pages/admin/reports/MarketTrendsReport';
+import { ActionPlansReport } from './pages/admin/reports/ActionPlansReport';
+import { GTMReport } from './pages/admin/reports/GTMReport';
+import { ErrandPerfReport } from './pages/admin/reports/ErrandPerfReport';
+import { DemographicsReport } from './pages/admin/reports/DemographicsReport';
 import UsersSafetyPage from './pages/admin/UsersSafety';
 import DisputesPage from './pages/admin/Disputes';
 import OperationsPage from './pages/admin/Operations';
@@ -415,6 +425,16 @@ export default function App() {
         <Route path="/admin/dashboard/operations" element={isAuthenticated && isAdmin ? <OperationsPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/regional" element={isAuthenticated && isAdmin ? <RegionalPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/cases" element={isAuthenticated && isAdmin ? <CasesPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/reports/financial" element={isAuthenticated && isAdmin ? <FinancialHealthReport /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/reports/user-behavior" element={isAuthenticated && isAdmin ? <UserBehaviorReport /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/reports/market" element={isAuthenticated && isAdmin ? <MarketAnalysisReport /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/reports/category" element={isAuthenticated && isAdmin ? <CategoryAnalysisReport /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/reports/vulnerable" element={isAuthenticated && isAdmin ? <VulnerableUsersReport /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/reports/trends" element={isAuthenticated && isAdmin ? <MarketTrendsReport /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/reports/actions" element={isAuthenticated && isAdmin ? <ActionPlansReport /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/reports/gtm" element={isAuthenticated && isAdmin ? <GTMReport /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/reports/errand-perf" element={isAuthenticated && isAdmin ? <ErrandPerfReport /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/reports/demographics" element={isAuthenticated && isAdmin ? <DemographicsReport /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/categories" element={isAuthenticated && isAdmin ? <CategoriesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/vouchers" element={isAuthenticated && isAdmin ? <VouchersPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/points" element={isAuthenticated && isAdmin ? <AdminErrandifyPointsPage /> : <Navigate to="/login" replace />} />
