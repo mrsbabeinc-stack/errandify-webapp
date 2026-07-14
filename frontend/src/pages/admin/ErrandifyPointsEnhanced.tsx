@@ -114,144 +114,54 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Volume KPI Cards - Middle Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
-          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>This Week Issued</div>
-            <div style={{ fontSize: '16px', fontWeight: '700', color: '#FF6B35' }}>{stats.pointsIssuedThisWeek} EP</div>
-            <div style={{ fontSize: '9px', color: '#999' }}>SGD ${stats.costWeekIssued.toFixed(2)}</div>
-          </div>
-          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>This Month Issued</div>
-            <div style={{ fontSize: '16px', fontWeight: '700', color: '#FF6B35' }}>{stats.pointsIssuedThisMonth} EP</div>
-            <div style={{ fontSize: '9px', color: '#999' }}>SGD ${stats.costMonthIssued.toFixed(2)}</div>
-          </div>
-          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Total Issued (All Time)</div>
-            <div style={{ fontSize: '16px', fontWeight: '700', color: '#FF6B35' }}>{stats.totalPoints.toLocaleString()} EP</div>
-            <div style={{ fontSize: '9px', color: '#999' }}>SGD ${stats.costTotalIssued.toFixed(2)}</div>
-          </div>
-          <div style={{ background: '#fff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <div style={{ fontSize: '10px', color: '#666', marginBottom: '2px' }}>Redemption Rate</div>
-            <div style={{ fontSize: '16px', fontWeight: '700', color: '#4CAF50' }}>{stats.redemptionRate}%</div>
-            <div style={{ fontSize: '9px', color: '#999' }}>${stats.spentTotalRedeemed.toFixed(2)} redeemed</div>
-          </div>
-        </div>
 
-        {/* Financial Breakdown Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>📈 Issuance Cost Breakdown</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '6px', borderBottom: '1px solid #f5f5f5' }}>
-                <span style={{ fontSize: '11px', color: '#666' }}>Today</span>
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#FF6B35' }}>SGD ${stats.costTodayIssued.toFixed(2)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '6px', borderBottom: '1px solid #f5f5f5' }}>
-                <span style={{ fontSize: '11px', color: '#666' }}>This Week</span>
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#FF6B35' }}>SGD ${stats.costWeekIssued.toFixed(2)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '6px', borderBottom: '1px solid #f5f5f5' }}>
-                <span style={{ fontSize: '11px', color: '#666' }}>This Month</span>
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#FF6B35' }}>SGD ${stats.costMonthIssued.toFixed(2)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '6px', borderTop: '2px solid #FF6B35' }}>
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#333' }}>All Time Total</span>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: '#FF6B35' }}>SGD ${stats.costTotalIssued.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>💰 Redemption Spending Breakdown</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '6px', borderBottom: '1px solid #f5f5f5' }}>
-                <span style={{ fontSize: '11px', color: '#666' }}>Today</span>
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#2196F3' }}>SGD ${stats.spentTodayRedeemed.toFixed(2)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '6px', borderBottom: '1px solid #f5f5f5' }}>
-                <span style={{ fontSize: '11px', color: '#666' }}>This Week</span>
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#2196F3' }}>SGD ${stats.spentWeekRedeemed.toFixed(2)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '6px', borderBottom: '1px solid #f5f5f5' }}>
-                <span style={{ fontSize: '11px', color: '#666' }}>This Month</span>
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#2196F3' }}>SGD ${stats.spentMonthRedeemed.toFixed(2)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '6px', borderTop: '2px solid #2196F3' }}>
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#333' }}>All Time Total</span>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: '#2196F3' }}>SGD ${stats.spentTotalRedeemed.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Charts Row 1: Issuance & Spending Charts */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', flex: 1, minHeight: 0 }}>
+        {/* Charts Row: 3 Columns */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '12px', flex: 1, minHeight: 0 }}>
           {/* Daily Issuance Chart */}
           <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>📈 Daily Points Issued (7-day)</h3>
+            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>📈 Daily Issuance (7-day)</h3>
             <Chart3DBar
               data={dailyData.map((d, idx) => ({
                 label: d.day,
                 value: d.issued,
                 color: ['#FF6B35', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#E91E63', '#00BCD4'][idx]
               }))}
-              height={180}
+              height={150}
             />
-            <div style={{ fontSize: '9px', color: '#666', marginTop: '8px', textAlign: 'center' }}>
-              SGD ${dailyData.reduce((sum, d) => sum + d.issued, 0) * 0.05} total this week
+            <div style={{ fontSize: '8px', color: '#666', marginTop: '6px', textAlign: 'center' }}>
+              SGD ${(dailyData.reduce((sum, d) => sum + d.issued, 0) * 0.05).toFixed(2)} total
             </div>
           </div>
 
-          {/* Daily Spending Chart */}
-          <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>💳 Daily Points Redeemed (7-day)</h3>
-            <Chart3DBar
-              data={dailyData.map((d, idx) => ({
-                label: d.day,
-                value: d.redeemed,
-                color: ['#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#E91E63', '#00BCD4', '#FF6B35'][idx]
-              }))}
-              height={180}
-            />
-            <div style={{ fontSize: '9px', color: '#666', marginTop: '8px', textAlign: 'center' }}>
-              SGD ${dailyData.reduce((sum, d) => sum + d.redeemed, 0) * 0.05} total this week
-            </div>
-          </div>
-        </div>
-
-        {/* Charts Row 2: Issuance by Type & Peak Hours */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', flex: 1, minHeight: 0 }}>
           {/* Issuance by Type */}
           <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>🎯 Issuance by Type</h3>
+            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>🎯 By Type</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {issuanceByType.map(item => (
                 <div key={item.type}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                    <span style={{ fontSize: '10px', color: '#333', fontWeight: '500' }}>{item.type}</span>
-                    <span style={{ fontSize: '10px', fontWeight: '600', color: '#FF6B35' }}>{item.percentage}%</span>
+                    <span style={{ fontSize: '9px', color: '#333', fontWeight: '500' }}>{item.type}</span>
+                    <span style={{ fontSize: '9px', fontWeight: '600', color: '#FF6B35' }}>{item.percentage}%</span>
                   </div>
-                  <div style={{ height: '6px', background: '#f5f5f5', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ height: '5px', background: '#f5f5f5', borderRadius: '2px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', background: '#FF6B35', width: `${item.percentage}%` }} />
                   </div>
-                  <div style={{ fontSize: '8px', color: '#999', marginTop: '1px' }}>{item.points} EP (${(item.points * 0.05).toFixed(2)})</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Peak Engagement Hours */}
+          {/* Peak Hours */}
           <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>⏰ Peak Issuance Hours</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>⏰ Peak Hours</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
               {peakHours.map(item => (
-                <div key={item.hour} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '9px', color: '#666', minWidth: '28px', fontWeight: '500' }}>{item.hour}</span>
-                  <div style={{ flex: 1, height: '4px', background: '#f5f5f5', borderRadius: '2px', overflow: 'hidden' }}>
+                <div key={item.hour} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '8px', color: '#666', minWidth: '24px', fontWeight: '500' }}>{item.hour}</span>
+                  <div style={{ flex: 1, height: '3px', background: '#f5f5f5', borderRadius: '1px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', background: '#2196F3', width: `${(item.points / 420) * 100}%` }} />
                   </div>
-                  <span style={{ fontSize: '9px', color: '#666', minWidth: '30px', textAlign: 'right', fontWeight: '500' }}>{item.points}</span>
+                  <span style={{ fontSize: '8px', color: '#666', minWidth: '22px', textAlign: 'right', fontWeight: '500' }}>{item.points}</span>
                 </div>
               ))}
             </div>
@@ -259,20 +169,18 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
         </div>
 
         {/* Recent Transactions Row */}
-        <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto', minHeight: '120px', marginBottom: '12px' }}>
-          <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>📋 Recent Transactions</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {transactions.slice(0, 5).map(t => (
-              <div key={t.id} style={{ background: '#f9f9f9', padding: '8px 12px', borderRadius: '4px', border: '1px solid #f0f0f0', flex: '1 1 180px', minWidth: '150px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '600', color: '#333' }}>{t.user}</span>
-                  <span style={{ fontSize: '10px', fontWeight: '600', color: t.points > 0 ? '#4CAF50' : '#F44336' }}>
+        <div style={{ background: '#fff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #ffb88c', minHeight: '80px' }}>
+          <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 6px 0' }}>📋 Recent Activity</h3>
+          <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '4px' }}>
+            {transactions.slice(0, 4).map(t => (
+              <div key={t.id} style={{ background: '#f9f9f9', padding: '8px 10px', borderRadius: '4px', border: '1px solid #f0f0f0', flex: '0 0 auto', minWidth: '140px' }}>
+                <div style={{ fontSize: '10px', fontWeight: '600', color: '#333', marginBottom: '2px' }}>{t.user}</div>
+                <div style={{ fontSize: '8px', color: '#666', marginBottom: '3px' }}>{t.action}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '9px' }}>
+                  <span style={{ color: t.points > 0 ? '#4CAF50' : '#F44336', fontWeight: '600' }}>
                     {t.points > 0 ? '+' : ''}{t.points}
                   </span>
-                </div>
-                <div style={{ fontSize: '9px', color: '#666', marginBottom: '3px' }}>{t.action}</div>
-                <div style={{ fontSize: '9px', color: '#2196F3', fontWeight: '600', borderTop: '1px solid #e0e0e0', paddingTop: '4px' }}>
-                  Balance: {t.balance} EP
+                  <span style={{ color: '#2196F3', fontWeight: '500' }}>Bal: {t.balance}</span>
                 </div>
               </div>
             ))}
