@@ -58,6 +58,7 @@ export default function NotificationsManagement() {
   // State - UI
   const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'create' | 'groups'>('create');
 
   // Load data
   useEffect(() => {
@@ -351,24 +352,26 @@ export default function NotificationsManagement() {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '2px solid #FFD9B3', paddingBottom: '8px' }}>
-        {(['create', 'groups'] as const).map(tab => (
+        {(['create', 'groups'] as const).map(tabName => (
           <button
-            key={tab}
+            key={tabName}
             onClick={() => {
-              if (tab === 'groups') setShowGroupForm(true);
+              setActiveTab(tabName);
+              if (tabName === 'groups') setShowGroupForm(true);
             }}
             style={{
               padding: '8px 16px',
-              background: tab === 'create' ? 'transparent' : 'transparent',
-              color: '#666',
+              background: activeTab === tabName ? '#FFD9B3' : 'transparent',
+              color: activeTab === tabName ? '#333' : '#666',
               border: 'none',
               fontSize: '14px',
               fontWeight: '600',
               cursor: 'pointer',
-              borderBottom: '2px solid transparent',
+              borderBottom: activeTab === tabName ? '3px solid #FF6B35' : '2px solid transparent',
+              transition: 'all 0.2s',
             }}
           >
-            {tab === 'create' ? '📨 Create & Send' : '👥 Manage Groups'}
+            {tabName === 'create' ? '📨 Create & Send' : '👥 Manage Groups'}
           </button>
         ))}
       </div>
@@ -376,7 +379,9 @@ export default function NotificationsManagement() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '24px' }}>
         {/* Main area */}
         <div>
-          {/* Create Form */}
+          {activeTab === 'create' && (
+            <>
+            {/* Create Form */}
           <div style={{
             padding: '16px',
             background: 'linear-gradient(135deg, #FFF8F5 0%, #FFE4C4 100%)',
@@ -593,7 +598,75 @@ export default function NotificationsManagement() {
             </div>
           </div>
 
+            </>
+          )}
+
+          {activeTab === 'groups' && (
+            <>
+            {/* Groups Management */}
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#333', marginBottom: '16px' }}>
+                👥 Notification Groups
+              </h3>
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {groups.map(group => (
+                  <div key={group.id} style={{
+                    padding: '16px',
+                    background: 'white',
+                    border: '2px solid #FFD9B3',
+                    borderRadius: '8px',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                      <div>
+                        <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
+                          {group.name}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>
+                          {group.description}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#FF6B35' }}>
+                        {group.userCount.toLocaleString()} users
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#999', marginBottom: '8px' }}>
+                      Channels: {(group.channels || []).join(', ').toUpperCase()}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <button style={{
+                        padding: '6px 12px',
+                        background: '#2196F3',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                      }}>
+                        ✏️ Edit
+                      </button>
+                      <button style={{
+                        padding: '6px 12px',
+                        background: '#F44336',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                      }}>
+                        🗑️ Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            </>
+          )}
+
           {/* Search & Filter */}
+          {activeTab === 'create' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
             <input
               type="text"
@@ -746,6 +819,7 @@ export default function NotificationsManagement() {
               })
             )}
           </div>
+          )}
         </div>
 
         {/* Right Sidebar - Group Management */}
