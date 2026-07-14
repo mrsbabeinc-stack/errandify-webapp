@@ -7,14 +7,6 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
   const [timeframe, setTimeframe] = useState('weekly');
   const [showAnalysis, setShowAnalysis] = useState(true);
 
-  const [transactions] = useState([
-    { id: 1, user: 'Sarah Tan', action: 'Task Completed', points: 25, date: '2 hours ago', balance: 450, timestamp: Date.now() - 2 * 3600000 },
-    { id: 2, user: 'John Lee', action: 'Referral Bonus', points: 50, date: '5 hours ago', balance: 325, timestamp: Date.now() - 5 * 3600000 },
-    { id: 3, user: 'Alice Wong', action: 'Rating Bonus', points: 10, date: '1 day ago', balance: 180, timestamp: Date.now() - 24 * 3600000 },
-    { id: 4, user: 'Bob Chen', action: 'Redemption', points: -100, date: '2 days ago', balance: 25, timestamp: Date.now() - 48 * 3600000 },
-    { id: 5, user: 'Eve Kumar', action: 'Streak Bonus', points: 75, date: '3 days ago', balance: 520, timestamp: Date.now() - 72 * 3600000 },
-  ]);
-
   const [stats] = useState({
     totalPoints: 12450,
     activeUsers: 2847,
@@ -170,24 +162,6 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Recent Transactions Row */}
-        <div style={{ background: '#fff', padding: '10px 12px', borderRadius: '6px', border: '1px solid #ffb88c', minHeight: '80px' }}>
-          <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 6px 0' }}>📋 Recent Activity</h3>
-          <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '4px' }}>
-            {transactions.slice(0, 4).map(t => (
-              <div key={t.id} style={{ background: '#f9f9f9', padding: '8px 10px', borderRadius: '4px', border: '1px solid #f0f0f0', flex: '0 0 auto', minWidth: '140px' }}>
-                <div style={{ fontSize: '10px', fontWeight: '600', color: '#333', marginBottom: '2px' }}>{t.user}</div>
-                <div style={{ fontSize: '8px', color: '#666', marginBottom: '3px' }}>{t.action}</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '9px' }}>
-                  <span style={{ color: t.points > 0 ? '#4CAF50' : '#F44336', fontWeight: '600' }}>
-                    {t.points > 0 ? '+' : ''}{t.points}
-                  </span>
-                  <span style={{ color: '#2196F3', fontWeight: '500' }}>Bal: {t.balance}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* AI Analysis Panel */}
         {showAnalysis && (
