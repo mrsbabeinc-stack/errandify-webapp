@@ -87,12 +87,12 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Financial KPI Cards - Top Row */}
+        {/* Financial KPI Cards - Row 1 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
           <div style={{ background: '#FFF3E0', padding: '10px', borderRadius: '6px', border: '2px solid #FF6B35' }}>
             <div style={{ fontSize: '10px', color: '#E65100', fontWeight: '600', marginBottom: '2px' }}>💸 Cost Issued Today</div>
             <div style={{ fontSize: '20px', fontWeight: '700', color: '#FF6B35' }}>SGD ${stats.costTodayIssued.toFixed(2)}</div>
-            <div style={{ fontSize: '9px', color: '#E65100', marginTop: '2px' }}>({stats.pointsIssuedToday} EP @ ${stats.epToSgd}/EP)</div>
+            <div style={{ fontSize: '9px', color: '#E65100', marginTop: '2px' }}>({stats.pointsIssuedToday} EP)</div>
           </div>
           <div style={{ background: '#FFF3E0', padding: '10px', borderRadius: '6px', border: '2px solid #FF6B35' }}>
             <div style={{ fontSize: '10px', color: '#E65100', fontWeight: '600', marginBottom: '2px' }}>💳 Spent/Redeemed Today</div>
@@ -102,7 +102,31 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
           <div style={{ background: '#E8F5E9', padding: '10px', borderRadius: '6px', border: '2px solid #4CAF50' }}>
             <div style={{ fontSize: '10px', color: '#2E7D32', fontWeight: '600', marginBottom: '2px' }}>📊 Net Spend Today</div>
             <div style={{ fontSize: '20px', fontWeight: '700', color: '#4CAF50' }}>SGD -${Math.abs(stats.netSpendToday).toFixed(2)}</div>
-            <div style={{ fontSize: '9px', color: '#2E7D32', marginTop: '2px' }}>Profit (more spent than issued)</div>
+            <div style={{ fontSize: '9px', color: '#2E7D32', marginTop: '2px' }}>Profit</div>
+          </div>
+        </div>
+
+        {/* Volume KPI Cards - Row 2 */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
+          <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <div style={{ fontSize: '10px', color: '#666', marginBottom: '3px', fontWeight: '600' }}>This Week</div>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: '#FF6B35' }}>{stats.pointsIssuedThisWeek} EP</div>
+            <div style={{ fontSize: '9px', color: '#999' }}>SGD ${stats.costWeekIssued.toFixed(2)}</div>
+          </div>
+          <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <div style={{ fontSize: '10px', color: '#666', marginBottom: '3px', fontWeight: '600' }}>This Month</div>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: '#FF6B35' }}>{stats.pointsIssuedThisMonth} EP</div>
+            <div style={{ fontSize: '9px', color: '#999' }}>SGD ${stats.costMonthIssued.toFixed(2)}</div>
+          </div>
+          <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <div style={{ fontSize: '10px', color: '#666', marginBottom: '3px', fontWeight: '600' }}>Total Issued</div>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: '#FF6B35' }}>{stats.totalPoints.toLocaleString()} EP</div>
+            <div style={{ fontSize: '9px', color: '#999' }}>SGD ${stats.costTotalIssued.toFixed(2)}</div>
+          </div>
+          <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #ffb88c' }}>
+            <div style={{ fontSize: '10px', color: '#666', marginBottom: '3px', fontWeight: '600' }}>Redemption</div>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: '#4CAF50' }}>{stats.redemptionRate}%</div>
+            <div style={{ fontSize: '9px', color: '#999' }}>SGD ${stats.spentTotalRedeemed.toFixed(2)}</div>
           </div>
         </div>
 
