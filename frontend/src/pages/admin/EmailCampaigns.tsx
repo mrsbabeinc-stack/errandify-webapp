@@ -622,45 +622,45 @@ Next: Generate image in the Image Generator, then select a text variant to load.
         </div>
 
         {activeTab === 'ai-assist' && (
-        <>
-        <div style={{ marginBottom: '24px', padding: '16px', background: '#F0E6FF', borderRadius: '8px', border: '2px solid #D4B5FF' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
-            🚀 AI Campaign Planner - Full Campaign Generation
-          </h3>
-          <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>
-            <strong>State your objective</strong> and Qwen AI will generate a complete campaign plan: name, 4 text variants, image description, and reasoning!
-          </p>
-          <div style={{ display: 'grid', gap: '12px' }}>
-            <textarea
-              placeholder="E.g., 'Increase referrals by 50% among active doers' or 'Drive adoption of new premium features among VIP users' or 'Launch summer promotion targeting askers with convenience messaging'"
-              value={campaignObjective}
-              onChange={(e) => setCampaignObjective(e.target.value)}
-              rows={3}
-              style={{ padding: '10px 12px', border: '2px solid #D4B5FF', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit' }}
-            />
-            <button
-              onClick={handleGenerateFullCampaign}
-              disabled={plannerLoading}
-              style={{
-                padding: '12px',
-                background: plannerLoading ? '#ccc' : 'linear-gradient(135deg, #A78BFA 0%, #C4B5FD 100%)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                fontWeight: '600',
-                cursor: plannerLoading ? 'not-allowed' : 'pointer',
-                fontSize: '15px'
-              }}
-            >
-              {plannerLoading ? '⏳ Planning campaign with Qwen...' : '🎯 Generate Full Campaign Plan'}
-            </button>
-            <div style={{ fontSize: '11px', color: '#666', background: '#fff', padding: '8px', borderRadius: '4px' }}>
-              ✨ This creates: campaign name, 4 segment-specific texts, image prompt, and template type
+          <div style={{ display: 'grid', gap: '24px' }}>
+            <div style={{ marginBottom: '24px', padding: '16px', background: '#F0E6FF', borderRadius: '8px', border: '2px solid #D4B5FF' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
+                🚀 AI Campaign Planner - Full Campaign Generation
+              </h3>
+              <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>
+                <strong>State your objective</strong> and Qwen AI will generate a complete campaign plan: name, 4 text variants, image description, and reasoning!
+              </p>
+              <div style={{ display: 'grid', gap: '12px' }}>
+                <textarea
+                  placeholder="E.g., 'Increase referrals by 50% among active doers' or 'Drive adoption of new premium features among VIP users' or 'Launch summer promotion targeting askers with convenience messaging'"
+                  value={campaignObjective}
+                  onChange={(e) => setCampaignObjective(e.target.value)}
+                  rows={3}
+                  style={{ padding: '10px 12px', border: '2px solid #D4B5FF', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit' }}
+                />
+                <button
+                  onClick={handleGenerateFullCampaign}
+                  disabled={plannerLoading}
+                  style={{
+                    padding: '12px',
+                    background: plannerLoading ? '#ccc' : 'linear-gradient(135deg, #A78BFA 0%, #C4B5FD 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontWeight: '600',
+                    cursor: plannerLoading ? 'not-allowed' : 'pointer',
+                    fontSize: '15px'
+                  }}
+                >
+                  {plannerLoading ? '⏳ Planning campaign with Qwen...' : '🎯 Generate Full Campaign Plan'}
+                </button>
+                <div style={{ fontSize: '11px', color: '#666', background: '#fff', padding: '8px', borderRadius: '4px' }}>
+                  ✨ This creates: campaign name, 4 segment-specific texts, image prompt, and template type
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div style={{ marginBottom: '24px', padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
+            <div style={{ marginBottom: '24px', padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
           <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
             📝 AI Text Generator - Segment-Optimized Variants
           </h3>
@@ -814,13 +814,12 @@ Next: Generate image in the Image Generator, then select a text variant to load.
               </button>
             </div>
           )}
+            </div>
+          )}
         </div>
-        </>
-      )}
 
       {activeTab === 'campaigns' && (
-        <>
-          <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '24px' }}>
             <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
               Create New Campaign
             </div>
@@ -1150,7 +1149,6 @@ Next: Generate image in the Image Generator, then select a text variant to load.
             ))}
           </div>
         )}
-      </>
       </div>
     </AdminLayout>
   );
