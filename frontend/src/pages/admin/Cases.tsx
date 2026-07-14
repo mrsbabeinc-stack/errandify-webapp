@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { useToast, ToastContainer } from '../../components/Toast';
 import { CaseDisputeService } from '../../services/CaseDisputeService';
@@ -36,12 +36,11 @@ interface LinkedDispute {
 
 export const CasesPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { toasts, showToast, removeToast } = useToast();
-  const isRestCases = location.pathname.includes('/rest');
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [linkedDisputes, setLinkedDisputes] = useState<LinkedDispute[]>([]);
   const [showCaseDetail, setShowCaseDetail] = useState(false);
@@ -218,13 +217,9 @@ export const CasesPage: React.FC = () => {
     }
   };
 
-  // Filter by status and by case type (money vs rest)
+  // Filter by status and case type
   let displayCases = filter === 'all' ? cases : cases.filter(c => c.status === filter);
-
-  // Apply money vs rest filter based on route
-  displayCases = isRestCases
-    ? displayCases.filter(c => restCaseTypes.has(c.case_type))
-    : displayCases.filter(c => moneyCaseTypes.has(c.case_type));
+  displayCases = typeFilter === 'all' ? displayCases : displayCases.filter(c => c.case_type === typeFilter);
 
   const filteredCases = displayCases;
 
@@ -235,10 +230,10 @@ export const CasesPage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
             <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#333', marginBottom: '4px' }}>
-              {isRestCases ? '🔧 Case Management (Rest)' : '💰 Case Management ($$$)'}
+              📋 Case Management
             </h2>
             <p style={{ fontSize: '14px', color: '#666' }}>
-              {isRestCases ? 'Manage non-payment related cases and issues' : 'Track and manage payment-related disputes with compensation'}
+              Track and resolve all case types with AI-powered insights
             </p>
           </div>
           <button
@@ -258,26 +253,54 @@ export const CasesPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Filters */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', background: '#fff', padding: '12px', borderRadius: '8px' }}>
-          {['all', 'open', 'in_progress', 'resolved'].map(status => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: 'none',
-                background: filter === status ? '#FF6B35' : '#f5f5f5',
-                color: filter === status ? 'white' : '#333',
-                fontWeight: '600',
-                cursor: 'pointer',
-                fontSize: '12px',
-              }}
-            >
-              {status === 'all' ? 'All Cases' : status === 'in_progress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1)}
-            </button>
-          ))}
+        {/* Status Filters */}
+        <div style={{ marginBottom: '16px' }}>
+          <p style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>Status</p>
+          <div style={{ display: 'flex', gap: '8px', background: '#fff', padding: '12px', borderRadius: '8px' }}>
+            {['all', 'open', 'in_progress', 'resolved'].map(status => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: filter === status ? '#FF6B35' : '#f5f5f5',
+                  color: filter === status ? 'white' : '#333',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                }}
+              >
+                {status === 'all' ? 'All' : status === 'in_progress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Case Type Filters */}
+        <div style={{ marginBottom: '16px' }}>
+          <p style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>Case Type</p>
+          <div style={{ display: 'flex', gap: '8px', background: '#fff', padding: '12px', borderRadius: '8px', flexWrap: 'wrap' }}>
+            {['all', 'dispute', 'refund_request', 'quality_issue', 'cancellation', 'app_issue', 'payment_enquiry', 'task_enquiry', 'safety_concern', 'other'].map(type => (
+              <button
+                key={type}
+                onClick={() => setTypeFilter(type)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: typeFilter === type ? '#FF6B35' : '#f5f5f5',
+                  color: typeFilter === type ? 'white' : '#333',
+                  fontWeight: typeFilter === type ? '600' : '500',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                }}
+              >
+                {type === 'all' ? 'All Types' : getCaseTypeLabel(type).icon + ' ' + getCaseTypeLabel(type).label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Cases List */}
