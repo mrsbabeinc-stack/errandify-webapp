@@ -14,10 +14,30 @@ export const AdminDashboard: React.FC = () => {
     { label: 'Rating', value: '4.8★', trend: '+0.3', icon: '⭐', color: '#f59e0b', bg: '#fef3c7' },
   ]);
 
-  const [aiInsights] = useState([
-    { id: 1, category: 'ALERT', title: 'Suspicious User #4521', desc: '15 disputes in 48h', action: 'Review', color: '#ef4444', bg: '#fee2e2', icon: '🚩' },
-    { id: 2, category: 'TREND', title: 'Refund Spike +23%', desc: 'Payment method X issues', action: 'Investigate', color: '#f59e0b', bg: '#fef3c7', icon: '📊' },
-    { id: 3, category: 'OPPORTUNITY', title: '24 Premium Doers Ready', desc: '50+ 5-star reviews', action: 'Engage', color: '#06b6d4', bg: '#cffafe', icon: '👑' },
+  const [qwenInsights] = useState([
+    {
+      period: '📅 TODAY',
+      insights: [
+        { id: 1, category: 'ALERT', title: 'Suspicious User #4521', desc: '15 disputes filed (2h window)', action: 'Review', color: '#ef4444', bg: '#fee2e2', icon: '🚩' },
+        { id: 2, category: 'TREND', title: 'Payment Errors +8% (vs yesterday)', desc: 'Method X: rejection rate 8.3%', action: 'Investigate', color: '#f59e0b', bg: '#fef3c7', icon: '📊' },
+      ]
+    },
+    {
+      period: '📊 WEEKLY',
+      insights: [
+        { id: 3, category: 'PATTERN', title: 'Refund Spike +23% Week-over-Week', desc: 'Avg refund value: SGD $65 (was $53)', action: 'Analyze', color: '#8b5cf6', bg: '#ede9fe', icon: '📈' },
+        { id: 4, category: 'OPPORTUNITY', title: '24 Premium Doers (50+ 5-stars)', desc: 'Avg rating: 4.9★ | Completion: 98%', action: 'Engage', color: '#06b6d4', bg: '#cffafe', icon: '👑' },
+        { id: 5, category: 'QUALITY', title: 'Top Doer: ProHelper_John', desc: 'Week: 28 tasks • 4.95★ avg • $1,240 earned', action: 'Recognize', color: '#10b981', bg: '#d1fae5', icon: '⭐' },
+      ]
+    },
+    {
+      period: '📆 MONTHLY',
+      insights: [
+        { id: 6, category: 'BUSINESS', title: 'Platform Growth: +18% MoM', desc: 'Users: +2.1K | Revenue: +SGD $8.4K | Disputes: -12%', action: 'Report', color: '#0891b2', bg: '#cffafe', icon: '🎯' },
+        { id: 7, category: 'RISK', title: 'Churn Alert: Support Avg -15%', desc: 'Users citing slow responses. SLA compliance: 89% (target: 95%)', action: 'Action', color: '#f59e0b', bg: '#fef3c7', icon: '⚡' },
+        { id: 8, category: 'FORECAST', title: 'July Projection: SGD $28K Revenue', desc: 'Based on current velocity & historical patterns', action: 'Plan', color: '#6366f1', bg: '#e0e7ff', icon: '🔮' },
+      ]
+    }
   ]);
 
   const [operationalStatus] = useState([
@@ -86,7 +106,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* KPI METRICS - COMPACT */}
+        {/* KPI METRICS */}
         <div style={{ marginBottom: '20px' }}>
           <h2 style={{ fontSize: '11px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>📊 Key Metrics</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
@@ -107,7 +127,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* OPERATIONS STATUS - COMPACT ROW */}
+        {/* OPERATIONS STATUS */}
         <div style={{ marginBottom: '20px' }}>
           <h2 style={{ fontSize: '11px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>🏢 Operations</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
@@ -138,45 +158,53 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* AI INSIGHTS */}
+        {/* QWEN AI INSIGHTS - DAILY/WEEKLY/MONTHLY */}
         <div style={{ marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '11px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>🤖 AI Insights (Qwen)</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-            {aiInsights.map(insight => (
-              <div key={insight.id} style={{
-                background: insight.bg,
-                border: `2px solid ${insight.color}`,
-                borderRadius: '8px',
-                padding: '12px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '16px' }}>{insight.icon}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: insight.color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      {insight.category}
-                    </div>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', marginTop: '2px', lineHeight: 1.2 }}>
-                      {insight.title}
-                    </div>
-                  </div>
-                </div>
-                <div style={{ fontSize: '11px', color: '#666', marginBottom: '8px' }}>{insight.desc}</div>
-                <button style={{
-                  background: insight.color,
-                  color: 'white',
-                  border: 'none',
-                  padding: '6px 10px',
-                  borderRadius: '4px',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  width: '100%'
-                }}>
-                  {insight.action} →
-                </button>
+          <h2 style={{ fontSize: '11px', fontWeight: 700, margin: '0 0 12px 0', color: '#0f172a', textTransform: 'uppercase' }}>🤖 AI Highlights (Qwen)</h2>
+          
+          {qwenInsights.map((periodGroup, periodIdx) => (
+            <div key={periodIdx} style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#666', marginBottom: '8px', paddingLeft: '4px', borderLeft: '3px solid #6366f1' }}>
+                {periodGroup.period}
               </div>
-            ))}
-          </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                {periodGroup.insights.map(insight => (
+                  <div key={insight.id} style={{
+                    background: insight.bg,
+                    border: `2px solid ${insight.color}`,
+                    borderRadius: '8px',
+                    padding: '10px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '14px' }}>{insight.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '10px', fontWeight: 700, color: insight.color, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                          {insight.category}
+                        </div>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: '#0f172a', marginTop: '2px', lineHeight: 1.2 }}>
+                          {insight.title}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '10px', color: '#666', marginBottom: '6px', lineHeight: 1.3 }}>{insight.desc}</div>
+                    <button style={{
+                      background: insight.color,
+                      color: 'white',
+                      border: 'none',
+                      padding: '5px 8px',
+                      borderRadius: '4px',
+                      fontSize: '10px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      width: '100%'
+                    }}>
+                      {insight.action} →
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* ACTIVITY LOG */}
