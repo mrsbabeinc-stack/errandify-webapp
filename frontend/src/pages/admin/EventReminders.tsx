@@ -497,22 +497,33 @@ Format as numbered list with bold headers. Keep it practical and specific to THI
                     </div>
 
                     {/* Action Buttons */}
-                    <div style={{ display: 'grid', gridTemplateColumns: event.status === 'active' ? 'repeat(5, 1fr)' : 'repeat(3, 1fr)', gap: '8px', marginBottom: '12px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: event.status === 'active' ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: '10px', marginBottom: '12px' }}>
                       {event.status === 'draft' && (
                         <button
                           onClick={() => handlePublishEvent(event.id)}
                           style={{
-                            padding: '8px',
-                            background: '#4CAF50',
+                            padding: '12px 16px',
+                            background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
                             color: 'white',
                             border: 'none',
-                            borderRadius: '4px',
+                            borderRadius: '8px',
                             fontWeight: '600',
                             cursor: 'pointer',
-                            fontSize: '12px',
+                            fontSize: '13px',
+                            boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1)',
+                            transform: 'translateY(0)',
+                            transition: 'all 0.2s',
+                          }}
+                          onMouseDown={(e) => {
+                            (e.target as HTMLButtonElement).style.transform = 'translateY(2px)';
+                            (e.target as HTMLButtonElement).style.boxShadow = '0 2px 6px rgba(255, 107, 53, 0.2), inset 0 -1px 0 rgba(0,0,0,0.1)';
+                          }}
+                          onMouseUp={(e) => {
+                            (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+                            (e.target as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1)';
                           }}
                         >
-                          📤 Publish
+                          Publish Event
                         </button>
                       )}
                       {event.status === 'active' && (
@@ -524,84 +535,156 @@ Format as numbered list with bold headers. Keep it practical and specific to THI
                                 showToast('📋 Link copied!', 'success');
                               }}
                               style={{
-                                padding: '8px',
-                                background: '#2196F3',
+                                padding: '12px 16px',
+                                background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
                                 color: 'white',
                                 border: 'none',
-                                borderRadius: '4px',
+                                borderRadius: '8px',
                                 fontWeight: '600',
                                 cursor: 'pointer',
-                                fontSize: '11px',
+                                fontSize: '13px',
+                                boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1)',
+                                transform: 'translateY(0)',
+                                transition: 'all 0.2s',
+                              }}
+                              onMouseDown={(e) => {
+                                (e.target as HTMLButtonElement).style.transform = 'translateY(2px)';
+                                (e.target as HTMLButtonElement).style.boxShadow = '0 2px 6px rgba(255, 107, 53, 0.2), inset 0 -1px 0 rgba(0,0,0,0.1)';
+                              }}
+                              onMouseUp={(e) => {
+                                (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+                                (e.target as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1)';
                               }}
                             >
-                              🔗 Link
+                              Copy Join Link
                             </button>
                           )}
                           <button
                             onClick={() => handleGetEventInsights(event.id)}
                             disabled={aiInsightsLoading}
                             style={{
-                              padding: '8px',
-                              background: aiInsightsLoading ? '#ccc' : '#FF9800',
+                              padding: '12px 16px',
+                              background: aiInsightsLoading ? '#ddd' : 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
                               color: 'white',
                               border: 'none',
-                              borderRadius: '4px',
+                              borderRadius: '8px',
                               fontWeight: '600',
                               cursor: aiInsightsLoading ? 'wait' : 'pointer',
-                              fontSize: '11px',
+                              fontSize: '13px',
+                              boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1)',
+                              transform: 'translateY(0)',
+                              transition: 'all 0.2s',
+                              opacity: aiInsightsLoading ? 0.7 : 1,
+                            }}
+                            onMouseDown={(e) => {
+                              if (!aiInsightsLoading) {
+                                (e.target as HTMLButtonElement).style.transform = 'translateY(2px)';
+                                (e.target as HTMLButtonElement).style.boxShadow = '0 2px 6px rgba(255, 107, 53, 0.2), inset 0 -1px 0 rgba(0,0,0,0.1)';
+                              }
+                            }}
+                            onMouseUp={(e) => {
+                              if (!aiInsightsLoading) {
+                                (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+                                (e.target as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1)';
+                              }
                             }}
                           >
-                            {aiInsightsLoading ? '⏳' : '🧠'}
+                            {aiInsightsLoading ? 'Analyzing...' : 'Insights'}
                           </button>
                           <button
                             onClick={() => handleGenerateConversionTips(event.id)}
                             disabled={conversionLoading}
                             style={{
-                              padding: '8px',
-                              background: conversionLoading ? '#ccc' : '#4CAF50',
+                              padding: '12px 16px',
+                              background: conversionLoading ? '#ddd' : 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
                               color: 'white',
                               border: 'none',
-                              borderRadius: '4px',
+                              borderRadius: '8px',
                               fontWeight: '600',
                               cursor: conversionLoading ? 'wait' : 'pointer',
-                              fontSize: '11px',
+                              fontSize: '13px',
+                              boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1)',
+                              transform: 'translateY(0)',
+                              transition: 'all 0.2s',
+                              opacity: conversionLoading ? 0.7 : 1,
+                            }}
+                            onMouseDown={(e) => {
+                              if (!conversionLoading) {
+                                (e.target as HTMLButtonElement).style.transform = 'translateY(2px)';
+                                (e.target as HTMLButtonElement).style.boxShadow = '0 2px 6px rgba(255, 107, 53, 0.2), inset 0 -1px 0 rgba(0,0,0,0.1)';
+                              }
+                            }}
+                            onMouseUp={(e) => {
+                              if (!conversionLoading) {
+                                (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+                                (e.target as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1)';
+                              }
                             }}
                           >
-                            {conversionLoading ? '⏳' : '🎯'}
+                            {conversionLoading ? 'Generating...' : 'Boost Signups'}
                           </button>
                           <button
                             onClick={() => handleGeneratePromotion(event.id)}
                             disabled={promotionalLoading}
                             style={{
-                              padding: '8px',
-                              background: promotionalLoading ? '#ccc' : '#E91E63',
+                              padding: '12px 16px',
+                              background: promotionalLoading ? '#ddd' : 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
                               color: 'white',
                               border: 'none',
-                              borderRadius: '4px',
+                              borderRadius: '8px',
                               fontWeight: '600',
                               cursor: promotionalLoading ? 'wait' : 'pointer',
-                              fontSize: '11px',
+                              fontSize: '13px',
+                              boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1)',
+                              transform: 'translateY(0)',
+                              transition: 'all 0.2s',
+                              opacity: promotionalLoading ? 0.7 : 1,
+                            }}
+                            onMouseDown={(e) => {
+                              if (!promotionalLoading) {
+                                (e.target as HTMLButtonElement).style.transform = 'translateY(2px)';
+                                (e.target as HTMLButtonElement).style.boxShadow = '0 2px 6px rgba(255, 107, 53, 0.2), inset 0 -1px 0 rgba(0,0,0,0.1)';
+                              }
+                            }}
+                            onMouseUp={(e) => {
+                              if (!promotionalLoading) {
+                                (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+                                (e.target as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1)';
+                              }
                             }}
                           >
-                            {promotionalLoading ? '⏳' : '📢'}
+                            {promotionalLoading ? 'Creating...' : 'Promo Message'}
                           </button>
                         </>
                       )}
-                      <button
-                        onClick={() => handleDeleteEvent(event.id)}
-                        style={{
-                          padding: '8px',
-                          background: '#F44336',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                        }}
-                      >
-                        🗑️
-                      </button>
+                      {event.status !== 'draft' && (
+                        <button
+                          onClick={() => handleDeleteEvent(event.id)}
+                          style={{
+                            padding: '12px 16px',
+                            background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1)',
+                            transform: 'translateY(0)',
+                            transition: 'all 0.2s',
+                          }}
+                          onMouseDown={(e) => {
+                            (e.target as HTMLButtonElement).style.transform = 'translateY(2px)';
+                            (e.target as HTMLButtonElement).style.boxShadow = '0 2px 6px rgba(255, 107, 53, 0.2), inset 0 -1px 0 rgba(0,0,0,0.1)';
+                          }}
+                          onMouseUp={(e) => {
+                            (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+                            (e.target as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1)';
+                          }}
+                        >
+                          Delete Event
+                        </button>
+                      )}
                     </div>
 
                     {/* AI Insights Display */}
