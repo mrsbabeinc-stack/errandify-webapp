@@ -239,6 +239,10 @@ export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) 
                                 className={`menu-item has-submenu ${expandedSections.has(child.id) ? 'open' : ''}`}
                                 onClick={() => {
                                   toggleSection(child.id);
+                                  // Also navigate to first child when expanding for the first time
+                                  if (!expandedSections.has(child.id) && child.children && child.children[0]?.path) {
+                                    setTimeout(() => navigate(child.children![0].path!), 150);
+                                  }
                                 }}
                                 style={{
                                   userSelect: 'none',
