@@ -481,4 +481,130 @@ router.patch('/:id', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/cases/demo/create-samples - Create sample test cases (dev only)
+router.post('/demo/create-samples', async (req: Request, res: Response) => {
+  try {
+    const sampleCases = [
+      {
+        case_type: 'app_issue',
+        severity: 'high',
+        complainant_user_id: 1,
+        respondent_user_id: 2,
+        errand_id: 101,
+        subject: 'App crashes when uploading photos',
+        description: 'The app freezes and crashes whenever I try to upload multiple photos to an errand. Tried on WiFi and mobile data, same issue.'
+      },
+      {
+        case_type: 'payment_enquiry',
+        severity: 'medium',
+        complainant_user_id: 3,
+        respondent_user_id: 4,
+        errand_id: 102,
+        subject: 'How does payment hold work?',
+        description: 'I want to understand the payment hold process. When does the money get released after completion?'
+      },
+      {
+        case_type: 'task_enquiry',
+        severity: 'low',
+        complainant_user_id: 5,
+        respondent_user_id: 6,
+        errand_id: 103,
+        subject: 'Can I edit task after posting?',
+        description: 'I posted a cleaning task but realized I need to change the location. Can I edit it or do I need to cancel and repost?'
+      },
+      {
+        case_type: 'safety_concern',
+        severity: 'critical',
+        complainant_user_id: 7,
+        respondent_user_id: 8,
+        errand_id: 104,
+        subject: 'Doer made inappropriate comments during task',
+        description: 'During the errand, the doer made offensive comments that made me feel uncomfortable and unsafe.'
+      },
+      {
+        case_type: 'app_issue',
+        severity: 'medium',
+        complainant_user_id: 9,
+        respondent_user_id: 10,
+        errand_id: 105,
+        subject: 'Cannot logout from account',
+        description: 'The logout button does not work. I have tried clearing cache and restarting the app but still unable to logout.'
+      },
+      {
+        case_type: 'task_enquiry',
+        severity: 'low',
+        complainant_user_id: 11,
+        respondent_user_id: 12,
+        errand_id: 106,
+        subject: 'What is the cancellation policy?',
+        description: 'If I cancel a task after a doer accepts it, what are the charges? Will the doer be penalized?'
+      },
+      {
+        case_type: 'safety_concern',
+        severity: 'high',
+        complainant_user_id: 13,
+        respondent_user_id: 14,
+        errand_id: 107,
+        subject: 'Suspicious user activity',
+        description: 'This user has been messaging multiple times trying to arrange meetups outside the app. Very suspicious behavior.'
+      },
+      {
+        case_type: 'payment_enquiry',
+        severity: 'low',
+        complainant_user_id: 15,
+        respondent_user_id: 16,
+        errand_id: 108,
+        subject: 'Do I get points for this task?',
+        description: 'Does completing errands earn Errandify Points? How are they calculated?'
+      }
+    ];
+
+    const createdCases = [];
+
+    for (const caseData of sampleCases) {
+      const autoTags = autoTagDescription(caseData.description);
+      const aiRec = generateAIRecommendation(caseData.case_type, autoTags, caseData.description);
+
+      const result = await db.query(
+        `INSERT INTO cases (
+          case_type, severity, status, complainant_user_id, respondent_user_id,
+          errand_id, subject, description, tags, ai_recommendation, ai_confidence
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        RETURNING *`,
+        [
+          caseData.case_type,
+          caseData.severity,
+          'open',
+          caseData.complainant_user_id,
+          caseData.respondent_user_id,
+          caseData.errand_id,
+          caseData.subject,
+          caseData.description,
+          autoTags,
+          JSON.stringify(aiRec),
+          aiRec.confidence
+        ]
+      );
+
+      createdCases.push(result.rows[0]);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `Created ${createdCases.length} sample test cases`,
+      cases: createdCases.map(c => ({
+        id: c.id,
+        case_id: c.case_id,
+        case_type: c.case_type,
+        severity: c.severity,
+        subject: c.subject,
+        status: c.status
+      }))
+    });
+  } catch (error) {
+    console.error('Create sample cases error:', error);
+    res.status(500).json({ error: 'Failed to create sample cases' });
+  }
+});
+
 export default router;
