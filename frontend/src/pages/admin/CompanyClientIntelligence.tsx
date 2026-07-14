@@ -58,7 +58,6 @@ const CompanyClientIntelligence: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'growth' | 'risk' | 'revenue'>('growth');
-  const [showCompanyMgmt, setShowCompanyMgmt] = useState(false);
 
   // Demo data
   useEffect(() => {
@@ -313,13 +312,10 @@ const CompanyClientIntelligence: React.FC = () => {
 
         {/* TAB NAVIGATION */}
         <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: '2px solid #FFD9B3' }}>
-          {(['portfolio', 'detail', 'insights', 'management'] as const).map(tab => (
+          {(['portfolio', 'detail', 'insights'] as const).map(tab => (
             <button
               key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                if (tab === 'management') setShowCompanyMgmt(true);
-              }}
+              onClick={() => setActiveTab(tab)}
               disabled={tab !== 'portfolio' && !selectedCompany}
               style={{
                 padding: '12px 16px',
@@ -333,7 +329,7 @@ const CompanyClientIntelligence: React.FC = () => {
                 transition: 'all 0.2s',
               }}
             >
-              {tab === 'portfolio' ? '📊 Portfolio' : tab === 'detail' ? '🔍 Client Details' : tab === 'insights' ? '💡 Smart Insights' : '⚙️ Management'}
+              {tab === 'portfolio' ? '📊 Portfolio' : tab === 'detail' ? '🔍 Client Details' : '💡 Smart Insights'}
             </button>
           ))}
         </div>
@@ -730,209 +726,6 @@ const CompanyClientIntelligence: React.FC = () => {
           </div>
         )}
 
-        {/* MANAGEMENT TAB */}
-        {activeTab === 'management' && selectedCompany && (
-          <div style={{ display: 'grid', gap: '20px', minHeight: '100vh' }}>
-            {/* Company Header */}
-            <div style={{ padding: '20px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '20px', alignItems: 'start' }}>
-                <div>
-                  <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#333', margin: '0 0 8px 0' }}>
-                    {selectedCompany.name}
-                  </h2>
-                  <div style={{ fontSize: '14px', color: '#666', marginBottom: '12px' }}>
-                    {selectedCompany.industry} • UEN: {selectedCompany.uen || 'N/A'}
-                  </div>
-                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                    <div style={{
-                      padding: '8px 12px',
-                      background: 'white',
-                      border: '1px solid #FFD9B3',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      color: '#333',
-                    }}>
-                      📍 {selectedCompany.location}
-                    </div>
-                    <div style={{
-                      padding: '8px 12px',
-                      background: 'white',
-                      border: '1px solid #FFD9B3',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      color: '#333',
-                    }}>
-                      👥 {selectedCompany.teamSize} staff members
-                    </div>
-                    <div style={{
-                      padding: '8px 12px',
-                      background: selectedCompany.subscriptionTier === 'silver' ? '#E3F2FD' : selectedCompany.subscriptionTier === 'gold' ? '#FFF9C4' : '#F3E5F5',
-                      color: selectedCompany.subscriptionTier === 'silver' ? '#1565C0' : selectedCompany.subscriptionTier === 'gold' ? '#F57F17' : '#6A1B9A',
-                      fontSize: '11px',
-                      fontWeight: '600',
-                      borderRadius: '3px',
-                    }}>
-                      {selectedCompany.subscriptionTier.toUpperCase()} TIER
-                    </div>
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '28px', fontWeight: '700', color: '#FF6B35' }}>
-                    ${selectedCompany.monthlyRevenue}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>Monthly Revenue</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Company Details Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-              <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '1px solid #FFD9B3' }}>
-                <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>Account Age</div>
-                <div style={{ fontSize: '24px', fontWeight: '700', color: '#FF6B35', marginBottom: '4px' }}>
-                  {selectedCompany.accountAgeMonths}mo
-                </div>
-                <div style={{ fontSize: '11px', color: '#999' }}>Since registration</div>
-              </div>
-
-              <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '1px solid #FFD9B3' }}>
-                <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>Wallet Balance</div>
-                <div style={{ fontSize: '24px', fontWeight: '700', color: '#4CAF50', marginBottom: '4px' }}>
-                  ${selectedCompany.walletBalance}
-                </div>
-                <div style={{ fontSize: '11px', color: '#999' }}>Available funds</div>
-              </div>
-
-              <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '1px solid #FFD9B3' }}>
-                <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>EP Balance</div>
-                <div style={{ fontSize: '24px', fontWeight: '700', color: '#FF6B35', marginBottom: '4px' }}>
-                  {selectedCompany.epBalance}
-                </div>
-                <div style={{ fontSize: '11px', color: '#999' }}>Errandify Points</div>
-              </div>
-
-              <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '1px solid #FFD9B3' }}>
-                <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>Last Activity</div>
-                <div style={{ fontSize: '18px', fontWeight: '700', color: '#333', marginBottom: '4px' }}>
-                  {selectedCompany.lastActivity}
-                </div>
-                <div style={{ fontSize: '11px', color: '#999' }}>Last interaction</div>
-              </div>
-            </div>
-
-            {/* Activity & Engagement */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
-              <div style={{ padding: '16px', background: '#E3F2FD', borderRadius: '8px', border: '2px solid #64B5F6' }}>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
-                  📊 Monthly Activity
-                </div>
-                <div style={{ display: 'grid', gap: '10px', fontSize: '13px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #B3E5FC', paddingBottom: '8px' }}>
-                    <span style={{ color: '#666' }}>Orders Placed</span>
-                    <span style={{ fontWeight: '600', color: '#333' }}>{selectedCompany.monthlyOrders}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #B3E5FC', paddingBottom: '8px' }}>
-                    <span style={{ color: '#666' }}>Avg Order Value</span>
-                    <span style={{ fontWeight: '600', color: '#333' }}>${selectedCompany.avgOrderValue}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #B3E5FC', paddingBottom: '8px' }}>
-                    <span style={{ color: '#666' }}>Completion Rate</span>
-                    <span style={{ fontWeight: '600', color: '#4CAF50' }}>{selectedCompany.completionRate}%</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#666' }}>Support Tickets</span>
-                    <span style={{ fontWeight: '600', color: selectedCompany.supportTickets > 15 ? '#F44336' : '#333' }}>
-                      {selectedCompany.supportTickets}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ padding: '16px', background: '#F3E5F5', borderRadius: '8px', border: '2px solid #CE93D8' }}>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
-                  💰 Financial Summary
-                </div>
-                <div style={{ display: 'grid', gap: '10px', fontSize: '13px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F8BBD0', paddingBottom: '8px' }}>
-                    <span style={{ color: '#666' }}>Monthly Spend</span>
-                    <span style={{ fontWeight: '600', color: '#333' }}>${selectedCompany.monthlySpend}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F8BBD0', paddingBottom: '8px' }}>
-                    <span style={{ color: '#666' }}>Advertising Budget</span>
-                    <span style={{ fontWeight: '600', color: '#333' }}>${selectedCompany.advertisingSpend}/mo</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F8BBD0', paddingBottom: '8px' }}>
-                    <span style={{ color: '#666' }}>Ad ROI</span>
-                    <span style={{ fontWeight: '600', color: '#4CAF50' }}>{selectedCompany.advertisingROI}x</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#666' }}>Total Paid</span>
-                    <span style={{ fontWeight: '600', color: '#333' }}>${(selectedCompany.monthlySpend * selectedCompany.accountAgeMonths).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Management Actions */}
-            <div style={{ padding: '16px', background: '#FCE4EC', borderRadius: '8px', border: '2px solid #F48FB1' }}>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
-                🛠️ Management Actions
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px' }}>
-                <button style={{
-                  padding: '10px 12px',
-                  background: '#FF6B35',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                }}>
-                  📧 Send Message
-                </button>
-                <button style={{
-                  padding: '10px 12px',
-                  background: '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                }}>
-                  ⬆️ Upgrade Tier
-                </button>
-                <button style={{
-                  padding: '10px 12px',
-                  background: '#2196F3',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                }}>
-                  📞 Log Call
-                </button>
-                <button style={{
-                  padding: '10px 12px',
-                  background: '#FF9800',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                }}>
-                  📋 View History
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </AdminLayout>
   );
