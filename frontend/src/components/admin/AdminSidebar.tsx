@@ -81,7 +81,7 @@ const menuItems: MenuItem[] = [
     children: [
       { id: 'email', label: 'Email Campaigns', icon: '📧', path: '/admin/comms/email' },
       { id: 'notifications', label: 'Notifications', icon: '📢', path: '/admin/comms/notifications' },
-      { id: 'events', label: 'Event Reminders', icon: '🎉', path: '/admin/comms/events' },
+      { id: 'events', label: 'Event Management', icon: '🎉', path: '/admin/comms/events' },
       { id: 'blog', label: 'Blog & Articles', icon: '📰', path: '/admin/comms/blog' },
       { id: 'recognition', label: 'Recognition', icon: '🏆', path: '/admin/comms/recognition' },
       { id: 'feed', label: 'Community Feed', icon: '📰', path: '/admin/comms/feed' },
