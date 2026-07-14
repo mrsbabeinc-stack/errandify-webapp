@@ -254,22 +254,19 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
         </div>
 
         {/* Recent Transactions Row */}
-        <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto', flex: 1, minHeight: 0, marginBottom: '12px' }}>
+        <div style={{ background: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ffb88c', overflowY: 'auto', minHeight: '120px', marginBottom: '12px' }}>
           <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#333', margin: '0 0 8px 0' }}>📋 Recent Transactions</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {transactions.slice(0, 5).map(t => (
-              <div key={t.id} style={{ background: '#f9f9f9', padding: '8px', borderRadius: '4px', border: '1px solid #f0f0f0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+              <div key={t.id} style={{ background: '#f9f9f9', padding: '8px 12px', borderRadius: '4px', border: '1px solid #f0f0f0', flex: '1 1 180px', minWidth: '150px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                   <span style={{ fontSize: '11px', fontWeight: '600', color: '#333' }}>{t.user}</span>
-                  <span style={{ fontSize: '11px', fontWeight: '600', color: t.points > 0 ? '#4CAF50' : '#F44336' }}>
-                    {t.points > 0 ? '+' : ''}{t.points} EP
+                  <span style={{ fontSize: '10px', fontWeight: '600', color: t.points > 0 ? '#4CAF50' : '#F44336' }}>
+                    {t.points > 0 ? '+' : ''}{t.points}
                   </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '10px', color: '#666' }}>{t.action}</span>
-                  <span style={{ fontSize: '10px', color: '#999' }}>{t.date}</span>
-                </div>
-                <div style={{ fontSize: '9px', color: '#2196F3', fontWeight: '600', paddingTop: '4px', borderTop: '1px solid #e0e0e0' }}>
+                <div style={{ fontSize: '9px', color: '#666', marginBottom: '3px' }}>{t.action}</div>
+                <div style={{ fontSize: '9px', color: '#2196F3', fontWeight: '600', borderTop: '1px solid #e0e0e0', paddingTop: '4px' }}>
                   Balance: {t.balance} EP
                 </div>
               </div>
