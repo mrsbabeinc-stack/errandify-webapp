@@ -16,7 +16,6 @@ const menuItems: MenuItem[] = [
     label: 'Dashboard',
     icon: '📊',
     children: [
-      { id: 'overview', label: 'Overview', icon: '🏠', path: '/admin/dashboard/overview' },
       { id: 'users-safety', label: 'Users & Safety', icon: '👥', path: '/admin/dashboard/users' },
     ]
   },
