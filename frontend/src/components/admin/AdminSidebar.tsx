@@ -114,6 +114,7 @@ const menuItems: MenuItem[] = [
     children: [
       { id: 'integration', label: 'Integration Dashboard', icon: '📊', path: '/admin/accounts-hr-integration' },
       { id: 'accounts', label: 'Accounts', icon: '💰', path: '/admin/accounts' },
+      { id: 'recruitment', label: 'Recruitment & Hiring', icon: '🎯', path: '/admin/recruitment' },
       { id: 'hr', label: 'HR', icon: '👥', path: '/admin/hr' },
       { id: 'payroll', label: 'Payroll', icon: '💵', path: '/admin/payroll' },
       { id: 'leave-management', label: 'Leave Management', icon: '🏖️', path: '/admin/leave-management' },
