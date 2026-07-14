@@ -19,6 +19,10 @@ const extractUserId = (req: Request): number | null => {
   }
 };
 
+// Case type classification for money ($$$) vs rest
+const MONEY_CASE_TYPES = new Set(['dispute', 'refund_request', 'quality_issue', 'cancellation']);
+const REST_CASE_TYPES = new Set(['app_issue', 'payment_enquiry', 'task_enquiry', 'safety_concern', 'other']);
+
 // Auto-tagging categories (7 categories)
 const AUTO_TAGS = {
   payment_issue: ['refund', 'payment', 'money', 'charge', 'bill'],
@@ -30,57 +34,79 @@ const AUTO_TAGS = {
   other: []
 };
 
-// AI Recommendation Engine (simple rule-based, 92% confidence)
-const generateAIRecommendation = (tags: string[], description: string): { recommendation: string; confidence: number; reasoning: string } => {
+// AI Recommendation Engine (rule-based, 92% confidence)
+const generateAIRecommendation = (caseType: string, tags: string[], description: string): { recommendation: string; confidence: number; reasoning: string } => {
   const descLower = description.toLowerCase();
-  let score = 0;
-  let reasons: string[] = [];
 
-  // Payment issues
-  if (tags.includes('payment_issue') || /refund|payment|money|charge/.test(descLower)) {
-    score = 90;
-    reasons.push('Payment-related keywords detected');
-    return {
-      recommendation: 'full_refund',
-      confidence: 0.92,
-      reasoning: `${reasons.join('. ')}. Recommend full refund with apology message.`
-    };
+  // Money-involved cases
+  if (MONEY_CASE_TYPES.has(caseType)) {
+    if (caseType === 'dispute') {
+      return {
+        recommendation: 'full_refund',
+        confidence: 0.92,
+        reasoning: 'Dispute case detected. Recommend full refund with compensation.'
+      };
+    }
+    if (caseType === 'refund_request') {
+      return {
+        recommendation: 'full_refund',
+        confidence: 0.90,
+        reasoning: 'Explicit refund request. Process full refund to user account.'
+      };
+    }
+    if (caseType === 'quality_issue') {
+      return {
+        recommendation: 'partial_refund',
+        confidence: 0.88,
+        reasoning: 'Quality issue detected. Recommend partial refund (50%) as compensation.'
+      };
+    }
+    if (caseType === 'cancellation') {
+      return {
+        recommendation: 'full_refund',
+        confidence: 0.85,
+        reasoning: 'Cancellation case. Process full refund to user.'
+      };
+    }
   }
 
-  // Quality issues
-  if (tags.includes('quality_issue')) {
-    score = 85;
-    reasons.push('Quality concerns noted');
-    return {
-      recommendation: 'partial_refund',
-      confidence: 0.88,
-      reasoning: `${reasons.join('. ')}. Recommend 50% refund as compensation.`
-    };
+  // Rest cases
+  if (REST_CASE_TYPES.has(caseType)) {
+    if (caseType === 'safety_concern') {
+      return {
+        recommendation: 'escalated',
+        confidence: 0.95,
+        reasoning: 'Safety concern detected. Escalate to Level 3 for immediate investigation.'
+      };
+    }
+    if (caseType === 'app_issue') {
+      return {
+        recommendation: 'no_action',
+        confidence: 0.80,
+        reasoning: 'App issue reported. Route to technical support team.'
+      };
+    }
+    if (caseType === 'payment_enquiry') {
+      return {
+        recommendation: 'no_action',
+        confidence: 0.75,
+        reasoning: 'Payment enquiry received. Route to payments support team.'
+      };
+    }
+    if (caseType === 'task_enquiry') {
+      return {
+        recommendation: 'no_action',
+        confidence: 0.75,
+        reasoning: 'Task enquiry received. Provide information and close case.'
+      };
+    }
   }
 
-  // Safety concerns
-  if (tags.includes('safety_concern')) {
-    return {
-      recommendation: 'escalated',
-      confidence: 0.95,
-      reasoning: 'Safety concern detected. Escalate to Level 3 for investigation.'
-    };
-  }
-
-  // Schedule/communication issues
-  if (tags.includes('schedule_issue') || tags.includes('communication')) {
-    return {
-      recommendation: 'no_action',
-      confidence: 0.85,
-      reasoning: 'Miscommunication detected. Recommend mediation between parties.'
-    };
-  }
-
-  // Default
+  // Default fallback
   return {
     recommendation: 'no_action',
     confidence: 0.75,
-    reasoning: 'Insufficient evidence. Recommend manual review.'
+    reasoning: 'Case category unclear. Recommend manual review.'
   };
 };
 
@@ -124,8 +150,8 @@ router.post('/', async (req: Request, res: Response) => {
     // Auto-tag based on description
     const autoTags = autoTagDescription(description);
 
-    // Generate AI recommendation
-    const aiRec = generateAIRecommendation(autoTags, description);
+    // Generate AI recommendation based on case type
+    const aiRec = generateAIRecommendation(case_type, autoTags, description);
 
     // Insert case
     const result = await db.query(

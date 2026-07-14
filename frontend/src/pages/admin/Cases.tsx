@@ -50,9 +50,28 @@ export const CasesPage: React.FC = () => {
   const [isSubmittingResolution, setIsSubmittingResolution] = useState(false);
   const [selectedResolution, setSelectedResolution] = useState<'full' | 'partial' | 'refund' | 'escalate' | null>(null);
 
+  // Case type classification: which involve money ($$$) and which are rest
+  const moneyCaseTypes = new Set(['dispute', 'refund_request', 'quality_issue', 'cancellation']);
+  const restCaseTypes = new Set(['app_issue', 'payment_enquiry', 'task_enquiry', 'safety_concern', 'other']);
+
   const generateCaseId = () => {
     const randomNum = Math.random().toString(16).substring(2, 6).toUpperCase();
     return `D26-${randomNum}`;
+  };
+
+  const getCaseTypeLabel = (type: string): { label: string; icon: string } => {
+    const typeMap: Record<string, { label: string; icon: string }> = {
+      'dispute': { label: 'Dispute', icon: '⚖️' },
+      'app_issue': { label: 'App Issue', icon: '🐛' },
+      'payment_enquiry': { label: 'Payment Enquiry', icon: '💬' },
+      'task_enquiry': { label: 'Task Enquiry', icon: '🔍' },
+      'refund_request': { label: 'Refund Request', icon: '💸' },
+      'safety_concern': { label: 'Safety Concern', icon: '🚨' },
+      'quality_issue': { label: 'Quality Issue', icon: '⭐' },
+      'cancellation': { label: 'Cancellation', icon: '❌' },
+      'other': { label: 'Other', icon: '❓' },
+    };
+    return typeMap[type] || { label: type.replace(/_/g, ' '), icon: '❓' };
   };
 
   useEffect(() => {
@@ -199,16 +218,13 @@ export const CasesPage: React.FC = () => {
     }
   };
 
-  // Case types involving money/compensation
-  const moneyCaseTypes = ['payment_dispute', 'refund_request', 'compensation_claim'];
-
   // Filter by status and by case type (money vs rest)
   let displayCases = filter === 'all' ? cases : cases.filter(c => c.status === filter);
 
   // Apply money vs rest filter based on route
   displayCases = isRestCases
-    ? displayCases.filter(c => !moneyCaseTypes.includes(c.case_type))
-    : displayCases.filter(c => moneyCaseTypes.includes(c.case_type));
+    ? displayCases.filter(c => restCaseTypes.has(c.case_type))
+    : displayCases.filter(c => moneyCaseTypes.has(c.case_type));
 
   const filteredCases = displayCases;
 
@@ -287,7 +303,7 @@ export const CasesPage: React.FC = () => {
                       </span>
                     </div>
                     <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
-                      Type: <strong>{caseItem.case_type}</strong> • Errand: <strong>#{caseItem.errand_id}</strong>
+                      Type: <strong>{getCaseTypeLabel(caseItem.case_type).icon} {getCaseTypeLabel(caseItem.case_type).label}</strong> • Errand: <strong>#{caseItem.errand_id}</strong>
                     </div>
                   </div>
                   <span style={{
