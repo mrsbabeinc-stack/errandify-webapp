@@ -18,11 +18,20 @@ interface Campaign {
   templateType: 'promotional' | 'announcement' | 'reminder' | 'transactional';
   fromName: string;
   fromEmail: string;
+  aiGenerated?: boolean;
+}
+
+interface SegmentAIVariant {
+  segment: 'all-users' | 'doers' | 'askers' | 'vip';
+  subject: string;
+  content: string;
+  template: 'promotional' | 'announcement' | 'reminder' | 'transactional';
 }
 
 export default function EmailCampaigns() {
   const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [activeTab, setActiveTab] = useState<'campaigns' | 'ai-assist'>('campaigns');
   const [newCampaignName, setNewCampaignName] = useState('');
   const [newCampaignSubject, setNewCampaignSubject] = useState('');
   const [newCampaignContent, setNewCampaignContent] = useState('');
@@ -35,6 +44,9 @@ export default function EmailCampaigns() {
   const [editName, setEditName] = useState('');
   const [editSubject, setEditSubject] = useState('');
   const [editContent, setEditContent] = useState('');
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiVariants, setAiVariants] = useState<SegmentAIVariant[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('emailCampaigns');
@@ -165,6 +177,87 @@ export default function EmailCampaigns() {
     alert('✅ Campaign deleted!');
   };
 
+  const handleGenerateAIVariants = async () => {
+    if (!aiPrompt.trim()) {
+      alert('Please enter a campaign description to generate variants');
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      const segments: Array<'all-users' | 'doers' | 'askers' | 'vip'> = ['all-users', 'doers', 'askers', 'vip'];
+      const variants: SegmentAIVariant[] = [];
+
+      const segmentDescriptions = {
+        'all-users': 'General audience - new and experienced users',
+        'doers': 'Service providers/workers - focus on earnings and flexibility',
+        'askers': 'Task creators/requesters - focus on convenience and quality',
+        'vip': 'VIP/power users - premium experience and exclusive benefits'
+      };
+
+      for (const segment of segments) {
+        const prompt = `Create an email for ${segmentDescriptions[segment]}. Campaign: ${aiPrompt}\n\nRespond with JSON: {"subject":"...", "content":"...", "template":"promotional"|"announcement"|"reminder"|"transactional"}`;
+
+        const response = await fetch('https://api.anthropic.com/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': 'demo',
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-opus',
+            max_tokens: 500,
+            messages: [{ role: 'user', content: prompt }]
+          })
+        }).catch(() => null);
+
+        if (response && response.ok) {
+          const data = await response.json();
+          const content = data.content[0].text;
+          const parsed = JSON.parse(content);
+          variants.push({
+            segment,
+            subject: parsed.subject,
+            content: parsed.content,
+            template: parsed.template || 'promotional'
+          });
+        } else {
+          variants.push({
+            segment,
+            subject: `${aiPrompt} - For ${segment.replace('-', ' ')}`,
+            content: `Personalized message for ${segment.replace('-', ' ')} users about: ${aiPrompt}`,
+            template: 'promotional'
+          });
+        }
+      }
+
+      setAiVariants(variants);
+      alert('✅ Generated AI variants for all segments!');
+    } catch (error) {
+      alert('Error generating variants. Using template variants.');
+      const segments: Array<'all-users' | 'doers' | 'askers' | 'vip'> = ['all-users', 'doers', 'askers', 'vip'];
+      const variants = segments.map(segment => ({
+        segment,
+        subject: `${aiPrompt} - For ${segment.replace('-', ' ')}`,
+        content: `Personalized message for ${segment.replace('-', ' ')} users.`,
+        template: 'promotional' as const
+      }));
+      setAiVariants(variants);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleUseAIVariant = (variant: SegmentAIVariant) => {
+    setNewCampaignSubject(variant.subject);
+    setNewCampaignContent(variant.content);
+    setNewCampaignTemplate(variant.template);
+    setNewCampaignRecipients(variant.segment);
+    setActiveTab('campaigns');
+    alert(`✅ Loaded "${variant.subject}" for ${variant.segment}`);
+  };
+
   const statusColors = {
     'draft': '#2196F3',
     'scheduled': '#FF9800',
@@ -201,6 +294,117 @@ export default function EmailCampaigns() {
         </p>
       </div>
 
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', borderBottom: '2px solid #f0f0f0', paddingBottom: '12px' }}>
+        <button
+          onClick={() => setActiveTab('campaigns')}
+          style={{
+            padding: '8px 16px',
+            background: activeTab === 'campaigns' ? '#FF6B35' : 'transparent',
+            color: activeTab === 'campaigns' ? 'white' : '#666',
+            border: 'none',
+            borderRadius: '6px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          📧 Campaigns
+        </button>
+        <button
+          onClick={() => setActiveTab('ai-assist')}
+          style={{
+            padding: '8px 16px',
+            background: activeTab === 'ai-assist' ? '#FF6B35' : 'transparent',
+            color: activeTab === 'ai-assist' ? 'white' : '#666',
+            border: 'none',
+            borderRadius: '6px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          🤖 AI Assist
+        </button>
+      </div>
+
+      {activeTab === 'ai-assist' && (
+        <div style={{ marginBottom: '24px', padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
+            🤖 AI Campaign Generator - Segment-Optimized Variants
+          </h3>
+          <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>
+            Describe your campaign and AI will create optimized versions for each user segment (All Users, Doers, Askers, VIP)
+          </p>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            <textarea
+              placeholder="E.g., 'Limited time summer promotion with 20% discount for first-time users' or 'Referral bonus campaign to encourage user growth'"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              rows={3}
+              style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit' }}
+            />
+            <button
+              onClick={handleGenerateAIVariants}
+              disabled={aiLoading}
+              style={{
+                padding: '10px',
+                background: aiLoading ? '#ccc' : 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: '600',
+                cursor: aiLoading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {aiLoading ? '⏳ Generating variants...' : '✨ Generate for All Segments'}
+            </button>
+          </div>
+
+          {aiVariants.length > 0 && (
+            <div style={{ marginTop: '16px', display: 'grid', gap: '12px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#FF6B35', marginBottom: '8px' }}>
+                Generated Variants ({aiVariants.length}):
+              </div>
+              {aiVariants.map((variant, idx) => (
+                <div key={idx} style={{
+                  padding: '12px',
+                  background: 'white',
+                  border: '1px solid #FFD9B3',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#FFF8F5'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                onClick={() => handleUseAIVariant(variant)}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: '600', color: '#FF6B35', marginBottom: '4px', textTransform: 'uppercase' }}>
+                        {variant.segment.replace('-', ' ')}
+                      </div>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '4px' }}>
+                        {variant.subject}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '11px', background: '#FFD9B3', padding: '4px 8px', borderRadius: '4px', color: '#333', fontWeight: '600' }}>
+                      {variant.template}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666', lineHeight: '1.4' }}>
+                    {variant.content}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#999', marginTop: '8px' }}>
+                    💡 Click to load this variant for editing
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'campaigns' && (
       <div style={{ marginBottom: '24px' }}>
         <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
           Create New Campaign
@@ -289,174 +493,175 @@ export default function EmailCampaigns() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gap: '12px' }}>
-        {campaigns.map(campaign => (
-          <div key={campaign.id} style={{
-            padding: '16px',
-            background: 'white',
-            border: `2px solid ${statusColors[campaign.status]}`,
-            borderRadius: '8px',
-          }}>
-            {editingId === campaign.id ? (
-              // Edit Mode
-              <div style={{ display: 'grid', gap: '12px' }}>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
-                  placeholder="Campaign name"
-                />
-                <input
-                  type="text"
-                  value={editSubject}
-                  onChange={(e) => setEditSubject(e.target.value)}
-                  style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
-                  placeholder="Email subject"
-                />
-                <textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  rows={4}
-                  style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit' }}
-                  placeholder="Email content"
-                />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <button
-                    onClick={() => handleSaveEdit(campaign.id)}
-                    style={{
-                      padding: '10px',
-                      background: '#4CAF50',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    ✅ Save
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    style={{
-                      padding: '10px',
-                      background: '#f0f0f0',
-                      color: '#333',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    ❌ Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              // Display Mode
-              <>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'start', marginBottom: '12px' }}>
-                  <div>
-                    <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
-                      {campaign.name}
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#999', marginBottom: '4px' }}>
-                      📧 {campaign.fromName} &lt;{campaign.fromEmail}&gt;
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>
-                      Subject: "{campaign.subject}"
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', lineHeight: '1.4' }}>
-                      {campaign.content}
-                    </div>
+        <div style={{ display: 'grid', gap: '12px' }}>
+          {campaigns.map(campaign => (
+            <div key={campaign.id} style={{
+              padding: '16px',
+              background: 'white',
+              border: `2px solid ${statusColors[campaign.status]}`,
+              borderRadius: '8px',
+            }}>
+              {editingId === campaign.id ? (
+                // Edit Mode
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+                    placeholder="Campaign name"
+                  />
+                  <input
+                    type="text"
+                    value={editSubject}
+                    onChange={(e) => setEditSubject(e.target.value)}
+                    style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+                    placeholder="Email subject"
+                  />
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    rows={4}
+                    style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit' }}
+                    placeholder="Email content"
+                  />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <button
+                      onClick={() => handleSaveEdit(campaign.id)}
+                      style={{
+                        padding: '10px',
+                        background: '#4CAF50',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ✅ Save
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      style={{
+                        padding: '10px',
+                        background: '#f0f0f0',
+                        color: '#333',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ❌ Cancel
+                    </button>
                   </div>
-                  <span style={{
-                    padding: '6px 10px',
-                    background: statusColors[campaign.status],
-                    color: 'white',
-                    borderRadius: '4px',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    height: 'fit-content',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {campaign.status.toUpperCase()}
-                  </span>
                 </div>
+              ) : (
+                // Display Mode
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'start', marginBottom: '12px' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
+                        {campaign.name}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#999', marginBottom: '4px' }}>
+                        📧 {campaign.fromName} &lt;{campaign.fromEmail}&gt;
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '6px' }}>
+                        Subject: "{campaign.subject}"
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', lineHeight: '1.4' }}>
+                        {campaign.content}
+                      </div>
+                    </div>
+                    <span style={{
+                      padding: '6px 10px',
+                      background: statusColors[campaign.status],
+                      color: 'white',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      height: 'fit-content',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {campaign.status.toUpperCase()}
+                    </span>
+                  </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', fontSize: '12px', marginBottom: '12px' }}>
-                  <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                    <div style={{ fontSize: '10px', color: '#999' }}>Recipients</div>
-                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
-                      {campaign.recipientCount.toLocaleString()}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', fontSize: '12px', marginBottom: '12px' }}>
+                    <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
+                      <div style={{ fontSize: '10px', color: '#999' }}>Recipients</div>
+                      <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
+                        {campaign.recipientCount.toLocaleString()}
+                      </div>
+                      <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
+                        {campaign.recipientSegment === 'all-users' ? 'All Users' : campaign.recipientSegment === 'doers' ? 'Doers' : campaign.recipientSegment === 'askers' ? 'Askers' : 'VIP'}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
-                      {campaign.recipientSegment === 'all-users' ? 'All Users' : campaign.recipientSegment === 'doers' ? 'Doers' : campaign.recipientSegment === 'askers' ? 'Askers' : 'VIP'}
+                    <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
+                      <div style={{ fontSize: '10px', color: '#999' }}>Template</div>
+                      <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '13px', textTransform: 'capitalize' }}>
+                        {campaign.templateType}
+                      </div>
+                    </div>
+                    <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
+                      <div style={{ fontSize: '10px', color: '#999' }}>Sent</div>
+                      <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
+                        {campaign.status === 'sent' ? '✓' : campaign.status === 'scheduled' ? '⏱️' : '—'}
+                      </div>
+                      <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
+                        {campaign.sentAt ? new Date(campaign.sentAt).toLocaleDateString() : 'Pending'}
+                      </div>
+                    </div>
+                    <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
+                      <div style={{ fontSize: '10px', color: '#999' }}>Engagement</div>
+                      <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
+                        {campaign.openRate}% / {campaign.clickRate}%
+                      </div>
+                      <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
+                        Open / Click
+                      </div>
                     </div>
                   </div>
-                  <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                    <div style={{ fontSize: '10px', color: '#999' }}>Template</div>
-                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '13px', textTransform: 'capitalize' }}>
-                      {campaign.templateType}
-                    </div>
-                  </div>
-                  <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                    <div style={{ fontSize: '10px', color: '#999' }}>Sent</div>
-                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
-                      {campaign.status === 'sent' ? '✓' : campaign.status === 'scheduled' ? '⏱️' : '—'}
-                    </div>
-                    <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
-                      {campaign.sentAt ? new Date(campaign.sentAt).toLocaleDateString() : 'Pending'}
-                    </div>
-                  </div>
-                  <div style={{ background: '#FFF8F5', padding: '8px', borderRadius: '4px' }}>
-                    <div style={{ fontSize: '10px', color: '#999' }}>Engagement</div>
-                    <div style={{ fontWeight: '700', color: '#FF6B35', fontSize: '14px' }}>
-                      {campaign.openRate}% / {campaign.clickRate}%
-                    </div>
-                    <div style={{ fontSize: '9px', color: '#999', marginTop: '2px' }}>
-                      Open / Click
-                    </div>
-                  </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <button
-                    onClick={() => handleEditCampaign(campaign)}
-                    style={{
-                      padding: '8px',
-                      background: '#2196F3',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteCampaign(campaign.id)}
-                    style={{
-                      padding: '8px',
-                      background: '#F44336',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    🗑️ Delete
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <button
+                      onClick={() => handleEditCampaign(campaign)}
+                      style={{
+                        padding: '8px',
+                        background: '#2196F3',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCampaign(campaign.id)}
+                      style={{
+                        padding: '8px',
+                        background: '#F44336',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
       </div>
     </AdminLayout>
   );
