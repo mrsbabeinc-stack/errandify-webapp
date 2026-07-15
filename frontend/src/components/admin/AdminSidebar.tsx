@@ -146,6 +146,14 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
+    id: 'approvals-workflows',
+    label: 'Approvals & Workflows',
+    icon: '✓',
+    children: [
+      { id: 'approval-workflow', label: 'Approval Workflows', icon: '✓', path: '/admin/approvals' },
+    ]
+  },
+  {
     id: 'finance-accounting',
     label: 'Finance & Accounting',
     icon: '📊',
@@ -156,8 +164,17 @@ const menuItems: MenuItem[] = [
       { id: 'expense-claims', label: 'Expense Claims', icon: '📝', path: '/admin/expense-claims' },
       { id: 'invoicing', label: 'Invoicing & Billing', icon: '📋', path: '/admin/invoicing' },
       { id: 'financial-reports', label: 'Reports', icon: '📈', path: '/admin/financial-reports' },
-      { id: 'vendors', label: 'Vendor Management', icon: '🏢', path: '/admin/vendors' },
+      { id: 'vendor-mgmt', label: 'Vendor Management', icon: '🏢', path: '/admin/vendors' },
       { id: 'clients', label: 'Clients & AR', icon: '👥', path: '/admin/clients' },
+    ]
+  },
+  {
+    id: 'operations-management',
+    label: 'Operations & Assets',
+    icon: '📦',
+    children: [
+      { id: 'asset-mgmt', label: 'Asset Management', icon: '📦', path: '/admin/assets' },
+      { id: 'probation-mgmt', label: 'Probation Management', icon: '👤', path: '/admin/probation' },
     ]
   },
   {

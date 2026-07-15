@@ -136,6 +136,10 @@ import StaffAttendanceClockIn from './pages/StaffAttendanceClockIn';
 import StaffAttendanceHistory from './pages/StaffAttendanceHistory';
 import BudgetDashboard from './pages/admin/BudgetDashboard';
 import APARDashboard from './pages/admin/APARDashboard';
+import ApprovalWorkflows from './pages/admin/ApprovalWorkflows';
+import AssetManagement from './pages/admin/AssetManagement';
+import ProbationManagement from './pages/admin/ProbationManagement';
+import VendorManagement from './pages/admin/VendorManagement';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -518,6 +522,10 @@ export default function App() {
         <Route path="/admin/attendance-reports" element={isAuthenticated && isAdmin ? <AttendanceReports /> : <Navigate to="/login" replace />} />
         <Route path="/admin/budget" element={isAuthenticated && isAdmin ? <BudgetDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/apar" element={isAuthenticated && isAdmin ? <APARDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/approvals" element={isAuthenticated && isAdmin ? <ApprovalWorkflows /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/assets" element={isAuthenticated && isAdmin ? <AssetManagement /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/probation" element={isAuthenticated && isAdmin ? <ProbationManagement /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/vendors" element={isAuthenticated && isAdmin ? <VendorManagement /> : <Navigate to="/login" replace />} />
         <Route path="/apply/:jobId" element={<JobApplicationForm />} />
         <Route path="/join-us" element={<JoinUsPage />} />
         <Route path="/admin/rbac" element={isAuthenticated && isAdmin ? <RBACManagementDashboard /> : <Navigate to="/login" replace />} />
