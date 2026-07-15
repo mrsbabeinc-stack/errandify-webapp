@@ -108,50 +108,64 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
-    id: 'accounts-hr',
-    label: 'Accounts & HR',
-    icon: '💼',
+    id: 'human-resources',
+    label: 'Human Resources',
+    icon: '👥',
     children: [
-      { id: 'rbac', label: 'Access Control', icon: '🔐', path: '/admin/rbac' },
-      { id: 'staff-info', label: 'Staff Info & Profiles', icon: '👤', path: '/admin/staff-info' },
-      { id: 'staff-salary', label: 'Compensation (Salary & Benefits)', icon: '💰', path: '/admin/staff-salary-benefits' },
-      { id: 'recruitment', label: 'Recruitment', icon: '🎯', path: '/admin/recruitment' },
+      { id: 'staff-info', label: 'Staff Management', icon: '👤', path: '/admin/staff-info' },
+      { id: 'recruitment', label: 'Recruitment & Onboarding', icon: '🎯', path: '/admin/recruitment' },
       {
         id: 'attendance-tracking',
-        label: 'Attendance & Timesheets',
+        label: 'Attendance & Time',
         icon: '⏰',
         children: [
-          { id: 'attendance', label: 'Attendance Dashboard', icon: '📊', path: '/admin/attendance' },
-          { id: 'timesheets', label: 'Timesheet Management', icon: '📋', path: '/admin/timesheets' },
+          { id: 'attendance', label: 'Dashboard', icon: '📊', path: '/admin/attendance' },
+          { id: 'timesheets', label: 'Timesheets', icon: '📋', path: '/admin/timesheets' },
           { id: 'timesheet-approvals', label: 'Approvals', icon: '✓', path: '/admin/timesheet-approvals' },
           { id: 'attendance-reports', label: 'Reports', icon: '📈', path: '/admin/attendance-reports' },
         ]
       },
       {
         id: 'leave-time-off',
-        label: 'Leave & Time Off',
+        label: 'Leave Management',
         icon: '🏖️',
         children: [
           { id: 'leave-mgmt', label: 'Leave Requests', icon: '📋', path: '/admin/leave-management' },
-          { id: 'holidays', label: 'Holiday Manager', icon: '📅', path: '/admin/holidays' },
+          { id: 'holidays', label: 'Holidays', icon: '📅', path: '/admin/holidays' },
         ]
       },
-      {
-        id: 'accounting',
-        label: 'Accounting & Finance',
-        icon: '💵',
-        children: [
-          { id: 'accounts', label: 'General Accounts', icon: '💰', path: '/admin/accounts' },
-          { id: 'payroll', label: 'Payroll Processing', icon: '💸', path: '/admin/payroll' },
-          { id: 'expense-claims', label: 'Expense Claims', icon: '📝', path: '/admin/expense-claims' },
-          { id: 'invoicing', label: 'Invoicing & Billing', icon: '📋', path: '/admin/invoicing' },
-          { id: 'financial-reports', label: 'Financial Reports', icon: '📊', path: '/admin/financial-reports' },
-          { id: 'vendors', label: 'Vendor Management', icon: '💳', path: '/admin/vendors' },
-          { id: 'clients', label: 'Client Management', icon: '👥', path: '/admin/clients' },
-        ]
-      },
-      { id: 'integration', label: 'Integration Dashboard', icon: '📊', path: '/admin/accounts-hr-integration' },
-      { id: 'ai-reports', label: 'AI Reports', icon: '🤖', path: '/admin/ai-reports' },
+    ]
+  },
+  {
+    id: 'payroll-compensation',
+    label: 'Payroll & Compensation',
+    icon: '💸',
+    children: [
+      { id: 'staff-salary', label: 'Compensation & Benefits', icon: '💰', path: '/admin/staff-salary-benefits' },
+      { id: 'payroll', label: 'Payroll Processing', icon: '💳', path: '/admin/payroll' },
+    ]
+  },
+  {
+    id: 'finance-accounting',
+    label: 'Finance & Accounting',
+    icon: '📊',
+    children: [
+      { id: 'accounts', label: 'General Accounts', icon: '💰', path: '/admin/accounts' },
+      { id: 'expense-claims', label: 'Expense Claims', icon: '📝', path: '/admin/expense-claims' },
+      { id: 'invoicing', label: 'Invoicing & Billing', icon: '📋', path: '/admin/invoicing' },
+      { id: 'financial-reports', label: 'Reports', icon: '📈', path: '/admin/financial-reports' },
+      { id: 'vendors', label: 'Vendor Management', icon: '🏢', path: '/admin/vendors' },
+      { id: 'clients', label: 'Clients & AR', icon: '👥', path: '/admin/clients' },
+    ]
+  },
+  {
+    id: 'admin-access',
+    label: 'Admin & Access',
+    icon: '🔐',
+    children: [
+      { id: 'rbac', label: 'Access Control & Roles', icon: '🔐', path: '/admin/rbac' },
+      { id: 'integration', label: 'Integrations', icon: '🔗', path: '/admin/accounts-hr-integration' },
+      { id: 'ai-reports', label: 'AI & Analytics', icon: '🤖', path: '/admin/ai-reports' },
     ]
   },
 ];
