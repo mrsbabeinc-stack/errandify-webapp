@@ -210,6 +210,16 @@ const menuItems: MenuItem[] = [
       { id: 'rbac', label: 'Access Control & Roles', icon: '🔐', path: '/admin/rbac' },
     ]
   },
+  {
+    id: 'hana-faq',
+    label: 'Hana FAQ Knowledge Base',
+    icon: '🤖',
+    children: [
+      { id: 'hana-faq-browser', label: 'FAQ Browser', icon: '📚', path: '/admin/hana-faq' },
+      { id: 'hana-categories', label: 'FAQ Categories', icon: '📂', path: '/admin/hana-faq-categories' },
+      { id: 'hana-manage', label: 'Manage FAQs', icon: '✏️', path: '/admin/hana-faq-manage' },
+    ]
+  },
 ];
 
 export const AdminSidebar: React.FC<{ isOpen?: boolean }> = ({ isOpen = true }) => {
