@@ -117,6 +117,17 @@ const menuItems: MenuItem[] = [
       { id: 'staff-salary', label: 'Compensation (Salary & Benefits)', icon: '💰', path: '/admin/staff-salary-benefits' },
       { id: 'recruitment', label: 'Recruitment', icon: '🎯', path: '/admin/recruitment' },
       {
+        id: 'attendance-tracking',
+        label: 'Attendance & Timesheets',
+        icon: '⏰',
+        children: [
+          { id: 'attendance', label: 'Attendance Dashboard', icon: '📊', path: '/admin/attendance' },
+          { id: 'timesheets', label: 'Timesheet Management', icon: '📋', path: '/admin/timesheets' },
+          { id: 'timesheet-approvals', label: 'Approvals', icon: '✓', path: '/admin/timesheet-approvals' },
+          { id: 'attendance-reports', label: 'Reports', icon: '📈', path: '/admin/attendance-reports' },
+        ]
+      },
+      {
         id: 'leave-time-off',
         label: 'Leave & Time Off',
         icon: '🏖️',
