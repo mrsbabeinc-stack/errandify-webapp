@@ -97,6 +97,9 @@ import NotificationsManagement from './pages/admin/NotificationsManagement';
 import EventReminders from './pages/admin/EventReminders';
 import BlogArticles from './pages/admin/BlogArticles';
 import Recognition from './pages/admin/Recognition';
+import HanaFAQBrowser from './pages/admin/HanaFAQBrowser';
+import HanaFAQCategories from './pages/admin/HanaFAQCategories';
+import HanaFAQManage from './pages/admin/HanaFAQManage';
 import CommunityFeed from './pages/admin/CommunityFeed';
 import HeroBanners from './pages/admin/HeroBanners';
 import CompanyClientIntelligence from './pages/admin/CompanyClientIntelligence';
@@ -553,6 +556,9 @@ export default function App() {
         <Route path="/apply/:jobId" element={<JobApplicationForm />} />
         <Route path="/join-us" element={<JoinUsPage />} />
         <Route path="/admin/rbac" element={isAuthenticated && isAdmin ? <RBACManagementDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/hana-faq" element={isAuthenticated && isAdmin ? <HanaFAQBrowser /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/hana-faq-categories" element={isAuthenticated && isAdmin ? <HanaFAQCategories /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/hana-faq-manage" element={isAuthenticated && isAdmin ? <HanaFAQManage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/staff-info" element={isAuthenticated && isAdmin ? <StaffInfoEditorEnhanced /> : <Navigate to="/login" replace />} />
         <Route path="/admin/staff-salary-benefits" element={isAuthenticated && isAdmin ? <StaffSalaryBenefitsEditor /> : <Navigate to="/login" replace />} />
         <Route path="/admin/holidays" element={isAuthenticated && isAdmin ? <HolidayManager /> : <Navigate to="/login" replace />} />
