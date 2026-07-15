@@ -134,6 +134,7 @@ const menuItems: MenuItem[] = [
           { id: 'holidays', label: 'Holidays', icon: '📅', path: '/admin/holidays' },
         ]
       },
+      { id: 'probation-mgmt', label: 'Probation Management', icon: '👤', path: '/admin/probation' },
     ]
   },
   {
@@ -161,20 +162,14 @@ const menuItems: MenuItem[] = [
       { id: 'budget', label: 'Budget Management', icon: '💰', path: '/admin/budget' },
       { id: 'accounts', label: 'General Accounts', icon: '💳', path: '/admin/accounts' },
       { id: 'apar', label: 'AP/AR Management', icon: '📤📥', path: '/admin/apar' },
+      { id: 'tax-mgmt', label: 'Tax Management', icon: '💰', path: '/admin/tax' },
+      { id: 'fixed-assets', label: 'Fixed Assets & Depreciation', icon: '🏭', path: '/admin/fixed-assets' },
       { id: 'expense-claims', label: 'Expense Claims', icon: '📝', path: '/admin/expense-claims' },
       { id: 'invoicing', label: 'Invoicing & Billing', icon: '📋', path: '/admin/invoicing' },
-      { id: 'financial-reports', label: 'Reports', icon: '📈', path: '/admin/financial-reports' },
       { id: 'vendor-mgmt', label: 'Vendor Management', icon: '🏢', path: '/admin/vendors' },
+      { id: 'cash-flow', label: 'Cash Flow Forecasting', icon: '📈', path: '/admin/cash-flow' },
+      { id: 'financial-reports', label: 'Reports', icon: '📊', path: '/admin/financial-reports' },
       { id: 'clients', label: 'Clients & AR', icon: '👥', path: '/admin/clients' },
-    ]
-  },
-  {
-    id: 'operations-management',
-    label: 'Operations & Assets',
-    icon: '📦',
-    children: [
-      { id: 'asset-mgmt', label: 'Asset Management', icon: '📦', path: '/admin/assets' },
-      { id: 'probation-mgmt', label: 'Probation Management', icon: '👤', path: '/admin/probation' },
     ]
   },
   {

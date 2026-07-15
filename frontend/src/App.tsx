@@ -140,6 +140,9 @@ import ApprovalWorkflows from './pages/admin/ApprovalWorkflows';
 import AssetManagement from './pages/admin/AssetManagement';
 import ProbationManagement from './pages/admin/ProbationManagement';
 import VendorManagement from './pages/admin/VendorManagement';
+import TaxManagement from './pages/admin/TaxManagement';
+import FixedAssetsDetail from './pages/admin/FixedAssetsDetail';
+import CashFlowForecasting from './pages/admin/CashFlowForecasting';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -526,6 +529,9 @@ export default function App() {
         <Route path="/admin/assets" element={isAuthenticated && isAdmin ? <AssetManagement /> : <Navigate to="/login" replace />} />
         <Route path="/admin/probation" element={isAuthenticated && isAdmin ? <ProbationManagement /> : <Navigate to="/login" replace />} />
         <Route path="/admin/vendors" element={isAuthenticated && isAdmin ? <VendorManagement /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/tax" element={isAuthenticated && isAdmin ? <TaxManagement /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/fixed-assets" element={isAuthenticated && isAdmin ? <FixedAssetsDetail /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/cash-flow" element={isAuthenticated && isAdmin ? <CashFlowForecasting /> : <Navigate to="/login" replace />} />
         <Route path="/apply/:jobId" element={<JobApplicationForm />} />
         <Route path="/join-us" element={<JoinUsPage />} />
         <Route path="/admin/rbac" element={isAuthenticated && isAdmin ? <RBACManagementDashboard /> : <Navigate to="/login" replace />} />
