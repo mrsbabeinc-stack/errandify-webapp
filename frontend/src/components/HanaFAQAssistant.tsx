@@ -20,7 +20,7 @@ interface Message {
   type?: 'text' | 'faq' | 'errand-context';
 }
 
-type MessageLanguage = 'en' | 'zh' | 'yue';
+type MessageLanguage = 'en' | 'zh';
 
 const Hana: React.FC = () => {
   const navigate = useNavigate();
@@ -94,9 +94,7 @@ const Hana: React.FC = () => {
     if (userErrands.length === 0) {
       return language === 'en'
         ? "You don't have any active errands right now. Want to post one?"
-        : language === 'zh'
-        ? "你现在没有任何活跃的任务。想发布一个吗？"
-        : "你而家冇任何活躍嘅幫幫。想發佈一個嗎？";
+        : "你现在没有任何活跃的任务。想发布一个吗？";
     }
 
     const activeErrands = userErrands.filter(e =>
@@ -106,25 +104,19 @@ const Hana: React.FC = () => {
     if (activeErrands.length === 0) {
       return language === 'en'
         ? "All your errands are completed or cancelled!"
-        : language === 'zh'
-        ? "你的所有任务都已完成或取消！"
-        : "你嘅所有幫幫都已完成或取消！";
+        : "你的所有任务都已完成或取消！";
     }
 
     const summary = activeErrands.map((e, idx) => {
       const status = language === 'en'
         ? e.status
-        : language === 'zh'
-        ? getStatusChinese(e.status)
-        : getStatusCantonese(e.status);
+        : getStatusChinese(e.status);
       return `${idx + 1}. "${e.title}" - ${status}`;
     }).join('\n');
 
     return language === 'en'
       ? `You have ${activeErrands.length} active errand(s):\n\n${summary}\n\nWould you like help with any of these?`
-      : language === 'zh'
-      ? `你有${activeErrands.length}个活跃的任务：\n\n${summary}\n\n你需要帮助吗？`
-      : `你有${activeErrands.length}個活躍嘅幫幫：\n\n${summary}\n\n你需要幫助嗎？`;
+      : `你有${activeErrands.length}个活跃的任务：\n\n${summary}\n\n你需要帮助吗？`;
   };
 
   const getStatusChinese = (status: string): string => {
@@ -140,18 +132,6 @@ const Hana: React.FC = () => {
     return map[status] || status;
   };
 
-  const getStatusCantonese = (status: string): string => {
-    const map: Record<string, string> = {
-      'posted': '已發佈',
-      'bidding': '競價中',
-      'accepted': '已接受',
-      'in-progress': '進行中',
-      'completed': '已完成',
-      'cancelled': '已取消',
-      'disputed': '有爭議',
-    };
-    return map[status] || status;
-  };
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
@@ -312,7 +292,6 @@ const Hana: React.FC = () => {
               >
                 <option value="en">🇬🇧 EN</option>
                 <option value="zh">🇨🇳 中文</option>
-                <option value="yue">🇭🇰 粵語</option>
               </select>
               <button
                 onClick={(e) => {
