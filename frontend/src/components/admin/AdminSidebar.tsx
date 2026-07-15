@@ -185,12 +185,29 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
-    id: 'admin-access',
-    label: 'Admin & Access',
+    id: 'reporting-analytics',
+    label: 'Reporting & Analytics',
+    icon: '📊',
+    children: [
+      { id: 'advanced-reporting', label: 'Advanced Reporting', icon: '📊', path: '/admin/advanced-reporting' },
+      { id: 'ai-features', label: 'AI Features', icon: '🤖', path: '/admin/ai-features' },
+    ]
+  },
+  {
+    id: 'compliance-security',
+    label: 'Compliance & Security',
     icon: '🔐',
     children: [
+      { id: 'compliance', label: 'SG Compliance Center', icon: '🇸🇬', path: '/admin/compliance' },
+      { id: 'security', label: 'Security & Encryption', icon: '🔐', path: '/admin/security' },
+    ]
+  },
+  {
+    id: 'admin-access',
+    label: 'Admin & Access',
+    icon: '⚙️',
+    children: [
       { id: 'rbac', label: 'Access Control & Roles', icon: '🔐', path: '/admin/rbac' },
-      { id: 'ai-reports', label: 'AI & Analytics', icon: '🤖', path: '/admin/ai-reports' },
     ]
   },
 ];

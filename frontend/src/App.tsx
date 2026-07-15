@@ -148,6 +148,10 @@ import ExpenseAPIntegration from './pages/admin/ExpenseAPIntegration';
 import LeavePayrollIntegration from './pages/admin/LeavePayrollIntegration';
 import StaffBudgetIntegration from './pages/admin/StaffBudgetIntegration';
 import HRAccountsReportsDashboard from './pages/admin/HRAccountsReportsDashboard';
+import AdvancedReportingAnalytics from './pages/admin/AdvancedReportingAnalytics';
+import SingaporeComplianceCenter from './pages/admin/SingaporeComplianceCenter';
+import SecurityEncryptionHub from './pages/admin/SecurityEncryptionHub';
+import AIFeaturesHub from './pages/admin/AIFeaturesHub';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -542,6 +546,10 @@ export default function App() {
         <Route path="/admin/leave-payroll" element={isAuthenticated && isAdmin ? <LeavePayrollIntegration /> : <Navigate to="/login" replace />} />
         <Route path="/admin/staff-budget" element={isAuthenticated && isAdmin ? <StaffBudgetIntegration /> : <Navigate to="/login" replace />} />
         <Route path="/admin/hr-accounts-reports" element={isAuthenticated && isAdmin ? <HRAccountsReportsDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/advanced-reporting" element={isAuthenticated && isAdmin ? <AdvancedReportingAnalytics /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/compliance" element={isAuthenticated && isAdmin ? <SingaporeComplianceCenter /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/security" element={isAuthenticated && isAdmin ? <SecurityEncryptionHub /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/ai-features" element={isAuthenticated && isAdmin ? <AIFeaturesHub /> : <Navigate to="/login" replace />} />
         <Route path="/apply/:jobId" element={<JobApplicationForm />} />
         <Route path="/join-us" element={<JoinUsPage />} />
         <Route path="/admin/rbac" element={isAuthenticated && isAdmin ? <RBACManagementDashboard /> : <Navigate to="/login" replace />} />
