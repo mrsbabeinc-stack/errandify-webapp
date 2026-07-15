@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 import { useState, useEffect } from 'react';
 import { initPushNotifications } from './utils/pushNotifications';
 import Layout from './components/Layout';
-import FloatingHana from './components/FloatingHana';
+import HanaFAQAssistant from './components/HanaFAQAssistant';
 import NotificationListener from './components/NotificationListener';
 import { NotificationProvider } from './context/NotificationContext';
 import NotificationToastContainer from './components/NotificationToastContainer';
@@ -268,7 +268,7 @@ export default function App() {
       <NotificationPanel />
       <NotificationToastContainer />
       <Router>
-        {isAuthenticated && !isStaff && <FloatingHana />}
+        {isAuthenticated && !isStaff && <HanaFAQAssistant />}
         {isAuthenticated && <NotificationListener />}
         <Routes>
         {/* Landing/Home page - shown first to unauthenticated users */}
