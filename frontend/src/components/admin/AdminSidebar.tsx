@@ -173,12 +173,22 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
+    id: 'integrations',
+    label: 'Module Integrations',
+    icon: '🔗',
+    children: [
+      { id: 'payroll-gl-int', label: 'Payroll → GL', icon: '💼', path: '/admin/payroll-gl' },
+      { id: 'expense-ap-int', label: 'Expense → AP', icon: '📝', path: '/admin/expense-ap' },
+      { id: 'leave-payroll-int', label: 'Leave → Payroll', icon: '🏖️', path: '/admin/leave-payroll' },
+      { id: 'staff-budget-int', label: 'Staff → Budget', icon: '👥', path: '/admin/staff-budget' },
+    ]
+  },
+  {
     id: 'admin-access',
     label: 'Admin & Access',
     icon: '🔐',
     children: [
       { id: 'rbac', label: 'Access Control & Roles', icon: '🔐', path: '/admin/rbac' },
-      { id: 'integration', label: 'Integrations', icon: '🔗', path: '/admin/accounts-hr-integration' },
       { id: 'ai-reports', label: 'AI & Analytics', icon: '🤖', path: '/admin/ai-reports' },
     ]
   },

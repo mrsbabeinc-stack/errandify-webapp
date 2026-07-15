@@ -143,6 +143,10 @@ import VendorManagement from './pages/admin/VendorManagement';
 import TaxManagement from './pages/admin/TaxManagement';
 import FixedAssetsDetail from './pages/admin/FixedAssetsDetail';
 import CashFlowForecasting from './pages/admin/CashFlowForecasting';
+import PayrollGLIntegration from './pages/admin/PayrollGLIntegration';
+import ExpenseAPIntegration from './pages/admin/ExpenseAPIntegration';
+import LeavePayrollIntegration from './pages/admin/LeavePayrollIntegration';
+import StaffBudgetIntegration from './pages/admin/StaffBudgetIntegration';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -532,6 +536,10 @@ export default function App() {
         <Route path="/admin/tax" element={isAuthenticated && isAdmin ? <TaxManagement /> : <Navigate to="/login" replace />} />
         <Route path="/admin/fixed-assets" element={isAuthenticated && isAdmin ? <FixedAssetsDetail /> : <Navigate to="/login" replace />} />
         <Route path="/admin/cash-flow" element={isAuthenticated && isAdmin ? <CashFlowForecasting /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/payroll-gl" element={isAuthenticated && isAdmin ? <PayrollGLIntegration /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/expense-ap" element={isAuthenticated && isAdmin ? <ExpenseAPIntegration /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/leave-payroll" element={isAuthenticated && isAdmin ? <LeavePayrollIntegration /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/staff-budget" element={isAuthenticated && isAdmin ? <StaffBudgetIntegration /> : <Navigate to="/login" replace />} />
         <Route path="/apply/:jobId" element={<JobApplicationForm />} />
         <Route path="/join-us" element={<JoinUsPage />} />
         <Route path="/admin/rbac" element={isAuthenticated && isAdmin ? <RBACManagementDashboard /> : <Navigate to="/login" replace />} />
