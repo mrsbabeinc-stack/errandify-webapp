@@ -85,6 +85,7 @@ export const CasesPage: React.FC = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setCases(data.cases || []);
     } catch (error) {
