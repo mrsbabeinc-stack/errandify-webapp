@@ -114,7 +114,11 @@ import ClientManagementDashboard from './pages/admin/ClientManagementDashboard';
 import RecruitmentDashboard from './pages/admin/RecruitmentDashboard';
 import RBACManagementDashboard from './pages/admin/RBACManagementDashboard';
 import StaffSalaryBenefitsEditor from './pages/admin/StaffSalaryBenefitsEditor';
-import StaffInfoEditor from './pages/admin/StaffInfoEditor';
+import StaffInfoEditorEnhanced from './pages/admin/StaffInfoEditorEnhanced';
+import AttendanceDashboard from './pages/admin/AttendanceDashboard';
+import TimesheetManagement from './pages/admin/TimesheetManagement';
+import TimesheetApprovalQueue from './pages/admin/TimesheetApprovalQueue';
+import AttendanceReports from './pages/admin/AttendanceReports';
 import HolidayManager from './pages/admin/HolidayManager';
 import CompanyRegistrationPage from './pages/CompanyRegistrationPage';
 import MyCompanyDashboard from './pages/MyCompanyDashboard';
@@ -125,6 +129,9 @@ import StripeCheckoutDummy from './pages/StripeCheckoutDummy';
 import StaffDashboard from './pages/StaffDashboard';
 import DoerActiveErrands from './components/DoerActiveErrands';
 import StaffLeaveApplication from './components/StaffLeaveApplication';
+import JobApplicationForm from './pages/JobApplicationForm';
+import RecruitmentApplicationsDashboard from './pages/admin/RecruitmentApplicationsDashboard';
+import JoinUsPage from './pages/JoinUsPage';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -500,8 +507,15 @@ export default function App() {
         <Route path="/admin/vendors" element={isAuthenticated && isAdmin ? <VendorManagementDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/clients" element={isAuthenticated && isAdmin ? <ClientManagementDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/recruitment" element={isAuthenticated && isAdmin ? <RecruitmentDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/recruitment/applications" element={isAuthenticated && isAdmin ? <RecruitmentApplicationsDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/attendance" element={isAuthenticated && isAdmin ? <AttendanceDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/timesheets" element={isAuthenticated && isAdmin ? <TimesheetManagement /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/timesheet-approvals" element={isAuthenticated && isAdmin ? <TimesheetApprovalQueue /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/attendance-reports" element={isAuthenticated && isAdmin ? <AttendanceReports /> : <Navigate to="/login" replace />} />
+        <Route path="/apply/:jobId" element={<JobApplicationForm />} />
+        <Route path="/join-us" element={<JoinUsPage />} />
         <Route path="/admin/rbac" element={isAuthenticated && isAdmin ? <RBACManagementDashboard /> : <Navigate to="/login" replace />} />
-        <Route path="/admin/staff-info" element={isAuthenticated && isAdmin ? <StaffInfoEditor /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/staff-info" element={isAuthenticated && isAdmin ? <StaffInfoEditorEnhanced /> : <Navigate to="/login" replace />} />
         <Route path="/admin/staff-salary-benefits" element={isAuthenticated && isAdmin ? <StaffSalaryBenefitsEditor /> : <Navigate to="/login" replace />} />
         <Route path="/admin/holidays" element={isAuthenticated && isAdmin ? <HolidayManager /> : <Navigate to="/login" replace />} />
 
