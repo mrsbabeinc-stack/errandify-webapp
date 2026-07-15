@@ -65,7 +65,7 @@ const menuItems: MenuItem[] = [
   },
   {
     id: 'company-management',
-    label: 'B2B Company Management',
+    label: 'B2B Management',
     icon: '🏢',
     children: [
       { id: 'company-intelligence', label: 'Client Intelligence', icon: '🎯', path: '/admin/company/intelligence' },
@@ -77,7 +77,7 @@ const menuItems: MenuItem[] = [
   },
   {
     id: 'communications',
-    label: 'Communications',
+    label: 'Communications (Marcom)',
     icon: '📧',
     children: [
       { id: 'email', label: 'Email Campaigns', icon: '📧', path: '/admin/comms/email' },
@@ -87,24 +87,6 @@ const menuItems: MenuItem[] = [
       { id: 'recognition', label: 'Recognition', icon: '🏆', path: '/admin/comms/recognition' },
       { id: 'feed', label: 'Community Feed', icon: '📰', path: '/admin/comms/feed' },
       { id: 'banners', label: 'Hero Banners', icon: '🎨', path: '/admin/comms/banners' },
-    ]
-  },
-  {
-    id: 'reports',
-    label: 'Reports',
-    icon: '📊',
-    children: [
-      { id: 'regional', label: 'Regional Performance', icon: '🌍', path: '/admin/dashboard/regional' },
-      { id: 'financial', label: 'Financial Health', icon: '💰', path: '/admin/reports/financial' },
-      { id: 'user-behavior', label: 'User Behavior', icon: '👥', path: '/admin/reports/user-behavior' },
-      { id: 'market', label: 'Market Analysis', icon: '📈', path: '/admin/reports/market' },
-      { id: 'category', label: 'Category Analysis', icon: '🎯', path: '/admin/reports/category' },
-      { id: 'vulnerable', label: 'Vulnerable Users', icon: '👨‍👩‍👧‍👦', path: '/admin/reports/vulnerable' },
-      { id: 'trends', label: 'Market Trends', icon: '🎓', path: '/admin/reports/trends' },
-      { id: 'actions', label: 'Action Plans', icon: '🚀', path: '/admin/reports/actions' },
-      { id: 'gtm', label: 'GTM & Acquisition', icon: '🎯', path: '/admin/reports/gtm' },
-      { id: 'errand-perf', label: 'Errand Performance', icon: '⏱️', path: '/admin/reports/errand-perf' },
-      { id: 'demographics', label: 'Demographics', icon: '👥', path: '/admin/reports/demographics' },
     ]
   },
   {
@@ -218,6 +200,24 @@ const menuItems: MenuItem[] = [
       { id: 'hana-faq-browser', label: 'FAQ Browser', icon: '📚', path: '/admin/hana-faq' },
       { id: 'hana-categories', label: 'FAQ Categories', icon: '📂', path: '/admin/hana-faq-categories' },
       { id: 'hana-manage', label: 'Manage FAQs', icon: '✏️', path: '/admin/hana-faq-manage' },
+    ]
+  },
+  {
+    id: 'reports',
+    label: 'Reports',
+    icon: '📊',
+    children: [
+      { id: 'regional', label: 'Regional Performance', icon: '🌍', path: '/admin/dashboard/regional' },
+      { id: 'financial', label: 'Financial Health', icon: '💰', path: '/admin/reports/financial' },
+      { id: 'user-behavior', label: 'User Behavior', icon: '👥', path: '/admin/reports/user-behavior' },
+      { id: 'market', label: 'Market Analysis', icon: '📈', path: '/admin/reports/market' },
+      { id: 'category', label: 'Category Analysis', icon: '🎯', path: '/admin/reports/category' },
+      { id: 'vulnerable', label: 'Vulnerable Users', icon: '👨‍👩‍👧‍👦', path: '/admin/reports/vulnerable' },
+      { id: 'trends', label: 'Market Trends', icon: '🎓', path: '/admin/reports/trends' },
+      { id: 'actions', label: 'Action Plans', icon: '🚀', path: '/admin/reports/actions' },
+      { id: 'gtm', label: 'GTM & Acquisition', icon: '🎯', path: '/admin/reports/gtm' },
+      { id: 'errand-perf', label: 'Errand Performance', icon: '⏱️', path: '/admin/reports/errand-perf' },
+      { id: 'demographics', label: 'Demographics', icon: '👥', path: '/admin/reports/demographics' },
     ]
   },
 ];
