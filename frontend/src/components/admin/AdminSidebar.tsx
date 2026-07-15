@@ -168,6 +168,7 @@ const menuItems: MenuItem[] = [
       { id: 'invoicing', label: 'Invoicing & Billing', icon: '📋', path: '/admin/invoicing' },
       { id: 'vendor-mgmt', label: 'Vendor Management', icon: '🏢', path: '/admin/vendors' },
       { id: 'cash-flow', label: 'Cash Flow Forecasting', icon: '📈', path: '/admin/cash-flow' },
+      { id: 'hr-accounts-reports', label: 'HR & Accounts Reports', icon: '📊', path: '/admin/hr-accounts-reports' },
       { id: 'financial-reports', label: 'Reports', icon: '📊', path: '/admin/financial-reports' },
       { id: 'clients', label: 'Clients & AR', icon: '👥', path: '/admin/clients' },
     ]
