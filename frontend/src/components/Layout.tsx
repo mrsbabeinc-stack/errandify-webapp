@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import BottomNav from './BottomNav';
 import RoleToggle from './RoleToggle';
 import HanaCustomerService from './HanaCustomerService';
+import HanaLeftSidebar from './HanaLeftSidebar';
 
 interface LayoutProps {
   userRole: 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
@@ -84,8 +85,11 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
 
   return (
     <div className="flex flex-col h-screen bg-errandify-bg">
+      {/* Hana Left Sidebar */}
+      <HanaLeftSidebar />
+
       {/* Top Bar with Logo, Role Toggle & Profile */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center sticky top-0 z-50">
+      <div className="bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center sticky top-0 z-40">
         {/* Logo */}
         <div className="flex items-center gap-2">
           <img
@@ -154,8 +158,8 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
         </div>
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pb-20">
+      {/* Main Content with Left Sidebar Space */}
+      <main className="flex-1 overflow-y-auto pb-20 ml-72">
         <Outlet />
       </main>
 
