@@ -150,7 +150,9 @@ const menuItems: MenuItem[] = [
     label: 'Finance & Accounting',
     icon: '📊',
     children: [
-      { id: 'accounts', label: 'General Accounts', icon: '💰', path: '/admin/accounts' },
+      { id: 'budget', label: 'Budget Management', icon: '💰', path: '/admin/budget' },
+      { id: 'accounts', label: 'General Accounts', icon: '💳', path: '/admin/accounts' },
+      { id: 'apar', label: 'AP/AR Management', icon: '📤📥', path: '/admin/apar' },
       { id: 'expense-claims', label: 'Expense Claims', icon: '📝', path: '/admin/expense-claims' },
       { id: 'invoicing', label: 'Invoicing & Billing', icon: '📋', path: '/admin/invoicing' },
       { id: 'financial-reports', label: 'Reports', icon: '📈', path: '/admin/financial-reports' },

@@ -134,6 +134,8 @@ import RecruitmentApplicationsDashboard from './pages/admin/RecruitmentApplicati
 import JoinUsPage from './pages/JoinUsPage';
 import StaffAttendanceClockIn from './pages/StaffAttendanceClockIn';
 import StaffAttendanceHistory from './pages/StaffAttendanceHistory';
+import BudgetDashboard from './pages/admin/BudgetDashboard';
+import APARDashboard from './pages/admin/APARDashboard';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -514,6 +516,8 @@ export default function App() {
         <Route path="/admin/timesheets" element={isAuthenticated && isAdmin ? <TimesheetManagement /> : <Navigate to="/login" replace />} />
         <Route path="/admin/timesheet-approvals" element={isAuthenticated && isAdmin ? <TimesheetApprovalQueue /> : <Navigate to="/login" replace />} />
         <Route path="/admin/attendance-reports" element={isAuthenticated && isAdmin ? <AttendanceReports /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/budget" element={isAuthenticated && isAdmin ? <BudgetDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/apar" element={isAuthenticated && isAdmin ? <APARDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/apply/:jobId" element={<JobApplicationForm />} />
         <Route path="/join-us" element={<JoinUsPage />} />
         <Route path="/admin/rbac" element={isAuthenticated && isAdmin ? <RBACManagementDashboard /> : <Navigate to="/login" replace />} />

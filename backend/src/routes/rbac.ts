@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/roles', async (req: Request, res: Response) => {
   try {
     const result = await db.query(`
-      SELECT id, name, description, role_type, permissions, created_at, last_modified
+      SELECT id, name, description, created_at
       FROM rbac_roles
       ORDER BY created_at ASC
     `);
@@ -41,23 +41,20 @@ router.get('/roles/:id', async (req: Request, res: Response) => {
 // Create role
 router.post('/roles', async (req: Request, res: Response) => {
   try {
-    const { name, description, role_type, permissions } = req.body;
+    const { name, description } = req.body;
 
-    if (!name || !role_type) {
+    if (!name) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields: name, role_type'
+        error: 'Missing required fields: name'
       });
     }
 
     const result = await db.query(
-      `INSERT INTO rbac_roles (name, description, role_type, permissions, created_at, last_modified)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO rbac_roles (name, description, created_at)
+       VALUES ($1, $2, $3)
        RETURNING *`,
-      [
-        name, description || '', role_type, permissions || [],
-        new Date().toISOString(), new Date().toISOString()
-      ]
+      [name, description || '', new Date().toISOString()]
     );
 
     res.status(201).json({ success: true, data: result.rows[0] });
@@ -71,18 +68,15 @@ router.post('/roles', async (req: Request, res: Response) => {
 router.put('/roles/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, description, role_type, permissions } = req.body;
+    const { name, description } = req.body;
 
     const result = await db.query(
       `UPDATE rbac_roles SET
         name = COALESCE($1, name),
-        description = COALESCE($2, description),
-        role_type = COALESCE($3, role_type),
-        permissions = COALESCE($4, permissions),
-        last_modified = $5
-       WHERE id = $6
+        description = COALESCE($2, description)
+       WHERE id = $3
        RETURNING *`,
-      [name, description, role_type, permissions, new Date().toISOString(), id]
+      [name, description, id]
     );
 
     if (result.rows.length === 0) {
@@ -103,7 +97,7 @@ router.delete('/roles/:id', async (req: Request, res: Response) => {
 
     // Check if role is assigned to users
     const assigned = await db.query(
-      'SELECT COUNT(*) as count FROM user_roles WHERE role_id = $1',
+      'SELECT COUNT(*) as count FROM rbac_user_roles WHERE role_id = $1',
       [id]
     );
 
@@ -131,9 +125,9 @@ router.delete('/roles/:id', async (req: Request, res: Response) => {
 router.get('/permissions', async (req: Request, res: Response) => {
   try {
     const result = await db.query(`
-      SELECT DISTINCT permission_code, module, description
+      SELECT id, permission_key, module, description
       FROM rbac_permissions
-      ORDER BY module, permission_code
+      ORDER BY module, permission_key
     `);
 
     // Group by module
@@ -142,7 +136,8 @@ router.get('/permissions', async (req: Request, res: Response) => {
         acc[row.module] = [];
       }
       acc[row.module].push({
-        code: row.permission_code,
+        id: row.id,
+        key: row.permission_key,
         description: row.description
       });
       return acc;
@@ -255,6 +250,55 @@ router.post('/check-permission', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('[RBAC] Check permission error:', error);
     res.status(500).json({ success: false, error: 'Failed to check permission' });
+  }
+});
+
+// Get permissions for a role
+router.get('/roles/:roleId/permissions', async (req: Request, res: Response) => {
+  try {
+    const { roleId } = req.params;
+    const result = await db.query(`
+      SELECT p.id, p.permission_key, p.module, p.description
+      FROM rbac_permissions p
+      INNER JOIN rbac_role_permissions rp ON p.id = rp.permission_id
+      WHERE rp.role_id = $1
+      ORDER BY p.module, p.permission_key
+    `, [roleId]);
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('[RBAC] Get role permissions error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch role permissions' });
+  }
+});
+
+// Assign permissions to a role
+router.post('/roles/:roleId/permissions', async (req: Request, res: Response) => {
+  try {
+    const { roleId } = req.params;
+    const { permissionIds } = req.body;
+
+    if (!Array.isArray(permissionIds)) {
+      return res.status(400).json({
+        success: false,
+        error: 'permissionIds must be an array'
+      });
+    }
+
+    // Delete existing permissions for this role
+    await db.query('DELETE FROM rbac_role_permissions WHERE role_id = $1', [roleId]);
+
+    // Insert new permissions
+    for (const permId of permissionIds) {
+      await db.query(
+        'INSERT INTO rbac_role_permissions (role_id, permission_id) VALUES ($1, $2)',
+        [roleId, permId]
+      );
+    }
+
+    res.json({ success: true, message: `Assigned ${permissionIds.length} permissions to role` });
+  } catch (error) {
+    console.error('[RBAC] Assign role permissions error:', error);
+    res.status(500).json({ success: false, error: 'Failed to assign permissions' });
   }
 });
 

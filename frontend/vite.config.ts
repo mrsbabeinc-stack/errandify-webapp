@@ -7,6 +7,13 @@ export default defineConfig({
     port: 5173,
     host: '0.0.0.0', // Listen on all network interfaces
     allowedHosts: ['localhost', '127.0.0.1', '10.11.146.187', '192.168.1.206', '.ngrok-free.dev', '.ngrok.io'],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (path) => path,
+      },
+    },
   },
   build: {
     outDir: 'dist',

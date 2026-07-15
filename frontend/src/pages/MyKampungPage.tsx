@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { moderatePost, getModerationStatus, getModerationMessage } from '../services/moderationService';
 import { blogPosts as blogPostsData } from '../data/blogPosts';
+import JoinUsPage from './JoinUsPage';
 
 interface CommunityPost {
   id: number;
@@ -71,7 +72,7 @@ interface BlogPost {
 export default function MyKampungPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<'feed' | 'news' | 'discussions' | 'announcements' | 'events' | 'blog' | 'recognition'>(
+  const [activeTab, setActiveTab] = useState<'feed' | 'news' | 'discussions' | 'announcements' | 'events' | 'blog' | 'recognition' | 'join-us'>(
     (location.state as any)?.tab || 'news'
   );
   const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -824,6 +825,16 @@ export default function MyKampungPage() {
             }`}
           >
             ⭐ Recognition
+          </button>
+          <button
+            onClick={() => setActiveTab('join-us')}
+            className={`py-1 px-2 rounded text-xs font-semibold transition whitespace-nowrap ${
+              activeTab === 'join-us'
+                ? 'bg-errandify-orange text-white'
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            👋 Join Us
           </button>
         </div>
 
@@ -1632,6 +1643,9 @@ export default function MyKampungPage() {
             </div>
           </div>
         )}
+
+        {/* JOIN US TAB */}
+        {activeTab === 'join-us' && <JoinUsPage />}
       </div>
     </div>
   );

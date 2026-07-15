@@ -104,6 +104,8 @@ const RBACManagementDashboard: React.FC = () => {
   const [showRoleForm, setShowRoleForm] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
+  const [apiPermissions, setApiPermissions] = useState<{ [key: string]: Permission[] }>({});
+  const [loadingPermissions, setLoadingPermissions] = useState(false);
 
   const [roleForm, setRoleForm] = useState({
     name: '',
@@ -111,107 +113,93 @@ const RBACManagementDashboard: React.FC = () => {
     type: 'custom' as const,
   });
 
-  // Demo data
+  // Fetch data from API
   useEffect(() => {
-    const demoRoles: Role[] = [
-      {
-        id: 'role_admin',
-        name: 'Administrator',
-        description: 'Full system access with all permissions',
-        type: 'admin',
-        permissions: ALL_PERMISSIONS.map(p => p.id),
-        userCount: 1,
-        createdAt: '2026-01-01',
-        lastModified: '2026-07-15',
-        isActive: true,
-      },
-      {
-        id: 'role_finance',
-        name: 'Finance Manager',
-        description: 'Manage accounts, payroll, and financial reports',
-        type: 'manager',
-        permissions: [
-          'accounts_view', 'accounts_create', 'accounts_edit', 'accounts_reconcile', 'accounts_export',
-          'payroll_view', 'payroll_edit', 'payroll_process', 'payroll_export',
-          'reports_view', 'reports_create', 'reports_export',
-          'expense_view', 'expense_approve', 'expense_reimburse',
-          'invoicing_view', 'invoicing_create', 'invoicing_edit', 'invoicing_send',
-          'vendor_view', 'client_view',
-        ],
-        userCount: 2,
-        createdAt: '2026-02-10',
-        lastModified: '2026-07-15',
-        isActive: true,
-      },
-      {
-        id: 'role_hr',
-        name: 'HR Manager',
-        description: 'Manage staff, leave, and recruitment',
-        type: 'manager',
-        permissions: [
-          'hr_view', 'hr_create', 'hr_edit', 'hr_export',
-          'leave_view', 'leave_approve', 'leave_manage',
-          'recruitment_view', 'recruitment_create', 'recruitment_evaluate', 'recruitment_hire',
-          'payroll_view',
-        ],
-        userCount: 1,
-        createdAt: '2026-03-05',
-        lastModified: '2026-07-15',
-        isActive: true,
-      },
-      {
-        id: 'role_staff',
-        name: 'Staff Member',
-        description: 'Basic access for staff members',
-        type: 'staff',
-        permissions: [
-          'leave_view',
-          'expense_view',
-          'reports_view',
-        ],
-        userCount: 18,
-        createdAt: '2026-04-01',
-        lastModified: '2026-07-15',
-        isActive: true,
-      },
-      {
-        id: 'role_viewer',
-        name: 'Viewer',
-        description: 'Read-only access to reports and data',
-        type: 'viewer',
-        permissions: [
-          'accounts_view',
-          'hr_view',
-          'payroll_view',
-          'reports_view',
-          'invoicing_view',
-          'vendor_view',
-          'client_view',
-          'recruitment_view',
-        ],
-        userCount: 5,
-        createdAt: '2026-05-15',
-        lastModified: '2026-07-15',
-        isActive: true,
-      },
-    ];
+    const loadData = async () => {
+      try {
+        // Fetch roles
+        console.log('[RBAC] Fetching roles from /api/admin/roles');
+        const rolesRes = await fetch('/api/admin/roles');
+        console.log('[RBAC] Roles response status:', rolesRes.status, 'Content-Type:', rolesRes.headers.get('content-type'));
 
-    const demoUsers: RoleUser[] = [
-      { id: 'user_1', name: 'Admin User', email: 'admin@errandify.sg', roleId: 'role_admin', department: 'IT', status: 'active' },
-      { id: 'user_2', name: 'Sarah Tan', email: 'sarah.tan@errandify.sg', roleId: 'role_finance', department: 'Finance', status: 'active' },
-      { id: 'user_3', name: 'Mike Wong', email: 'mike.wong@errandify.sg', roleId: 'role_finance', department: 'Finance', status: 'active' },
-      { id: 'user_4', name: 'Jennifer Lim', email: 'jennifer.lim@errandify.sg', roleId: 'role_hr', department: 'HR', status: 'active' },
-      { id: 'user_5', name: 'John Chen', email: 'john.chen@errandify.sg', roleId: 'role_staff', department: 'Operations', status: 'active' },
-      { id: 'user_6', name: 'Amy Ooi', email: 'amy.ooi@errandify.sg', roleId: 'role_viewer', department: 'Finance', status: 'active' },
-    ];
+        if (rolesRes.ok) {
+          const rolesData = await rolesRes.json();
+          console.log('[RBAC] Roles data:', rolesData);
+          const transformedRoles: Role[] = rolesData.data.map((r: any) => ({
+            id: String(r.id),
+            name: r.name,
+            description: r.description || '',
+            type: 'custom' as const,
+            permissions: [],
+            userCount: 0,
+            createdAt: r.created_at || new Date().toISOString(),
+            lastModified: r.created_at || new Date().toISOString(),
+            isActive: true,
+          }));
+          setRoles(transformedRoles);
+          showToast('✅ Roles loaded from server', 'success');
+        } else {
+          throw new Error(`Failed to fetch roles: ${rolesRes.status}`);
+        }
 
-    setRoles(demoRoles);
-    setUsers(demoUsers);
+        // Fetch permissions
+        setLoadingPermissions(true);
+        console.log('[RBAC] Fetching permissions from /api/admin/permissions');
+        const permsRes = await fetch('/api/admin/permissions');
+        console.log('[RBAC] Permissions response status:', permsRes.status, 'Content-Type:', permsRes.headers.get('content-type'));
+
+        if (permsRes.ok) {
+          const permsData = await permsRes.json();
+          console.log('[RBAC] Permissions data:', permsData);
+          const grouped: { [key: string]: Permission[] } = {};
+
+          // Transform API permissions to local format
+          if (permsData.data) {
+            Object.entries(permsData.data).forEach(([module, perms]: any) => {
+              grouped[module] = (perms || []).map((p: any) => ({
+                id: p.key,
+                name: p.key.replace(/\./g, ' ').replace(/_/g, ' ').toUpperCase(),
+                description: p.description || '',
+                category: module,
+                action: p.key.split('.')[1] || 'manage'
+              }));
+            });
+          }
+          setApiPermissions(grouped);
+          showToast(`✅ ${Object.values(grouped).reduce((a, b) => a + b.length, 0)} permissions loaded`, 'success');
+        } else {
+          throw new Error(`Failed to fetch permissions: ${permsRes.status}`);
+        }
+        setLoadingPermissions(false);
+      } catch (error) {
+        console.error('[RBAC] Error loading data:', error);
+        showToast('⚠️ Could not load from server, using defaults', 'warning');
+        setLoadingPermissions(false);
+      }
+    };
+
+    loadData();
   }, []);
 
-  const handleSelectRole = (role: Role) => {
+  const handleSelectRole = async (role: Role) => {
     setSelectedRole(role);
-    setSelectedPermissions(new Set(role.permissions));
+
+    try {
+      // Fetch permissions for this role from the API
+      const response = await fetch(`/api/admin/roles/${role.id}/permissions`);
+      if (response.ok) {
+        const data = await response.json();
+        const permKeys = new Set(data.data.map((p: any) => p.permission_key));
+        setSelectedPermissions(permKeys);
+        console.log(`[RBAC] Loaded ${permKeys.size} permissions for role ${role.name}`);
+      } else {
+        // If API fails, use empty set (no permissions assigned yet)
+        setSelectedPermissions(new Set());
+      }
+    } catch (error) {
+      console.error('[RBAC] Error loading role permissions:', error);
+      setSelectedPermissions(new Set());
+    }
   };
 
   const handlePermissionToggle = (permissionId: string) => {
@@ -224,17 +212,52 @@ const RBACManagementDashboard: React.FC = () => {
     setSelectedPermissions(newPerms);
   };
 
-  const handleSavePermissions = () => {
+  const handleSavePermissions = async () => {
     if (!selectedRole) return;
 
-    const updatedRoles = roles.map(r =>
-      r.id === selectedRole.id
-        ? { ...r, permissions: Array.from(selectedPermissions), lastModified: new Date().toISOString() }
-        : r
-    );
-    setRoles(updatedRoles);
-    setSelectedRole({ ...selectedRole, permissions: Array.from(selectedPermissions) });
-    showToast(`✅ Permissions updated for "${selectedRole.name}"`, 'success');
+    try {
+      // Get permission IDs from the selected permission keys
+      const permissionKeyToId: { [key: string]: number } = {};
+      Object.values(getPermissionsByCategory()).forEach(perms => {
+        perms.forEach(p => {
+          permissionKeyToId[p.id] = p.id as any; // Assuming permission ID matches the key for now
+        });
+      });
+
+      // Map selected permission keys to IDs from the API response
+      const permissionIds: number[] = [];
+      for (const [module, perms] of Object.entries(apiPermissions)) {
+        perms.forEach(p => {
+          if (selectedPermissions.has(p.id)) {
+            permissionIds.push(p.id as any);
+          }
+        });
+      }
+
+      console.log('[RBAC] Saving permissions for role', selectedRole.id, ':', permissionIds);
+
+      const response = await fetch(`/api/admin/roles/${selectedRole.id}/permissions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permissionIds })
+      });
+
+      if (response.ok) {
+        const updatedRoles = roles.map(r =>
+          r.id === selectedRole.id
+            ? { ...r, permissions: Array.from(selectedPermissions), lastModified: new Date().toISOString() }
+            : r
+        );
+        setRoles(updatedRoles);
+        setSelectedRole({ ...selectedRole, permissions: Array.from(selectedPermissions) });
+        showToast(`✅ Saved ${permissionIds.length} permissions for "${selectedRole.name}"`, 'success');
+      } else {
+        showToast('❌ Failed to save permissions', 'error');
+      }
+    } catch (error) {
+      console.error('[RBAC] Error saving permissions:', error);
+      showToast('❌ Error saving permissions', 'error');
+    }
   };
 
   const handleCreateRole = () => {
@@ -262,6 +285,11 @@ const RBACManagementDashboard: React.FC = () => {
   };
 
   const getPermissionsByCategory = (): { [key: string]: Permission[] } => {
+    // Use API permissions if available, otherwise fall back to demo permissions
+    if (Object.keys(apiPermissions).length > 0) {
+      return apiPermissions;
+    }
+
     const grouped: { [key: string]: Permission[] } = {};
     ALL_PERMISSIONS.forEach(perm => {
       if (!grouped[perm.category]) grouped[perm.category] = [];
@@ -523,8 +551,13 @@ const RBACManagementDashboard: React.FC = () => {
             <div style={{ marginBottom: '16px', padding: '12px', background: '#E3F2FD', borderRadius: '6px', fontSize: '12px', color: '#0D47A1' }}>
               <strong>Currently assigned: {selectedPermissions.size} permissions</strong> • <button
                 onClick={() => {
-                  const allPerms = new Set(ALL_PERMISSIONS.map(p => p.id));
+                  // Get all permission IDs from current category view
+                  const allPerms = new Set<string>();
+                  Object.entries(getPermissionsByCategory()).forEach(([, perms]) => {
+                    perms.forEach(p => allPerms.add(p.id));
+                  });
                   setSelectedPermissions(allPerms);
+                  showToast(`✅ Selected all ${allPerms.size} permissions`, 'success');
                 }}
                 style={{
                   background: 'none',
@@ -533,11 +566,15 @@ const RBACManagementDashboard: React.FC = () => {
                   fontWeight: '600',
                   cursor: 'pointer',
                   textDecoration: 'underline',
+                  padding: '0 4px',
                 }}
               >
                 Select All
               </button> • <button
-                onClick={() => setSelectedPermissions(new Set())}
+                onClick={() => {
+                  setSelectedPermissions(new Set());
+                  showToast('✅ Cleared all permissions', 'success');
+                }}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -545,6 +582,7 @@ const RBACManagementDashboard: React.FC = () => {
                   fontWeight: '600',
                   cursor: 'pointer',
                   textDecoration: 'underline',
+                  padding: '0 4px',
                 }}
               >
                 Clear All
@@ -555,9 +593,51 @@ const RBACManagementDashboard: React.FC = () => {
               {Object.entries(getPermissionsByCategory()).map(([category, perms]) => {
                 return (
                   <div key={category} style={{ padding: '16px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '8px' }}>
-                    <div style={{ fontWeight: '600', fontSize: '14px', color: '#333', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      📋 {category}
-                      <span style={{ fontSize: '11px', color: '#999', fontWeight: '400' }}>({perms.length} permissions)</span>
+                    <div style={{ fontWeight: '600', fontSize: '14px', color: '#333', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        📋 {category}
+                        <span style={{ fontSize: '11px', color: '#999', fontWeight: '400' }}>({perms.length} permissions)</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => {
+                            const categoryPerms = new Set(selectedPermissions);
+                            perms.forEach(p => categoryPerms.add(p.id));
+                            setSelectedPermissions(categoryPerms);
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#FF6B35',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            fontSize: '11px',
+                            textDecoration: 'underline',
+                            padding: '0 4px',
+                          }}
+                        >
+                          Select All
+                        </button>
+                        <button
+                          onClick={() => {
+                            const categoryPerms = new Set(selectedPermissions);
+                            perms.forEach(p => categoryPerms.delete(p.id));
+                            setSelectedPermissions(categoryPerms);
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#FF6B35',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            fontSize: '11px',
+                            textDecoration: 'underline',
+                            padding: '0 4px',
+                          }}
+                        >
+                          Clear
+                        </button>
+                      </div>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '8px' }}>
                       {perms.map(perm => {
