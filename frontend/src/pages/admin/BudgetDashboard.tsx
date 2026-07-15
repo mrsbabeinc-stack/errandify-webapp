@@ -13,13 +13,22 @@ interface BudgetAllocation {
 
 interface Budget {
   budget_id: number;
+  budget_number: string;
   department: string;
+  cost_center: string;
+  manager_name: string;
+  manager_id: string;
   period: string;
+  fiscal_year: number;
   total_budget: number;
   total_spent: number;
   allocations: BudgetAllocation[];
-  status: 'active' | 'archived';
+  status: 'active' | 'archived' | 'approved' | 'pending_approval';
+  approval_status: 'approved' | 'pending' | 'rejected';
+  approved_by?: string;
+  approval_date?: string;
   created_by: string;
+  created_date: string;
 }
 
 const BudgetDashboard: React.FC = () => {
@@ -34,8 +43,13 @@ const BudgetDashboard: React.FC = () => {
 
   // Form state for creating budget
   const [formData, setFormData] = useState({
+    budget_number: '',
     department: '',
+    cost_center: '',
+    manager_name: '',
+    manager_id: '',
     period: '2026-07',
+    fiscal_year: 2026,
     total_budget: '',
     categories: [{ category: '', allocated: '' }],
   });
@@ -52,12 +66,21 @@ const BudgetDashboard: React.FC = () => {
       let mockBudgets: Budget[] = [
         {
           budget_id: 1,
+          budget_number: 'BDG-2026-001',
           department: 'Operations',
+          cost_center: 'CC-001',
+          manager_name: 'John Smith',
+          manager_id: 'EMP-001',
           period: '2026-07',
+          fiscal_year: 2026,
           total_budget: 50000,
           total_spent: 38500,
           status: 'active',
+          approval_status: 'approved',
+          approved_by: 'CFO',
+          approval_date: '2026-06-15',
           created_by: 'Manager 1',
+          created_date: new Date().toISOString(),
           allocations: [
             { category: 'Salaries', allocated: 30000, actual: 28500, variance: 1500, status: 'on_track' },
             { category: 'Equipment', allocated: 10000, actual: 7200, variance: 2800, status: 'on_track' },
@@ -67,12 +90,21 @@ const BudgetDashboard: React.FC = () => {
         },
         {
           budget_id: 2,
+          budget_number: 'BDG-2026-002',
           department: 'Marketing',
+          cost_center: 'CC-002',
+          manager_name: 'Jane Doe',
+          manager_id: 'EMP-002',
           period: '2026-07',
+          fiscal_year: 2026,
           total_budget: 25000,
           total_spent: 26800,
           status: 'active',
+          approval_status: 'approved',
+          approved_by: 'CFO',
+          approval_date: '2026-06-15',
           created_by: 'Manager 2',
+          created_date: new Date().toISOString(),
           allocations: [
             { category: 'Digital Ads', allocated: 15000, actual: 16200, variance: -1200, status: 'over_budget' },
             { category: 'Content', allocated: 7000, actual: 8100, variance: -1100, status: 'warning' },
@@ -81,12 +113,21 @@ const BudgetDashboard: React.FC = () => {
         },
         {
           budget_id: 3,
+          budget_number: 'BDG-2026-003',
           department: 'HR',
+          cost_center: 'CC-003',
+          manager_name: 'Bob Wilson',
+          manager_id: 'EMP-003',
           period: '2026-07',
+          fiscal_year: 2026,
           total_budget: 15000,
           total_spent: 12300,
           status: 'active',
+          approval_status: 'approved',
+          approved_by: 'CFO',
+          approval_date: '2026-06-15',
           created_by: 'Manager 3',
+          created_date: new Date().toISOString(),
           allocations: [
             { category: 'Training', allocated: 8000, actual: 6500, variance: 1500, status: 'on_track' },
             { category: 'Recruitment', allocated: 5000, actual: 4200, variance: 800, status: 'on_track' },
@@ -112,20 +153,29 @@ const BudgetDashboard: React.FC = () => {
   };
 
   const handleCreateBudget = async () => {
-    if (!formData.department || !formData.total_budget || formData.categories.some(c => !c.category || !c.allocated)) {
-      showToast('❌ Please fill all fields', 'error');
+    if (!formData.budget_number || !formData.department || !formData.cost_center ||
+        !formData.manager_name || !formData.manager_id || !formData.total_budget ||
+        formData.categories.some(c => !c.category || !c.allocated)) {
+      showToast('❌ Please fill all required fields (*)', 'error');
       return;
     }
 
     try {
       const newBudget: Budget = {
         budget_id: Date.now(),
+        budget_number: formData.budget_number,
         department: formData.department,
+        cost_center: formData.cost_center,
+        manager_name: formData.manager_name,
+        manager_id: formData.manager_id,
         period: formData.period,
+        fiscal_year: formData.fiscal_year,
         total_budget: Number(formData.total_budget),
         total_spent: 0,
-        status: 'active',
+        status: 'pending_approval',
+        approval_status: 'pending',
         created_by: 'Current User',
+        created_date: new Date().toISOString(),
         allocations: formData.categories
           .filter(c => c.category && c.allocated)
           .map(c => ({
@@ -143,12 +193,17 @@ const BudgetDashboard: React.FC = () => {
       allBudgets.push(newBudget);
       localStorage.setItem('budgets', JSON.stringify(allBudgets));
 
-      showToast(`✅ Budget for ${formData.department} created successfully`, 'success');
+      showToast(`✅ Budget ${formData.budget_number} created (pending approval)`, 'success');
 
       // Reset form
       setFormData({
+        budget_number: '',
         department: '',
+        cost_center: '',
+        manager_name: '',
+        manager_id: '',
         period: '2026-07',
+        fiscal_year: 2026,
         total_budget: '',
         categories: [{ category: '', allocated: '' }],
       });
@@ -161,9 +216,9 @@ const BudgetDashboard: React.FC = () => {
   };
 
   const getVarianceColor = (variance: number) => {
-    if (variance > 0) return '#4CAF50'; // Under budget
-    if (variance < -1000) return '#F44336'; // Over budget
-    return '#FF9800'; // Warning
+    if (variance > 0) return '#4CAF50';
+    if (variance < -1000) return '#F44336';
+    return '#FF9800';
   };
 
   const getStatusBadge = (status: string) => {
@@ -189,6 +244,20 @@ const BudgetDashboard: React.FC = () => {
     );
   };
 
+  const getApprovalBadge = (status: string) => {
+    const styles: { [key: string]: { bg: string; color: string; text: string; icon: string } } = {
+      approved: { bg: '#E8F5E9', color: '#2E7D32', text: 'Approved', icon: '✓' },
+      pending: { bg: '#FFF3E0', color: '#E65100', text: 'Pending', icon: '⏳' },
+      rejected: { bg: '#FFEBEE', color: '#C62828', text: 'Rejected', icon: '✗' },
+    };
+    const style = styles[status] || styles.pending;
+    return (
+      <span style={{ padding: '4px 8px', background: style.bg, color: style.color, borderRadius: '4px', fontSize: '11px', fontWeight: '600' }}>
+        {style.icon} {style.text}
+      </span>
+    );
+  };
+
   const totalBudget = budgets.reduce((sum, b) => sum + b.total_budget, 0);
   const totalSpent = budgets.reduce((sum, b) => sum + b.total_spent, 0);
   const totalVariance = totalBudget - totalSpent;
@@ -200,7 +269,7 @@ const BudgetDashboard: React.FC = () => {
         <div style={{ padding: '16px', background: '#fff', minHeight: '100vh' }}>
           <ToastContainer toasts={toasts} onClose={removeToast} />
 
-          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#333', margin: 0 }}>
                 ➕ Create New Budget
@@ -221,16 +290,23 @@ const BudgetDashboard: React.FC = () => {
             </div>
 
             <div style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #ddd' }}>
-              {/* Department */}
+              {/* Required Fields Notice */}
+              <div style={{ padding: '12px', background: '#E3F2FD', borderRadius: '4px', marginBottom: '16px', borderLeft: '4px solid #1565C0' }}>
+                <p style={{ fontSize: '11px', color: '#0D47A1', margin: 0 }}>
+                  <strong>* = Required fields (Singapore MOM/ACRA compliance)</strong>
+                </p>
+              </div>
+
+              {/* Budget Number */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
-                  Department *
+                  Budget Number * (e.g., BDG-2026-001)
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g., Finance, Operations"
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                  placeholder="BDG-2026-001"
+                  value={formData.budget_number}
+                  onChange={(e) => setFormData({ ...formData, budget_number: e.target.value.toUpperCase() })}
                   style={{
                     width: '100%',
                     padding: '10px',
@@ -243,31 +319,141 @@ const BudgetDashboard: React.FC = () => {
                 />
               </div>
 
-              {/* Period */}
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
-                  Period *
-                </label>
-                <input
-                  type="month"
-                  value={formData.period}
-                  onChange={(e) => setFormData({ ...formData, period: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontFamily: 'inherit',
-                    boxSizing: 'border-box',
-                  }}
-                />
+              {/* Department & Cost Center */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                    Department * (ACRA)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Operations, Finance"
+                    value={formData.department}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                    Cost Center * (Audit trail)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="CC-001"
+                    value={formData.cost_center}
+                    onChange={(e) => setFormData({ ...formData, cost_center: e.target.value.toUpperCase() })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Manager Details */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                    Manager Name * (Approval)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="John Smith"
+                    value={formData.manager_name}
+                    onChange={(e) => setFormData({ ...formData, manager_name: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                    Employee ID * (MOM)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="EMP-001"
+                    value={formData.manager_id}
+                    onChange={(e) => setFormData({ ...formData, manager_id: e.target.value.toUpperCase() })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Period & Fiscal Year */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                    Budget Period *
+                  </label>
+                  <input
+                    type="month"
+                    value={formData.period}
+                    onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                    Fiscal Year *
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="2026"
+                    value={formData.fiscal_year}
+                    onChange={(e) => setFormData({ ...formData, fiscal_year: Number(e.target.value) })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Total Budget */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
-                  Total Budget (SGD) *
+                  Total Budget (SGD) * (ACRA)
                 </label>
                 <input
                   type="number"
@@ -289,7 +475,7 @@ const BudgetDashboard: React.FC = () => {
               {/* Categories */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '8px' }}>
-                  Budget Categories *
+                  Budget Categories * (Variance tracking)
                 </label>
                 {formData.categories.map((category, idx) => (
                   <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '8px', marginBottom: '8px' }}>
@@ -369,8 +555,15 @@ const BudgetDashboard: React.FC = () => {
                 </button>
               </div>
 
+              {/* Compliance Notice */}
+              <div style={{ padding: '12px', background: '#FFF3E0', borderRadius: '4px', marginBottom: '24px', borderLeft: '4px solid #FF6B35' }}>
+                <p style={{ fontSize: '11px', color: '#E65100', margin: 0, lineHeight: '1.5' }}>
+                  <strong>🇸🇬 Singapore Compliance:</strong> Budget captures all required ACRA/MOM fields: unique budget number, department/cost center, manager approval, fiscal year, and categorized allocations for audit trail and variance analysis.
+                </p>
+              </div>
+
               {/* Action Buttons */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '24px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <button
                   onClick={() => setViewMode('overview')}
                   style={{
@@ -397,7 +590,7 @@ const BudgetDashboard: React.FC = () => {
                     fontWeight: '600',
                   }}
                 >
-                  ✓ Create Budget
+                  ✓ Create Budget (Pending Approval)
                 </button>
               </div>
             </div>
@@ -417,10 +610,10 @@ const BudgetDashboard: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <div>
               <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#333', margin: '0 0 4px 0' }}>
-                {selectedBudget.department} Budget Detail
+                {selectedBudget.budget_number}: {selectedBudget.department}
               </h1>
               <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
-                Period: {selectedBudget.period}
+                Cost Center: {selectedBudget.cost_center} | Manager: {selectedBudget.manager_name} ({selectedBudget.manager_id})
               </p>
             </div>
             <button
@@ -461,6 +654,14 @@ const BudgetDashboard: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Approval Status */}
+          <div style={{ padding: '12px', background: '#E8F5E9', borderRadius: '4px', marginBottom: '24px', borderLeft: '4px solid #4CAF50' }}>
+            <div style={{ fontSize: '12px', color: '#2E7D32' }}>
+              <strong>Approval Status:</strong> {getApprovalBadge(selectedBudget.approval_status)}
+              {selectedBudget.approval_date && ` - Approved on ${selectedBudget.approval_date}`}
+            </div>
           </div>
 
           {/* Budget Breakdown Table */}
@@ -516,27 +717,25 @@ const BudgetDashboard: React.FC = () => {
 
           {/* Progress Bar */}
           <div style={{ background: '#FFF3E0', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #FF6B35' }}>
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '600', color: '#E65100', marginBottom: '8px' }}>
-                Overall Budget Utilization
-              </div>
-              <div style={{ background: '#white', height: '24px', borderRadius: '4px', overflow: 'hidden', border: '1px solid #FFCC80' }}>
-                <div
-                  style={{
-                    height: '100%',
-                    background: '#FF6B35',
-                    width: `${(selectedBudget.total_spent / selectedBudget.total_budget * 100)}%`,
-                    transition: 'width 0.3s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                  }}
-                >
-                  {((selectedBudget.total_spent / selectedBudget.total_budget) * 100).toFixed(0)}%
-                </div>
+            <div style={{ fontSize: '12px', fontWeight: '600', color: '#E65100', marginBottom: '8px' }}>
+              Overall Budget Utilization
+            </div>
+            <div style={{ background: '#white', height: '24px', borderRadius: '4px', overflow: 'hidden', border: '1px solid #FFCC80' }}>
+              <div
+                style={{
+                  height: '100%',
+                  background: '#FF6B35',
+                  width: `${(selectedBudget.total_spent / selectedBudget.total_budget * 100)}%`,
+                  transition: 'width 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                }}
+              >
+                {((selectedBudget.total_spent / selectedBudget.total_budget) * 100).toFixed(0)}%
               </div>
             </div>
           </div>
@@ -557,7 +756,7 @@ const BudgetDashboard: React.FC = () => {
               💰 Budget Management
             </h1>
             <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
-              Track departmental budgets and spending
+              Track departmental budgets and spending (MOM/ACRA Compliant)
             </p>
           </div>
           <button
@@ -687,13 +886,16 @@ const BudgetDashboard: React.FC = () => {
                     setViewMode('detail');
                   }}
                 >
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: '16px', alignItems: 'center' }}>
-                    {/* Department */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr auto', gap: '12px', alignItems: 'center' }}>
+                    {/* Budget & Department */}
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: '600', color: '#333' }}>
-                        {budget.department}
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: '#FF6B35' }}>
+                        {budget.budget_number}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#666' }}>Period: {budget.period}</div>
+                      <div style={{ fontSize: '12px', fontWeight: '600', color: '#333' }}>
+                        {budget.department} ({budget.cost_center})
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#666' }}>Manager: {budget.manager_name}</div>
                     </div>
 
                     {/* Budget Amount */}
@@ -720,12 +922,17 @@ const BudgetDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Status */}
-                    <div style={{ textAlign: 'right' }}>
-                      {getStatusBadge(status)}
+                    {/* Approval */}
+                    <div style={{ textAlign: 'center' }}>
+                      {getApprovalBadge(budget.approval_status)}
                       <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
                         {percentUsed}% used
                       </div>
+                    </div>
+
+                    {/* Status */}
+                    <div>
+                      {getStatusBadge(status)}
                     </div>
                   </div>
 
