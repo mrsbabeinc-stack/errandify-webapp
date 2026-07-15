@@ -82,7 +82,7 @@ const StaffBudgetIntegration: React.FC = () => {
             { label: 'Total Headcount', value: totalHeadcount.toString(), color: '#2196F3' },
             { label: 'Total Staff Cost', value: `SGD ${totalStaffCost.toLocaleString()}`, color: '#FF6B35' },
             { label: 'Budget Allocated', value: `SGD ${totalBudgetAllocated.toLocaleString()}`, color: '#4CAF50' },
-            { label: 'Total Variance', value: `SGD ${totalVariance.toLocaleString()}`, color: variance > 0 ? '#4CAF50' : '#E65100' },
+            { label: 'Total Variance', value: `SGD ${totalVariance.toLocaleString()}`, color: totalVariance > 0 ? '#4CAF50' : '#E65100' },
           ].map((stat, idx) => (
             <div key={idx} style={{ padding: '16px', background: 'white', border: `2px solid ${stat.color}`, borderRadius: '8px', textAlign: 'center' }}>
               <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>{stat.label}</div>
