@@ -149,120 +149,269 @@ export async function up(pool: Pool): Promise<void> {
       ON CONFLICT DO NOTHING;
     `);
 
-    // Insert default permissions
+    // Insert default permissions - COMPREHENSIVE MODULE COVERAGE
     await client.query(`
       INSERT INTO rbac_permissions (permission_code, module, description)
       VALUES
-        -- Accounts Permissions
+        -- Accounts & Ledger
         ('accounts.view', 'Accounts', 'View accounts'),
-        ('accounts.create', 'Accounts', 'Create accounts'),
+        ('accounts.create', 'Accounts', 'Create new accounts'),
         ('accounts.edit', 'Accounts', 'Edit accounts'),
         ('accounts.delete', 'Accounts', 'Delete accounts'),
-        ('accounts.export', 'Accounts', 'Export accounts'),
+        ('accounts.export', 'Accounts', 'Export account data'),
         ('accounts.reconcile', 'Accounts', 'Reconcile accounts'),
+        ('accounts.ledger_view', 'Accounts', 'View ledger entries'),
+        ('accounts.ledger_edit', 'Accounts', 'Edit ledger entries'),
 
-        -- HR Permissions
+        -- HR & Staff Management
         ('hr.view', 'HR', 'View HR records'),
         ('hr.create', 'HR', 'Create HR records'),
         ('hr.edit', 'HR', 'Edit HR records'),
         ('hr.delete', 'HR', 'Delete HR records'),
-        ('hr.manage_staff', 'HR', 'Manage staff'),
+        ('hr.manage_staff', 'HR', 'Manage staff members'),
+        ('hr.staff_info_edit', 'HR', 'Edit staff information'),
+        ('hr.staff_info_delete', 'HR', 'Delete staff records'),
 
-        -- Payroll Permissions
+        -- Payroll & Compensation
         ('payroll.view', 'Payroll', 'View payroll'),
-        ('payroll.create', 'Payroll', 'Create payroll'),
+        ('payroll.create', 'Payroll', 'Create payroll records'),
+        ('payroll.edit', 'Payroll', 'Edit payroll records'),
         ('payroll.process', 'Payroll', 'Process payroll'),
         ('payroll.export', 'Payroll', 'Export payroll'),
+        ('salary.view', 'Salary', 'View salary information'),
+        ('salary.edit', 'Salary', 'Edit salary and benefits'),
+        ('salary.allowances', 'Salary', 'Manage allowances'),
+        ('salary.benefits', 'Salary', 'Manage benefits'),
 
-        -- Leave Permissions
+        -- Leave Management
         ('leave.view', 'Leave', 'View leave records'),
+        ('leave.apply', 'Leave', 'Apply for leave'),
         ('leave.approve', 'Leave', 'Approve leave requests'),
-        ('leave.manage', 'Leave', 'Manage leave'),
+        ('leave.reject', 'Leave', 'Reject leave requests'),
+        ('leave.manage', 'Leave', 'Manage all leave'),
+        ('leave.calendar', 'Leave', 'View leave calendar'),
+        ('holidays.view', 'Holidays', 'View holidays'),
+        ('holidays.manage', 'Holidays', 'Manage holidays'),
 
-        -- Expense Claims
+        -- Expense Claims & Reimbursement
         ('claims.view', 'Expense Claims', 'View expense claims'),
+        ('claims.create', 'Expense Claims', 'Create claims'),
         ('claims.approve', 'Expense Claims', 'Approve claims'),
+        ('claims.reject', 'Expense Claims', 'Reject claims'),
         ('claims.process', 'Expense Claims', 'Process claims'),
 
-        -- Financial Reports
-        ('reports.view', 'Financial Reports', 'View reports'),
-        ('reports.generate', 'Financial Reports', 'Generate reports'),
-        ('reports.export', 'Financial Reports', 'Export reports'),
+        -- Financial Reports & Analytics
+        ('reports.view', 'Reports', 'View financial reports'),
+        ('reports.generate', 'Reports', 'Generate reports'),
+        ('reports.export', 'Reports', 'Export reports'),
+        ('reports.ai_insights', 'Reports', 'Access AI-powered insights'),
 
-        -- Invoicing
+        -- Invoicing & Billing
         ('invoicing.view', 'Invoicing', 'View invoices'),
         ('invoicing.create', 'Invoicing', 'Create invoices'),
         ('invoicing.edit', 'Invoicing', 'Edit invoices'),
         ('invoicing.send', 'Invoicing', 'Send invoices'),
+        ('invoicing.payment_track', 'Invoicing', 'Track payments'),
 
-        -- Vendor Management
+        -- Vendor & Client Management
         ('vendors.view', 'Vendor Management', 'View vendors'),
-        ('vendors.manage', 'Vendor Management', 'Manage vendors'),
-
-        -- Client Management
+        ('vendors.create', 'Vendor Management', 'Create vendors'),
+        ('vendors.edit', 'Vendor Management', 'Edit vendors'),
+        ('vendors.delete', 'Vendor Management', 'Delete vendors'),
+        ('vendors.manage', 'Vendor Management', 'Full vendor management'),
         ('clients.view', 'Client Management', 'View clients'),
-        ('clients.manage', 'Client Management', 'Manage clients'),
+        ('clients.create', 'Client Management', 'Create clients'),
+        ('clients.edit', 'Client Management', 'Edit clients'),
+        ('clients.delete', 'Client Management', 'Delete clients'),
+        ('clients.manage', 'Client Management', 'Full client management'),
 
-        -- Recruitment
+        -- Recruitment & Hiring
         ('recruitment.view', 'Recruitment', 'View recruitment'),
         ('recruitment.post_job', 'Recruitment', 'Post job openings'),
         ('recruitment.review_apps', 'Recruitment', 'Review applications'),
+        ('recruitment.interview', 'Recruitment', 'Conduct interviews'),
         ('recruitment.hire', 'Recruitment', 'Hire candidates'),
 
-        -- Admin
+        -- Errand & Operations Management
+        ('errands.view', 'Errand Management', 'View errands'),
+        ('errands.create', 'Errand Management', 'Create errands'),
+        ('errands.edit', 'Errand Management', 'Edit errands'),
+        ('errands.allocate', 'Errand Management', 'Allocate errands'),
+        ('errands.review', 'Errand Management', 'Review errand completion'),
+
+        -- Cases & Dispute Resolution
+        ('cases.view', 'Cases', 'View cases'),
+        ('cases.create', 'Cases', 'Create cases'),
+        ('cases.investigate', 'Cases', 'Investigate cases'),
+        ('cases.resolve', 'Cases', 'Resolve cases'),
+        ('cases.manage', 'Cases', 'Manage all cases'),
+
+        -- Advertising & Marketing
+        ('advertising.view', 'Advertising', 'View campaigns'),
+        ('advertising.create', 'Advertising', 'Create campaigns'),
+        ('advertising.approve', 'Advertising', 'Approve campaigns'),
+        ('advertising.manage', 'Advertising', 'Manage all campaigns'),
+
+        -- Content & Blog
+        ('blog.view', 'Blog & Articles', 'View articles'),
+        ('blog.create', 'Blog & Articles', 'Create articles'),
+        ('blog.edit', 'Blog & Articles', 'Edit articles'),
+        ('blog.delete', 'Blog & Articles', 'Delete articles'),
+        ('blog.publish', 'Blog & Articles', 'Publish articles'),
+
+        -- Email & Communications
+        ('email.view', 'Email Campaigns', 'View email campaigns'),
+        ('email.create', 'Email Campaigns', 'Create campaigns'),
+        ('email.send', 'Email Campaigns', 'Send campaigns'),
+        ('email.analytics', 'Email Campaigns', 'View analytics'),
+
+        -- Events Management
+        ('events.view', 'Events', 'View events'),
+        ('events.create', 'Events', 'Create events'),
+        ('events.edit', 'Events', 'Edit events'),
+        ('events.delete', 'Events', 'Delete events'),
+        ('events.manage', 'Events', 'Manage all events'),
+
+        -- Errandify Points & Rewards
+        ('points.view', 'Errandify Points', 'View points'),
+        ('points.grant', 'Errandify Points', 'Grant points'),
+        ('points.rules', 'Errandify Points', 'Manage earning rules'),
+        ('points.redemption', 'Errandify Points', 'Manage redemptions'),
+
+        -- User Management & Safety
+        ('users.view', 'User Management', 'View users'),
+        ('users.create', 'User Management', 'Create users'),
+        ('users.edit', 'User Management', 'Edit users'),
+        ('users.delete', 'User Management', 'Delete users'),
+        ('users.ban', 'User Management', 'Ban users'),
+        ('safety.view', 'Safety & Moderation', 'View safety alerts'),
+        ('safety.manage', 'Safety & Moderation', 'Manage safety issues'),
+
+        -- Discounts & Promotions
+        ('discounts.view', 'Discount Codes', 'View discount codes'),
+        ('discounts.create', 'Discount Codes', 'Create codes'),
+        ('discounts.manage', 'Discount Codes', 'Manage codes'),
+
+        -- Payments & Transactions
+        ('payments.view', 'Payments', 'View payments'),
+        ('payments.process', 'Payments', 'Process payments'),
+        ('payments.refund', 'Payments', 'Issue refunds'),
+
+        -- Notifications & Alerts
+        ('notifications.view', 'Notifications', 'View notifications'),
+        ('notifications.create', 'Notifications', 'Create notifications'),
+        ('notifications.manage', 'Notifications', 'Manage notifications'),
+
+        -- System & Admin
         ('admin.view', 'Admin', 'View admin panel'),
         ('admin.manage_users', 'Admin', 'Manage users'),
         ('admin.manage_roles', 'Admin', 'Manage roles'),
-        ('admin.settings', 'Admin', 'Access settings')
+        ('admin.settings', 'Admin', 'Access settings'),
+        ('admin.system_config', 'Admin', 'Configure system'),
+        ('admin.audit_logs', 'Admin', 'View audit logs'),
+        ('admin.compliance', 'Admin', 'Access compliance'),
+        ('admin.auth', 'Admin', 'Manage authentication')
       ON CONFLICT DO NOTHING;
     `);
 
-    // Create default roles
+    // Create default roles with COMPREHENSIVE permissions
     await client.query(`
       INSERT INTO rbac_roles (name, description, role_type, permissions)
       VALUES
         (
           'Administrator',
-          'Full system access',
+          'Full system access - all modules and operations',
           'built-in',
           ARRAY[
-            'accounts.view', 'accounts.create', 'accounts.edit', 'accounts.delete', 'accounts.export', 'accounts.reconcile',
-            'hr.view', 'hr.create', 'hr.edit', 'hr.delete', 'hr.manage_staff',
-            'payroll.view', 'payroll.create', 'payroll.process', 'payroll.export',
-            'leave.view', 'leave.approve', 'leave.manage',
-            'claims.view', 'claims.approve', 'claims.process',
-            'reports.view', 'reports.generate', 'reports.export',
-            'invoicing.view', 'invoicing.create', 'invoicing.edit', 'invoicing.send',
-            'vendors.view', 'vendors.manage',
-            'clients.view', 'clients.manage',
-            'recruitment.view', 'recruitment.post_job', 'recruitment.review_apps', 'recruitment.hire',
-            'admin.view', 'admin.manage_users', 'admin.manage_roles', 'admin.settings'
+            'accounts.view', 'accounts.create', 'accounts.edit', 'accounts.delete', 'accounts.export', 'accounts.reconcile', 'accounts.ledger_view', 'accounts.ledger_edit',
+            'hr.view', 'hr.create', 'hr.edit', 'hr.delete', 'hr.manage_staff', 'hr.staff_info_edit', 'hr.staff_info_delete',
+            'payroll.view', 'payroll.create', 'payroll.edit', 'payroll.process', 'payroll.export',
+            'salary.view', 'salary.edit', 'salary.allowances', 'salary.benefits',
+            'leave.view', 'leave.apply', 'leave.approve', 'leave.reject', 'leave.manage', 'leave.calendar',
+            'holidays.view', 'holidays.manage',
+            'claims.view', 'claims.create', 'claims.approve', 'claims.reject', 'claims.process',
+            'reports.view', 'reports.generate', 'reports.export', 'reports.ai_insights',
+            'invoicing.view', 'invoicing.create', 'invoicing.edit', 'invoicing.send', 'invoicing.payment_track',
+            'vendors.view', 'vendors.create', 'vendors.edit', 'vendors.delete', 'vendors.manage',
+            'clients.view', 'clients.create', 'clients.edit', 'clients.delete', 'clients.manage',
+            'recruitment.view', 'recruitment.post_job', 'recruitment.review_apps', 'recruitment.interview', 'recruitment.hire',
+            'errands.view', 'errands.create', 'errands.edit', 'errands.allocate', 'errands.review',
+            'cases.view', 'cases.create', 'cases.investigate', 'cases.resolve', 'cases.manage',
+            'advertising.view', 'advertising.create', 'advertising.approve', 'advertising.manage',
+            'blog.view', 'blog.create', 'blog.edit', 'blog.delete', 'blog.publish',
+            'email.view', 'email.create', 'email.send', 'email.analytics',
+            'events.view', 'events.create', 'events.edit', 'events.delete', 'events.manage',
+            'points.view', 'points.grant', 'points.rules', 'points.redemption',
+            'users.view', 'users.create', 'users.edit', 'users.delete', 'users.ban',
+            'safety.view', 'safety.manage',
+            'discounts.view', 'discounts.create', 'discounts.manage',
+            'payments.view', 'payments.process', 'payments.refund',
+            'notifications.view', 'notifications.create', 'notifications.manage',
+            'admin.view', 'admin.manage_users', 'admin.manage_roles', 'admin.settings', 'admin.system_config', 'admin.audit_logs', 'admin.compliance', 'admin.auth'
           ]
         ),
         (
           'Finance Manager',
-          'Manage financial operations',
+          'Manage financial operations and reporting',
           'built-in',
           ARRAY[
-            'accounts.view', 'accounts.create', 'accounts.edit', 'accounts.export', 'accounts.reconcile',
-            'payroll.view', 'payroll.create', 'payroll.process', 'payroll.export',
-            'claims.view', 'claims.approve', 'claims.process',
+            'accounts.view', 'accounts.create', 'accounts.edit', 'accounts.export', 'accounts.reconcile', 'accounts.ledger_view',
+            'payroll.view', 'payroll.create', 'payroll.edit', 'payroll.process', 'payroll.export',
+            'salary.view',
+            'claims.view', 'claims.approve', 'claims.reject', 'claims.process',
             'reports.view', 'reports.generate', 'reports.export',
-            'invoicing.view', 'invoicing.create', 'invoicing.edit', 'invoicing.send',
-            'vendors.view', 'vendors.manage',
-            'clients.view'
+            'invoicing.view', 'invoicing.create', 'invoicing.edit', 'invoicing.send', 'invoicing.payment_track',
+            'vendors.view', 'vendors.create', 'vendors.edit', 'vendors.manage',
+            'clients.view', 'clients.create', 'clients.edit',
+            'payments.view', 'payments.process', 'payments.refund',
+            'admin.view', 'admin.audit_logs'
           ]
         ),
         (
           'HR Manager',
-          'Manage HR operations',
+          'Manage HR operations, staff, and leave',
           'built-in',
           ARRAY[
-            'hr.view', 'hr.create', 'hr.edit', 'hr.manage_staff',
+            'hr.view', 'hr.create', 'hr.edit', 'hr.manage_staff', 'hr.staff_info_edit',
             'payroll.view',
-            'leave.view', 'leave.approve', 'leave.manage',
-            'claims.view', 'claims.approve',
-            'recruitment.view', 'recruitment.post_job', 'recruitment.review_apps', 'recruitment.hire'
+            'salary.view', 'salary.edit', 'salary.allowances', 'salary.benefits',
+            'leave.view', 'leave.apply', 'leave.approve', 'leave.reject', 'leave.manage', 'leave.calendar',
+            'holidays.view', 'holidays.manage',
+            'claims.view', 'claims.approve', 'claims.reject',
+            'recruitment.view', 'recruitment.post_job', 'recruitment.review_apps', 'recruitment.interview', 'recruitment.hire',
+            'points.view', 'points.grant',
+            'users.view', 'users.create', 'users.edit',
+            'notifications.view', 'notifications.create',
+            'admin.view', 'admin.audit_logs'
+          ]
+        ),
+        (
+          'Operations Manager',
+          'Manage errands, cases, and operational tasks',
+          'built-in',
+          ARRAY[
+            'errands.view', 'errands.create', 'errands.edit', 'errands.allocate', 'errands.review',
+            'cases.view', 'cases.create', 'cases.investigate', 'cases.resolve',
+            'leave.view', 'leave.calendar',
+            'claims.view',
+            'payments.view',
+            'notifications.view',
+            'admin.view', 'admin.audit_logs'
+          ]
+        ),
+        (
+          'Marketing Manager',
+          'Manage advertising, events, and promotions',
+          'built-in',
+          ARRAY[
+            'advertising.view', 'advertising.create', 'advertising.approve', 'advertising.manage',
+            'blog.view', 'blog.create', 'blog.edit', 'blog.publish',
+            'email.view', 'email.create', 'email.send', 'email.analytics',
+            'events.view', 'events.create', 'events.edit', 'events.manage',
+            'discounts.view', 'discounts.create', 'discounts.manage',
+            'points.view',
+            'notifications.view', 'notifications.create', 'notifications.manage',
+            'admin.view', 'admin.audit_logs'
           ]
         ),
         (
@@ -271,28 +420,45 @@ export async function up(pool: Pool): Promise<void> {
           'built-in',
           ARRAY[
             'hr.view',
-            'leave.view',
-            'claims.view',
+            'leave.view', 'leave.apply', 'leave.calendar',
+            'claims.view', 'claims.create',
             'reports.view',
             'invoicing.view',
-            'clients.view'
+            'clients.view',
+            'points.view',
+            'payments.view',
+            'notifications.view'
           ]
         ),
         (
           'Viewer',
-          'Read-only access',
+          'Read-only access to all modules',
           'built-in',
           ARRAY[
-            'accounts.view',
+            'accounts.view', 'accounts.ledger_view',
             'hr.view',
             'payroll.view',
-            'leave.view',
+            'salary.view',
+            'leave.view', 'leave.calendar',
+            'holidays.view',
             'claims.view',
             'reports.view',
             'invoicing.view',
             'vendors.view',
             'clients.view',
-            'recruitment.view'
+            'recruitment.view',
+            'errands.view',
+            'cases.view',
+            'advertising.view',
+            'blog.view',
+            'email.view',
+            'events.view',
+            'points.view',
+            'users.view',
+            'discounts.view',
+            'payments.view',
+            'notifications.view',
+            'admin.view'
           ]
         )
       ON CONFLICT DO NOTHING;
