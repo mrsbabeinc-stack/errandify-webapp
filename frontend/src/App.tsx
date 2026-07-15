@@ -132,6 +132,8 @@ import StaffLeaveApplication from './components/StaffLeaveApplication';
 import JobApplicationForm from './pages/JobApplicationForm';
 import RecruitmentApplicationsDashboard from './pages/admin/RecruitmentApplicationsDashboard';
 import JoinUsPage from './pages/JoinUsPage';
+import StaffAttendanceClockIn from './pages/StaffAttendanceClockIn';
+import StaffAttendanceHistory from './pages/StaffAttendanceHistory';
 
 type UserRole = 'asker' | 'doer' | 'admin' | 'support_l2' | 'support_l3';
 
@@ -529,6 +531,8 @@ export default function App() {
         <Route path="/company/staff" element={isAuthenticated ? <CompanyStaffManagement /> : <Navigate to="/login" replace />} />
         <Route path="/company/post-errand" element={isAuthenticated ? <CompanyPostErrandPage /> : <Navigate to="/login" replace />} />
         <Route path="/staff/dashboard" element={isAuthenticated ? <DoerActiveErrands /> : <Navigate to="/login" replace />} />
+        <Route path="/staff/clock-in" element={isAuthenticated ? <StaffAttendanceClockIn /> : <Navigate to="/login" replace />} />
+        <Route path="/staff/attendance-history" element={isAuthenticated ? <StaffAttendanceHistory /> : <Navigate to="/login" replace />} />
         <Route path="/apply-leave" element={isAuthenticated ? <StaffLeaveApplication /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout - for asker/doer AND admin users */}
