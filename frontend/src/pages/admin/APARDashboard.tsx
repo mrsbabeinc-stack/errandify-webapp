@@ -13,6 +13,7 @@ interface Invoice {
   paid_amount: number;
   status: 'paid' | 'pending' | 'overdue' | 'partial';
   days_outstanding: number;
+  notes?: string;
 }
 
 const APARDashboard: React.FC = () => {
@@ -22,6 +23,18 @@ const APARDashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [invoiceType, setInvoiceType] = useState<'all' | 'payable' | 'receivable'>('all');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'paid' | 'pending' | 'overdue' | 'partial'>('all');
+  const [viewMode, setViewMode] = useState<'overview' | 'create'>('overview');
+
+  // Form state
+  const [formData, setFormData] = useState({
+    party: '',
+    type: 'payable' as 'payable' | 'receivable',
+    invoice_date: new Date().toISOString().split('T')[0],
+    due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    amount: '',
+    paid_amount: '0',
+    notes: '',
+  });
 
   useEffect(() => {
     loadInvoices();
@@ -30,9 +43,9 @@ const APARDashboard: React.FC = () => {
   const loadInvoices = async () => {
     try {
       setLoading(true);
-      // Mock data
-      const mockInvoices: Invoice[] = [
-        // Payables (Vendor Invoices)
+      // Load from localStorage or use mock data
+      const saved = localStorage.getItem('invoices');
+      let mockInvoices: Invoice[] = [
         {
           invoice_id: 1,
           party: 'TechSupplies Ltd',
@@ -77,7 +90,6 @@ const APARDashboard: React.FC = () => {
           status: 'partial',
           days_outstanding: 25,
         },
-        // Receivables (Customer Invoices)
         {
           invoice_id: 5,
           party: 'ABC Corporation',
@@ -124,6 +136,11 @@ const APARDashboard: React.FC = () => {
         },
       ];
 
+      if (saved) {
+        const savedInvoices = JSON.parse(saved);
+        mockInvoices = [...mockInvoices, ...savedInvoices];
+      }
+
       let filtered = mockInvoices;
       if (invoiceType !== 'all') {
         filtered = filtered.filter(inv => inv.type === invoiceType);
@@ -137,6 +154,55 @@ const APARDashboard: React.FC = () => {
       showToast('Failed to load invoices', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateInvoice = async () => {
+    if (!formData.party || !formData.amount) {
+      showToast('❌ Please fill required fields', 'error');
+      return;
+    }
+
+    try {
+      const newInvoice: Invoice = {
+        invoice_id: Date.now(),
+        party: formData.party,
+        type: formData.type,
+        invoice_date: formData.invoice_date,
+        due_date: formData.due_date,
+        amount: Number(formData.amount),
+        paid_amount: Number(formData.paid_amount),
+        status: Number(formData.paid_amount) >= Number(formData.amount)
+          ? 'paid'
+          : Number(formData.paid_amount) > 0
+          ? 'partial'
+          : 'pending',
+        days_outstanding: Math.floor((new Date(formData.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+      };
+
+      // Save to localStorage
+      const saved = localStorage.getItem('invoices') || '[]';
+      const allInvoices = JSON.parse(saved);
+      allInvoices.push(newInvoice);
+      localStorage.setItem('invoices', JSON.stringify(allInvoices));
+
+      showToast(`✅ Invoice for ${formData.party} created successfully`, 'success');
+
+      // Reset form
+      setFormData({
+        party: '',
+        type: 'payable',
+        invoice_date: new Date().toISOString().split('T')[0],
+        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        amount: '',
+        paid_amount: '0',
+        notes: '',
+      });
+
+      setViewMode('overview');
+      loadInvoices();
+    } catch (error) {
+      showToast('❌ Failed to create invoice', 'error');
     }
   };
 
@@ -163,6 +229,231 @@ const APARDashboard: React.FC = () => {
       </span>
     );
   };
+
+  if (viewMode === 'create') {
+    return (
+      <AdminLayout>
+        <div style={{ padding: '16px', background: '#fff', minHeight: '100vh' }}>
+          <ToastContainer toasts={toasts} onClose={removeToast} />
+
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#333', margin: 0 }}>
+                ➕ New Invoice
+              </h1>
+              <button
+                onClick={() => setViewMode('overview')}
+                style={{
+                  fontSize: '20px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#FF6B35',
+                  fontWeight: '700',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #ddd' }}>
+              {/* Type Selection */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '8px' }}>
+                  Invoice Type *
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  {[
+                    { value: 'payable' as const, label: '📤 Payable (Vendor Invoice)' },
+                    { value: 'receivable' as const, label: '📥 Receivable (Customer Invoice)' },
+                  ].map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setFormData({ ...formData, type: opt.value })}
+                      style={{
+                        padding: '10px',
+                        background: formData.type === opt.value ? '#FF6B35' : '#f0f0f0',
+                        color: formData.type === opt.value ? 'white' : '#333',
+                        border: 'none',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Party */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                  {formData.type === 'payable' ? 'Vendor Name' : 'Customer Name'} *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., ABC Suppliers Ltd"
+                  value={formData.party}
+                  onChange={(e) => setFormData({ ...formData, party: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontFamily: 'inherit',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              {/* Dates */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                    Invoice Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.invoice_date}
+                    onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                    Due Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.due_date}
+                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Amounts */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                    Total Amount (SGD) *
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="10000"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                    Paid Amount (SGD)
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={formData.paid_amount}
+                    onChange={(e) => setFormData({ ...formData, paid_amount: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
+                  Notes
+                </label>
+                <textarea
+                  placeholder="Add any additional notes..."
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontFamily: 'inherit',
+                    minHeight: '80px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <button
+                  onClick={() => setViewMode('overview')}
+                  style={{
+                    padding: '12px',
+                    background: '#f0f0f0',
+                    color: '#333',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateInvoice}
+                  style={{
+                    padding: '12px',
+                    background: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                  }}
+                >
+                  ✓ Create Invoice
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   const payables = invoices.filter(inv => inv.type === 'payable');
   const receivables = invoices.filter(inv => inv.type === 'receivable');
@@ -310,7 +601,7 @@ const APARDashboard: React.FC = () => {
           </select>
 
           <button
-            onClick={() => showToast('📋 New invoice created', 'success')}
+            onClick={() => setViewMode('create')}
             style={{
               marginLeft: 'auto',
               padding: '6px 12px',
@@ -332,72 +623,64 @@ const APARDashboard: React.FC = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#F5F5F5', borderBottom: '2px solid #ddd' }}>
-                <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600' }}>
-                  Party
-                </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600' }}>
-                  Invoice Date
-                </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600' }}>
-                  Due Date
-                </th>
-                <th style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600' }}>
-                  Amount
-                </th>
-                <th style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600' }}>
-                  Paid
-                </th>
-                <th style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600' }}>
-                  Outstanding
-                </th>
-                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>
-                  Days Outstanding
-                </th>
-                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>
-                  Status
-                </th>
+                <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600' }}>Party</th>
+                <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600' }}>Invoice Date</th>
+                <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600' }}>Due Date</th>
+                <th style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600' }}>Amount</th>
+                <th style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600' }}>Paid</th>
+                <th style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600' }}>Outstanding</th>
+                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>Days Outstanding</th>
+                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>Status</th>
               </tr>
             </thead>
             <tbody>
-              {invoices.map((invoice) => (
-                <tr key={invoice.invoice_id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '12px', fontSize: '12px', fontWeight: '600', color: '#333' }}>
-                    {invoice.party}
-                    <div style={{ fontSize: '11px', color: '#999' }}>
-                      {invoice.type === 'payable' ? '📤 Payable' : '📥 Receivable'}
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px', fontSize: '12px', color: '#666' }}>
-                    {new Date(invoice.invoice_date).toLocaleDateString('en-GB')}
-                  </td>
-                  <td style={{ padding: '12px', fontSize: '12px', color: '#666' }}>
-                    {new Date(invoice.due_date).toLocaleDateString('en-GB')}
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#333' }}>
-                    SGD {invoice.amount.toLocaleString()}
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#4CAF50' }}>
-                    SGD {invoice.paid_amount.toLocaleString()}
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#F44336' }}>
-                    SGD {(invoice.amount - invoice.paid_amount).toLocaleString()}
-                  </td>
-                  <td
-                    style={{
-                      padding: '12px',
-                      textAlign: 'center',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      color: invoice.days_outstanding > 30 ? '#F44336' : invoice.days_outstanding > 14 ? '#FF9800' : '#666',
-                    }}
-                  >
-                    {invoice.days_outstanding} days
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'center' }}>
-                    {getStatusBadge(invoice.status)}
+              {invoices.length === 0 ? (
+                <tr>
+                  <td colSpan={8} style={{ padding: '32px', textAlign: 'center', color: '#999' }}>
+                    No invoices found. Create one to get started!
                   </td>
                 </tr>
-              ))}
+              ) : (
+                invoices.map((invoice) => (
+                  <tr key={invoice.invoice_id} style={{ borderBottom: '1px solid #eee' }}>
+                    <td style={{ padding: '12px', fontSize: '12px', fontWeight: '600', color: '#333' }}>
+                      {invoice.party}
+                      <div style={{ fontSize: '11px', color: '#999' }}>
+                        {invoice.type === 'payable' ? '📤 Payable' : '📥 Receivable'}
+                      </div>
+                    </td>
+                    <td style={{ padding: '12px', fontSize: '12px', color: '#666' }}>
+                      {new Date(invoice.invoice_date).toLocaleDateString('en-GB')}
+                    </td>
+                    <td style={{ padding: '12px', fontSize: '12px', color: '#666' }}>
+                      {new Date(invoice.due_date).toLocaleDateString('en-GB')}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#333' }}>
+                      SGD {invoice.amount.toLocaleString()}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#4CAF50' }}>
+                      SGD {invoice.paid_amount.toLocaleString()}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#F44336' }}>
+                      SGD {(invoice.amount - invoice.paid_amount).toLocaleString()}
+                    </td>
+                    <td
+                      style={{
+                        padding: '12px',
+                        textAlign: 'center',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        color: invoice.days_outstanding > 30 ? '#F44336' : invoice.days_outstanding > 14 ? '#FF9800' : '#666',
+                      }}
+                    >
+                      {invoice.days_outstanding} days
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>
+                      {getStatusBadge(invoice.status)}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
