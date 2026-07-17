@@ -7,7 +7,6 @@ import NotificationListener from './components/NotificationListener';
 import { NotificationProvider } from './context/NotificationContext';
 import NotificationToastContainer from './components/NotificationToastContainer';
 import TopNotificationBar from './components/TopNotificationBar';
-import NotificationPanel from './components/NotificationPanel';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import SingPassSimulator from './pages/SingPassSimulator';
@@ -270,7 +269,6 @@ export default function App() {
   return (
     <NotificationProvider>
       <TopNotificationBar />
-      <NotificationPanel />
       <NotificationToastContainer />
       <Router>
         {isAuthenticated && <NotificationListener />}
