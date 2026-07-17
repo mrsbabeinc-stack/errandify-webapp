@@ -205,51 +205,47 @@ export default function HomePage({ userRole }: HomePageProps) {
           )}
         </div>
 
-        {/* Quick Categories */}
-        <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', borderTop: '4px solid #FF6B35', maxHeight: '200px', overflowY: 'auto'}}>
-          <h2 style={{fontWeight: '700', color: '#333', marginBottom: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+        {/* Quick Categories - 2 Row Grid */}
+        <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', borderTop: '4px solid #FF6B35'}}>
+          <h2 style={{fontWeight: '700', color: '#333', marginBottom: '10px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'}}>
             {userRole === 'asker' ? '🎯 Need help?' : '🤝 Help?'}
           </h2>
 
-          <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-            {Object.entries(groupedCategories).map(([groupName, cats]) => (
-              <div key={groupName}>
-                <h3 style={{fontSize: '11px', fontWeight: '600', color: '#666', marginBottom: '4px', paddingLeft: '2px'}}>{groupName}</h3>
-                <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px'}}>
-                  {cats.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => handleCategoryClick(category.id)}
-                      style={{
-                        padding: '8px 4px',
-                        borderRadius: '6px',
-                        fontSize: '10px',
-                        fontWeight: '500',
-                        border: 'none',
-                        cursor: 'pointer',
-                        background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)',
-                        transition: 'all 0.2s',
-                        textAlign: 'center',
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(255, 160, 122, 0.15) 100%)';
-                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(255, 107, 53, 0.15)';
-                        e.currentTarget.style.transform = 'translateY(-1px)';
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)';
-                        e.currentTarget.style.boxShadow = 'none';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                      }}
-                      title={category.purpose}
-                    >
-                      <div style={{fontSize: '14px', marginBottom: '2px'}}>{category.icon}</div>
-                      <div style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '9px', color: '#333'}}>{category.name}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
+          {/* Show only first 2 groups in compact grid */}
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px'}}>
+            {Object.entries(groupedCategories).slice(0, 2).map(([groupName, cats]) =>
+              cats.slice(0, 3).map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => handleCategoryClick(category.id)}
+                  style={{
+                    padding: '8px 4px',
+                    borderRadius: '6px',
+                    fontSize: '9px',
+                    fontWeight: '500',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)',
+                    transition: 'all 0.2s',
+                    textAlign: 'center',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(255, 160, 122, 0.15) 100%)';
+                    e.currentTarget.style.boxShadow = '0 3px 8px rgba(255, 107, 53, 0.15)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)';
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                  title={category.purpose}
+                >
+                  <div style={{fontSize: '16px', marginBottom: '2px'}}>{category.icon}</div>
+                  <div style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '8px', color: '#333', lineHeight: '1.1'}}>{category.name}</div>
+                </button>
+              ))
+            )}
           </div>
         </div>
 
