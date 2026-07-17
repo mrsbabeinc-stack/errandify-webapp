@@ -328,9 +328,9 @@ export default function ChatPage({ userRole }: ChatPageProps) {
     <AdminThemeWrapper title="💬 MyChat" subtitle="Chat with users about errands" showBackButton onBack={() => navigate(-1)}>
       <div style={{maxWidth: '1000px', margin: '0 auto'}}>
         {/* Socket Connection Status Indicator */}
-        <div style={{marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: isSocketConnected ? '#E8F5E9' : '#FFF3E0', borderRadius: '8px', borderLeft: `4px solid ${isSocketConnected ? '#4CAF50' : '#FF9800'}`}}>
-          <div style={{width: '8px', height: '8px', borderRadius: '50%', background: isSocketConnected ? '#4CAF50' : '#FF9800'}} />
-          <p style={{fontSize: '12px', fontWeight: '600', color: isSocketConnected ? '#2E7D32' : '#E65100', margin: 0}}>
+        <div style={{marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: isSocketConnected ? 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)' : 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)', borderRadius: '10px', borderLeft: `5px solid ${isSocketConnected ? '#4CAF50' : '#FF9800'}`, boxShadow: `0 4px 12px ${isSocketConnected ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 152, 0, 0.2)'}`}}>
+          <div style={{width: '10px', height: '10px', borderRadius: '50%', background: isSocketConnected ? '#4CAF50' : '#FF9800', boxShadow: isSocketConnected ? '0 0 8px rgba(76, 175, 80, 0.6)' : '0 0 8px rgba(255, 152, 0, 0.6)', animation: 'pulse 2s infinite'}} />
+          <p style={{fontSize: '13px', fontWeight: '700', color: isSocketConnected ? '#2E7D32' : '#E65100', margin: 0}}>
             {isSocketConnected ? '✅ Real-time messaging active' : '⏳ Connecting...'}
           </p>
         </div>
@@ -356,30 +356,30 @@ export default function ChatPage({ userRole }: ChatPageProps) {
         </div>
 
         {/* View Filter - All/Asker/Doer */}
-        <div style={{display: 'flex', gap: '8px', marginBottom: '12px', overflowX: 'auto', paddingBottom: '8px'}}>
+        <div style={{display: 'flex', gap: '10px', marginBottom: '14px', overflowX: 'auto', paddingBottom: '8px'}}>
           {['all', 'asker', 'doer'].map((filter) => (
             <button
               key={filter}
               onClick={() => setViewFilter(filter as any)}
               style={{
-                padding: '8px 14px',
-                borderRadius: '20px',
-                fontSize: '13px',
-                fontWeight: '600',
+                padding: '10px 16px',
+                borderRadius: '22px',
+                fontSize: '14px',
+                fontWeight: '700',
                 whiteSpace: 'nowrap',
-                border: 'none',
+                border: viewFilter === filter ? 'none' : '2px solid #FFE0D6',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                background: viewFilter === filter ? '#FF6B35' : 'linear-gradient(135deg, rgba(255,245,240,0.6) 0%, rgba(255,232,214,0.4) 100%)',
-                color: viewFilter === filter ? 'white' : '#555',
-                boxShadow: viewFilter === filter ? '0 4px 12px rgba(255, 107, 53, 0.3)' : '0 2px 8px rgba(0,0,0,0.05)',
+                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                background: viewFilter === filter ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255,245,240,0.8) 0%, rgba(255,232,214,0.6) 100%)',
+                color: viewFilter === filter ? 'white' : '#FF6B35',
+                boxShadow: viewFilter === filter ? '0 6px 16px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.1)',
               }}
-              onMouseEnter={(e) => {if (viewFilter !== filter) {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.8) 0%, rgba(255,200,160,0.6) 100%)'; e.currentTarget.style.transform = 'translateY(-2px)';}} }
-              onMouseLeave={(e) => {if (viewFilter !== filter) {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.6) 0%, rgba(255,232,214,0.4) 100%)'; e.currentTarget.style.transform = 'translateY(0)';}} }
+              onMouseEnter={(e) => {if (viewFilter !== filter) {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.9) 0%, rgba(255,200,160,0.7) 100%)'; e.currentTarget.style.transform = 'translateY(-3px) scale(1.05)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.2)';}} }
+              onMouseLeave={(e) => {if (viewFilter !== filter) {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.8) 0%, rgba(255,232,214,0.6) 100%)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.1)';}} }
             >
               {filter === 'all' && '📬 All Messages'}
-              {filter === 'asker' && '📝 My Tasks (Asker)'}
-              {filter === 'doer' && '✓ My Jobs (Doer)'}
+              {filter === 'asker' && '📝 My Tasks'}
+              {filter === 'doer' && '✓ My Jobs'}
             </button>
           ))}
         </div>
@@ -436,55 +436,47 @@ export default function ChatPage({ userRole }: ChatPageProps) {
           <p className="text-xs text-gray-400">Try adjusting your search or filters</p>
         </div>
       ) : (
-        <div style={{display: 'grid', gap: '12px'}}>
+        <div style={{display: 'grid', gap: '10px'}}>
           {filteredConversations.map((conversation) => (
-            <div key={conversation.id} style={{background: 'linear-gradient(135deg, #FFF9F7 0%, #FFF5F0 100%)', borderRadius: '12px', padding: '14px', boxShadow: '0 4px 12px rgba(255, 107, 53, 0.1)', border: '1px solid #FFE0D6', position: 'relative', transition: 'all 0.2s', cursor: 'pointer'}} onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 107, 53, 0.15)'; e.currentTarget.style.transform = 'translateY(-2px)';}} onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.1)'; e.currentTarget.style.transform = 'translateY(0)';}}>
+            <div key={conversation.id} style={{background: 'linear-gradient(135deg, #FFF9F7 0%, #FFF5F0 100%)', borderRadius: '12px', padding: '12px', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8)', border: '1.5px solid #FFE0D6', position: 'relative', transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)', cursor: 'pointer', overflow: 'hidden'}} onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 107, 53, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8)'; e.currentTarget.style.transform = 'translateY(-3px)';}} onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 4px 16px rgba(255, 107, 53, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8)'; e.currentTarget.style.transform = 'translateY(0)';}}>
               {/* Unread Badge */}
               {unreadCounts.get(conversation.id) && unreadCounts.get(conversation.id)! > 0 && (
-                <div style={{position: 'absolute', top: '10px', right: '10px', background: '#E63946', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', boxShadow: '0 2px 8px rgba(0,0,0,0.2)'}}>
+                <div style={{position: 'absolute', top: '8px', right: '8px', background: '#E63946', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', boxShadow: '0 3px 10px rgba(230, 57, 70, 0.3)', border: '2px solid white'}}>
                   {unreadCounts.get(conversation.id)}
                 </div>
               )}
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '8px'}}>
                 <div style={{flex: 1, minWidth: 0}}>
-                  <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px'}}>
                     <h3 style={{fontWeight: '700', fontSize: '14px', color: '#333', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{conversation.title}</h3>
-                    <span style={{fontSize: '11px', fontWeight: '700', color: '#FF6B35', background: '#FFE8D6', padding: '4px 8px', borderRadius: '6px', flexShrink: 0}}>{conversation.formattedId}</span>
+                    <span style={{fontSize: '11px', fontWeight: '700', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '3px 8px', borderRadius: '6px', flexShrink: 0, boxShadow: '0 2px 8px rgba(255, 107, 53, 0.25)'}}>{conversation.formattedId}</span>
                   </div>
                 </div>
-                <span style={{padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? '#FFE8D6' : getStatusColor(conversation.status).includes('green') ? '#E8F5E9' : '#F5F5F5', color: getStatusColor(conversation.status).includes('orange') ? '#FF6B35' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#555'}}>
+                <span style={{padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? 'linear-gradient(135deg, #FFE8D6 0%, #FFD4B3 100%)' : getStatusColor(conversation.status).includes('green') ? '#C8E6C9' : '#F0F0F0', color: getStatusColor(conversation.status).includes('orange') ? '#FF6B35' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#555'}}>
                   {getStatusLabel(conversation.status)}
                 </span>
               </div>
 
-              {/* Start Date/Time and Area - 2 lines with buttons on right */}
-              <div style={{fontSize: '12px', color: '#666'}}>
-                {conversation.deadline && (
-                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px'}}>
-                    <p style={{margin: 0}}>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                    <button
-                      onClick={() => handleOpenChat(conversation.id)}
-                      style={{background: '#FF6B35', color: 'white', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s'}}
-                      onMouseEnter={(e) => {e.currentTarget.style.background = '#FF5520'; e.currentTarget.style.transform = 'scale(1.05)';}}
-                      onMouseLeave={(e) => {e.currentTarget.style.background = '#FF6B35'; e.currentTarget.style.transform = 'scale(1)';}}
-                    >
-                      💬 Chat
-                    </button>
-                  </div>
-                )}
-                {(conversation.location || conversation.postal) && conversation.status !== 'completed' && conversation.status !== 'completed_confirmed' && conversation.status !== 'completed_unconfirmed' && (
-                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                    <p style={{margin: 0}}>📍 {`${conversation.postal}${conversation.location && conversation.postal ? ', ' : ''}${conversation.location}`}</p>
-                    <p style={{margin: 0, color: '#999', fontSize: '11px'}}>Posted by {conversation.otherPartyName}</p>
-                  </div>
-                )}
-                {(conversation.location || conversation.postal) && (conversation.status === 'completed' || conversation.status === 'completed_confirmed' || conversation.status === 'completed_unconfirmed') && (
-                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                    <p style={{margin: 0}}>📍 {getAreaOnly(conversation.location)}</p>
-                    <p style={{margin: 0, color: '#999', fontSize: '11px'}}>Posted by {conversation.otherPartyName}</p>
-                  </div>
-                )}
-              </div>
+              {/* Info rows */}
+              {conversation.deadline && (
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', padding: '6px 8px', background: 'rgba(255, 245, 240, 0.8)', borderRadius: '6px'}}>
+                  <span style={{fontSize: '12px', color: '#FF6B35', fontWeight: '600'}}>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <button
+                    onClick={() => handleOpenChat(conversation.id)}
+                    style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', color: 'white', padding: '5px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(255, 107, 53, 0.25)', marginLeft: '8px'}}
+                    onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.35)'; e.currentTarget.style.transform = 'translateY(-1px)';}}
+                    onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.25)'; e.currentTarget.style.transform = 'translateY(0)';}}
+                  >
+                    💬 Chat
+                  </button>
+                </div>
+              )}
+              {(conversation.location || conversation.postal) && (
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#666', padding: '4px 0'}}>
+                  <span style={{fontWeight: '500'}}>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</span>
+                  <span style={{fontSize: '11px', color: '#999'}}>By {conversation.otherPartyName}</span>
+                </div>
+              )}
             </div>
           ))}
         </div>
