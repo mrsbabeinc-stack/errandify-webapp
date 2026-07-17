@@ -18,7 +18,7 @@ export default function AdminThemeWrapper({
   return (
     <div style={{background: 'white', minHeight: '100vh'}}>
       <div style={{background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%)', paddingBottom: '20px'}}>
-        <div style={{maxWidth: '1200px', margin: '0 auto', padding: '20px', paddingBottom: '0'}}>
+        <div style={{maxWidth: '1200px', margin: '0 auto', padding: '8px 20px 0 20px'}}>
           {/* Header Section */}
           {(title || showBackButton) && (
             <div style={{marginBottom: '24px'}}>
