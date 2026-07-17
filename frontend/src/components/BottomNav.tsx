@@ -105,6 +105,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
       boxShadow: '0 -12px 40px rgba(255, 107, 53, 0.12), 0 -2px 8px rgba(255, 107, 53, 0.06)',
       zIndex: 40,
       backdropFilter: 'blur(10px)',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     }}>
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '90px', padding: '12px 8px 16px 8px', position: 'relative'}}>
         {/* Navigation Items */}
@@ -142,7 +143,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                   ) : (
                     <span style={{fontSize: '28px'}}>{item.icon}</span>
                   )}
-                  <span style={{fontSize: '12px', fontWeight: '600'}}>{item.label}</span>
+                  <span style={{fontSize: '12px', fontWeight: '600', fontFamily: 'inherit'}}>{item.label}</span>
                 </div>
               );
             }
@@ -235,7 +236,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </div>
                 )}
-                <span style={{fontSize: '12px', fontWeight: '700', letterSpacing: '0.3px'}}>{item.label}</span>
+                <span style={{fontSize: '12px', fontWeight: '700', letterSpacing: '0.3px', fontFamily: 'inherit'}}>{item.label}</span>
               </Link>
             );
           })}
