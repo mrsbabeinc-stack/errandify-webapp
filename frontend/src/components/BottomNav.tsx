@@ -100,9 +100,9 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
       bottom: 0,
       left: 0,
       right: 0,
-      background: 'linear-gradient(180deg, rgba(255,245,240,0.95) 0%, rgba(255,232,214,1) 100%)',
-      borderTop: '3px solid #FF6B35',
-      boxShadow: '0 -8px 32px rgba(255, 107, 53, 0.2)',
+      background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(245,245,245,1) 100%)',
+      borderTop: 'none',
+      boxShadow: '0 -12px 40px rgba(0, 0, 0, 0.12), 0 -2px 8px rgba(0, 0, 0, 0.08)',
       zIndex: 40,
       backdropFilter: 'blur(10px)',
     }}>
@@ -164,34 +164,34 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                   flex: 1,
                   position: 'relative',
                   textDecoration: 'none',
-                  color: active ? 'white' : '#666',
+                  color: active ? 'white' : '#555',
                   background: active
                     ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)'
-                    : 'linear-gradient(135deg, rgba(255,107,53,0.08) 0%, rgba(255,160,122,0.08) 100%)',
-                  boxShadow: active ? '0 6px 16px rgba(255, 107, 53, 0.35)' : '0 2px 8px rgba(255, 107, 53, 0.1)',
+                    : '#F8F9FA',
+                  boxShadow: active
+                    ? '0 8px 24px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
+                    : '0 4px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
                   fontWeight: active ? '700' : '600',
-                  border: active ? 'none' : '1px solid rgba(255, 107, 53, 0.15)',
+                  border: 'none',
                 }}
                 onMouseEnter={(e) => {
                   if (!active) {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,107,53,0.15) 0%, rgba(255,160,122,0.15) 100%)';
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.2)';
-                    e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)';
-                    e.currentTarget.style.border = '1px solid rgba(255, 107, 53, 0.3)';
+                    e.currentTarget.style.background = '#F0F2F5';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
+                    e.currentTarget.style.transform = 'translateY(-3px)';
                   } else {
-                    e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)';
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 107, 53, 0.4)';
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!active) {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,107,53,0.08) 0%, rgba(255,160,122,0.08) 100%)';
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.1)';
-                    e.currentTarget.style.border = '1px solid rgba(255, 107, 53, 0.15)';
+                    e.currentTarget.style.background = '#F8F9FA';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
                   } else {
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.35)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
                   }
-                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
                 {item.image ? (
@@ -218,18 +218,18 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                     position: 'absolute',
                     top: '-2px',
                     right: '2px',
-                    background: 'linear-gradient(135deg, #FF4444 0%, #FF6B6B 100%)',
+                    background: '#E63946',
                     color: 'white',
                     borderRadius: '50%',
-                    width: '22px',
-                    height: '22px',
+                    width: '24px',
+                    height: '24px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '11px',
-                    fontWeight: '800',
-                    border: '2.5px solid white',
-                    boxShadow: '0 2px 8px rgba(255, 68, 68, 0.4)',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    border: '2px solid white',
+                    boxShadow: '0 3px 10px rgba(0, 0, 0, 0.15)',
                     animation: 'pulse 2s infinite',
                   }}>
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -249,26 +249,26 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                 left: '50%',
                 bottom: '12px',
                 transform: 'translateX(-50%)',
-                width: '64px',
-                height: '64px',
-                background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
+                width: '56px',
+                height: '56px',
+                background: 'linear-gradient(135deg, #FF6B35 0%, #FF8550 100%)',
                 color: 'white',
-                borderRadius: '18px',
-                border: '3px solid white',
-                boxShadow: '0 8px 28px rgba(255, 107, 53, 0.4)',
+                borderRadius: '16px',
+                border: '2px solid white',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
                 cursor: 'pointer',
                 fontWeight: '800',
-                fontSize: '32px',
-                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                fontSize: '28px',
+                transition: 'all 0.3s ease-out',
                 zIndex: 50,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateX(-50%) translateY(-6px) scale(1.12)';
-                e.currentTarget.style.boxShadow = '0 12px 40px rgba(255, 107, 53, 0.5)';
+                e.currentTarget.style.transform = 'translateX(-50%) translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateX(-50%) translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 8px 28px rgba(255, 107, 53, 0.4)';
+                e.currentTarget.style.transform = 'translateX(-50%) translateY(0)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
               }}
               title="Create new errand"
             >
