@@ -236,7 +236,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   });
 
   return (
-    <AdminThemeWrapper title="🆘 Browse Opportunities" showBackButton onBack={() => navigate('/home')}>
+    <AdminThemeWrapper title="🔍 Browse Errands To Help" showBackButton onBack={() => navigate('/home')}>
       <div className="max-w-2xl mx-auto">
         {/* Header - Warm & Compact */}
         <div style={{marginBottom: '10px'}}>
@@ -284,7 +284,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                 }
               }}
             >
-              All Opportunities
+              All Errands
             </button>
             <button
               onClick={() => setShowRecommended(true)}
@@ -350,7 +350,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
         {userRole === 'doer' && (
           <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '10px', border: '1px solid #FFE0D6', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', marginBottom: '10px'}}>
           <h3 style={{fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px'}}>
-            🚀 Explore Opportunities <span style={{color: '#999', fontWeight: '400', fontSize: '11px'}}>(Filter)</span>
+            🎯 Categories <span style={{color: '#999', fontWeight: '400', fontSize: '11px'}}>(Select)</span>
           </h3>
 
           {/* Show all categories */}
