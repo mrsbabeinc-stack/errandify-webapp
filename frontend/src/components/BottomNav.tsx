@@ -247,7 +247,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
               style={{
                 position: 'absolute',
                 left: '50%',
-                bottom: '12px',
+                bottom: '70px',
                 transform: 'translateX(-50%)',
                 width: '62px',
                 height: '62px',

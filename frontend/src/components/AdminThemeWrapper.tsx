@@ -40,7 +40,7 @@ export default function AdminThemeWrapper({
       }}>
         {/* Header Section */}
         {(title || showBackButton) && (
-          <div style={{marginBottom: '8px', flexShrink: 0}}>
+          <div style={{marginBottom: '12px', flexShrink: 0, position: 'relative'}}>
             {showBackButton && (
               <button
                 onClick={onBack}
@@ -48,35 +48,42 @@ export default function AdminThemeWrapper({
                   background: 'none',
                   border: 'none',
                   color: '#FF6B35',
-                  fontSize: '14px',
-                  fontWeight: '600',
+                  fontSize: '16px',
+                  fontWeight: '700',
                   cursor: 'pointer',
-                  marginBottom: '4px',
-                  padding: 0
+                  marginBottom: '8px',
+                  padding: '4px 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  hover: {
+                    opacity: 0.8
+                  },
+                  transition: 'opacity 0.2s'
                 }}
+                title="Go back"
               >
                 ← Back
               </button>
             )}
             {title && (
               <>
-                <h1 style={{fontSize: '24px', fontWeight: '700', color: '#333', margin: '0 0 2px 0'}}>
+                <h1 style={{fontSize: '28px', fontWeight: '700', color: '#333', margin: '0 0 4px 0'}}>
                   {title}
                 </h1>
                 {subtitle && (
-                  <p style={{fontSize: '12px', color: '#666', margin: 0}}>{subtitle}</p>
+                  <p style={{fontSize: '13px', color: '#666', margin: 0}}>{subtitle}</p>
                 )}
               </>
             )}
           </div>
         )}
 
-        {/* Content */}
+        {/* Content - Scrollable */}
         <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          padding: '12px',
-          boxShadow: 'none'
+          flex: 1,
+          overflow: 'auto',
+          WebkitOverflowScrolling: 'touch'
         }}>
           {children}
         </div>
