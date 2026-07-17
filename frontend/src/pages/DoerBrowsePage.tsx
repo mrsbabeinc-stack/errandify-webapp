@@ -245,67 +245,6 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
           </div>
         )}
 
-        {/* Tab Selection - Warm Style */}
-        {userRole === 'doer' && (
-          <div style={{display: 'flex', gap: '8px', marginBottom: '10px'}}>
-            <button
-              onClick={() => setShowRecommended(false)}
-              style={{
-                flex: 1,
-                padding: '10px 12px',
-                borderRadius: '8px',
-                fontWeight: '600',
-                fontSize: '12px',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                background: !showRecommended ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : '#F5F5F5',
-                color: !showRecommended ? 'white' : '#666',
-                boxShadow: !showRecommended ? '0 4px 12px rgba(255, 107, 53, 0.3)' : 'none',
-              }}
-              onMouseOver={(e) => {
-                if (showRecommended) {
-                  e.currentTarget.style.background = '#EEEEEE';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (showRecommended) {
-                  e.currentTarget.style.background = '#F5F5F5';
-                }
-              }}
-            >
-              All Errands
-            </button>
-            <button
-              onClick={() => setShowRecommended(true)}
-              style={{
-                flex: 1,
-                padding: '10px 12px',
-                borderRadius: '8px',
-                fontWeight: '600',
-                fontSize: '12px',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                background: showRecommended ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : '#F5F5F5',
-                color: showRecommended ? 'white' : '#666',
-                boxShadow: showRecommended ? '0 4px 12px rgba(255, 107, 53, 0.3)' : 'none',
-              }}
-              onMouseOver={(e) => {
-                if (!showRecommended) {
-                  e.currentTarget.style.background = '#EEEEEE';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (!showRecommended) {
-                  e.currentTarget.style.background = '#F5F5F5';
-                }
-              }}
-            >
-              🎯 For You
-            </button>
-          </div>
-        )}
 
         {/* Search Bar */}
         {userRole === 'doer' && (
