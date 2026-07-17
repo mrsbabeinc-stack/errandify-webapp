@@ -239,88 +239,159 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
     <AdminThemeWrapper title="🆘 Browse Opportunities" showBackButton onBack={() => navigate('/home')}>
       <div className="max-w-2xl mx-auto">
         {/* Header - Warm & Compact */}
-        <div className="mb-2">
-          <h1 className="text-lg font-bold text-errandify-brown">
-            {userRole === 'asker' ? 'My Posted Tasks' : 'Browse ToHelp'}
+        <div style={{marginBottom: '16px'}}>
+          <h1 style={{fontSize: '18px', fontWeight: '700', color: '#333', margin: '0 0 4px 0'}}>
+            {userRole === 'asker' ? 'My Posted Tasks' : 'Browse Opportunities'}
           </h1>
-          <p className="text-gray-600 text-xs">
-            {userRole === 'asker' ? 'Tasks you have posted' : 'Find errands and earn money'}
+          <p style={{color: '#666', fontSize: '13px', margin: 0}}>
+            {userRole === 'asker' ? 'Tasks you have posted' : 'Find errands and earn Errandify Points'}
           </p>
         </div>
 
         {userRole === 'asker' && (
-          <div className="bg-blue-100 border border-blue-300 p-2 rounded-lg mb-2 text-xs text-blue-800 font-medium">
-            💡 Switch to Doer role to browse and bid on tasks.
+          <div style={{background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)', border: '1px solid #90CAF9', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', color: '#1565C0', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px'}}>
+            <span>💡</span>
+            <span>Switch to Doer role to browse and bid on tasks.</span>
           </div>
         )}
 
         {/* Tab Selection - Warm Style */}
         {userRole === 'doer' && (
-          <div className="flex gap-1.5 mb-2">
+          <div style={{display: 'flex', gap: '12px', marginBottom: '16px'}}>
             <button
               onClick={() => setShowRecommended(false)}
-              className={`flex-1 py-1.5 px-2 rounded-lg font-semibold text-xs transition-all ${
-                !showRecommended
-                  ? 'bg-gradient-to-r from-errandify-orange to-orange-500 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontWeight: '600',
+                fontSize: '13px',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                background: !showRecommended ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : '#F5F5F5',
+                color: !showRecommended ? 'white' : '#666',
+                boxShadow: !showRecommended ? '0 4px 12px rgba(255, 107, 53, 0.3)' : 'none',
+              }}
+              onMouseOver={(e) => {
+                if (showRecommended) {
+                  e.currentTarget.style.background = '#EEEEEE';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (showRecommended) {
+                  e.currentTarget.style.background = '#F5F5F5';
+                }
+              }}
             >
-              All
+              All Opportunities
             </button>
             <button
               onClick={() => setShowRecommended(true)}
-              className={`flex-1 py-1.5 px-2 rounded-lg font-semibold text-xs transition-all ${
-                showRecommended
-                  ? 'bg-gradient-to-r from-errandify-orange to-orange-500 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontWeight: '600',
+                fontSize: '13px',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                background: showRecommended ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : '#F5F5F5',
+                color: showRecommended ? 'white' : '#666',
+                boxShadow: showRecommended ? '0 4px 12px rgba(255, 107, 53, 0.3)' : 'none',
+              }}
+              onMouseOver={(e) => {
+                if (!showRecommended) {
+                  e.currentTarget.style.background = '#EEEEEE';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (!showRecommended) {
+                  e.currentTarget.style.background = '#F5F5F5';
+                }
+              }}
             >
-              For You
+              🎯 For You
             </button>
           </div>
         )}
 
         {/* Search Bar */}
         {userRole === 'doer' && (
-          <div className="mb-2">
+          <div style={{marginBottom: '16px'}}>
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="🔍 Search opportunities..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange focus:ring-1 focus:ring-orange-200 text-xs"
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid #DDD',
+                borderRadius: '8px',
+                fontSize: '13px',
+                outline: 'none',
+                transition: 'all 0.2s',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#FF6B35';
+                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255, 107, 53, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = '#DDD';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             />
           </div>
         )}
 
         {/* Category Selection Card - Warm & Compact - Grouped by Category Groups */}
         {userRole === 'doer' && (
-          <div className="bg-white rounded-xl p-2 border border-orange-100 shadow-sm mb-2">
-          <h3 className="text-xs font-bold text-errandify-brown mb-1.5 uppercase tracking-wide">
-            🎯 Categories <span className="text-gray-500 font-normal">(Click to Select)</span>
+          <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '16px', border: '1px solid #FFE0D6', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', marginBottom: '16px'}}>
+          <h3 style={{fontSize: '13px', fontWeight: '700', color: '#333', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+            🎯 Categories <span style={{color: '#999', fontWeight: '400', fontSize: '12px'}}>(Select to filter)</span>
           </h3>
 
           {/* Group Categories by their group field */}
-          <div className="space-y-1.5 mb-2">
+          <div style={{display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '12px'}}>
             {Object.entries(groupedCategories).map(([groupName, cats]) => (
               <div key={groupName}>
-                <h4 className="text-xs font-bold text-gray-600 mb-0.5 pl-1">{groupName}</h4>
-                <div className="grid grid-cols-4 gap-1 mb-1">
+                <h4 style={{fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '8px', paddingLeft: '4px'}}>{groupName}</h4>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px'}}>
                   {cats.map((category) => {
                     const isSelected = selectedCategories.includes(category.id);
                     return (
                       <button
                         key={category.id}
                         onClick={() => handleCategoryToggle(category.id)}
-                        className={`px-1 py-1 rounded text-xs font-medium transition-all hover:shadow-md ${
-                          isSelected
-                            ? 'bg-errandify-orange text-white shadow-md ring-1 ring-orange-300'
-                            : `bg-gradient-to-r ${category.color}`
-                        }`}
+                        style={{
+                          padding: '8px 4px',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: '500',
+                          border: 'none',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          background: isSelected ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255, 107, 53, 0.08) 0%, rgba(255, 160, 122, 0.08) 100%)',
+                          color: isSelected ? 'white' : '#333',
+                          boxShadow: isSelected ? '0 3px 8px rgba(255, 107, 53, 0.2)' : 'none',
+                          textAlign: 'center',
+                        }}
+                        onMouseOver={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.12) 0%, rgba(255, 160, 122, 0.12) 100%)';
+                          }
+                        }}
+                        onMouseOut={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.08) 0%, rgba(255, 160, 122, 0.08) 100%)';
+                          }
+                        }}
                         title={category.purpose}
                       >
-                        <div className="text-xs">{category.icon}</div>
-                        <div className="line-clamp-1 text-xs">{category.name}</div>
+                        <div style={{fontSize: '14px', marginBottom: '2px'}}>{category.icon}</div>
+                        <div style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '10px'}}>{category.name}</div>
                       </button>
                     );
                   })}
@@ -329,12 +400,18 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
             ))}
           </div>
 
-          <div className="flex gap-2">
+          <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
             <button
               onClick={() => setSelectedCategories([])}
-              className="text-xs text-errandify-orange font-semibold hover:underline"
+              style={{fontSize: '12px', color: '#FF6B35', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0}}
+              onMouseOver={(e) => {
+                e.currentTarget.style.textDecoration = 'underline';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.textDecoration = 'none';
+              }}
             >
-              Clear
+              Clear All
             </button>
 
             {/* Favorites Filter - Inline */}

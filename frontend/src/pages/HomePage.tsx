@@ -93,66 +93,158 @@ export default function HomePage({ userRole }: HomePageProps) {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-1.5 mb-1.5">
+        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px'}}>
           {userRole === 'asker' ? (
             <>
               <button
                 onClick={() => navigate('/create-errand-hana')}
-                className="bg-errandify-orange text-white p-2.5 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+                style={{
+                  background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
+                  color: 'white',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)',
+                  textAlign: 'center',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.4)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)';
+                }}
               >
-                <span className="text-lg block">📝</span>
-                <span className="font-semibold text-xs">Post</span>
+                <div style={{fontSize: '24px', marginBottom: '8px'}}>📝</div>
+                <div style={{fontWeight: '600', fontSize: '14px'}}>Post Errand</div>
               </button>
 
               <button
                 onClick={() => navigate('/errands')}
-                className="bg-errandify-brown text-white p-2.5 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+                style={{
+                  background: 'linear-gradient(135deg, #8B6F47 0%, #A0826D 100%)',
+                  color: 'white',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(139, 111, 71, 0.3)',
+                  textAlign: 'center',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(139, 111, 71, 0.4)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 111, 71, 0.3)';
+                }}
               >
-                <span className="text-lg block">📋</span>
-                <span className="font-semibold text-xs">MyErrands</span>
+                <div style={{fontSize: '24px', marginBottom: '8px'}}>📋</div>
+                <div style={{fontWeight: '600', fontSize: '14px'}}>My Errands</div>
               </button>
             </>
           ) : (
             <>
               <button
                 onClick={() => navigate('/browse')}
-                className="bg-errandify-orange text-white p-2.5 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+                style={{
+                  background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
+                  color: 'white',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)',
+                  textAlign: 'center',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.4)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)';
+                }}
               >
-                <span className="text-lg block">🔍</span>
-                <span className="font-semibold text-xs">Browse</span>
+                <div style={{fontSize: '24px', marginBottom: '8px'}}>🔍</div>
+                <div style={{fontWeight: '600', fontSize: '14px'}}>Browse</div>
               </button>
 
               <button
                 onClick={() => navigate('/my-offer')}
-                className="bg-errandify-brown text-white p-2.5 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+                style={{
+                  background: 'linear-gradient(135deg, #8B6F47 0%, #A0826D 100%)',
+                  color: 'white',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(139, 111, 71, 0.3)',
+                  textAlign: 'center',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(139, 111, 71, 0.4)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 111, 71, 0.3)';
+                }}
               >
-                <span className="text-lg block">💼</span>
-                <span className="font-semibold text-xs">MyOffer</span>
+                <div style={{fontSize: '24px', marginBottom: '8px'}}>💼</div>
+                <div style={{fontWeight: '600', fontSize: '14px'}}>My Offers</div>
               </button>
             </>
           )}
         </div>
 
         {/* Quick Categories */}
-        <div className="bg-white rounded-lg p-1 border border-gray-200">
-          <h2 className="font-bold text-errandify-brown mb-0.5 text-xs pl-1">
+        <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', marginBottom: '16px', borderTop: '4px solid #FF6B35'}}>
+          <h2 style={{fontWeight: '700', color: '#333', marginBottom: '12px', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px'}}>
             {userRole === 'asker' ? '🎯 Need help?' : '🤝 Help?'}
           </h2>
 
-          <div className="space-y-0.5">
+          <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
             {Object.entries(groupedCategories).map(([groupName, cats]) => (
               <div key={groupName}>
-                <h3 className="text-xs font-bold text-gray-600 mb-0.5 pl-1">{groupName}</h3>
-                <div className="grid grid-cols-4 gap-1 mb-1">
+                <h3 style={{fontSize: '13px', fontWeight: '600', color: '#666', marginBottom: '8px', paddingLeft: '4px'}}>{groupName}</h3>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px'}}>
                   {cats.map((category) => (
                     <button
                       key={category.id}
                       onClick={() => handleCategoryClick(category.id)}
-                      className={`px-1 py-1 rounded text-xs font-medium transition-all hover:shadow-md bg-gradient-to-r ${category.color}`}
+                      style={{
+                        padding: '12px 8px',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)',
+                        transition: 'all 0.2s',
+                        textAlign: 'center',
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(255, 160, 122, 0.15) 100%)';
+                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(255, 107, 53, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)';
+                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
                       title={category.purpose}
                     >
-                      <div className="text-xs">{category.icon}</div>
-                      <div className="line-clamp-1 text-xs">{category.name}</div>
+                      <div style={{fontSize: '18px', marginBottom: '4px'}}>{category.icon}</div>
+                      <div style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '11px', color: '#333'}}>{category.name}</div>
                     </button>
                   ))}
                 </div>
