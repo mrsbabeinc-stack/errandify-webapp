@@ -436,47 +436,46 @@ export default function ChatPage({ userRole }: ChatPageProps) {
           <p className="text-xs text-gray-400">Try adjusting your search or filters</p>
         </div>
       ) : (
-        <div style={{display: 'grid', gap: '10px'}}>
+        <div style={{display: 'grid', gap: '6px'}}>
           {filteredConversations.map((conversation) => (
-            <div key={conversation.id} style={{background: 'linear-gradient(135deg, #FFF9F7 0%, #FFF5F0 100%)', borderRadius: '10px', padding: '10px', boxShadow: '0 2px 12px rgba(255, 107, 53, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)', border: '1px solid #FFE0D6', position: 'relative', transition: 'all 0.2s', cursor: 'pointer', overflow: 'hidden'}} onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 4px 16px rgba(255, 107, 53, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8)'; e.currentTarget.style.transform = 'translateY(-2px)';}} onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 2px 12px rgba(255, 107, 53, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)'; e.currentTarget.style.transform = 'translateY(0)';}}>
+            <div key={conversation.id} style={{background: 'linear-gradient(135deg, #FFF9F7 0%, #FFF5F0 100%)', borderRadius: '8px', padding: '8px', boxShadow: '0 1px 8px rgba(255, 107, 53, 0.06)', border: '1px solid #FFE8D6', position: 'relative', transition: 'all 0.15s', cursor: 'pointer'}} onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 2px 12px rgba(255, 107, 53, 0.1)'; e.currentTarget.style.transform = 'translateY(-1px)';}} onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 1px 8px rgba(255, 107, 53, 0.06)'; e.currentTarget.style.transform = 'translateY(0)';}}>
               {/* Unread Badge */}
               {unreadCounts.get(conversation.id) && unreadCounts.get(conversation.id)! > 0 && (
-                <div style={{position: 'absolute', top: '6px', right: '6px', background: '#E63946', color: 'white', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', boxShadow: '0 2px 6px rgba(230, 57, 70, 0.3)', border: '2px solid white'}}>
+                <div style={{position: 'absolute', top: '4px', right: '4px', background: '#E63946', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700', boxShadow: '0 1px 4px rgba(230, 57, 70, 0.25)', border: '1.5px solid white'}}>
                   {unreadCounts.get(conversation.id)}
                 </div>
               )}
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px'}}>
-                <div style={{flex: 1, minWidth: 0}}>
-                  <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-                    <h3 style={{fontWeight: '700', fontSize: '13px', color: '#333', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{conversation.title}</h3>
-                    <span style={{fontSize: '10px', fontWeight: '700', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '2px 6px', borderRadius: '5px', flexShrink: 0, boxShadow: '0 1px 5px rgba(255, 107, 53, 0.2)'}}>{conversation.formattedId}</span>
-                  </div>
+              {/* Title + Badge + Status in one row */}
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px', marginBottom: '6px'}}>
+                <div style={{flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '4px'}}>
+                  <h3 style={{fontWeight: '700', fontSize: '12px', color: '#333', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{conversation.title}</h3>
+                  <span style={{fontSize: '9px', fontWeight: '700', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '1px 5px', borderRadius: '4px', flexShrink: 0}}>{conversation.formattedId}</span>
                 </div>
-                <span style={{padding: '3px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? '#FFE8D6' : getStatusColor(conversation.status).includes('green') ? '#C8E6C9' : '#F0F0F0', color: getStatusColor(conversation.status).includes('orange') ? '#FF6B35' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#666'}}>
-                  {getStatusLabel(conversation.status)}
+                <span style={{padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '700', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? '#FFE8D6' : getStatusColor(conversation.status).includes('green') ? '#C8E6C9' : '#F0F0F0', color: getStatusColor(conversation.status).includes('orange') ? '#FF6B35' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#666'}}>
+                  {getStatusLabel(conversation.status).replace('Awaiting Confirmation', 'Awaiting').replace('Completed', 'Done')}
                 </span>
               </div>
 
-              {/* Info rows - all in one line */}
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#666', gap: '8px'}}>
-                <div style={{flex: 1, display: 'flex', gap: '12px', minWidth: 0}}>
+              {/* Single line: Date | Location | Chat Button | Posted by */}
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px', flexWrap: 'wrap'}}>
+                <div style={{display: 'flex', gap: '8px', minWidth: 0, flex: 1}}>
                   {conversation.deadline && (
-                    <span style={{color: '#FF6B35', fontWeight: '600', whiteSpace: 'nowrap'}}>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span style={{fontSize: '11px', color: '#FF6B35', fontWeight: '600', whiteSpace: 'nowrap'}}>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   )}
                   {(conversation.location || conversation.postal) && (
-                    <span style={{fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</span>
+                    <span style={{fontSize: '11px', fontWeight: '500', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</span>
                   )}
                 </div>
                 <button
                   onClick={() => handleOpenChat(conversation.id)}
-                  style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', color: 'white', padding: '5px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(255, 107, 53, 0.2)', flexShrink: 0}}
-                  onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.3)'; e.currentTarget.style.transform = 'translateY(-1px)';}}
-                  onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.2)'; e.currentTarget.style.transform = 'translateY(0)';}}
+                  style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', color: 'white', padding: '4px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: '700', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '3px', transition: 'all 0.15s', boxShadow: '0 1px 6px rgba(255, 107, 53, 0.15)', flexShrink: 0}}
+                  onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.25)'; e.currentTarget.style.transform = 'translateY(-0.5px)';}}
+                  onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 1px 6px rgba(255, 107, 53, 0.15)'; e.currentTarget.style.transform = 'translateY(0)';}}
                 >
                   💬 Chat
                 </button>
               </div>
-              <p style={{fontSize: '11px', color: '#999', margin: '6px 0 0 0'}}>By {conversation.otherPartyName}</p>
+              <div style={{fontSize: '10px', color: '#999', marginTop: '3px'}}>By {conversation.otherPartyName}</div>
             </div>
           ))}
         </div>
