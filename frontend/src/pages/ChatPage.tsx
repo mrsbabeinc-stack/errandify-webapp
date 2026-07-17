@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import TaskChatbox from '../components/TaskChatbox';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 import { initializeSocket, getSocket, isSocketConnected as checkSocketConnected } from '../utils/socketClient';
 
 interface ChatPageProps {
@@ -324,126 +325,97 @@ export default function ChatPage({ userRole }: ChatPageProps) {
   });
 
   return (
-    <div className="px-4 py-4 max-w-3xl mx-auto pb-24 relative">
-      {/* Socket Connection Status Indicator */}
-      <div className="mb-4 flex items-center gap-2">
-        <div className={`w-3 h-3 rounded-full ${isSocketConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-        <p className="text-xs font-medium text-gray-600">
-          {isSocketConnected ? '✅ Real-time messaging active' : '⏳ Connecting...'}
-        </p>
-      </div>
-
-      {/* Notification Toast */}
-      {notification && (
-        <div className={`fixed top-4 left-4 right-4 p-3 rounded-lg shadow-lg text-sm font-semibold z-40 animate-bounce ${
-          notification.type === 'info' ? 'bg-blue-500 text-white' : 'bg-amber-500 text-white'
-        }`}>
-          {notification.message}
+    <AdminThemeWrapper title="💬 MyChat" subtitle="Chat with users about errands" showBackButton onBack={() => navigate(-1)}>
+      <div style={{maxWidth: '1000px', margin: '0 auto'}}>
+        {/* Socket Connection Status Indicator */}
+        <div style={{marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: isSocketConnected ? '#E8F5E9' : '#FFF3E0', borderRadius: '8px', borderLeft: `4px solid ${isSocketConnected ? '#4CAF50' : '#FF9800'}`}}>
+          <div style={{width: '8px', height: '8px', borderRadius: '50%', background: isSocketConnected ? '#4CAF50' : '#FF9800'}} />
+          <p style={{fontSize: '12px', fontWeight: '600', color: isSocketConnected ? '#2E7D32' : '#E65100', margin: 0}}>
+            {isSocketConnected ? '✅ Real-time messaging active' : '⏳ Connecting...'}
+          </p>
         </div>
-      )}
-      <h1 className="text-lg font-bold text-errandify-brown mb-2">Messages</h1>
-      <p className="text-xs text-gray-600 mb-4">
-        Chat with users about errands
-      </p>
 
-      {/* Search Box */}
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="🔍 Search task name or user..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-errandify-orange"
-        />
-      </div>
+        {/* Notification Toast */}
+        {notification && (
+          <div style={{position: 'fixed', top: '16px', left: '16px', right: '16px', padding: '12px 16px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', fontSize: '14px', fontWeight: '600', zIndex: 40, background: notification.type === 'info' ? '#2196F3' : '#FF9800', color: 'white', animation: 'fadeInOut 3s ease-in-out'}}>
+            {notification.message}
+          </div>
+        )}
 
-      {/* View Filter - All/Asker/Doer */}
-      <div className="flex gap-2 mb-3 pb-2">
-        <button
-          onClick={() => setViewFilter('all')}
-          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
-            viewFilter === 'all'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          📬 All Messages
-        </button>
-        <button
-          onClick={() => setViewFilter('asker')}
-          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
-            viewFilter === 'asker'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          📝 My Tasks (Asker)
-        </button>
-        <button
-          onClick={() => setViewFilter('doer')}
-          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
-            viewFilter === 'doer'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          ✓ My Jobs (Doer)
-        </button>
-      </div>
+        {/* Search Box */}
+        <div style={{marginBottom: '16px'}}>
+          <input
+            type="text"
+            placeholder="🔍 Search task name or user..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{width: '100%', padding: '10px 12px', border: '2px solid #FFE0D6', borderRadius: '8px', fontSize: '14px', fontWeight: '500', background: '#FFF9F7', outline: 'none', transition: 'all 0.2s'}}
+            onFocus={(e) => {e.currentTarget.style.borderColor = '#FF6B35'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255, 107, 53, 0.1)';}}
+            onBlur={(e) => {e.currentTarget.style.borderColor = '#FFE0D6'; e.currentTarget.style.boxShadow = 'none';}}
+          />
+        </div>
 
-      {/* Status Filter Buttons */}
-      <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-        <button
-          onClick={() => setSelectedStatus('all')}
-          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
-            selectedStatus === 'all'
-              ? 'bg-errandify-orange text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          All
-        </button>
-        <button
-          onClick={() => setSelectedStatus('confirmed')}
-          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
-            selectedStatus === 'confirmed'
-              ? 'bg-errandify-orange text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Confirmed
-        </button>
-        <button
-          onClick={() => setSelectedStatus('in_progress')}
-          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
-            selectedStatus === 'in_progress'
-              ? 'bg-errandify-orange text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          In Progress
-        </button>
-        <button
-          onClick={() => setSelectedStatus('completed_unconfirmed')}
-          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
-            selectedStatus === 'completed_unconfirmed'
-              ? 'bg-errandify-orange text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Awaiting Confirmation
-        </button>
-        <button
-          onClick={() => setSelectedStatus('completed_confirmed')}
-          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
-            selectedStatus === 'completed_confirmed'
-              ? 'bg-errandify-orange text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Completed
-        </button>
-      </div>
+        {/* View Filter - All/Asker/Doer */}
+        <div style={{display: 'flex', gap: '8px', marginBottom: '12px', overflowX: 'auto', paddingBottom: '8px'}}>
+          {['all', 'asker', 'doer'].map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setViewFilter(filter as any)}
+              style={{
+                padding: '8px 14px',
+                borderRadius: '20px',
+                fontSize: '13px',
+                fontWeight: '600',
+                whiteSpace: 'nowrap',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                background: viewFilter === filter ? '#FF6B35' : 'linear-gradient(135deg, rgba(255,245,240,0.6) 0%, rgba(255,232,214,0.4) 100%)',
+                color: viewFilter === filter ? 'white' : '#555',
+                boxShadow: viewFilter === filter ? '0 4px 12px rgba(255, 107, 53, 0.3)' : '0 2px 8px rgba(0,0,0,0.05)',
+              }}
+              onMouseEnter={(e) => {if (viewFilter !== filter) {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.8) 0%, rgba(255,200,160,0.6) 100%)'; e.currentTarget.style.transform = 'translateY(-2px)';}} }
+              onMouseLeave={(e) => {if (viewFilter !== filter) {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.6) 0%, rgba(255,232,214,0.4) 100%)'; e.currentTarget.style.transform = 'translateY(0)';}} }
+            >
+              {filter === 'all' && '📬 All Messages'}
+              {filter === 'asker' && '📝 My Tasks (Asker)'}
+              {filter === 'doer' && '✓ My Jobs (Doer)'}
+            </button>
+          ))}
+        </div>
+
+        {/* Status Filter Buttons */}
+        <div style={{display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '8px'}}>
+          {[
+            { value: 'all', label: 'All' },
+            { value: 'confirmed', label: 'Confirmed' },
+            { value: 'in_progress', label: 'In Progress' },
+            { value: 'completed_unconfirmed', label: 'Awaiting Confirmation' },
+            { value: 'completed_confirmed', label: 'Completed' }
+          ].map((status) => (
+            <button
+              key={status.value}
+              onClick={() => setSelectedStatus(status.value)}
+              style={{
+                padding: '8px 14px',
+                borderRadius: '20px',
+                fontSize: '13px',
+                fontWeight: '600',
+                whiteSpace: 'nowrap',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                background: selectedStatus === status.value ? '#FF6B35' : '#F5F5F5',
+                color: selectedStatus === status.value ? 'white' : '#555',
+                boxShadow: selectedStatus === status.value ? '0 4px 12px rgba(255, 107, 53, 0.3)' : 'none',
+              }}
+              onMouseEnter={(e) => {if (selectedStatus !== status.value) e.currentTarget.style.background = '#E8E8E8';}}
+              onMouseLeave={(e) => {if (selectedStatus !== status.value) e.currentTarget.style.background = '#F5F5F5';}}
+            >
+              {status.label}
+            </button>
+          ))}
+        </div>
 
       {loading ? (
         <div className="text-center py-8">
@@ -464,54 +436,52 @@ export default function ChatPage({ userRole }: ChatPageProps) {
           <p className="text-xs text-gray-400">Try adjusting your search or filters</p>
         </div>
       ) : (
-        <div className="grid gap-3">
+        <div style={{display: 'grid', gap: '12px'}}>
           {filteredConversations.map((conversation) => (
-            <div key={conversation.id} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow relative">
+            <div key={conversation.id} style={{background: 'linear-gradient(135deg, #FFF9F7 0%, #FFF5F0 100%)', borderRadius: '12px', padding: '14px', boxShadow: '0 4px 12px rgba(255, 107, 53, 0.1)', border: '1px solid #FFE0D6', position: 'relative', transition: 'all 0.2s', cursor: 'pointer'}} onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 107, 53, 0.15)'; e.currentTarget.style.transform = 'translateY(-2px)';}} onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.1)'; e.currentTarget.style.transform = 'translateY(0)';}}>
               {/* Unread Badge */}
               {unreadCounts.get(conversation.id) && unreadCounts.get(conversation.id)! > 0 && (
-                <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                <div style={{position: 'absolute', top: '10px', right: '10px', background: '#E63946', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', boxShadow: '0 2px 8px rgba(0,0,0,0.2)'}}>
                   {unreadCounts.get(conversation.id)}
                 </div>
               )}
-              <div className="flex justify-between items-start gap-2 mb-1">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-sm text-gray-800 line-clamp-1">{conversation.title}</h3>
-                    <span className="text-xs font-bold text-errandify-orange bg-orange-50 px-1.5 py-0.5 rounded flex-shrink-0">{conversation.formattedId}</span>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px'}}>
+                <div style={{flex: 1, minWidth: 0}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    <h3 style={{fontWeight: '700', fontSize: '14px', color: '#333', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{conversation.title}</h3>
+                    <span style={{fontSize: '11px', fontWeight: '700', color: '#FF6B35', background: '#FFE8D6', padding: '4px 8px', borderRadius: '6px', flexShrink: 0}}>{conversation.formattedId}</span>
                   </div>
                 </div>
-                <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${getStatusColor(conversation.status)}`}>
+                <span style={{padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? '#FFE8D6' : getStatusColor(conversation.status).includes('green') ? '#E8F5E9' : '#F5F5F5', color: getStatusColor(conversation.status).includes('orange') ? '#FF6B35' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#555'}}>
                   {getStatusLabel(conversation.status)}
                 </span>
               </div>
 
               {/* Start Date/Time and Area - 2 lines with buttons on right */}
-              <div className="text-xs text-gray-600 space-y-0">
+              <div style={{fontSize: '12px', color: '#666'}}>
                 {conversation.deadline && (
-                  <div className="flex justify-between items-center">
-                    <p>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px'}}>
+                    <p style={{margin: 0}}>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     <button
                       onClick={() => handleOpenChat(conversation.id)}
-                      className="bg-errandify-orange text-white px-2 py-1 rounded text-xs font-semibold hover:bg-opacity-90 transition-colors whitespace-nowrap flex items-center gap-1"
+                      style={{background: '#FF6B35', color: 'white', padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s'}}
+                      onMouseEnter={(e) => {e.currentTarget.style.background = '#FF5520'; e.currentTarget.style.transform = 'scale(1.05)';}}
+                      onMouseLeave={(e) => {e.currentTarget.style.background = '#FF6B35'; e.currentTarget.style.transform = 'scale(1)';}}
                     >
                       💬 Chat
                     </button>
                   </div>
                 )}
                 {(conversation.location || conversation.postal) && conversation.status !== 'completed' && conversation.status !== 'completed_confirmed' && conversation.status !== 'completed_unconfirmed' && (
-                  <div className="flex justify-between items-center">
-                    <p>
-                      📍 {`${conversation.postal}${conversation.location && conversation.postal ? ', ' : ''}${conversation.location}`}
-                    </p>
-                    <p className="text-gray-600">Posted by {conversation.otherPartyName}</p>
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                    <p style={{margin: 0}}>📍 {`${conversation.postal}${conversation.location && conversation.postal ? ', ' : ''}${conversation.location}`}</p>
+                    <p style={{margin: 0, color: '#999', fontSize: '11px'}}>Posted by {conversation.otherPartyName}</p>
                   </div>
                 )}
                 {(conversation.location || conversation.postal) && (conversation.status === 'completed' || conversation.status === 'completed_confirmed' || conversation.status === 'completed_unconfirmed') && (
-                  <div className="flex justify-between items-center">
-                    <p>
-                      📍 {getAreaOnly(conversation.location)}
-                    </p>
-                    <p className="text-gray-600">Posted by {conversation.otherPartyName}</p>
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                    <p style={{margin: 0}}>📍 {getAreaOnly(conversation.location)}</p>
+                    <p style={{margin: 0, color: '#999', fontSize: '11px'}}>Posted by {conversation.otherPartyName}</p>
                   </div>
                 )}
               </div>
@@ -519,6 +489,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
           ))}
         </div>
       )}
+      </div>
 
       {showChatbox && selectedErrandId && (
         <TaskChatbox
@@ -535,6 +506,6 @@ export default function ChatPage({ userRole }: ChatPageProps) {
           } : undefined}
         />
       )}
-    </div>
+    </AdminThemeWrapper>
   );
 }
