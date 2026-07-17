@@ -85,9 +85,9 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
   return (
     <div className="flex flex-col h-screen bg-errandify-bg">
       {/* Top Bar with Logo, Role Toggle & Profile */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center sticky top-0 z-50">
-        {/* Logo */}
-        <div className="flex items-center gap-2">
+      <div className="bg-white border-b border-gray-200 px-4 py-2 flex justify-center items-center relative sticky top-0 z-50">
+        {/* Logo - Left */}
+        <div className="absolute left-4 flex items-center gap-2">
           <img
             src="/images/Errandify Logo.png"
             alt="Errandify"
@@ -95,11 +95,13 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
           />
         </div>
 
-        {/* Role Toggle */}
-        <RoleToggle currentRole={userRole} onRoleChange={handleRoleChange} />
+        {/* Role Toggle - Center */}
+        <div className="flex-1 flex justify-center">
+          <RoleToggle currentRole={userRole} onRoleChange={handleRoleChange} />
+        </div>
 
-        {/* Notifications & Profile */}
-        <div className="flex items-center gap-4">
+        {/* Notifications & Profile - Right */}
+        <div className="absolute right-4 flex items-center gap-4">
           {/* Notification Bell - Removed */}
           {/* <NotificationBell /> */}
 

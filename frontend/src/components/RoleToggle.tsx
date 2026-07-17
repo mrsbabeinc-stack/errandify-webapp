@@ -19,23 +19,23 @@ export default function RoleToggle({ currentRole, onRoleChange }: RoleToggleProp
   };
 
   return (
-    <div className="flex gap-1 bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+    <div className="flex gap-2 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl shadow-md border border-orange-200 p-1.5">
       <button
         onClick={() => onRoleChange('asker')}
-        className={`px-3 py-1 rounded-md font-semibold text-sm transition-colors ${
+        className={`px-4 py-2 rounded-lg font-bold text-sm transition-all duration-200 ${
           currentRole === 'asker'
-            ? 'bg-errandify-orange text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ? 'bg-gradient-to-r from-errandify-orange to-orange-400 text-white shadow-lg scale-105'
+            : 'bg-white text-gray-700 hover:bg-orange-100 hover:text-errandify-orange'
         }`}
       >
         👤 Asker
       </button>
       <button
         onClick={() => onRoleChange('doer')}
-        className={`px-3 py-1 rounded-md font-semibold text-sm transition-colors ${
+        className={`px-4 py-2 rounded-lg font-bold text-sm transition-all duration-200 ${
           currentRole === 'doer'
-            ? 'bg-errandify-orange text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ? 'bg-gradient-to-r from-errandify-orange to-orange-400 text-white shadow-lg scale-105'
+            : 'bg-white text-gray-700 hover:bg-orange-100 hover:text-errandify-orange'
         }`}
       >
         💼 Doer
@@ -45,7 +45,7 @@ export default function RoleToggle({ currentRole, onRoleChange }: RoleToggleProp
       {isAdmin && (
         <button
           onClick={handleAdminClick}
-          className="px-3 py-1 rounded-md font-semibold text-sm transition-colors bg-gray-800 text-white hover:bg-gray-900"
+          className="px-4 py-2 rounded-lg font-bold text-sm transition-all duration-200 bg-gray-800 text-white hover:bg-gray-900 hover:shadow-lg"
           title="Enter professional admin dashboard"
         >
           ⚙️ Admin
