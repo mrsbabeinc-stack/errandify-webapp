@@ -1,7 +1,7 @@
 // Service Worker for Push Notifications
 // Handles background sync, push events, and offline notifications
 
-const CACHE_NAME = 'errandify-v16-admin-theme-pages';
+const CACHE_NAME = 'errandify-v17-no-notifications';
 const urlsToCache = [
   '/',
   '/index.html',
