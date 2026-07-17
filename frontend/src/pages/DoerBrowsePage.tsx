@@ -340,8 +340,11 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
         {userRole === 'doer' && (
           <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '10px', border: '1px solid #FFE0D6', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', marginBottom: '10px'}}>
           <h3 style={{fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px'}}>
-            🎯 Categories <span style={{color: '#999', fontWeight: '400', fontSize: '11px'}}>(Select)</span>
+            🎯 Categories <span style={{color: '#999', fontWeight: '400', fontSize: '11px'}}>(Select to filter)</span>
           </h3>
+          <p style={{fontSize: '11px', color: '#666', marginBottom: '8px', lineHeight: '1.4'}}>
+            Filter errands by category to find work that matches your skills. Leave empty to see all errands.
+          </p>
 
           {/* Show all categories */}
           <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '6px'}}>
