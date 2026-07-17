@@ -350,7 +350,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
         {userRole === 'doer' && (
           <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '10px', border: '1px solid #FFE0D6', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', marginBottom: '10px'}}>
           <h3 style={{fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px'}}>
-            🎯 Categories <span style={{color: '#999', fontWeight: '400', fontSize: '11px'}}>(Select)</span>
+            🚀 Explore Opportunities <span style={{color: '#999', fontWeight: '400', fontSize: '11px'}}>(Filter)</span>
           </h3>
 
           {/* Show all categories */}

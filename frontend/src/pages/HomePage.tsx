@@ -203,7 +203,7 @@ export default function HomePage({ userRole }: HomePageProps) {
         {/* Quick Categories - 2 Row Grid */}
         <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '10px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'}}>
           <h2 style={{fontWeight: '700', color: '#333', marginBottom: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'}}>
-            {userRole === 'asker' ? '🎯 Need help?' : '🤝 Help?'}
+            {userRole === 'asker' ? '✨ Get It Done' : '🚀 Earn & Grow'}
           </h2>
 
           {/* Show all categories grouped with headers */}
