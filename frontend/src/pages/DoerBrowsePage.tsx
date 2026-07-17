@@ -248,28 +248,31 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
 
         {/* Search Bar */}
         {userRole === 'doer' && (
-          <div style={{marginBottom: '10px'}}>
+          <div style={{marginBottom: '16px'}}>
             <input
               type="text"
-              placeholder="🔍 Search errands..."
+              placeholder="🔍 Search errands by title, skills, or budget..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #DDD',
-                borderRadius: '8px',
-                fontSize: '12px',
+                padding: '12px 16px',
+                border: '2px solid #FFE0D6',
+                borderRadius: '12px',
+                fontSize: '13px',
                 outline: 'none',
-                transition: 'all 0.2s',
+                transition: 'all 0.3s',
+                background: 'white',
+                fontWeight: '500',
+                boxShadow: '0 2px 8px rgba(255, 107, 53, 0.08)',
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = '#FF6B35';
-                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255, 107, 53, 0.1)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(255, 107, 53, 0.2)';
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#DDD';
-                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.borderColor = '#FFE0D6';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.08)';
               }}
             />
           </div>
@@ -277,12 +280,12 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
 
         {/* Category Selection Card - Warm & Compact - Grouped by Category Groups */}
         {userRole === 'doer' && (
-          <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '10px', border: '1px solid #FFE0D6', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', marginBottom: '10px'}}>
-          <h3 style={{fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px'}}>
-            🎯 Categories <span style={{color: '#999', fontWeight: '400', fontSize: '11px'}}>(Select to filter)</span>
+          <div style={{background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF5F0 100%)', borderRadius: '16px', padding: '16px', border: '2px solid #FFE0D6', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.15)', marginBottom: '16px'}}>
+          <h3 style={{fontSize: '14px', fontWeight: '800', color: '#333', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px'}}>
+            🎯 Categories <span style={{color: '#999', fontWeight: '400', fontSize: '12px'}}>(Select to filter)</span>
           </h3>
-          <p style={{fontSize: '11px', color: '#666', marginBottom: '8px', lineHeight: '1.4'}}>
-            Filter errands by category to find work that matches your skills. Leave empty to see all errands.
+          <p style={{fontSize: '12px', color: '#555', marginBottom: '12px', lineHeight: '1.5', fontWeight: '500'}}>
+            Find work that matches your skills. Pick one or more categories to get started! 🚀
           </p>
 
           {/* Show all categories */}
@@ -378,14 +381,17 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
             <p className="text-gray-600 text-xs">Loading errands...</p>
           </div>
         ) : filteredErrands.length === 0 ? (
-          <div className="text-center py-6 bg-white rounded-xl p-4 border border-orange-100 shadow-sm">
-            <p className="text-gray-700 text-sm font-medium mb-2">
-              📭 No errands available yet
+          <div style={{textAlign: 'center', padding: '32px 24px', background: 'linear-gradient(135deg, #FFF9F5 0%, #FFEFEA 100%)', borderRadius: '16px', border: '2px solid #FFE0D6', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.12)'}}>
+            <p style={{fontSize: '32px', marginBottom: '8px'}}>
+              {selectedCategories.length > 0 ? '🔍' : '📭'}
             </p>
-            <p className="text-gray-500 text-xs mb-3">
+            <p style={{fontSize: '16px', fontWeight: '700', color: '#333', marginBottom: '8px'}}>
+              {selectedCategories.length > 0 ? 'No matches found' : 'No errands yet'}
+            </p>
+            <p style={{fontSize: '13px', color: '#555', marginBottom: '16px', lineHeight: '1.6', fontWeight: '500'}}>
               {selectedCategories.length > 0
-                ? 'No errands in selected categories. Try a different category or clear filters.'
-                : 'Be the first to browse errands! Check back soon as more doers post tasks.'}
+                ? '😊 No errands in your selected categories yet. Try exploring other categories or check back soon!'
+                : '🚀 The errand board is currently empty. Be the first to post one or check back soon as more opportunities arrive!'}
             </p>
             {(selectedCategories.length > 0 || searchQuery) && (
               <button
@@ -393,9 +399,28 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                   setSelectedCategories([]);
                   setSearchQuery('');
                 }}
-                className="text-errandify-orange font-semibold text-xs hover:text-orange-600 transition"
+                style={{
+                  padding: '10px 20px',
+                  background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.4)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)';
+                }}
               >
-                Clear filters & search
+                Clear Filters
               </button>
             )}
           </div>
@@ -475,28 +500,16 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
         )}
 
         {/* Footer */}
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          {filteredErrands.length > 0 ? (
-            <div className="text-center text-xs text-gray-600 mb-3">
-              <p className="font-medium text-gray-700 mb-1">
-                ✅ Showing {filteredErrands.length} errand{filteredErrands.length !== 1 ? 's' : ''}
-              </p>
-              <p className="text-gray-500">
-                💡 Tap an errand card to view details and place your bid
-              </p>
-            </div>
-          ) : (
-            <div className="text-center text-xs text-gray-600 mb-3">
-              <p className="font-medium text-gray-700 mb-1">No errands found</p>
-              <p className="text-gray-500">
-                Try adjusting your filters or check back later
-              </p>
-            </div>
-          )}
-          <div className="text-center text-xs text-gray-500 pb-4">
-            <p>🏠 Errandify • Find jobs that fit your schedule</p>
+        {filteredErrands.length > 0 && (
+          <div className="mt-6 pt-4 border-t border-gray-200 text-center text-xs text-gray-600">
+            <p className="font-medium text-gray-700 mb-1">
+              ✅ Showing {filteredErrands.length} errand{filteredErrands.length !== 1 ? 's' : ''}
+            </p>
+            <p className="text-gray-500">
+              💡 Tap an errand card to view details and place your bid
+            </p>
           </div>
-        </div>
+        )}
       </div>
     </AdminThemeWrapper>
   );
