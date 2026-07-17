@@ -16,12 +16,12 @@ export default function AdminThemeWrapper({
   onBack,
 }: AdminThemeWrapperProps) {
   return (
-    <div style={{background: 'white', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column'}}>
+    <div style={{background: 'white', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', paddingBottom: '60px'}}>
       <div style={{background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%)', flex: 1, overflow: 'hidden'}}>
-        <div style={{maxWidth: '1200px', margin: '0 auto', padding: '8px 20px', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
+        <div style={{maxWidth: '100%', margin: '0', padding: '4px 16px', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
           {/* Header Section */}
           {(title || showBackButton) && (
-            <div style={{marginBottom: '12px', flexShrink: 0}}>
+            <div style={{marginBottom: '6px', flexShrink: 0}}>
               {showBackButton && (
                 <button
                   onClick={onBack}
@@ -29,10 +29,10 @@ export default function AdminThemeWrapper({
                     background: 'none',
                     border: 'none',
                     color: '#FF6B35',
-                    fontSize: '14px',
+                    fontSize: '12px',
                     fontWeight: '600',
                     cursor: 'pointer',
-                    marginBottom: '8px',
+                    marginBottom: '4px',
                     padding: 0
                   }}
                 >
@@ -41,11 +41,11 @@ export default function AdminThemeWrapper({
               )}
               {title && (
                 <>
-                  <h1 style={{fontSize: '24px', fontWeight: '700', color: '#333', margin: '0 0 2px 0'}}>
+                  <h1 style={{fontSize: '20px', fontWeight: '700', color: '#333', margin: '0', lineHeight: '1.2'}}>
                     {title}
                   </h1>
                   {subtitle && (
-                    <p style={{fontSize: '12px', color: '#666', margin: 0}}>{subtitle}</p>
+                    <p style={{fontSize: '11px', color: '#666', margin: 0}}>{subtitle}</p>
                   )}
                 </>
               )}
@@ -53,7 +53,7 @@ export default function AdminThemeWrapper({
           )}
 
           {/* Content */}
-          <div style={{background: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 4px 12px rgba(255, 107, 53, 0.1)', flex: 1, overflow: 'auto'}}>
+          <div style={{background: 'white', borderRadius: '8px', padding: '12px', boxShadow: '0 2px 8px rgba(255, 107, 53, 0.08)', flex: 1, overflow: 'hidden'}}>
             {children}
           </div>
         </div>
