@@ -223,7 +223,8 @@ export default function MyOfferPage() {
 
         {/* Active Job Sticky Header - Only show if in_progress */}
         {activeBid && activeBid.status === 'in_progress' && (
-          <div style={{marginBottom: '16px', padding: '16px', borderRadius: '14px', border: '2px solid #4CAF50', background: 'linear-gradient(135deg, #F1F8F4 0%, #E8F5E9 100%)', boxShadow: '0 4px 16px rgba(76, 175, 80, 0.2)'}}>
+          <div style={{marginBottom: '16px', padding: '16px', borderRadius: '14px', border: '2px solid #4CAF50', background: 'linear-gradient(135deg, #F1F8F4 0%, #E8F5E9 100%)', boxShadow: '0 6px 20px rgba(76, 175, 80, 0.25)'}}>
+            <p style={{fontSize: '12px', fontWeight: '700', color: '#4CAF50', margin: '0 0 12px 0', textTransform: 'uppercase', letterSpacing: '0.5px'}}>🚀 CURRENTLY ACTIVE</p>
             <div className="flex items-start justify-between mb-3">
               <div>
                 <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
