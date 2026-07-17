@@ -18,7 +18,7 @@ export default function AdminThemeWrapper({
   return (
     <div style={{
       background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%)',
-      height: '100vh',
+      height: 'calc(100vh - 60px)',
       width: '100vw',
       overflow: 'hidden',
       display: 'flex',
@@ -29,14 +29,14 @@ export default function AdminThemeWrapper({
     }}>
       <div style={{
         flex: 1,
-        overflow: 'hidden',
+        overflow: 'auto',
+        WebkitOverflowScrolling: 'touch',
         display: 'flex',
         flexDirection: 'column',
         maxWidth: '1200px',
         margin: '0 auto',
         width: '100%',
-        padding: '8px 20px',
-        paddingBottom: '0'
+        padding: '8px 20px'
       }}>
         {/* Header Section */}
         {(title || showBackButton) && (
@@ -76,10 +76,7 @@ export default function AdminThemeWrapper({
           background: 'white',
           borderRadius: '12px',
           padding: '12px',
-          boxShadow: 'none',
-          flex: 1,
-          overflow: 'hidden',
-          marginBottom: '60px'
+          boxShadow: 'none'
         }}>
           {children}
         </div>
