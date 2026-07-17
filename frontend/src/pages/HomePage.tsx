@@ -79,17 +79,12 @@ export default function HomePage({ userRole }: HomePageProps) {
   };
 
   return (
-    <AdminThemeWrapper title="🏠 Home" showBackButton={false}>
+    <AdminThemeWrapper title="" showBackButton={false}>
       {/* Page Container */}
       <div className="max-w-3xl mx-auto">
         {/* AD CAROUSEL */}
-        <div style={{marginBottom: '8px', maxHeight: '100px', overflow: 'hidden'}}>
+        <div style={{marginBottom: '12px', maxHeight: '100px', overflow: 'hidden'}}>
           <AdCarousel />
-        </div>
-
-        {/* EVENT BANNER */}
-        <div style={{marginBottom: '8px', maxHeight: '60px', overflow: 'hidden'}}>
-          <EventBanner />
         </div>
 
         {/* Quick Actions */}
@@ -211,41 +206,46 @@ export default function HomePage({ userRole }: HomePageProps) {
             {userRole === 'asker' ? '🎯 Need help?' : '🤝 Help?'}
           </h2>
 
-          {/* Show all categories */}
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px'}}>
-            {Object.entries(groupedCategories).flatMap(([groupName, cats]) =>
-              cats.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategoryClick(category.id)}
-                  style={{
-                    padding: '14px 8px',
-                    borderRadius: '10px',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)',
-                    transition: 'all 0.2s',
-                    textAlign: 'center',
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(255, 160, 122, 0.15) 100%)';
-                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(255, 107, 53, 0.15)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)';
-                    e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                  title={category.purpose}
-                >
-                  <div style={{fontSize: '22px', marginBottom: '6px'}}>{category.icon}</div>
-                  <div style={{fontSize: '12px', color: '#333', fontWeight: '500', lineHeight: '1.3'}}>{category.name}</div>
-                </button>
-              ))
-            )}
+          {/* Show all categories grouped with headers */}
+          <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+            {Object.entries(groupedCategories).map(([groupName, cats]) => (
+              <div key={groupName}>
+                <h3 style={{fontSize: '13px', fontWeight: '600', color: '#666', marginBottom: '8px', paddingLeft: '2px'}}>{groupName}</h3>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px'}}>
+                  {cats.map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => handleCategoryClick(category.id)}
+                      style={{
+                        padding: '14px 8px',
+                        borderRadius: '10px',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)',
+                        transition: 'all 0.2s',
+                        textAlign: 'center',
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(255, 160, 122, 0.15) 100%)';
+                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(255, 107, 53, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)';
+                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                      title={category.purpose}
+                    >
+                      <div style={{fontSize: '22px', marginBottom: '6px'}}>{category.icon}</div>
+                      <div style={{fontSize: '12px', color: '#333', fontWeight: '500', lineHeight: '1.3'}}>{category.name}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
