@@ -16,8 +16,8 @@ export default function AdminThemeWrapper({
   onBack,
 }: AdminThemeWrapperProps) {
   return (
-    <div style={{minHeight: '100vh', background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%)', paddingBottom: '5rem'}}>
-      <div style={{maxWidth: '1200px', margin: '0 auto', padding: '20px'}}>
+    <div style={{minHeight: '100vh', background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%)', paddingBottom: '0'}}>
+      <div style={{maxWidth: '1200px', margin: '0 auto', padding: '20px', paddingBottom: '100px'}}>
         {/* Header Section */}
         {(title || showBackButton) && (
           <div style={{marginBottom: '24px'}}>
