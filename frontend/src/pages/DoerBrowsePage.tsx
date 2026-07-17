@@ -236,7 +236,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   });
 
   return (
-    <AdminThemeWrapper title="🔍 Browse Errands To Help" showBackButton onBack={() => navigate('/home')}>
+    <AdminThemeWrapper title="🔍 Browse Errands ToHelp" showBackButton onBack={() => navigate('/home')}>
       <div className="max-w-2xl mx-auto">
         {userRole === 'asker' && (
           <div style={{background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)', border: '1px solid #90CAF9', padding: '10px', borderRadius: '8px', marginBottom: '10px', fontSize: '12px', color: '#1565C0', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px'}}>
