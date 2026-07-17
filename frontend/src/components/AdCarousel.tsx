@@ -15,7 +15,7 @@ const DEFAULT_ADS: Ad[] = [
     title: '🎁 Earn Errandify Points',
     description: 'Complete errands and earn EP to redeem for rewards!',
     image: '🏆',
-    bgColor: 'bg-gradient-to-r from-amber-400 to-orange-400',
+    bgColor: 'bg-gradient-to-r from-blue-400 to-blue-500',
     cta: { label: 'Learn More', url: '/errandify-points' }
   },
   {
