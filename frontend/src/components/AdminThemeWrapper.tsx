@@ -17,8 +17,8 @@ export default function AdminThemeWrapper({
 }: AdminThemeWrapperProps) {
   return (
     <div style={{background: 'white', minHeight: '100vh'}}>
-      <div style={{background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%)', paddingBottom: '20px'}}>
-        <div style={{maxWidth: '1200px', margin: '0 auto', padding: '8px 20px 0 20px'}}>
+      <div style={{background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%)'}}>
+        <div style={{maxWidth: '1200px', margin: '0 auto', padding: '8px 20px'}}>
           {/* Header Section */}
           {(title || showBackButton) && (
             <div style={{marginBottom: '24px'}}>
@@ -53,7 +53,7 @@ export default function AdminThemeWrapper({
           )}
 
           {/* Content */}
-          <div style={{background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 12px rgba(255, 107, 53, 0.1)'}}>
+          <div style={{background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 12px rgba(255, 107, 53, 0.1)', marginBottom: '100px'}}>
             {children}
           </div>
         </div>
