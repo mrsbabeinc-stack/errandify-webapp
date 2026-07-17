@@ -363,9 +363,9 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                     key={category.id}
                     onClick={() => handleCategoryToggle(category.id)}
                     style={{
-                      padding: '14px 8px',
+                      padding: '16px 10px',
                       borderRadius: '10px',
-                      fontSize: '12px',
+                      fontSize: '13px',
                       fontWeight: '500',
                       border: 'none',
                       cursor: 'pointer',
@@ -387,8 +387,8 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                     }}
                     title={category.purpose}
                   >
-                    <div style={{fontSize: '22px', marginBottom: '6px'}}>{category.icon}</div>
-                    <div style={{fontSize: '12px', fontWeight: '500', lineHeight: '1.3'}}>{category.name}</div>
+                    <div style={{fontSize: '24px', marginBottom: '8px'}}>{category.icon}</div>
+                    <div style={{fontSize: '13px', fontWeight: '600', lineHeight: '1.3'}}>{category.name}</div>
                   </button>
                 );
               })

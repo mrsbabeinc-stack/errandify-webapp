@@ -82,8 +82,8 @@ export default function HomePage({ userRole }: HomePageProps) {
     <AdminThemeWrapper title="" showBackButton={false}>
       {/* Page Container */}
       <div className="max-w-3xl mx-auto">
-        {/* AD CAROUSEL */}
-        <div style={{marginBottom: '12px', maxHeight: '100px', overflow: 'hidden'}}>
+        {/* AD CAROUSEL - 4 Banner Hero Section */}
+        <div style={{marginBottom: '16px'}}>
           <AdCarousel />
         </div>
 
@@ -217,9 +217,9 @@ export default function HomePage({ userRole }: HomePageProps) {
                       key={category.id}
                       onClick={() => handleCategoryClick(category.id)}
                       style={{
-                        padding: '14px 8px',
+                        padding: '16px 10px',
                         borderRadius: '10px',
-                        fontSize: '12px',
+                        fontSize: '13px',
                         fontWeight: '500',
                         border: 'none',
                         cursor: 'pointer',
@@ -239,8 +239,8 @@ export default function HomePage({ userRole }: HomePageProps) {
                       }}
                       title={category.purpose}
                     >
-                      <div style={{fontSize: '22px', marginBottom: '6px'}}>{category.icon}</div>
-                      <div style={{fontSize: '12px', color: '#333', fontWeight: '500', lineHeight: '1.3'}}>{category.name}</div>
+                      <div style={{fontSize: '24px', marginBottom: '8px'}}>{category.icon}</div>
+                      <div style={{fontSize: '13px', color: '#333', fontWeight: '600', lineHeight: '1.3'}}>{category.name}</div>
                     </button>
                   ))}
                 </div>
