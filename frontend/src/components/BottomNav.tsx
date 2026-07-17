@@ -250,26 +250,26 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                 left: '50%',
                 bottom: '70px',
                 transform: 'translateX(-50%)',
-                width: '62px',
-                height: '62px',
+                width: '68px',
+                height: '68px',
                 background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
                 color: 'white',
-                borderRadius: '16px',
-                border: '2px solid white',
-                boxShadow: '0 8px 28px rgba(255, 107, 53, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+                borderRadius: '20px',
+                border: '3px solid white',
+                boxShadow: '0 12px 40px rgba(255, 107, 53, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.1)',
                 cursor: 'pointer',
                 fontWeight: '800',
-                fontSize: '32px',
+                fontSize: '36px',
                 transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                 zIndex: 50,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateX(-50%) translateY(-5px) scale(1.08)';
-                e.currentTarget.style.boxShadow = '0 12px 36px rgba(255, 107, 53, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+                e.currentTarget.style.transform = 'translateX(-50%) translateY(-10px) scale(1.15)';
+                e.currentTarget.style.boxShadow = '0 18px 48px rgba(255, 107, 53, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 8px 20px rgba(0, 0, 0, 0.12)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateX(-50%) translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 8px 28px rgba(255, 107, 53, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+                e.currentTarget.style.boxShadow = '0 12px 40px rgba(255, 107, 53, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.1)';
               }}
               title="Create new errand"
             >
