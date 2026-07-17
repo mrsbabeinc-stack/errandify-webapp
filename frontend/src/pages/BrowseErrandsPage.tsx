@@ -188,15 +188,8 @@ export default function BrowseErrandsPage() {
 
   return (
     <AdminThemeWrapper title="🔍 Browse Errands" showBackButton onBack={() => navigate(-1)}>
-      <div>
       {/* Header */}
       <div className="mb-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="text-errandify-orange font-semibold mb-3"
-        >
-          ← Back
-        </button>
         <h1 className="text-3xl font-bold text-errandify-brown mb-2">
           Available Errands
         </h1>
@@ -374,7 +367,6 @@ export default function BrowseErrandsPage() {
           })}
         </div>
       )}
-      </div>
     </AdminThemeWrapper>
   );
 }

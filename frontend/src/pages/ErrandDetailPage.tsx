@@ -675,17 +675,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 
   return (
     <AdminThemeWrapper title="📋 Errand Details" showBackButton onBack={() => navigate(-1)}>
-      <div className="max-w-2xl mx-auto">
-        {/* Page Container */}
+      {/* Page Container */}
       <div className="max-w-2xl mx-auto px-2 py-1">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="text-errandify-orange font-bold mb-1 text-xs hover:text-orange-600 transition"
-        >
-          ← Back
-        </button>
-
         {/* Main Errand Card */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-orange-100">
           {/* Header Section - Warm & Compact */}
@@ -2370,9 +2361,6 @@ Let's help each other! 🤝`}
           </div>
         </div>
       )}
-
-      </div>
-      </div>
     </AdminThemeWrapper>
   );
 }

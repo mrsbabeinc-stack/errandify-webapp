@@ -1169,16 +1169,8 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
 
   return (
     <AdminThemeWrapper title="⚙️ My Account" showBackButton onBack={() => navigate(-1)}>
-      <div>
       {/* HEADER - Matches Layout Style */}
       <div className="bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center relative sticky top-0 z-50">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="text-lg text-errandify-brown font-bold hover:opacity-80 transition"
-        >
-          ←
-        </button>
 
         {/* MyAccount Title - Centered Absolute */}
         <h1 className="absolute left-1/2 transform -translate-x-1/2 text-lg font-bold text-errandify-brown">MyAccount</h1>
@@ -4378,7 +4370,6 @@ function SafetyResourcesList({
           <p className="text-sm text-gray-600">No resources found matching your search.</p>
         </div>
       )}
-      </div>
     </AdminThemeWrapper>
   );
 }

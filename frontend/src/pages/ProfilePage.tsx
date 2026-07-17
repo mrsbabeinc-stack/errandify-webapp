@@ -102,7 +102,6 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
 
   return (
     <AdminThemeWrapper title="👤 User Profile" showBackButton onBack={() => navigate(-1)}>
-      <div>
       {/* ===== PUBLIC PROFILE SECTION ===== */}
       <div className="bg-white border-b-4 border-orange-200 shadow-md">
         {!loading && userProfile && (
@@ -210,7 +209,6 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
             </button>
           </div>
         </div>
-      </div>
       </div>
     </AdminThemeWrapper>
   );
