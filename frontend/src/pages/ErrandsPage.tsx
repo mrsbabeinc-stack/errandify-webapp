@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AdminThemeWrapper from '../components/AdminThemeWrapper';
 import { capitalizeStatus } from '../utils/format';
+import { checkErrandExpiration, getAskerPreExpirationNotification } from '../utils/errandNotifications';
 
 interface ErrandsPageProps {
   userRole: 'asker' | 'doer';
@@ -301,12 +302,22 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
             <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
               {summary.undecidedOffers > 0 && (
                 <div
-                  className="cursor-pointer hover:bg-orange-200 p-2 rounded transition-colors"
+                  style={{background: 'rgba(255,255,255,0.6)', padding: '10px 12px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s'}}
                   onClick={() => setStatusFilter('open')}
+                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.8)'}
+                  onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.6)'}
                 >
-                  <p className="text-sm font-semibold text-errandify-brown">
-                    💰 {summary.undecidedOffers} offer{summary.undecidedOffers > 1 ? 's' : ''} to review from {summary.offersErrandCount} errand{summary.offersErrandCount > 1 ? 's' : ''}
+                  <p style={{fontSize: '14px', fontWeight: '700', color: '#333', margin: '0 0 4px 0'}}>
+                    💰 {summary.undecidedOffers} offer{summary.undecidedOffers > 1 ? 's' : ''} waiting
                   </p>
+                  <p style={{fontSize: '12px', color: '#555', margin: 0}}>
+                    From {summary.offersErrandCount} errand{summary.offersErrandCount > 1 ? 's' : ''} - Review before deadline!
+                  </p>
+                  {summary.soonestDeadline && summary.soonestDeadline.deadline && (
+                    <p style={{fontSize: '11px', color: '#999', margin: '4px 0 0 0', fontWeight: '500'}}>
+                      ⏰ Expires: {new Date(summary.soonestDeadline.deadline).toLocaleDateString()}
+                    </p>
+                  )}
                 </div>
               )}
               {summary.needsAction > 0 && (
