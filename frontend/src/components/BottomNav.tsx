@@ -86,7 +86,6 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
     { label: 'MyChat', path: '/chat', icon: '💬' },
     { label: 'MyKampung', path: '/my-kampung', icon: '📰' },
     { label: 'MyAccount', path: '/my-account', icon: '👤', image: userImage || undefined },
-    { label: 'Notifications', path: '/notifications', icon: '🔔' },
   ];
 
   const askerItems: NavItem[] = [
@@ -95,7 +94,6 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
     { label: 'MyChat', path: '/chat', icon: '💬' },
     { label: 'MyKampung', path: '/my-kampung', icon: '📰' },
     { label: 'MyAccount', path: '/my-account', icon: '👤', image: userImage || undefined },
-    { label: 'Notifications', path: '/notifications', icon: '🔔' },
   ];
 
   const navItems = userRole === 'doer' ? doerItems : askerItems;
@@ -153,12 +151,6 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                 {item.label === 'MyChat' && unreadCount > 0 && (
                   <div className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
                     {unreadCount > 9 ? '9+' : unreadCount}
-                  </div>
-                )}
-                {/* Unread Badge for Notifications */}
-                {item.label === 'Notifications' && unreadNotifications > 0 && (
-                  <div className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                    {unreadNotifications > 9 ? '9+' : unreadNotifications}
                   </div>
                 )}
                 <span className="text-xs font-medium">{item.label}</span>
