@@ -322,7 +322,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
           <div style={{marginBottom: '10px'}}>
             <input
               type="text"
-              placeholder="🔍 Search opportunities..."
+              placeholder="🔍 Search errands..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
