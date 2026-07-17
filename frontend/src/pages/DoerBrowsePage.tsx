@@ -238,16 +238,6 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   return (
     <AdminThemeWrapper title="🔍 Browse Errands To Help" showBackButton onBack={() => navigate('/home')}>
       <div className="max-w-2xl mx-auto">
-        {/* Header - Warm & Compact */}
-        <div style={{marginBottom: '10px'}}>
-          <h1 style={{fontSize: '16px', fontWeight: '700', color: '#333', margin: '0 0 2px 0'}}>
-            {userRole === 'asker' ? 'My Posted Tasks' : 'Browse Opportunities'}
-          </h1>
-          <p style={{color: '#666', fontSize: '12px', margin: 0}}>
-            {userRole === 'asker' ? 'Tasks you have posted' : 'Find errands and earn Errandify Points'}
-          </p>
-        </div>
-
         {userRole === 'asker' && (
           <div style={{background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)', border: '1px solid #90CAF9', padding: '10px', borderRadius: '8px', marginBottom: '10px', fontSize: '12px', color: '#1565C0', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px'}}>
             <span>💡</span>
