@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 
 interface Errand {
   id: string;
@@ -235,16 +236,10 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-errandify-bg pb-20">
-      <div className="max-w-2xl mx-auto px-2 py-1">
+    <AdminThemeWrapper title="🆘 Browse Opportunities" showBackButton onBack={() => navigate('/home')}>
+      <div className="max-w-2xl mx-auto">
         {/* Header - Warm & Compact */}
         <div className="mb-2">
-          <button
-            onClick={() => navigate('/home')}
-            className="text-errandify-orange font-bold text-xs hover:text-orange-600 transition mb-1"
-          >
-            ← Back
-          </button>
           <h1 className="text-lg font-bold text-errandify-brown">
             {userRole === 'asker' ? 'My Posted Tasks' : 'Browse ToHelp'}
           </h1>
@@ -485,6 +480,6 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
           </div>
         </div>
       </div>
-    </div>
+    </AdminThemeWrapper>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdCarousel from '../components/AdCarousel';
 import EventBanner from '../components/EventBanner';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 
 interface HomePageProps {
   userRole: 'asker' | 'doer';
@@ -78,9 +79,9 @@ export default function HomePage({ userRole }: HomePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-errandify-bg pb-32">
+    <AdminThemeWrapper title="🏠 Home" showBackButton={false}>
       {/* Page Container */}
-      <div className="max-w-3xl mx-auto px-2 py-0.5">
+      <div className="max-w-3xl mx-auto">
         {/* AD CAROUSEL */}
         <div className="mb-1">
           <AdCarousel />
@@ -161,6 +162,6 @@ export default function HomePage({ userRole }: HomePageProps) {
         </div>
 
       </div>
-    </div>
+    </AdminThemeWrapper>
   );
 }
