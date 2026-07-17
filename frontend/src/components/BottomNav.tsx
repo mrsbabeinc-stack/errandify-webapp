@@ -78,18 +78,18 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
 
   const doerItems: NavItem[] = [
     { label: 'Browse', path: '/browse', icon: '🔍' },
-    { label: 'My Offers', path: '/my-offer', icon: '💼' },
+    { label: 'MyOffers', path: '/my-offer', icon: '💼' },
     { label: 'Chat', path: '/chat', icon: '💬' },
-    { label: 'Kampung', path: '/my-kampung', icon: '📰' },
-    { label: 'Account', path: '/my-account', icon: '👤', image: userImage || undefined },
+    { label: 'MyKampung', path: '/my-kampung', icon: '📰' },
+    { label: 'MyAccount', path: '/my-account', icon: '👤', image: userImage || undefined },
   ];
 
   const askerItems: NavItem[] = [
     { label: 'Home', path: '/', icon: '🏠' },
     { label: 'My Errands', path: '/errands', icon: '📋' },
     { label: 'Chat', path: '/chat', icon: '💬' },
-    { label: 'Kampung', path: '/my-kampung', icon: '📰' },
-    { label: 'Account', path: '/my-account', icon: '👤', image: userImage || undefined },
+    { label: 'MyKampung', path: '/my-kampung', icon: '📰' },
+    { label: 'MyAccount', path: '/my-account', icon: '👤', image: userImage || undefined },
   ];
 
   const navItems = userRole === 'doer' ? doerItems : askerItems;
