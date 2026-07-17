@@ -36,7 +36,7 @@ export default function AdminThemeWrapper({
         maxWidth: '1200px',
         margin: '0 auto',
         width: '100%',
-        padding: '60px 20px 8px 20px'
+        padding: '8px 20px 8px 20px'
       }}>
         {/* Header Section */}
         {(title || showBackButton) && (
