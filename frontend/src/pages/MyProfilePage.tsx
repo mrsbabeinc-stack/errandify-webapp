@@ -1061,7 +1061,6 @@ export default function MyProfilePage() {
         icon="✨"
         onClose={() => setShowSuccessModal(false)}
       />
-      </div>
     </AdminThemeWrapper>
   );
 }

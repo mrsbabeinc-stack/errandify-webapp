@@ -4181,7 +4181,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
 
       {/* Floating Hana */}
       <HanaCustomerService />
-    </div>
+    </AdminThemeWrapper>
   );
 }
 
@@ -4370,6 +4370,6 @@ function SafetyResourcesList({
           <p className="text-sm text-gray-600">No resources found matching your search.</p>
         </div>
       )}
-    </AdminThemeWrapper>
+    </div>
   );
 }
