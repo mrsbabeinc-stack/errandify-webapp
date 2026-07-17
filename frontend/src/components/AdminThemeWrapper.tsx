@@ -16,11 +16,31 @@ export default function AdminThemeWrapper({
   onBack,
 }: AdminThemeWrapperProps) {
   return (
-    <div style={{background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%)', minHeight: '100vh', paddingBottom: '60px'}}>
-      <div style={{maxWidth: '1200px', margin: '0 auto', padding: '8px 20px'}}>
+    <div style={{
+      background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%)',
+      height: '100vh',
+      width: '100vw',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'fixed',
+      top: 0,
+      left: 0
+    }}>
+      <div style={{
+        flex: 1,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        maxWidth: '1200px',
+        margin: '0 auto',
+        width: '100%',
+        padding: '8px 20px',
+        paddingBottom: '0'
+      }}>
         {/* Header Section */}
         {(title || showBackButton) && (
-          <div style={{marginBottom: '12px'}}>
+          <div style={{marginBottom: '8px', flexShrink: 0}}>
             {showBackButton && (
               <button
                 onClick={onBack}
@@ -31,7 +51,7 @@ export default function AdminThemeWrapper({
                   fontSize: '14px',
                   fontWeight: '600',
                   cursor: 'pointer',
-                  marginBottom: '8px',
+                  marginBottom: '4px',
                   padding: 0
                 }}
               >
@@ -52,7 +72,15 @@ export default function AdminThemeWrapper({
         )}
 
         {/* Content */}
-        <div style={{background: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 4px 12px rgba(255, 107, 53, 0.1)'}}>
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '12px',
+          boxShadow: 'none',
+          flex: 1,
+          overflow: 'hidden',
+          marginBottom: '60px'
+        }}>
           {children}
         </div>
       </div>
