@@ -387,8 +387,8 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                     }}
                     title={category.purpose}
                   >
-                    <div style={{fontSize: '24px', marginBottom: '8px'}}>{category.icon}</div>
-                    <div style={{fontSize: '13px', fontWeight: '600', lineHeight: '1.3'}}>{category.name}</div>
+                    <div style={{fontSize: '28px', marginBottom: '8px'}}>{category.icon}</div>
+                    <div style={{fontSize: '14px', fontWeight: '600', lineHeight: '1.3'}}>{category.name}</div>
                   </button>
                 );
               })

@@ -239,8 +239,8 @@ export default function HomePage({ userRole }: HomePageProps) {
                       }}
                       title={category.purpose}
                     >
-                      <div style={{fontSize: '24px', marginBottom: '8px'}}>{category.icon}</div>
-                      <div style={{fontSize: '13px', color: '#333', fontWeight: '600', lineHeight: '1.3'}}>{category.name}</div>
+                      <div style={{fontSize: '28px', marginBottom: '8px'}}>{category.icon}</div>
+                      <div style={{fontSize: '14px', color: '#333', fontWeight: '600', lineHeight: '1.3'}}>{category.name}</div>
                     </button>
                   ))}
                 </div>
