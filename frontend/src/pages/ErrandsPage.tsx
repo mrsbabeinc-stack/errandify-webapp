@@ -482,24 +482,47 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
         </div>
 
         {/* Content Section */}
-        <div className="space-y-1">
+        <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
           {error ? (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-              {error}
+            <div style={{padding: '16px', background: '#FFE0D6', border: '2px solid #FF6B35', borderRadius: '12px', color: '#333', fontSize: '13px', fontWeight: '500'}}>
+              ⚠️ {error}
             </div>
           ) : errands.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-              <p className="text-gray-500 mb-4 text-sm">No errands yet</p>
+            <div style={{textAlign: 'center', padding: '32px 24px', background: 'linear-gradient(135deg, #FFF9F5 0%, #FFEFEA 100%)', borderRadius: '16px', border: '2px solid #FFE0D6', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.12)'}}>
+              <p style={{fontSize: '32px', marginBottom: '8px'}}>📋</p>
+              <p style={{fontSize: '16px', fontWeight: '700', color: '#333', marginBottom: '8px'}}>No errands yet</p>
+              <p style={{fontSize: '13px', color: '#555', marginBottom: '16px', fontWeight: '500'}}>
+                {userRole === 'asker' ? 'Start by posting your first errand!' : 'Browse and accept errands to earn!'}
+              </p>
               <button
-                onClick={() => navigate(userRole === 'asker' ? '/create-errand-hana' : '/')}
-                className="bg-errandify-orange text-white px-6 py-2 rounded-lg font-semibold hover:bg-opacity-90 text-sm inline-block"
+                onClick={() => navigate(userRole === 'asker' ? '/create-errand-hana' : '/browse')}
+                style={{
+                  padding: '12px 24px',
+                  background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.4)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)';
+                }}
               >
-                {userRole === 'asker' ? 'Post an Errand' : 'Browse Errands'}
+                {userRole === 'asker' ? '✍️ Post an Errand' : '🔍 Browse Errands'}
               </button>
             </div>
           ) : filteredErrands.length === 0 ? (
-            <div className="text-center py-6 bg-white rounded border border-gray-200 text-xs text-gray-500">
-              No errands found
+            <div style={{textAlign: 'center', padding: '24px', background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF5F0 100%)', borderRadius: '12px', border: '2px solid #FFE0D6', fontSize: '13px', color: '#666'}}>
+              🔍 No errands found - Try adjusting your filters
             </div>
           ) : (
             filteredErrands.map((errand) => {
@@ -507,16 +530,34 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
               return (
               <div
                 key={errand.id}
-                className={`bg-white rounded border border-gray-200 overflow-hidden hover:shadow-md transition-shadow ${getStatusBarColor(errand)}`}
+                style={{
+                  background: 'linear-gradient(135deg, #FFF5F0 0%, #FFE8D6 100%)',
+                  borderRadius: '14px',
+                  border: '2px solid #FFE0D6',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  boxShadow: '0 4px 12px rgba(255, 107, 53, 0.15)',
+                  cursor: 'pointer',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';
+                  e.currentTarget.style.transform = 'translateY(-3px) scale(1.01)';
+                  e.currentTarget.style.borderColor = '#FF6B35';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.15)';
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.borderColor = '#FFE0D6';
+                }}
               >
                 {/* Balanced 2-Row Card Layout */}
-                <div className="w-full p-3 text-left space-y-2">
+                <div style={{width: '100%', padding: '14px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '10px'}}>
                   {/* ROW 1: Status | Title + ID | Actions on Right */}
-                  <div className="flex items-center justify-between gap-3">
+                  <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'}}>
                     {/* Left Section: Status + Title + ID */}
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div style={{display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1}}>
                       {/* Status Badge */}
-                      <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-semibold flex-shrink-0">
+                      <span style={{fontSize: '11px', background: 'linear-gradient(135deg, #FFE8D6 0%, #FFD4B3 100%)', color: '#FF6B35', padding: '6px 10px', borderRadius: '8px', fontWeight: '700', flexShrink: 0}}>
                         {capitalizeStatus(errand.status)}
                       </span>
 
