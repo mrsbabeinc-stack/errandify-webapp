@@ -446,34 +446,34 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 </div>
               )}
               {/* Title + ID + Status in one row */}
-              <div style={{display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px', minWidth: 0}}>
-                <h3 style={{fontWeight: '700', fontSize: '14px', color: '#333', margin: 0, minWidth: 0, flex: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '500px'}}>{conversation.title}</h3>
-                <span style={{fontSize: '11px', fontWeight: '700', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap', flexShrink: 0}}>{conversation.formattedId}</span>
-                <span style={{padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '700', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? '#FFE8D6' : getStatusColor(conversation.status).includes('green') ? '#C8E6C9' : '#F0F0F0', color: getStatusColor(conversation.status).includes('orange') ? '#FF6B35' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#666', flexShrink: 0}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', minWidth: 0}}>
+                <h3 style={{fontWeight: '700', fontSize: '16px', color: '#333', margin: 0, minWidth: 0, flex: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '500px'}}>{conversation.title}</h3>
+                <span style={{fontSize: '13px', fontWeight: '700', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '3px 8px', borderRadius: '5px', whiteSpace: 'nowrap', flexShrink: 0}}>{conversation.formattedId}</span>
+                <span style={{padding: '3px 10px', borderRadius: '5px', fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? '#FFE8D6' : getStatusColor(conversation.status).includes('green') ? '#C8E6C9' : '#F0F0F0', color: getStatusColor(conversation.status).includes('orange') ? '#FF6B35' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#666', flexShrink: 0}}>
                   {getStatusLabel(conversation.status).replace('Awaiting Confirmation', 'Awaiting').replace('Completed', 'Done')}
                 </span>
               </div>
 
               {/* Single line: Date | Location | Chat Button | Posted by */}
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px', flexWrap: 'wrap'}}>
-                <div style={{display: 'flex', gap: '8px', minWidth: 0, flex: 1}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap'}}>
+                <div style={{display: 'flex', gap: '12px', minWidth: 0, flex: 1}}>
                   {conversation.deadline && (
-                    <span style={{fontSize: '11px', color: '#FF6B35', fontWeight: '600', whiteSpace: 'nowrap'}}>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span style={{fontSize: '13px', color: '#FF6B35', fontWeight: '600', whiteSpace: 'nowrap'}}>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   )}
                   {(conversation.location || conversation.postal) && (
-                    <span style={{fontSize: '11px', fontWeight: '500', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</span>
+                    <span style={{fontSize: '13px', fontWeight: '500', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</span>
                   )}
                 </div>
                 <button
                   onClick={() => handleOpenChat(conversation.id)}
-                  style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', color: 'white', padding: '4px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: '700', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '3px', transition: 'all 0.15s', boxShadow: '0 1px 6px rgba(255, 107, 53, 0.15)', flexShrink: 0}}
-                  onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.25)'; e.currentTarget.style.transform = 'translateY(-0.5px)';}}
-                  onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 1px 6px rgba(255, 107, 53, 0.15)'; e.currentTarget.style.transform = 'translateY(0)';}}
+                  style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', color: 'white', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s', boxShadow: '0 2px 8px rgba(255, 107, 53, 0.2)', flexShrink: 0}}
+                  onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)'; e.currentTarget.style.transform = 'translateY(-1px)';}}
+                  onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.2)'; e.currentTarget.style.transform = 'translateY(0)';}}
                 >
                   💬 Chat
                 </button>
               </div>
-              <div style={{fontSize: '10px', color: '#999', marginTop: '3px'}}>By {conversation.otherPartyName}</div>
+              <div style={{fontSize: '12px', color: '#999', marginTop: '4px'}}>By {conversation.otherPartyName}</div>
             </div>
           ))}
         </div>
