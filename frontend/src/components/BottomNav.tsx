@@ -81,53 +81,71 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   const isActive = (path: string) => location.pathname === path;
 
   const doerItems: NavItem[] = [
-    { label: 'Browse ToHelp', path: '/browse', icon: '🔍' },
-    { label: 'MyOffer', path: '/my-offer', icon: '💼' },
-    { label: 'MyChat', path: '/chat', icon: '💬' },
-    { label: 'MyKampung', path: '/my-kampung', icon: '📰' },
-    { label: 'MyAccount', path: '/my-account', icon: '👤', image: userImage || undefined },
+    { label: 'Browse', path: '/browse', icon: '🔍' },
+    { label: 'My Offers', path: '/my-offer', icon: '💼' },
+    { label: 'Chat', path: '/chat', icon: '💬' },
+    { label: 'Kampung', path: '/my-kampung', icon: '📰' },
+    { label: 'Account', path: '/my-account', icon: '👤', image: userImage || undefined },
   ];
 
   const askerItems: NavItem[] = [
-    { label: 'MyHome', path: '/', icon: '🏠' },
-    { label: 'MyErrands', path: '/errands', icon: '📋' },
-    { label: 'MyChat', path: '/chat', icon: '💬' },
-    { label: 'MyKampung', path: '/my-kampung', icon: '📰' },
-    { label: 'MyAccount', path: '/my-account', icon: '👤', image: userImage || undefined },
+    { label: 'Home', path: '/', icon: '🏠' },
+    { label: 'My Errands', path: '/errands', icon: '📋' },
+    { label: 'Chat', path: '/chat', icon: '💬' },
+    { label: 'Kampung', path: '/my-kampung', icon: '📰' },
+    { label: 'Account', path: '/my-account', icon: '👤', image: userImage || undefined },
   ];
 
   const navItems = userRole === 'doer' ? doerItems : askerItems;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-errandify-bg border-t border-gray-200 shadow-lg z-40">
-      <div className="flex justify-between items-center h-16 px-2 relative">
-        {/* Navigation Items - Evenly distributed for doers, left/right split for askers */}
-        {/* All items evenly distributed with center plus button for askers */}
-        <div className="flex justify-around items-center w-full gap-1 relative">
+    <nav style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: 'linear-gradient(to top, #FFF9F5, #FFFFFF)',
+      borderTop: '2px solid #FFE0D6',
+      boxShadow: '0 -4px 20px rgba(255, 107, 53, 0.1)',
+      zIndex: 40,
+    }}>
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '70px', paddingX: '8px', position: 'relative'}}>
+        {/* Navigation Items */}
+        <div style={{display: 'flex', justifyContent: 'space-around', alignItems: 'center', width: '100%', gap: '4px', position: 'relative'}}>
           {navItems.map((item, index) => {
             const disabled = 'disabled' in item && item.disabled;
-            const itemClasses = disabled
-              ? 'text-gray-300 cursor-not-allowed opacity-50'
-              : isActive(item.path)
-              ? 'bg-errandify-orange text-white'
-              : 'text-gray-600 hover:text-errandify-orange';
+            const active = isActive(item.path);
 
             if (disabled) {
               return (
                 <div
                   key={item.path}
-                  className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 rounded-lg transition-all text-sm flex-1 ${itemClasses}`}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    padding: '8px',
+                    borderRadius: '12px',
+                    transition: 'all 0.2s',
+                    fontSize: '12px',
+                    flex: 1,
+                    color: '#CCC',
+                    cursor: 'not-allowed',
+                    opacity: 0.5,
+                  }}
                 >
                   {item.image ? (
                     <img
                       src={item.image}
                       alt={item.label}
-                      className="w-6 h-6 rounded-full object-cover"
+                      style={{width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover'}}
                     />
                   ) : (
-                    <span className="text-lg">{item.icon}</span>
+                    <span style={{fontSize: '20px'}}>{item.icon}</span>
                   )}
-                  <span className="text-xs font-medium">{item.label}</span>
+                  <span style={{fontSize: '11px', fontWeight: '500'}}>{item.label}</span>
                 </div>
               );
             }
@@ -136,24 +154,76 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center justify-center gap-0.5 py-2 px-2 rounded-lg transition-all text-sm flex-1 relative ${itemClasses}`}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  padding: '8px 12px',
+                  borderRadius: '12px',
+                  transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  fontSize: '12px',
+                  flex: 1,
+                  position: 'relative',
+                  textDecoration: 'none',
+                  color: active ? 'white' : '#666',
+                  background: active ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'transparent',
+                  boxShadow: active ? '0 4px 12px rgba(255, 107, 53, 0.3)' : 'none',
+                  fontWeight: active ? '600' : '500',
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #FFF5F0 0%, #FFE8D6 100%)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.15)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }
+                }}
               >
                 {item.image ? (
                   <img
                     src={item.image}
                     alt={item.label}
-                    className={`w-6 h-6 rounded-full object-cover ${isActive(item.path) ? 'border-2 border-white' : ''}`}
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: active ? '2px solid white' : 'none',
+                    }}
                   />
                 ) : (
-                  <span className="text-lg">{item.icon}</span>
+                  <span style={{fontSize: '20px'}}>{item.icon}</span>
                 )}
-                {/* Unread Badge for MyChat */}
-                {item.label === 'MyChat' && unreadCount > 0 && (
-                  <div className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                {/* Unread Badge for Chat */}
+                {item.label === 'Chat' && unreadCount > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-4px',
+                    right: '-4px',
+                    background: '#FF4444',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '10px',
+                    fontWeight: '700',
+                    border: '2px solid white',
+                  }}>
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </div>
                 )}
-                <span className="text-xs font-medium">{item.label}</span>
+                <span style={{fontSize: '10px', fontWeight: 500}}>{item.label}</span>
               </Link>
             );
           })}
@@ -162,10 +232,31 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
           {userRole === 'asker' && (
             <button
               onClick={onCreateTask}
-              className="absolute left-1/2 -translate-x-1/2 top-0 w-11 h-11 bg-gradient-to-b from-errandify-orange via-orange-500 to-orange-700 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all transform flex items-center justify-center font-bold text-lg border-3 border-orange-800 active:scale-95 z-50"
               style={{
-                boxShadow: '0 4px 0 rgba(0,0,0,0.2), 0 6px 12px rgba(0,0,0,0.15)',
-                transform: 'translateX(-50%) translateY(-50%)',
+                position: 'absolute',
+                left: '50%',
+                bottom: '8px',
+                transform: 'translateX(-50%)',
+                width: '56px',
+                height: '56px',
+                background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
+                color: 'white',
+                borderRadius: '16px',
+                border: 'none',
+                boxShadow: '0 6px 20px rgba(255, 107, 53, 0.35)',
+                cursor: 'pointer',
+                fontWeight: '700',
+                fontSize: '24px',
+                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                zIndex: 50,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateX(-50%) translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 107, 53, 0.45)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateX(-50%) translateY(0)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.35)';
               }}
               title="Create new errand"
             >
