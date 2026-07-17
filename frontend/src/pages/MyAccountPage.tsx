@@ -10,6 +10,7 @@ import BottomNav from '../components/BottomNav';
 import HanaCustomerService from '../components/HanaCustomerService';
 import AccountPauseModal from '../components/AccountPauseModal';
 import StaffLeaveApplication from '../components/StaffLeaveApplication';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 
 interface UserProfile {
   id?: number;
@@ -1167,7 +1168,8 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
   const badges = ratings.averageRating >= 4.8 ? [{ icon: '⭐' }] : [];
 
   return (
-    <div className="min-h-screen bg-errandify-bg pb-24">
+    <AdminThemeWrapper title="⚙️ My Account" showBackButton onBack={() => navigate(-1)}>
+      <div>
       {/* HEADER - Matches Layout Style */}
       <div className="bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center relative sticky top-0 z-50">
         {/* Back Button */}
@@ -4376,6 +4378,7 @@ function SafetyResourcesList({
           <p className="text-sm text-gray-600">No resources found matching your search.</p>
         </div>
       )}
-    </div>
+      </div>
+    </AdminThemeWrapper>
   );
 }

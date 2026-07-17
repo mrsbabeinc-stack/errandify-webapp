@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 
 interface UserProfile {
   id: number;
@@ -100,7 +101,8 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 pb-20">
+    <AdminThemeWrapper title="👤 User Profile" showBackButton onBack={() => navigate(-1)}>
+      <div>
       {/* ===== PUBLIC PROFILE SECTION ===== */}
       <div className="bg-white border-b-4 border-orange-200 shadow-md">
         {!loading && userProfile && (
@@ -209,6 +211,7 @@ export default function ProfilePage({ userRole, onLogout }: ProfilePageProps) {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </AdminThemeWrapper>
   );
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import SuccessModal from '../components/SuccessModal';
 import ProfilePlaque from '../components/ProfilePlaque';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 
 interface UserProfile {
   id: number;
@@ -314,8 +315,8 @@ export default function MyProfilePage() {
   const badges = getBadges();
 
   return (
-    <div className="min-h-screen bg-errandify-bg pb-24">
-      <div className="max-w-2xl mx-auto px-4 py-6">
+    <AdminThemeWrapper title="👤 My Profile" showBackButton onBack={() => navigate(-1)}>
+      <div className="max-w-2xl mx-auto">
         <button
           onClick={() => navigate(-1)}
           className="text-errandify-orange font-semibold mb-4 text-sm hover:underline"
@@ -1060,6 +1061,7 @@ export default function MyProfilePage() {
         icon="✨"
         onClose={() => setShowSuccessModal(false)}
       />
-    </div>
+      </div>
+    </AdminThemeWrapper>
   );
 }

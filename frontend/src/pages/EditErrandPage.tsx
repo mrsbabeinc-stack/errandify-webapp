@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 
 interface EditErrandPageProps {
   userRole: 'asker' | 'doer';
@@ -175,8 +176,8 @@ export default function EditErrandPage({ userRole }: EditErrandPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-errandify-bg pb-32">
-      <div className="max-w-2xl mx-auto px-4 py-4">
+    <AdminThemeWrapper title="✏️ Edit Errand" showBackButton onBack={() => navigate(-1)}>
+      <div className="max-w-2xl mx-auto">
         <button
           onClick={() => navigate(-1)}
           className="text-errandify-orange font-semibold mb-4 text-sm"
@@ -293,6 +294,6 @@ export default function EditErrandPage({ userRole }: EditErrandPageProps) {
           </form>
         </div>
       </div>
-    </div>
+    </AdminThemeWrapper>
   );
 }

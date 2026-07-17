@@ -9,6 +9,7 @@ import JobExecutionPanel from '../components/JobExecutionPanel';
 import RecurringErrandSessionSelector from '../components/RecurringErrandSessionSelector';
 import TaskQA from '../components/TaskQA';
 import ErrandActivityLog from '../components/ErrandActivityLog';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 import { capitalizeStatus, formatCurrency } from '../utils/format';
 
 interface ErrandDetail {
@@ -673,8 +674,9 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-errandify-bg pb-20">
-      {/* Page Container */}
+    <AdminThemeWrapper title="📋 Errand Details" showBackButton onBack={() => navigate(-1)}>
+      <div className="max-w-2xl mx-auto">
+        {/* Page Container */}
       <div className="max-w-2xl mx-auto px-2 py-1">
         {/* Back Button */}
         <button
@@ -2369,6 +2371,8 @@ Let's help each other! 🤝`}
         </div>
       )}
 
-    </div>
+      </div>
+      </div>
+    </AdminThemeWrapper>
   );
 }

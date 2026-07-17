@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 
 interface Errand {
   id: string;
@@ -186,7 +187,8 @@ export default function BrowseErrandsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-errandify-bg px-4 py-6 pb-32">
+    <AdminThemeWrapper title="🔍 Browse Errands" showBackButton onBack={() => navigate(-1)}>
+      <div>
       {/* Header */}
       <div className="mb-6">
         <button
@@ -372,6 +374,7 @@ export default function BrowseErrandsPage() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </AdminThemeWrapper>
   );
 }
