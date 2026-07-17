@@ -221,19 +221,19 @@ export default function HomePage({ userRole }: HomePageProps) {
                         borderRadius: '8px',
                         fontSize: '12px',
                         fontWeight: '500',
-                        border: 'none',
+                        border: '1px solid #F5E6D3',
                         cursor: 'pointer',
-                        background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)',
+                        background: '#FAFAF8',
                         transition: 'all 0.2s',
                         textAlign: 'center',
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(255, 160, 122, 0.15) 100%)';
-                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(255, 107, 53, 0.15)';
+                        e.currentTarget.style.background = '#F5F0EB';
+                        e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.08)';
                         e.currentTarget.style.transform = 'translateY(-1px)';
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)';
+                        e.currentTarget.style.background = '#FAFAF8';
                         e.currentTarget.style.boxShadow = 'none';
                         e.currentTarget.style.transform = 'translateY(0)';
                       }}
