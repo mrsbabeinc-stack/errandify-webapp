@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import TaskChatbox from '../components/TaskChatbox';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 import { getSocket } from '../utils/socketClient';
 
 interface Bid {
@@ -211,17 +212,10 @@ export default function MyOfferPage() {
   }
 
   return (
-    <div className="min-h-screen bg-errandify-bg pb-32">
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        {/* Header */}
+    <AdminThemeWrapper title="💼 MyOffer" showBackButton onBack={() => navigate('/home')}>
+      <div className="max-w-3xl mx-auto">
+        {/* Header Subtitle */}
         <div className="mb-6">
-          <button
-            onClick={() => navigate('/home')}
-            className="text-errandify-orange font-semibold mb-2 text-xs"
-          >
-            ← Back
-          </button>
-          <h1 className="text-2xl font-bold text-errandify-brown">MyOffer</h1>
           <p className="text-gray-600 text-sm">Track all your offers and active jobs</p>
         </div>
 
@@ -538,6 +532,6 @@ export default function MyOfferPage() {
           );
         })()}
       </div>
-    </div>
+    </AdminThemeWrapper>
   );
 }
