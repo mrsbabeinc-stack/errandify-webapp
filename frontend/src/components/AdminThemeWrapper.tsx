@@ -17,7 +17,7 @@ export default function AdminThemeWrapper({
 }: AdminThemeWrapperProps) {
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%)',
+      background: 'white',
       height: 'calc(100vh - 60px)',
       width: '100vw',
       overflow: 'hidden',
