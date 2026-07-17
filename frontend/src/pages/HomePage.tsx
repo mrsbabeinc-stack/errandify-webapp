@@ -83,7 +83,7 @@ export default function HomePage({ userRole }: HomePageProps) {
       {/* Page Container */}
       <div className="max-w-3xl mx-auto">
         {/* AD CAROUSEL - 4 Banner Hero Section */}
-        <div style={{marginBottom: '10px'}}>
+        <div style={{marginBottom: '10px', marginTop: '-60px', paddingTop: '60px'}}>
           <AdCarousel />
         </div>
 
