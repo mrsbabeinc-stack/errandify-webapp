@@ -28,7 +28,6 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   useEffect(() => {
     fetchProfileImage();
 
-    // Check for unread chats
     const checkChats = () => {
       const stored = localStorage.getItem('unreadChats');
       if (stored) {
@@ -39,7 +38,6 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
     };
 
     checkChats();
-    // Refresh chat count every 3 seconds
     const interval = setInterval(checkChats, 3000);
 
     return () => {
@@ -54,7 +52,6 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Users don't have avatar yet, just load from localStorage
       const user = localStorage.getItem('user');
       if (user) {
         try {
@@ -65,7 +62,6 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
         }
       }
     } catch (err) {
-      // Fallback to localStorage if API fails
       const user = localStorage.getItem('user');
       if (user) {
         try {
@@ -104,12 +100,13 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
       bottom: 0,
       left: 0,
       right: 0,
-      background: 'linear-gradient(to top, #FFF9F5, #FFFFFF)',
-      borderTop: '2px solid #FFE0D6',
-      boxShadow: '0 -4px 20px rgba(255, 107, 53, 0.1)',
+      background: 'linear-gradient(180deg, rgba(255,245,240,0.95) 0%, rgba(255,232,214,1) 100%)',
+      borderTop: '3px solid #FF6B35',
+      boxShadow: '0 -8px 32px rgba(255, 107, 53, 0.2)',
       zIndex: 40,
+      backdropFilter: 'blur(10px)',
     }}>
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '70px', paddingX: '8px', position: 'relative'}}>
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '90px', padding: '12px 8px 16px 8px', position: 'relative'}}>
         {/* Navigation Items */}
         <div style={{display: 'flex', justifyContent: 'space-around', alignItems: 'center', width: '100%', gap: '4px', position: 'relative'}}>
           {navItems.map((item, index) => {
@@ -125,9 +122,9 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '4px',
-                    padding: '8px',
-                    borderRadius: '12px',
+                    gap: '6px',
+                    padding: '10px',
+                    borderRadius: '14px',
                     transition: 'all 0.2s',
                     fontSize: '12px',
                     flex: 1,
@@ -140,12 +137,12 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                     <img
                       src={item.image}
                       alt={item.label}
-                      style={{width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover'}}
+                      style={{width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover'}}
                     />
                   ) : (
-                    <span style={{fontSize: '20px'}}>{item.icon}</span>
+                    <span style={{fontSize: '28px'}}>{item.icon}</span>
                   )}
-                  <span style={{fontSize: '11px', fontWeight: '500'}}>{item.label}</span>
+                  <span style={{fontSize: '12px', fontWeight: '600'}}>{item.label}</span>
                 </div>
               );
             }
@@ -159,32 +156,42 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '4px',
-                  padding: '8px 12px',
-                  borderRadius: '12px',
+                  gap: '6px',
+                  padding: '10px 14px',
+                  borderRadius: '14px',
                   transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   fontSize: '12px',
                   flex: 1,
                   position: 'relative',
                   textDecoration: 'none',
                   color: active ? 'white' : '#666',
-                  background: active ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'transparent',
-                  boxShadow: active ? '0 4px 12px rgba(255, 107, 53, 0.3)' : 'none',
-                  fontWeight: active ? '600' : '500',
+                  background: active
+                    ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)'
+                    : 'linear-gradient(135deg, rgba(255,107,53,0.08) 0%, rgba(255,160,122,0.08) 100%)',
+                  boxShadow: active ? '0 6px 16px rgba(255, 107, 53, 0.35)' : '0 2px 8px rgba(255, 107, 53, 0.1)',
+                  fontWeight: active ? '700' : '600',
+                  border: active ? 'none' : '1px solid rgba(255, 107, 53, 0.15)',
                 }}
                 onMouseEnter={(e) => {
                   if (!active) {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, #FFF5F0 0%, #FFE8D6 100%)';
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.15)';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,107,53,0.15) 0%, rgba(255,160,122,0.15) 100%)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.2)';
+                    e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)';
+                    e.currentTarget.style.border = '1px solid rgba(255, 107, 53, 0.3)';
+                  } else {
+                    e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 107, 53, 0.4)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!active) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,107,53,0.08) 0%, rgba(255,160,122,0.08) 100%)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.1)';
+                    e.currentTarget.style.border = '1px solid rgba(255, 107, 53, 0.15)';
+                  } else {
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.35)';
                   }
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
                 }}
               >
                 {item.image ? (
@@ -192,38 +199,43 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                     src={item.image}
                     alt={item.label}
                     style={{
-                      width: '24px',
-                      height: '24px',
+                      width: '28px',
+                      height: '28px',
                       borderRadius: '50%',
                       objectFit: 'cover',
                       border: active ? '2px solid white' : 'none',
+                      transition: 'all 0.3s',
                     }}
                   />
                 ) : (
-                  <span style={{fontSize: '20px'}}>{item.icon}</span>
+                  <span style={{fontSize: '28px', transition: 'transform 0.3s'}}>
+                    {item.icon}
+                  </span>
                 )}
                 {/* Unread Badge for Chat */}
                 {item.label === 'Chat' && unreadCount > 0 && (
                   <div style={{
                     position: 'absolute',
-                    top: '-4px',
-                    right: '-4px',
-                    background: '#FF4444',
+                    top: '-2px',
+                    right: '2px',
+                    background: 'linear-gradient(135deg, #FF4444 0%, #FF6B6B 100%)',
                     color: 'white',
                     borderRadius: '50%',
-                    width: '20px',
-                    height: '20px',
+                    width: '22px',
+                    height: '22px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '10px',
-                    fontWeight: '700',
-                    border: '2px solid white',
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    border: '2.5px solid white',
+                    boxShadow: '0 2px 8px rgba(255, 68, 68, 0.4)',
+                    animation: 'pulse 2s infinite',
                   }}>
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </div>
                 )}
-                <span style={{fontSize: '10px', fontWeight: 500}}>{item.label}</span>
+                <span style={{fontSize: '12px', fontWeight: '700', letterSpacing: '0.3px'}}>{item.label}</span>
               </Link>
             );
           })}
@@ -235,28 +247,28 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
               style={{
                 position: 'absolute',
                 left: '50%',
-                bottom: '8px',
+                bottom: '12px',
                 transform: 'translateX(-50%)',
-                width: '56px',
-                height: '56px',
+                width: '64px',
+                height: '64px',
                 background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
                 color: 'white',
-                borderRadius: '16px',
-                border: 'none',
-                boxShadow: '0 6px 20px rgba(255, 107, 53, 0.35)',
+                borderRadius: '18px',
+                border: '3px solid white',
+                boxShadow: '0 8px 28px rgba(255, 107, 53, 0.4)',
                 cursor: 'pointer',
-                fontWeight: '700',
-                fontSize: '24px',
+                fontWeight: '800',
+                fontSize: '32px',
                 transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                 zIndex: 50,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateX(-50%) translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 107, 53, 0.45)';
+                e.currentTarget.style.transform = 'translateX(-50%) translateY(-6px) scale(1.12)';
+                e.currentTarget.style.boxShadow = '0 12px 40px rgba(255, 107, 53, 0.5)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateX(-50%) translateY(0)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.35)';
+                e.currentTarget.style.transform = 'translateX(-50%) translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 8px 28px rgba(255, 107, 53, 0.4)';
               }}
               title="Create new errand"
             >
@@ -265,6 +277,14 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
           )}
         </div>
       </div>
+
+      {/* Pulse animation for badge */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.1); opacity: 0.8; }
+        }
+      `}</style>
     </nav>
   );
 }
