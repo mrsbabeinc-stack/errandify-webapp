@@ -218,24 +218,25 @@ export default function HomePage({ userRole }: HomePageProps) {
                       onClick={() => handleCategoryClick(category.id)}
                       style={{
                         padding: '12px 8px',
-                        borderRadius: '8px',
+                        borderRadius: '12px',
                         fontSize: '12px',
-                        fontWeight: '500',
-                        border: '1px solid #F5E6D3',
+                        fontWeight: '600',
+                        border: 'none',
                         cursor: 'pointer',
-                        background: '#FAFAF8',
-                        transition: 'all 0.2s',
+                        background: 'linear-gradient(135deg, #FFF5F0 0%, #FFE8D6 100%)',
+                        transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                         textAlign: 'center',
+                        boxShadow: '0 2px 8px rgba(255, 107, 53, 0.12)',
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.background = '#F5F0EB';
-                        e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.08)';
-                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #FFE8D6 0%, #FFD4B3 100%)';
+                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';
+                        e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.background = '#FAFAF8';
-                        e.currentTarget.style.boxShadow = 'none';
-                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #FFF5F0 0%, #FFE8D6 100%)';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.12)';
+                        e.currentTarget.style.transform = 'translateY(0) scale(1)';
                       }}
                       title={category.purpose}
                     >

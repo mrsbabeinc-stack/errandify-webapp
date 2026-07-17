@@ -364,28 +364,35 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                     onClick={() => handleCategoryToggle(category.id)}
                     style={{
                       padding: '12px 8px',
-                      borderRadius: '8px',
+                      borderRadius: '12px',
                       fontSize: '12px',
-                      fontWeight: '500',
-                      border: isSelected ? 'none' : '1px solid #F5E6D3',
+                      fontWeight: '600',
+                      border: 'none',
                       cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      background: isSelected ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : '#FAFAF8',
+                      transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                      background: isSelected ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, #FFF5F0 0%, #FFE8D6 100%)',
                       color: isSelected ? 'white' : '#333',
-                      boxShadow: isSelected ? '0 4px 8px rgba(255, 107, 53, 0.2)' : 'none',
+                      boxShadow: isSelected ? '0 8px 20px rgba(255, 107, 53, 0.35)' : '0 2px 8px rgba(255, 107, 53, 0.12)',
                       textAlign: 'center',
                     }}
                     onMouseOver={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.background = '#F5F0EB';
-                        e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.08)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #FFE8D6 0%, #FFD4B3 100%)';
+                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';
+                        e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
+                      } else {
+                        e.currentTarget.style.boxShadow = '0 12px 28px rgba(255, 107, 53, 0.4)';
+                        e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
                       }
                     }}
                     onMouseOut={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.background = '#FAFAF8';
-                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #FFF5F0 0%, #FFE8D6 100%)';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.12)';
+                      } else {
+                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.35)';
                       }
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
                     }}
                     title={category.purpose}
                   >
