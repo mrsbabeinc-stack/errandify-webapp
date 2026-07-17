@@ -239,17 +239,17 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
     <AdminThemeWrapper title="🆘 Browse Opportunities" showBackButton onBack={() => navigate('/home')}>
       <div className="max-w-2xl mx-auto">
         {/* Header - Warm & Compact */}
-        <div style={{marginBottom: '16px'}}>
-          <h1 style={{fontSize: '18px', fontWeight: '700', color: '#333', margin: '0 0 4px 0'}}>
+        <div style={{marginBottom: '10px'}}>
+          <h1 style={{fontSize: '16px', fontWeight: '700', color: '#333', margin: '0 0 2px 0'}}>
             {userRole === 'asker' ? 'My Posted Tasks' : 'Browse Opportunities'}
           </h1>
-          <p style={{color: '#666', fontSize: '13px', margin: 0}}>
+          <p style={{color: '#666', fontSize: '12px', margin: 0}}>
             {userRole === 'asker' ? 'Tasks you have posted' : 'Find errands and earn Errandify Points'}
           </p>
         </div>
 
         {userRole === 'asker' && (
-          <div style={{background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)', border: '1px solid #90CAF9', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', color: '#1565C0', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px'}}>
+          <div style={{background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)', border: '1px solid #90CAF9', padding: '10px', borderRadius: '8px', marginBottom: '10px', fontSize: '12px', color: '#1565C0', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px'}}>
             <span>💡</span>
             <span>Switch to Doer role to browse and bid on tasks.</span>
           </div>
@@ -257,7 +257,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
 
         {/* Tab Selection - Warm Style */}
         {userRole === 'doer' && (
-          <div style={{display: 'flex', gap: '10px', marginBottom: '12px'}}>
+          <div style={{display: 'flex', gap: '8px', marginBottom: '10px'}}>
             <button
               onClick={() => setShowRecommended(false)}
               style={{
@@ -319,7 +319,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
 
         {/* Search Bar */}
         {userRole === 'doer' && (
-          <div style={{marginBottom: '12px'}}>
+          <div style={{marginBottom: '10px'}}>
             <input
               type="text"
               placeholder="🔍 Search opportunities..."
@@ -348,13 +348,13 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
 
         {/* Category Selection Card - Warm & Compact - Grouped by Category Groups */}
         {userRole === 'doer' && (
-          <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '12px', border: '1px solid #FFE0D6', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', marginBottom: '12px'}}>
-          <h3 style={{fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+          <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '10px', border: '1px solid #FFE0D6', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', marginBottom: '10px'}}>
+          <h3 style={{fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px'}}>
             🎯 Categories <span style={{color: '#999', fontWeight: '400', fontSize: '11px'}}>(Select)</span>
           </h3>
 
           {/* Show all categories */}
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '8px'}}>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '6px'}}>
             {Object.entries(groupedCategories).flatMap(([groupName, cats]) =>
               cats.map((category) => {
                 const isSelected = selectedCategories.includes(category.id);
@@ -395,10 +395,10 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
             )}
           </div>
 
-          <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
+          <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
             <button
               onClick={() => setSelectedCategories([])}
-              style={{fontSize: '12px', color: '#FF6B35', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0}}
+              style={{fontSize: '11px', color: '#FF6B35', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0}}
               onMouseOver={(e) => {
                 e.currentTarget.style.textDecoration = 'underline';
               }}
