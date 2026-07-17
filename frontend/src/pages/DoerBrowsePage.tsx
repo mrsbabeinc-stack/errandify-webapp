@@ -353,42 +353,42 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
             🎯 Categories <span style={{color: '#999', fontWeight: '400', fontSize: '11px'}}>(Select)</span>
           </h3>
 
-          {/* Show only first group - compact grid */}
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px', marginBottom: '8px'}}>
-            {Object.entries(groupedCategories).slice(0, 1).map(([groupName, cats]) =>
-              cats.slice(0, 6).map((category) => {
+          {/* Show all categories */}
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '8px'}}>
+            {Object.entries(groupedCategories).flatMap(([groupName, cats]) =>
+              cats.map((category) => {
                 const isSelected = selectedCategories.includes(category.id);
                 return (
                   <button
                     key={category.id}
                     onClick={() => handleCategoryToggle(category.id)}
                     style={{
-                      padding: '8px 4px',
-                      borderRadius: '6px',
-                      fontSize: '9px',
+                      padding: '14px 8px',
+                      borderRadius: '10px',
+                      fontSize: '12px',
                       fontWeight: '500',
                       border: 'none',
                       cursor: 'pointer',
                       transition: 'all 0.2s',
-                      background: isSelected ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255, 107, 53, 0.08) 0%, rgba(255, 160, 122, 0.08) 100%)',
+                      background: isSelected ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)',
                       color: isSelected ? 'white' : '#333',
-                      boxShadow: isSelected ? '0 3px 8px rgba(255, 107, 53, 0.2)' : 'none',
+                      boxShadow: isSelected ? '0 4px 8px rgba(255, 107, 53, 0.2)' : 'none',
                       textAlign: 'center',
                     }}
                     onMouseOver={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.12) 0%, rgba(255, 160, 122, 0.12) 100%)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(255, 160, 122, 0.15) 100%)';
                       }
                     }}
                     onMouseOut={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.08) 0%, rgba(255, 160, 122, 0.08) 100%)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 160, 122, 0.1) 100%)';
                       }
                     }}
                     title={category.purpose}
                   >
-                    <div style={{fontSize: '16px', marginBottom: '2px'}}>{category.icon}</div>
-                    <div style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '8px', lineHeight: '1.1'}}>{category.name}</div>
+                    <div style={{fontSize: '22px', marginBottom: '6px'}}>{category.icon}</div>
+                    <div style={{fontSize: '12px', fontWeight: '500', lineHeight: '1.3'}}>{category.name}</div>
                   </button>
                 );
               })

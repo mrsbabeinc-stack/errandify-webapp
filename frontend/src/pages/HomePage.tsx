@@ -211,17 +211,17 @@ export default function HomePage({ userRole }: HomePageProps) {
             {userRole === 'asker' ? '🎯 Need help?' : '🤝 Help?'}
           </h2>
 
-          {/* Show only first 2 groups in compact grid */}
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px'}}>
-            {Object.entries(groupedCategories).slice(0, 2).map(([groupName, cats]) =>
-              cats.slice(0, 3).map((category) => (
+          {/* Show all categories */}
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px'}}>
+            {Object.entries(groupedCategories).flatMap(([groupName, cats]) =>
+              cats.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => handleCategoryClick(category.id)}
                   style={{
-                    padding: '8px 4px',
-                    borderRadius: '6px',
-                    fontSize: '9px',
+                    padding: '14px 8px',
+                    borderRadius: '10px',
+                    fontSize: '12px',
                     fontWeight: '500',
                     border: 'none',
                     cursor: 'pointer',
@@ -231,7 +231,7 @@ export default function HomePage({ userRole }: HomePageProps) {
                   }}
                   onMouseOver={(e) => {
                     e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(255, 160, 122, 0.15) 100%)';
-                    e.currentTarget.style.boxShadow = '0 3px 8px rgba(255, 107, 53, 0.15)';
+                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(255, 107, 53, 0.15)';
                     e.currentTarget.style.transform = 'translateY(-1px)';
                   }}
                   onMouseOut={(e) => {
@@ -241,8 +241,8 @@ export default function HomePage({ userRole }: HomePageProps) {
                   }}
                   title={category.purpose}
                 >
-                  <div style={{fontSize: '16px', marginBottom: '2px'}}>{category.icon}</div>
-                  <div style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '8px', color: '#333', lineHeight: '1.1'}}>{category.name}</div>
+                  <div style={{fontSize: '22px', marginBottom: '6px'}}>{category.icon}</div>
+                  <div style={{fontSize: '12px', color: '#333', fontWeight: '500', lineHeight: '1.3'}}>{category.name}</div>
                 </button>
               ))
             )}
