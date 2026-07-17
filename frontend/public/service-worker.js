@@ -1,7 +1,7 @@
 // Service Worker for Push Notifications
 // Handles background sync, push events, and offline notifications
 
-const CACHE_NAME = 'errandify-v18-no-notification-panel';
+const CACHE_NAME = 'errandify-v19-engaging-button';
 const urlsToCache = [
   '/',
   '/index.html',
