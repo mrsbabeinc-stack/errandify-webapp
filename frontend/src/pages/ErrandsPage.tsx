@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 import { capitalizeStatus } from '../utils/format';
 
 interface ErrandsPageProps {
@@ -284,22 +285,20 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   const summary = getSummary();
 
   return (
-    <div className="min-h-screen bg-errandify-bg pb-32">
-      <div className="max-w-3xl mx-auto px-2 py-2">
-        {/* Page Header - Compact */}
-        <div className="mb-2">
-          <h1 className="text-lg font-bold text-errandify-brown">
-            {pageTitle}
-          </h1>
-          <p className="text-xs text-gray-600">
-            {pageSubtitle}
+    <AdminThemeWrapper title="📋 MyErrands" showBackButton onBack={() => navigate('/home')}>
+      <div className="max-w-3xl mx-auto">
+        {/* Header Subtitle */}
+        <div style={{marginBottom: '16px', background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF5F0 100%)', borderRadius: '12px', padding: '16px', border: '2px solid #FFE0D6', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.12)'}}>
+          <p style={{color: '#555', fontSize: '14px', margin: 0, fontWeight: '500', lineHeight: '1.6'}}>
+            {userRole === 'asker' ? '✨ Manage your posted tasks and track all activity' : '✨ View and manage your active tasks'} 🎯
           </p>
         </div>
 
-        {/* Summary Section for Askers */}
+        {/* Summary Section for Askers - URGENT ITEMS */}
         {userRole === 'asker' && summary && (summary.needsAction > 0 || summary.waitingRating > 0 || summary.undecidedOffers > 0) && (
-          <div className="mb-3 p-3 bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-errandify-orange rounded-lg">
-            <div className="space-y-2">
+          <div style={{marginBottom: '16px', background: 'linear-gradient(135deg, #FFE8D6 0%, #FFD4B3 100%)', borderRadius: '12px', padding: '16px', border: '2px solid #FF6B35', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.2)'}}>
+            <p style={{fontSize: '13px', fontWeight: '700', color: '#FF6B35', margin: '0 0 12px 0'}}>🚨 REQUIRES IMMEDIATE ATTENTION</p>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
               {summary.undecidedOffers > 0 && (
                 <div
                   className="cursor-pointer hover:bg-orange-200 p-2 rounded transition-colors"
@@ -341,13 +340,32 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
         )}
 
         {/* Search Bar */}
-        <div className="mb-2">
+        <div style={{marginBottom: '16px'}}>
           <input
             type="text"
-            placeholder="Search by title or category..."
+            placeholder="🔍 Search by title or category..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              border: '2px solid #FFE0D6',
+              borderRadius: '12px',
+              fontSize: '13px',
+              outline: 'none',
+              transition: 'all 0.3s',
+              background: 'white',
+              fontWeight: '500',
+              boxShadow: '0 2px 8px rgba(255, 107, 53, 0.08)',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = '#FF6B35';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(255, 107, 53, 0.2)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = '#FFE0D6';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.08)';
+            }}
           />
         </div>
 
@@ -605,9 +623,6 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
           )}
         </div>
       </div>
-
-      {/* Bottom Spacing */}
-      <div className="h-8"></div>
-    </div>
+    </AdminThemeWrapper>
   );
 }
