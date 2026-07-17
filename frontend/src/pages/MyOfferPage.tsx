@@ -215,17 +215,15 @@ export default function MyOfferPage() {
     <AdminThemeWrapper title="💼 MyOffer" showBackButton onBack={() => navigate('/home')}>
       <div className="max-w-3xl mx-auto">
         {/* Header Subtitle */}
-        <div className="mb-6">
-          <p className="text-gray-600 text-sm">Track all your offers and active jobs</p>
+        <div style={{marginBottom: '16px', background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF5F0 100%)', borderRadius: '12px', padding: '16px', border: '2px solid #FFE0D6', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.12)'}}>
+          <p style={{color: '#555', fontSize: '14px', margin: 0, fontWeight: '500', lineHeight: '1.6'}}>
+            ✨ Track all your offers and active jobs. Your earnings dashboard awaits! 🚀
+          </p>
         </div>
 
         {/* Active Job Sticky Header - Only show if in_progress */}
         {activeBid && activeBid.status === 'in_progress' && (
-          <div className={`mb-6 p-4 rounded-lg border-2 ${
-            activeBid.status === 'in_progress'
-              ? 'bg-blue-50 border-blue-300'
-              : 'bg-green-50 border-green-300'
-          }`}>
+          <div style={{marginBottom: '16px', padding: '16px', borderRadius: '14px', border: '2px solid #4CAF50', background: 'linear-gradient(135deg, #F1F8F4 0%, #E8F5E9 100%)', boxShadow: '0 4px 16px rgba(76, 175, 80, 0.2)'}}>
             <div className="flex items-start justify-between mb-3">
               <div>
                 <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
@@ -258,18 +256,37 @@ export default function MyOfferPage() {
         )}
 
         {/* Search Bar */}
-        <div className="mb-4">
+        <div style={{marginBottom: '16px'}}>
           <input
             type="text"
-            placeholder="Search by title, category, or location..."
+            placeholder="🔍 Search by title, category, or location..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-errandify-orange"
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              border: '2px solid #FFE0D6',
+              borderRadius: '12px',
+              fontSize: '13px',
+              outline: 'none',
+              transition: 'all 0.3s',
+              background: 'white',
+              fontWeight: '500',
+              boxShadow: '0 2px 8px rgba(255, 107, 53, 0.08)',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = '#FF6B35';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(255, 107, 53, 0.2)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = '#FFE0D6';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.08)';
+            }}
           />
         </div>
 
         {/* Filter Tabs - Organized by priority */}
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+        <div style={{display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '8px'}}>
           {['all', 'in_progress', 'confirmed', 'open', 'completed_unconfirmed', 'completed', 'rated', 'expired'].map((status) => {
             // Count by ERRAND status, not bid status
             const count = bids.filter(b => {
@@ -294,11 +311,38 @@ export default function MyOfferPage() {
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
-                className={`px-4 py-2 rounded-full font-semibold text-xs whitespace-nowrap transition-all ${
-                  filterStatus === status
-                    ? 'bg-errandify-orange text-white'
-                    : 'bg-white border border-gray-300 text-gray-700 hover:border-errandify-orange'
-                }`}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '12px',
+                  fontWeight: '600',
+                  fontSize: '12px',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: filterStatus === status ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, #FFF5F0 0%, #FFE8D6 100%)',
+                  color: filterStatus === status ? 'white' : '#333',
+                  boxShadow: filterStatus === status ? '0 8px 20px rgba(255, 107, 53, 0.35)' : '0 2px 8px rgba(255, 107, 53, 0.12)',
+                }}
+                onMouseOver={(e) => {
+                  if (filterStatus !== status) {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #FFE8D6 0%, #FFD4B3 100%)';
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';
+                    e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                  } else {
+                    e.currentTarget.style.boxShadow = '0 12px 28px rgba(255, 107, 53, 0.4)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (filterStatus !== status) {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #FFF5F0 0%, #FFE8D6 100%)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.12)';
+                  } else {
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.35)';
+                  }
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                }}
               >
                 {labels[status]} {count > 0 ? `(${count})` : ''}
               </button>
