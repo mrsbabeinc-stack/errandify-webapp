@@ -53,7 +53,7 @@ export default function AdminThemeWrapper({
           )}
 
           {/* Content */}
-          <div style={{background: 'white', borderRadius: '8px', padding: '12px', boxShadow: '0 2px 8px rgba(255, 107, 53, 0.08)', flex: 1, overflow: 'hidden'}}>
+          <div style={{background: 'white', borderRadius: '8px', padding: '12px', boxShadow: '0 2px 8px rgba(255, 107, 53, 0.08)', flex: 1, overflow: 'auto', WebkitOverflowScrolling: 'touch'}}>
             {children}
           </div>
         </div>

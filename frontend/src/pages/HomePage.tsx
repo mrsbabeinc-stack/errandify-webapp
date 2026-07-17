@@ -217,9 +217,9 @@ export default function HomePage({ userRole }: HomePageProps) {
                       key={category.id}
                       onClick={() => handleCategoryClick(category.id)}
                       style={{
-                        padding: '16px 10px',
-                        borderRadius: '10px',
-                        fontSize: '13px',
+                        padding: '12px 8px',
+                        borderRadius: '8px',
+                        fontSize: '12px',
                         fontWeight: '500',
                         border: 'none',
                         cursor: 'pointer',
@@ -239,8 +239,8 @@ export default function HomePage({ userRole }: HomePageProps) {
                       }}
                       title={category.purpose}
                     >
-                      <div style={{fontSize: '28px', marginBottom: '8px'}}>{category.icon}</div>
-                      <div style={{fontSize: '14px', color: '#333', fontWeight: '600', lineHeight: '1.3'}}>{category.name}</div>
+                      <div style={{fontSize: '24px', marginBottom: '6px'}}>{category.icon}</div>
+                      <div style={{fontSize: '13px', color: '#333', fontWeight: '600', lineHeight: '1.3'}}>{category.name}</div>
                     </button>
                   ))}
                 </div>
