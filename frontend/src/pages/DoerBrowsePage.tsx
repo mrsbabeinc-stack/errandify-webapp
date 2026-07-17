@@ -257,15 +257,15 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
 
         {/* Tab Selection - Warm Style */}
         {userRole === 'doer' && (
-          <div style={{display: 'flex', gap: '12px', marginBottom: '16px'}}>
+          <div style={{display: 'flex', gap: '10px', marginBottom: '12px'}}>
             <button
               onClick={() => setShowRecommended(false)}
               style={{
                 flex: 1,
-                padding: '12px 16px',
+                padding: '10px 12px',
                 borderRadius: '8px',
                 fontWeight: '600',
-                fontSize: '13px',
+                fontSize: '12px',
                 border: 'none',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
@@ -290,10 +290,10 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
               onClick={() => setShowRecommended(true)}
               style={{
                 flex: 1,
-                padding: '12px 16px',
+                padding: '10px 12px',
                 borderRadius: '8px',
                 fontWeight: '600',
-                fontSize: '13px',
+                fontSize: '12px',
                 border: 'none',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
@@ -319,7 +319,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
 
         {/* Search Bar */}
         {userRole === 'doer' && (
-          <div style={{marginBottom: '16px'}}>
+          <div style={{marginBottom: '12px'}}>
             <input
               type="text"
               placeholder="🔍 Search opportunities..."
@@ -330,7 +330,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                 padding: '10px 12px',
                 border: '1px solid #DDD',
                 borderRadius: '8px',
-                fontSize: '13px',
+                fontSize: '12px',
                 outline: 'none',
                 transition: 'all 0.2s',
               }}
@@ -348,17 +348,17 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
 
         {/* Category Selection Card - Warm & Compact - Grouped by Category Groups */}
         {userRole === 'doer' && (
-          <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '16px', border: '1px solid #FFE0D6', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', marginBottom: '16px'}}>
-          <h3 style={{fontSize: '13px', fontWeight: '700', color: '#333', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px'}}>
-            🎯 Categories <span style={{color: '#999', fontWeight: '400', fontSize: '12px'}}>(Select to filter)</span>
+          <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '12px', border: '1px solid #FFE0D6', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', marginBottom: '12px', maxHeight: '180px', overflowY: 'auto'}}>
+          <h3 style={{fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+            🎯 Categories <span style={{color: '#999', fontWeight: '400', fontSize: '11px'}}>(Select)</span>
           </h3>
 
           {/* Group Categories by their group field */}
-          <div style={{display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '12px'}}>
+          <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px'}}>
             {Object.entries(groupedCategories).map(([groupName, cats]) => (
               <div key={groupName}>
-                <h4 style={{fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '8px', paddingLeft: '4px'}}>{groupName}</h4>
-                <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px'}}>
+                <h4 style={{fontSize: '11px', fontWeight: '600', color: '#666', marginBottom: '4px', paddingLeft: '2px'}}>{groupName}</h4>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px'}}>
                   {cats.map((category) => {
                     const isSelected = selectedCategories.includes(category.id);
                     return (

@@ -83,17 +83,17 @@ export default function HomePage({ userRole }: HomePageProps) {
       {/* Page Container */}
       <div className="max-w-3xl mx-auto">
         {/* AD CAROUSEL */}
-        <div className="mb-1">
+        <div style={{marginBottom: '8px', maxHeight: '100px', overflow: 'hidden'}}>
           <AdCarousel />
         </div>
 
         {/* EVENT BANNER */}
-        <div className="mb-1">
+        <div style={{marginBottom: '8px', maxHeight: '60px', overflow: 'hidden'}}>
           <EventBanner />
         </div>
 
         {/* Quick Actions */}
-        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px'}}>
+        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px'}}>
           {userRole === 'asker' ? (
             <>
               <button
@@ -101,8 +101,8 @@ export default function HomePage({ userRole }: HomePageProps) {
                 style={{
                   background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
                   color: 'white',
-                  padding: '16px',
-                  borderRadius: '12px',
+                  padding: '12px',
+                  borderRadius: '10px',
                   border: 'none',
                   cursor: 'pointer',
                   boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)',
@@ -118,8 +118,8 @@ export default function HomePage({ userRole }: HomePageProps) {
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)';
                 }}
               >
-                <div style={{fontSize: '24px', marginBottom: '8px'}}>📝</div>
-                <div style={{fontWeight: '600', fontSize: '14px'}}>Post Errand</div>
+                <div style={{fontSize: '20px', marginBottom: '4px'}}>📝</div>
+                <div style={{fontWeight: '600', fontSize: '12px'}}>Post Errand</div>
               </button>
 
               <button
@@ -127,8 +127,8 @@ export default function HomePage({ userRole }: HomePageProps) {
                 style={{
                   background: 'linear-gradient(135deg, #8B6F47 0%, #A0826D 100%)',
                   color: 'white',
-                  padding: '16px',
-                  borderRadius: '12px',
+                  padding: '12px',
+                  borderRadius: '10px',
                   border: 'none',
                   cursor: 'pointer',
                   boxShadow: '0 4px 12px rgba(139, 111, 71, 0.3)',
@@ -144,8 +144,8 @@ export default function HomePage({ userRole }: HomePageProps) {
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 111, 71, 0.3)';
                 }}
               >
-                <div style={{fontSize: '24px', marginBottom: '8px'}}>📋</div>
-                <div style={{fontWeight: '600', fontSize: '14px'}}>My Errands</div>
+                <div style={{fontSize: '20px', marginBottom: '4px'}}>📋</div>
+                <div style={{fontWeight: '600', fontSize: '12px'}}>My Errands</div>
               </button>
             </>
           ) : (
@@ -155,8 +155,8 @@ export default function HomePage({ userRole }: HomePageProps) {
                 style={{
                   background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
                   color: 'white',
-                  padding: '16px',
-                  borderRadius: '12px',
+                  padding: '12px',
+                  borderRadius: '10px',
                   border: 'none',
                   cursor: 'pointer',
                   boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)',
@@ -172,8 +172,8 @@ export default function HomePage({ userRole }: HomePageProps) {
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)';
                 }}
               >
-                <div style={{fontSize: '24px', marginBottom: '8px'}}>🔍</div>
-                <div style={{fontWeight: '600', fontSize: '14px'}}>Browse</div>
+                <div style={{fontSize: '20px', marginBottom: '4px'}}>🔍</div>
+                <div style={{fontWeight: '600', fontSize: '12px'}}>Browse</div>
               </button>
 
               <button
@@ -181,8 +181,8 @@ export default function HomePage({ userRole }: HomePageProps) {
                 style={{
                   background: 'linear-gradient(135deg, #8B6F47 0%, #A0826D 100%)',
                   color: 'white',
-                  padding: '16px',
-                  borderRadius: '12px',
+                  padding: '12px',
+                  borderRadius: '10px',
                   border: 'none',
                   cursor: 'pointer',
                   boxShadow: '0 4px 12px rgba(139, 111, 71, 0.3)',
@@ -198,32 +198,32 @@ export default function HomePage({ userRole }: HomePageProps) {
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 111, 71, 0.3)';
                 }}
               >
-                <div style={{fontSize: '24px', marginBottom: '8px'}}>💼</div>
-                <div style={{fontWeight: '600', fontSize: '14px'}}>My Offers</div>
+                <div style={{fontSize: '20px', marginBottom: '4px'}}>💼</div>
+                <div style={{fontWeight: '600', fontSize: '12px'}}>My Offers</div>
               </button>
             </>
           )}
         </div>
 
         {/* Quick Categories */}
-        <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', marginBottom: '16px', borderTop: '4px solid #FF6B35'}}>
-          <h2 style={{fontWeight: '700', color: '#333', marginBottom: '12px', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+        <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', borderTop: '4px solid #FF6B35', maxHeight: '200px', overflowY: 'auto'}}>
+          <h2 style={{fontWeight: '700', color: '#333', marginBottom: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'}}>
             {userRole === 'asker' ? '🎯 Need help?' : '🤝 Help?'}
           </h2>
 
-          <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+          <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
             {Object.entries(groupedCategories).map(([groupName, cats]) => (
               <div key={groupName}>
-                <h3 style={{fontSize: '13px', fontWeight: '600', color: '#666', marginBottom: '8px', paddingLeft: '4px'}}>{groupName}</h3>
-                <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px'}}>
+                <h3 style={{fontSize: '11px', fontWeight: '600', color: '#666', marginBottom: '4px', paddingLeft: '2px'}}>{groupName}</h3>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px'}}>
                   {cats.map((category) => (
                     <button
                       key={category.id}
                       onClick={() => handleCategoryClick(category.id)}
                       style={{
-                        padding: '12px 8px',
-                        borderRadius: '8px',
-                        fontSize: '12px',
+                        padding: '8px 4px',
+                        borderRadius: '6px',
+                        fontSize: '10px',
                         fontWeight: '500',
                         border: 'none',
                         cursor: 'pointer',
@@ -243,8 +243,8 @@ export default function HomePage({ userRole }: HomePageProps) {
                       }}
                       title={category.purpose}
                     >
-                      <div style={{fontSize: '18px', marginBottom: '4px'}}>{category.icon}</div>
-                      <div style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '11px', color: '#333'}}>{category.name}</div>
+                      <div style={{fontSize: '14px', marginBottom: '2px'}}>{category.icon}</div>
+                      <div style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '9px', color: '#333'}}>{category.name}</div>
                     </button>
                   ))}
                 </div>
