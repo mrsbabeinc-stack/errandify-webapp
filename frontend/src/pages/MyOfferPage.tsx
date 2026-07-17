@@ -359,59 +359,109 @@ export default function MyOfferPage() {
 
         {/* Bids List */}
         {filteredBids.length === 0 ? (
-          <div className="bg-white rounded-lg p-8 text-center">
-            <p className="text-gray-600 mb-2">
+          <div style={{background: 'linear-gradient(135deg, #FFF9F5 0%, #FFEFEA 100%)', borderRadius: '16px', padding: '32px 24px', textAlign: 'center', border: '2px solid #FFE0D6', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.12)'}}>
+            <p style={{fontSize: '32px', marginBottom: '8px'}}>🎯</p>
+            <p style={{fontSize: '16px', fontWeight: '700', color: '#333', marginBottom: '8px'}}>
               {filterStatus === 'all' ? 'No offers yet' : `No ${filterStatus} offers`}
             </p>
-            <p className="text-xs text-gray-500">
-              Start browsing errands and place your first offer!
+            <p style={{fontSize: '13px', color: '#555', marginBottom: '16px', fontWeight: '500'}}>
+              Start browsing errands and place your first offer to earn! 🚀
             </p>
             <button
               onClick={() => navigate('/browse')}
-              className="mt-4 px-4 py-2 bg-errandify-orange text-white rounded-lg font-semibold text-sm hover:bg-opacity-90"
+              style={{
+                padding: '12px 24px',
+                background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '13px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)',
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.4)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)';
+              }}
             >
-              Browse ToHelp
+              🔍 Browse Errands ToHelp
             </button>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
             {filteredBids.map((bid) => (
               <div
                 key={bid.id}
-                className={`bg-white rounded-lg p-2 border transition-all text-sm ${
-                  bid === activeBid
-                    ? 'border-green-300 shadow-md'
-                    : 'border-gray-200 hover:shadow-md'
-                }`}
+                style={{
+                  background: bid === activeBid
+                    ? 'linear-gradient(135deg, #F1F8F4 0%, #E8F5E9 100%)'
+                    : 'linear-gradient(135deg, #FFF5F0 0%, #FFE8D6 100%)',
+                  borderRadius: '14px',
+                  padding: '16px',
+                  border: bid === activeBid ? '2px solid #4CAF50' : '2px solid #FFE0D6',
+                  transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  boxShadow: bid === activeBid
+                    ? '0 8px 20px rgba(76, 175, 80, 0.25)'
+                    : '0 4px 12px rgba(255, 107, 53, 0.15)',
+                  cursor: 'pointer',
+                }}
+                onMouseOver={(e) => {
+                  if (bid !== activeBid) {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #FFE8D6 0%, #FFD4B3 100%)';
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';
+                    e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
+                    e.currentTarget.style.borderColor = '#FF6B35';
+                  } else {
+                    e.currentTarget.style.boxShadow = '0 12px 28px rgba(76, 175, 80, 0.3)';
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (bid !== activeBid) {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #FFF5F0 0%, #FFE8D6 100%)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.15)';
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                    e.currentTarget.style.borderColor = '#FFE0D6';
+                  } else {
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(76, 175, 80, 0.25)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }
+                }}
               >
                 {/* Line 1: Title, Errand ID, Status */}
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <h3 className="font-semibold text-errandify-brown text-sm truncate">
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px'}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0}}>
+                    <h3 style={{fontWeight: '700', color: '#FF6B35', fontSize: '14px', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
                       {bid.errand?.title || 'Errand #' + bid.errand_id}
                     </h3>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded font-mono whitespace-nowrap">
+                    <span style={{fontSize: '11px', color: '#666', background: '#FFF0E6', padding: '4px 8px', borderRadius: '6px', fontFamily: 'monospace', whiteSpace: 'nowrap', fontWeight: '600'}}>
                       {bid.errand?.formatted_id || `ER26${String(bid.errand_id).padStart(2, '0')}-${String(bid.id).slice(-4).toUpperCase().padEnd(4, '0')}`}
                     </span>
                   </div>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border whitespace-nowrap ${getStatusColor(bid.errand?.status || bid.status)}`}>
+                  <span style={{padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', border: '1.5px solid #FF6B35', color: '#FF6B35', background: '#FFF5F0', whiteSpace: 'nowrap'}}>
                     {getStatusLabel(bid.errand?.status || bid.status)}
                   </span>
                 </div>
 
                 {/* Line 2: Posted by + Category on left, Price + ID on right */}
-                <div className="flex items-start justify-between gap-2 text-xs mb-1">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <p className="text-gray-600 whitespace-nowrap">by {bid.errand?.asker_alias || bid.errand?.asker_name || 'Unknown'}</p>
+                <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px', marginBottom: '8px', fontSize: '12px'}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0}}>
+                    <p style={{color: '#666', whiteSpace: 'nowrap', margin: 0, fontWeight: '500'}}>by {bid.errand?.asker_alias || bid.errand?.asker_name || 'Unknown'}</p>
                     {bid.errand?.category && (
-                      <span className="px-2 py-0.5 bg-orange-100 text-errandify-orange rounded text-xs font-semibold whitespace-nowrap">
+                      <span style={{padding: '4px 10px', background: 'linear-gradient(135deg, #FFE8D6 0%, #FFD4B3 100%)', color: '#FF6B35', borderRadius: '8px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap'}}>
                         {bid.errand.category}
                       </span>
                     )}
                   </div>
-                  <div className="text-right">
-                    <p className="text-gray-700 font-semibold">SGD ${Number(bid.amount).toFixed(2)}</p>
-                    <p className="text-gray-500 font-mono text-xs">{bid.offer_id || `OF${bid.id}`}</p>
+                  <div style={{textAlign: 'right'}}>
+                    <p style={{color: '#333', fontWeight: '700', margin: '0 0 4px 0'}}>SGD ${Number(bid.amount).toFixed(2)}</p>
+                    <p style={{color: '#999', fontFamily: 'monospace', fontSize: '10px', margin: 0}}>{bid.offer_id || `OF${bid.id}`}</p>
                   </div>
                 </div>
 
