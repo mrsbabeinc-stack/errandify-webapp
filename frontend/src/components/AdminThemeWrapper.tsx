@@ -53,7 +53,7 @@ export default function AdminThemeWrapper({
           )}
 
           {/* Content */}
-          <div style={{background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 12px rgba(255, 107, 53, 0.1)', borderTop: title ? '4px solid #FF6B35' : 'none'}}>
+          <div style={{background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 12px rgba(255, 107, 53, 0.1)'}}>
             {children}
           </div>
         </div>
