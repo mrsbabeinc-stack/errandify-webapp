@@ -446,13 +446,12 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 </div>
               )}
               {/* Title + ID + Status in one row */}
-              <div style={{display: 'grid', gridTemplateColumns: 'auto auto auto 1fr', alignItems: 'center', gap: '4px', marginBottom: '6px'}}>
-                <h3 style={{fontWeight: '700', fontSize: '12px', color: '#333', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{conversation.title}</h3>
-                <span style={{fontSize: '9px', fontWeight: '700', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '1px 5px', borderRadius: '4px', whiteSpace: 'nowrap'}}>{conversation.formattedId}</span>
-                <span style={{padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '700', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? '#FFE8D6' : getStatusColor(conversation.status).includes('green') ? '#C8E6C9' : '#F0F0F0', color: getStatusColor(conversation.status).includes('orange') ? '#FF6B35' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#666'}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px', minWidth: 0}}>
+                <h3 style={{fontWeight: '700', fontSize: '14px', color: '#333', margin: 0, minWidth: 0, flex: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '500px'}}>{conversation.title}</h3>
+                <span style={{fontSize: '11px', fontWeight: '700', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap', flexShrink: 0}}>{conversation.formattedId}</span>
+                <span style={{padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '700', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? '#FFE8D6' : getStatusColor(conversation.status).includes('green') ? '#C8E6C9' : '#F0F0F0', color: getStatusColor(conversation.status).includes('orange') ? '#FF6B35' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#666', flexShrink: 0}}>
                   {getStatusLabel(conversation.status).replace('Awaiting Confirmation', 'Awaiting').replace('Completed', 'Done')}
                 </span>
-                <div></div>
               </div>
 
               {/* Single line: Date | Location | Chat Button | Posted by */}
