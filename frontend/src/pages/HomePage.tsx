@@ -83,12 +83,12 @@ export default function HomePage({ userRole }: HomePageProps) {
       {/* Page Container */}
       <div className="max-w-3xl mx-auto">
         {/* AD CAROUSEL - 4 Banner Hero Section */}
-        <div style={{marginBottom: '16px'}}>
+        <div style={{marginBottom: '10px'}}>
           <AdCarousel />
         </div>
 
         {/* Quick Actions */}
-        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px'}}>
+        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px'}}>
           {userRole === 'asker' ? (
             <>
               <button
@@ -201,17 +201,17 @@ export default function HomePage({ userRole }: HomePageProps) {
         </div>
 
         {/* Quick Categories - 2 Row Grid */}
-        <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', borderTop: '4px solid #FF6B35'}}>
-          <h2 style={{fontWeight: '700', color: '#333', marginBottom: '10px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+        <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '10px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'}}>
+          <h2 style={{fontWeight: '700', color: '#333', marginBottom: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'}}>
             {userRole === 'asker' ? '🎯 Need help?' : '🤝 Help?'}
           </h2>
 
           {/* Show all categories grouped with headers */}
-          <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+          <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
             {Object.entries(groupedCategories).map(([groupName, cats]) => (
               <div key={groupName}>
-                <h3 style={{fontSize: '13px', fontWeight: '600', color: '#666', marginBottom: '8px', paddingLeft: '2px'}}>{groupName}</h3>
-                <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px'}}>
+                <h3 style={{fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '6px', paddingLeft: '2px'}}>{groupName}</h3>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px'}}>
                   {cats.map((category) => (
                     <button
                       key={category.id}
