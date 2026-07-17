@@ -100,9 +100,9 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
       bottom: 0,
       left: 0,
       right: 0,
-      background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(245,245,245,1) 100%)',
-      borderTop: 'none',
-      boxShadow: '0 -12px 40px rgba(0, 0, 0, 0.12), 0 -2px 8px rgba(0, 0, 0, 0.08)',
+      background: 'linear-gradient(180deg, rgba(255,250,247,0.98) 0%, rgba(252,240,233,1) 100%)',
+      borderTop: '1px solid rgba(255, 107, 53, 0.15)',
+      boxShadow: '0 -12px 40px rgba(255, 107, 53, 0.12), 0 -2px 8px rgba(255, 107, 53, 0.06)',
       zIndex: 40,
       backdropFilter: 'blur(10px)',
     }}>
@@ -164,34 +164,34 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                   flex: 1,
                   position: 'relative',
                   textDecoration: 'none',
-                  color: active ? 'white' : '#555',
+                  color: active ? 'white' : '#444',
                   background: active
                     ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)'
-                    : '#F8F9FA',
+                    : 'linear-gradient(135deg, rgba(255,245,240,0.6) 0%, rgba(255,232,214,0.4) 100%)',
                   boxShadow: active
-                    ? '0 8px 24px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                    : '0 4px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
+                    ? '0 8px 24px rgba(255, 107, 53, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
+                    : '0 4px 12px rgba(255, 107, 53, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
                   fontWeight: active ? '700' : '600',
-                  border: 'none',
+                  border: active ? 'none' : '1px solid rgba(255, 107, 53, 0.1)',
                 }}
                 onMouseEnter={(e) => {
                   if (!active) {
-                    e.currentTarget.style.background = '#F0F2F5';
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
-                    e.currentTarget.style.transform = 'translateY(-3px)';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.8) 0%, rgba(255,200,160,0.6) 100%)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
+                    e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
                   } else {
                     e.currentTarget.style.transform = 'translateY(-3px)';
-                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(255, 107, 53, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!active) {
-                    e.currentTarget.style.background = '#F8F9FA';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.6) 0%, rgba(255,232,214,0.4) 100%)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
                   } else {
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 107, 53, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
                   }
-                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
                 }}
               >
                 {item.image ? (
@@ -249,26 +249,26 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                 left: '50%',
                 bottom: '12px',
                 transform: 'translateX(-50%)',
-                width: '56px',
-                height: '56px',
-                background: 'linear-gradient(135deg, #FF6B35 0%, #FF8550 100%)',
+                width: '62px',
+                height: '62px',
+                background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
                 color: 'white',
                 borderRadius: '16px',
                 border: '2px solid white',
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 8px 28px rgba(255, 107, 53, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
                 cursor: 'pointer',
                 fontWeight: '800',
-                fontSize: '28px',
-                transition: 'all 0.3s ease-out',
+                fontSize: '32px',
+                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                 zIndex: 50,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateX(-50%) translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.transform = 'translateX(-50%) translateY(-5px) scale(1.08)';
+                e.currentTarget.style.boxShadow = '0 12px 36px rgba(255, 107, 53, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateX(-50%) translateY(0)';
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.transform = 'translateX(-50%) translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 8px 28px rgba(255, 107, 53, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
               }}
               title="Create new errand"
             >
