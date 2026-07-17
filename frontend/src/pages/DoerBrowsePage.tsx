@@ -378,9 +378,14 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
             <p className="text-gray-600 text-xs">Loading errands...</p>
           </div>
         ) : filteredErrands.length === 0 ? (
-          <div className="text-center py-6 bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
-            <p className="text-gray-700 text-xs font-medium mb-1.5">
-              😊 No errands found{selectedCategories.length > 0 ? ` in selected categories` : ''}{searchQuery ? ` matching "${searchQuery}"` : ''}.
+          <div className="text-center py-6 bg-white rounded-xl p-4 border border-orange-100 shadow-sm">
+            <p className="text-gray-700 text-sm font-medium mb-2">
+              📭 No errands available yet
+            </p>
+            <p className="text-gray-500 text-xs mb-3">
+              {selectedCategories.length > 0
+                ? 'No errands in selected categories. Try a different category or clear filters.'
+                : 'Be the first to browse errands! Check back soon as more doers post tasks.'}
             </p>
             {(selectedCategories.length > 0 || searchQuery) && (
               <button
@@ -390,7 +395,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                 }}
                 className="text-errandify-orange font-semibold text-xs hover:text-orange-600 transition"
               >
-                Clear filters
+                Clear filters & search
               </button>
             )}
           </div>
