@@ -124,7 +124,7 @@ const GiftingModal: React.FC<GiftingModalProps> = ({ isOpen, onClose, onSendGift
   return (
     <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000}}>
       <div style={{background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '520px', width: '95%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 12px 40px rgba(0,0,0,0.2)'}}>
-        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', paddingBottom: '16px', borderBottom: '2px solid #FFF0E6'}}>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '16px', borderBottom: '2px solid #FFF0E6'}}>
           <div>
             <h2 style={{margin: 0, fontSize: '26px', fontWeight: '800', background: 'linear-gradient(135deg, #FF6B35 0%, #E67E22 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>💝 Share the Love</h2>
             <p style={{margin: '6px 0 0 0', fontSize: '13px', color: '#999', fontWeight: '500'}}>Reward your amazing team</p>

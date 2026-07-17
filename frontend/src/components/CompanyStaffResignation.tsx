@@ -193,7 +193,7 @@ const CompanyStaffResignation: React.FC = () => {
         }
 
         .stat-card {
-          background: linear-gradient(135deg, #FFC107, #FFD54F);
+          background: linear-gradient(135deg, #FF6B35, #FF8A5B);
           color: #fff;
           padding: 16px 24px;
           border-radius: 12px;
@@ -205,7 +205,7 @@ const CompanyStaffResignation: React.FC = () => {
         }
 
         .stat-card.pending {
-          background: linear-gradient(135deg, #FFC107, #FFD54F);
+          background: linear-gradient(135deg, #FF6B35, #FF8A5B);
         }
 
         .stat-card .count {
@@ -226,7 +226,7 @@ const CompanyStaffResignation: React.FC = () => {
 
         .empty-state {
           text-align: center;
-          padding: 48px 24px;
+          padding: 20px 24px;
           color: #999;
         }
 
@@ -253,17 +253,17 @@ const CompanyStaffResignation: React.FC = () => {
         }
 
         .resignation-card.pending {
-          border-left: 4px solid #FFC107;
+          border-left: 4px solid #FF6B35;
         }
 
         .resignation-card.approved {
           border-left: 4px solid #27AE60;
-          background: #F8FFF9;
+          background: #FFF9F5;
         }
 
         .resignation-card.rejected {
           border-left: 4px solid #E74C3C;
-          background: #FFF5F5;
+          background: #FFF9F5;
         }
 
         .card-header {
@@ -297,7 +297,7 @@ const CompanyStaffResignation: React.FC = () => {
 
         .reason-tag.vehicle-issues {
           background: #FFE0B2;
-          color: #E65100;
+          color: #E55A24;
         }
 
         .reason-tag.time-conflict {
@@ -335,7 +335,7 @@ const CompanyStaffResignation: React.FC = () => {
         }
 
         .status-badge.pending {
-          background: #FFC107;
+          background: #FF6B35;
           color: #fff;
         }
 

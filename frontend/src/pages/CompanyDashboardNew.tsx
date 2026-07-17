@@ -1,6 +1,6 @@
+import '../styles/CompanyDashboardNew.css';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/CompanyDashboardNew.css';
 import CompanyLeaveCalendar from '../components/CompanyLeaveCalendar';
 import CompanyPointsDistribution from '../components/CompanyPointsDistribution';
 import CompanyStaffResignation from '../components/CompanyStaffResignation';
@@ -268,7 +268,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
               <div className="nav-section">
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer'}} onClick={() => toggleSection('asker')}>
                   <h3 style={{margin: 0}}>ASKER SECTION</h3>
-                  <span style={{fontSize: '18px', userSelect: 'none', flexShrink: 0, marginLeft: '12px', padding: '4px 8px', width: '24px', textAlign: 'center'}}>{collapsedSections.asker ? '▲' : '▼'}</span>
+                  <span style={{fontSize: '18px', userSelect: 'none', flexShrink: 0, marginLeft: '12px', padding: '4px 8px', width: '24px', textAlign: 'center'}}>{collapsedSections.asker ? '▼' : '▲'}</span>
                 </div>
                 {!collapsedSections.asker && (
                   <>
@@ -465,8 +465,8 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       <div className="priority-badge">HIGH</div>
                       <div className="item-content">
                         <h4>Approve Pending Leave Requests</h4>
-                        <p>2 staff members waiting for approval</p>
-                        <span className="due-date">Due: Today</span>
+                        <p style={{color: '#333'}}>2 staff members waiting for approval</p>
+                        <span className="due-date" style={{color: '#333'}}>Due: Today</span>
                       </div>
                       <button className="item-action" onClick={() => setActiveSection('leave-calendar')}>→ Review</button>
                     </div>
@@ -478,8 +478,8 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         <div className="priority-badge">MEDIUM</div>
                         <div className="item-content">
                           <h4>Review Staff Reassignment Requests</h4>
-                          <p>1 errand reassignment pending manager approval</p>
-                          <span className="due-date">Due: Tomorrow</span>
+                          <p style={{color: '#333'}}>1 errand reassignment pending manager approval</p>
+                          <span className="due-date" style={{color: '#333'}}>Due: Tomorrow</span>
                         </div>
                         <button className="item-action" onClick={() => setActiveSection('staff-reassignment')}>→ Review</button>
                       </div>
@@ -1039,13 +1039,13 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         <svg viewBox="0 0 600 300" className="interactive-chart">
                           {/* Line Chart */}
                           <polyline points="80,140 150,120 220,100 290,110 360,90 430,85 500,70"
-                            style={{fill: 'none', stroke: '#FFD700', strokeWidth: '3', strokeLinejoin: 'round'}} />
+                            style={{fill: 'none', stroke: '#FF6B35', strokeWidth: '3', strokeLinejoin: 'round'}} />
                           <polygon points="80,140 150,120 220,100 290,110 360,90 430,85 500,70 500,240 80,240"
-                            style={{fill: '#FFD700', fillOpacity: '0.15'}} />
+                            style={{fill: '#FF6B35', fillOpacity: '0.15'}} />
                           {/* Data points */}
-                          <circle cx="80" cy="140" r="5" fill="#FFD700" />
-                          <circle cx="220" cy="100" r="5" fill="#FFD700" />
-                          <circle cx="500" cy="70" r="5" fill="#FFD700" />
+                          <circle cx="80" cy="140" r="5" fill="#FF6B35" />
+                          <circle cx="220" cy="100" r="5" fill="#FF6B35" />
+                          <circle cx="500" cy="70" r="5" fill="#FF6B35" />
                           {/* Labels */}
                           <text x="60" y="265" fontSize="11" fill="#999">4.2★</text>
                           <text x="200" y="265" fontSize="11" fill="#999">4.5★</text>
@@ -1521,7 +1521,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                     <p style={{margin: 0, fontSize: '14px', color: '#666', fontWeight: '500'}}>Perfect for startups</p>
                   </div>
 
-                  <div style={{background: pricingBillingCycle === 'annual' ? 'white' : '#f9f9f9', borderRadius: '12px', padding: '20px', marginBottom: '20px', border: pricingBillingCycle === 'annual' ? '1px solid #FFE4C4' : 'none'}}>
+                  <div style={{background: pricingBillingCycle === 'annual' ? 'white' : '#FFF9F5', borderRadius: '12px', padding: '20px', marginBottom: '20px', border: pricingBillingCycle === 'annual' ? '1px solid #FFE4C4' : 'none'}}>
                     <p style={{margin: '0 0 6px 0', fontSize: '12px', color: '#999', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px'}}>PRICE (SGD)</p>
                     <p style={{margin: '0 0 2px 0', fontSize: '36px', fontWeight: '700', color: '#FF6B35'}}>
                       {pricingBillingCycle === 'annual' ? '990' : '99'}
@@ -1695,7 +1695,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 </div>
 
                 {/* FAQ Section */}
-                <div style={{marginTop: '40px', background: '#f9f9f9', borderRadius: '12px', padding: '24px', border: '1px solid #e0e0e0'}}>
+                <div style={{marginTop: '40px', background: '#FFF9F5', borderRadius: '12px', padding: '24px', border: '1px solid #e0e0e0'}}>
                   <h3 style={{margin: '0 0 20px 0', fontSize: '18px', fontWeight: '700', color: '#333'}}>❓ Frequently Asked Questions</h3>
 
                   <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px'}}>
@@ -1845,7 +1845,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         cursor: 'pointer',
                         transition: 'all 0.2s ease'
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#E65100'}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#E55A24'}
                       onMouseLeave={(e) => e.currentTarget.style.background = '#FF6B35'}
                     >
                       📈 View History
@@ -1954,7 +1954,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                             <p style={{margin: '0 0 12px 0', fontSize: '12px', color: '#666'}}>Worth {voucher.value}</p>
                             <p style={{margin: '0 0 12px 0', fontSize: '13px', fontWeight: '700', color: '#FF6B35'}}>{voucher.price}</p>
                             <div style={{display: 'flex', gap: '8px'}}>
-                              <button style={{flex: 1, padding: '8px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s ease'}} onMouseEnter={(e) => e.currentTarget.style.background = '#E65100'} onMouseLeave={(e) => e.currentTarget.style.background = '#FF6B35'}>🎁 Redeem</button>
+                              <button style={{flex: 1, padding: '8px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s ease'}} onMouseEnter={(e) => e.currentTarget.style.background = '#E55A24'} onMouseLeave={(e) => e.currentTarget.style.background = '#FF6B35'}>🎁 Redeem</button>
                               <button style={{flex: 1, padding: '8px', background: '#F5EFEA', color: '#FF6B35', border: '2px solid #FF6B35', borderRadius: '6px', fontWeight: '600', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s ease'}} onMouseEnter={(e) => e.currentTarget.style.background = '#FFE4C4'} onMouseLeave={(e) => e.currentTarget.style.background = '#F5EFEA'}>💝 Gift</button>
                             </div>
                           </div>
@@ -1978,7 +1978,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                             <p style={{margin: '0 0 12px 0', fontSize: '12px', color: '#666'}}>Worth {voucher.value}</p>
                             <p style={{margin: '0 0 12px 0', fontSize: '13px', fontWeight: '700', color: '#FF6B35'}}>{voucher.price}</p>
                             <div style={{display: 'flex', gap: '8px'}}>
-                              <button style={{flex: 1, padding: '8px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s ease'}} onMouseEnter={(e) => e.currentTarget.style.background = '#E65100'} onMouseLeave={(e) => e.currentTarget.style.background = '#FF6B35'}>🎁 Redeem</button>
+                              <button style={{flex: 1, padding: '8px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s ease'}} onMouseEnter={(e) => e.currentTarget.style.background = '#E55A24'} onMouseLeave={(e) => e.currentTarget.style.background = '#FF6B35'}>🎁 Redeem</button>
                               <button style={{flex: 1, padding: '8px', background: '#F5EFEA', color: '#FF6B35', border: '2px solid #FF6B35', borderRadius: '6px', fontWeight: '600', fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s ease'}} onMouseEnter={(e) => e.currentTarget.style.background = '#FFE4C4'} onMouseLeave={(e) => e.currentTarget.style.background = '#F5EFEA'}>💝 Gift</button>
                             </div>
                           </div>
@@ -2038,7 +2038,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                   </div>
 
                   {/* Features Highlight */}
-                  <div style={{background: '#f9f9f9', borderRadius: '12px', padding: '24px', maxWidth: '500px', margin: '0 auto', border: '1px solid #e0e0e0'}}>
+                  <div style={{background: '#FFF9F5', borderRadius: '12px', padding: '24px', maxWidth: '500px', margin: '0 auto', border: '1px solid #e0e0e0'}}>
                     <h4 style={{fontSize: '14px', fontWeight: '700', marginBottom: '16px', color: '#333'}}>✨ Gifting Features</h4>
                     <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
                       <div style={{display: 'flex', gap: '8px', alignItems: 'flex-start'}}>
@@ -2193,7 +2193,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                     <div style={{overflowX: 'auto'}}>
                       <table style={{width: '100%', borderCollapse: 'collapse'}}>
                         <thead>
-                          <tr style={{background: '#f9f9f9', borderBottom: '2px solid #e0e0e0'}}>
+                          <tr style={{background: '#FFF9F5', borderBottom: '2px solid #e0e0e0'}}>
                             <th style={{padding: '16px', textAlign: 'left', fontWeight: '700', fontSize: '13px', color: '#333'}}>Type</th>
                             <th style={{padding: '16px', textAlign: 'left', fontWeight: '700', fontSize: '13px', color: '#333'}}>Description</th>
                             <th style={{padding: '16px', textAlign: 'right', fontWeight: '700', fontSize: '13px', color: '#333'}}>Amount</th>

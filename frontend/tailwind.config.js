@@ -10,6 +10,11 @@ export default {
         'errandify-orange': '#FF7A29',
         'errandify-brown': '#4A3221',
         'errandify-bg': '#FFFAF6',
+        'admin-bg-light': '#FFF9F5',
+        'admin-bg-peach': '#FFF0E5',
+      },
+      backgroundImage: {
+        'admin-gradient': 'linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%)',
       },
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', '"Helvetica Neue"', 'Arial', 'sans-serif'],

@@ -107,12 +107,12 @@ const CompanyOperatingHours: React.FC = () => {
 
   return (
     <div style={{ padding: '24px', maxWidth: '900px' }}>
-      <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '32px', color: '#333' }}>
+      <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '20px', color: '#333' }}>
         ⏰ Company Operating Hours
       </h2>
 
       {/* Operating Hours Section */}
-      <div style={{ background: '#f9f9f9', borderRadius: '12px', padding: '24px', marginBottom: '32px', border: '1px solid #e0e0e0' }}>
+      <div style={{ background: '#FFF9F5', borderRadius: '12px', padding: '24px', marginBottom: '20px', border: '1px solid #e0e0e0' }}>
         <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px', color: '#333' }}>📅 Weekly Schedule</h3>
 
         <div style={{ display: 'grid', gap: '16px' }}>
@@ -171,7 +171,7 @@ const CompanyOperatingHours: React.FC = () => {
       </div>
 
       {/* Special Dates & Public Holidays Section */}
-      <div style={{ background: '#f9f9f9', borderRadius: '12px', padding: '24px', marginBottom: '32px', border: '1px solid #e0e0e0' }}>
+      <div style={{ background: '#FFF9F5', borderRadius: '12px', padding: '24px', marginBottom: '20px', border: '1px solid #e0e0e0' }}>
         <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px', color: '#333' }}>📅 Special Dates & Public Holidays</h3>
 
         <div style={{ marginBottom: '24px', padding: '16px', background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE4C4 100%)', borderRadius: '8px', border: '2px solid #FFB84D' }}>

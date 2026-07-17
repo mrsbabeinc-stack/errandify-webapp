@@ -61,6 +61,7 @@ const menuItems: MenuItem[] = [
         ]
       },
       { id: 'discounts', label: 'Discount Codes', icon: '🏷️', path: '/admin/manage/discounts' },
+      { id: 'notification-test', label: 'Notification Test', icon: '🔔', path: '/admin/notification-test' },
     ]
   },
   {

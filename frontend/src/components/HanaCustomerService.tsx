@@ -26,20 +26,19 @@ interface Message {
   text: string;
   timestamp: Date;
   suggestedCategory?: string;
+  actions?: Array<{ label: string; action: string }>;
 }
 
-type Language = 'en' | 'zh' | 'yue';
+type Language = 'en' | 'zh';
 
 const LANGUAGE_NAMES: Record<Language, string> = {
   en: '🇬🇧 English',
-  zh: '🇨🇳 中文 (帮帮乐)',
-  yue: '🇭🇰 粵語 (廣東話)',
+  zh: '🇨🇳 中文',
 };
 
 const LANGUAGE_PROMPTS: Record<Language, string> = {
   en: 'Reply in English.',
   zh: '用中文回复。',
-  yue: '用粵語回復。',
 };
 
 // Quick reply suggestions (context-aware) with navigation
@@ -55,12 +54,6 @@ const QUICK_REPLIES: Record<Language, Array<{ label: string; action: string }>> 
     { label: '我的任务', action: '/errands' },
     { label: '我的钱包', action: '/wallet' },
     { label: '推荐', action: '/referral' },
-  ],
-  yue: [
-    { label: '創建新任務', action: '/create-errand-hana' },
-    { label: '我的任務', action: '/errands' },
-    { label: '我的錢包', action: '/wallet' },
-    { label: '推薦', action: '/referral' },
   ],
 };
 
@@ -80,12 +73,6 @@ const INTENT_RESPONSES: Record<Language, Record<string, string>> = {
     'browse_errands': '查找帮帮：\n1. 点击放大镜图标（浏览）\n2. 按类别浏览可用的帮帮\n3. 点击查看详情\n4. 点击接受来出价',
     'payment': '您的款项在工作完成并确认前由我们安全保管。一旦发布者批准您的工作，您就能获得报酬。',
     'bidding': '您可以通过点击接受来对任何帮帮出价。发布者会选择他们最喜欢的帮手。您可以出价任何您认为公平的金额。',
-  },
-  yue: {
-    'post_errand': '發佈幫幫好簡單：\n1. 點擊底部嘅 + 按鈕\n2. 描述你需要嘅幫助\n3. 設定預算同截止日期\n4. 提交\n\n就噉！你會收到幫手嘅出價。',
-    'browse_errands': '搵幫幫：\n1. 點擊放大鏡圖標（瀏覽）\n2. 按類別瀏覽可用嘅幫幫\n3. 點擊查睇詳情\n4. 點擊接受嚟出價',
-    'payment': '你嘅款項喺工作完成同確認前由我哋安全保管。一旦發佈者批准你嘅工作，你就能獲得報酬。',
-    'bidding': '你可以通過點擊接受嚟對任何幫幫出價。發佈者會選擇佢哋最鍾意嘅幫手。你可以出價任何你認為公平嘅金額。',
   },
 };
 
@@ -117,13 +104,33 @@ const detectIntent = (message: string): string | null => {
 };
 
 const getGreeting = (lang: Language) => {
-  if (lang === 'yue') {
-    return '你好呀! 我係帮帮乐嘅助手。随时准备帮你处理各种生活小任务。有咩我可以幫你嘅呢?';
-  } else if (lang === 'zh') {
+  if (lang === 'zh') {
     return '你好！很高兴为你服务～ 我是帮帮乐的助手，随时准备帮你处理各种生活小任务。';
   }
   return "Hi there! I'm Hana, your Errandify assistant. How can I help you today?";
 };
+
+interface UserData {
+  id?: string;
+  name?: string;
+  display_name?: string;
+  alias?: string;
+  email?: string;
+  phone?: string;
+  role?: string;
+}
+
+interface ErrandData {
+  id: number;
+  title: string;
+  description?: string;
+  status: string;
+  category: string;
+  budget: number;
+  deadline?: string;
+  createdAt?: string;
+  role?: 'asker' | 'doer'; // Track which role user has in this errand
+}
 
 export default function HanaCustomerService() {
   console.log('[Hana] Component mounted');
@@ -145,6 +152,12 @@ export default function HanaCustomerService() {
   const [autoSpeak, setAutoSpeak] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
+
+  // User and Errand Data
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [errands, setErrands] = useState<ErrandData[]>([]);
+  const [wallet, setWallet] = useState<number>(0);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -166,15 +179,152 @@ export default function HanaCustomerService() {
     scrollToBottom();
   }, [messages]);
 
-
-  // Auto-speak greeting when Hana is first opened
+  // Load user data from localStorage and errands from API
   useEffect(() => {
-    if (isOpen && messages.length === 1 && autoSpeak) {
+    const loadUserData = async () => {
+      try {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          setUserData(user);
+          console.log('[Hana] User data loaded:', user.display_name || user.name);
+        }
+
+        // Load wallet balance
+        const walletStr = localStorage.getItem('wallet_balance');
+        if (walletStr) {
+          setWallet(parseFloat(walletStr));
+        }
+
+        // Load errands from API (both asker and doer)
+        const token = localStorage.getItem('token');
+        if (token) {
+          const allErrands: ErrandData[] = [];
+
+          try {
+            // Fetch errands where user is ASKER
+            const askerResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`, {
+              headers: { 'Authorization': `Bearer ${token}` },
+            });
+            console.log('[Hana] Asker API response status:', askerResponse.status);
+            if (askerResponse.ok) {
+              const askerData = await askerResponse.json();
+              console.log('[Hana] Asker API response:', askerData);
+              if (askerData.data && Array.isArray(askerData.data)) {
+                const askerErrands = askerData.data.map((e: any) => ({
+                  ...e,
+                  role: 'asker' as const,
+                }));
+                allErrands.push(...askerErrands);
+                console.log('[Hana] Loaded asker errands:', askerErrands.length);
+              } else if (Array.isArray(askerData)) {
+                // If response is directly an array
+                const askerErrands = askerData.map((e: any) => ({
+                  ...e,
+                  role: 'asker' as const,
+                }));
+                allErrands.push(...askerErrands);
+                console.log('[Hana] Loaded asker errands (direct array):', askerErrands.length);
+              }
+            } else {
+              console.warn('[Hana] Asker API response not ok:', askerResponse.statusText);
+            }
+          } catch (err) {
+            console.warn('[Hana] Failed to fetch asker errands:', err);
+          }
+
+          try {
+            // Fetch errands where user is DOER (my-bids)
+            const doerResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/my-bids`, {
+              headers: { 'Authorization': `Bearer ${token}` },
+            });
+            console.log('[Hana] Doer API response status:', doerResponse.status);
+            if (doerResponse.ok) {
+              const doerData = await doerResponse.json();
+              console.log('[Hana] Doer API response:', doerData);
+              if (doerData.data && Array.isArray(doerData.data)) {
+                const doerErrands = doerData.data.map((bid: any) => ({
+                  id: bid.errand_id,
+                  title: bid.errand?.title || 'Unknown',
+                  description: bid.errand?.description,
+                  status: bid.errand?.status || bid.status, // Use errand status, fallback to bid status
+                  category: bid.errand?.category,
+                  budget: bid.errand?.budget || bid.amount,
+                  deadline: bid.errand?.deadline,
+                  role: 'doer' as const,
+                }));
+                allErrands.push(...doerErrands);
+                console.log('[Hana] Loaded doer errands (bids):', doerErrands.length);
+              } else if (Array.isArray(doerData)) {
+                // If response is directly an array
+                const doerErrands = doerData.map((bid: any) => ({
+                  id: bid.errand_id,
+                  title: bid.errand?.title || 'Unknown',
+                  description: bid.errand?.description,
+                  status: bid.errand?.status || bid.status,
+                  category: bid.errand?.category,
+                  budget: bid.errand?.budget || bid.amount,
+                  deadline: bid.errand?.deadline,
+                  role: 'doer' as const,
+                }));
+                allErrands.push(...doerErrands);
+                console.log('[Hana] Loaded doer errands (direct array):', doerErrands.length);
+              }
+            } else {
+              console.warn('[Hana] Doer API response not ok:', doerResponse.statusText);
+            }
+          } catch (err) {
+            console.warn('[Hana] Failed to fetch doer errands:', err);
+          }
+
+          setErrands(allErrands);
+          console.log('[Hana] Total errands loaded:', allErrands.length);
+          console.log('[Hana] All errands with roles:', allErrands.map(e => ({ id: e.id, title: e.title, role: e.role, status: e.status })));
+        }
+      } catch (error) {
+        console.error('[Hana] Error loading user data:', error);
+      }
+    };
+
+    loadUserData();
+  }, []);
+
+  // Update greeting when Hana is opened with user name
+  useEffect(() => {
+    if (isOpen && userData && messages.length === 1) {
+      const activeAskerErrands = errands.filter(e => e.role === 'asker' && e.status !== 'completed' && e.status !== 'cancelled').length;
+      const activeDoerErrands = errands.filter(e => e.role === 'doer' && e.status !== 'completed' && e.status !== 'cancelled').length;
+      const totalActive = activeAskerErrands + activeDoerErrands;
+
+      const newGreeting = language === 'zh'
+        ? `你好 ${userData.display_name || userData.name}！很高兴为你服务。你有 ${activeAskerErrands} 个作为发布者的活跃任务，${activeDoerErrands} 个作为执行者的活跃任务。有什么我可以帮助你的吗？`
+        : `Hi ${userData.display_name || userData.name}! You have ${activeAskerErrands} active errand(s) as an Asker and ${activeDoerErrands} as a Doer. How can I help you today?`;
+
+      const updatedMessages = [{
+        id: '1',
+        sender: 'hana' as const,
+        text: newGreeting,
+        timestamp: new Date(),
+      }];
+      setMessages(updatedMessages);
+
+      // Auto-speak greeting if enabled
+      if (autoSpeak) {
+        setTimeout(() => {
+          handleSpeak(newGreeting);
+        }, 500);
+      }
+    }
+  }, [isOpen, userData]);
+
+  // Auto-speak greeting when Hana is first opened (fallback for no user data)
+  useEffect(() => {
+    if (isOpen && messages.length === 1 && autoSpeak && !userData) {
       setTimeout(() => {
         handleSpeak(messages[0].text);
       }, 500);
     }
-  }, [isOpen]);
+  }, [isOpen, userData]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -188,7 +338,6 @@ export default function HanaCustomerService() {
       const languageMap: Record<Language, string> = {
         en: 'en-US',
         zh: 'zh-CN',
-        yue: 'zh-HK',
       };
       recognitionRef.current.lang = languageMap[language];
 
@@ -482,7 +631,62 @@ export default function HanaCustomerService() {
       const intent = detectIntent(input);
       let reply = '';
 
-      if (intent && INTENT_RESPONSES[detectedLang] && INTENT_RESPONSES[detectedLang][intent]) {
+      // Check if user is asking about their errands or account
+      const isErrandRelated = /errand|task|bid|status|active|my.*errand|my.*task|check.*errand/.test(input.toLowerCase());
+      const isUserRelated = /my.*account|profile|wallet|balance|earned|information|details/.test(input.toLowerCase());
+
+      console.log('[Hana] isErrandRelated:', isErrandRelated, 'errands.length:', errands.length, 'errands:', errands);
+
+      if (isErrandRelated && errands.length > 0) {
+        // Provide errand status - count by role
+        const activeAskerErrands = errands.filter(e => e.role === 'asker' && e.status !== 'completed' && e.status !== 'cancelled');
+        const activeDoerErrands = errands.filter(e => e.role === 'doer' && e.status !== 'completed' && e.status !== 'cancelled');
+        console.log('[Hana] Filtering errands:');
+        console.log('[Hana] - All errands:', errands.length);
+        console.log('[Hana] - Asker errands (role=asker):', errands.filter(e => e.role === 'asker').length);
+        console.log('[Hana] - Doer errands (role=doer):', errands.filter(e => e.role === 'doer').length);
+        console.log('[Hana] - Active Asker (not completed/cancelled):', activeAskerErrands.length);
+        console.log('[Hana] - Active Doer (not completed/cancelled):', activeDoerErrands.length);
+        console.log('[Hana] activeAskerErrands:', activeAskerErrands, 'activeDoerErrands:', activeDoerErrands);
+
+        if (activeAskerErrands.length > 0 || activeDoerErrands.length > 0) {
+          const totalActive = activeAskerErrands.length + activeDoerErrands.length;
+
+          reply = detectedLang === 'zh'
+            ? `你有 ${totalActive} 个活跃任务：${activeAskerErrands.length} 个作为发布者，${activeDoerErrands.length} 个作为执行者。点击下面查看详情。`
+            : `You have ${totalActive} active errand(s): ${activeAskerErrands.length} as an Asker, ${activeDoerErrands.length} as a Doer. Click below to view details.`;
+
+          // Add action buttons to view errands
+          const msgObj: Message = {
+            id: Date.now().toString(),
+            sender: 'hana',
+            text: reply,
+            timestamp: new Date(),
+            actions: [
+              { label: activeAskerErrands.length > 0 ? `View Asker Errands (${activeAskerErrands.length})` : undefined as any, action: '/errands' },
+              { label: activeDoerErrands.length > 0 ? `View Doer Errands (${activeDoerErrands.length})` : undefined as any, action: '/my-offer' },
+            ].filter(a => a.label),
+          };
+          setMessages((prev) => [...prev, msgObj]);
+
+          if (autoSpeak) {
+            setTimeout(() => {
+              handleSpeak(reply);
+            }, 300);
+          }
+          setIsLoading(false);
+          return;
+        } else {
+          reply = detectedLang === 'zh'
+            ? `你现在没有活跃的任务。想发布一个新的吗？`
+            : `You don't have any active errands right now. Want to post a new one?`;
+        }
+      } else if (isUserRelated && userData) {
+        // Provide user account information
+        reply = detectedLang === 'zh'
+          ? `你的账户信息：\n👤 名称: ${userData.display_name || userData.name || '用户'}\n💰 钱包余额: ¥${wallet.toFixed(2)}\n📧 邮箱: ${userData.email || '未设置'}\n📱 电话: ${userData.phone || '未设置'}\n\n需要其他帮助吗？`
+          : `Your account info:\n👤 Name: ${userData.display_name || userData.name || 'User'}\n💰 Wallet: $${wallet.toFixed(2)}\n📧 Email: ${userData.email || 'Not set'}\n📱 Phone: ${userData.phone || 'Not set'}\n\nNeed anything else?`;
+      } else if (intent && INTENT_RESPONSES[detectedLang] && INTENT_RESPONSES[detectedLang][intent]) {
         // Use intent-based response (instant, no API call needed)
         console.log('[Hana] Intent detected:', intent, '- using instant response');
         reply = INTENT_RESPONSES[detectedLang][intent];
@@ -500,13 +704,18 @@ export default function HanaCustomerService() {
           content: m.text
         }));
 
+        // Add user context to API request
+        const userContext = userData ? `User: ${userData.display_name || userData.name}, Active Errands: ${errands.filter(e => e.status !== 'completed').length}` : '';
+
         console.log('[Hana] Making API call with detected language:', detectedLang);
         const response = await axios.post(
           '/api/chat/hana/customer-service',
           {
             message: input,
             language: detectedLang,
-            context: recentMessages // Send context for better responses
+            context: recentMessages, // Send context for better responses
+            userContext: userContext,
+            userId: userData?.id
           },
           { headers }
         );
@@ -727,6 +936,21 @@ export default function HanaCustomerService() {
                         >
                           📝 Post {msg.suggestedCategory}
                         </button>
+                      </div>
+                    )}
+                    {msg.actions && msg.actions.length > 0 && msg.sender === 'hana' && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {msg.actions.map((action, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              window.location.href = action.action;
+                            }}
+                            className="text-xs bg-orange-100 hover:bg-errandify-orange hover:text-white text-errandify-orange px-3 py-1 rounded-full font-semibold transition-colors"
+                          >
+                            📋 {action.label}
+                          </button>
+                        ))}
                       </div>
                     )}
                   </div>

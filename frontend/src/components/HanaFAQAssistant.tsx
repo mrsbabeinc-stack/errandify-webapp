@@ -64,7 +64,6 @@ const Hana: React.FC = () => {
     const greetings = {
       en: "👋 Hi! I'm Hana, your Errandify assistant. I can help you with FAQs, answer questions about your ongoing errands, or guide you through any process. What can I help you with today?",
       zh: "👋 你好！我是帮帮乐助手Hana。我可以帮助你了解常见问题、回答关于你正在进行的任务的问题，或指导你完成任何流程。今天有什么我可以帮助你的吗？",
-      yue: "👋 你好呀！我係幫幫樂助手Hana。我可以幫助你了解常見問題、回答關於你正在進行嘅幫幫嘅問題，或指導你完成任何流程。今日有咩我可以幫助你嘅嗎？",
     };
     return greetings[lang];
   };
@@ -154,9 +153,7 @@ const Hana: React.FC = () => {
         if (faqMatches.length > 1) {
           const followUp = language === 'en'
             ? `I found ${faqMatches.length} relevant articles. Would you like to see more?`
-            : language === 'zh'
-            ? `我找到了${faqMatches.length}篇相关文章。你想看更多吗？`
-            : `我搵到咗${faqMatches.length}篇相關文章。你想睇更多嗎？`;
+            : `我找到了${faqMatches.length}篇相关文章。你想看更多吗？`;
           addMessage('hana', followUp);
         }
       }
@@ -177,9 +174,7 @@ const Hana: React.FC = () => {
       else {
         const fallback = language === 'en'
           ? "I'm not sure about that. Could you rephrase your question or try asking about a specific feature? I'm here to help with FAQs, errand guidance, and more."
-          : language === 'zh'
-          ? "我不太确定。你能重新表述你的问题或尝试询问特定功能吗？我在这里帮助你解答常见问题、任务指导等。"
-          : "我唔係好確定。你能重新表述你嘅問題或嘗試詢問特定功能嗎？我喺呢度幫助你解答常見問題、幫幫指導等。";
+          : "我不太确定。你能重新表述你的问题或尝试询问特定功能吗？我在这里帮助你解答常见问题、任务指导等。";
         addMessage('hana', fallback);
       }
 
@@ -193,9 +188,7 @@ const Hana: React.FC = () => {
       const categoryName = FAQ_TOPICS[categoryId as keyof typeof FAQ_TOPICS] || categoryId;
       const responseText = language === 'en'
         ? `I found ${categoryItems.length} articles about ${categoryName}. Here are the top questions:\n\n${categoryItems.slice(0, 3).map((item, idx) => `${idx + 1}. ${item.question[language] || item.question.en}`).join('\n')}\n\nWhich one interests you?`
-        : language === 'zh'
-        ? `我找到了关于${categoryName}的${categoryItems.length}篇文章。以下是最受欢迎的问题：\n\n${categoryItems.slice(0, 3).map((item, idx) => `${idx + 1}. ${item.question.zh || item.question.en}`).join('\n')}\n\n哪一个吸引你？`
-        : `我搵到咗關於${categoryName}嘅${categoryItems.length}篇文章。以下係最受歡迎嘅問題：\n\n${categoryItems.slice(0, 3).map((item, idx) => `${idx + 1}. ${item.question.yue || item.question.en}`).join('\n')}\n\n邊一個吸引你？`;
+        : `我找到了关于${categoryName}的${categoryItems.length}篇文章。以下是最受欢迎的问题：\n\n${categoryItems.slice(0, 3).map((item, idx) => `${idx + 1}. ${item.question.zh || item.question.en}`).join('\n')}\n\n哪一个吸引你？`;
 
       addMessage('hana', responseText);
       setSelectedCategory(categoryId);

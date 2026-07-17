@@ -1,6 +1,6 @@
+import '../styles/CompanyPostErrandPage.css';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/CompanyPostErrandPage.css';
 
 const CompanyPostErrandPage: React.FC = () => {
   const navigate = useNavigate();

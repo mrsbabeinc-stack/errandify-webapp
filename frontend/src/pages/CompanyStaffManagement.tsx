@@ -1,6 +1,6 @@
+import '../styles/CompanyStaffManagement.css';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/CompanyStaffManagement.css';
 
 interface Employee {
   id: number;

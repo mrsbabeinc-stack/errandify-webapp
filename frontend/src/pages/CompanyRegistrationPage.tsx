@@ -1,7 +1,7 @@
+import '../styles/CompanyRegistrationPage.css';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToastNotification } from '../utils/toastNotification';
-import '../styles/CompanyRegistrationPage.css';
 
 const CompanyRegistrationPage: React.FC = () => {
   const navigate = useNavigate();

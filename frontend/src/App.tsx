@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { initPushNotifications } from './utils/pushNotifications';
+import './styles/CompanyModuleTheme.css';
 import Layout from './components/Layout';
-import HanaFAQAssistant from './components/HanaFAQAssistant';
 import NotificationListener from './components/NotificationListener';
 import { NotificationProvider } from './context/NotificationContext';
 import NotificationToastContainer from './components/NotificationToastContainer';
@@ -38,6 +38,7 @@ import MyRewardsPage from './pages/MyRewardsPage';
 import PointsHistoryPage from './pages/PointsHistoryPage';
 import TestPage from './pages/TestPage';
 import TestCannotComplete from './pages/TestCannotComplete';
+import TestGradient from './pages/TestGradient';
 import MyOfferPage from './pages/MyOfferPage';
 import TaskCompleteEvidencePage from './pages/TaskCompleteEvidencePage';
 import ReviewCompletionPage from './pages/ReviewCompletionPage';
@@ -100,6 +101,7 @@ import Recognition from './pages/admin/Recognition';
 import HanaFAQBrowser from './pages/admin/HanaFAQBrowser';
 import HanaFAQCategories from './pages/admin/HanaFAQCategories';
 import HanaFAQManage from './pages/admin/HanaFAQManage';
+import NotificationSystemTest from './pages/admin/NotificationSystemTest';
 import CommunityFeed from './pages/admin/CommunityFeed';
 import HeroBanners from './pages/admin/HeroBanners';
 import CompanyClientIntelligence from './pages/admin/CompanyClientIntelligence';
@@ -271,7 +273,6 @@ export default function App() {
       <NotificationPanel />
       <NotificationToastContainer />
       <Router>
-        {isAuthenticated && !isStaff && <HanaFAQAssistant />}
         {isAuthenticated && <NotificationListener />}
         <Routes>
         {/* Landing/Home page - shown first to unauthenticated users */}
@@ -376,6 +377,21 @@ export default function App() {
           }
         />
 
+        {/* Create errand - full page form */}
+        <Route
+          path="/create-errand"
+          element={
+            isAuthenticated ? (
+              (() => {
+                console.log('🎨 RENDERING CREATE ERRAND PAGE');
+                return <CreateErrandPage />;
+              })()
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
         {/* Create errand - manual form with prefilled data from Hana */}
         <Route
           path="/create-errand"
@@ -434,6 +450,7 @@ export default function App() {
 
         {/* TEST ROUTE - to verify routing works */}
         <Route path="/test" element={<TestPage />} />
+        <Route path="/test-gradient" element={<TestGradient />} />
         <Route path="/test-cannot-complete" element={<TestCannotComplete />} />
         <Route path="/test-notifications" element={<TopNotificationTestPage />} />
 
@@ -559,6 +576,7 @@ export default function App() {
         <Route path="/admin/hana-faq" element={isAuthenticated && isAdmin ? <HanaFAQBrowser /> : <Navigate to="/login" replace />} />
         <Route path="/admin/hana-faq-categories" element={isAuthenticated && isAdmin ? <HanaFAQCategories /> : <Navigate to="/login" replace />} />
         <Route path="/admin/hana-faq-manage" element={isAuthenticated && isAdmin ? <HanaFAQManage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/notification-test" element={isAuthenticated && isAdmin ? <NotificationSystemTest /> : <Navigate to="/login" replace />} />
         <Route path="/admin/staff-info" element={isAuthenticated && isAdmin ? <StaffInfoEditorEnhanced /> : <Navigate to="/login" replace />} />
         <Route path="/admin/staff-salary-benefits" element={isAuthenticated && isAdmin ? <StaffSalaryBenefitsEditor /> : <Navigate to="/login" replace />} />
         <Route path="/admin/holidays" element={isAuthenticated && isAdmin ? <HolidayManager /> : <Navigate to="/login" replace />} />

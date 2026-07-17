@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { COMPREHENSIVE_FAQ, FAQ_TOPICS } from '../../data/HanaFAQDatabase';
-import { useToast } from '../../components/Toast';
+import { useErrandifyToast } from '../../utils/errandifyToast';
 
-type Language = 'en' | 'zh' | 'yue';
+type Language = 'en' | 'zh';
 
 interface NewFAQ {
   category: string;
-  question: { en: string; zh: string; yue: string };
-  answer: { en: string; zh: string; yue: string };
+  question: { en: string; zh: string };
+  answer: { en: string; zh: string };
   tags: string[];
 }
 
 export const HanaFAQManage: React.FC = () => {
-  const { showToast } = useToast();
+  const { success, error, info } = useErrandifyToast();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<NewFAQ>({
     category: Object.keys(FAQ_TOPICS)[0],
-    question: { en: '', zh: '', yue: '' },
-    answer: { en: '', zh: '', yue: '' },
+    question: { en: '', zh: '' },
+    answer: { en: '', zh: '' },
     tags: [],
   });
 
@@ -31,15 +31,15 @@ export const HanaFAQManage: React.FC = () => {
 
   const handleAddFAQ = () => {
     if (!formData.question.en || !formData.answer.en) {
-      showToast('Please fill in English question and answer', 'error');
+      error('Validation Error', 'Please fill in English question and answer');
       return;
     }
-    showToast('FAQ added successfully! (Demo mode - reload to see changes)', 'success');
+    success('FAQ Created', 'New FAQ added successfully (pending backend integration)');
     setShowForm(false);
     setFormData({
       category: Object.keys(FAQ_TOPICS)[0],
-      question: { en: '', zh: '', yue: '' },
-      answer: { en: '', zh: '', yue: '' },
+      question: { en: '', zh: '' },
+      answer: { en: '', zh: '' },
       tags: [],
     });
   };
@@ -59,7 +59,7 @@ export const HanaFAQManage: React.FC = () => {
   };
 
   const handleDeleteFAQ = (faqId: string) => {
-    showToast('FAQ deleted successfully! (Demo mode - reload to see changes)', 'success');
+    success('FAQ Deleted', 'FAQ item removed successfully (pending backend integration)');
   };
 
   return (
@@ -76,8 +76,8 @@ export const HanaFAQManage: React.FC = () => {
               setEditingId(null);
               setFormData({
                 category: Object.keys(FAQ_TOPICS)[0],
-                question: { en: '', zh: '', yue: '' },
-                answer: { en: '', zh: '', yue: '' },
+                question: { en: '', zh: '' },
+                answer: { en: '', zh: '' },
                 tags: [],
               });
               setShowForm(!showForm);

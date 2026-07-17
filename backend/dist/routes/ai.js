@@ -1143,9 +1143,9 @@ router.post('/suggestions', async (req, res) => {
         console.log('[Suggestions] Category:', category);
         console.log('[Suggestions] Date:', date);
         console.log('[Suggestions] Time:', time);
-        if (!title || !category) {
-            console.warn('[Suggestions] Missing required fields: title or category');
-            return res.status(400).json({ error: 'Title and category required' });
+        if (!title) {
+            console.warn('[Suggestions] Missing required field: title');
+            return res.status(400).json({ error: 'Title required' });
         }
         // Get Qwen API key from environment
         const qwenApiKey = process.env.QWEN_API_KEY;
@@ -1185,6 +1185,48 @@ router.post('/suggestions', async (req, res) => {
             'eventhelp': ['Organization', 'Communication', 'Physical Stamina', 'Problem-solving'],
             'tech-support': ['Technical Knowledge', 'Problem-solving', 'Patience', 'Communication'],
             'data-entry': ['Data Entry Skills', 'Accuracy', 'Time Management', 'Attention to Detail'],
+        };
+        const certificationMap = {
+            'eldercare': {
+                required: ['Caregiver Certification'],
+                optional: ['CPR Certification', 'First Aid Certification', 'Dementia Care Training']
+            },
+            'childcare': {
+                required: ['Child Care License'],
+                optional: ['CPR Certification', 'First Aid Certification', 'Background Check']
+            },
+            'homehelp': {
+                required: [],
+                optional: ['Cleaning Certification', 'Safety Training', 'Chemical Handling Certification']
+            },
+            'petcare': {
+                required: [],
+                optional: ['Pet Care Certification', 'Animal CPR', 'Veterinary Assistant Training']
+            },
+            'delivery': {
+                required: ['Valid Driver License'],
+                optional: ['Vehicle Insurance', 'Defensive Driving Course']
+            },
+            'eventhelp': {
+                required: [],
+                optional: ['Event Management Certificate', 'Safety Training']
+            },
+            'tech-support': {
+                required: ['Technical Certification'],
+                optional: ['CompTIA A+', 'Microsoft Certified', 'Apple Certified']
+            },
+            'data-entry': {
+                required: [],
+                optional: ['Data Entry Certification', 'Excel Certification']
+            },
+            'admin-business': {
+                required: [],
+                optional: ['Microsoft Office Certification', 'Administrative Assistant Certification']
+            },
+            'creative-arts': {
+                required: [],
+                optional: ['Design Certification', 'Professional Portfolio']
+            }
         };
         const descriptionSuggestions = {
             'eldercare': 'Help with daily activities and companionship for elderly person. Include mobility assistance, meal prep, or medication reminders needed.',
@@ -1310,18 +1352,22 @@ router.post('/suggestions', async (req, res) => {
             notes = notesSuggestions[detectedCategory] || 'Add important questions or requirements for potential doers.';
             console.log('[Qwen] Using fallback notes');
         }
+        // Get certifications for this category
+        const certifications = certificationMap[detectedCategory] || { required: [], optional: [] };
         // Ensure all response fields have valid values
         const responseData = {
             category: String(detectedCategory || 'homehelp'),
             description: String(suggestedDescription || 'Provide details about your task.'),
             notes: String(notes || 'Share any special requirements with doers.'),
             skills: Array.isArray(skills) ? skills : [],
+            certifications: certifications,
         };
         console.log('[Suggestions] ✅ SUCCESS - Returning response');
         console.log('[Suggestions] Category:', responseData.category);
         console.log('[Suggestions] Description length:', responseData.description.length);
         console.log('[Suggestions] Notes length:', responseData.notes.length);
         console.log('[Suggestions] Skills count:', responseData.skills.length);
+        console.log('[Suggestions] Certifications:', responseData.certifications);
         return res.status(200).json({
             success: true,
             data: responseData,
@@ -1344,6 +1390,7 @@ router.post('/suggestions', async (req, res) => {
                     description: 'Provide details about your task.',
                     notes: 'Share any special requirements with doers.',
                     skills: [],
+                    certifications: { required: [], optional: [] },
                 }
             });
         }

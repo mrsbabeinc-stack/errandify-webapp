@@ -39,10 +39,10 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   console.log('[ErrandsPage] Mounted, userRole:', userRole);
 
   useEffect(() => {
-    // Redirect doers to MyBids page
+    // Redirect doers to MyOffer page
     if (userRole === 'doer') {
-      console.log('[ErrandsPage] Redirecting doer to /my-bids');
-      navigate('/my-bids', { replace: true });
+      console.log('[ErrandsPage] Redirecting doer to /my-offer');
+      navigate('/my-offer', { replace: true });
       return;
     }
 
@@ -462,7 +462,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
             <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
               <p className="text-gray-500 mb-4 text-sm">No errands yet</p>
               <button
-                onClick={() => navigate(userRole === 'asker' ? '/create-errand' : '/')}
+                onClick={() => navigate(userRole === 'asker' ? '/create-errand-hana' : '/')}
                 className="bg-errandify-orange text-white px-6 py-2 rounded-lg font-semibold hover:bg-opacity-90 text-sm inline-block"
               >
                 {userRole === 'asker' ? 'Post an Errand' : 'Browse Errands'}

@@ -49,7 +49,7 @@ const CompanyDisputeCenter: React.FC<CompanyDisputeCenterProps> = ({ companyId =
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'Open': return '#FF6B35';
-      case 'In Review': return '#FFC266';
+      case 'In Review': return '#FF8A5B';
       case 'Resolved': return '#2D7A34';
       case 'Appealed': return '#1B5E75';
       default: return '#666';

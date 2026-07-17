@@ -40,6 +40,7 @@ export default function HanaTaskCreation({
   isOpen,
   onClose,
   onComplete,
+  onSkipToManual,
   defaultCategory,
 }: HanaTaskCreationProps) {
   const [currentStep, setCurrentStep] = useState<CollectionStep>('input');
@@ -499,12 +500,22 @@ export default function HanaTaskCreation({
             <h1 className="text-xl font-bold text-white">Hana (Your AI Sister)</h1>
             <p className="text-orange-100 text-xs">Chat With Hana</p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-white hover:text-orange-100 text-2xl font-light"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onSkipToManual}
+              className="px-3 py-2 bg-white text-errandify-orange rounded-full font-bold hover:bg-orange-100 text-sm flex-shrink-0"
+              title="Skip Hana and enter details manually"
+            >
+              ✎ Manual
+            </button>
+            <button
+              onClick={onClose}
+              className="text-white hover:text-orange-100 text-2xl font-light"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Main Content - Bubble Renders First (Loads First), Hana Below (Visual Order) */}
@@ -584,45 +595,46 @@ export default function HanaTaskCreation({
           )}
         </div>
 
-        {/* Input Section - OUTSIDE (Always at Bottom, Not Affected by Flex-Reverse) */}
+        {/* Input Section - Textarea left, buttons right same line */}
         {currentStep === 'input' && (
-          <form onSubmit={handleSendMessage} className="flex gap-3 flex-shrink-0 pb-2 px-6">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  // Submit on Enter (unless Shift is pressed for new line)
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage({ preventDefault: () => {} } as any);
-                  }
-                }}
-                placeholder="Type all details here..."
-                className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-2xl focus:outline-none focus:border-opacity-100 text-base font-semibold resize-none"
-                rows={2}
-                disabled={loading || isRecording}
-                autoFocus
-              />
-              <button
-                type="button"
-                onClick={isRecording ? stopRecording : startRecording}
-                className={`px-4 py-3 rounded-full font-bold transition-all text-sm flex-shrink-0 ${
-                  isRecording
-                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                }`}
-                title={isRecording ? 'Stop recording' : 'Start voice input'}
-              >
-                {isRecording ? '⏹️' : '🎤'}
-              </button>
-              <button
-                type="submit"
-                disabled={loading || !input.trim()}
-                className="px-6 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex-shrink-0"
-              >
-                {loading ? '•••' : '→'}
-              </button>
-            </form>
+          <div className="flex-shrink-0 pb-4 px-6 flex gap-3 items-end w-full">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                // Submit on Enter (unless Shift is pressed for new line)
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage({ preventDefault: () => {} } as any);
+                }
+              }}
+              placeholder="Type all details here..."
+              className="flex-1 px-4 py-3 border-2 border-errandify-orange border-opacity-30 rounded-2xl focus:outline-none focus:border-opacity-100 text-base font-semibold resize-none"
+              rows={2}
+              disabled={loading || isRecording}
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={isRecording ? stopRecording : startRecording}
+              className={`px-4 py-3 rounded-full font-bold transition-all text-sm flex-shrink-0 ${
+                isRecording
+                  ? 'bg-red-500 hover:bg-red-600 text-white'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              }`}
+              title={isRecording ? 'Stop recording' : 'Start voice input'}
+            >
+              {isRecording ? '⏹️' : '🎤'}
+            </button>
+            <button
+              type="button"
+              onClick={handleSendMessage}
+              disabled={loading || !input.trim()}
+              className="px-6 py-3 bg-errandify-orange text-white rounded-full font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex-shrink-0"
+            >
+              {loading ? '•••' : '→'}
+            </button>
+          </div>
         )}
 
         {currentStep === 'confirm' && (

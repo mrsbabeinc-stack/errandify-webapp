@@ -591,7 +591,7 @@ const CompanyLeaveCalendar: React.FC = () => {
       </div>
 
       {/* Legend */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px', padding: '16px', background: '#f9f9f9', borderRadius: '8px', fontSize: '13px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px', padding: '16px', background: '#FFF9F5', borderRadius: '8px', fontSize: '13px' }}>
         <div>
           <span style={{ display: 'inline-block', width: '12px', height: '12px', background: '#4caf50', borderRadius: '2px', marginRight: '8px' }}></span>
           <strong>✓ Available</strong>

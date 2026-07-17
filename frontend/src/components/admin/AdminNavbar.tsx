@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 interface AdminNavbarProps {
   onMenuToggle?: () => void;
   isMenuOpen?: boolean;
+  onLogout?: () => void;
 }
 
-export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOpen = true }) => {
+export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOpen = true, onLogout }) => {
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -16,15 +17,22 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
   const userName = user?.display_name || user?.name || 'Admin';
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('current_role');
-    localStorage.removeItem('singpass_state');
-    localStorage.removeItem('singpass_nonce');
-    localStorage.removeItem('singpass_mode');
-    navigate('/auth');
+    if (onLogout) {
+      // Use the App's logout handler which properly updates state and redirects
+      onLogout();
+    } else {
+      // Fallback if onLogout prop is not provided: clear and redirect with hard reload
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('current_role');
+      localStorage.removeItem('singpass_state');
+      localStorage.removeItem('singpass_nonce');
+      localStorage.removeItem('singpass_mode');
+      // Use window.location.href for hard redirect to ensure /auth route is served
+      window.location.href = '/auth';
+    }
   };
 
   const handleBackToUser = () => {

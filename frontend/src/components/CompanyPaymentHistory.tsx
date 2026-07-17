@@ -482,7 +482,7 @@ Thank you for your business!
         }
 
         .amount.refund {
-          color: #FFC107;
+          color: #FF6B35;
         }
 
         .status-badge {
@@ -501,7 +501,7 @@ Thank you for your business!
 
         .status-badge.pending {
           background: #FFF3E0;
-          color: #E65100;
+          color: #E55A24;
         }
 
         .status-badge.failed {

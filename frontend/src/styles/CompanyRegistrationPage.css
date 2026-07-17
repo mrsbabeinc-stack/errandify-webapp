@@ -1,7 +1,7 @@
 .company-registration-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%);
-  padding: 40px 20px;
+  background: linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%);
+  padding: 20px 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,33 +9,33 @@
 
 .registration-card {
   background: white;
-  border-radius: 16px;
+  border-radius: 12px;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
-  padding: 48px;
+  padding: 20px;
   max-width: 700px;
   width: 100%;
 }
 
 .header-section {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .header-section .icon {
-  font-size: 48px;
+  font-size: 24px;
   margin-bottom: 16px;
 }
 
 .registration-card h1 {
-  color: #1B5E75;
-  font-size: 32px;
+  color: #333;
+  font-size: 24px;
   margin-bottom: 8px;
   font-weight: 700;
 }
 
 .registration-card .subtitle {
   color: #666;
-  font-size: 16px;
+  font-size: 14px;
   margin-bottom: 0;
   line-height: 1.5;
 }
@@ -43,7 +43,7 @@
 .alert {
   padding: 14px 16px;
   border-radius: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -66,7 +66,7 @@
 form {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 16px;
 }
 
 .form-section {
@@ -76,8 +76,8 @@ form {
 }
 
 .form-section h3 {
-  color: #1B5E75;
-  font-size: 16px;
+  color: #333;
+  font-size: 14px;
   font-weight: 600;
   margin-bottom: 8px;
   text-transform: uppercase;
@@ -97,7 +97,7 @@ form {
 }
 
 .form-group label {
-  color: #1B5E75;
+  color: #333;
   font-weight: 600;
   font-size: 14px;
 }
@@ -167,10 +167,10 @@ form {
 }
 
 .submit-btn {
-  padding: 14px 24px;
+  padding: 16px 20px;
   border: none;
   border-radius: 10px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -235,15 +235,15 @@ form {
 
 @media (max-width: 640px) {
   .registration-card {
-    padding: 24px;
+    padding: 20px;
   }
 
   .header-section .icon {
-    font-size: 40px;
+    font-size: 24px;
   }
 
   .registration-card h1 {
-    font-size: 28px;
+    font-size: 24px;
   }
 
   .registration-card .subtitle {

@@ -352,7 +352,7 @@ const CompanyPointsDistribution: React.FC = () => {
         }
 
         .history-item.pending {
-          border-left-color: #FFC107;
+          border-left-color: #FF6B35;
         }
 
         .item-content {
@@ -386,7 +386,7 @@ const CompanyPointsDistribution: React.FC = () => {
         }
 
         .status-badge.pending {
-          background: #FFC107;
+          background: #FF6B35;
           color: #fff;
         }
 

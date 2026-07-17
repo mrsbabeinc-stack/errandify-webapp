@@ -1,7 +1,7 @@
+import '../styles/MyCompanyDashboard.css';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToastNotification } from '../utils/toastNotification';
-import '../styles/MyCompanyDashboard.css';
 
 interface Company {
   id: number;

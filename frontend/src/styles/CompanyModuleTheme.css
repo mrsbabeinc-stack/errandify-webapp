@@ -1,0 +1,428 @@
+/* ============================================================================
+   COMPANY MODULE - UNIFIED ADMIN THEME
+   All company pages and sections use this consistent theme
+   ============================================================================ */
+
+/* CSS VARIABLES - Admin Theme Standards */
+:root {
+  /* Colors */
+  --color-primary: #FF6B35 !important;
+  --color-primary-light: #FF8A5B !important;
+  --color-primary-dark: #E55A24 !important;
+  --color-bg-light: #FFF9F5 !important;
+  --color-bg-peach: #FFF0E5 !important;
+  --color-text-dark: #333 !important;
+  --color-text-muted: #555 !important;
+  --color-border: #FFF0E5 !important;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(255, 107, 53, 0.08) !important;
+  --shadow-md: 0 4px 12px rgba(255, 107, 53, 0.1) !important;
+  --shadow-lg: 0 8px 24px rgba(255, 107, 53, 0.12) !important;
+
+  /* Typography */
+  --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  --font-size-h1: 24px !important;
+  --font-size-h2: 18px !important;
+  --font-size-body: 14px !important;
+  --font-size-label: 12px !important;
+  --font-weight-bold: 700 !important;
+  --font-weight-semibold: 600 !important;
+
+  /* Spacing */
+  --spacing-xs: 4px !important;
+  --spacing-sm: 8px !important;
+  --spacing-md: 12px !important;
+  --spacing-lg: 16px !important;
+  --spacing-xl: 20px !important;
+
+  /* Border Radius */
+  --radius-sm: 6px !important;
+  --radius-md: 8px !important;
+  --radius-lg: 12px !important;
+}
+
+/* ============================================================================
+   CONTAINERS & SECTIONS
+   ============================================================================ */
+
+.staff-page,
+.company-dashboard,
+.company-dashboard-new,
+.company-post-errand-hana,
+.company-registration-container {
+  background: linear-gradient(135deg, var(--color-bg-light) 0%, var(--color-bg-peach) 100%) !important;
+  font-family: var(--font-primary);
+  color: var(--color-text-dark) !important;
+}
+
+.page-header,
+.dashboard-header,
+.company-header-v2,
+.header-section,
+.registration-header {
+  background: white;
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+/* ============================================================================
+   TYPOGRAPHY - ENFORCE CONSISTENCY
+   ============================================================================ */
+
+h1, .header-content h1, .company-header-v2 h1 {
+  color: var(--color-text-dark) !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  margin: 0 0 8px 0 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+h2, .header-content h2 {
+  color: var(--color-text-dark) !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  margin: 0 0 12px 0 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+h3, .form-card h3, .employees-section h2 {
+  color: var(--color-text-dark) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  margin: 0 0 16px 0 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+p, .subtitle, .header-content p {
+  color: #555 !important;
+  font-size: 14px !important;
+  margin: 0 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+.label, .form-section h3, .form-group label {
+  color: var(--color-text-dark) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+/* ============================================================================
+   BUTTONS - ENFORCE CONSISTENT SIZING
+   ============================================================================ */
+
+.btn-primary,
+.btn-suggest,
+.logo-upload-btn,
+.btn-add-category,
+button[class*="btn"] {
+  background: #FF6B35 !important;
+  color: white !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+.btn-primary:hover,
+.btn-suggest:hover,
+.logo-upload-btn:hover,
+.btn-add-category:hover,
+button[class*="btn"]:hover {
+  background: #E55A24 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3) !important;
+}
+
+.btn-secondary,
+.btn-edit {
+  background: white !important;
+  color: #FF6B35 !important;
+  border: 2px solid #FF6B35 !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+.btn-secondary:hover,
+.btn-edit:hover {
+  background: #FFF9F5 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.btn-danger {
+  background: #F44336 !important;
+  color: white !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+.btn-danger:hover {
+  background: #D32F2F !important;
+  transform: translateY(-1px);
+}
+
+/* ============================================================================
+   CARDS & BOXES - CONSISTENT SPACING
+   ============================================================================ */
+
+.card,
+.form-card,
+.employees-section,
+.kpi-card,
+.advertising-card,
+.action-card,
+.resignation-card,
+.mybiz-section-item,
+.hana-examples-section,
+.rating-card,
+.staff-card {
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.08) !important;
+  border: 1px solid #FFF0E5 !important;
+  padding: 20px !important;
+  margin-bottom: 16px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+.card:hover,
+.form-card:hover,
+.action-card:hover,
+.staff-card:hover {
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.1) !important;
+  transition: all 0.2s ease;
+}
+
+/* ============================================================================
+   FORMS - CONSISTENT INPUT STYLING
+   ============================================================================ */
+
+.form-group {
+  margin-bottom: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.form-group label {
+  color: #333 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px 12px !important;
+  border: 2px solid #E0E0E0 !important;
+  border-radius: 6px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  font-size: 14px !important;
+  transition: all 0.2s ease;
+  color: #333 !important;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none !important;
+  border-color: #FF6B35 !important;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1) !important;
+  background: #FFF9F5 !important;
+}
+
+/* ============================================================================
+   ALERTS & MESSAGES
+   ============================================================================ */
+
+.alert,
+.alert-box {
+  padding: 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-xl);
+  border-left: 4px solid;
+  font-size: var(--font-size-body);
+}
+
+.alert-error,
+.alert-error {
+  background: #FFEBEE;
+  color: #C62828;
+  border-color: #D32F2F;
+}
+
+.alert-success {
+  background: #E8F5E9;
+  color: #2E7D32;
+  border-color: #4CAF50;
+}
+
+.alert-info {
+  background: #E3F2FD;
+  color: #1565C0;
+  border-color: #2196F3;
+}
+
+/* ============================================================================
+   BADGES & TAGS
+   ============================================================================ */
+
+.badge,
+.status-badge,
+.role-badge,
+.cert-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-label);
+}
+
+.badge-primary {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  color: white;
+}
+
+.status-badge.active {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.status-badge.pending {
+  background: #FFF3E0;
+  color: #E65100;
+}
+
+.status-badge.rejected {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+/* ============================================================================
+   SPACING & LAYOUT
+   ============================================================================ */
+
+.header-actions,
+.form-actions,
+.col-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+.mb-xl { margin-bottom: var(--spacing-xl); }
+
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+.p-xl { padding: var(--spacing-xl); }
+
+/* ============================================================================
+   TABLES
+   ============================================================================ */
+
+.table-header,
+.table-row {
+  padding: 16px;
+  border-bottom: 1px solid #E0E0E0;
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.table-header {
+  background: #F5F5F5;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-dark) !important;
+  font-size: var(--font-size-body);
+}
+
+.table-row {
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.table-row:hover {
+  background-color: var(--color-bg-light);
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .page-header,
+  .dashboard-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .header-actions button {
+    width: 100%;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header,
+  .form-card,
+  .card {
+    padding: 16px;
+  }
+
+  h1 {
+    font-size: 18px;
+  }
+
+  h2 {
+    font-size: 16px;
+  }
+}

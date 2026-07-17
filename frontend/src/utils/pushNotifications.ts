@@ -34,9 +34,10 @@ export async function initPushNotifications() {
       return false;
     }
 
-    // Register service worker
-    registration = await navigator.serviceWorker.register('/service-worker.js');
-    console.log('Service Worker registered:', registration);
+    // Register service worker - DISABLED FOR DEVELOPMENT
+    // registration = await navigator.serviceWorker.register('/service-worker.js');
+    // console.log('Service Worker registered:', registration);
+    return false;
 
     // Request permission if not already granted
     if (Notification.permission === 'default') {

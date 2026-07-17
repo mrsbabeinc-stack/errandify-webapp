@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { COMPREHENSIVE_FAQ, FAQ_TOPICS } from '../../data/HanaFAQDatabase';
 
-type Language = 'en' | 'zh' | 'yue';
+type Language = 'en' | 'zh';
 
 export const HanaFAQBrowser: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -43,7 +43,6 @@ export const HanaFAQBrowser: React.FC = () => {
               >
                 <option value="en">🇬🇧 English</option>
                 <option value="zh">🇨🇳 中文</option>
-                <option value="yue">🇭🇰 粵語</option>
               </select>
             </div>
 

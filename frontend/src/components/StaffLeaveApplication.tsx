@@ -238,7 +238,7 @@ const StaffLeaveApplication: React.FC = () => {
   return (
     <div style={{ padding: '24px', maxWidth: '800px' }}>
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ marginBottom: '20px' }}>
         <h2 style={{ fontSize: '28px', fontWeight: '700', color: '#333', margin: '0 0 8px 0' }}>
           📅 Apply for Unavailability
         </h2>
@@ -267,7 +267,7 @@ const StaffLeaveApplication: React.FC = () => {
         background: 'linear-gradient(135deg, #FFF8F5 0%, #FFE4C4 100%)',
         borderRadius: '16px',
         padding: '28px',
-        marginBottom: '32px',
+        marginBottom: '20px',
         border: '2px solid #FFD9B3',
       }}>
         <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#333', marginBottom: '20px' }}>

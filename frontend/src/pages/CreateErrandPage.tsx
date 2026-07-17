@@ -54,6 +54,7 @@ export default function CreateErrandPage() {
   const [pendingPostalCode, setPendingPostalCode] = useState('');
   const [selectedArea, setSelectedArea] = useState('');
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const lastRefetchedCorrectedTitle = useRef<string>('');
 
   // Singapore areas list for dropdown
   const singaporeAreas = [
@@ -523,10 +524,38 @@ export default function CreateErrandPage() {
       );
 
       if (response.data.success) {
+        console.log('[fetchAiSuggestions] Response received:', response.data);
+        console.log('[fetchAiSuggestions] Skills:', response.data.data.skills);
+        console.log('[fetchAiSuggestions] Certifications:', response.data.data.certifications);
+        console.log('[fetchAiSuggestions] Corrected title:', response.data.data.correctedTitle);
+
+        // Auto-correct the title if corrections detected
+        const correctedTitle = response.data.data.correctedTitle || '';
+        if (correctedTitle && correctedTitle !== title) {
+          console.log('[fetchAiSuggestions] Auto-correcting title from "' + title + '" to "' + correctedTitle + '"');
+          setFormData((prev) => ({
+            ...prev,
+            title: correctedTitle,
+          }));
+        }
+
+        const apiCategory = response.data.data.category;
+        console.log('[fetchAiSuggestions] API returned category:', apiCategory);
+
+        // Auto-set category if it's empty (first time only)
+        if (!formData.category && apiCategory) {
+          const categoryId = categoryNameToId[apiCategory] || apiCategory;
+          console.log('[fetchAiSuggestions] ✅ Setting category directly:', apiCategory, '→', categoryId);
+          setFormData((prev) => ({
+            ...prev,
+            category: categoryId,
+          }));
+        }
+
         setAiSuggestions({
-          suggestedCategory: response.data.data.category,
+          suggestedCategory: apiCategory,
           suggestedDescription: response.data.data.description,
-          correctedTitle: response.data.data.correctedTitle || '',
+          correctedTitle: correctedTitle,
           hasCorrections: response.data.data.hasCorrections,
           suggestedBudget: response.data.data.budget || null,
           suggestedNotes: response.data.data.notes || '',
@@ -535,6 +564,7 @@ export default function CreateErrandPage() {
           blocked: false,
           error: '',
         });
+        console.log('[fetchAiSuggestions] State updated with skills:', response.data.data.skills);
       }
     } catch (err: any) {
       console.error('AI suggestion error:', err);
@@ -593,18 +623,21 @@ export default function CreateErrandPage() {
 
 
 
-  // Auto-apply AI suggestions when they arrive
-  useEffect(() => {
-    // Note: Do NOT auto-fill description or notes - only show as suggestions for user to approve
-    // Update category if AI has a suggestion and user hasn't selected one yet
-    if (aiSuggestions.suggestedCategory && !formData.category) {
-      console.log('[useEffect] Auto-filling category from AI suggestion');
-      setFormData((prev) => ({
-        ...prev,
-        category: aiSuggestions.suggestedCategory,
-      }));
-    }
-  }, [aiSuggestions.suggestedCategory, aiSuggestions.suggestedDescription, aiSuggestions.suggestedNotes, formData.category, formData.description, formData.specialNote]);
+  // Map internal category names to frontend category IDs
+  const categoryNameToId: Record<string, string> = {
+    'homehelp': 'home-maintenance',
+    'childcare': 'childcare-education',
+    'petcare': 'pet-care',
+    'delivery': 'delivery-moving',
+    'eldercare': 'eldercare-healthcare',
+    'eventhelp': 'event-planning',
+    'tech-support': 'tech-support',
+    'data-entry': 'admin-business',
+  };
+
+
+  // Don't refetch - the API already returns suggestions for the corrected title
+  // This was causing excessive looping and duplicate API calls
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -623,13 +656,21 @@ export default function CreateErrandPage() {
   };
 
   const addSkill = () => {
-    if (skillInput.trim() && !formData.skills.includes(skillInput.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        skills: [...prev.skills, skillInput.trim()],
-      }));
-      setSkillInput('');
+    const trimmedSkill = skillInput.trim();
+    if (!trimmedSkill) {
+      console.warn('[addSkill] Empty skill input');
+      return;
     }
+    if (formData.skills.includes(trimmedSkill)) {
+      console.warn('[addSkill] Skill already added:', trimmedSkill);
+      return;
+    }
+    console.log('[addSkill] Adding skill:', trimmedSkill);
+    setFormData((prev) => ({
+      ...prev,
+      skills: [...prev.skills, trimmedSkill],
+    }));
+    setSkillInput('');
   };
 
   const removeSkill = (skill: string) => {
@@ -994,45 +1035,57 @@ export default function CreateErrandPage() {
 
 
   return (
-    <div className="min-h-screen bg-errandify-bg pb-20">
-      <div className="max-w-2xl mx-auto px-3 py-1">
-        {/* Header */}
-        <button
-          onClick={() => navigate(-1)}
-          className="text-errandify-orange font-semibold mb-0.5 text-sm"
-        >
-          ← Back
-        </button>
+    <div style={{minHeight: '100vh', background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%)', paddingBottom: '5rem'}}>
+      <div style={{maxWidth: '1200px', margin: '0 auto', padding: '20px'}}>
 
-        <h1 className="text-lg font-bold text-errandify-brown mb-0.5">Create Your Errand</h1>
+        {/* Header Section */}
+        <div style={{marginBottom: '24px'}}>
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#FF6B35',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              marginBottom: '12px',
+              padding: 0
+            }}
+          >
+            ← Back
+          </button>
+          <h1 style={{fontSize: '28px', fontWeight: '700', color: '#333', margin: '0 0 4px 0'}}>📋 Create Your Errand</h1>
+          <p style={{fontSize: '14px', color: '#666', margin: 0}}>Post a task and let doers help you</p>
+        </div>
 
         {/* Error Display */}
         {error && (
-          <div className="mb-3 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg text-sm font-medium">
-            <p className="font-bold mb-1">⚠️ Error:</p>
-            <p>{error}</p>
+          <div style={{marginBottom: '16px', padding: '12px 16px', background: '#FFEBEE', border: '1px solid #EF5350', color: '#C62828', borderRadius: '8px', fontSize: '14px'}}>
+            <p style={{fontWeight: '600', margin: '0 0 4px 0'}}>⚠️ Error</p>
+            <p style={{margin: 0}}>{error}</p>
             {error.includes('Authentication') && (
-              <p className="text-xs text-red-600 mt-2">Please log in first, then try posting again.</p>
+              <p style={{fontSize: '12px', color: '#B71C1C', marginTop: '8px', margin: 0}}>Please log in first, then try posting again.</p>
             )}
           </div>
         )}
 
         {/* Blocked Content Alert */}
         {aiSuggestions.blocked && (
-          <div className="mb-0.5 p-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs">
+          <div style={{marginBottom: '12px', padding: '10px 12px', background: '#FFEBEE', border: '1px solid #EF5350', color: '#C62828', borderRadius: '6px', fontSize: '12px'}}>
             {aiSuggestions.error}
           </div>
         )}
 
-        {/* Main Form - Warm, Approachable, Breathing Room */}
-        <div className="bg-white rounded-2xl shadow-md p-4 space-y-4">
+        {/* Main Form Card */}
+        <div style={{background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 12px rgba(255, 107, 53, 0.1)', borderTop: '4px solid #FF6B35'}}>
           {/* Section 1: Essentials (Title, Description, Category) */}
-          <div className="space-y-2.5">
-            <h3 className="font-bold text-errandify-brown text-sm leading-relaxed tracking-tight">Tell us what you need</h3>
+          <div style={{marginBottom: '24px', padding: '16px', backgroundColor: '#FFF9F5', borderRadius: '8px', borderLeft: '4px solid #FF6B35'}}>
+            <h3 style={{fontSize: '16px', fontWeight: '700', color: '#FF6B35', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', margin: '-16px -16px 16px -16px', padding: '12px 16px', backgroundColor: 'rgba(255, 107, 53, 0.05)', borderRadius: '6px 6px 0 0'}}>📝 Tell us what you need</h3>
 
             {/* Title - Required */}
             <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
+              <label className="block text-sm font-semibold mb-1.5" style={{color: '#333'}}>
                 What help do you need? *
               </label>
               <input
@@ -1045,13 +1098,14 @@ export default function CreateErrandPage() {
                   debouncedFetchAiSuggestions(e.target.value, formData.description);
                 }}
                 placeholder="e.g., help move boxes, tutoring, cleaning..."
-                className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown placeholder:text-gray-400"
+                className="w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium placeholder:text-gray-400"
+                style={{borderColor: '#DDD', color: '#333'}}
               />
             </div>
 
             {/* Description - Compact */}
             <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
+              <label className="block text-sm font-semibold mb-1.5" style={{color: '#333'}}>
                 Description
               </label>
               <div className="relative">
@@ -1062,12 +1116,13 @@ export default function CreateErrandPage() {
                   placeholder="Add details about your task above"
                   rows={2}
                   maxLength={150}
-                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium text-errandify-brown placeholder:text-gray-400"
+                  className="w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium placeholder:text-gray-400"
+                  style={{borderColor: '#DDD', color: '#333'}}
                 />
-                <span className="absolute bottom-2 right-3 text-xs text-gray-400">{formData.description.length}/150</span>
+                <span className="absolute bottom-2 right-3 text-xs" style={{color: '#999'}}>{formData.description.length}/150</span>
               </div>
               {formData.title && aiSuggestions.suggestedDescription && (
-                <div className="text-xs text-errandify-orange-700 mt-1.5 px-2 py-1 bg-orange-50 rounded">
+                <div className="text-xs mt-1.5 px-2 py-1 rounded" style={{color: '#E55A24', backgroundColor: '#FFF0E5'}}>
                   💡 Tip: {(() => {
                     let tip = aiSuggestions.suggestedDescription;
                     // Add time-based tips if duration and time are specified
@@ -1096,7 +1151,7 @@ export default function CreateErrandPage() {
               )}
 
               {formData.title && aiSuggestions.suggestedNotes && (
-                <div className="text-xs text-gray-600 mt-1.5 px-2 py-1.5 bg-gray-50 rounded border-l-2 border-gray-300">
+                <div className="text-xs mt-1.5 px-2 py-1.5 rounded border-l-2" style={{color: '#555', backgroundColor: '#F9F9F9', borderColor: '#DDD'}}>
                   <div>💡 <strong>Note for doer:</strong> {aiSuggestions.suggestedNotes}</div>
                 </div>
               )}
@@ -1104,14 +1159,15 @@ export default function CreateErrandPage() {
 
             {/* Category - Auto-detected */}
             <div>
-              <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
+              <label className="block text-sm font-semibold mb-1.5" style={{color: '#333'}}>
                 Type of help *
               </label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm appearance-none cursor-pointer text-errandify-brown"
+                className="w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm appearance-none cursor-pointer"
+                style={{borderColor: '#DDD', color: '#333'}}
               >
                 <option value="">Pick a category</option>
                 {Object.entries(categoryNames).map(([key, name]) => (
@@ -1124,12 +1180,12 @@ export default function CreateErrandPage() {
           </div>
 
           {/* Section 2: Logistics (Budget, Deadline, Duration) */}
-          <div className="border-t-2 border-gray-100 pt-4 space-y-2.5">
-            <h3 className="font-bold text-errandify-brown text-sm leading-relaxed tracking-tight">When & how much</h3>
+          <div style={{padding: '16px', backgroundColor: '#FFF9F5', borderRadius: '8px', borderLeft: '4px solid #FF6B35'}}>
+            <h3 style={{fontSize: '16px', fontWeight: '700', color: '#FF6B35', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', margin: '-16px -16px 16px -16px', padding: '12px 16px', backgroundColor: 'rgba(255, 107, 53, 0.05)', borderRadius: '6px 6px 0 0'}}>💰 When & how much</h3>
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
+                <label className="block text-sm font-semibold mb-1.5" style={{color: '#333'}}>
                   Pay (SGD) *
                 </label>
                 <input
@@ -1138,11 +1194,12 @@ export default function CreateErrandPage() {
                   value={formData.budget}
                   onChange={handleChange}
                   placeholder="$"
-                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown placeholder:text-gray-400"
+                  className="w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium placeholder:text-gray-400"
+                  style={{borderColor: '#DDD', color: '#333'}}
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
+                <label className="block text-sm font-semibold mb-1.5" style={{color: '#333'}}>
                   Date *
                 </label>
                 <input
@@ -1151,11 +1208,12 @@ export default function CreateErrandPage() {
                   value={formData.deadline}
                   onChange={handleChange}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown"
+                  className="w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium"
+                  style={{borderColor: '#FFF0E5', color: '#333'}}
                 />
               </div>
               <div className="relative">
-                <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
+                <label className="block text-sm font-semibold mb-1.5" style={{color: '#333'}}>
                   Time *
                 </label>
                 <input
@@ -1171,14 +1229,15 @@ export default function CreateErrandPage() {
                   onFocus={() => setShowTimePicker(true)}
                   onBlur={() => setTimeout(() => setShowTimePicker(false), 200)}
                   placeholder="HH:MM"
-                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm placeholder:text-gray-400 cursor-pointer font-medium text-errandify-brown"
+                  className="w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm placeholder:text-gray-400 cursor-pointer font-medium"
+                  style={{borderColor: '#FFF0E5', color: '#333'}}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3 items-end">
               <div>
-                <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
+                <label className="block text-sm font-semibold mb-1.5" style={{color: '#333'}}>
                   Duration
                 </label>
                 <input
@@ -1187,18 +1246,20 @@ export default function CreateErrandPage() {
                   value={formData.duration}
                   onChange={handleChange}
                   placeholder="1"
-                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white focus:border-errandify-orange transition-colors text-sm font-medium"
+                  className="w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium"
+                  style={{borderColor: '#FFF0E5', color: '#333'}}
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
+                <label className="block text-sm font-semibold mb-1.5" style={{color: '#333'}}>
                   Unit
                 </label>
                 <select
                   name="durationUnit"
                   value={formData.durationUnit}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white focus:border-errandify-orange transition-colors text-sm font-medium appearance-none cursor-pointer"
+                  className="w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium appearance-none cursor-pointer"
+                  style={{borderColor: '#FFF0E5', color: '#333'}}
                 >
                   <option>Min</option>
                   <option>Hr</option>
@@ -1214,18 +1275,19 @@ export default function CreateErrandPage() {
                     checked={formData.isRecurring}
                     onChange={handleChange}
                     className="w-3 h-3"
+                    style={{accentColor: '#FF6B35'}}
                   />
-                  <span className="text-xs font-semibold text-errandify-brown">Recurring</span>
+                  <span className="text-xs font-semibold" style={{color: '#333'}}>Recurring</span>
                 </label>
               </div>
             </div>
 
             {formData.isRecurring && (
-              <div className="bg-blue-50 border border-blue-200 p-3 rounded space-y-3">
+              <div className="p-3 rounded space-y-3" style={{backgroundColor: '#FFF0E5', border: '1px solid #FFE0CC'}}>
                 {/* Input Row */}
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-0.5 block">
+                    <label className="text-xs font-semibold mb-0.5 block" style={{color: '#555'}}>
                       Every
                     </label>
                     <input
@@ -1234,18 +1296,20 @@ export default function CreateErrandPage() {
                       value={formData.repeatEvery}
                       onChange={handleChange}
                       min="1"
-                      className="w-full px-2 py-0.5 border border-gray-300 rounded text-sm"
+                      className="w-full px-2 py-0.5 border rounded text-sm"
+                      style={{borderColor: '#FFE0CC', color: '#333'}}
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-0.5 block">
+                    <label className="text-xs font-semibold mb-0.5 block" style={{color: '#555'}}>
                       Unit
                     </label>
                     <select
                       name="repeatUnit"
                       value={formData.repeatUnit}
                       onChange={handleChange}
-                      className="w-full px-2 py-0.5 border border-gray-300 rounded text-sm"
+                      className="w-full px-2 py-0.5 border rounded text-sm"
+                      style={{borderColor: '#FFE0CC', color: '#333'}}
                     >
                       <option value="day">Day</option>
                       <option value="week">Week</option>
@@ -1253,7 +1317,7 @@ export default function CreateErrandPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-0.5 block">
+                    <label className="text-xs font-semibold mb-0.5 block" style={{color: '#555'}}>
                       Times
                     </label>
                     <input
@@ -1263,14 +1327,15 @@ export default function CreateErrandPage() {
                       onChange={handleChange}
                       min="1"
                       max="12"
-                      className="w-full px-2 py-0.5 border border-gray-300 rounded text-sm"
+                      className="w-full px-2 py-0.5 border rounded text-sm"
+                      style={{borderColor: '#FFE0CC', color: '#333'}}
                     />
                   </div>
                 </div>
 
                 {/* Preview Row */}
-                <div className="border-t border-blue-200 pt-2">
-                  <p className="text-xs text-gray-600 mb-2">📅 <strong>Scheduled Dates:</strong></p>
+                <div className="pt-2" style={{borderTop: '1px solid #FFE0CC'}}>
+                  <p className="text-xs mb-2" style={{color: '#555'}}>📅 <strong>Scheduled Dates:</strong></p>
                   <div className="flex flex-wrap gap-1">
                     {Array.from({ length: Math.min(parseInt(formData.occurrences || '1'), 12) }).map((_, idx) => {
                       const date = new Date(formData.deadline || new Date());
@@ -1281,7 +1346,7 @@ export default function CreateErrandPage() {
                       }[formData.repeatUnit] || 1;
                       date.setDate(date.getDate() + idx * (parseInt(formData.repeatEvery || '1') * multiplier));
                       return (
-                        <span key={idx} className="text-xs bg-white border border-blue-200 px-2 py-1 rounded">
+                        <span key={idx} className="text-xs bg-white px-2 py-1 rounded" style={{borderColor: '#FFE0CC', border: '1px solid #FFE0CC', color: '#555'}}>
                           {date.toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
                         </span>
                       );
@@ -1291,10 +1356,10 @@ export default function CreateErrandPage() {
 
                 {/* Cost Row */}
                 {formData.budget && (
-                  <div className="border-t border-blue-200 pt-2">
-                    <p className="text-sm font-semibold text-blue-700">
-                      💰 Total: <span className="text-lg text-errandify-orange">${(parseFloat(formData.budget) * parseInt(formData.occurrences || '1')).toFixed(2)}</span>
-                      <span className="text-xs text-gray-600 ml-2">({formData.occurrences} × ${formData.budget})</span>
+                  <div className="pt-2" style={{borderTop: '1px solid #FFE0CC'}}>
+                    <p className="text-sm font-semibold" style={{color: '#E55A24'}}>
+                      💰 Total: <span className="text-lg" style={{color: '#FF6B35'}}>${(parseFloat(formData.budget) * parseInt(formData.occurrences || '1')).toFixed(2)}</span>
+                      <span className="text-xs ml-2" style={{color: '#555'}}>({formData.occurrences} × ${formData.budget})</span>
                     </p>
                   </div>
                 )}
@@ -1303,11 +1368,11 @@ export default function CreateErrandPage() {
           </div>
 
           {/* Section 3: Location - Only area shown here */}
-          <div className="border-t-2 border-gray-100 pt-4 space-y-2.5">
-            <h3 className="font-bold text-errandify-brown text-sm leading-relaxed tracking-tight mb-2">Where</h3>
+          <div style={{padding: '16px', backgroundColor: '#FFF9F5', borderRadius: '8px', borderLeft: '4px solid #FF6B35'}}>
+            <h3 style={{fontSize: '16px', fontWeight: '700', color: '#FF6B35', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', margin: '-16px -16px 16px -16px', padding: '12px 16px', backgroundColor: 'rgba(255, 107, 53, 0.05)', borderRadius: '6px 6px 0 0'}}>📍 Where</h3>
 
             {/* Remote Work Checkbox */}
-            <label className="flex items-center gap-2 mb-2">
+            <label className="flex items-center gap-2 mb-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={isRemoteWork}
@@ -1321,8 +1386,9 @@ export default function CreateErrandPage() {
                   }
                 }}
                 className="w-4 h-4 rounded cursor-pointer"
+                style={{accentColor: '#FF6B35'}}
               />
-              <span className="text-sm text-gray-700 cursor-pointer">Online only</span>
+              <span className="text-sm cursor-pointer" style={{color: '#555'}}>Online only</span>
             </label>
 
             {/* Postal Code and Area - Side by side */}
@@ -1330,7 +1396,7 @@ export default function CreateErrandPage() {
               <div className="grid grid-cols-2 gap-3 mb-2">
                 {/* Postal Code */}
                 <div>
-                  <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
+                  <label className="block text-sm font-semibold mb-1.5" style={{color: '#333'}}>
                     Postal Code (SG)
                   </label>
                   <input
@@ -1390,14 +1456,15 @@ export default function CreateErrandPage() {
                       }
                       // Otherwise: don't update location (partial postal codes won't modify anything)
                     }}
-                    className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown placeholder:text-gray-400"
+                    className="w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium placeholder:text-gray-400"
+                    style={{borderColor: '#FFF0E5', color: '#333'}}
                   />
                 </div>
 
                 {/* Area */}
                 <div>
-                  <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
-                    Area <span className="text-xs font-normal text-gray-500">(Shown to All)</span>
+                  <label className="block text-sm font-semibold mb-1.5" style={{color: '#333'}}>
+                    Area <span className="text-xs font-normal" style={{color: '#999'}}>(Shown to All)</span>
                   </label>
                   <select
                     value={area}
@@ -1408,7 +1475,8 @@ export default function CreateErrandPage() {
                         location: e.target.value,
                       }));
                     }}
-                    className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium text-errandify-brown appearance-none cursor-pointer"
+                    className="w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors text-sm font-medium appearance-none cursor-pointer"
+                    style={{borderColor: '#FFF0E5', color: '#333'}}
                   >
                     <option value="">Select Area</option>
                     {Array.from(new Set(Object.values(postalCodeAreas).map(x => x.area))).sort().map((areaName) => (
@@ -1422,25 +1490,26 @@ export default function CreateErrandPage() {
             {/* Full Address - Only shown when NOT remote */}
             {!isRemoteWork && (
               <div>
-                  <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
-                    Full address (add unit if needed) <span className="text-xs font-normal text-gray-500">(Shown to Confirmed Doer)</span>
+                  <label className="block text-sm font-semibold mb-1.5" style={{color: '#333'}}>
+                    Full address (add unit if needed) <span className="text-xs font-normal" style={{color: '#999'}}>(Shown to Confirmed Doer)</span>
                   </label>
                   <textarea
                     value={fullAddress}
                     onChange={(e) => setFullAddress(e.target.value)}
                     placeholder="e.g., Block 1, Unit #5-10"
                     rows={2}
-                    className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium text-errandify-brown placeholder:text-gray-400"
+                    className="w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium placeholder:text-gray-400"
+                    style={{borderColor: '#FFF0E5', color: '#333'}}
                   />
 
                   {/* GPS Location Notice */}
                   {gpsEnabled && gpsLocation && (
-                    <div className="mt-2 p-2 bg-orange-50 border-l-4 border-errandify-orange-400 rounded text-xs">
-                      <p className="text-errandify-orange-900">
+                    <div className="mt-2 p-2 rounded text-xs" style={{backgroundColor: '#FFF0E5', borderLeft: '4px solid #FF6B35', color: '#E55A24'}}>
+                      <p>
                         📍 <span className="font-semibold">Your current location detected:</span> {gpsLocation.latitude.toFixed(4)}, {gpsLocation.longitude.toFixed(4)}
                       </p>
                       {formData.location && (
-                        <p className="text-errandify-orange-800 mt-1">
+                        <p className="mt-1" style={{color: '#E55A24'}}>
                           ℹ️ Task location: <span className="font-semibold">{formData.location}</span> — Make sure this is different from your current location if the doer needs to travel.
                         </p>
                       )}
@@ -1452,30 +1521,38 @@ export default function CreateErrandPage() {
           </div>
 
           {/* Section 4: Skills Required */}
-          <div className="border-t pt-1 space-y-1">
-            <h3 className="font-bold text-errandify-brown text-sm">Skills Required (Optional)</h3>
+          <div style={{padding: '16px', backgroundColor: '#FFF9F5', borderRadius: '8px', borderLeft: '4px solid #FF6B35'}}>
+            <h3 style={{fontSize: '16px', fontWeight: '700', color: '#FF6B35', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', margin: '-16px -16px 16px -16px', padding: '12px 16px', backgroundColor: 'rgba(255, 107, 53, 0.05)', borderRadius: '6px 6px 0 0'}}>⭐ Skills Required (Optional)</h3>
 
             {/* AI Suggestions */}
             {aiSuggestions.skills.length > 0 && (
               <div>
-                <p className="text-xs text-gray-600 font-semibold mb-0.5">🤖 AI Suggested Skills — Please select:</p>
+                <p className="text-xs font-semibold mb-0.5" style={{color: '#555'}}>🤖 AI Suggested Skills — Please select:</p>
                 <div className="flex flex-wrap gap-2 mb-0.5">
                   {aiSuggestions.skills.map((skill) => (
                     <button
                       key={skill}
                       onClick={() => {
+                        console.log('[Skill Button] Clicked skill:', skill);
+                        console.log('[Skill Button] Already included?', formData.skills.includes(skill));
                         if (!formData.skills.includes(skill)) {
+                          console.log('[Skill Button] Adding skill:', skill);
                           setFormData((prev) => ({
                             ...prev,
                             skills: [...prev.skills, skill],
                           }));
+                        } else {
+                          console.log('[Skill Button] Skill already exists:', skill);
                         }
                       }}
                       className={`text-xs px-3 py-1 rounded-full font-semibold transition-colors ${
                         formData.skills.includes(skill)
-                          ? 'bg-errandify-orange text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'text-white'
+                          : 'text-gray-700 hover:bg-gray-200'
                       }`}
+                      style={{
+                        backgroundColor: formData.skills.includes(skill) ? '#FF6B35' : '#f0f0f0'
+                      }}
                     >
                       {skill}
                     </button>
@@ -1493,11 +1570,13 @@ export default function CreateErrandPage() {
                 onChange={(e) => setSkillInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && addSkill()}
                 placeholder="Add custom skill..."
-                className="flex-1 px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-errandify-orange"
+                className="flex-1 px-3 py-1 border rounded-lg text-sm focus:outline-none"
+                style={{borderColor: '#FFF0E5', color: '#333'}}
               />
               <button
                 onClick={addSkill}
-                className="px-3 py-1 bg-errandify-orange text-white rounded-lg hover:bg-orange-600 font-semibold text-sm transition-colors"
+                className="px-3 py-1 text-white rounded-lg font-semibold text-sm transition-colors hover:opacity-90"
+                style={{backgroundColor: '#FF6B35'}}
               >
                 +
               </button>
@@ -1509,7 +1588,8 @@ export default function CreateErrandPage() {
                   <button
                     key={skill}
                     onClick={() => removeSkill(skill)}
-                    className="bg-orange-100 text-errandify-orange-700 text-sm px-3 py-1 rounded-full font-semibold hover:bg-orange-200"
+                    className="text-sm px-3 py-1 rounded-full font-semibold hover:opacity-80"
+                    style={{backgroundColor: '#FFF0E5', color: '#E55A24'}}
                   >
                     {skill} ✕
                   </button>
@@ -1520,16 +1600,16 @@ export default function CreateErrandPage() {
 
           {/* Section 5: Certifications Required - Only show if category needs them or AI has suggestions */}
           {(aiSuggestions.certifications.required.length > 0 || aiSuggestions.certifications.optional.length > 0) && (
-          <div className="border-t pt-1 space-y-1">
-            <h3 className="font-bold text-errandify-brown text-sm">
-              Certifications Required {formData.certifications.required.length > 0 ? '✓' : ''}
+          <div style={{padding: '16px', backgroundColor: '#FFF9F5', borderRadius: '8px', borderLeft: '4px solid #FF6B35'}}>
+            <h3 style={{fontSize: '16px', fontWeight: '700', color: '#FF6B35', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', margin: '-16px -16px 16px -16px', padding: '12px 16px', backgroundColor: 'rgba(255, 107, 53, 0.05)', borderRadius: '6px 6px 0 0'}}>
+              🏆 Certifications Required {formData.certifications.required.length > 0 ? '✓' : ''}
             </h3>
 
 
             {/* Required Certifications from AI */}
             {aiSuggestions.certifications.required.length > 0 && (
               <div>
-                <p className="text-xs text-gray-600 font-semibold mb-0.5">
+                <p className="text-xs font-semibold mb-0.5" style={{color: '#555'}}>
                   🤖 Required Certifications — Please select:
                 </p>
                 <div className="flex flex-wrap gap-2 mb-0.5">
@@ -1537,11 +1617,11 @@ export default function CreateErrandPage() {
                     <button
                       key={cert}
                       onClick={() => toggleCertification(cert, 'required')}
-                      className={`text-xs px-3 py-1 rounded-full font-semibold transition-colors ${
-                        formData.certifications.required.includes(cert)
-                          ? 'bg-errandify-orange text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`text-xs px-3 py-1 rounded-full font-semibold transition-colors`}
+                      style={{
+                        backgroundColor: formData.certifications.required.includes(cert) ? '#FF6B35' : '#f0f0f0',
+                        color: formData.certifications.required.includes(cert) ? 'white' : '#333'
+                      }}
                     >
                       {cert}
                     </button>
@@ -1553,7 +1633,7 @@ export default function CreateErrandPage() {
             {/* Optional Certifications from AI */}
             {aiSuggestions.certifications.optional.length > 0 && (
               <div>
-                <p className="text-xs text-gray-600 font-semibold mb-0.5">
+                <p className="text-xs font-semibold mb-0.5" style={{color: '#555'}}>
                   🤖 Optional Certifications — Please select:
                 </p>
                 <div className="flex flex-wrap gap-2 mb-0.5">
@@ -1561,11 +1641,11 @@ export default function CreateErrandPage() {
                     <button
                       key={cert}
                       onClick={() => toggleCertification(cert, 'optional')}
-                      className={`text-xs px-3 py-1 rounded-full font-semibold transition-colors ${
-                        formData.certifications.optional.includes(cert)
-                          ? 'bg-errandify-orange text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`text-xs px-3 py-1 rounded-full font-semibold transition-colors`}
+                      style={{
+                        backgroundColor: formData.certifications.optional.includes(cert) ? '#FF6B35' : '#f0f0f0',
+                        color: formData.certifications.optional.includes(cert) ? 'white' : '#333'
+                      }}
                     >
                       {cert}
                     </button>
@@ -1578,7 +1658,7 @@ export default function CreateErrandPage() {
             {aiSuggestions.certifications.required.length === 0 &&
               aiSuggestions.certifications.optional.length === 0 && (
                 <div>
-                  <p className="text-xs text-gray-600 font-semibold mb-0.5">
+                  <p className="text-xs font-semibold mb-0.5" style={{color: '#555'}}>
                     Common Certifications:
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -1596,12 +1676,11 @@ export default function CreateErrandPage() {
                             toggleCertification(cert, 'optional');
                           }
                         }}
-                        className={`text-xs px-3 py-1 rounded-full font-semibold transition-colors ${
-                          formData.certifications.required.includes(cert) ||
-                          formData.certifications.optional.includes(cert)
-                            ? 'bg-errandify-orange text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                        className={`text-xs px-3 py-1 rounded-full font-semibold transition-colors`}
+                        style={{
+                          backgroundColor: (formData.certifications.required.includes(cert) || formData.certifications.optional.includes(cert)) ? '#FF6B35' : '#f0f0f0',
+                          color: (formData.certifications.required.includes(cert) || formData.certifications.optional.includes(cert)) ? 'white' : '#333'
+                        }}
                       >
                         {cert}
                       </button>
@@ -1613,17 +1692,18 @@ export default function CreateErrandPage() {
             {/* Selected Certifications Display */}
             {(formData.certifications.required.length > 0 ||
               formData.certifications.optional.length > 0) && (
-              <div className="p-2 bg-orange-50 rounded text-sm mt-3 space-y-3">
-                <p className="font-semibold text-errandify-orange-900">Selected Certifications:</p>
+              <div className="p-2 rounded text-sm mt-3 space-y-3" style={{backgroundColor: '#FFF0E5'}}>
+                <p className="font-semibold" style={{color: '#E55A24'}}>Selected Certifications:</p>
 
                 {formData.certifications.required.length > 0 && (
                   <div>
-                    <p className="text-xs text-errandify-orange-800 font-semibold mb-0.5">Required:</p>
+                    <p className="text-xs font-semibold mb-0.5" style={{color: '#E55A24'}}>Required:</p>
                     <div className="flex flex-wrap gap-2">
                       {formData.certifications.required.map((cert) => (
                         <div
                           key={cert}
-                          className="bg-orange-200 text-errandify-orange-800 text-xs px-2 py-0.5 rounded flex items-center gap-2"
+                          className="text-xs px-2 py-0.5 rounded flex items-center gap-2"
+                          style={{backgroundColor: '#FFD4B3', color: '#E55A24'}}
                         >
                           <span>{cert}</span>
                           <label className="flex items-center gap-1 cursor-pointer">
@@ -1635,6 +1715,7 @@ export default function CreateErrandPage() {
                                 toggleCertification(cert, 'optional');
                               }}
                               className="w-3 h-3"
+                              style={{accentColor: '#FF6B35'}}
                             />
                             <span className="text-xs">Optional?</span>
                           </label>
@@ -1652,12 +1733,13 @@ export default function CreateErrandPage() {
 
                 {formData.certifications.optional.length > 0 && (
                   <div>
-                    <p className="text-xs text-errandify-orange-700 font-semibold mb-0.5">Optional:</p>
+                    <p className="text-xs font-semibold mb-0.5" style={{color: '#E55A24'}}>Optional:</p>
                     <div className="flex flex-wrap gap-2">
                       {formData.certifications.optional.map((cert) => (
                         <div
                           key={cert}
-                          className="bg-orange-100 text-errandify-orange-700 text-xs px-2 py-0.5 rounded flex items-center gap-2"
+                          className="text-xs px-2 py-0.5 rounded flex items-center gap-2"
+                          style={{backgroundColor: '#FFF0E5', color: '#E55A24'}}
                         >
                           <span>{cert}</span>
                           <label className="flex items-center gap-1 cursor-pointer">
@@ -1669,6 +1751,7 @@ export default function CreateErrandPage() {
                                 toggleCertification(cert, 'required');
                               }}
                               className="w-3 h-3"
+                              style={{accentColor: '#FF6B35'}}
                             />
                             <span className="text-xs">Required?</span>
                           </label>
@@ -1690,12 +1773,12 @@ export default function CreateErrandPage() {
         </div>
 
         {/* Section 6: Notes - At end of form */}
-        <div className="border-t-2 border-gray-100 pt-4 space-y-2.5">
-          <h3 className="font-bold text-errandify-brown text-sm leading-relaxed tracking-tight">Anything else</h3>
+        <div style={{padding: '16px', backgroundColor: '#FFF9F5', borderRadius: '8px', borderLeft: '4px solid #FF6B35'}}>
+          <h3 style={{fontSize: '16px', fontWeight: '700', color: '#FF6B35', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', margin: '-16px -16px 16px -16px', padding: '12px 16px', backgroundColor: 'rgba(255, 107, 53, 0.05)', borderRadius: '6px 6px 0 0'}}>💬 Anything else</h3>
 
           <div>
-            <label className="block text-sm font-semibold text-errandify-brown mb-1.5">
-              Notes to Confirmed Doer <span className="text-xs font-normal text-gray-500">(Shown to Confirmed Doer)</span>
+            <label className="block text-sm font-semibold mb-1.5" style={{color: '#333'}}>
+              Notes to Confirmed Doer <span className="text-xs font-normal" style={{color: '#999'}}>(Shown to Confirmed Doer)</span>
             </label>
             <div className="relative">
               <textarea
@@ -1705,20 +1788,22 @@ export default function CreateErrandPage() {
                 placeholder="access tips, requests, special needs..."
                 rows={2}
                 maxLength={300}
-                className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium ${
-                  formData.specialNote ? 'border-errandify-orange text-errandify-brown' : 'border-gray-200 text-gray-900 placeholder:text-gray-400'
-                }`}
+                className={`w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium placeholder:text-gray-400`}
+                style={{
+                  borderColor: formData.specialNote ? '#FF6B35' : '#FFF0E5',
+                  color: '#333'
+                }}
               />
-              <span className="absolute bottom-2 right-3 text-xs text-gray-400">{formData.specialNote.length}/300</span>
+              <span className="absolute bottom-2 right-3 text-xs" style={{color: '#999'}}>{formData.specialNote.length}/300</span>
             </div>
           </div>
         </div>
 
         {/* Quick Summary & Post Button */}
         <div className="mt-4 space-y-2.5">
-          <div className="bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-errandify-orange p-3 rounded-lg">
-            <p className="font-semibold text-errandify-brown text-sm">Ready to post?</p>
-            <p className="text-gray-700 text-sm leading-relaxed">
+          <div className="border-l-4 p-3 rounded-lg" style={{backgroundColor: '#FFF0E5', borderColor: '#FF6B35'}}>
+            <p className="font-semibold text-sm" style={{color: '#333'}}>Ready to post?</p>
+            <p className="text-sm leading-relaxed" style={{color: '#555'}}>
               <strong>{formData.title}</strong> • {categoryNames[formData.category] || '?'} • SGD ${formData.budget || '?'}
             </p>
           </div>
@@ -1735,11 +1820,11 @@ export default function CreateErrandPage() {
             if (!isRemoteWork && (!formData.location || formData.location.trim().length === 0)) missingFields.push({ icon: '📍', label: 'Add a location', field: 'location' });
 
             return missingFields.length > 0 ? (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
-                <p className="text-sm font-semibold text-blue-900">✨ Just a couple things:</p>
+              <div className="border rounded-lg p-3 space-y-2" style={{backgroundColor: '#FFF9F5', borderColor: '#FFE0CC'}}>
+                <p className="text-sm font-semibold" style={{color: '#E55A24'}}>✨ Just a couple things:</p>
                 <div className="space-y-1">
                   {missingFields.map((item) => (
-                    <div key={item.field} className="flex items-center gap-2 text-sm text-blue-800">
+                    <div key={item.field} className="flex items-center gap-2 text-sm" style={{color: '#E55A24'}}>
                       <span>{item.icon}</span>
                       <span>{item.label}</span>
                     </div>
@@ -1772,7 +1857,8 @@ export default function CreateErrandPage() {
               if (loading) return true;
               return false;
             })()}
-            className="w-full bg-errandify-orange text-white py-2.5 rounded-xl font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base shadow-sm"
+            className="w-full text-white py-2.5 rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base shadow-sm hover:opacity-90"
+            style={{backgroundColor: '#FF6B35'}}
           >
             {loading ? 'Posting...' : 'Post'}
           </button>
@@ -1783,12 +1869,12 @@ export default function CreateErrandPage() {
       {showConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 pointer-events-auto">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full flex flex-col max-h-[90vh] pointer-events-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 pb-3 border-b-2 border-orange-100">
-              <h2 className="text-2xl font-bold text-errandify-brown">Ready to post?</h2>
-              <p className="text-sm text-gray-600 mt-1">Here's what doers will see</p>
+            <div className="p-6 pb-3 border-b-2" style={{borderColor: '#FFF0E5', backgroundColor: '#FFFBF8'}}>
+              <h2 className="text-2xl font-bold" style={{color: '#333'}}>Ready to post?</h2>
+              <p className="text-sm mt-1" style={{color: '#555'}}>Here's what doers will see</p>
             </div>
 
-            <div className="p-5 pt-4 flex-1 overflow-y-auto space-y-2.5 text-sm text-gray-700">
+            <div className="p-5 pt-4 flex-1 overflow-y-auto space-y-2.5 text-sm" style={{color: '#555'}}>
               <p>
                 <span className="font-semibold">Title:</span> {formData.title}
               </p>
@@ -1845,13 +1931,14 @@ export default function CreateErrandPage() {
               )}
             </div>
 
-            <div className="border-t-2 border-orange-100 px-5 py-4 flex gap-2.5 pointer-events-auto bg-gradient-to-r from-orange-50 to-white">
+            <div className="border-t-2 px-5 py-4 flex gap-2.5 pointer-events-auto" style={{borderColor: '#FFF0E5', backgroundColor: '#FFFBF8'}}>
               <button
                 onClick={() => {
                   console.log('[DEBUG] Edit button clicked');
                   setShowConfirm(false);
                 }}
-                className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-colors cursor-pointer pointer-events-auto"
+                className="flex-1 px-3 py-2 border-2 rounded-lg font-semibold transition-colors cursor-pointer pointer-events-auto hover:opacity-80"
+                style={{borderColor: '#DDD', color: '#333', backgroundColor: '#f9f9f9'}}
               >
                 Edit
               </button>
@@ -1871,7 +1958,8 @@ export default function CreateErrandPage() {
                   console.log('[DEBUG] *** handleSubmit RETURNED ***');
                 }}
                 disabled={loading}
-                className="flex-1 px-3 py-2 bg-errandify-orange text-white rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer pointer-events-auto transition-all shadow-sm"
+                className="flex-1 px-3 py-2 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer pointer-events-auto transition-all shadow-sm hover:opacity-90"
+                style={{backgroundColor: '#FF6B35'}}
               >
                 {loading ? 'Posting...' : 'Post'}
               </button>
@@ -1884,15 +1972,16 @@ export default function CreateErrandPage() {
       {needsAreaConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
-            <h2 className="text-2xl font-bold text-errandify-brown mb-2">Confirm Location</h2>
-            <p className="text-gray-600 mb-4">
+            <h2 className="text-2xl font-bold mb-2" style={{color: '#333'}}>Confirm Location</h2>
+            <p className="mb-4" style={{color: '#555'}}>
               We couldn't auto-detect the area for postal code <strong>{pendingPostalCode}</strong>. Please select the correct area:
             </p>
 
             <select
               value={selectedArea}
               onChange={(e) => setSelectedArea(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-errandify-orange mb-4"
+              className="w-full px-4 py-3 border-2 rounded-lg focus:outline-none mb-4"
+              style={{borderColor: '#FFF0E5', color: '#333'}}
             >
               <option value="">-- Select Area --</option>
               {singaporeAreas.map((areaName) => (
@@ -1908,7 +1997,8 @@ export default function CreateErrandPage() {
                   setNeedsAreaConfirmation(false);
                   setSelectedArea('');
                 }}
-                className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-100"
+                className="flex-1 px-4 py-2 border-2 rounded-lg font-semibold hover:opacity-80"
+                style={{borderColor: '#DDD', color: '#333', backgroundColor: '#f9f9f9'}}
               >
                 Cancel
               </button>
@@ -1926,7 +2016,8 @@ export default function CreateErrandPage() {
                   }
                 }}
                 disabled={!selectedArea}
-                className="flex-1 px-4 py-2 bg-errandify-orange text-white rounded-lg font-semibold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{backgroundColor: '#FF6B35'}}
               >
                 Confirm
               </button>
@@ -1940,18 +2031,18 @@ export default function CreateErrandPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
             <div className="text-5xl mb-4">🎉</div>
-            <h2 className="text-2xl font-bold text-errandify-brown mb-2">
+            <h2 className="text-2xl font-bold mb-2" style={{color: '#333'}}>
               Errand Posted!
             </h2>
-            <p className="text-gray-600 mb-4">
+            <p className="mb-4" style={{color: '#555'}}>
               Your errand is now live and doers can see it.
             </p>
 
             {/* Errand ID Display */}
-            <div className="bg-gray-100 rounded-lg p-4 mb-4">
-              <p className="text-xs text-gray-600 mb-1">Your Errand ID:</p>
+            <div className="rounded-lg p-4 mb-4" style={{backgroundColor: '#FFF0E5'}}>
+              <p className="text-xs mb-1" style={{color: '#555'}}>Your Errand ID:</p>
               <div className="flex items-center justify-between gap-2">
-                <code className="text-lg font-mono font-bold text-errandify-brown flex-1">
+                <code className="text-lg font-mono font-bold flex-1" style={{color: '#FF6B35'}}>
                   {successErrandId}
                 </code>
                 <button

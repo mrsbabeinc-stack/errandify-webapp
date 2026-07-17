@@ -160,16 +160,18 @@ export default function NotificationListener() {
           }
         );
 
-        const notifications = response.data.data || [];
+        const notifications = Array.isArray(response.data.data) ? response.data.data : [];
 
         // Only show toasts for NEW notifications (created after lastNotificationTime)
-        notifications.forEach((notification: Notification) => {
+        if (Array.isArray(notifications)) {
+          notifications.forEach((notification: Notification) => {
           const notificationTime = new Date(notification.created_at).getTime();
 
-          if (notificationTime > lastNotificationTime && !notification.is_read) {
-            handleNotification(notification);
-          }
-        });
+            if (notificationTime > lastNotificationTime && !notification.is_read) {
+              handleNotification(notification);
+            }
+          });
+        }
 
         // Update last notification time
         if (notifications.length > 0) {

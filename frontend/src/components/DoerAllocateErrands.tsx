@@ -143,7 +143,7 @@ const DoerAllocateErrands: React.FC = () => {
       const modal = document.createElement('div');
       modal.innerHTML = `
         <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;" id="warn-modal">
-          <div style="background: white; border-radius: 12px; padding: 32px; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+          <div style="background: white; border-radius: 12px; padding: 20px; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
             <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
             <h2 style="color: #8B4513; font-size: 24px; margin-bottom: 8px; font-weight: bold;">Selection Required</h2>
             <p style="color: #666; margin-bottom: 24px; line-height: 1.5;">Please select both an errand and a staff member</p>
@@ -176,7 +176,7 @@ const DoerAllocateErrands: React.FC = () => {
       const modal = document.createElement('div');
       modal.innerHTML = `
         <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;" id="alloc-modal">
-          <div style="background: white; border-radius: 12px; padding: 32px; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+          <div style="background: white; border-radius: 12px; padding: 20px; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
             <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
             <h2 style="color: #8B4513; font-size: 24px; margin-bottom: 8px; font-weight: bold;">Errand Allocated!</h2>
             <p style="color: #666; margin-bottom: 24px; line-height: 1.5;">Staff member has been assigned to this errand and will receive a notification.</p>
@@ -200,7 +200,7 @@ const DoerAllocateErrands: React.FC = () => {
       const modal = document.createElement('div');
       modal.innerHTML = `
         <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;" id="error-modal">
-          <div style="background: white; border-radius: 12px; padding: 32px; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+          <div style="background: white; border-radius: 12px; padding: 20px; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
             <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
             <h2 style="color: #8B4513; font-size: 24px; margin-bottom: 8px; font-weight: bold;">Allocation Failed</h2>
             <p style="color: #d9534f; margin-bottom: 24px; line-height: 1.5;">${errorMsg}</p>

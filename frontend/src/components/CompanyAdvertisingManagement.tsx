@@ -112,7 +112,7 @@ const CompanyAdvertisingManagement: React.FC = () => {
   return (
     <div className="advertising-management">
       {/* Hero Section */}
-      <div style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)', borderRadius: '16px', padding: '40px', marginBottom: '32px', color: 'white', boxShadow: '0 8px 24px rgba(255,107,53,0.2)'}}>
+      <div style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)', borderRadius: '16px', padding: '40px', marginBottom: '20px', color: 'white', boxShadow: '0 8px 24px rgba(255,107,53,0.2)'}}>
         <div style={{maxWidth: '600px'}}>
           <div style={{fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.9, marginBottom: '12px'}}>🚀 Grow Your Business</div>
           <h1 style={{margin: '0 0 12px 0', fontSize: '36px', fontWeight: '800', lineHeight: '1.2'}}>
@@ -139,7 +139,7 @@ const CompanyAdvertisingManagement: React.FC = () => {
       </div>
 
       {/* Advertising Opportunities */}
-      <div className="advertising-opportunities" style={{marginBottom: '32px'}}>
+      <div className="advertising-opportunities" style={{marginBottom: '20px'}}>
         <h3 style={{margin: '0 0 16px 0', fontSize: '16px', fontWeight: '700'}}>🎯 Start Advertising</h3>
         <div className="opportunities-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '16px'}}>
           <div className="opportunity-card" style={{padding: '16px', background: 'white', border: '2px solid #FFE5D9', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.3s ease', position: 'relative'}}>
@@ -198,13 +198,13 @@ const CompanyAdvertisingManagement: React.FC = () => {
 
       {/* Empty State - No campaigns yet */}
       {filteredAds.length === 0 && (
-        <div style={{background: 'linear-gradient(135deg, #FFF8F5 0%, #FFE5D9 100%)', borderRadius: '16px', padding: '48px', textAlign: 'center', marginBottom: '32px'}}>
+        <div style={{background: 'linear-gradient(135deg, #FFF8F5 0%, #FFE5D9 100%)', borderRadius: '16px', padding: '48px', textAlign: 'center', marginBottom: '20px'}}>
           <div style={{fontSize: '64px', marginBottom: '16px'}}>📢</div>
           <h2 style={{margin: '0 0 12px 0', fontSize: '28px', fontWeight: '800', color: '#333'}}>No campaigns yet</h2>
           <p style={{margin: '0 0 24px 0', fontSize: '16px', color: '#666', lineHeight: '1.6', maxWidth: '450px', marginLeft: 'auto', marginRight: 'auto'}}>
             Start advertising today and reach thousands of active users looking for services like yours.
           </p>
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto'}}>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto'}}>
             <div style={{background: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center'}}>
               <div style={{fontSize: '28px', marginBottom: '8px'}}>⚡</div>
               <div style={{fontSize: '12px', fontWeight: '700', color: '#333'}}>Quick Setup</div>
@@ -267,7 +267,7 @@ const CompanyAdvertisingManagement: React.FC = () => {
 
       {/* Performance Summary - Only show if they have campaigns */}
       {filteredAds.length > 0 && (
-        <div style={{marginBottom: '32px'}}>
+        <div style={{marginBottom: '20px'}}>
           <h3 style={{margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#333'}}>📊 Performance Overview</h3>
           <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, minmax(150px, 1fr))', gap: '12px'}}>
             <div style={{padding: '16px', background: 'white', borderRadius: '12px', border: '1px solid #e0e0e0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}>
@@ -545,7 +545,7 @@ const CompanyAdvertisingManagement: React.FC = () => {
         .advertising-management {
           background: linear-gradient(135deg, #fff 0%, #fff9f5 100%);
           border-radius: 16px;
-          padding: 32px;
+          padding: 20px;
           box-shadow: 0 4px 16px rgba(255, 107, 53, 0.08);
         }
 
@@ -1088,7 +1088,7 @@ const CompanyAdvertisingManagement: React.FC = () => {
         .booking-notice p {
           margin: 0;
           font-size: 12px;
-          color: #E65100;
+          color: #E55A24;
         }
 
         .modal-actions {
@@ -1131,7 +1131,7 @@ const CompanyAdvertisingManagement: React.FC = () => {
         }
 
         .preview-hero-placement {
-          background: #f9f9f9;
+          background: #FFF9F5;
           border-radius: 10px;
           padding: 20px;
           overflow-x: auto;

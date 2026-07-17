@@ -5,9 +5,10 @@ import AdminFooter from './AdminFooter';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
+  onLogout?: () => void;
 }
 
-export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, onLogout }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleMenuToggle = () => {
@@ -16,7 +17,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   return (
     <div className="admin-layout">
-      <AdminNavbar onMenuToggle={handleMenuToggle} isMenuOpen={sidebarOpen} />
+      <AdminNavbar onMenuToggle={handleMenuToggle} isMenuOpen={sidebarOpen} onLogout={onLogout} />
 
       <div className="admin-container">
         <AdminSidebar isOpen={sidebarOpen} />

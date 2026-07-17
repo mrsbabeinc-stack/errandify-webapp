@@ -98,7 +98,7 @@ const ManagerLeaveApproval: React.FC = () => {
   return (
     <div style={{ padding: '24px', maxWidth: '1000px' }}>
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ marginBottom: '20px' }}>
         <h2 style={{ fontSize: '28px', fontWeight: '700', color: '#333', margin: '0 0 8px 0' }}>
           📋 Leave Approvals
         </h2>
