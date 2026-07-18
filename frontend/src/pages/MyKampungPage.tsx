@@ -851,31 +851,61 @@ export default function MyKampungPage() {
           </button>
           <button
             onClick={() => setActiveTab('blog')}
-            className={`py-1 px-2 rounded text-sm font-bold transition whitespace-nowrap ${
-              activeTab === 'blog'
-                ? 'bg-errandify-orange text-white'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
+            style={{
+              padding: '12px 20px',
+              borderRadius: '16px',
+              fontSize: '16px',
+              fontWeight: '800',
+              whiteSpace: 'nowrap',
+              border: activeTab === 'blog' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              background: activeTab === 'blog' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
+              color: activeTab === 'blog' ? 'white' : '#FF6B35',
+              boxShadow: activeTab === 'blog' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
+            }}
+            onMouseEnter={(e) => {if (activeTab !== 'blog') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
+            onMouseLeave={(e) => {if (activeTab !== 'blog') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
           >
             📖 Blog
           </button>
           <button
             onClick={() => setActiveTab('recognition')}
-            className={`py-1 px-2 rounded text-sm font-bold transition whitespace-nowrap ${
-              activeTab === 'recognition'
-                ? 'bg-errandify-orange text-white'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
+            style={{
+              padding: '12px 20px',
+              borderRadius: '16px',
+              fontSize: '16px',
+              fontWeight: '800',
+              whiteSpace: 'nowrap',
+              border: activeTab === 'recognition' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              background: activeTab === 'recognition' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
+              color: activeTab === 'recognition' ? 'white' : '#FF6B35',
+              boxShadow: activeTab === 'recognition' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
+            }}
+            onMouseEnter={(e) => {if (activeTab !== 'recognition') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
+            onMouseLeave={(e) => {if (activeTab !== 'recognition') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
           >
             ⭐ Recognition
           </button>
           <button
             onClick={() => setActiveTab('join-us')}
-            className={`py-1 px-2 rounded text-sm font-bold transition whitespace-nowrap ${
-              activeTab === 'join-us'
-                ? 'bg-errandify-orange text-white'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
+            style={{
+              padding: '12px 20px',
+              borderRadius: '16px',
+              fontSize: '16px',
+              fontWeight: '800',
+              whiteSpace: 'nowrap',
+              border: activeTab === 'join-us' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              background: activeTab === 'join-us' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
+              color: activeTab === 'join-us' ? 'white' : '#FF6B35',
+              boxShadow: activeTab === 'join-us' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
+            }}
+            onMouseEnter={(e) => {if (activeTab !== 'join-us') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
+            onMouseLeave={(e) => {if (activeTab !== 'join-us') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
           >
             👋 Join Us
           </button>
