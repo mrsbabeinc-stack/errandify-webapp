@@ -761,9 +761,9 @@ export default function MyKampungPage() {
 
       <button onClick={() => navigate(-1)} style={{fontSize: '18px', fontWeight: '800', color: '#FF6B35', background: 'none', border: 'none', cursor: 'pointer', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px', padding: 0, transition: 'all 0.2s'}}>← Back</button>
 
-      <div style={{marginBottom: '28px', paddingBottom: '20px', borderBottom: '4px solid rgba(255, 107, 53, 0.3)', position: 'relative', zIndex: 1}}>
-        <h1 style={{fontSize: '48px', fontWeight: '900', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', margin: '0 0 8px 0', letterSpacing: '-1.5px'}}>🏘️ MyKampung</h1>
-        <p style={{fontSize: '17px', color: '#FF6B35', margin: 0, fontWeight: '700', letterSpacing: '0.5px'}}>✨ Your neighbourhood community ✨</p>
+      <div style={{marginBottom: '32px', paddingBottom: '24px', borderBottom: '5px solid #FF6B35', position: 'relative', zIndex: 1}}>
+        <h1 style={{fontSize: '56px', fontWeight: '900', color: '#FF6B35', margin: '0 0 12px 0', letterSpacing: '-2px'}}>🏘️ MyKampung</h1>
+        <p style={{fontSize: '21px', color: '#FF6B35', margin: 0, fontWeight: '800', letterSpacing: '0.5px'}}>✨ Your Neighbourhood Community ✨</p>
       </div>
 
       <div className="w-full" style={{maxWidth: '1200px', margin: '0 auto'}}>
@@ -851,7 +851,7 @@ export default function MyKampungPage() {
           </button>
           <button
             onClick={() => setActiveTab('blog')}
-            className={`py-1 px-2 rounded text-xs font-semibold transition whitespace-nowrap ${
+            className={`py-1 px-2 rounded text-sm font-bold transition whitespace-nowrap ${
               activeTab === 'blog'
                 ? 'bg-errandify-orange text-white'
                 : 'text-gray-700 hover:bg-gray-100'
@@ -861,7 +861,7 @@ export default function MyKampungPage() {
           </button>
           <button
             onClick={() => setActiveTab('recognition')}
-            className={`py-1 px-2 rounded text-xs font-semibold transition whitespace-nowrap ${
+            className={`py-1 px-2 rounded text-sm font-bold transition whitespace-nowrap ${
               activeTab === 'recognition'
                 ? 'bg-errandify-orange text-white'
                 : 'text-gray-700 hover:bg-gray-100'
@@ -871,7 +871,7 @@ export default function MyKampungPage() {
           </button>
           <button
             onClick={() => setActiveTab('join-us')}
-            className={`py-1 px-2 rounded text-xs font-semibold transition whitespace-nowrap ${
+            className={`py-1 px-2 rounded text-sm font-bold transition whitespace-nowrap ${
               activeTab === 'join-us'
                 ? 'bg-errandify-orange text-white'
                 : 'text-gray-700 hover:bg-gray-100'
@@ -938,7 +938,7 @@ export default function MyKampungPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-1">
                         <h3 className="font-semibold text-gray-800 text-sm">{post.author}</h3>
-                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getCategoryColor(post.category)}`}>
+                        <span className={`text-sm font-bold px-1.5 py-0.5 rounded-full ${getCategoryColor(post.category)}`}>
                           {post.category === 'success_story' ? '🏆' : post.category === 'tip' ? '💡' : post.category === 'question' ? '❓' : '🤝'}
                         </span>
                       </div>
@@ -1013,7 +1013,7 @@ export default function MyKampungPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-1 mb-1">
                         <h3 className="font-semibold text-gray-800 hover:text-errandify-orange text-sm line-clamp-2">{discussion.title}</h3>
-                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap ${getCategoryColor(discussion.category)}`}>
+                        <span className={`text-sm font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap ${getCategoryColor(discussion.category)}`}>
                           {discussion.category.charAt(0).toUpperCase()}
                         </span>
                       </div>
@@ -1058,7 +1058,7 @@ export default function MyKampungPage() {
                 <button
                   key={tab.key}
                   onClick={() => setNewsTypeFilter(tab.key as any)}
-                  className={`py-1 px-2 rounded text-xs font-semibold whitespace-nowrap transition ${
+                  className={`py-1 px-2 rounded text-sm font-bold whitespace-nowrap transition ${
                     newsTypeFilter === tab.key
                       ? 'bg-errandify-orange text-white'
                       : 'bg-gray-200 text-gray-700'
@@ -1078,10 +1078,10 @@ export default function MyKampungPage() {
                 <div className="flex gap-1 mb-2 overflow-x-auto pb-1">
                   <button
                     onClick={() => setNewsCategoryFilter('all')}
-                    className={`py-1 px-2 rounded text-xs font-semibold whitespace-nowrap transition ${
+                    className={`py-1 px-2 rounded text-sm font-bold whitespace-nowrap transition ${
                       newsCategoryFilter === 'all'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-blue-100 text-blue-700'
+                        ? 'bg-errandify-orange text-white'
+                        : 'bg-orange-100 text-errandify-orange'
                     }`}
                   >
                     All
@@ -1090,10 +1090,10 @@ export default function MyKampungPage() {
                     <button
                       key={cat}
                       onClick={() => setNewsCategoryFilter(cat)}
-                      className={`py-1 px-2 rounded text-xs font-semibold whitespace-nowrap transition ${
+                      className={`py-1 px-2 rounded text-sm font-bold whitespace-nowrap transition ${
                         newsCategoryFilter === cat
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-blue-100 text-blue-700'
+                          ? 'bg-errandify-orange text-white'
+                          : 'bg-orange-100 text-errandify-orange'
                       }`}
                     >
                       {cat}
@@ -1132,7 +1132,7 @@ export default function MyKampungPage() {
                     filteredNews.map((item: any) => {
                 const typeColors: Record<string, string> = {
                   community: 'bg-green-50 border-green-300',
-                  singapore: 'bg-blue-50 border-blue-300',
+                  singapore: 'bg-orange-50 border-orange-300',
                   errandify: 'bg-orange-50 border-orange-300',
                 };
                 const typeIcons: Record<string, string> = {
@@ -1291,7 +1291,7 @@ export default function MyKampungPage() {
                               </div>
                               <button
                                 onClick={() => handleAttendEvent(event.id)}
-                                className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap transition ${
+                                className={`px-2 py-1 rounded text-sm font-bold whitespace-nowrap transition ${
                                   event.isAttending
                                     ? 'bg-red-100 text-red-700'
                                     : 'bg-errandify-orange text-white hover:bg-opacity-90'
@@ -1334,8 +1334,8 @@ export default function MyKampungPage() {
                       <p className="text-sm font-bold text-green-700">{events.filter(e => e.isAttending).length}</p>
                       <p className="text-xs text-gray-600">Attending</p>
                     </div>
-                    <div className="bg-blue-50 rounded p-2 text-center border border-blue-200">
-                      <p className="text-sm font-bold text-blue-700">{events.reduce((sum, e) => sum + e.attendees, 0)}</p>
+                    <div className="bg-orange-50 rounded p-2 text-center border border-orange-200">
+                      <p className="text-sm font-bold text-errandify-orange">{events.reduce((sum, e) => sum + e.attendees, 0)}</p>
                       <p className="text-xs text-gray-600">Total Attendees</p>
                     </div>
                     <div className="bg-purple-50 rounded p-2 text-center border border-purple-200">
@@ -1411,11 +1411,11 @@ export default function MyKampungPage() {
                       {/* Category Badge */}
                       <div className="flex items-center justify-between gap-2 mb-2">
                         <div className="flex items-center gap-1">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(post.category)}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-sm font-bold ${getCategoryColor(post.category)}`}>
                             {post.category === 'guide' ? '📚' : post.category === 'stories' ? '📖' : post.category === 'tips' ? '💡' : '📰'}
                           </span>
                           {readBlogPosts.has(post.id) && (
-                            <span className="text-xs font-semibold text-gray-600">✓</span>
+                            <span className="text-sm font-bold text-gray-600">✓</span>
                           )}
                         </div>
                         <button
@@ -1423,7 +1423,7 @@ export default function MyKampungPage() {
                             e.stopPropagation();
                             handleLikeBlog(post.id);
                           }}
-                          className={`text-xs font-semibold px-2 py-0.5 rounded transition ${
+                          className={`text-sm font-bold px-2 py-0.5 rounded transition ${
                             post.isLiked
                               ? 'bg-red-100 text-red-600'
                               : 'bg-gray-100 text-gray-600'
@@ -1661,10 +1661,10 @@ export default function MyKampungPage() {
 
                         <button
                           onClick={() => handleVoteRecognition(recognition.id)}
-                          className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold transition ${
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded text-sm font-bold transition ${
                             userVotes.includes(recognition.id)
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-blue-100 text-blue-600'
+                              ? 'bg-errandify-orange text-white'
+                              : 'bg-orange-100 text-errandify-orange'
                           }`}
                         >
                           <span>{userVotes.includes(recognition.id) ? '👍' : '👏'}</span>
@@ -1680,7 +1680,7 @@ export default function MyKampungPage() {
             <div className="bg-orange-50 rounded border border-orange-200 p-2 text-center">
               <h3 className="text-xs font-bold text-errandify-brown">Know someone amazing?</h3>
               <p className="text-xs text-gray-700 my-0.5">Nominate a doer!</p>
-              <button className="px-3 py-1 bg-errandify-orange text-white rounded text-xs font-semibold hover:bg-opacity-90">
+              <button className="px-3 py-1 bg-errandify-orange text-white rounded text-sm font-bold hover:bg-opacity-90">
                 🌟 Nominate
               </button>
             </div>
