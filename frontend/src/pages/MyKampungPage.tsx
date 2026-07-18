@@ -792,60 +792,60 @@ export default function MyKampungPage() {
           <button
             onClick={() => setActiveTab('discussions')}
             style={{
-              padding: '8px 14px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: '700',
+              padding: '12px 20px',
+              borderRadius: '16px',
+              fontSize: '16px',
+              fontWeight: '800',
               whiteSpace: 'nowrap',
-              border: activeTab === 'discussions' ? 'none' : '1.5px solid #FFE0D6',
+              border: activeTab === 'discussions' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
               cursor: 'pointer',
-              transition: 'all 0.2s',
-              background: activeTab === 'discussions' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)',
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              background: activeTab === 'discussions' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
               color: activeTab === 'discussions' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'discussions' ? '0 3px 10px rgba(255, 107, 53, 0.25)' : '0 2px 6px rgba(255, 107, 53, 0.08)',
+              boxShadow: activeTab === 'discussions' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
             }}
-            onMouseEnter={(e) => {if (activeTab !== 'discussions') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.8) 0%, rgba(255,200,160,0.6) 100%)'; e.currentTarget.style.transform = 'translateY(-2px)';}} }
-            onMouseLeave={(e) => {if (activeTab !== 'discussions') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)'; e.currentTarget.style.transform = 'translateY(0)';}} }
+            onMouseEnter={(e) => {if (activeTab !== 'discussions') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
+            onMouseLeave={(e) => {if (activeTab !== 'discussions') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
           >
             💭 Discussions
           </button>
           <button
             onClick={() => setActiveTab('news')}
             style={{
-              padding: '8px 14px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: '700',
+              padding: '12px 20px',
+              borderRadius: '16px',
+              fontSize: '16px',
+              fontWeight: '800',
               whiteSpace: 'nowrap',
-              border: activeTab === 'news' ? 'none' : '1.5px solid #FFE0D6',
+              border: activeTab === 'news' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
               cursor: 'pointer',
-              transition: 'all 0.2s',
-              background: activeTab === 'news' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)',
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              background: activeTab === 'news' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
               color: activeTab === 'news' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'news' ? '0 3px 10px rgba(255, 107, 53, 0.25)' : '0 2px 6px rgba(255, 107, 53, 0.08)',
+              boxShadow: activeTab === 'news' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
             }}
-            onMouseEnter={(e) => {if (activeTab !== 'news') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.8) 0%, rgba(255,200,160,0.6) 100%)'; e.currentTarget.style.transform = 'translateY(-2px)';}} }
-            onMouseLeave={(e) => {if (activeTab !== 'news') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)'; e.currentTarget.style.transform = 'translateY(0)';}} }
+            onMouseEnter={(e) => {if (activeTab !== 'news') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
+            onMouseLeave={(e) => {if (activeTab !== 'news') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
           >
             📰 News
           </button>
           <button
             onClick={() => setActiveTab('events')}
             style={{
-              padding: '8px 14px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: '700',
+              padding: '12px 20px',
+              borderRadius: '16px',
+              fontSize: '16px',
+              fontWeight: '800',
               whiteSpace: 'nowrap',
-              border: activeTab === 'events' ? 'none' : '1.5px solid #FFE0D6',
+              border: activeTab === 'events' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
               cursor: 'pointer',
-              transition: 'all 0.2s',
-              background: activeTab === 'events' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)',
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              background: activeTab === 'events' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
               color: activeTab === 'events' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'events' ? '0 3px 10px rgba(255, 107, 53, 0.25)' : '0 2px 6px rgba(255, 107, 53, 0.08)',
+              boxShadow: activeTab === 'events' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
             }}
-            onMouseEnter={(e) => {if (activeTab !== 'events') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.8) 0%, rgba(255,200,160,0.6) 100%)'; e.currentTarget.style.transform = 'translateY(-2px)';}} }
-            onMouseLeave={(e) => {if (activeTab !== 'events') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)'; e.currentTarget.style.transform = 'translateY(0)';}} }
+            onMouseEnter={(e) => {if (activeTab !== 'events') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
+            onMouseLeave={(e) => {if (activeTab !== 'events') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
           >
             🎯 Events
           </button>
