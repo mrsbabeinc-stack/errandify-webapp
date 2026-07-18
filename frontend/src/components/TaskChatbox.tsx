@@ -398,14 +398,16 @@ Your message doesn't meet our community standards. Please keep messages:
     <div className="fixed inset-0 bg-black/50 flex items-end z-50 md:items-center md:justify-center">
       <div className="bg-white rounded-t-lg md:rounded-lg w-full md:max-w-6xl md:h-screen md:max-h-[85vh] flex flex-col max-h-[95vh] shadow-2xl overflow-hidden">
         {/* Header - Full Width */}
-        <div className="bg-errandify-brown text-white p-3 flex items-start justify-between gap-2">
-          <div className="flex-1">
-            <h3 className="font-bold text-sm">💬 {taskTitle}</h3>
-            <p className="text-xs text-orange-100">ID: {errandFormattedId}</p>
+        <div style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', color: 'white', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', boxShadow: '0 2px 8px rgba(255, 107, 53, 0.2)'}}>
+          <div style={{flex: 1}}>
+            <h3 style={{fontWeight: 'bold', fontSize: '15px', margin: '0 0 4px 0', color: 'white'}}>💬 {taskTitle}</h3>
+            <p style={{fontSize: '12px', color: 'rgba(255, 255, 255, 0.9)', margin: 0}}>ID: {errandFormattedId}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-white text-xl hover:opacity-80 flex-shrink-0"
+            style={{background: 'none', border: 'none', color: 'white', fontSize: '24px', cursor: 'pointer', opacity: 0.9, transition: 'opacity 0.2s', flexShrink: 0}}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.9'}
           >
             ✕
           </button>
