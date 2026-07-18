@@ -1298,16 +1298,16 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
               )}
 
               {/* RIGHT - RATING */}
-              <div className="bg-gradient-to-br from-orange-200 to-orange-100 rounded-xl p-3 border-2 border-orange-300 shadow-md">
+              <div className="bg-gradient-to-br from-yellow-300 via-orange-200 to-orange-300 rounded-xl p-3 border-2 border-yellow-400 shadow-md">
                 <div className="text-center">
-                  <p className="text-lg font-black text-orange-900 mb-1">✨ People Love You!</p>
-                  <p className="text-3xl font-black text-orange-700">{ratings.averageRating.toFixed(1)}</p>
-                  <div className="flex gap-0.5 justify-center mb-1">
+                  <p className="text-base font-black text-orange-900 mb-1">✨ People Love You!</p>
+                  <p className="text-4xl font-black text-orange-700">{ratings.averageRating.toFixed(1)}</p>
+                  <div className="flex gap-1 justify-center mb-1">
                     {[...Array(5)].map((_, i) => (
-                      <span key={i} className="text-sm">{i < Math.floor(ratings.averageRating) ? '⭐' : '✨'}</span>
+                      <span key={i} className="text-lg">{i < Math.floor(ratings.averageRating) ? '⭐' : '✨'}</span>
                     ))}
                   </div>
-                  <p className="text-xs font-bold text-orange-800">({ratings.reviewCount} reviews)</p>
+                  <p className="text-xs font-bold text-orange-900">({ratings.reviewCount} reviews) 💝</p>
                 </div>
               </div>
             </div>
@@ -1341,16 +1341,16 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
               </div>
             </div>
 
-            {/* REFERRAL BUTTON - COMPACT */}
+            {/* REFERRAL BUTTON - ENGAGING & VIBRANT */}
             <button
               onClick={() => navigate('/referral')}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded-lg p-3 shadow-md hover:shadow-lg transition text-white text-center border-2 border-orange-700"
+              className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 hover:from-purple-600 hover:via-pink-600 hover:to-red-600 rounded-xl p-4 shadow-lg hover:shadow-2xl transition transform hover:scale-102 active:scale-95 text-white text-center border-3 border-purple-700"
             >
-              <div className="flex items-center justify-center gap-2">
-                <p className="text-2xl">🎁</p>
-                <div className="text-left">
-                  <p className="text-sm font-black">Refer & Earn!</p>
-                  <p className="text-xs font-bold">Invite friends & rewards</p>
+              <div className="flex items-center justify-center gap-3">
+                <div className="text-3xl animate-bounce">🎁</div>
+                <div>
+                  <p className="text-lg font-black leading-tight">Refer & Earn!</p>
+                  <p className="text-xs font-bold">Invite friends • Get rewards 🚀</p>
                 </div>
               </div>
             </button>
