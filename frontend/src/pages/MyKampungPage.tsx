@@ -768,21 +768,21 @@ export default function MyKampungPage() {
 
       <div className="w-full" style={{maxWidth: '1200px', margin: '0 auto'}}>
         {/* Tab Navigation */}
-        <div className="flex gap-3 mb-4 overflow-x-auto pb-2" style={{marginBottom: '24px', paddingBottom: '12px', position: 'relative', zIndex: 1}}>
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-2" style={{marginBottom: '24px', paddingBottom: '12px', position: 'relative', zIndex: 1}}>
           <button
             onClick={() => setActiveTab('feed')}
             style={{
-              padding: '12px 20px',
-              borderRadius: '16px',
-              fontSize: '16px',
+              padding: '9px 14px',
+              borderRadius: '12px',
+              fontSize: '14px',
               fontWeight: '800',
               whiteSpace: 'nowrap',
-              border: activeTab === 'feed' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
+              border: activeTab === 'feed' ? '2.5px solid rgba(255, 255, 255, 0.6)' : '2px solid rgba(255, 107, 53, 0.2)',
               cursor: 'pointer',
               transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
               background: activeTab === 'feed' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
               color: activeTab === 'feed' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'feed' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
+              boxShadow: activeTab === 'feed' ? '0 4px 16px rgba(255, 107, 53, 0.3)' : '0 2px 8px rgba(255, 107, 53, 0.1)',
             }}
             onMouseEnter={(e) => {if (activeTab !== 'feed') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
             onMouseLeave={(e) => {if (activeTab !== 'feed') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
