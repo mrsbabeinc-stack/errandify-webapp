@@ -446,26 +446,28 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 </div>
               )}
               {/* Row 1: ID Badge */}
-              <div style={{marginBottom: '3px'}}>
+              <div style={{marginBottom: '2px'}}>
                 <span style={{fontSize: '11px', fontWeight: '700', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '3px 8px', borderRadius: '3px', display: 'inline-block'}}>{conversation.formattedId}</span>
               </div>
-              {/* Row 2: Title + Status */}
-              <div style={{display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'space-between', marginBottom: '4px'}}>
+              {/* Row 2: Title + Date/Area + Status */}
+              <div style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between', marginBottom: '6px', minHeight: '20px'}}>
                 <h3 style={{fontWeight: '700', fontSize: '14px', color: '#333', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1}}>{conversation.title}</h3>
+                <div style={{display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0}}>
+                  {conversation.deadline && (
+                    <span style={{fontSize: '10px', color: '#FF6B35', fontWeight: '600', whiteSpace: 'nowrap'}}>📅 {new Date(conversation.deadline).toLocaleDateString()}</span>
+                  )}
+                  {(conversation.location || conversation.postal) && (
+                    <span style={{fontSize: '10px', fontWeight: '500', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80px'}}>📍 {conversation.postal}</span>
+                  )}
+                </div>
                 <span style={{padding: '3px 8px', borderRadius: '3px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? '#FFE8D6' : getStatusColor(conversation.status).includes('green') ? '#C8E6C9' : '#F0F0F0', color: getStatusColor(conversation.status).includes('orange') ? '#FF6B35' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#666', flexShrink: 0}}>
                   {getStatusLabel(conversation.status).replace('Awaiting Confirmation', 'Awaiting').replace('Completed', 'Done')}
                 </span>
               </div>
 
-              {/* Single line: Date | Location | Chat Button | Posted by */}
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap'}}>
-                <div style={{display: 'flex', gap: '12px', minWidth: 0, flex: 1}}>
-                  {conversation.deadline && (
-                    <span style={{fontSize: '13px', color: '#FF6B35', fontWeight: '600', whiteSpace: 'nowrap'}}>📅 {new Date(conversation.deadline).toLocaleDateString()} {new Date(conversation.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  )}
-                  {(conversation.location || conversation.postal) && (
-                    <span style={{fontSize: '13px', fontWeight: '500', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</span>
-                  )}
+              {/* Single line: Chat Button | Posted by */}
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px'}}>
+                <div style={{display: 'flex', gap: '4px', minWidth: 0, flex: 1}}>
                 </div>
                 <button
                   onClick={() => handleOpenChat(conversation.id)}
