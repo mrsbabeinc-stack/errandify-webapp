@@ -445,13 +445,15 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                   {unreadCounts.get(conversation.id)}
                 </div>
               )}
-              {/* ID Badge + Title + Status all on one line */}
-              <div style={{display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: '10px', marginBottom: '6px'}}>
-                <span style={{fontSize: '12px', fontWeight: '700', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '6px 10px', borderRadius: '4px', whiteSpace: 'nowrap'}}>{conversation.formattedId}</span>
-                <h3 style={{fontWeight: '700', fontSize: '15px', color: '#333', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{conversation.title}</h3>
-                <span style={{padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: '700', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? '#FFE8D6' : getStatusColor(conversation.status).includes('green') ? '#C8E6C9' : '#F0F0F0', color: getStatusColor(conversation.status).includes('orange') ? '#FF6B35' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#666'}}>
-                  {getStatusLabel(conversation.status).replace('Awaiting Confirmation', 'Awaiting').replace('Completed', 'Done')}
-                </span>
+              {/* ID Badge above, Title below with Status */}
+              <div style={{marginBottom: '6px'}}>
+                <span style={{fontSize: '12px', fontWeight: '700', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '4px 10px', borderRadius: '4px', display: 'inline-block', marginBottom: '4px'}}>{conversation.formattedId}</span>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between'}}>
+                  <h3 style={{fontWeight: '700', fontSize: '15px', color: '#333', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1}}>{conversation.title}</h3>
+                  <span style={{padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: '700', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? '#FFE8D6' : getStatusColor(conversation.status).includes('green') ? '#C8E6C9' : '#F0F0F0', color: getStatusColor(conversation.status).includes('orange') ? '#FF6B35' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#666', flexShrink: 0}}>
+                    {getStatusLabel(conversation.status).replace('Awaiting Confirmation', 'Awaiting').replace('Completed', 'Done')}
+                  </span>
+                </div>
               </div>
 
               {/* Single line: Date | Location | Chat Button | Posted by */}
