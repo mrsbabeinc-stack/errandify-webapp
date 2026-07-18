@@ -1278,47 +1278,49 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
 
         {/* DASHBOARD - Always show first */}
         {activeSection === 'dashboard' && (
-          <div className="space-y-1.5 px-2">
-            {/* TWO COLUMN LAYOUT - LEFT: ID/Name, RIGHT: Reviews */}
-            <div className="grid grid-cols-2 gap-2">
-              {/* LEFT COLUMN - USER ID & ALIAS - CELEBRATORY */}
+          <div className="space-y-3 px-2">
+            {/* HERO PROFILE CARD - LEFT: ID/Name, RIGHT: Reviews */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              {/* LEFT COLUMN - USER ID & ALIAS */}
               {profileData && (
-                <div className="bg-gradient-to-br from-blue-300 to-cyan-300 rounded-xl p-3 border-2 border-blue-500 shadow-md hover:shadow-lg transition">
-                  <div className="space-y-1.5">
-                    <div className="bg-white rounded-lg p-2 border border-blue-300 shadow-sm">
-                      <p className="text-xs text-blue-700 font-bold">🎫 Your ID</p>
-                      <p className="text-sm font-mono font-bold text-blue-800 break-all">{profileData.formattedUserId || 'N/A'}</p>
+                <div className="lg:col-span-1 bg-gradient-to-br from-orange-100 via-orange-50 to-amber-100 rounded-2xl p-4 border-2 border-orange-300 shadow-lg hover:shadow-xl transition">
+                  <div className="space-y-3">
+                    <div className="bg-white rounded-xl p-3 border-2 border-orange-200 shadow-sm hover:shadow-md transition">
+                      <p className="text-xs font-bold text-orange-700 mb-1">🎫 YOUR ID</p>
+                      <p className="text-lg font-mono font-bold text-orange-900 break-all">{profileData.formattedUserId || 'N/A'}</p>
                     </div>
-                    <div className="bg-white rounded-lg p-2 border border-blue-300 shadow-sm">
-                      <p className="text-xs text-blue-700 font-bold">👤 Name</p>
-                      <p className="text-sm font-bold text-blue-800">@{profileData.alias || 'N/A'}</p>
+                    <div className="bg-white rounded-xl p-3 border-2 border-orange-200 shadow-sm hover:shadow-md transition">
+                      <p className="text-xs font-bold text-orange-700 mb-1">👤 YOUR NAME</p>
+                      <p className="text-base font-bold text-orange-900">@{profileData.alias || profileData.name || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
               )}
 
               {/* RIGHT COLUMN - RATING & REVIEWS - CELEBRATORY */}
-              <div className="bg-gradient-to-br from-yellow-300 via-pink-200 to-orange-300 rounded-2xl p-4 border-3 border-yellow-400 shadow-lg">
+              <div className="lg:col-span-2 bg-gradient-to-br from-pink-200 via-yellow-100 to-orange-200 rounded-2xl p-5 border-3 border-yellow-300 shadow-lg hover:shadow-xl transition">
                 {/* Celebratory Header */}
-                <div className="text-center mb-3">
-                  <p className="text-lg text-yellow-900 font-bold mb-2">🎉 People Love You! 🎉</p>
-                  <div className="flex items-center justify-center gap-2">
-                    <p className="text-4xl font-bold text-yellow-700">{ratings.averageRating.toFixed(1)}</p>
+                <div className="text-center">
+                  <p className="text-2xl font-black text-orange-900 mb-1">✨ People Love You! ✨</p>
+                  <div className="flex items-center justify-center gap-4 mb-3">
+                    <div>
+                      <p className="text-5xl font-black text-orange-700">{ratings.averageRating.toFixed(1)}</p>
+                    </div>
                     <div>
                       <div className="flex gap-1">
                         {[...Array(5)].map((_, i) => (
-                          <span key={i} className="text-lg">{i < Math.floor(ratings.averageRating) ? '⭐' : '✨'}</span>
+                          <span key={i} className="text-2xl">{i < Math.floor(ratings.averageRating) ? '⭐' : '✨'}</span>
                         ))}
                       </div>
-                      <p className="text-xs text-yellow-900 font-bold mt-1">({ratings.reviewCount} reviews) 💝</p>
+                      <p className="text-sm font-bold text-orange-900 mt-2">({ratings.reviewCount} reviews) 💝</p>
                     </div>
                   </div>
 
                   {/* Positive Reviews Count */}
-                  {ratings.reviews && (
-                    <div className="mt-3 flex justify-center gap-4">
-                      <div className="bg-white rounded-full px-3 py-1 shadow-md">
-                        <p className="text-sm font-bold text-green-700">
+                  {ratings.reviews && ratings.reviews.filter((r: any) => r.rating >= 4).length > 0 && (
+                    <div className="mt-3 flex justify-center gap-2">
+                      <div className="bg-white rounded-full px-4 py-2 shadow-md border border-green-300">
+                        <p className="text-base font-bold text-green-700">
                           💚 {ratings.reviews.filter((r: any) => r.rating >= 4).length} Love You
                         </p>
                       </div>
@@ -1328,19 +1330,19 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
 
                 {/* Celebratory Reviews */}
                 {ratings.reviews && ratings.reviews.filter((r: any) => r.rating >= 4).length > 0 && (
-                  <div className="space-y-2">
+                  <div className="mt-4 space-y-2">
                     {ratings.reviews
                       .filter((r: any) => r.rating >= 4)
                       .slice(0, 2)
                       .map((review: any, idx: number) => (
-                        <div key={idx} className="bg-white rounded-xl p-2.5 border-2 border-yellow-300 shadow-md hover:shadow-lg transition transform hover:scale-105">
-                          <div className="flex gap-1 mb-1 justify-center">
+                        <div key={idx} className="bg-white rounded-xl p-3 border-2 border-orange-200 shadow-md hover:shadow-lg transition transform hover:scale-102">
+                          <div className="flex gap-1 mb-2 justify-center">
                             {[...Array(5)].map((_, i) => (
-                              <span key={i} className="text-sm">{i < review.rating ? '⭐' : '✨'}</span>
+                              <span key={i} className="text-base">{i < review.rating ? '⭐' : '✨'}</span>
                             ))}
                           </div>
-                          <p className="text-xs text-gray-800 font-bold line-clamp-2 leading-snug mb-1 italic">"{review.comment || 'Amazing!'}"</p>
-                          <p className="text-xs text-gray-700 font-bold">— {review.author || 'Happy User'} 😊</p>
+                          <p className="text-sm text-gray-800 font-bold line-clamp-2 leading-snug mb-1 italic text-center">"{review.comment || 'Amazing!'}"</p>
+                          <p className="text-xs text-gray-700 font-bold text-center">— {review.author || 'Happy User'} 😊</p>
                         </div>
                       ))}
                   </div>
@@ -1348,47 +1350,46 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
               </div>
             </div>
 
-            {/* DASHBOARD CONTENT */}
-            {/* COMPACT FUN DASHBOARD - HAPPY DESIGN */}
-            <div className="space-y-1">
-
-              {/* STATS GRID - CELEBRATORY */}
-              <div className="grid grid-cols-4 gap-1.5">
-                <div className="bg-gradient-to-b from-amber-300 to-amber-100 rounded-lg p-2 text-center border-2 border-amber-400 hover:shadow-md transition transform hover:scale-105">
-                  <p className="text-lg">👥</p>
-                  <p className="text-base font-bold text-amber-800">{ratings.reviewCount}</p>
-                  <p className="text-xs text-amber-700 font-semibold">Reviews</p>
-                </div>
-                <div className="bg-gradient-to-b from-green-300 to-green-100 rounded-lg p-2 text-center border-2 border-green-400 hover:shadow-md transition transform hover:scale-105">
-                  <p className="text-lg">✅</p>
-                  <p className="text-base font-bold text-green-800">{profileData.completedTasks || 0}</p>
-                  <p className="text-xs text-green-700 font-semibold">Errands</p>
-                </div>
-                <div className="bg-gradient-to-b from-blue-300 to-blue-100 rounded-lg p-2 text-center border-2 border-blue-400 hover:shadow-md transition transform hover:scale-105">
-                  <p className="text-lg">💰</p>
-                  <p className="text-base font-bold text-blue-800">${profileData.totalEarnings || 0}</p>
-                  <p className="text-xs text-blue-700 font-semibold">Earnings</p>
-                </div>
-                <div className="bg-gradient-to-b from-purple-300 to-purple-100 rounded-lg p-2 text-center border-2 border-purple-400 hover:shadow-md transition transform hover:scale-105">
-                  <p className="text-lg">⭐</p>
-                  <p className="text-base font-bold text-purple-800">{profileData.errandifyPoints || 0}</p>
-                  <p className="text-xs text-purple-700 font-semibold">EP</p>
-                </div>
-                <div className="bg-gradient-to-b from-red-300 to-red-100 rounded-lg p-2 text-center border-2 border-red-400 hover:shadow-md transition transform hover:scale-105">
-                  <p className="text-lg">❤️</p>
-                  <p className="text-base font-bold text-red-800">{(profileData as any).timesFavorited || 0}</p>
-                  <p className="text-xs text-red-700 font-semibold">Trusted</p>
-                </div>
+            {/* STATS GRID - VIBRANT & ENGAGING */}
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+              <div className="bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 rounded-xl p-4 text-center border-2 border-amber-500 shadow-lg hover:shadow-xl transition transform hover:scale-110 hover:-translate-y-1">
+                <p className="text-3xl mb-2">👥</p>
+                <p className="text-2xl font-black text-white">{ratings.reviewCount}</p>
+                <p className="text-xs font-bold text-amber-100 mt-1">REVIEWS</p>
               </div>
+              <div className="bg-gradient-to-br from-green-400 via-emerald-400 to-green-500 rounded-xl p-4 text-center border-2 border-green-500 shadow-lg hover:shadow-xl transition transform hover:scale-110 hover:-translate-y-1">
+                <p className="text-3xl mb-2">✅</p>
+                <p className="text-2xl font-black text-white">{profileData.completedTasks || 0}</p>
+                <p className="text-xs font-bold text-green-100 mt-1">ERRANDS</p>
+              </div>
+              <div className="bg-gradient-to-br from-blue-400 via-cyan-400 to-blue-500 rounded-xl p-4 text-center border-2 border-blue-500 shadow-lg hover:shadow-xl transition transform hover:scale-110 hover:-translate-y-1">
+                <p className="text-3xl mb-2">💰</p>
+                <p className="text-2xl font-black text-white">${profileData.totalEarnings || 0}</p>
+                <p className="text-xs font-bold text-blue-100 mt-1">EARNINGS</p>
+              </div>
+              <div className="bg-gradient-to-br from-purple-400 via-pink-400 to-purple-500 rounded-xl p-4 text-center border-2 border-purple-500 shadow-lg hover:shadow-xl transition transform hover:scale-110 hover:-translate-y-1">
+                <p className="text-3xl mb-2">⭐</p>
+                <p className="text-2xl font-black text-white">{profileData.errandifyPoints || 0}</p>
+                <p className="text-xs font-bold text-purple-100 mt-1">EP</p>
+              </div>
+              <div className="bg-gradient-to-br from-red-400 via-pink-400 to-red-500 rounded-xl p-4 text-center border-2 border-red-500 shadow-lg hover:shadow-xl transition transform hover:scale-110 hover:-translate-y-1">
+                <p className="text-3xl mb-2">❤️</p>
+                <p className="text-2xl font-black text-white">{(profileData as any).timesFavorited || 0}</p>
+                <p className="text-xs font-bold text-red-100 mt-1">TRUSTED</p>
+              </div>
+            </div>
 
               {/* REFERRAL BUTTON - CELEBRATORY */}
               <button
                 onClick={() => navigate('/referral')}
-                className="w-full bg-gradient-to-r from-orange-400 via-pink-400 to-red-400 hover:from-orange-500 hover:via-pink-500 hover:to-red-500 rounded-lg p-2.5 shadow-md hover:shadow-lg transition transform active:scale-95 text-white text-center border-2 border-orange-600"
+                className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 hover:from-orange-600 hover:via-pink-600 hover:to-red-600 rounded-xl p-4 shadow-lg hover:shadow-xl transition transform active:scale-95 text-white text-center border-3 border-orange-700"
               >
-                <div className="flex items-center justify-center gap-2">
-                  <p className="text-2xl">🎁</p>
-                  <p className="text-sm font-bold">Refer & Earn! 🚀</p>
+                <div className="flex items-center justify-center gap-3">
+                  <p className="text-3xl">🎁</p>
+                  <div>
+                    <p className="text-lg font-black">Refer & Earn!</p>
+                    <p className="text-xs font-bold">Invite friends & get rewards 🚀</p>
+                  </div>
                 </div>
               </button>
             </div>
