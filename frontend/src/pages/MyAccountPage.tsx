@@ -1278,117 +1278,79 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
 
         {/* DASHBOARD - Always show first */}
         {activeSection === 'dashboard' && (
-          <div className="space-y-3 px-2">
-            {/* HERO PROFILE CARD - LEFT: ID/Name, RIGHT: Reviews */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              {/* LEFT COLUMN - USER ID & ALIAS */}
+          <div className="space-y-2 px-2">
+            {/* COMPACT HERO - ID/Name on left, Rating on right */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* LEFT - ID & NAME */}
               {profileData && (
-                <div className="lg:col-span-1 bg-gradient-to-br from-orange-100 via-orange-50 to-amber-100 rounded-2xl p-4 border-2 border-orange-300 shadow-lg hover:shadow-xl transition">
-                  <div className="space-y-3">
-                    <div className="bg-white rounded-xl p-3 border-2 border-orange-200 shadow-sm hover:shadow-md transition">
-                      <p className="text-xs font-bold text-orange-700 mb-1">🎫 YOUR ID</p>
-                      <p className="text-lg font-mono font-bold text-orange-900 break-all">{profileData.formattedUserId || 'N/A'}</p>
+                <div className="bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl p-3 border-2 border-orange-300 shadow-md">
+                  <div className="space-y-2">
+                    <div className="bg-white rounded-lg p-2 border border-orange-200">
+                      <p className="text-xs font-bold text-orange-700">🎫 YOUR ID</p>
+                      <p className="text-sm font-mono font-bold text-orange-900">{profileData.formattedUserId || 'N/A'}</p>
                     </div>
-                    <div className="bg-white rounded-xl p-3 border-2 border-orange-200 shadow-sm hover:shadow-md transition">
-                      <p className="text-xs font-bold text-orange-700 mb-1">👤 YOUR NAME</p>
-                      <p className="text-base font-bold text-orange-900">@{profileData.alias || profileData.name || 'N/A'}</p>
+                    <div className="bg-white rounded-lg p-2 border border-orange-200">
+                      <p className="text-xs font-bold text-orange-700">👤 NAME</p>
+                      <p className="text-sm font-bold text-orange-900">@{profileData.alias || profileData.name || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* RIGHT COLUMN - RATING & REVIEWS - CELEBRATORY */}
-              <div className="lg:col-span-2 bg-gradient-to-br from-pink-200 via-yellow-100 to-orange-200 rounded-2xl p-5 border-3 border-yellow-300 shadow-lg hover:shadow-xl transition">
-                {/* Celebratory Header */}
+              {/* RIGHT - RATING */}
+              <div className="bg-gradient-to-br from-orange-200 to-orange-100 rounded-xl p-3 border-2 border-orange-300 shadow-md">
                 <div className="text-center">
-                  <p className="text-2xl font-black text-orange-900 mb-1">✨ People Love You! ✨</p>
-                  <div className="flex items-center justify-center gap-4 mb-3">
-                    <div>
-                      <p className="text-5xl font-black text-orange-700">{ratings.averageRating.toFixed(1)}</p>
-                    </div>
-                    <div>
-                      <div className="flex gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <span key={i} className="text-2xl">{i < Math.floor(ratings.averageRating) ? '⭐' : '✨'}</span>
-                        ))}
-                      </div>
-                      <p className="text-sm font-bold text-orange-900 mt-2">({ratings.reviewCount} reviews) 💝</p>
-                    </div>
+                  <p className="text-lg font-black text-orange-900 mb-1">✨ People Love You!</p>
+                  <p className="text-3xl font-black text-orange-700">{ratings.averageRating.toFixed(1)}</p>
+                  <div className="flex gap-0.5 justify-center mb-1">
+                    {[...Array(5)].map((_, i) => (
+                      <span key={i} className="text-sm">{i < Math.floor(ratings.averageRating) ? '⭐' : '✨'}</span>
+                    ))}
                   </div>
-
-                  {/* Positive Reviews Count */}
-                  {ratings.reviews && ratings.reviews.filter((r: any) => r.rating >= 4).length > 0 && (
-                    <div className="mt-3 flex justify-center gap-2">
-                      <div className="bg-white rounded-full px-4 py-2 shadow-md border border-green-300">
-                        <p className="text-base font-bold text-green-700">
-                          💚 {ratings.reviews.filter((r: any) => r.rating >= 4).length} Love You
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                  <p className="text-xs font-bold text-orange-800">({ratings.reviewCount} reviews)</p>
                 </div>
-
-                {/* Celebratory Reviews */}
-                {ratings.reviews && ratings.reviews.filter((r: any) => r.rating >= 4).length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {ratings.reviews
-                      .filter((r: any) => r.rating >= 4)
-                      .slice(0, 2)
-                      .map((review: any, idx: number) => (
-                        <div key={idx} className="bg-white rounded-xl p-3 border-2 border-orange-200 shadow-md hover:shadow-lg transition transform hover:scale-102">
-                          <div className="flex gap-1 mb-2 justify-center">
-                            {[...Array(5)].map((_, i) => (
-                              <span key={i} className="text-base">{i < review.rating ? '⭐' : '✨'}</span>
-                            ))}
-                          </div>
-                          <p className="text-sm text-gray-800 font-bold line-clamp-2 leading-snug mb-1 italic text-center">"{review.comment || 'Amazing!'}"</p>
-                          <p className="text-xs text-gray-700 font-bold text-center">— {review.author || 'Happy User'} 😊</p>
-                        </div>
-                      ))}
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* STATS GRID - VIBRANT & ENGAGING */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-              <div className="bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 rounded-xl p-4 text-center border-2 border-amber-500 shadow-lg hover:shadow-xl transition transform hover:scale-110 hover:-translate-y-1">
-                <p className="text-3xl mb-2">👥</p>
-                <p className="text-2xl font-black text-white">{ratings.reviewCount}</p>
-                <p className="text-xs font-bold text-amber-100 mt-1">REVIEWS</p>
+            {/* STATS GRID - 5 CARDS IN ONE ROW, ORANGE THEME */}
+            <div className="grid grid-cols-5 gap-1.5">
+              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg p-2 text-center border border-orange-600 shadow-md">
+                <p className="text-2xl mb-1">👥</p>
+                <p className="text-lg font-black text-white">{ratings.reviewCount}</p>
+                <p className="text-xs font-bold text-orange-100">Reviews</p>
               </div>
-              <div className="bg-gradient-to-br from-green-400 via-emerald-400 to-green-500 rounded-xl p-4 text-center border-2 border-green-500 shadow-lg hover:shadow-xl transition transform hover:scale-110 hover:-translate-y-1">
-                <p className="text-3xl mb-2">✅</p>
-                <p className="text-2xl font-black text-white">{profileData.completedTasks || 0}</p>
-                <p className="text-xs font-bold text-green-100 mt-1">ERRANDS</p>
+              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg p-2 text-center border border-orange-600 shadow-md">
+                <p className="text-2xl mb-1">✅</p>
+                <p className="text-lg font-black text-white">{profileData.completedTasks || 0}</p>
+                <p className="text-xs font-bold text-orange-100">Errands</p>
               </div>
-              <div className="bg-gradient-to-br from-blue-400 via-cyan-400 to-blue-500 rounded-xl p-4 text-center border-2 border-blue-500 shadow-lg hover:shadow-xl transition transform hover:scale-110 hover:-translate-y-1">
-                <p className="text-3xl mb-2">💰</p>
-                <p className="text-2xl font-black text-white">${profileData.totalEarnings || 0}</p>
-                <p className="text-xs font-bold text-blue-100 mt-1">EARNINGS</p>
+              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg p-2 text-center border border-orange-600 shadow-md">
+                <p className="text-2xl mb-1">💰</p>
+                <p className="text-lg font-black text-white">${profileData.totalEarnings || 0}</p>
+                <p className="text-xs font-bold text-orange-100">Earnings</p>
               </div>
-              <div className="bg-gradient-to-br from-purple-400 via-pink-400 to-purple-500 rounded-xl p-4 text-center border-2 border-purple-500 shadow-lg hover:shadow-xl transition transform hover:scale-110 hover:-translate-y-1">
-                <p className="text-3xl mb-2">⭐</p>
-                <p className="text-2xl font-black text-white">{profileData.errandifyPoints || 0}</p>
-                <p className="text-xs font-bold text-purple-100 mt-1">EP</p>
+              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg p-2 text-center border border-orange-600 shadow-md">
+                <p className="text-2xl mb-1">⭐</p>
+                <p className="text-lg font-black text-white">{profileData.errandifyPoints || 0}</p>
+                <p className="text-xs font-bold text-orange-100">EP</p>
               </div>
-              <div className="bg-gradient-to-br from-red-400 via-pink-400 to-red-500 rounded-xl p-4 text-center border-2 border-red-500 shadow-lg hover:shadow-xl transition transform hover:scale-110 hover:-translate-y-1">
-                <p className="text-3xl mb-2">❤️</p>
-                <p className="text-2xl font-black text-white">{(profileData as any).timesFavorited || 0}</p>
-                <p className="text-xs font-bold text-red-100 mt-1">TRUSTED</p>
+              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg p-2 text-center border border-orange-600 shadow-md">
+                <p className="text-2xl mb-1">❤️</p>
+                <p className="text-lg font-black text-white">{(profileData as any).timesFavorited || 0}</p>
+                <p className="text-xs font-bold text-orange-100">Trusted</p>
               </div>
             </div>
 
-            {/* REFERRAL BUTTON - CELEBRATORY */}
+            {/* REFERRAL BUTTON - COMPACT */}
             <button
               onClick={() => navigate('/referral')}
-              className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 hover:from-orange-600 hover:via-pink-600 hover:to-red-600 rounded-xl p-4 shadow-lg hover:shadow-xl transition transform active:scale-95 text-white text-center border-3 border-orange-700"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded-lg p-3 shadow-md hover:shadow-lg transition text-white text-center border-2 border-orange-700"
             >
-              <div className="flex items-center justify-center gap-3">
-                <p className="text-3xl">🎁</p>
-                <div>
-                  <p className="text-lg font-black">Refer & Earn!</p>
-                  <p className="text-xs font-bold">Invite friends & get rewards 🚀</p>
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-2xl">🎁</p>
+                <div className="text-left">
+                  <p className="text-sm font-black">Refer & Earn!</p>
+                  <p className="text-xs font-bold">Invite friends & rewards</p>
                 </div>
               </div>
             </button>
