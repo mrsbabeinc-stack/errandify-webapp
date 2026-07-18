@@ -199,7 +199,6 @@ export default function ReferralPage() {
             <div className="bg-orange-50 rounded-lg p-2 shadow-sm border border-orange-300 text-center">
               <p className="text-xs font-bold text-orange-800">💡 3 Steps: Share → Sign Up → Earn! +50 EP each</p>
             </div>
-            </div>
 
             {/* Share Modal */}
             {showShareModal && referralData && (
