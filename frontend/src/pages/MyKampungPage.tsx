@@ -754,17 +754,17 @@ export default function MyKampungPage() {
   }
 
   return (
-    <div style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 100%)', minHeight: '100vh', paddingBottom: '100px', paddingTop: '8px', paddingLeft: '16px', paddingRight: '16px'}}>
-      <button onClick={() => navigate(-1)} style={{fontSize: '16px', fontWeight: '700', color: '#FF6B35', background: 'none', border: 'none', cursor: 'pointer', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '4px'}}>← Back</button>
+    <div style={{background: 'linear-gradient(to bottom, #FFFBF8 0%, #FFF6F0 50%, #FFE8D6 100%)', minHeight: '100vh', paddingBottom: '100px', paddingTop: '8px', paddingLeft: '16px', paddingRight: '16px'}}>
+      <button onClick={() => navigate(-1)} style={{fontSize: '16px', fontWeight: '700', color: '#FF6B35', background: 'none', border: 'none', cursor: 'pointer', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '4px', padding: 0}}>← Back</button>
 
-      <div style={{marginBottom: '16px'}}>
-        <h1 style={{fontSize: '28px', fontWeight: '700', color: '#333', margin: '0 0 4px 0'}}>🏘️ MyKampung</h1>
-        <p style={{fontSize: '13px', color: '#666', margin: 0}}>Your neighbourhood community</p>
+      <div style={{marginBottom: '20px', paddingBottom: '16px', borderBottom: '2px solid rgba(255, 107, 53, 0.15)'}}>
+        <h1 style={{fontSize: '32px', fontWeight: '800', color: '#2D2D2D', margin: '0 0 4px 0', letterSpacing: '-0.5px'}}>🏘️ MyKampung</h1>
+        <p style={{fontSize: '14px', color: '#666', margin: 0, fontWeight: '500'}}>Your neighbourhood community</p>
       </div>
 
       <div className="w-full" style={{maxWidth: '1200px', margin: '0 auto'}}>
         {/* Tab Navigation */}
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-2" style={{marginBottom: '16px'}}>
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-2" style={{marginBottom: '20px', paddingBottom: '12px'}}>
           <button
             onClick={() => setActiveTab('feed')}
             style={{
