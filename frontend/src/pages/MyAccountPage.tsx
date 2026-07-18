@@ -1168,39 +1168,38 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
   const badges = ratings.averageRating >= 4.8 ? [{ icon: '⭐' }] : [];
 
   return (
-    <AdminThemeWrapper title="⚙️ My Account" showBackButton onBack={() => navigate(-1)}>
-      {/* HEADER - Matches Layout Style */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center relative sticky top-0 z-50">
-
-        {/* MyAccount Title - Centered Absolute */}
-        <h1 className="absolute left-1/2 transform -translate-x-1/2 text-lg font-bold text-errandify-brown">MyAccount</h1>
-
-        {/* Profile & Logout - Same as Layout */}
-        <div className="flex items-center gap-2">
-          {/* Profile Photo */}
-          {(profileImage || headerProfile?.profileImage) ? (
-            <img
-              src={profileImage || headerProfile?.profileImage}
-              alt="Profile"
-              className="w-8 h-8 rounded-full object-cover border border-gray-300"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-errandify-orange flex items-center justify-center text-white text-xs font-bold">
-              {(headerProfile?.name || profileData?.name)?.charAt(0).toUpperCase() || 'U'}
-            </div>
-          )}
-          {/* User Alias/Name */}
-          <span className="text-sm font-semibold text-gray-700 max-w-[100px] truncate">
-            {headerProfile?.name || profileData?.name || 'User'}
-          </span>
-          {/* Logout Button */}
-          <button
-            onClick={handleLogout}
-            className="px-3 py-1 text-sm font-semibold text-white bg-errandify-orange hover:bg-orange-600 rounded-lg transition-colors"
-          >
-            Logout
-          </button>
-        </div>
+    <AdminThemeWrapper
+      title="⚙️ My Account"
+      subtitle="Manage your profile and preferences"
+      showBackButton
+      onBack={() => navigate(-1)}
+      style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 50%, #FFE8D6 100%)'}}
+    >
+      {/* HEADER - Profile & Logout on Top Right */}
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex justify-end items-center sticky top-0 z-50">
+        {/* Profile Photo */}
+        {(profileImage || headerProfile?.profileImage) ? (
+          <img
+            src={profileImage || headerProfile?.profileImage}
+            alt="Profile"
+            className="w-10 h-10 rounded-full object-cover border-2 border-errandify-orange"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-errandify-orange flex items-center justify-center text-white text-sm font-bold">
+            {(headerProfile?.name || profileData?.name)?.charAt(0).toUpperCase() || 'U'}
+          </div>
+        )}
+        {/* User Name */}
+        <span className="text-sm font-bold text-gray-800 ml-3 mr-4 max-w-[120px] truncate">
+          {headerProfile?.name || profileData?.name || 'User'}
+        </span>
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 text-sm font-bold text-white bg-errandify-orange hover:bg-orange-600 rounded-lg transition-colors shadow-md"
+        >
+          Logout
+        </button>
       </div>
 
       {/* MAIN CONTENT */}
