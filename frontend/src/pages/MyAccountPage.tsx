@@ -1168,15 +1168,9 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
   const badges = ratings.averageRating >= 4.8 ? [{ icon: '⭐' }] : [];
 
   return (
-    <AdminThemeWrapper
-      title="⚙️ My Account"
-      subtitle="Manage your profile and preferences"
-      showBackButton
-      onBack={() => navigate(-1)}
-      style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 50%, #FFE8D6 100%)'}}
-    >
-      {/* HEADER - Profile & Logout on Top Right */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex justify-end items-center sticky top-0 z-50">
+    <>
+      {/* TOP RIGHT HEADER - Profile & Logout */}
+      <div className="fixed top-0 right-0 bg-white border-b border-l border-gray-200 px-4 py-3 flex items-center gap-3 z-50 shadow-sm">
         {/* Profile Photo */}
         {(profileImage || headerProfile?.profileImage) ? (
           <img
@@ -1190,7 +1184,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
           </div>
         )}
         {/* User Name */}
-        <span className="text-sm font-bold text-gray-800 ml-3 mr-4 max-w-[120px] truncate">
+        <span className="text-sm font-bold text-gray-800 max-w-[120px] truncate">
           {headerProfile?.name || profileData?.name || 'User'}
         </span>
         {/* Logout Button */}
@@ -1201,6 +1195,14 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
           Logout
         </button>
       </div>
+
+    <AdminThemeWrapper
+      title="⚙️ My Account"
+      subtitle="Manage your profile and preferences"
+      showBackButton
+      onBack={() => navigate(-1)}
+      style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 50%, #FFE8D6 100%)'}}
+    >
 
       {/* MAIN CONTENT */}
       <div className="max-w-6xl mx-auto px-4 py-6 w-full">
@@ -4181,6 +4183,7 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
       {/* Floating Hana */}
       <HanaCustomerService />
     </AdminThemeWrapper>
+    </>
   );
 }
 
