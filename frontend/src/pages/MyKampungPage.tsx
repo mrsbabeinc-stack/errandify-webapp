@@ -757,9 +757,9 @@ export default function MyKampungPage() {
     <div style={{background: 'linear-gradient(to bottom, #FFFBF8 0%, #FFF6F0 50%, #FFE8D6 100%)', minHeight: '100vh', paddingBottom: '100px', paddingTop: '8px', paddingLeft: '16px', paddingRight: '16px'}}>
       <button onClick={() => navigate(-1)} style={{fontSize: '16px', fontWeight: '700', color: '#FF6B35', background: 'none', border: 'none', cursor: 'pointer', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '4px', padding: 0}}>← Back</button>
 
-      <div style={{marginBottom: '20px', paddingBottom: '16px', borderBottom: '2px solid rgba(255, 107, 53, 0.15)'}}>
-        <h1 style={{fontSize: '32px', fontWeight: '800', color: '#2D2D2D', margin: '0 0 4px 0', letterSpacing: '-0.5px'}}>🏘️ MyKampung</h1>
-        <p style={{fontSize: '14px', color: '#666', margin: 0, fontWeight: '500'}}>Your neighbourhood community</p>
+      <div style={{marginBottom: '24px', paddingBottom: '16px', borderBottom: '3px solid rgba(255, 107, 53, 0.2)'}}>
+        <h1 style={{fontSize: '40px', fontWeight: '900', color: '#1a1a1a', margin: '0 0 6px 0', letterSpacing: '-1px'}}>🏘️ MyKampung</h1>
+        <p style={{fontSize: '16px', color: '#555', margin: 0, fontWeight: '600'}}>Your neighbourhood community</p>
       </div>
 
       <div className="w-full" style={{maxWidth: '1200px', margin: '0 auto'}}>
@@ -768,17 +768,17 @@ export default function MyKampungPage() {
           <button
             onClick={() => setActiveTab('feed')}
             style={{
-              padding: '8px 14px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: '700',
+              padding: '10px 16px',
+              borderRadius: '10px',
+              fontSize: '15px',
+              fontWeight: '800',
               whiteSpace: 'nowrap',
-              border: activeTab === 'feed' ? 'none' : '1.5px solid #FFE0D6',
+              border: activeTab === 'feed' ? 'none' : '2px solid #FFD6B8',
               cursor: 'pointer',
-              transition: 'all 0.2s',
-              background: activeTab === 'feed' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)',
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              background: activeTab === 'feed' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255,245,240,0.8) 0%, rgba(255,232,214,0.6) 100%)',
               color: activeTab === 'feed' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'feed' ? '0 3px 10px rgba(255, 107, 53, 0.25)' : '0 2px 6px rgba(255, 107, 53, 0.08)',
+              boxShadow: activeTab === 'feed' ? '0 4px 12px rgba(255, 107, 53, 0.3)' : '0 2px 8px rgba(255, 107, 53, 0.1)',
             }}
             onMouseEnter={(e) => {if (activeTab !== 'feed') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.8) 0%, rgba(255,200,160,0.6) 100%)'; e.currentTarget.style.transform = 'translateY(-2px)';}} }
             onMouseLeave={(e) => {if (activeTab !== 'feed') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)'; e.currentTarget.style.transform = 'translateY(0)';}} }
