@@ -1170,8 +1170,8 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
 
   return (
     <AdminThemeWrapper
-      title="⚙️ My Account"
-      subtitle="Manage your profile and preferences"
+      title="👤 MyAccount"
+      subtitle="Your space to shine! Update your profile, preferences & achievements"
       showBackButton
       onBack={() => navigate(-1)}
       style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 50%, #FFE8D6 100%)'}}
