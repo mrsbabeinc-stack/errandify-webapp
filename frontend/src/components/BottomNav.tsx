@@ -100,14 +100,15 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
       bottom: 0,
       left: 0,
       right: 0,
-      background: 'linear-gradient(180deg, rgba(255,250,247,0.98) 0%, rgba(252,240,233,1) 100%)',
-      borderTop: '1px solid rgba(255, 107, 53, 0.15)',
-      boxShadow: '0 -12px 40px rgba(255, 107, 53, 0.12), 0 -2px 8px rgba(255, 107, 53, 0.06)',
+      background: 'linear-gradient(180deg, #FFFFFF 0%, #FFF9F5 50%, #FFF0E6 100%)',
+      borderTop: '2px solid transparent',
+      borderImage: 'linear-gradient(90deg, #FFB366 0%, #FF6B35 50%, #FFB366 100%) 1',
+      boxShadow: '0 -20px 60px rgba(255, 107, 53, 0.15), 0 -8px 24px rgba(255, 107, 53, 0.08)',
       zIndex: 40,
-      backdropFilter: 'blur(10px)',
+      backdropFilter: 'blur(20px)',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     }}>
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '90px', padding: '12px 8px 16px 8px', position: 'relative'}}>
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '100px', padding: '16px 12px 20px 12px', position: 'relative'}}>
         {/* Navigation Items */}
         <div style={{display: 'flex', justifyContent: 'space-around', alignItems: 'center', width: '100%', gap: '4px', position: 'relative'}}>
           {navItems.map((item, index) => {
@@ -123,27 +124,29 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '6px',
-                    padding: '10px',
-                    borderRadius: '14px',
+                    gap: '8px',
+                    padding: '10px 14px',
+                    borderRadius: '18px',
                     transition: 'all 0.2s',
                     fontSize: '12px',
                     flex: 1,
-                    color: '#CCC',
+                    color: '#D1D5DB',
                     cursor: 'not-allowed',
-                    opacity: 0.5,
+                    opacity: 0.6,
+                    background: 'linear-gradient(135deg, rgba(255, 245, 240, 0.4) 0%, rgba(255, 232, 214, 0.2) 100%)',
+                    minWidth: '60px',
                   }}
                 >
                   {item.image ? (
                     <img
                       src={item.image}
                       alt={item.label}
-                      style={{width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover'}}
+                      style={{width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', opacity: 0.6}}
                     />
                   ) : (
-                    <span style={{fontSize: '28px'}}>{item.icon}</span>
+                    <span style={{fontSize: '32px', opacity: 0.6}}>{item.icon}</span>
                   )}
-                  <span style={{fontSize: '12px', fontWeight: '600', fontFamily: 'inherit'}}>{item.label}</span>
+                  <span style={{fontSize: '11px', fontWeight: '700', fontFamily: 'inherit'}}>{item.label}</span>
                 </div>
               );
             }
@@ -157,40 +160,42 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px',
-                  padding: '10px 14px',
-                  borderRadius: '14px',
+                  gap: '8px',
+                  padding: active ? '12px 16px' : '10px 14px',
+                  borderRadius: '18px',
                   transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   fontSize: '12px',
                   flex: 1,
                   position: 'relative',
                   textDecoration: 'none',
-                  color: active ? 'white' : '#444',
+                  color: active ? 'white' : '#555',
                   background: active
-                    ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)'
-                    : 'linear-gradient(135deg, rgba(255,245,240,0.6) 0%, rgba(255,232,214,0.4) 100%)',
+                    ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 50%, #FF9D7A 100%)'
+                    : 'linear-gradient(135deg, rgba(255, 245, 240, 0.8) 0%, rgba(255, 232, 214, 0.6) 100%)',
                   boxShadow: active
-                    ? '0 8px 24px rgba(255, 107, 53, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                    : '0 4px 12px rgba(255, 107, 53, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
-                  fontWeight: active ? '700' : '600',
-                  border: active ? 'none' : '1px solid rgba(255, 107, 53, 0.1)',
+                    ? '0 12px 32px rgba(255, 107, 53, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.4), inset 0 -2px 0 rgba(0, 0, 0, 0.1)'
+                    : '0 6px 20px rgba(255, 107, 53, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
+                  fontWeight: active ? '800' : '700',
+                  border: active ? 'none' : '1px solid rgba(255, 107, 53, 0.15)',
+                  cursor: 'pointer',
+                  minWidth: '60px',
                 }}
                 onMouseEnter={(e) => {
                   if (!active) {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.8) 0%, rgba(255,200,160,0.6) 100%)';
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
-                    e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 232, 214, 1) 0%, rgba(255, 200, 160, 0.8) 100%)';
+                    e.currentTarget.style.boxShadow = '0 10px 28px rgba(255, 107, 53, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
+                    e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)';
                   } else {
-                    e.currentTarget.style.transform = 'translateY(-3px)';
-                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(255, 107, 53, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 16px 40px rgba(255, 107, 53, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.4), inset 0 -2px 0 rgba(0, 0, 0, 0.1)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!active) {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.6) 0%, rgba(255,232,214,0.4) 100%)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 245, 240, 0.8) 0%, rgba(255, 232, 214, 0.6) 100%)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)';
                   } else {
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 107, 53, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(255, 107, 53, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.4), inset 0 -2px 0 rgba(0, 0, 0, 0.1)';
                   }
                   e.currentTarget.style.transform = 'translateY(0) scale(1)';
                 }}
@@ -200,16 +205,17 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                     src={item.image}
                     alt={item.label}
                     style={{
-                      width: '28px',
-                      height: '28px',
+                      width: '32px',
+                      height: '32px',
                       borderRadius: '50%',
                       objectFit: 'cover',
-                      border: active ? '2px solid white' : 'none',
+                      border: active ? '3px solid white' : '2px solid rgba(255, 107, 53, 0.2)',
                       transition: 'all 0.3s',
+                      boxShadow: active ? '0 4px 12px rgba(255, 107, 53, 0.2)' : 'none',
                     }}
                   />
                 ) : (
-                  <span style={{fontSize: '28px', transition: 'transform 0.3s'}}>
+                  <span style={{fontSize: '32px', transition: 'transform 0.3s', lineHeight: 1}}>
                     {item.icon}
                   </span>
                 )}
@@ -217,26 +223,26 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                 {item.label === 'Chat' && unreadCount > 0 && (
                   <div style={{
                     position: 'absolute',
-                    top: '-2px',
-                    right: '2px',
-                    background: '#E63946',
+                    top: '-4px',
+                    right: '-4px',
+                    background: 'linear-gradient(135deg, #E63946 0%, #D62828 100%)',
                     color: 'white',
                     borderRadius: '50%',
-                    width: '24px',
-                    height: '24px',
+                    width: '28px',
+                    height: '28px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '12px',
-                    fontWeight: '700',
-                    border: '2px solid white',
-                    boxShadow: '0 3px 10px rgba(0, 0, 0, 0.15)',
+                    fontWeight: '800',
+                    border: '3px solid white',
+                    boxShadow: '0 4px 14px rgba(230, 57, 70, 0.4)',
                     animation: 'pulse 2s infinite',
                   }}>
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </div>
                 )}
-                <span style={{fontSize: '12px', fontWeight: '700', letterSpacing: '0.3px', fontFamily: 'inherit'}}>{item.label}</span>
+                <span style={{fontSize: '11px', fontWeight: '800', letterSpacing: '0.5px', fontFamily: 'inherit', textAlign: 'center'}}>{item.label}</span>
               </Link>
             );
           })}
@@ -248,28 +254,32 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
               style={{
                 position: 'absolute',
                 left: '50%',
-                bottom: '70px',
+                bottom: '75px',
                 transform: 'translateX(-50%)',
-                width: '68px',
-                height: '68px',
-                background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
+                width: '76px',
+                height: '76px',
+                background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 50%, #FF9D7A 100%)',
                 color: 'white',
-                borderRadius: '20px',
-                border: '3px solid white',
-                boxShadow: '0 12px 40px rgba(255, 107, 53, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.1)',
+                borderRadius: '24px',
+                border: '4px solid white',
+                boxShadow: '0 16px 48px rgba(255, 107, 53, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.5), 0 -2px 0 rgba(0, 0, 0, 0.1)',
                 cursor: 'pointer',
-                fontWeight: '800',
-                fontSize: '36px',
+                fontWeight: '900',
+                fontSize: '40px',
                 transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                 zIndex: 50,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                lineHeight: 1,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateX(-50%) translateY(-10px) scale(1.15)';
-                e.currentTarget.style.boxShadow = '0 18px 48px rgba(255, 107, 53, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 8px 20px rgba(0, 0, 0, 0.12)';
+                e.currentTarget.style.transform = 'translateX(-50%) translateY(-12px) scale(1.18)';
+                e.currentTarget.style.boxShadow = '0 22px 56px rgba(255, 107, 53, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.5), 0 -2px 0 rgba(0, 0, 0, 0.12)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateX(-50%) translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 12px 40px rgba(255, 107, 53, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.1)';
+                e.currentTarget.style.boxShadow = '0 16px 48px rgba(255, 107, 53, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.5), 0 -2px 0 rgba(0, 0, 0, 0.1)';
               }}
               title="Create new errand"
             >
