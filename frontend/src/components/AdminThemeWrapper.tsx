@@ -39,16 +39,22 @@ export default function AdminThemeWrapper({
       const role = (localStorage.getItem('userRole') || 'asker') as 'asker' | 'doer';
       setUserRole(role);
 
+      console.log('[AdminThemeWrapper] Loading user from localStorage:', userStr ? 'user found' : 'no user');
+
       if (userStr) {
         try {
           const user = JSON.parse(userStr);
+          console.log('[AdminThemeWrapper] Parsed user:', user);
           setUserProfile(user);
           if (profileImg) {
             setProfileImage(profileImg);
           }
         } catch (e) {
           console.error('Failed to parse user profile:', e);
+          setUserProfile(null);
         }
+      } else {
+        setUserProfile(null);
       }
     };
 
@@ -75,7 +81,13 @@ export default function AdminThemeWrapper({
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('userId');
-    navigate('/auth');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('current_role');
+    localStorage.removeItem('singpass_state');
+    localStorage.removeItem('singpass_nonce');
+    localStorage.removeItem('singpass_mode');
+    localStorage.removeItem('isAuthenticated');
+    window.location.href = '/auth';
   };
 
   return (

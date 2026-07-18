@@ -77,6 +77,14 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
+    id: 'growth-acquisition',
+    label: 'Growth & Acquisition',
+    icon: '📈',
+    children: [
+      { id: 'referral-tracking', label: 'Referral Tracking', icon: '🎁', path: '/admin/referral-tracking' },
+    ]
+  },
+  {
     id: 'communications',
     label: 'Communications (Marcom)',
     icon: '📧',

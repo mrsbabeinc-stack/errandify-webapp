@@ -15,16 +15,18 @@ interface ReferralConversion {
   id: string;
   referrerId: string;
   referrerAlias: string;
+  referrerType: 'individual' | 'company';
   referredAlias: string;
   signupDate: string;
-  tasksCompleted: number;
+  errandsCompleted: number;
   epEarned: number;
   status: 'pending' | 'active' | 'inactive';
 }
 
 export default function ReferralTracking() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'analytics'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'analytics' | 'performance'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
+  const [timePeriod, setTimePeriod] = useState<'daily' | 'weekly' | 'monthly' | 'all'>('weekly');
 
   // Mock data
   const referralUsers: ReferralUser[] = [
@@ -65,30 +67,33 @@ export default function ReferralTracking() {
       id: '1',
       referrerId: '1',
       referrerAlias: 'Sarah Tan',
+      referrerType: 'individual',
       referredAlias: 'Mike Johnson',
       signupDate: '2024-07-18',
-      tasksCompleted: 5,
-      epEarned: 100,
+      errandsCompleted: 5,
+      epEarned: 350,
       status: 'active',
     },
     {
       id: '2',
       referrerId: '1',
       referrerAlias: 'Sarah Tan',
+      referrerType: 'individual',
       referredAlias: 'Alex Chen',
       signupDate: '2024-07-17',
-      tasksCompleted: 2,
-      epEarned: 100,
+      errandsCompleted: 2,
+      epEarned: 150,
       status: 'active',
     },
     {
       id: '3',
       referrerId: '2',
-      referrerAlias: 'John Doe',
+      referrerAlias: 'Acme Corp',
+      referrerType: 'company',
       referredAlias: 'Lisa Wong',
       signupDate: '2024-07-16',
-      tasksCompleted: 0,
-      epEarned: 0,
+      errandsCompleted: 0,
+      epEarned: 50,
       status: 'pending',
     },
   ];
@@ -114,12 +119,12 @@ export default function ReferralTracking() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b-2 border-orange-300">
-          {(['overview', 'users', 'analytics'] as const).map((tab) => (
+        <div className="flex gap-2 mb-6 border-b-2 border-orange-300 overflow-x-auto">
+          {(['overview', 'users', 'analytics', 'performance'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 font-bold text-sm transition ${
+              className={`px-4 py-2 font-bold text-sm transition whitespace-nowrap ${
                 activeTab === tab
                   ? 'bg-orange-500 text-white rounded-t-lg'
                   : 'text-orange-800 hover:text-orange-900'
@@ -128,6 +133,7 @@ export default function ReferralTracking() {
               {tab === 'overview' && '📊 Overview'}
               {tab === 'users' && '👥 Users'}
               {tab === 'analytics' && '📈 Analytics'}
+              {tab === 'performance' && '🎯 Performance'}
             </button>
           ))}
         </div>
@@ -178,6 +184,7 @@ export default function ReferralTracking() {
                     <div className="text-right">
                       <p className="font-black text-orange-600">{user.totalReferrals}</p>
                       <p className="text-xs text-orange-700">referrals</p>
+                      <p className="text-xs text-orange-600 font-bold">{user.totalEarnings} EP from them</p>
                     </div>
                   </div>
                 ))}
@@ -234,28 +241,151 @@ export default function ReferralTracking() {
         {activeTab === 'analytics' && (
           <div className="space-y-4">
             <div className="bg-white rounded-lg p-4 shadow border-2 border-orange-300">
-              <h2 className="text-lg font-bold text-orange-800 mb-3">📈 Referral Conversions</h2>
+              <h2 className="text-lg font-bold text-orange-800 mb-3">📈 Referral Engagement & Earnings</h2>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {conversions.map((conv) => (
                   <div key={conv.id} className="flex items-center justify-between p-2 bg-orange-50 rounded border border-orange-200 text-xs">
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-gray-800">{conv.referrerAlias} → {conv.referredAlias}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-bold text-gray-800">{conv.referrerAlias} → {conv.referredAlias}</p>
+                        <span className={`px-1 py-0.5 rounded text-xs font-bold ${
+                          conv.referrerType === 'company'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {conv.referrerType === 'company' ? '🏢' : '👤'}
+                        </span>
+                      </div>
                       <p className="text-gray-600">{new Date(conv.signupDate).toLocaleDateString()}</p>
                     </div>
                     <div className="flex items-center gap-2 ml-2">
-                      <span className={`px-1.5 py-0.5 rounded font-bold text-xs ${
+                      <span className={`px-1.5 py-0.5 rounded font-bold text-xs whitespace-nowrap ${
                         conv.status === 'active' ? 'bg-green-500 text-white' :
                         conv.status === 'pending' ? 'bg-yellow-500 text-white' :
                         'bg-gray-400 text-white'
                       }`}>
-                        {conv.status === 'active' ? '✓ Active' :
-                         conv.status === 'pending' ? '⏳ Pending' :
-                         '✕ Inactive'}
+                        {conv.status === 'active' ? '✓' : conv.status === 'pending' ? '⏳' : '✕'}
                       </span>
-                      <span className="font-bold text-orange-600">{conv.tasksCompleted} tasks</span>
+                      <span className="font-bold text-orange-600 whitespace-nowrap">{conv.errandsCompleted} errands • {conv.epEarned} EP</span>
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PERFORMANCE ANALYSIS TAB */}
+        {activeTab === 'performance' && (
+          <div className="space-y-4">
+            {/* Period Selector */}
+            <div className="bg-white rounded-lg p-4 shadow border-2 border-orange-300">
+              <div className="flex gap-2 mb-4">
+                {(['daily', 'weekly', 'monthly', 'all'] as const).map((period) => (
+                  <button
+                    key={period}
+                    onClick={() => setTimePeriod(period)}
+                    className={`px-3 py-1.5 rounded text-sm font-bold transition ${
+                      timePeriod === period
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
+                    }`}
+                  >
+                    {period === 'daily' && '📅 Daily'}
+                    {period === 'weekly' && '📊 Weekly'}
+                    {period === 'monthly' && '📈 Monthly'}
+                    {period === 'all' && '⏱️ All-Time'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Individual vs Company Breakdown */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white rounded-lg p-4 shadow border-2 border-blue-300">
+                <p className="text-xs text-blue-700 font-bold mb-1">👤 Individual Referrers</p>
+                <p className="text-2xl font-black text-blue-600">{conversions.filter(c => c.referrerType === 'individual').length}</p>
+                <p className="text-xs text-blue-600 mt-1">Active conversions</p>
+                <p className="text-xs text-blue-700 font-bold mt-2">Avg: {(conversions.filter(c => c.referrerType === 'individual').reduce((s, c) => s + c.errandsCompleted, 0) / Math.max(conversions.filter(c => c.referrerType === 'individual').length, 1)).toFixed(1)} errands/person</p>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow border-2 border-purple-300">
+                <p className="text-xs text-purple-700 font-bold mb-1">🏢 Company Referrers</p>
+                <p className="text-2xl font-black text-purple-600">{conversions.filter(c => c.referrerType === 'company').length}</p>
+                <p className="text-xs text-purple-600 mt-1">Active conversions</p>
+                <p className="text-xs text-purple-700 font-bold mt-2">Avg: {(conversions.filter(c => c.referrerType === 'company').reduce((s, c) => s + c.errandsCompleted, 0) / Math.max(conversions.filter(c => c.referrerType === 'company').length, 1)).toFixed(1)} errands/person</p>
+              </div>
+            </div>
+
+            {/* Conversion Funnel */}
+            <div className="bg-white rounded-lg p-4 shadow border-2 border-orange-300">
+              <h2 className="text-lg font-bold text-orange-800 mb-3">🎯 Conversion Funnel</h2>
+              <div className="space-y-2">
+                <div className="p-3 bg-blue-50 rounded border border-blue-200">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-blue-900">QR Code Scans → Signups</span>
+                    <span className="text-blue-700 font-black">{conversions.length} signups</span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div className="bg-blue-500 h-2 rounded-full" style={{width: '100%'}}></div>
+                  </div>
+                  <p className="text-xs text-blue-700 mt-1">100% - All referred users signed up</p>
+                </div>
+
+                <div className="p-3 bg-green-50 rounded border border-green-200">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-green-900">Signups → Active (1+ errand)</span>
+                    <span className="text-green-700 font-black">{conversions.filter(c => c.errandsCompleted > 0).length}/{conversions.length}</span>
+                  </div>
+                  <div className="w-full bg-green-200 rounded-full h-2">
+                    <div className="bg-green-500 h-2 rounded-full" style={{width: `${(conversions.filter(c => c.errandsCompleted > 0).length / conversions.length * 100)}%`}}></div>
+                  </div>
+                  <p className="text-xs text-green-700 mt-1">{((conversions.filter(c => c.errandsCompleted > 0).length / conversions.length) * 100).toFixed(0)}% activation rate</p>
+                </div>
+
+                <div className="p-3 bg-orange-50 rounded border border-orange-200">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-orange-900">Active → High Value (5+ errands)</span>
+                    <span className="text-orange-700 font-black">{conversions.filter(c => c.errandsCompleted >= 5).length}/{conversions.length}</span>
+                  </div>
+                  <div className="w-full bg-orange-200 rounded-full h-2">
+                    <div className="bg-orange-500 h-2 rounded-full" style={{width: `${(conversions.filter(c => c.errandsCompleted >= 5).length / conversions.length * 100)}%`}}></div>
+                  </div>
+                  <p className="text-xs text-orange-700 mt-1">{((conversions.filter(c => c.errandsCompleted >= 5).length / conversions.length) * 100).toFixed(0)}% high value rate</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Key Insights & Recommendations */}
+            <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-4 shadow border-2 border-orange-300">
+              <h2 className="text-lg font-bold text-orange-900 mb-3">💡 Key Insights & Growth Recommendations</h2>
+              <div className="space-y-2 text-sm">
+                <div className="p-2 bg-white rounded border-l-4 border-blue-500">
+                  <p className="font-bold text-blue-900">📊 Individual vs Company Performance</p>
+                  <p className="text-gray-700 text-xs mt-1">
+                    Individual referrers show higher engagement ({(conversions.filter(c => c.referrerType === 'individual').reduce((s, c) => s + c.errandsCompleted, 0) / Math.max(conversions.filter(c => c.referrerType === 'individual').length, 1)).toFixed(1)} avg errands) vs companies ({(conversions.filter(c => c.referrerType === 'company').reduce((s, c) => s + c.errandsCompleted, 0) / Math.max(conversions.filter(c => c.referrerType === 'company').length, 1)).toFixed(1)} avg). <strong>Action: Promote B2C referrals with personal incentives.</strong>
+                  </p>
+                </div>
+
+                <div className="p-2 bg-white rounded border-l-4 border-green-500">
+                  <p className="font-bold text-green-900">🎯 Activation Bottleneck</p>
+                  <p className="text-gray-700 text-xs mt-1">
+                    {((1 - conversions.filter(c => c.errandsCompleted > 0).length / conversions.length) * 100).toFixed(0)}% of referred users haven't completed their first errand yet. <strong>Action: Send onboarding messages with task recommendations within 24-48h of signup.</strong>
+                  </p>
+                </div>
+
+                <div className="p-2 bg-white rounded border-l-4 border-orange-500">
+                  <p className="font-bold text-orange-900">💰 Revenue Potential</p>
+                  <p className="text-gray-700 text-xs mt-1">
+                    Total EP earned from referrals: {conversions.reduce((s, c) => s + c.epEarned, 0)} EP. Tier at 5+ errands to unlock retention. <strong>Action: Create "Referral VIP" status for those generating 250+ EP/month from friends.</strong>
+                  </p>
+                </div>
+
+                <div className="p-2 bg-white rounded border-l-4 border-purple-500">
+                  <p className="font-bold text-purple-900">📈 Viral Loop Strategy</p>
+                  <p className="text-gray-700 text-xs mt-1">
+                    Both referrer and referred users earn EP. <strong>Action: After 1st errand, show both earned amounts in celebratory notification. Encourage referred user to become a referrer with +50 EP bonus for their first referral.</strong>
+                  </p>
+                </div>
               </div>
             </div>
           </div>

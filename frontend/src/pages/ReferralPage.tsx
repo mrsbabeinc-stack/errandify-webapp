@@ -15,7 +15,8 @@ interface ReferredUser {
   alias: string;
   signupDate: string;
   status: 'active' | 'inactive';
-  tasksCompleted: number;
+  errandsCompleted: number;
+  epEarned: number;
 }
 
 export default function ReferralPage() {
@@ -61,11 +62,11 @@ export default function ReferralPage() {
 
     // Mock referral history
     setReferredUsers([
-      { id: '1', alias: 'John Doe', signupDate: '2024-07-16', status: 'active', tasksCompleted: 3 },
-      { id: '2', alias: 'Jane Smith', signupDate: '2024-07-15', status: 'active', tasksCompleted: 1 },
-      { id: '3', alias: 'Mike Johnson', signupDate: '2024-07-14', status: 'inactive', tasksCompleted: 0 },
-      { id: '4', alias: 'Sarah Lee', signupDate: '2024-07-13', status: 'active', tasksCompleted: 5 },
-      { id: '5', alias: 'Alex Chen', signupDate: '2024-07-12', status: 'active', tasksCompleted: 2 },
+      { id: '1', alias: 'John Doe', signupDate: '2024-07-16', status: 'active', errandsCompleted: 3, epEarned: 180 },
+      { id: '2', alias: 'Jane Smith', signupDate: '2024-07-15', status: 'active', errandsCompleted: 1, epEarned: 60 },
+      { id: '3', alias: 'Mike Johnson', signupDate: '2024-07-14', status: 'inactive', errandsCompleted: 0, epEarned: 0 },
+      { id: '4', alias: 'Sarah Lee', signupDate: '2024-07-13', status: 'active', errandsCompleted: 5, epEarned: 320 },
+      { id: '5', alias: 'Alex Chen', signupDate: '2024-07-12', status: 'active', errandsCompleted: 2, epEarned: 140 },
     ]);
     setLoading(false);
   };
@@ -222,12 +223,12 @@ export default function ReferralPage() {
 
             {/* Motivational Message */}
             <div className="bg-yellow-50 rounded-lg p-2 border-2 border-yellow-300 mb-2 text-center">
-              <p className="text-xs font-bold text-yellow-800">✨ {referredUsers.filter(u => u.status === 'active').length} friends are actively helping! Keep the momentum going 🚀</p>
+              <p className="text-xs font-bold text-yellow-800">✨ {referredUsers.filter(u => u.status === 'active').length} friends actively earning EP! Encourage them to complete more errands 🚀</p>
             </div>
 
             {/* Referral History */}
             <div className="bg-white rounded-lg p-2 border border-orange-300 shadow-sm">
-              <p className="text-sm font-bold text-orange-800 mb-2">📋 Your Referrals ({referredUsers.length}) <span className="text-xs text-orange-600">- Great team!</span></p>
+              <p className="text-sm font-bold text-orange-800 mb-2">📋 Your Referrals ({referredUsers.length}) <span className="text-xs text-orange-600">- Earn more when they complete errands!</span></p>
               <div className="space-y-1.5 max-h-48 overflow-y-auto">
                 {referredUsers.length > 0 ? (
                   referredUsers.map((user) => (
@@ -240,7 +241,7 @@ export default function ReferralPage() {
                         <p className="font-bold text-gray-800 truncate">{user.alias}</p>
                         <p className="text-gray-600 text-xs">{new Date(user.signupDate).toLocaleDateString()}</p>
                       </div>
-                      <div className="flex items-center gap-2 ml-2">
+                      <div className="flex items-center gap-1.5 ml-2">
                         <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${
                           user.status === 'active'
                             ? 'bg-green-500 text-white'
@@ -248,7 +249,14 @@ export default function ReferralPage() {
                         }`}>
                           {user.status === 'active' ? '✓' : '○'}
                         </span>
-                        <span className="font-bold text-orange-600">{user.tasksCompleted} tasks</span>
+                        <div className="text-right">
+                          <p className="font-bold text-orange-600">{user.errandsCompleted}</p>
+                          <p className="text-gray-600">errands</p>
+                        </div>
+                        <div className="text-right border-l border-orange-300 pl-1.5">
+                          <p className="font-black text-orange-700">{user.epEarned}</p>
+                          <p className="text-gray-600">EP</p>
+                        </div>
                       </div>
                     </div>
                   ))
