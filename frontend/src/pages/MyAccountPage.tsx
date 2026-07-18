@@ -10,6 +10,7 @@ import BottomNav from '../components/BottomNav';
 import HanaCustomerService from '../components/HanaCustomerService';
 import AccountPauseModal from '../components/AccountPauseModal';
 import StaffLeaveApplication from '../components/StaffLeaveApplication';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 
 interface UserProfile {
   id?: number;
@@ -1168,8 +1169,15 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
   const badges = ratings.averageRating >= 4.8 ? [{ icon: '⭐' }] : [];
 
   return (
-    <div className="flex flex-col min-h-screen bg-errandify-bg">
+    <AdminThemeWrapper
+      title="⚙️ My Account"
+      subtitle="Manage your profile and preferences"
+      showBackButton
+      onBack={() => navigate(-1)}
+      style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 50%, #FFE8D6 100%)'}}
+    >
       {/* Main Content */}
+      <div className="flex flex-col min-h-screen bg-errandify-bg">
       <main className="flex-1 pb-20">
 
       {/* MAIN CONTENT */}
@@ -4145,19 +4153,17 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
         onClose={() => setShowAccountPauseModal(false)}
       />
 
+      {/* Floating Hana */}
+      <HanaCustomerService />
+
       {/* Bottom Navigation Footer */}
-      <BottomNav />
-
-        {/* Floating Hana */}
-        <HanaCustomerService />
-
-        {/* Bottom Navigation */}
-        <BottomNav
-          onLogout={handleLogout}
-          userRole={userRole}
-        />
+      <BottomNav
+        onLogout={handleLogout}
+        userRole={userRole}
+      />
       </main>
-    </div>
+      </div>
+    </AdminThemeWrapper>
   );
 }
 
