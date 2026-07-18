@@ -1687,6 +1687,5 @@ export default function MyKampungPage() {
         {activeTab === 'join-us' && <JoinUsPage />}
       </div>
     </div>
-    </div>
   );
 }
