@@ -110,8 +110,8 @@ export default function ReferralPage() {
     >
       <div className="max-w-2xl mx-auto">
         {referralData && (
-
-        {/* Hero Pitch - CELEBRATORY */}
+          <>
+            {/* Hero Pitch - CELEBRATORY */}
         <div className="bg-gradient-to-r from-yellow-300 via-pink-300 to-orange-300 rounded-xl p-3 mb-2 shadow-lg border-2 border-yellow-400 text-center transform hover:scale-105 transition">
           <p className="text-xl font-bold text-white drop-shadow-lg mb-0.5">🎉 Earn 50 EP Per Friend! 🎉</p>
           <p className="text-xs font-bold text-white drop-shadow-md">Share → Sign Up → Earn! 💸</p>
@@ -340,7 +340,7 @@ Let's help each other in our community! 🤝`}
               </button>
             </div>
           </div>
-        )}
+          </>
         )}
       </div>
     </AdminThemeWrapper>
