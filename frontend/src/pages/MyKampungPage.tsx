@@ -768,13 +768,13 @@ export default function MyKampungPage() {
 
       <div className="w-full" style={{maxWidth: '1200px', margin: '0 auto'}}>
         {/* Tab Navigation */}
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-2" style={{marginBottom: '24px', paddingBottom: '12px', position: 'relative', zIndex: 1}}>
+        <div className="flex gap-1.5 mb-4 overflow-x-auto pb-2" style={{marginBottom: '24px', paddingBottom: '12px', position: 'relative', zIndex: 1}}>
           <button
             onClick={() => setActiveTab('feed')}
             style={{
-              padding: '9px 14px',
-              borderRadius: '12px',
-              fontSize: '14px',
+              padding: '8px 12px',
+              borderRadius: '10px',
+              fontSize: '13px',
               fontWeight: '800',
               whiteSpace: 'nowrap',
               border: activeTab === 'feed' ? '2.5px solid rgba(255, 255, 255, 0.6)' : '2px solid rgba(255, 107, 53, 0.2)',
