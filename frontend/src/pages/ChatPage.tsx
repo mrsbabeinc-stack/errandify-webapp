@@ -438,24 +438,30 @@ export default function ChatPage({ userRole }: ChatPageProps) {
       ) : (
         <div style={{display: 'grid', gap: '6px'}}>
           {filteredConversations.map((conversation) => (
-            <div key={conversation.id} style={{background: 'linear-gradient(135deg, #FFF9F7 0%, #FFF5F0 100%)', borderRadius: '8px', padding: '10px 12px', boxShadow: '0 1px 8px rgba(255, 107, 53, 0.06)', border: '1px solid #FFE8D6', position: 'relative', transition: 'all 0.15s', cursor: 'pointer'}} onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 2px 12px rgba(255, 107, 53, 0.1)'; e.currentTarget.style.transform = 'translateY(-1px)';}} onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 1px 8px rgba(255, 107, 53, 0.06)'; e.currentTarget.style.transform = 'translateY(0)';}}>
+            <div key={conversation.id} style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 100%)', borderRadius: '12px', padding: '12px 14px', boxShadow: '0 2px 12px rgba(255, 107, 53, 0.12)', border: '1px solid #FFE0CC', position: 'relative', transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)', cursor: 'pointer'}} onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.18)'; e.currentTarget.style.transform = 'translateY(-2px)';}} onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 2px 12px rgba(255, 107, 53, 0.12)'; e.currentTarget.style.transform = 'translateY(0)';}}>
               {/* Unread Badge */}
               {unreadCounts.get(conversation.id) && unreadCounts.get(conversation.id)! > 0 && (
                 <div style={{position: 'absolute', top: '4px', right: '4px', background: '#E63946', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700', boxShadow: '0 1px 4px rgba(230, 57, 70, 0.25)', border: '1.5px solid white'}}>
                   {unreadCounts.get(conversation.id)}
                 </div>
               )}
-              {/* Warm Header: ID | Title | Date | Area | Status */}
-              <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', justifyContent: 'space-between'}}>
-                <span style={{fontSize: '12px', fontWeight: '800', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '5px 12px', borderRadius: '6px', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 2px 8px rgba(255, 107, 53, 0.25)', letterSpacing: '0.5px'}}>{conversation.formattedId}</span>
-                <h3 style={{fontWeight: '800', fontSize: '16px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0, letterSpacing: '0.3px'}}>{conversation.title}</h3>
-                {conversation.deadline && (
-                  <span style={{fontSize: '12px', color: '#FF6B35', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0, background: '#FFE8D6', padding: '3px 8px', borderRadius: '4px'}}>📅 {new Date(conversation.deadline).toLocaleDateString()}</span>
-                )}
-                {(conversation.location || conversation.postal) && (
-                  <span style={{fontSize: '12px', fontWeight: '700', color: '#FF6B35', whiteSpace: 'nowrap', flexShrink: 0, background: '#FFE8D6', padding: '3px 8px', borderRadius: '4px'}}>📍 {conversation.postal}</span>
-                )}
-                <span style={{padding: '5px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '800', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? 'linear-gradient(135deg, #FFD89B 0%, #FFC870 100%)' : getStatusColor(conversation.status).includes('green') ? 'linear-gradient(135deg, #A8E6C1 0%, #7DD9B5 100%)' : 'linear-gradient(135deg, #E8E8E8 0%, #D8D8D8 100%)', color: getStatusColor(conversation.status).includes('orange') ? '#B85A1D' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#555', flexShrink: 0, boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)', letterSpacing: '0.3px'}}>
+              {/* Row 1: ID Badge + Title */}
+              <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px'}}>
+                <span style={{fontSize: '12px', fontWeight: '800', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '6px 12px', borderRadius: '8px', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 3px 10px rgba(255, 107, 53, 0.3)'}}>{conversation.formattedId}</span>
+                <h3 style={{fontWeight: '800', fontSize: '16px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0}}>{conversation.title}</h3>
+              </div>
+
+              {/* Row 2: Date | Area | Status | Chat Button */}
+              <div style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between', marginBottom: '6px'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: 1}}>
+                  {conversation.deadline && (
+                    <span style={{fontSize: '12px', color: '#FF6B35', fontWeight: '700', whiteSpace: 'nowrap', background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '6px'}}>📅 {new Date(conversation.deadline).toLocaleDateString()}</span>
+                  )}
+                  {(conversation.location || conversation.postal) && (
+                    <span style={{fontSize: '12px', fontWeight: '700', color: '#FF6B35', whiteSpace: 'nowrap', background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '6px'}}>📍 {conversation.postal}</span>
+                  )}
+                </div>
+                <span style={{padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '800', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? 'linear-gradient(135deg, #FFD89B 0%, #FFC870 100%)' : getStatusColor(conversation.status).includes('green') ? 'linear-gradient(135deg, #A8E6C1 0%, #7DD9B5 100%)' : 'linear-gradient(135deg, #E8E8E8 0%, #D8D8D8 100%)', color: getStatusColor(conversation.status).includes('orange') ? '#B85A1D' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#555', flexShrink: 0, boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)'}}>
                   {getStatusLabel(conversation.status).replace('Awaiting Confirmation', 'Awaiting').replace('Completed', 'Done')}
                 </span>
               </div>
