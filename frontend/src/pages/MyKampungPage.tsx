@@ -4,6 +4,7 @@ import axios from 'axios';
 import { moderatePost, getModerationStatus, getModerationMessage } from '../services/moderationService';
 import { blogPosts as blogPostsData } from '../data/blogPosts';
 import JoinUsPage from './JoinUsPage';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 
 interface CommunityPost {
   id: number;
@@ -754,55 +755,92 @@ export default function MyKampungPage() {
   }
 
   return (
-    <div className="min-h-screen bg-errandify-bg px-2 py-2 pb-32">
-      <div className="max-w-2xl mx-auto">
-        <button onClick={() => navigate(-1)} className="mb-1 text-sm text-gray-600 font-bold">‹ Back</button>
-
-        {/* Header */}
-        <div className="mb-2">
-          <h1 className="text-lg font-bold text-errandify-brown">MyKampung</h1>
-          <p className="text-xs text-gray-600">Your neighbourhood community</p>
-        </div>
-
+    <AdminThemeWrapper
+      title="🏘️ MyKampung"
+      subtitle="Your neighbourhood community"
+      showBackButton={true}
+      onBack={() => navigate(-1)}
+    >
+      <div className="w-full">
         {/* Tab Navigation */}
-        <div className="flex gap-1 mb-2 overflow-x-auto pb-1">
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-2" style={{marginBottom: '16px'}}>
           <button
             onClick={() => setActiveTab('feed')}
-            className={`py-1 px-2 rounded text-xs font-semibold transition whitespace-nowrap ${
-              activeTab === 'feed'
-                ? 'bg-errandify-orange text-white'
-                : 'bg-gray-200 text-gray-700'
-            }`}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: '700',
+              whiteSpace: 'nowrap',
+              border: activeTab === 'feed' ? 'none' : '1.5px solid #FFE0D6',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              background: activeTab === 'feed' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)',
+              color: activeTab === 'feed' ? 'white' : '#FF6B35',
+              boxShadow: activeTab === 'feed' ? '0 3px 10px rgba(255, 107, 53, 0.25)' : '0 2px 6px rgba(255, 107, 53, 0.08)',
+            }}
+            onMouseEnter={(e) => {if (activeTab !== 'feed') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.8) 0%, rgba(255,200,160,0.6) 100%)'; e.currentTarget.style.transform = 'translateY(-2px)';}} }
+            onMouseLeave={(e) => {if (activeTab !== 'feed') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)'; e.currentTarget.style.transform = 'translateY(0)';}} }
           >
             💬 Feed
           </button>
           <button
             onClick={() => setActiveTab('discussions')}
-            className={`py-1 px-2 rounded text-xs font-semibold transition whitespace-nowrap ${
-              activeTab === 'discussions'
-                ? 'bg-errandify-orange text-white'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: '700',
+              whiteSpace: 'nowrap',
+              border: activeTab === 'discussions' ? 'none' : '1.5px solid #FFE0D6',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              background: activeTab === 'discussions' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)',
+              color: activeTab === 'discussions' ? 'white' : '#FF6B35',
+              boxShadow: activeTab === 'discussions' ? '0 3px 10px rgba(255, 107, 53, 0.25)' : '0 2px 6px rgba(255, 107, 53, 0.08)',
+            }}
+            onMouseEnter={(e) => {if (activeTab !== 'discussions') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.8) 0%, rgba(255,200,160,0.6) 100%)'; e.currentTarget.style.transform = 'translateY(-2px)';}} }
+            onMouseLeave={(e) => {if (activeTab !== 'discussions') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)'; e.currentTarget.style.transform = 'translateY(0)';}} }
           >
             💭 Discussions
           </button>
           <button
             onClick={() => setActiveTab('news')}
-            className={`py-1 px-2 rounded text-xs font-semibold transition whitespace-nowrap ${
-              activeTab === 'news'
-                ? 'bg-errandify-orange text-white'
-                : 'bg-gray-200 text-gray-700'
-            }`}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: '700',
+              whiteSpace: 'nowrap',
+              border: activeTab === 'news' ? 'none' : '1.5px solid #FFE0D6',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              background: activeTab === 'news' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)',
+              color: activeTab === 'news' ? 'white' : '#FF6B35',
+              boxShadow: activeTab === 'news' ? '0 3px 10px rgba(255, 107, 53, 0.25)' : '0 2px 6px rgba(255, 107, 53, 0.08)',
+            }}
+            onMouseEnter={(e) => {if (activeTab !== 'news') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.8) 0%, rgba(255,200,160,0.6) 100%)'; e.currentTarget.style.transform = 'translateY(-2px)';}} }
+            onMouseLeave={(e) => {if (activeTab !== 'news') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)'; e.currentTarget.style.transform = 'translateY(0)';}} }
           >
             📰 News
           </button>
           <button
             onClick={() => setActiveTab('events')}
-            className={`py-1 px-2 rounded text-xs font-semibold transition whitespace-nowrap ${
-              activeTab === 'events'
-                ? 'bg-errandify-orange text-white'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: '700',
+              whiteSpace: 'nowrap',
+              border: activeTab === 'events' ? 'none' : '1.5px solid #FFE0D6',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              background: activeTab === 'events' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)',
+              color: activeTab === 'events' ? 'white' : '#FF6B35',
+              boxShadow: activeTab === 'events' ? '0 3px 10px rgba(255, 107, 53, 0.25)' : '0 2px 6px rgba(255, 107, 53, 0.08)',
+            }}
+            onMouseEnter={(e) => {if (activeTab !== 'events') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.8) 0%, rgba(255,200,160,0.6) 100%)'; e.currentTarget.style.transform = 'translateY(-2px)';}} }
+            onMouseLeave={(e) => {if (activeTab !== 'events') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)'; e.currentTarget.style.transform = 'translateY(0)';}} }
           >
             🎯 Events
           </button>
@@ -1647,6 +1685,6 @@ export default function MyKampungPage() {
         {/* JOIN US TAB */}
         {activeTab === 'join-us' && <JoinUsPage />}
       </div>
-    </div>
+    </AdminThemeWrapper>
   );
 }
