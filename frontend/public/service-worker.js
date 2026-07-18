@@ -1,7 +1,7 @@
 // Service Worker for Push Notifications
 // Handles background sync, push events, and offline notifications
 
-const CACHE_NAME = 'errandify-v23-force-reload';
+const CACHE_NAME = 'errandify-v24-direct-styling';
 const urlsToCache = [
   '/',
   '/index.html',
