@@ -754,7 +754,7 @@ export default function MyKampungPage() {
   }
 
   return (
-    <div style={{background: 'linear-gradient(135deg, #FFF5E6 0%, #FFE8D1 25%, #FFD9B8 50%, #FFC99F 75%, #FFB386 100%)', minHeight: '100vh', paddingBottom: '100px', paddingTop: '12px', paddingLeft: '16px', paddingRight: '16px', position: 'relative', zIndex: 0}}>
+    <div style={{background: 'linear-gradient(135deg, #FFF5E6 0%, #FFE8D1 25%, #FFD9B8 50%, #FFC99F 75%, #FFB386 100%)', minHeight: '100vh', paddingBottom: '100px', paddingTop: '12px', paddingLeft: '12px', paddingRight: '12px', position: 'relative', zIndex: 0}}>
       {/* Decorative background elements */}
       <div style={{position: 'fixed', top: '60px', right: '20px', fontSize: '100px', opacity: 0.08, pointerEvents: 'none', zIndex: -1}}>🏘️</div>
       <div style={{position: 'fixed', bottom: '150px', left: '10px', fontSize: '80px', opacity: 0.08, pointerEvents: 'none', zIndex: -1}}>🌸</div>
@@ -772,9 +772,9 @@ export default function MyKampungPage() {
           <button
             onClick={() => setActiveTab('feed')}
             style={{
-              padding: '8px 12px',
+              padding: '8px 10px',
               borderRadius: '10px',
-              fontSize: '13px',
+              fontSize: '14px',
               fontWeight: '800',
               whiteSpace: 'nowrap',
               border: activeTab === 'feed' ? '2.5px solid rgba(255, 255, 255, 0.6)' : '2px solid rgba(255, 107, 53, 0.2)',
