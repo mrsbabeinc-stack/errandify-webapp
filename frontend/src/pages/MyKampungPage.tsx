@@ -794,7 +794,7 @@ export default function MyKampungPage() {
             style={{
               padding: '12px 20px',
               borderRadius: '16px',
-              fontSize: '16px',
+              fontSize: '14px',
               fontWeight: '800',
               whiteSpace: 'nowrap',
               border: activeTab === 'discussions' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
@@ -814,7 +814,7 @@ export default function MyKampungPage() {
             style={{
               padding: '12px 20px',
               borderRadius: '16px',
-              fontSize: '16px',
+              fontSize: '14px',
               fontWeight: '800',
               whiteSpace: 'nowrap',
               border: activeTab === 'news' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
@@ -834,7 +834,7 @@ export default function MyKampungPage() {
             style={{
               padding: '12px 20px',
               borderRadius: '16px',
-              fontSize: '16px',
+              fontSize: '14px',
               fontWeight: '800',
               whiteSpace: 'nowrap',
               border: activeTab === 'events' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
@@ -854,7 +854,7 @@ export default function MyKampungPage() {
             style={{
               padding: '12px 20px',
               borderRadius: '16px',
-              fontSize: '16px',
+              fontSize: '14px',
               fontWeight: '800',
               whiteSpace: 'nowrap',
               border: activeTab === 'blog' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
@@ -874,7 +874,7 @@ export default function MyKampungPage() {
             style={{
               padding: '12px 20px',
               borderRadius: '16px',
-              fontSize: '16px',
+              fontSize: '14px',
               fontWeight: '800',
               whiteSpace: 'nowrap',
               border: activeTab === 'recognition' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
@@ -894,7 +894,7 @@ export default function MyKampungPage() {
             style={{
               padding: '12px 20px',
               borderRadius: '16px',
-              fontSize: '16px',
+              fontSize: '14px',
               fontWeight: '800',
               whiteSpace: 'nowrap',
               border: activeTab === 'join-us' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
