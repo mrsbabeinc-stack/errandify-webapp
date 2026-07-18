@@ -754,34 +754,38 @@ export default function MyKampungPage() {
   }
 
   return (
-    <div style={{background: 'linear-gradient(to bottom, #FFFBF8 0%, #FFF6F0 50%, #FFE8D6 100%)', minHeight: '100vh', paddingBottom: '100px', paddingTop: '8px', paddingLeft: '16px', paddingRight: '16px'}}>
-      <button onClick={() => navigate(-1)} style={{fontSize: '16px', fontWeight: '700', color: '#FF6B35', background: 'none', border: 'none', cursor: 'pointer', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '4px', padding: 0}}>← Back</button>
+    <div style={{background: 'linear-gradient(135deg, #FFF5E6 0%, #FFE8D1 25%, #FFD9B8 50%, #FFC99F 75%, #FFB386 100%)', minHeight: '100vh', paddingBottom: '100px', paddingTop: '12px', paddingLeft: '16px', paddingRight: '16px', position: 'relative'}}>
+      {/* Decorative background elements */}
+      <div style={{position: 'absolute', top: '20px', right: '30px', fontSize: '80px', opacity: 0.1}}>🏘️</div>
+      <div style={{position: 'absolute', bottom: '200px', left: '20px', fontSize: '60px', opacity: 0.1}}>🌸</div>
 
-      <div style={{marginBottom: '24px', paddingBottom: '16px', borderBottom: '3px solid rgba(255, 107, 53, 0.2)'}}>
-        <h1 style={{fontSize: '40px', fontWeight: '900', color: '#1a1a1a', margin: '0 0 6px 0', letterSpacing: '-1px'}}>🏘️ MyKampung</h1>
-        <p style={{fontSize: '16px', color: '#555', margin: 0, fontWeight: '600'}}>Your neighbourhood community</p>
+      <button onClick={() => navigate(-1)} style={{fontSize: '18px', fontWeight: '800', color: '#FF6B35', background: 'none', border: 'none', cursor: 'pointer', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px', padding: 0, transition: 'all 0.2s'}}>← Back</button>
+
+      <div style={{marginBottom: '28px', paddingBottom: '20px', borderBottom: '4px solid rgba(255, 107, 53, 0.3)', position: 'relative', zIndex: 1}}>
+        <h1 style={{fontSize: '48px', fontWeight: '900', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', margin: '0 0 8px 0', letterSpacing: '-1.5px'}}>🏘️ MyKampung</h1>
+        <p style={{fontSize: '17px', color: '#FF6B35', margin: 0, fontWeight: '700', letterSpacing: '0.5px'}}>✨ Your neighbourhood community ✨</p>
       </div>
 
       <div className="w-full" style={{maxWidth: '1200px', margin: '0 auto'}}>
         {/* Tab Navigation */}
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-2" style={{marginBottom: '20px', paddingBottom: '12px'}}>
+        <div className="flex gap-3 mb-4 overflow-x-auto pb-2" style={{marginBottom: '24px', paddingBottom: '12px', position: 'relative', zIndex: 1}}>
           <button
             onClick={() => setActiveTab('feed')}
             style={{
-              padding: '10px 16px',
-              borderRadius: '10px',
-              fontSize: '15px',
+              padding: '12px 20px',
+              borderRadius: '16px',
+              fontSize: '16px',
               fontWeight: '800',
               whiteSpace: 'nowrap',
-              border: activeTab === 'feed' ? 'none' : '2px solid #FFD6B8',
+              border: activeTab === 'feed' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
               cursor: 'pointer',
               transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              background: activeTab === 'feed' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'linear-gradient(135deg, rgba(255,245,240,0.8) 0%, rgba(255,232,214,0.6) 100%)',
+              background: activeTab === 'feed' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
               color: activeTab === 'feed' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'feed' ? '0 4px 12px rgba(255, 107, 53, 0.3)' : '0 2px 8px rgba(255, 107, 53, 0.1)',
+              boxShadow: activeTab === 'feed' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
             }}
-            onMouseEnter={(e) => {if (activeTab !== 'feed') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,232,214,0.8) 0%, rgba(255,200,160,0.6) 100%)'; e.currentTarget.style.transform = 'translateY(-2px)';}} }
-            onMouseLeave={(e) => {if (activeTab !== 'feed') {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)'; e.currentTarget.style.transform = 'translateY(0)';}} }
+            onMouseEnter={(e) => {if (activeTab !== 'feed') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
+            onMouseLeave={(e) => {if (activeTab !== 'feed') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
           >
             💬 Feed
           </button>
