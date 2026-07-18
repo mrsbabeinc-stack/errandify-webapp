@@ -4,7 +4,6 @@ import axios from 'axios';
 import { moderatePost, getModerationStatus, getModerationMessage } from '../services/moderationService';
 import { blogPosts as blogPostsData } from '../data/blogPosts';
 import JoinUsPage from './JoinUsPage';
-import AdminThemeWrapper from '../components/AdminThemeWrapper';
 
 interface CommunityPost {
   id: number;
@@ -755,13 +754,15 @@ export default function MyKampungPage() {
   }
 
   return (
-    <AdminThemeWrapper
-      title="🏘️ MyKampung"
-      subtitle="Your neighbourhood community"
-      showBackButton={true}
-      onBack={() => navigate(-1)}
-    >
-      <div className="w-full">
+    <div style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 100%)', minHeight: '100vh', paddingBottom: '100px', paddingTop: '8px', paddingLeft: '16px', paddingRight: '16px'}}>
+      <button onClick={() => navigate(-1)} style={{fontSize: '16px', fontWeight: '700', color: '#FF6B35', background: 'none', border: 'none', cursor: 'pointer', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '4px'}}>← Back</button>
+
+      <div style={{marginBottom: '16px'}}>
+        <h1 style={{fontSize: '28px', fontWeight: '700', color: '#333', margin: '0 0 4px 0'}}>🏘️ MyKampung</h1>
+        <p style={{fontSize: '13px', color: '#666', margin: 0}}>Your neighbourhood community</p>
+      </div>
+
+      <div className="w-full" style={{maxWidth: '1200px', margin: '0 auto'}}>
         {/* Tab Navigation */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-2" style={{marginBottom: '16px'}}>
           <button
@@ -1685,6 +1686,7 @@ export default function MyKampungPage() {
         {/* JOIN US TAB */}
         {activeTab === 'join-us' && <JoinUsPage />}
       </div>
-    </AdminThemeWrapper>
+    </div>
+    </div>
   );
 }
