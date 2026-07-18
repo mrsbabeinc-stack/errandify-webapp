@@ -10,10 +10,19 @@ interface ReferralData {
   earnedPoints: number;
 }
 
+interface ReferredUser {
+  id: string;
+  alias: string;
+  signupDate: string;
+  status: 'active' | 'inactive';
+  tasksCompleted: number;
+}
+
 export default function ReferralPage() {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
+  const [referredUsers, setReferredUsers] = useState<ReferredUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -42,12 +51,22 @@ export default function ReferralPage() {
     }
 
     // Use mock data immediately if API fails or doesn't respond
+    const mockCode = 'ERRAND' + Math.random().toString(36).substring(2, 8).toUpperCase();
     setReferralData({
-      code: 'ERRAND' + Math.random().toString(36).substring(2, 8).toUpperCase(),
-      link: `https://errandify.ai/join?ref=ERRAND${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+      code: mockCode,
+      link: `https://errandify.ai/join?ref=${mockCode}`,
       referredCount: 5,
       earnedPoints: 250,
     });
+
+    // Mock referral history
+    setReferredUsers([
+      { id: '1', alias: 'John Doe', signupDate: '2024-07-16', status: 'active', tasksCompleted: 3 },
+      { id: '2', alias: 'Jane Smith', signupDate: '2024-07-15', status: 'active', tasksCompleted: 1 },
+      { id: '3', alias: 'Mike Johnson', signupDate: '2024-07-14', status: 'inactive', tasksCompleted: 0 },
+      { id: '4', alias: 'Sarah Lee', signupDate: '2024-07-13', status: 'active', tasksCompleted: 5 },
+      { id: '5', alias: 'Alex Chen', signupDate: '2024-07-12', status: 'active', tasksCompleted: 2 },
+    ]);
     setLoading(false);
   };
 
@@ -196,8 +215,41 @@ export default function ReferralPage() {
             </div>
 
             {/* How It Works - Mini */}
-            <div className="bg-orange-50 rounded-lg p-2 shadow-sm border border-orange-300 text-center">
+            <div className="bg-orange-50 rounded-lg p-2 shadow-sm border border-orange-300 text-center mb-3">
               <p className="text-xs font-bold text-orange-800">💡 3 Steps: Share → Sign Up → Earn! +50 EP each</p>
+            </div>
+
+            {/* Referral History */}
+            <div className="bg-white rounded-lg p-2 border border-orange-300 shadow-sm">
+              <p className="text-sm font-bold text-orange-800 mb-2">📋 Your Referrals ({referredUsers.length})</p>
+              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                {referredUsers.length > 0 ? (
+                  referredUsers.map((user) => (
+                    <div key={user.id} className={`rounded-lg p-2 border flex items-center justify-between text-xs ${
+                      user.status === 'active'
+                        ? 'bg-green-50 border-green-300'
+                        : 'bg-gray-50 border-gray-300'
+                    }`}>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-gray-800 truncate">{user.alias}</p>
+                        <p className="text-gray-600 text-xs">{new Date(user.signupDate).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex items-center gap-2 ml-2">
+                        <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${
+                          user.status === 'active'
+                            ? 'bg-green-500 text-white'
+                            : 'bg-gray-400 text-white'
+                        }`}>
+                          {user.status === 'active' ? '✓' : '○'}
+                        </span>
+                        <span className="font-bold text-orange-600">{user.tasksCompleted} tasks</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-gray-600 py-4">No referrals yet. Share your code to get started!</p>
+                )}
+              </div>
             </div>
 
             {/* Share Modal */}

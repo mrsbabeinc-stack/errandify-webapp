@@ -30,6 +30,7 @@ import ProfilePage from './pages/ProfilePage';
 import ReviewPage from './pages/ReviewPage';
 import MyProfilePage from './pages/MyProfilePage';
 import ReferralPage from './pages/ReferralPage';
+import ReferralTracking from './pages/admin/ReferralTracking';
 import PayoutSettingsPage from './pages/PayoutSettingsPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import ErrandifyPointsPage from './pages/ErrandifyPointsPage';
@@ -503,6 +504,7 @@ export default function App() {
         <Route path="/admin/manage/point-rules" element={isAuthenticated && isAdmin ? <EPRulesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/manage/discounts" element={isAuthenticated && isAdmin ? <DiscountCodesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/reports" element={isAuthenticated && isAdmin ? <ReportsPage /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/referral-tracking" element={isAuthenticated && isAdmin ? <ReferralTracking /> : <Navigate to="/login" replace />} />
 
         {/* Operations & Management Routes (TIER 1) */}
         <Route path="/admin/operations/auth-management" element={isAuthenticated && isAdmin ? <AdminAuthManagement /> : <Navigate to="/login" replace />} />
