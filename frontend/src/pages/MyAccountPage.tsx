@@ -10,7 +10,6 @@ import BottomNav from '../components/BottomNav';
 import HanaCustomerService from '../components/HanaCustomerService';
 import AccountPauseModal from '../components/AccountPauseModal';
 import StaffLeaveApplication from '../components/StaffLeaveApplication';
-import AdminThemeWrapper from '../components/AdminThemeWrapper';
 
 interface UserProfile {
   id?: number;
@@ -42,9 +41,10 @@ interface Rating {
 
 interface MyAccountPageProps {
   onLogout?: () => void;
+  userRole?: 'asker' | 'doer';
 }
 
-export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
+export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccountPageProps = {}) {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'safety' | 'notify' | 'categories' | 'availability'>('dashboard');
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
@@ -1168,41 +1168,9 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
   const badges = ratings.averageRating >= 4.8 ? [{ icon: '⭐' }] : [];
 
   return (
-    <>
-      {/* TOP RIGHT HEADER - Profile & Logout */}
-      <div className="fixed top-0 right-0 bg-white border-b border-l border-gray-200 px-4 py-3 flex items-center gap-3 z-50 shadow-sm">
-        {/* Profile Photo */}
-        {(profileImage || headerProfile?.profileImage) ? (
-          <img
-            src={profileImage || headerProfile?.profileImage}
-            alt="Profile"
-            className="w-10 h-10 rounded-full object-cover border-2 border-errandify-orange"
-          />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-errandify-orange flex items-center justify-center text-white text-sm font-bold">
-            {(headerProfile?.name || profileData?.name)?.charAt(0).toUpperCase() || 'U'}
-          </div>
-        )}
-        {/* User Name */}
-        <span className="text-sm font-bold text-gray-800 max-w-[120px] truncate">
-          {headerProfile?.name || profileData?.name || 'User'}
-        </span>
-        {/* Logout Button */}
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 text-sm font-bold text-white bg-errandify-orange hover:bg-orange-600 rounded-lg transition-colors shadow-md"
-        >
-          Logout
-        </button>
-      </div>
-
-    <AdminThemeWrapper
-      title="⚙️ My Account"
-      subtitle="Manage your profile and preferences"
-      showBackButton
-      onBack={() => navigate(-1)}
-      style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 50%, #FFE8D6 100%)'}}
-    >
+    <div className="flex flex-col min-h-screen bg-errandify-bg">
+      {/* Main Content */}
+      <main className="flex-1 pb-20">
 
       {/* MAIN CONTENT */}
       <div className="max-w-6xl mx-auto px-4 py-6 w-full">
@@ -4180,10 +4148,16 @@ export default function MyAccountPage({ onLogout }: MyAccountPageProps = {}) {
       {/* Bottom Navigation Footer */}
       <BottomNav />
 
-      {/* Floating Hana */}
-      <HanaCustomerService />
-    </AdminThemeWrapper>
-    </>
+        {/* Floating Hana */}
+        <HanaCustomerService />
+
+        {/* Bottom Navigation */}
+        <BottomNav
+          onLogout={handleLogout}
+          userRole={userRole}
+        />
+      </main>
+    </div>
   );
 }
 
