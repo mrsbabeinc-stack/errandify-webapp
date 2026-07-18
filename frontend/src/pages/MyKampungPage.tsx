@@ -754,10 +754,10 @@ export default function MyKampungPage() {
   }
 
   return (
-    <div style={{background: 'linear-gradient(135deg, #FFF5E6 0%, #FFE8D1 25%, #FFD9B8 50%, #FFC99F 75%, #FFB386 100%)', minHeight: '100vh', paddingBottom: '100px', paddingTop: '12px', paddingLeft: '16px', paddingRight: '16px', position: 'relative'}}>
+    <div style={{background: 'linear-gradient(135deg, #FFF5E6 0%, #FFE8D1 25%, #FFD9B8 50%, #FFC99F 75%, #FFB386 100%)', minHeight: '100vh', paddingBottom: '100px', paddingTop: '12px', paddingLeft: '16px', paddingRight: '16px', position: 'relative', zIndex: 0}}>
       {/* Decorative background elements */}
-      <div style={{position: 'absolute', top: '20px', right: '30px', fontSize: '80px', opacity: 0.1}}>🏘️</div>
-      <div style={{position: 'absolute', bottom: '200px', left: '20px', fontSize: '60px', opacity: 0.1}}>🌸</div>
+      <div style={{position: 'fixed', top: '60px', right: '20px', fontSize: '100px', opacity: 0.08, pointerEvents: 'none', zIndex: -1}}>🏘️</div>
+      <div style={{position: 'fixed', bottom: '150px', left: '10px', fontSize: '80px', opacity: 0.08, pointerEvents: 'none', zIndex: -1}}>🌸</div>
 
       <button onClick={() => navigate(-1)} style={{fontSize: '18px', fontWeight: '800', color: '#FF6B35', background: 'none', border: 'none', cursor: 'pointer', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px', padding: 0, transition: 'all 0.2s'}}>← Back</button>
 
