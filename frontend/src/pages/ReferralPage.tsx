@@ -132,8 +132,9 @@ export default function ReferralPage() {
           <>
             {/* Hero Pitch */}
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-3 mb-2 shadow-lg text-center">
-              <p className="text-lg font-black text-white mb-0.5">🎉 Earn 50 EP Per Friend!</p>
+              <p className="text-lg font-black text-white mb-1">🎉 Earn 50 EP Per Friend!</p>
               <p className="text-xs font-bold text-orange-100">Share → Sign Up → Earn 💸</p>
+              <p className="text-xs text-orange-50 mt-1">Help your friends join, grow together 🤝</p>
             </div>
 
             {/* QR Code - Compact */}
@@ -219,9 +220,14 @@ export default function ReferralPage() {
               <p className="text-xs font-bold text-orange-800">💡 3 Steps: Share → Sign Up → Earn! +50 EP each</p>
             </div>
 
+            {/* Motivational Message */}
+            <div className="bg-yellow-50 rounded-lg p-2 border-2 border-yellow-300 mb-2 text-center">
+              <p className="text-xs font-bold text-yellow-800">✨ {referredUsers.filter(u => u.status === 'active').length} friends are actively helping! Keep the momentum going 🚀</p>
+            </div>
+
             {/* Referral History */}
             <div className="bg-white rounded-lg p-2 border border-orange-300 shadow-sm">
-              <p className="text-sm font-bold text-orange-800 mb-2">📋 Your Referrals ({referredUsers.length})</p>
+              <p className="text-sm font-bold text-orange-800 mb-2">📋 Your Referrals ({referredUsers.length}) <span className="text-xs text-orange-600">- Great team!</span></p>
               <div className="space-y-1.5 max-h-48 overflow-y-auto">
                 {referredUsers.length > 0 ? (
                   referredUsers.map((user) => (

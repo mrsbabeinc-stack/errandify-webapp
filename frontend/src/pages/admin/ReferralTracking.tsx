@@ -109,7 +109,8 @@ export default function ReferralTracking() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-black text-orange-900 mb-2">🎁 Referral Tracking</h1>
-          <p className="text-orange-800">Monitor and manage user referrals</p>
+          <p className="text-orange-800">Monitor and manage user referrals • Celebrate community growth</p>
+          <p className="text-xs text-orange-700 mt-2 font-bold">📊 Tracking both individual & company referrals</p>
         </div>
 
         {/* Tabs */}
@@ -160,7 +161,10 @@ export default function ReferralTracking() {
 
             {/* Top Referrers */}
             <div className="bg-white rounded-lg p-4 shadow border-2 border-orange-300">
-              <h2 className="text-lg font-bold text-orange-800 mb-3">🌟 Top Referrers</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-bold text-orange-800">🌟 Top Referrers</h2>
+                <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded font-bold">Community Heroes! 🦸</span>
+              </div>
               <div className="space-y-2">
                 {topReferrers.map((user, idx) => (
                   <div key={user.userId} className="flex items-center justify-between p-2 bg-orange-50 rounded border border-orange-200">

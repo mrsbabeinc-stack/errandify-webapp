@@ -1342,18 +1342,21 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
             </div>
 
             {/* REFERRAL BUTTON - ENGAGING & VIBRANT */}
-            <button
-              onClick={() => navigate('/referral')}
-              className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 hover:from-purple-600 hover:via-pink-600 hover:to-red-600 rounded-xl p-4 shadow-lg hover:shadow-2xl transition transform hover:scale-102 active:scale-95 text-white text-center border-3 border-purple-700"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <div className="text-3xl animate-bounce">🎁</div>
-                <div>
-                  <p className="text-lg font-black leading-tight">Refer & Earn!</p>
-                  <p className="text-xs font-bold">Invite friends • Get rewards 🚀</p>
+            <div className="space-y-1.5">
+              <button
+                onClick={() => navigate('/referral')}
+                className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 hover:from-purple-600 hover:via-pink-600 hover:to-red-600 rounded-xl p-4 shadow-lg hover:shadow-2xl transition transform hover:scale-102 active:scale-95 text-white text-center border-3 border-purple-700"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <div className="text-3xl animate-bounce">🎁</div>
+                  <div>
+                    <p className="text-lg font-black leading-tight">Refer & Earn!</p>
+                    <p className="text-xs font-bold">+50 EP per friend • Build your circle 🚀</p>
+                  </div>
                 </div>
-              </div>
-            </button>
+              </button>
+              <p className="text-xs text-center text-purple-700 font-bold">💡 Individual & Company Referrals Welcome!</p>
+            </div>
           </div>
         )}
 
