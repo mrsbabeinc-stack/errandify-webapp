@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AdminThemeWrapper from '../components/AdminThemeWrapper';
 
 interface ReferralData {
   code: string;
@@ -118,13 +119,14 @@ export default function ReferralPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-200 via-purple-200 to-blue-200 px-2 py-2 pb-24">
+    <AdminThemeWrapper
+      title="🎁 Refer & Earn!"
+      subtitle="Invite friends and earn amazing rewards together"
+      showBackButton
+      onBack={() => navigate(-1)}
+      style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 50%, #FFE8D6 100%)'}}
+    >
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-2 mb-3">
-          <button onClick={() => navigate(-1)} className="text-lg text-white font-bold bg-purple-500 rounded-full w-8 h-8 flex items-center justify-center hover:bg-purple-600">‹</button>
-          <h1 className="flex-1 text-2xl font-bold text-white drop-shadow-lg">🎁 Refer & Earn! 🚀</h1>
-        </div>
 
         {/* Hero Pitch - CELEBRATORY */}
         <div className="bg-gradient-to-r from-yellow-300 via-pink-300 to-orange-300 rounded-xl p-3 mb-2 shadow-lg border-2 border-yellow-400 text-center transform hover:scale-105 transition">
@@ -357,6 +359,6 @@ Let's help each other in our community! 🤝`}
           </div>
         )}
       </div>
-    </div>
+    </AdminThemeWrapper>
   );
 }
