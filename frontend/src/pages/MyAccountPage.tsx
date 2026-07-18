@@ -1379,20 +1379,19 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
               </div>
             </div>
 
-              {/* REFERRAL BUTTON - CELEBRATORY */}
-              <button
-                onClick={() => navigate('/referral')}
-                className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 hover:from-orange-600 hover:via-pink-600 hover:to-red-600 rounded-xl p-4 shadow-lg hover:shadow-xl transition transform active:scale-95 text-white text-center border-3 border-orange-700"
-              >
-                <div className="flex items-center justify-center gap-3">
-                  <p className="text-3xl">🎁</p>
-                  <div>
-                    <p className="text-lg font-black">Refer & Earn!</p>
-                    <p className="text-xs font-bold">Invite friends & get rewards 🚀</p>
-                  </div>
+            {/* REFERRAL BUTTON - CELEBRATORY */}
+            <button
+              onClick={() => navigate('/referral')}
+              className="w-full bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 hover:from-orange-600 hover:via-pink-600 hover:to-red-600 rounded-xl p-4 shadow-lg hover:shadow-xl transition transform active:scale-95 text-white text-center border-3 border-orange-700"
+            >
+              <div className="flex items-center justify-center gap-3">
+                <p className="text-3xl">🎁</p>
+                <div>
+                  <p className="text-lg font-black">Refer & Earn!</p>
+                  <p className="text-xs font-bold">Invite friends & get rewards 🚀</p>
                 </div>
-              </button>
-            </div>
+              </div>
+            </button>
           </div>
         )}
 
