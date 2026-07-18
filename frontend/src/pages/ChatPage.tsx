@@ -378,8 +378,8 @@ export default function ChatPage({ userRole }: ChatPageProps) {
               onMouseLeave={(e) => {if (viewFilter !== filter) {e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,245,240,0.7) 0%, rgba(255,232,214,0.5) 100%)'; e.currentTarget.style.transform = 'translateY(0)';}} }
             >
               {filter === 'all' && '📬 All'}
-              {filter === 'asker' && '📝 Tasks'}
-              {filter === 'doer' && '✓ Jobs'}
+              {filter === 'asker' && 'As Asker'}
+              {filter === 'doer' && 'As Doer'}
             </button>
           ))}
         </div>
