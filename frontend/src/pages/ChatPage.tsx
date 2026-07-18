@@ -445,26 +445,27 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                   {unreadCounts.get(conversation.id)}
                 </div>
               )}
-              {/* Row 1: ID Badge + Title */}
-              <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px'}}>
-                <span style={{fontSize: '12px', fontWeight: '800', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '6px 12px', borderRadius: '8px', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 3px 10px rgba(255, 107, 53, 0.3)'}}>{conversation.formattedId}</span>
-                <h3 style={{fontWeight: '800', fontSize: '16px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0}}>{conversation.title}</h3>
+              {/* Row 1: ID Badge + Title + Status + Chat Button */}
+              <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', justifyContent: 'space-between'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0}}>
+                  <span style={{fontSize: '12px', fontWeight: '800', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '6px 12px', borderRadius: '8px', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 3px 10px rgba(255, 107, 53, 0.3)'}}>{conversation.formattedId}</span>
+                  <h3 style={{fontWeight: '800', fontSize: '16px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0}}>{conversation.title}</h3>
+                </div>
+                <span style={{padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '800', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? 'linear-gradient(135deg, #FFD89B 0%, #FFC870 100%)' : getStatusColor(conversation.status).includes('green') ? 'linear-gradient(135deg, #A8E6C1 0%, #7DD9B5 100%)' : 'linear-gradient(135deg, #E8E8E8 0%, #D8D8D8 100%)', color: getStatusColor(conversation.status).includes('orange') ? '#B85A1D' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#555', flexShrink: 0, boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)'}}>
+                  {getStatusLabel(conversation.status).replace('Awaiting Confirmation', 'Awaiting').replace('Completed', 'Done')}
+                </span>
               </div>
 
-              {/* Row 2: Date | Area | Status | Chat Button */}
+              {/* Row 2: Date | Area | Chat Button */}
               <div style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between', marginBottom: '6px'}}>
                 <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: 1}}>
                   {conversation.deadline && (
                     <span style={{fontSize: '12px', color: '#FF6B35', fontWeight: '700', whiteSpace: 'nowrap', background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '6px'}}>📅 {new Date(conversation.deadline).toLocaleDateString()}</span>
                   )}
                   {(conversation.location || conversation.postal) && (
-                    <span style={{fontSize: '12px', fontWeight: '700', color: '#FF6B35', whiteSpace: 'nowrap', background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '6px'}}>📍 {conversation.postal}</span>
+                    <span style={{fontSize: '12px', fontWeight: '700', color: '#FF6B35', whiteSpace: 'nowrap', background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '6px'}}>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</span>
                   )}
                 </div>
-                <span style={{padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '800', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? 'linear-gradient(135deg, #FFD89B 0%, #FFC870 100%)' : getStatusColor(conversation.status).includes('green') ? 'linear-gradient(135deg, #A8E6C1 0%, #7DD9B5 100%)' : 'linear-gradient(135deg, #E8E8E8 0%, #D8D8D8 100%)', color: getStatusColor(conversation.status).includes('orange') ? '#B85A1D' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#555', flexShrink: 0, boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)'}}>
-                  {getStatusLabel(conversation.status).replace('Awaiting Confirmation', 'Awaiting').replace('Completed', 'Done')}
-                </span>
-              </div>
 
               {/* Footer: Chat Button | Posted by */}
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px'}}>
