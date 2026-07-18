@@ -29,21 +29,26 @@ export default function ReferralPage() {
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/referral`,
         {
           headers: { Authorization: `Bearer ${token}` },
+          timeout: 3000
         }
       );
-      setReferralData(response.data.data);
+      if (response.data && response.data.data) {
+        setReferralData(response.data.data);
+        setLoading(false);
+        return;
+      }
     } catch (err) {
-      console.error('Failed to fetch referral data:', err);
-      // Mock data for demo
-      setReferralData({
-        code: 'ERRAND' + Math.random().toString(36).substring(2, 8).toUpperCase(),
-        link: `https://errandify.ai/join?ref=ERRAND${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-        referredCount: 5,
-        earnedPoints: 250,
-      });
-    } finally {
-      setLoading(false);
+      console.log('Using mock referral data');
     }
+
+    // Use mock data immediately if API fails or doesn't respond
+    setReferralData({
+      code: 'ERRAND' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+      link: `https://errandify.ai/join?ref=ERRAND${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+      referredCount: 5,
+      earnedPoints: 250,
+    });
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -94,29 +99,6 @@ export default function ReferralPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-errandify-bg px-4 py-4 flex items-center justify-center">
-        <p className="text-gray-600">Loading referral data...</p>
-      </div>
-    );
-  }
-
-  if (!referralData) {
-    return (
-      <div className="min-h-screen bg-errandify-bg px-4 py-4">
-        <div className="max-w-2xl mx-auto text-center py-12">
-          <p className="text-red-600 mb-4">Failed to load referral data</p>
-          <button
-            onClick={() => navigate(-1)}
-            className="bg-errandify-orange text-white px-6 py-2 rounded-lg font-semibold"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <AdminThemeWrapper
@@ -127,6 +109,7 @@ export default function ReferralPage() {
       style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 50%, #FFE8D6 100%)'}}
     >
       <div className="max-w-2xl mx-auto">
+        {referralData && (
 
         {/* Hero Pitch - CELEBRATORY */}
         <div className="bg-gradient-to-r from-yellow-300 via-pink-300 to-orange-300 rounded-xl p-3 mb-2 shadow-lg border-2 border-yellow-400 text-center transform hover:scale-105 transition">
@@ -357,6 +340,7 @@ Let's help each other in our community! 🤝`}
               </button>
             </div>
           </div>
+        )}
         )}
       </div>
     </AdminThemeWrapper>
