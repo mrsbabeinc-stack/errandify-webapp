@@ -445,17 +445,17 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                   {unreadCounts.get(conversation.id)}
                 </div>
               )}
-              {/* Clean Header: ID | Title | Date | Area | Status */}
+              {/* Warm Header: ID | Title | Date | Area | Status */}
               <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', justifyContent: 'space-between'}}>
-                <span style={{fontSize: '11px', fontWeight: '700', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '4px 10px', borderRadius: '4px', whiteSpace: 'nowrap', flexShrink: 0}}>{conversation.formattedId}</span>
-                <h3 style={{fontWeight: '700', fontSize: '15px', color: '#333', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0}}>{conversation.title}</h3>
+                <span style={{fontSize: '12px', fontWeight: '800', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '5px 12px', borderRadius: '6px', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 2px 8px rgba(255, 107, 53, 0.25)', letterSpacing: '0.5px'}}>{conversation.formattedId}</span>
+                <h3 style={{fontWeight: '800', fontSize: '16px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0, letterSpacing: '0.3px'}}>{conversation.title}</h3>
                 {conversation.deadline && (
-                  <span style={{fontSize: '11px', color: '#666', fontWeight: '500', whiteSpace: 'nowrap', flexShrink: 0}}>📅 {new Date(conversation.deadline).toLocaleDateString()}</span>
+                  <span style={{fontSize: '12px', color: '#FF6B35', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0, background: '#FFE8D6', padding: '3px 8px', borderRadius: '4px'}}>📅 {new Date(conversation.deadline).toLocaleDateString()}</span>
                 )}
                 {(conversation.location || conversation.postal) && (
-                  <span style={{fontSize: '11px', fontWeight: '500', color: '#666', whiteSpace: 'nowrap', flexShrink: 0}}>📍 {conversation.postal}</span>
+                  <span style={{fontSize: '12px', fontWeight: '700', color: '#FF6B35', whiteSpace: 'nowrap', flexShrink: 0, background: '#FFE8D6', padding: '3px 8px', borderRadius: '4px'}}>📍 {conversation.postal}</span>
                 )}
-                <span style={{padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? '#FFE8D6' : getStatusColor(conversation.status).includes('green') ? '#C8E6C9' : '#F0F0F0', color: getStatusColor(conversation.status).includes('orange') ? '#FF6B35' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#666', flexShrink: 0}}>
+                <span style={{padding: '5px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '800', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? 'linear-gradient(135deg, #FFD89B 0%, #FFC870 100%)' : getStatusColor(conversation.status).includes('green') ? 'linear-gradient(135deg, #A8E6C1 0%, #7DD9B5 100%)' : 'linear-gradient(135deg, #E8E8E8 0%, #D8D8D8 100%)', color: getStatusColor(conversation.status).includes('orange') ? '#B85A1D' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#555', flexShrink: 0, boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)', letterSpacing: '0.3px'}}>
                   {getStatusLabel(conversation.status).replace('Awaiting Confirmation', 'Awaiting').replace('Completed', 'Done')}
                 </span>
               </div>
