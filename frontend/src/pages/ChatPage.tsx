@@ -466,11 +466,6 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                     <span style={{fontSize: '12px', fontWeight: '700', color: '#FF6B35', whiteSpace: 'nowrap', background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '6px'}}>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</span>
                   )}
                 </div>
-
-              {/* Footer: Chat Button | Posted by */}
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px'}}>
-                <div style={{display: 'flex', gap: '4px', minWidth: 0, flex: 1}}>
-                </div>
                 <button
                   onClick={() => handleOpenChat(conversation.id)}
                   style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', color: 'white', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s', boxShadow: '0 2px 8px rgba(255, 107, 53, 0.2)', flexShrink: 0}}
