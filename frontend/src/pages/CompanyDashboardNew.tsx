@@ -88,6 +88,15 @@ const CompanyDashboardNew: React.FC = () => {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [actionItemFilter, setActionItemFilter] = useState<'all' | 'high' | 'medium' | 'low' | 'done'>('all');
   const [invoiceFilter, setInvoiceFilter] = useState<string>('');
+  // Security & Privacy state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [showLoginActivityModal, setShowLoginActivityModal] = useState(false);
+  const [showAPIKeyModal, setShowAPIKeyModal] = useState(false);
+  const [showConnectedAppsModal, setShowConnectedAppsModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
+  const [twoFAMethod, setTwoFAMethod] = useState<'sms' | 'authenticator'>('authenticator');
+  const [generatedAPIKey, setGeneratedAPIKey] = useState<string | null>(null);
   // Settings state
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: true,
@@ -1314,26 +1323,16 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
 
                 <div className="settings-section">
                   <h3>Security & Privacy</h3>
-                  <button className="btn-secondary" onClick={() => {
-                    alert('Opening password change form - Current password required');
-                  }}>Change Password</button>
-                  <button className="btn-secondary" style={{marginTop: '8px'}} onClick={() => {
-                    alert('Enable Two-Factor Authentication - Verify via SMS or Authenticator app');
-                  }}>Enable Two-Factor Authentication</button>
-                  <button className="btn-secondary" style={{marginTop: '8px'}} onClick={() => {
-                    alert('Showing login activity log - All recent logins from different devices');
-                  }}>View Login Activity</button>
+                  <button className="btn-secondary" onClick={() => setShowPasswordModal(true)}>Change Password</button>
+                  <button className="btn-secondary" style={{marginTop: '8px'}} onClick={() => setShow2FAModal(true)}>Enable Two-Factor Authentication</button>
+                  <button className="btn-secondary" style={{marginTop: '8px'}} onClick={() => setShowLoginActivityModal(true)}>View Login Activity</button>
                 </div>
 
                 <div className="settings-section">
                   <h3>API & Integrations</h3>
                   <p className="settings-desc">Manage API keys and third-party integrations</p>
-                  <button className="btn-secondary" onClick={() => {
-                    alert('Generated new API Key: sk_live_51Hj3LJ... (Copy to clipboard)');
-                  }}>Generate API Key</button>
-                  <button className="btn-secondary" style={{marginTop: '8px'}} onClick={() => {
-                    alert('Connected Apps: Slack, Zapier, Salesforce (Click to manage)');
-                  }}>Connected Apps</button>
+                  <button className="btn-secondary" onClick={() => setShowAPIKeyModal(true)}>Generate API Key</button>
+                  <button className="btn-secondary" style={{marginTop: '8px'}} onClick={() => setShowConnectedAppsModal(true)}>Connected Apps</button>
                 </div>
 
                 <div className="settings-section danger">
@@ -2338,6 +2337,478 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
         }}
         userBalance={stats.pointsBalance}
       />
+
+      {/* SECURITY & PRIVACY MODALS */}
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+          }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700' }}>🔐 Change Password</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+              <input
+                type="password"
+                placeholder="Current Password"
+                value={passwordForm.current}
+                onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                style={{
+                  padding: '10px 12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                }}
+              />
+              <input
+                type="password"
+                placeholder="New Password"
+                value={passwordForm.new}
+                onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
+                style={{
+                  padding: '10px 12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                }}
+              />
+              <input
+                type="password"
+                placeholder="Confirm New Password"
+                value={passwordForm.confirm}
+                onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                style={{
+                  padding: '10px 12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => {
+                  if (passwordForm.new !== passwordForm.confirm) {
+                    alert('❌ Passwords do not match');
+                    return;
+                  }
+                  alert('✅ Password changed successfully!\n\nYour new password is now active.');
+                  setPasswordForm({ current: '', new: '', confirm: '' });
+                  setShowPasswordModal(false);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  background: '#FF6B35',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Update Password
+              </button>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  background: '#f0f0f0',
+                  color: '#333',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enable 2FA Modal */}
+      {show2FAModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+          }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700' }}>🔐 Enable Two-Factor Authentication</h3>
+            <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#666' }}>Choose your verification method:</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '12px',
+                border: twoFAMethod === 'authenticator' ? '2px solid #FF6B35' : '1px solid #ddd',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                background: twoFAMethod === 'authenticator' ? '#FFF3E0' : 'white',
+              }}>
+                <input
+                  type="radio"
+                  checked={twoFAMethod === 'authenticator'}
+                  onChange={() => setTwoFAMethod('authenticator')}
+                  style={{ marginRight: '8px', cursor: 'pointer' }}
+                />
+                <div>
+                  <div style={{ fontWeight: '600', fontSize: '14px' }}>Authenticator App</div>
+                  <div style={{ fontSize: '12px', color: '#666' }}>Google Authenticator, Microsoft Authenticator, etc.</div>
+                </div>
+              </label>
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '12px',
+                border: twoFAMethod === 'sms' ? '2px solid #FF6B35' : '1px solid #ddd',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                background: twoFAMethod === 'sms' ? '#FFF3E0' : 'white',
+              }}>
+                <input
+                  type="radio"
+                  checked={twoFAMethod === 'sms'}
+                  onChange={() => setTwoFAMethod('sms')}
+                  style={{ marginRight: '8px', cursor: 'pointer' }}
+                />
+                <div>
+                  <div style={{ fontWeight: '600', fontSize: '14px' }}>SMS Verification</div>
+                  <div style={{ fontSize: '12px', color: '#666' }}>Receive codes via text message</div>
+                </div>
+              </label>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => {
+                  alert(`✅ 2FA Enabled!\n\nMethod: ${twoFAMethod === 'authenticator' ? 'Authenticator App' : 'SMS'}\n\nYour account is now more secure.`);
+                  setShow2FAModal(false);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  background: '#FF6B35',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Enable {twoFAMethod === 'authenticator' ? 'Authenticator' : 'SMS'}
+              </button>
+              <button
+                onClick={() => setShow2FAModal(false)}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  background: '#f0f0f0',
+                  color: '#333',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Login Activity Modal */}
+      {showLoginActivityModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '600px',
+            width: '90%',
+            maxHeight: '70vh',
+            overflow: 'auto',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+          }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700' }}>📋 Login Activity</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {[
+                { time: 'Today, 2:45 PM', device: 'MacBook Pro', location: 'Singapore', ip: '203.0.113.42', status: '✅ Current' },
+                { time: 'Yesterday, 11:20 AM', device: 'iPhone 14 Pro', location: 'Singapore', ip: '203.0.113.43', status: '✅' },
+                { time: '2 days ago, 3:15 PM', device: 'Windows PC', location: 'Singapore', ip: '203.0.113.44', status: '✅' },
+                { time: '5 days ago, 9:30 AM', device: 'iPad Air', location: 'Johor', ip: '203.0.113.45', status: '✅' },
+              ].map((activity, idx) => (
+                <div key={idx} style={{
+                  padding: '12px',
+                  border: '1px solid #eee',
+                  borderRadius: '6px',
+                  background: '#f9f9f9',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <div style={{ fontWeight: '600', fontSize: '14px' }}>{activity.device}</div>
+                    <div style={{ fontSize: '12px', color: '#2D7A34' }}>{activity.status}</div>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666' }}>
+                    📍 {activity.location} • 🌐 {activity.ip} • ⏰ {activity.time}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowLoginActivityModal(false)}
+              style={{
+                width: '100%',
+                marginTop: '16px',
+                padding: '10px',
+                background: '#f0f0f0',
+                color: '#333',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: '600',
+                cursor: 'pointer',
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Generate API Key Modal */}
+      {showAPIKeyModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+          }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700' }}>🔑 Generate API Key</h3>
+            {!generatedAPIKey ? (
+              <>
+                <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#666' }}>
+                  API keys allow third-party services to access your Errandify account. Keep them secure!
+                </p>
+                <button
+                  onClick={() => {
+                    const key = `sk_live_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+                    setGeneratedAPIKey(key);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: '#FF6B35',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Generate New Key
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{
+                  padding: '12px',
+                  background: '#FFF3E0',
+                  border: '1px solid #FFB74D',
+                  borderRadius: '6px',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}>
+                  <code style={{ fontSize: '12px', fontFamily: 'monospace', flex: 1 }}>{generatedAPIKey}</code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedAPIKey);
+                      alert('✅ API key copied to clipboard!');
+                    }}
+                    style={{
+                      marginLeft: '8px',
+                      padding: '6px 12px',
+                      background: '#FF6B35',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Copy
+                  </button>
+                </div>
+                <button
+                  onClick={() => {
+                    setGeneratedAPIKey(null);
+                    setShowAPIKeyModal(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: '#f0f0f0',
+                    color: '#333',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Done
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Connected Apps Modal */}
+      {showConnectedAppsModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '70vh',
+            overflow: 'auto',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+          }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700' }}>🔗 Connected Apps</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+              {[
+                { name: '💬 Slack', status: 'Connected', connected: true },
+                { name: '⚡ Zapier', status: 'Connected', connected: true },
+                { name: '📊 Salesforce', status: 'Connected', connected: true },
+                { name: '📧 Gmail', status: 'Not Connected', connected: false },
+                { name: '📅 Google Calendar', status: 'Not Connected', connected: false },
+              ].map((app, idx) => (
+                <div key={idx} style={{
+                  padding: '12px',
+                  border: '1px solid #eee',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}>
+                  <div>
+                    <div style={{ fontWeight: '600', fontSize: '14px' }}>{app.name}</div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>{app.status}</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      alert(`${app.connected ? 'Disconnected' : 'Connected'}: ${app.name}`);
+                    }}
+                    style={{
+                      padding: '6px 12px',
+                      background: app.connected ? '#f44336' : '#FF6B35',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {app.connected ? 'Disconnect' : 'Connect'}
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowConnectedAppsModal(false)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: '#f0f0f0',
+                color: '#333',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: '600',
+                cursor: 'pointer',
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
