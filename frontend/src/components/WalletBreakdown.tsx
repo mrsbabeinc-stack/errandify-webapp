@@ -92,10 +92,10 @@ export default function WalletBreakdown({ data }: WalletBreakdownProps) {
             <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.8 }}>Ready for withdrawal • {percentage(walletData.available)}%</p>
           </div>
 
-          {/* On Hold (48h) - Asker Budget */}
+          {/* On Hold (48h) - Asker Budget + Stripe Fee */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <p style={{ margin: 0, fontSize: '12px', fontWeight: '600' }}>⏳ Stripe Hold (Asker Budget, 48h)</p>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: '600' }}>⏳ Stripe Hold (Budget + Fee, 48h)</p>
               <p style={{ margin: 0, fontSize: '13px', fontWeight: '700' }}>SGD ${walletData.onHold.toFixed(2)}</p>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.3)', borderRadius: '6px', height: '8px', overflow: 'hidden' }}>
@@ -108,13 +108,13 @@ export default function WalletBreakdown({ data }: WalletBreakdownProps) {
                 }}
               />
             </div>
-            <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.8 }}>Held by Stripe • Auto-releases after 48hrs if no dispute</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.8 }}>Includes errand budget + Stripe fee • Doer gets (Budget - Platform Commission), Stripe fee → Stripe</p>
           </div>
 
-          {/* Pending Admin */}
+          {/* Pending Admin - Advertising Fees + Dispute Holds */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <p style={{ margin: 0, fontSize: '12px', fontWeight: '600' }}>⚠️ Held by Stripe (Pending Admin)</p>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: '600' }}>⚠️ Held by Stripe (Pending Admin Decision)</p>
               <p style={{ margin: 0, fontSize: '13px', fontWeight: '700' }}>SGD ${walletData.pending.toFixed(2)}</p>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.3)', borderRadius: '6px', height: '8px', overflow: 'hidden' }}>
@@ -127,17 +127,17 @@ export default function WalletBreakdown({ data }: WalletBreakdownProps) {
                 }}
               />
             </div>
-            <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.8 }}>Advertising campaigns + errand disputes • Held in Stripe escrow • Admin deducts on approval or releases on rejection</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.8 }}><strong>Advertising:</strong> Fee + Stripe fee held until approval (deducts both) or rejection (releases both). <strong>Disputes:</strong> Held until admin decision</p>
           </div>
 
           {/* Subscription (if any) */}
           {walletData.subscription && walletData.subscription > 0 && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <p style={{ margin: 0, fontSize: '12px', fontWeight: '600' }}>📅 Monthly Subscription</p>
+                <p style={{ margin: 0, fontSize: '12px', fontWeight: '600' }}>📅 Monthly Subscription (Charged)</p>
                 <p style={{ margin: 0, fontSize: '13px', fontWeight: '700' }}>-SGD ${walletData.subscription.toFixed(2)}</p>
               </div>
-              <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.8 }}>Gold Partner • Charged on 10th of each month</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.8 }}>Gold Partner • Immediately charged on purchase, renewed on 10th of each month</p>
             </div>
           )}
 
@@ -150,7 +150,7 @@ export default function WalletBreakdown({ data }: WalletBreakdownProps) {
             fontSize: '11px',
             lineHeight: '1.5',
           }}>
-            💡 <strong>How it works:</strong> When you post an errand, Stripe holds your budget for 48h (auto-releases if no dispute). When advertising, Stripe holds the fee on submit (deducted on admin approval, released on rejection). Available balance can be withdrawn anytime.
+            💡 <strong>How it works:</strong> Post errand → Stripe holds (Budget + Stripe Fee). After 48h: Doer gets (Budget - Platform Commission), Stripe fee → Stripe, you see the fees upfront. Advertising: Stripe holds fee (deducted on approval, released on rejection).
           </div>
         </div>
       )}

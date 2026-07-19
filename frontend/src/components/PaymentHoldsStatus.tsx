@@ -202,11 +202,12 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
     <div style={{ padding: '20px', background: '#fff9f5', borderRadius: '12px', border: '2px solid #FFE0B2' }}>
       {/* Header */}
       <h2 style={{ margin: '0 0 20px 0', fontSize: '20px', fontWeight: '700', color: '#333' }}>
-        💳 Stripe Escrow Holds Status
+        💳 Stripe Escrow Holds & Fees
       </h2>
       <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
-        💡 <strong>Asker (Individual/Company):</strong> Stripe holds errand budget on post → releases after 48h if no dispute.
-        <strong>Advertising:</strong> Stripe holds campaign fee on submit → deducts on admin approval or releases on rejection.
+        💡 <strong>Errand (Asker):</strong> Stripe holds budget + Stripe fee (upfront visible). After 48h → Doer gets (budget - platform commission), Stripe fee → Stripe.
+        <strong>Advertising:</strong> Stripe holds (campaign fee + Stripe fee). Approve → both deducted. Reject → both released.
+        <strong>Subscription:</strong> Immediately charged on purchase, renewed monthly (company is aware).
       </p>
 
       {/* Summary Cards */}
@@ -218,9 +219,9 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
           border: '2px solid #FFC107',
           textAlign: 'center',
         }}>
-          <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#666', fontWeight: '600' }}>Stripe Holds (Asker Budget)</p>
+          <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#666', fontWeight: '600' }}>Stripe Holds (Errand Budget + Fee)</p>
           <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#FFC107' }}>SGD ${totalOnHold.toFixed(2)}</p>
-          <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#999' }}>Errand budgets • Auto-release in 48h if no dispute</p>
+          <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#999' }}>Budget + Stripe fee • Released to Doer after 48h minus platform commission</p>
         </div>
 
         <div style={{
@@ -230,9 +231,9 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
           border: '2px solid #FF9800',
           textAlign: 'center',
         }}>
-          <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#666', fontWeight: '600' }}>Stripe Holds (Awaiting Admin)</p>
+          <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#666', fontWeight: '600' }}>Stripe Holds (Awaiting Admin Decision)</p>
           <p style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#FF9800' }}>SGD ${totalPending.toFixed(2)}</p>
-          <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#999' }}>Ads & disputes • Admin deducts or releases</p>
+          <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#999' }}>Ads (fee + Stripe fee) & disputes • Deducted on approval, released on rejection</p>
         </div>
       </div>
 

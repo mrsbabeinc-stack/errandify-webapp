@@ -405,7 +405,7 @@ export default function AdminPaymentManagement() {
               <strong>Total Held by Stripe:</strong> SGD ${totalAdvertising.toFixed(2)} • <strong>Campaigns Pending:</strong> {advertisingHolds.length}
             </p>
             <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#E65100', fontStyle: 'italic' }}>
-              ⏳ Funds are held in Stripe escrow. Approve to charge, reject to release hold.
+              ⏳ Funds are held in Stripe escrow (Campaign fee + Stripe fee). Approve → Deduct both. Reject → Release both.
             </p>
           </div>
 
@@ -505,7 +505,7 @@ export default function AdminPaymentManagement() {
                             cursor: 'pointer',
                           }}
                         >
-                          ✅ Approve & Deduct from Hold
+                          ✅ Approve & Deduct Both (Fee + Stripe)
                         </button>
                         <button
                           onClick={() => handleReject(hold.id)}
@@ -521,7 +521,7 @@ export default function AdminPaymentManagement() {
                             cursor: 'pointer',
                           }}
                         >
-                          ❌ Reject & Release Hold
+                          ❌ Reject & Release Both
                         </button>
                       </div>
                     </div>
