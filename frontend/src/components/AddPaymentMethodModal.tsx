@@ -22,7 +22,7 @@ export default function AddPaymentMethodModal({ isOpen, onClose, onSuccess, user
   const { showSuccess, showError } = useToastNotification();
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-  const [paymentType, setPaymentType] = useState<'card' | 'bank' | 'paypal'>('card');
+  const [paymentType, setPaymentType] = useState<'card' | 'bank'>('card');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<PaymentMethod>({
     type: 'card',
@@ -203,7 +203,7 @@ export default function AddPaymentMethodModal({ isOpen, onClose, onSuccess, user
           marginBottom: '24px',
           borderBottom: '2px solid #f0f0f0',
         }}>
-          {(['card', 'bank', 'paypal'] as const).map((type) => (
+          {(['card', 'bank'] as const).map((type) => (
             <button
               key={type}
               onClick={() => {
@@ -224,7 +224,6 @@ export default function AddPaymentMethodModal({ isOpen, onClose, onSuccess, user
             >
               {type === 'card' && '💳 Card'}
               {type === 'bank' && '🏦 Bank Account'}
-              {type === 'paypal' && '🅿️ PayPal'}
             </button>
           ))}
         </div>
@@ -442,19 +441,6 @@ export default function AddPaymentMethodModal({ isOpen, onClose, onSuccess, user
             </>
           )}
 
-          {paymentType === 'paypal' && (
-            <div style={{
-              background: '#FFF3E0',
-              border: '2px solid #FF9800',
-              borderRadius: '8px',
-              padding: '16px',
-              textAlign: 'center',
-              color: '#E65100',
-            }}>
-              <p style={{ margin: 0, fontWeight: '600', fontSize: '14px' }}>🅿️ PayPal Connection</p>
-              <p style={{ margin: '8px 0 0 0', fontSize: '13px' }}>You'll be redirected to PayPal to securely connect your account. No card details needed!</p>
-            </div>
-          )}
 
           {/* Security Info */}
           <div style={{
