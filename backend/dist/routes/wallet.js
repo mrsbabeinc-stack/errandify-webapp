@@ -772,6 +772,82 @@ router.post('/ep-purchase-webhook', async (req, res) => {
         res.status(500).json({ success: false, error: 'Webhook processing failed' });
     }
 });
+// POST /api/wallet/ep-purchase-webhook-demo - Demo endpoint to test webhook locally
+router.post('/ep-purchase-webhook-demo', async (req, res) => {
+    try {
+        const { userId, companyId, epAmount, basePriceSgd, stripeFee } = req.body;
+        const epAmount_to_award = parseInt(epAmount || '0', 10);
+        // Ensure transaction table exists
+        try {
+            await db.query(`
+        CREATE TABLE IF NOT EXISTS ep_purchase_transactions (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER,
+          company_id INTEGER,
+          ep_amount INTEGER NOT NULL,
+          sgd_price DECIMAL(10, 2),
+          stripe_fee DECIMAL(10, 2),
+          total_paid DECIMAL(10, 2),
+          status VARCHAR(20) DEFAULT 'completed',
+          stripe_transaction_id VARCHAR(255),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+        }
+        catch (e) {
+            // Table might already exist
+        }
+        if (epAmount_to_award > 0) {
+            if (userId) {
+                // Award EP to individual user
+                const userRes = await db.query(`UPDATE users SET errandify_points = COALESCE(errandify_points, 0) + $1 WHERE id = $2 RETURNING errandify_points`, [epAmount_to_award, userId]);
+                const newBalance = userRes.rows[0]?.errandify_points || epAmount_to_award;
+                console.log(`✅ [DEMO] Awarded ${epAmount_to_award} EP to user ${userId}. New balance: ${newBalance}`);
+                // Log transaction
+                try {
+                    await db.query(`INSERT INTO ep_purchase_transactions (user_id, ep_amount, sgd_price, stripe_fee, total_paid, status)
+             VALUES ($1, $2, $3, $4, $5, 'completed')`, [userId, epAmount_to_award, basePriceSgd || 0, stripeFee || 0, (basePriceSgd || 0) + (stripeFee || 0)]);
+                }
+                catch (logError) {
+                    console.warn('Could not log transaction:', logError);
+                }
+                return res.json({
+                    success: true,
+                    message: `✅ Awarded ${epAmount_to_award} EP successfully`,
+                    epAmount: epAmount_to_award,
+                    awardedTo: `user ${userId}`,
+                    newBalance: newBalance
+                });
+            }
+            else if (companyId) {
+                // Award EP to company
+                const companyRes = await db.query(`UPDATE companies SET ep_balance = COALESCE(ep_balance, 0) + $1 WHERE id = $2 RETURNING ep_balance`, [epAmount_to_award, companyId]);
+                const newBalance = companyRes.rows[0]?.ep_balance || epAmount_to_award;
+                console.log(`✅ [DEMO] Awarded ${epAmount_to_award} EP to company ${companyId}. New balance: ${newBalance}`);
+                // Log transaction
+                try {
+                    await db.query(`INSERT INTO ep_purchase_transactions (company_id, ep_amount, sgd_price, stripe_fee, total_paid, status)
+             VALUES ($1, $2, $3, $4, $5, 'completed')`, [companyId, epAmount_to_award, basePriceSgd || 0, stripeFee || 0, (basePriceSgd || 0) + (stripeFee || 0)]);
+                }
+                catch (logError) {
+                    console.warn('Could not log transaction:', logError);
+                }
+                return res.json({
+                    success: true,
+                    message: `✅ Awarded ${epAmount_to_award} EP successfully`,
+                    epAmount: epAmount_to_award,
+                    awardedTo: `company ${companyId}`,
+                    newBalance: newBalance
+                });
+            }
+        }
+        res.status(400).json({ success: false, error: 'Invalid EP amount or missing user/company ID' });
+    }
+    catch (error) {
+        console.error('Demo webhook error:', error);
+        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Demo webhook failed' });
+    }
+});
 // GET /api/wallet/ep-purchase-history - Get EP purchase transaction history
 router.get('/ep-purchase-history', authMiddleware, async (req, res) => {
     try {
