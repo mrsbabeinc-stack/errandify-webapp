@@ -2523,67 +2523,6 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                     </button>
                   </div>
 
-                  {/* Purchase History - Bottom Section with Scroll */}
-                  <div style={{background: 'white', border: '2px solid #FFE4C4', borderRadius: '16px', padding: '28px'}}>
-                    <h4 style={{margin: '0 0 20px 0', fontSize: '16px', fontWeight: '700', color: '#8B4513'}}>📋 Your Transaction History (EP & Vouchers)</h4>
-                    <div style={{overflowY: 'auto', maxHeight: '400px', border: '1px solid #FFE4C4', borderRadius: '8px', padding: '4px'}}>
-                      <table style={{width: '100%', borderCollapse: 'collapse'}}>
-                        <thead style={{position: 'sticky', top: 0, background: '#FFF5F0', zIndex: 10}}>
-                          <tr style={{borderBottom: '2px solid #FFE4C4'}}>
-                            <th style={{padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#666'}}>Date</th>
-                            <th style={{padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#666'}}>Type</th>
-                            <th style={{padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#666'}}>Amount</th>
-                            <th style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '700', color: '#666'}}>Price</th>
-                            <th style={{padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: '#666'}}>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr style={{borderBottom: '1px solid #FFE4C4'}}>
-                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jul 19, 2026</td>
-                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>💳 EP Purchase</td>
-                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>8,000 EP</td>
-                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>SGD $80.23</td>
-                            <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Paid</span></td>
-                          </tr>
-                          <tr style={{borderBottom: '1px solid #FFE4C4'}}>
-                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jul 15, 2026</td>
-                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>💳 EP Purchase</td>
-                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>5,000 EP</td>
-                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>SGD $46.45</td>
-                            <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Paid</span></td>
-                          </tr>
-                          <tr style={{borderBottom: '1px solid #FFE4C4'}}>
-                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jul 12, 2026</td>
-                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#8B4513'}}>🎟️ Voucher Redeemed</td>
-                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#8B4513'}}>200 EP Used</td>
-                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#8B4513'}}>$10 Discount</td>
-                            <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dbeafe', color: '#1e40af', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Redeemed</span></td>
-                          </tr>
-                          <tr style={{borderBottom: '1px solid #FFE4C4'}}>
-                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jul 08, 2026</td>
-                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>💳 EP Purchase</td>
-                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>10,000 EP</td>
-                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>SGD $82.90</td>
-                            <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Paid</span></td>
-                          </tr>
-                          <tr style={{borderBottom: '1px solid #FFE4C4'}}>
-                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jul 01, 2026</td>
-                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#8B4513'}}>🎁 Voucher Gifted</td>
-                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#8B4513'}}>500 EP Gifted</td>
-                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#8B4513'}}>$50 Value</td>
-                            <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#fce7f3', color: '#be185d', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Gifted</span></td>
-                          </tr>
-                          <tr>
-                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jun 25, 2026</td>
-                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>💳 EP Purchase</td>
-                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>3,000 EP</td>
-                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>SGD $30.87</td>
-                            <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Paid</span></td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
                 </div>
               )}
 
@@ -2973,10 +2912,11 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       onChange={(e) => setHistoryFilter(e.target.value as any)}
                       style={{padding: '12px 16px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '14px', fontFamily: 'inherit', cursor: 'pointer'}}
                     >
-                      <option value="all">📋 All</option>
-                      <option value="redeemed">🎟️ Redeemed</option>
-                      <option value="gifted">💝 Gifted</option>
-                      <option value="received">📬 Received</option>
+                      <option value="all">📋 All Transactions</option>
+                      <option value="ep-purchase">💳 EP Purchases</option>
+                      <option value="redeemed">🎟️ Voucher Redeemed</option>
+                      <option value="gifted">🎁 Voucher Gifted</option>
+                      <option value="received">📬 Bonus Received</option>
                     </select>
                   </div>
 
@@ -2987,17 +2927,22 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                           <tr style={{background: '#FFF9F5', borderBottom: '2px solid #e0e0e0'}}>
                             <th style={{padding: '16px', textAlign: 'left', fontWeight: '700', fontSize: '13px', color: '#333'}}>Type</th>
                             <th style={{padding: '16px', textAlign: 'left', fontWeight: '700', fontSize: '13px', color: '#333'}}>Description</th>
-                            <th style={{padding: '16px', textAlign: 'right', fontWeight: '700', fontSize: '13px', color: '#333'}}>Amount</th>
+                            <th style={{padding: '16px', textAlign: 'right', fontWeight: '700', fontSize: '13px', color: '#333'}}>Amount (EP)</th>
+                            <th style={{padding: '16px', textAlign: 'left', fontWeight: '700', fontSize: '13px', color: '#333'}}>Price/Note</th>
                             <th style={{padding: '16px', textAlign: 'left', fontWeight: '700', fontSize: '13px', color: '#333'}}>Date</th>
                           </tr>
                         </thead>
                         <tbody>
                           {[
-                            { type: 'redeemed', emoji: '🎟️', description: '$20 Discount Voucher', amount: -200, date: '2026-07-13', amountColor: '#999' },
-                            { type: 'gifted', emoji: '💝', description: 'Sent 50 EP to 3 staff members', amount: -150, date: '2026-07-12', amountColor: '#E91E63' },
-                            { type: 'redeemed', emoji: '🎟️', description: 'Starbucks $10 Gift', amount: -120, date: '2026-07-10', amountColor: '#999' },
-                            { type: 'received', emoji: '📬', description: 'Received from admin bonus', amount: 500, date: '2026-07-08', amountColor: '#27AE60' },
-                            { type: 'redeemed', emoji: '🎟️', description: '$10 Discount Voucher', amount: -100, date: '2026-07-05', amountColor: '#999' }
+                            { type: 'ep-purchase', emoji: '💳', description: '8,000 EP Purchase', amount: 8000, price: 'SGD $80.23', date: '2026-07-19', amountColor: '#FF6B35', status: '✅ Paid' },
+                            { type: 'ep-purchase', emoji: '💳', description: '5,000 EP Purchase', amount: 5000, price: 'SGD $46.45', date: '2026-07-15', amountColor: '#FF6B35', status: '✅ Paid' },
+                            { type: 'redeemed', emoji: '🎟️', description: '$20 Discount Voucher', amount: -200, price: '200 EP Used', date: '2026-07-13', amountColor: '#999', status: '✅ Redeemed' },
+                            { type: 'gifted', emoji: '🎁', description: 'Sent 50 EP to 3 staff members', amount: -150, price: 'Sent', date: '2026-07-12', amountColor: '#E91E63', status: '✅ Gifted' },
+                            { type: 'ep-purchase', emoji: '💳', description: '10,000 EP Purchase', amount: 10000, price: 'SGD $82.90', date: '2026-07-08', amountColor: '#FF6B35', status: '✅ Paid' },
+                            { type: 'received', emoji: '📬', description: 'Received from admin bonus', amount: 500, price: 'Bonus', date: '2026-07-08', amountColor: '#27AE60', status: '✅ Received' },
+                            { type: 'redeemed', emoji: '🎟️', description: 'Starbucks $10 Gift', amount: -120, price: '120 EP Used', date: '2026-07-10', amountColor: '#999', status: '✅ Redeemed' },
+                            { type: 'redeemed', emoji: '🎟️', description: '$10 Discount Voucher', amount: -100, price: '100 EP Used', date: '2026-07-05', amountColor: '#999', status: '✅ Redeemed' },
+                            { type: 'ep-purchase', emoji: '💳', description: '3,000 EP Purchase', amount: 3000, price: 'SGD $30.87', date: '2026-06-25', amountColor: '#FF6B35', status: '✅ Paid' }
                           ]
                             .filter(tx =>
                               (historyFilter === 'all' || tx.type === historyFilter) &&
@@ -3008,6 +2953,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                                 <td style={{padding: '16px', fontSize: '20px'}}>{tx.emoji}</td>
                                 <td style={{padding: '16px', fontSize: '13px', color: '#333'}}>{tx.description}</td>
                                 <td style={{padding: '16px', textAlign: 'right', fontWeight: '700', fontSize: '13px', color: tx.amountColor}}>{tx.amount > 0 ? '+' : ''}{tx.amount} EP</td>
+                                <td style={{padding: '16px', textAlign: 'left', fontSize: '13px', color: '#666'}}>{tx.price}</td>
                                 <td style={{padding: '16px', fontSize: '13px', color: '#999'}}>{tx.date}</td>
                               </tr>
                             ))}
