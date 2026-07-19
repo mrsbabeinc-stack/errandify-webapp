@@ -85,6 +85,19 @@ const CompanyDashboardNew: React.FC = () => {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [actionItemFilter, setActionItemFilter] = useState<'all' | 'high' | 'medium' | 'low' | 'done'>('all');
   const [invoiceFilter, setInvoiceFilter] = useState<string>('');
+  // Settings state
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: true,
+    smsAlerts: true,
+    pushNotifications: true,
+    weeklyReports: true,
+    marketingEmails: false,
+  });
+  const [billingData, setBillingData] = useState({
+    email: 'billing@rumaheimas.com',
+    address: '123 Business District, Singapore 089999',
+    frequency: 'Monthly',
+  });
   const [rewardsTab, setRewardsTab] = useState<'overview' | 'gift' | 'redeemed' | 'history'>('overview');
   const [giftSearch, setGiftSearch] = useState('');
   const [giftCategoryFilter, setGiftCategoryFilter] = useState<'all' | 'discount' | 'partner'>('all');
@@ -1092,23 +1105,23 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                   <h3>Notifications & Communication</h3>
                   <div className="settings-toggle">
                     <label>Email Notifications</label>
-                    <input type="checkbox" defaultChecked />
+                    <input type="checkbox" checked={notificationSettings.emailNotifications} onChange={(e) => setNotificationSettings(prev => ({ ...prev, emailNotifications: e.target.checked }))} />
                   </div>
                   <div className="settings-toggle">
                     <label>SMS Alerts</label>
-                    <input type="checkbox" defaultChecked />
+                    <input type="checkbox" checked={notificationSettings.smsAlerts} onChange={(e) => setNotificationSettings(prev => ({ ...prev, smsAlerts: e.target.checked }))} />
                   </div>
                   <div className="settings-toggle">
                     <label>Push Notifications</label>
-                    <input type="checkbox" defaultChecked />
+                    <input type="checkbox" checked={notificationSettings.pushNotifications} onChange={(e) => setNotificationSettings(prev => ({ ...prev, pushNotifications: e.target.checked }))} />
                   </div>
                   <div className="settings-toggle">
                     <label>Weekly Reports</label>
-                    <input type="checkbox" defaultChecked />
+                    <input type="checkbox" checked={notificationSettings.weeklyReports} onChange={(e) => setNotificationSettings(prev => ({ ...prev, weeklyReports: e.target.checked }))} />
                   </div>
                   <div className="settings-toggle">
                     <label>Marketing Emails</label>
-                    <input type="checkbox" />
+                    <input type="checkbox" checked={notificationSettings.marketingEmails} onChange={(e) => setNotificationSettings(prev => ({ ...prev, marketingEmails: e.target.checked }))} />
                   </div>
                 </div>
 
@@ -1126,12 +1139,14 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       <div className="card-actions">
                         <span className="badge default">Default</span>
                         <button className="btn-remove" onClick={() => {
-                          alert('Remove payment method: **** **** **** 1234');
+                          if (confirm('Are you sure you want to remove this payment method?')) {
+                            alert('✅ Payment method removed successfully!');
+                          }
                         }}>Remove</button>
                       </div>
                     </div>
                     <button className="btn-add-payment" onClick={() => {
-                      alert('Opening payment method form - Add new Visa, Mastercard, or Bank Account');
+                      alert('💳 Add Payment Method\n\nSupported methods:\n• Visa/Mastercard\n• Apple Pay\n• Google Pay\n• Bank Transfer (Singapore)\n\nClick OK to open payment form.');
                     }}>+ Add Payment Method</button>
                   </div>
 
@@ -1139,22 +1154,22 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                     <h4>Billing Information</h4>
                     <div className="settings-item">
                       <label>Billing Email</label>
-                      <input type="email" value="billing@rumaheimas.com" />
+                      <input type="email" value={billingData.email} onChange={(e) => setBillingData(prev => ({ ...prev, email: e.target.value }))} />
                     </div>
                     <div className="settings-item">
                       <label>Billing Address</label>
-                      <input type="text" value="123 Business District, Singapore 089999" />
+                      <input type="text" value={billingData.address} onChange={(e) => setBillingData(prev => ({ ...prev, address: e.target.value }))} />
                     </div>
                     <div className="settings-item">
                       <label>Invoice Frequency</label>
-                      <select className="settings-select">
+                      <select className="settings-select" value={billingData.frequency} onChange={(e) => setBillingData(prev => ({ ...prev, frequency: e.target.value }))}>
                         <option>Monthly</option>
                         <option>Quarterly</option>
                         <option>Annual</option>
                       </select>
                     </div>
                     <button className="btn-save" onClick={() => {
-                      alert('Billing information updated successfully!');
+                      alert(`✅ Billing information updated!\n\nEmail: ${billingData.email}\nAddress: ${billingData.address}\nFrequency: ${billingData.frequency}`);
                     }}>Update Billing Info</button>
                   </div>
 

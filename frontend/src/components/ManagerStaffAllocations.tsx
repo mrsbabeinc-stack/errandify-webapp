@@ -162,10 +162,9 @@ const ManagerStaffAllocations: React.FC<ManagerStaffAllocationsProps> = ({ compa
       ) : (
         <div className="allocations-table">
           <div className="table-header">
-            <div className="col-staff">Staff Member</div>
-            <div className="col-task">Task</div>
-            <div className="col-status">Status</div>
-            <div className="col-date">Date</div>
+            <div className="col-staff">STAFF MEMBER</div>
+            <div className="col-task">ERRAND</div>
+            <div className="col-status">STATUS</div>
           </div>
 
           {filteredAllocations.map(allocation => (

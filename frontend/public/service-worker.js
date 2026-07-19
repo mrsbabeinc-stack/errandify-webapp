@@ -1,7 +1,7 @@
 // Service Worker for Push Notifications
 // Handles background sync, push events, and offline notifications
 
-const CACHE_NAME = 'errandify-v35-referral-performance';
+const CACHE_NAME = 'errandify-v37-company-settings';
 const urlsToCache = [
   '/',
   '/index.html',
