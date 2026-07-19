@@ -124,6 +124,7 @@ const CompanyDashboardNew: React.FC = () => {
   });
   const [rewardsTab, setRewardsTab] = useState<'overview' | 'gift' | 'redeemed' | 'history' | 'buy-ep'>('overview');
   const [selectedEPPackage, setSelectedEPPackage] = useState<{id: number, ep_amount: number, price_sgd: number, discount_percent: number} | null>(null);
+  const [customEPAmount, setCustomEPAmount] = useState<number | ''>('');
   const [epPurchaseStep, setEpPurchaseStep] = useState(0); // 0: select, 1: confirm, 2: processing
   const [giftSearch, setGiftSearch] = useState('');
   const [giftCategoryFilter, setGiftCategoryFilter] = useState<'all' | 'discount' | 'partner'>('all');
@@ -146,6 +147,15 @@ const CompanyDashboardNew: React.FC = () => {
       ...prev,
       [section]: !prev[section],
     }));
+  };
+
+  // Calculate Stripe fee (2.9% + $0.30 SGD)
+  const calculateStripeFee = (amountInSgd: number): { stripeFee: number, totalSgd: number } => {
+    const stripeFee = (amountInSgd * 0.029 + 0.30);
+    return {
+      stripeFee: parseFloat(stripeFee.toFixed(2)),
+      totalSgd: parseFloat((amountInSgd + stripeFee).toFixed(2))
+    };
   };
 
   useEffect(() => {
@@ -2325,95 +2335,200 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       { id: 2, ep_amount: 5000, price_sgd: 45.00, discount_percent: 10, emoji: '⭐', popular: true },
                       { id: 3, ep_amount: 10000, price_sgd: 80.00, discount_percent: 20, emoji: '🎯' },
                       { id: 4, ep_amount: 25000, price_sgd: 180.00, discount_percent: 28, emoji: '💎' },
-                    ].map((pkg) => (
-                      <div key={pkg.id} style={{
-                        position: 'relative',
-                        background: pkg.popular ? 'linear-gradient(135deg, #FFE4C4 0%, #FFDAB9 100%)' : 'white',
-                        borderRadius: '16px',
-                        border: pkg.popular ? '3px solid #FF6B35' : '2px solid #FFE4C4',
-                        padding: '28px',
-                        boxShadow: pkg.popular ? '0 8px 24px rgba(255, 107, 53, 0.15)' : '0 4px 12px rgba(0, 0, 0, 0.08)',
-                        transition: 'all 0.3s ease',
-                        cursor: 'pointer',
-                        transform: 'scale(1)',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.05)';
-                        e.currentTarget.style.boxShadow = pkg.popular ? '0 12px 32px rgba(255, 107, 53, 0.25)' : '0 8px 24px rgba(0, 0, 0, 0.12)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                        e.currentTarget.style.boxShadow = pkg.popular ? '0 8px 24px rgba(255, 107, 53, 0.15)' : '0 4px 12px rgba(0, 0, 0, 0.08)';
-                      }}>
-                        {pkg.popular && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '-12px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            background: '#FF6B35',
-                            color: 'white',
-                            padding: '6px 16px',
-                            borderRadius: '20px',
-                            fontSize: '12px',
-                            fontWeight: '700',
-                            whiteSpace: 'nowrap'
-                          }}>
-                            ⭐ Most Popular
-                          </div>
-                        )}
-
-                        <div style={{textAlign: 'center', marginBottom: '20px'}}>
-                          <div style={{fontSize: '40px', marginBottom: '12px'}}>{pkg.emoji}</div>
-                          <div style={{fontSize: '28px', fontWeight: '800', color: '#FF6B35', marginBottom: '8px'}}>
-                            {pkg.ep_amount.toLocaleString()}
-                          </div>
-                          <div style={{fontSize: '14px', color: '#999', marginBottom: '16px'}}>Errandify Points</div>
-
-                          <div style={{fontSize: '24px', fontWeight: '700', color: '#333', marginBottom: '4px'}}>
-                            SGD ${pkg.price_sgd.toFixed(2)}
-                          </div>
-                          {pkg.discount_percent > 0 && (
-                            <div style={{fontSize: '12px', color: '#22c55e', fontWeight: '700', marginBottom: '12px'}}>
-                              💚 Save {pkg.discount_percent}%
+                    ].map((pkg) => {
+                      const fees = calculateStripeFee(pkg.price_sgd);
+                      return (
+                        <div key={pkg.id} style={{
+                          position: 'relative',
+                          background: pkg.popular ? 'linear-gradient(135deg, #FFE4C4 0%, #FFDAB9 100%)' : 'white',
+                          borderRadius: '16px',
+                          border: pkg.popular ? '3px solid #FF6B35' : '2px solid #FFE4C4',
+                          padding: '28px',
+                          boxShadow: pkg.popular ? '0 8px 24px rgba(255, 107, 53, 0.15)' : '0 4px 12px rgba(0, 0, 0, 0.08)',
+                          transition: 'all 0.3s ease',
+                          cursor: 'pointer',
+                          transform: 'scale(1)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.05)';
+                          e.currentTarget.style.boxShadow = pkg.popular ? '0 12px 32px rgba(255, 107, 53, 0.25)' : '0 8px 24px rgba(0, 0, 0, 0.12)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.boxShadow = pkg.popular ? '0 8px 24px rgba(255, 107, 53, 0.15)' : '0 4px 12px rgba(0, 0, 0, 0.08)';
+                        }}>
+                          {pkg.popular && (
+                            <div style={{
+                              position: 'absolute',
+                              top: '-12px',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              background: '#FF6B35',
+                              color: 'white',
+                              padding: '6px 16px',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: '700',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              ⭐ Most Popular
                             </div>
                           )}
-                        </div>
 
-                        <button
-                          onClick={() => {
-                            setSelectedEPPackage(pkg);
-                            setEpPurchaseStep(0);
-                          }}
-                          style={{
-                            width: '100%',
-                            padding: '14px 20px',
-                            background: '#FF6B35',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '10px',
-                            fontSize: '14px',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = '#ff8c5a')}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = '#FF6B35')}
-                        >
-                          🛒 Buy Now
-                        </button>
-                      </div>
-                    ))}
+                          <div style={{textAlign: 'center', marginBottom: '20px'}}>
+                            <div style={{fontSize: '40px', marginBottom: '12px'}}>{pkg.emoji}</div>
+                            <div style={{fontSize: '28px', fontWeight: '800', color: '#FF6B35', marginBottom: '8px'}}>
+                              {pkg.ep_amount.toLocaleString()}
+                            </div>
+                            <div style={{fontSize: '14px', color: '#999', marginBottom: '16px'}}>Errandify Points</div>
+
+                            <div style={{fontSize: '16px', fontWeight: '700', color: '#999', marginBottom: '4px'}}>
+                              Base: SGD ${pkg.price_sgd.toFixed(2)}
+                            </div>
+                            <div style={{fontSize: '12px', color: '#999', marginBottom: '8px'}}>
+                              + ${fees.stripeFee.toFixed(2)} Stripe fee
+                            </div>
+                            <div style={{fontSize: '24px', fontWeight: '700', color: '#FF6B35', marginBottom: '4px'}}>
+                              Total: SGD ${fees.totalSgd.toFixed(2)}
+                            </div>
+                            {pkg.discount_percent > 0 && (
+                              <div style={{fontSize: '12px', color: '#22c55e', fontWeight: '700', marginTop: '12px'}}>
+                                💚 Save {pkg.discount_percent}%
+                              </div>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              setSelectedEPPackage(pkg);
+                              setEpPurchaseStep(0);
+                              setCustomEPAmount('');
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '14px 20px',
+                              background: '#FF6B35',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '10px',
+                              fontSize: '14px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease',
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = '#ff8c5a')}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = '#FF6B35')}
+                          >
+                            🛒 Buy Now
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
 
-                  {/* Purchase History */}
+                  {/* Custom EP Amount Section */}
+                  <div style={{background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE4C4 100%)', border: '2px solid #FFB84D', borderRadius: '16px', padding: '28px', marginBottom: '40px', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.1)'}}>
+                    <h4 style={{margin: '0 0 20px 0', fontSize: '16px', fontWeight: '700', color: '#8B4513'}}>⚡ Or Customize Your Amount</h4>
+                    <p style={{margin: '0 0 16px 0', fontSize: '13px', color: '#666', fontWeight: '500'}}>Buy in multiples of 1,000 EP (SGD $0.01 per EP + Stripe fees)</p>
+
+                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'end'}}>
+                      <div>
+                        <label style={{display: 'block', fontSize: '12px', fontWeight: '700', color: '#8B4513', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>EP Amount</label>
+                        <input
+                          type="number"
+                          min="1000"
+                          step="1000"
+                          value={customEPAmount}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? '' : parseInt(e.target.value, 10);
+                            setCustomEPAmount(val);
+                          }}
+                          placeholder="e.g., 1000, 2000, 5000..."
+                          style={{
+                            width: '100%',
+                            padding: '12px 14px',
+                            fontSize: '14px',
+                            border: '2px solid #FFB84D',
+                            borderRadius: '8px',
+                            fontWeight: '600',
+                            color: '#333',
+                            boxSizing: 'border-box'
+                          }}
+                        />
+                      </div>
+
+                      {customEPAmount && typeof customEPAmount === 'number' && customEPAmount >= 1000 && customEPAmount % 1000 === 0 ? (
+                        (() => {
+                          const basePriceSgd = customEPAmount / 100; // SGD $0.01 per EP
+                          const fees = calculateStripeFee(basePriceSgd);
+                          return (
+                            <div style={{background: 'white', borderRadius: '8px', padding: '12px 14px', border: '2px solid #FF6B35'}}>
+                              <div style={{fontSize: '12px', fontWeight: '700', color: '#FF6B35', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Total with Fee</div>
+                              <div style={{fontSize: '18px', fontWeight: '800', color: '#FF6B35'}}>SGD ${fees.totalSgd.toFixed(2)}</div>
+                              <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>Base ${basePriceSgd.toFixed(2)} + Fee ${fees.stripeFee.toFixed(2)}</div>
+                            </div>
+                          );
+                        })()
+                      ) : null}
+                    </div>
+
+                    {customEPAmount && (typeof customEPAmount !== 'number' || customEPAmount < 1000 || customEPAmount % 1000 !== 0) && (
+                      <div style={{marginTop: '12px', padding: '12px', background: '#FFF0F0', borderRadius: '8px', border: '1px solid #FFB3B3', fontSize: '12px', color: '#D32F2F', fontWeight: '500'}}>
+                        ⚠️ EP amount must be at least 1,000 and in multiples of 1,000
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        if (customEPAmount && typeof customEPAmount === 'number' && customEPAmount >= 1000 && customEPAmount % 1000 === 0) {
+                          const basePriceSgd = customEPAmount / 100;
+                          setSelectedEPPackage({
+                            id: 99,
+                            ep_amount: customEPAmount,
+                            price_sgd: basePriceSgd,
+                            discount_percent: 0
+                          });
+                          setEpPurchaseStep(0);
+                        }
+                      }}
+                      disabled={!customEPAmount || typeof customEPAmount !== 'number' || customEPAmount < 1000 || customEPAmount % 1000 !== 0}
+                      style={{
+                        width: '100%',
+                        marginTop: '16px',
+                        padding: '14px 20px',
+                        background: (customEPAmount && typeof customEPAmount === 'number' && customEPAmount >= 1000 && customEPAmount % 1000 === 0) ? '#FF6B35' : '#CCC',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                        fontWeight: '700',
+                        cursor: (customEPAmount && typeof customEPAmount === 'number' && customEPAmount >= 1000 && customEPAmount % 1000 === 0) ? 'pointer' : 'not-allowed',
+                        transition: 'all 0.3s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        if ((customEPAmount && typeof customEPAmount === 'number' && customEPAmount >= 1000 && customEPAmount % 1000 === 0)) {
+                          e.currentTarget.style.background = '#ff8c5a';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if ((customEPAmount && typeof customEPAmount === 'number' && customEPAmount >= 1000 && customEPAmount % 1000 === 0)) {
+                          e.currentTarget.style.background = '#FF6B35';
+                        }
+                      }}
+                    >
+                      🛒 Proceed with Custom Amount
+                    </button>
+                  </div>
+
+                  {/* Purchase History - Bottom Section with Scroll */}
                   <div style={{background: 'white', border: '2px solid #FFE4C4', borderRadius: '16px', padding: '28px'}}>
-                    <h4 style={{margin: '0 0 20px 0', fontSize: '16px', fontWeight: '700', color: '#8B4513'}}>📋 Your Purchase History</h4>
-                    <div style={{overflowX: 'auto'}}>
+                    <h4 style={{margin: '0 0 20px 0', fontSize: '16px', fontWeight: '700', color: '#8B4513'}}>📋 Your Transaction History (EP & Vouchers)</h4>
+                    <div style={{overflowY: 'auto', maxHeight: '400px', border: '1px solid #FFE4C4', borderRadius: '8px', padding: '4px'}}>
                       <table style={{width: '100%', borderCollapse: 'collapse'}}>
-                        <thead>
-                          <tr style={{background: '#FFF5F0', borderBottom: '2px solid #FFE4C4'}}>
+                        <thead style={{position: 'sticky', top: 0, background: '#FFF5F0', zIndex: 10}}>
+                          <tr style={{borderBottom: '2px solid #FFE4C4'}}>
                             <th style={{padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#666'}}>Date</th>
+                            <th style={{padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#666'}}>Type</th>
                             <th style={{padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#666'}}>Amount</th>
                             <th style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '700', color: '#666'}}>Price</th>
                             <th style={{padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: '#666'}}>Status</th>
@@ -2421,15 +2536,45 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         </thead>
                         <tbody>
                           <tr style={{borderBottom: '1px solid #FFE4C4'}}>
-                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jul 15, 2026</td>
-                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>5,000 EP</td>
-                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>SGD $45</td>
+                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jul 19, 2026</td>
+                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>💳 EP Purchase</td>
+                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>8,000 EP</td>
+                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>SGD $80.23</td>
                             <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Paid</span></td>
                           </tr>
-                          <tr>
+                          <tr style={{borderBottom: '1px solid #FFE4C4'}}>
+                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jul 15, 2026</td>
+                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>💳 EP Purchase</td>
+                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>5,000 EP</td>
+                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>SGD $46.45</td>
+                            <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Paid</span></td>
+                          </tr>
+                          <tr style={{borderBottom: '1px solid #FFE4C4'}}>
+                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jul 12, 2026</td>
+                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#8B4513'}}>🎟️ Voucher Redeemed</td>
+                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#8B4513'}}>200 EP Used</td>
+                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#8B4513'}}>$10 Discount</td>
+                            <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dbeafe', color: '#1e40af', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Redeemed</span></td>
+                          </tr>
+                          <tr style={{borderBottom: '1px solid #FFE4C4'}}>
                             <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jul 08, 2026</td>
+                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>💳 EP Purchase</td>
                             <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>10,000 EP</td>
-                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>SGD $80</td>
+                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>SGD $82.90</td>
+                            <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Paid</span></td>
+                          </tr>
+                          <tr style={{borderBottom: '1px solid #FFE4C4'}}>
+                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jul 01, 2026</td>
+                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#8B4513'}}>🎁 Voucher Gifted</td>
+                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#8B4513'}}>500 EP Gifted</td>
+                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#8B4513'}}>$50 Value</td>
+                            <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#fce7f3', color: '#be185d', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Gifted</span></td>
+                          </tr>
+                          <tr>
+                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jun 25, 2026</td>
+                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>💳 EP Purchase</td>
+                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>3,000 EP</td>
+                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>SGD $30.87</td>
                             <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Paid</span></td>
                           </tr>
                         </tbody>
@@ -2515,6 +2660,26 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                   <div style={{background: 'white', borderRadius: '16px', padding: '28px', border: '2px solid #E8D5C4', boxShadow: '0 2px 12px rgba(0,0,0,0.06)'}}>
                     <p style={{margin: '0 0 12px 0', fontSize: '12px', fontWeight: '600', color: '#8B4513', textTransform: 'uppercase', letterSpacing: '0.5px'}}>⚡ Quick Actions</p>
                     <h3 style={{margin: '0 0 20px 0', fontSize: '20px', fontWeight: '700', color: '#333'}}>Take Action</h3>
+                    <button
+                      onClick={() => setRewardsTab('buy-ep')}
+                      style={{
+                        width: '100%',
+                        padding: '14px 16px',
+                        background: 'linear-gradient(135deg, #FF6B35, #FF8C5A)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontWeight: '700',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        marginBottom: '12px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                    >
+                      💳 Buy EP Now
+                    </button>
                     <button
                       onClick={() => setRewardsTab('gift')}
                       style={{

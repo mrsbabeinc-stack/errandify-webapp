@@ -888,31 +888,82 @@ router.get('/ep-packages', async (req: any, res: Response) => {
   }
 });
 
+// Calculate Stripe fee (2.9% + $0.30 SGD)
+const calculateStripeFee = (amountInCents: number): number => {
+  return Math.round(amountInCents * 0.029 + 30); // 2.9% + $0.30
+};
+
+// Calculate base price for custom EP amount (SGD $0.01 per EP)
+const calculateCustomPrice = (epAmount: number): { basePriceSgd: number, stripeFee: number, totalSgd: number } => {
+  if (epAmount < 1000 || epAmount % 1000 !== 0) {
+    throw new Error('EP amount must be at least 1,000 and in multiples of 1,000');
+  }
+
+  const basePriceSgd = epAmount / 100; // SGD $0.01 per EP
+  const baseAmountCents = Math.round(basePriceSgd * 100);
+  const stripeFee = calculateStripeFee(baseAmountCents);
+  const totalCents = baseAmountCents + stripeFee;
+  const totalSgd = totalCents / 100;
+
+  return {
+    basePriceSgd: parseFloat(basePriceSgd.toFixed(2)),
+    stripeFee: parseFloat((stripeFee / 100).toFixed(2)),
+    totalSgd: parseFloat(totalSgd.toFixed(2))
+  };
+};
+
 // POST /api/wallet/purchase-ep - Initiate EP purchase via Stripe
 router.post('/purchase-ep', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { package_id } = req.body;
+    const { package_id, custom_ep_amount } = req.body;
     const companyId = parseInt(req.companyId || req.userId || '0', 10);
 
-    if (!package_id) {
-      return res.status(400).json({ success: false, error: 'package_id required' });
+    let epAmount: number;
+    let basePriceSgd: number;
+    let stripeFee: number;
+    let totalPriceSgd: number;
+
+    if (custom_ep_amount) {
+      // Custom amount
+      if (typeof custom_ep_amount !== 'number' || custom_ep_amount < 1000 || custom_ep_amount % 1000 !== 0) {
+        return res.status(400).json({ success: false, error: 'EP amount must be at least 1,000 and in multiples of 1,000' });
+      }
+
+      try {
+        const pricing = calculateCustomPrice(custom_ep_amount);
+        epAmount = custom_ep_amount;
+        basePriceSgd = pricing.basePriceSgd;
+        stripeFee = pricing.stripeFee;
+        totalPriceSgd = pricing.totalSgd;
+      } catch (error: any) {
+        return res.status(400).json({ success: false, error: error.message });
+      }
+    } else if (package_id) {
+      // Pre-configured package
+      const packageData = EP_PACKAGES.find(p => p.id === package_id);
+      if (!packageData) {
+        return res.status(400).json({ success: false, error: 'Invalid package' });
+      }
+
+      epAmount = packageData.ep_amount;
+      basePriceSgd = packageData.price_sgd;
+      const baseAmountCents = Math.round(basePriceSgd * 100);
+      stripeFee = calculateStripeFee(baseAmountCents) / 100;
+      totalPriceSgd = basePriceSgd + stripeFee;
+    } else {
+      return res.status(400).json({ success: false, error: 'Either package_id or custom_ep_amount required' });
     }
 
-    const packageData = EP_PACKAGES.find(p => p.id === package_id);
-    if (!packageData) {
-      return res.status(400).json({ success: false, error: 'Invalid package' });
-    }
-
-    // Demo mode - return Stripe-like response
+    // Demo mode - return Stripe-like response with fee breakdown
     res.json({
       success: true,
       isDemo: true,
       checkout_url: `https://checkout.stripe.com/pay/cs_demo_ep_${Date.now()}`,
-      package_id: package_id,
-      ep_amount: packageData.ep_amount,
-      price_sgd: packageData.price_sgd,
-      discount_percent: packageData.discount_percent,
-      message: `✨ Ready to purchase ${packageData.ep_amount} EP for SGD $${packageData.price_sgd}${packageData.discount_percent > 0 ? ` (Save ${packageData.discount_percent}%)` : ''}!`,
+      ep_amount: epAmount,
+      base_price_sgd: basePriceSgd,
+      stripe_fee_sgd: stripeFee,
+      total_price_sgd: totalPriceSgd,
+      message: `✨ Ready to purchase ${epAmount.toLocaleString()} EP for SGD $${totalPriceSgd.toFixed(2)} (includes SGD $${stripeFee.toFixed(2)} Stripe fee)!`,
     });
   } catch (error) {
     console.error('Purchase EP error:', error);

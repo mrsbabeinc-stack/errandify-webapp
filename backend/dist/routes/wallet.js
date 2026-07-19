@@ -653,4 +653,156 @@ router.post('/award-ep-bonus', authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Failed to award bonus EP' });
     }
 });
+// ==================== EP PURCHASE SYSTEM ====================
+// EP Packages configuration
+const EP_PACKAGES = [
+    { id: 1, ep_amount: 1000, price_sgd: 10.00, discount_percent: 0, is_popular: false, display_order: 1 },
+    { id: 2, ep_amount: 5000, price_sgd: 45.00, discount_percent: 10, is_popular: true, display_order: 2 },
+    { id: 3, ep_amount: 10000, price_sgd: 80.00, discount_percent: 20, is_popular: false, display_order: 3 },
+    { id: 4, ep_amount: 25000, price_sgd: 180.00, discount_percent: 28, is_popular: false, display_order: 4 },
+];
+// GET /api/wallet/ep-packages - Get all available EP packages
+router.get('/ep-packages', async (req, res) => {
+    try {
+        res.json({
+            success: true,
+            data: EP_PACKAGES,
+        });
+    }
+    catch (error) {
+        console.error('Get packages error:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch packages' });
+    }
+});
+// Calculate Stripe fee (2.9% + $0.30 SGD)
+const calculateStripeFee = (amountInCents) => {
+    return Math.round(amountInCents * 0.029 + 30); // 2.9% + $0.30
+};
+// Calculate base price for custom EP amount (SGD $0.01 per EP)
+const calculateCustomPrice = (epAmount) => {
+    if (epAmount < 1000 || epAmount % 1000 !== 0) {
+        throw new Error('EP amount must be at least 1,000 and in multiples of 1,000');
+    }
+    const basePriceSgd = epAmount / 100; // SGD $0.01 per EP
+    const baseAmountCents = Math.round(basePriceSgd * 100);
+    const stripeFee = calculateStripeFee(baseAmountCents);
+    const totalCents = baseAmountCents + stripeFee;
+    const totalSgd = totalCents / 100;
+    return {
+        basePriceSgd: parseFloat(basePriceSgd.toFixed(2)),
+        stripeFee: parseFloat((stripeFee / 100).toFixed(2)),
+        totalSgd: parseFloat(totalSgd.toFixed(2))
+    };
+};
+// POST /api/wallet/purchase-ep - Initiate EP purchase via Stripe
+router.post('/purchase-ep', authMiddleware, async (req, res) => {
+    try {
+        const { package_id, custom_ep_amount } = req.body;
+        const companyId = parseInt(req.companyId || req.userId || '0', 10);
+        let epAmount;
+        let basePriceSgd;
+        let stripeFee;
+        let totalPriceSgd;
+        if (custom_ep_amount) {
+            // Custom amount
+            if (typeof custom_ep_amount !== 'number' || custom_ep_amount < 1000 || custom_ep_amount % 1000 !== 0) {
+                return res.status(400).json({ success: false, error: 'EP amount must be at least 1,000 and in multiples of 1,000' });
+            }
+            try {
+                const pricing = calculateCustomPrice(custom_ep_amount);
+                epAmount = custom_ep_amount;
+                basePriceSgd = pricing.basePriceSgd;
+                stripeFee = pricing.stripeFee;
+                totalPriceSgd = pricing.totalSgd;
+            }
+            catch (error) {
+                return res.status(400).json({ success: false, error: error.message });
+            }
+        }
+        else if (package_id) {
+            // Pre-configured package
+            const packageData = EP_PACKAGES.find(p => p.id === package_id);
+            if (!packageData) {
+                return res.status(400).json({ success: false, error: 'Invalid package' });
+            }
+            epAmount = packageData.ep_amount;
+            basePriceSgd = packageData.price_sgd;
+            const baseAmountCents = Math.round(basePriceSgd * 100);
+            stripeFee = calculateStripeFee(baseAmountCents) / 100;
+            totalPriceSgd = basePriceSgd + stripeFee;
+        }
+        else {
+            return res.status(400).json({ success: false, error: 'Either package_id or custom_ep_amount required' });
+        }
+        // Demo mode - return Stripe-like response with fee breakdown
+        res.json({
+            success: true,
+            isDemo: true,
+            checkout_url: `https://checkout.stripe.com/pay/cs_demo_ep_${Date.now()}`,
+            ep_amount: epAmount,
+            base_price_sgd: basePriceSgd,
+            stripe_fee_sgd: stripeFee,
+            total_price_sgd: totalPriceSgd,
+            message: `✨ Ready to purchase ${epAmount.toLocaleString()} EP for SGD $${totalPriceSgd.toFixed(2)} (includes SGD $${stripeFee.toFixed(2)} Stripe fee)!`,
+        });
+    }
+    catch (error) {
+        console.error('Purchase EP error:', error);
+        res.status(500).json({ success: false, error: 'Failed to initiate purchase' });
+    }
+});
+// POST /api/wallet/ep-purchase-webhook - Stripe webhook for payment success
+router.post('/ep-purchase-webhook', async (req, res) => {
+    try {
+        const event = req.body;
+        if (event.type === 'payment_intent.succeeded') {
+            const paymentIntent = event.data.object;
+            const companyId = parseInt(paymentIntent.metadata?.companyId || '0', 10);
+            const epAmount = parseInt(paymentIntent.metadata?.ep_amount || '0', 10);
+            if (companyId && epAmount) {
+                // Award EP to company wallet
+                await db.query(`UPDATE wallet_balance SET ep_balance = ep_balance + ? WHERE company_id = ?`, [epAmount, companyId]);
+                console.log(`✅ Awarded ${epAmount} EP to company ${companyId}`);
+            }
+        }
+        res.json({ success: true, received: true });
+    }
+    catch (error) {
+        console.error('Webhook error:', error);
+        res.status(500).json({ success: false, error: 'Webhook processing failed' });
+    }
+});
+// GET /api/wallet/ep-purchase-history - Get EP purchase transaction history
+router.get('/ep-purchase-history', authMiddleware, async (req, res) => {
+    try {
+        const userId = parseInt(req.userId || '0', 10);
+        // Demo data showing sample purchases
+        const history = [
+            {
+                id: 1,
+                date: '2026-07-15',
+                ep_amount: 5000,
+                price_sgd: 45.00,
+                status: 'completed',
+                package_id: 2,
+            },
+            {
+                id: 2,
+                date: '2026-07-08',
+                ep_amount: 10000,
+                price_sgd: 80.00,
+                status: 'completed',
+                package_id: 3,
+            },
+        ];
+        res.json({
+            success: true,
+            data: history,
+        });
+    }
+    catch (error) {
+        console.error('Get purchase history error:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch history' });
+    }
+});
 export default router;
