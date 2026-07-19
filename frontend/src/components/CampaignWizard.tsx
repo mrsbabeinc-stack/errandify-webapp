@@ -20,10 +20,19 @@ interface CampaignWizardProps {
 }
 
 const CampaignWizard: React.FC<CampaignWizardProps> = ({ isOpen, onClose, onCampaignSubmit }) => {
-  const [step, setStep] = useState<'package-setup' | 'campaign-details'>('package-setup');
+  const [step, setStep] = useState<'package-setup' | 'campaign-details' | 'refund-warning'>('package-setup');
   const [campaigns, setCampaigns] = useState<CampaignData[]>([]);
   const [currentCampaign, setCurrentCampaign] = useState<Partial<CampaignData> | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [pendingSubmission, setPendingSubmission] = useState<CampaignData[] | null>(null);
+
+  // Reset to step 1 when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setStep('package-setup');
+      setPendingSubmission(null);
+    }
+  }, [isOpen]);
 
   // Package setup state
   const [selectedTypes, setSelectedTypes] = useState<Set<'hero-banner' | 'in-feed-ads'>>(new Set());
@@ -1149,26 +1158,21 @@ const CampaignWizard: React.FC<CampaignWizardProps> = ({ isOpen, onClose, onCamp
                     return;
                   }
                   handleSaveCampaign();
-                  // Notify parent component of campaigns before checkout
-                  if (onCampaignSubmit) {
-                    onCampaignSubmit([...campaigns, {
-                      id: `campaign-${Date.now()}`,
-                      type: currentCampaign?.type as 'hero-banner' | 'in-feed-ads',
-                      title: campaignTitle,
-                      bio: campaignBio || undefined,
-                      url: campaignUrl,
-                      imageUrl: imagePreview,
-                      budget,
-                      duration,
-                      startDate,
-                      endDate,
-                    }]);
-                  }
-                  // Go to checkout
-                  const totalWithCurrent = totalBudget + budget;
-                  const finalDiscount = campaigns.length + 1 > 1 ? (campaigns.length + 1 === 2 ? 15 : 20) : 0;
-                  const finalTotal = totalWithCurrent - (totalWithCurrent * finalDiscount) / 100;
-                  window.location.href = `/stripe-checkout?total=${finalTotal}&discount=${finalDiscount}&campaigns=${campaigns.length + 1}`;
+                  // Store pending submission and show refund warning
+                  const newCampaign: CampaignData = {
+                    id: `campaign-${Date.now()}`,
+                    type: currentCampaign?.type as 'hero-banner' | 'in-feed-ads',
+                    title: campaignTitle,
+                    bio: campaignBio || undefined,
+                    url: campaignUrl,
+                    imageUrl: imagePreview,
+                    budget,
+                    duration,
+                    startDate,
+                    endDate,
+                  };
+                  setPendingSubmission([...campaigns, newCampaign]);
+                  setStep('refund-warning');
                 }}
                 disabled={!formIsValid}
                 style={{flex: 1, padding: '14px', background: formIsValid ? 'linear-gradient(135deg, #FF6B35, #FF8C5A)' : '#ccc', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: formIsValid ? 'pointer' : 'not-allowed', fontSize: '14px', transition: 'all 0.2s ease', boxShadow: formIsValid ? '0 4px 12px rgba(255,107,53,0.3)' : 'none', opacity: formIsValid ? 1 : 0.6}}
@@ -1194,6 +1198,136 @@ const CampaignWizard: React.FC<CampaignWizardProps> = ({ isOpen, onClose, onCamp
                 {!formIsValid ? '⚠️ Complete All Fields' : '✅ Save & Next Campaign →'}
               </button>
             )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // STEP 3: Refund Warning before Payment
+  if (step === 'refund-warning' && pendingSubmission) {
+    return (
+      <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001, padding: '20px'}}>
+        <div style={{background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '500px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)'}}>
+
+          {/* Header */}
+          <div style={{textAlign: 'center', marginBottom: '24px'}}>
+            <div style={{fontSize: '48px', marginBottom: '12px'}}>⚠️</div>
+            <h2 style={{margin: '0 0 8px 0', fontSize: '20px', fontWeight: '800', color: '#333'}}>
+              Payment Policy
+            </h2>
+            <p style={{margin: 0, fontSize: '13px', color: '#666'}}>Please read carefully before proceeding</p>
+          </div>
+
+          {/* Policy Content */}
+          <div style={{background: '#FFF5F0', border: '2px solid #FF6B35', borderRadius: '12px', padding: '20px', marginBottom: '24px'}}>
+            <div style={{marginBottom: '16px'}}>
+              <h3 style={{margin: '0 0 12px 0', fontSize: '14px', fontWeight: '700', color: '#FF6B35', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                <span>❌</span> No Refunds - Ever
+              </h3>
+              <p style={{margin: 0, fontSize: '13px', color: '#333', lineHeight: '1.6'}}>
+                Once you submit payment, <strong>no refunds will be issued</strong>—regardless of reason, timing, or status. This includes when campaigns are paused or stopped.
+              </p>
+            </div>
+
+            <div style={{marginBottom: '16px', paddingTop: '16px', borderTop: '1px solid #FFD5C0'}}>
+              <h3 style={{margin: '0 0 12px 0', fontSize: '14px', fontWeight: '700', color: '#FF6B35', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                <span>⏸️</span> Pause Anytime (No Refund)
+              </h3>
+              <p style={{margin: 0, fontSize: '13px', color: '#333', lineHeight: '1.6'}}>
+                You can <strong>pause</strong> your campaign at any time and <strong>resume it later</strong>. <strong>No partial refunds</strong> when paused—full budget remains held.
+              </p>
+            </div>
+
+            <div style={{paddingTop: '16px', borderTop: '1px solid #FFD5C0'}}>
+              <h3 style={{margin: '0 0 12px 0', fontSize: '14px', fontWeight: '700', color: '#FF6B35', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                <span>⏹️</span> Stop Permanently
+              </h3>
+              <p style={{margin: 0, fontSize: '13px', color: '#333', lineHeight: '1.6'}}>
+                You can <strong>stop</strong> your campaign at any time to end it permanently. <strong>No refund for unused budget.</strong>
+              </p>
+            </div>
+          </div>
+
+          {/* Important Note */}
+          <div style={{background: '#FFF9F5', border: '1px solid #FFE5D9', borderRadius: '8px', padding: '12px', marginBottom: '24px', fontSize: '12px', color: '#555', lineHeight: '1.6'}}>
+            <strong style={{color: '#FF6B35'}}>💡 Important:</strong> Review your campaign details carefully before payment. Make sure everything is correct—you cannot edit once submitted for payment. No refunds for any reason, including when paused.
+          </div>
+
+          {/* Agreement Checkbox */}
+          <label style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', cursor: 'pointer', fontSize: '13px'}}>
+            <input
+              type="checkbox"
+              id="refund-policy-agree"
+              defaultChecked={false}
+              style={{width: '18px', height: '18px', cursor: 'pointer', accentColor: '#FF6B35'}}
+            />
+            <span style={{color: '#333'}}>
+              I understand there are <strong>no refunds under any circumstance</strong>. Payment is non-refundable whether campaign is active, paused, or stopped.
+            </span>
+          </label>
+
+          {/* Buttons */}
+          <div style={{display: 'flex', gap: '12px'}}>
+            <button
+              onClick={() => {
+                setStep('campaign-details');
+                setPendingSubmission(null);
+              }}
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                background: '#f5f5f5',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: '#333'
+              }}
+            >
+              Go Back
+            </button>
+            <button
+              onClick={() => {
+                const checkbox = document.getElementById('refund-policy-agree') as HTMLInputElement;
+                if (!checkbox.checked) {
+                  alert('Please agree to the policy to proceed');
+                  return;
+                }
+                // Notify parent component and proceed to payment
+                if (onCampaignSubmit) {
+                  onCampaignSubmit(pendingSubmission);
+                }
+                // Go to checkout
+                const totalBudget = pendingSubmission.reduce((sum, c) => sum + c.budget, 0);
+                const finalDiscount = pendingSubmission.length > 1 ? (pendingSubmission.length === 2 ? 15 : 20) : 0;
+                const finalTotal = totalBudget - (totalBudget * finalDiscount) / 100;
+                window.location.href = `/stripe-checkout?total=${finalTotal}&discount=${finalDiscount}&campaigns=${pendingSubmission.length}`;
+              }}
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                background: 'linear-gradient(135deg, #FF6B35, #FF8C5A)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                fontSize: '14px',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 8px 20px rgba(255,107,53,0.4)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              💳 Continue to Payment
+            </button>
           </div>
         </div>
       </div>

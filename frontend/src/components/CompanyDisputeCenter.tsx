@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { DisputeResponsePage } from './company/DisputeResponsePage';
 
 interface Dispute {
   id: number;
@@ -40,6 +41,8 @@ const CompanyDisputeCenter: React.FC<CompanyDisputeCenterProps> = ({ companyId =
   ]);
 
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
+  const [showResponsePage, setShowResponsePage] = useState<boolean>(false);
+  const [selectedDisputeId, setSelectedDisputeId] = useState<number | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('All');
 
   const filteredDisputes = filterStatus === 'All'
@@ -55,6 +58,20 @@ const CompanyDisputeCenter: React.FC<CompanyDisputeCenterProps> = ({ companyId =
       default: return '#666';
     }
   };
+
+  // If showing response page, render that instead
+  if (showResponsePage && selectedDisputeId) {
+    return (
+      <DisputeResponsePage
+        disputeId={selectedDisputeId}
+        onBack={() => {
+          setShowResponsePage(false);
+          setSelectedDisputeId(null);
+        }}
+        userRole="owner"
+      />
+    );
+  }
 
   return (
     <div className="dispute-center-container">
@@ -131,7 +148,16 @@ const CompanyDisputeCenter: React.FC<CompanyDisputeCenterProps> = ({ companyId =
                   </div>
 
                   <div className="dispute-card-footer">
-                    <button className="btn-view">View Details →</button>
+                    <button
+                      className="btn-view"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedDisputeId(dispute.id);
+                        setShowResponsePage(true);
+                      }}
+                    >
+                      View Details →
+                    </button>
                   </div>
                 </div>
               ))}
@@ -221,7 +247,7 @@ const CompanyDisputeCenter: React.FC<CompanyDisputeCenterProps> = ({ companyId =
         }
 
         .dispute-header {
-          margin-bottom: 24px;
+          margin-bottom: 16px;
         }
 
         .dispute-header h2 {
@@ -283,20 +309,20 @@ const CompanyDisputeCenter: React.FC<CompanyDisputeCenterProps> = ({ companyId =
 
         .disputes-grid {
           display: grid;
-          gap: 16px;
+          gap: 2px;
         }
 
         .dispute-card {
           background: white;
           border: 1px solid #E8E8E8;
-          border-radius: 12px;
-          padding: 16px;
+          border-radius: 4px;
+          padding: 3px;
           cursor: pointer;
           transition: all 0.2s;
         }
 
         .dispute-card:hover {
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
           border-color: #FF6B35;
         }
 
@@ -304,56 +330,63 @@ const CompanyDisputeCenter: React.FC<CompanyDisputeCenterProps> = ({ companyId =
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          margin-bottom: 12px;
+          gap: 3px;
         }
 
         .dispute-info h3 {
-          font-size: 16px;
+          font-size: 14px;
           font-weight: 600;
-          margin: 0 0 4px 0;
+          margin: 0;
           color: #1A1A1A;
+          line-height: 1.2;
         }
 
         .errand-id {
-          font-size: 12px;
+          font-size: 11px;
           color: #999;
           margin: 0;
+          line-height: 1.2;
         }
 
         .status-badge {
-          padding: 4px 12px;
-          border-radius: 6px;
+          padding: 1px 6px;
+          border-radius: 3px;
           color: white;
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 600;
           white-space: nowrap;
+          flex-shrink: 0;
         }
 
         .dispute-card-body {
           display: grid;
-          gap: 8px;
+          gap: 1px;
         }
 
         .detail-row {
           display: flex;
           justify-content: space-between;
-          font-size: 13px;
+          font-size: 11px;
+          line-height: 1.2;
+          gap: 2px;
         }
 
         .detail-row .label {
           color: #999;
           font-weight: 500;
+          flex-shrink: 0;
         }
 
         .detail-row .value {
           color: #1A1A1A;
           font-weight: 500;
+          text-align: right;
         }
 
         .dispute-card-footer {
-          margin-top: 12px;
-          padding-top: 12px;
-          border-top: 1px solid #F0F0F0;
+          margin-top: 1px;
+          padding-top: 1px;
+          border-top: none;
         }
 
         .btn-view {
@@ -361,8 +394,10 @@ const CompanyDisputeCenter: React.FC<CompanyDisputeCenterProps> = ({ companyId =
           border: none;
           color: #FF6B35;
           cursor: pointer;
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 600;
+          padding: 0;
+          line-height: 1.2;
         }
 
         .btn-view:hover {

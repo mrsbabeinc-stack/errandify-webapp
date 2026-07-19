@@ -48,8 +48,11 @@ import demoRoutes from './routes/demo.js';
 import staffManagementRoutes from './routes/staffManagement.js';
 import salaryBenefitsRoutes from './routes/salaryBenefits.js';
 import holidaysRoutes from './routes/holidays.js';
-import rbacRoutes from './routes/rbac.js';
+import advertisingRoutes from './routes/advertising.js';
+import advertisingAdminRoutes from './routes/advertisingAdmin.js';import rbacRoutes from './routes/rbac.js';
 import leavesRoutes from './routes/leaves.js';
+import subscriptionsRoutes from './routes/subscriptions.js';
+import subscriptionWebhooksRoutes from './routes/webhooks-subscriptions.js';
 import { startCrons } from './cron.js';
 import db from './db.js';
 
@@ -202,6 +205,245 @@ const app = express();
   } catch (error) {
     console.log('Migration: corrected_by_user_id column already exists');
   }
+
+  try {
+    // Create advertising system tables
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS campaigns (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        image_url VARCHAR(500),
+        budget DECIMAL(10, 2) NOT NULL,
+        spent DECIMAL(10, 2) DEFAULT 0,
+        status VARCHAR(50) NOT NULL DEFAULT 'draft',
+        starts_at TIMESTAMP NOT NULL,
+        ends_at TIMESTAMP NOT NULL,
+        duration_days INTEGER,
+        stripe_charge_id VARCHAR(255),
+        admin_notes TEXT,
+        rejection_reason TEXT,
+        submitted_at TIMESTAMP,
+        approved_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_by INTEGER,
+        FOREIGN KEY (company_id) REFERENCES companies(id),
+        FOREIGN KEY (created_by) REFERENCES users(id)
+      );
+    `);
+    console.log('Migration: campaigns table created');
+  } catch (error) {
+    console.log('Migration: campaigns table already exists');
+  }
+
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS ad_placements (
+        id SERIAL PRIMARY KEY,
+        campaign_id INTEGER NOT NULL,
+        placement_type VARCHAR(100) NOT NULL,
+        impressions INTEGER DEFAULT 0,
+        clicks INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+      );
+    `);
+    console.log('Migration: ad_placements table created');
+  } catch (error) {
+    console.log('Migration: ad_placements table already exists');
+  }
+
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS campaign_performance (
+        id SERIAL PRIMARY KEY,
+        campaign_id INTEGER NOT NULL,
+        performance_date DATE NOT NULL,
+        impressions INTEGER DEFAULT 0,
+        clicks INTEGER DEFAULT 0,
+        spend DECIMAL(10, 2) DEFAULT 0,
+        ctr DECIMAL(5, 2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
+        UNIQUE(campaign_id, performance_date)
+      );
+    `);
+    console.log('Migration: campaign_performance table created');
+  } catch (error) {
+    console.log('Migration: campaign_performance table already exists');
+  }
+
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS ad_schedules (
+        id SERIAL PRIMARY KEY,
+        campaign_id INTEGER NOT NULL,
+        scheduled_date TIMESTAMP NOT NULL,
+        action VARCHAR(50) NOT NULL,
+        executed_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+      );
+    `);
+    console.log('Migration: ad_schedules table created');
+  } catch (error) {
+    console.log('Migration: ad_schedules table already exists');
+  }
+
+  try {
+    await db.query(`
+      CREATE INDEX IF NOT EXISTS idx_campaigns_company_id ON campaigns(company_id);
+      CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
+      CREATE INDEX IF NOT EXISTS idx_campaigns_start_date ON campaigns(starts_at);
+      CREATE INDEX IF NOT EXISTS idx_campaigns_end_date ON campaigns(ends_at);
+      CREATE INDEX IF NOT EXISTS idx_ad_placements_campaign_id ON ad_placements(campaign_id);
+      CREATE INDEX IF NOT EXISTS idx_campaign_performance_campaign_id ON campaign_performance(campaign_id);
+      CREATE INDEX IF NOT EXISTS idx_ad_schedules_campaign_id ON ad_schedules(campaign_id);
+      CREATE INDEX IF NOT EXISTS idx_ad_schedules_scheduled_date ON ad_schedules(scheduled_date);
+    `);
+    console.log('Migration: advertising indexes created');
+  } catch (error) {
+    console.log('Migration: advertising indexes already exist');
+  }
+
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS companies (
+        id SERIAL PRIMARY KEY,
+        uen VARCHAR(50) UNIQUE NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        owner_id INTEGER NOT NULL REFERENCES users(id),
+        email VARCHAR(255),
+        phone VARCHAR(20),
+        address TEXT,
+        postal_code VARCHAR(10),
+        area VARCHAR(100),
+        subscription_tier VARCHAR(20) DEFAULT 'silver',
+        company_status VARCHAR(20) DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('Migration: companies table created');
+  } catch (error) {
+    console.log('Migration: companies table already exists');
+  }
+
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS company_wallets (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER NOT NULL UNIQUE REFERENCES companies(id),
+        balance DECIMAL(15, 2) DEFAULT 0,
+        total_earned DECIMAL(15, 2) DEFAULT 0,
+        total_withdrawn DECIMAL(15, 2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('Migration: company_wallets table created');
+  } catch (error) {
+    console.log('Migration: company_wallets table already exists');
+  }
+
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS company_subscriptions (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER NOT NULL UNIQUE REFERENCES companies(id),
+        current_tier VARCHAR(20) NOT NULL DEFAULT 'free',
+        billing_type VARCHAR(20),
+        status VARCHAR(20) DEFAULT 'active',
+        billing_date DATE,
+        renewal_date TIMESTAMP,
+        stripe_subscription_id VARCHAR(255),
+        stripe_customer_id VARCHAR(255),
+        pending_tier VARCHAR(20),
+        pending_effective_date TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('Migration: company_subscriptions table created');
+  } catch (error) {
+    console.log('Migration: company_subscriptions table already exists');
+  }
+
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS subscription_tiers (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50) UNIQUE NOT NULL,
+        commission_rate DECIMAL(5, 3),
+        ad_credit_monthly DECIMAL(10, 2),
+        ep_multiplier INTEGER,
+        max_team_members INTEGER,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('Migration: subscription_tiers table created');
+  } catch (error) {
+    console.log('Migration: subscription_tiers table already exists');
+  }
+
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS subscription_ad_credits (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER NOT NULL REFERENCES companies(id),
+        amount DECIMAL(10, 2),
+        spent DECIMAL(10, 2) DEFAULT 0,
+        expires_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('Migration: subscription_ad_credits table created');
+  } catch (error) {
+    console.log('Migration: subscription_ad_credits table already exists');
+  }
+
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS subscription_milestones (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER NOT NULL REFERENCES companies(id),
+        tier VARCHAR(20),
+        milestone_threshold INTEGER,
+        reward_amount DECIMAL(10, 2),
+        achieved BOOLEAN DEFAULT FALSE,
+        achieved_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('Migration: subscription_milestones table created');
+  } catch (error) {
+    console.log('Migration: subscription_milestones table already exists');
+  }
+
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS subscription_billing_history (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER NOT NULL REFERENCES companies(id),
+        stripe_invoice_id VARCHAR(255),
+        amount DECIMAL(10, 2),
+        status VARCHAR(50),
+        error_message TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('Migration: subscription_billing_history table created');
+  } catch (error) {
+    console.log('Migration: subscription_billing_history table already exists');
+  }
 })();
 
 // Middleware
@@ -263,7 +505,10 @@ app.use('/api/admin', salaryBenefitsRoutes);
 app.use('/api/admin', holidaysRoutes);
 app.use('/api/admin', rbacRoutes);
 app.use('/api/admin', leavesRoutes);
-app.use('/api/speech', speechRoutes);
+app.use('/api/subscriptions', subscriptionsRoutes);
+app.use('/webhooks', subscriptionWebhooksRoutes);
+app.use('/api/advertising', advertisingRoutes);
+app.use('/api/admin/advertising', advertisingAdminRoutes);app.use('/api/speech', speechRoutes);
 app.use('/api/questions', questionsRoutes);
 // app.use('/api/email', emailRoutes); // TODO: Fix email module imports
 // app.use('/api/verification', verificationRoutes); // TODO: Fix module imports

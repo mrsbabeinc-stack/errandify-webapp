@@ -84,7 +84,7 @@ import { GrantEPEnhancedPage as GrantPointsPage } from './pages/admin/GrantPoint
 import { EPRulesFlexiblePage as EPRulesPage } from './pages/admin/EPRulesFlexible';
 import EmailCampaigns from './pages/admin/EmailCampaigns';
 import CompanyManagement from './pages/admin/CompanyManagement';
-import SubscriptionPackages from './pages/admin/SubscriptionPackages';
+import AdminSubscriptionManagement from './pages/admin/AdminSubscriptionManagement';
 import AdvertisingApproval from './pages/admin/AdvertisingApproval';
 import PartnerTiers from './pages/admin/PartnerTiers';
 import AdminAuthManagement from './pages/admin/AdminAuthManagement';
@@ -532,7 +532,7 @@ export default function App() {
         {/* Company Management Routes */}
         <Route path="/admin/company/intelligence" element={isAuthenticated && isAdmin ? <CompanyClientIntelligence /> : <Navigate to="/login" replace />} />
         <Route path="/admin/company/management" element={isAuthenticated && isAdmin ? <CompanyManagement /> : <Navigate to="/login" replace />} />
-        <Route path="/admin/company/subscriptions" element={isAuthenticated && isAdmin ? <SubscriptionPackages /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/company/subscriptions" element={isAuthenticated && isAdmin ? <AdminSubscriptionManagement /> : <Navigate to="/login" replace />} />
         <Route path="/admin/company/advertising" element={isAuthenticated && isAdmin ? <AdvertisingApproval /> : <Navigate to="/login" replace />} />
         <Route path="/admin/company/partner-tiers" element={isAuthenticated && isAdmin ? <PartnerTiers /> : <Navigate to="/login" replace />} />
 

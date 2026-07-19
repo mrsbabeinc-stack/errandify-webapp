@@ -3,7 +3,7 @@ import CampaignWizard from './CampaignWizard';
 
 interface Advertisement {
   id: number;
-  type: 'profile-banner' | 'in-feed-ads';
+  type: 'banner-ads' | 'in-feed-ads';
   title: string;
   imageUrl?: string;
   url: string;
@@ -13,16 +13,17 @@ interface Advertisement {
   clicks: number;
   startDate: string;
   endDate: string;
-  status: 'active' | 'scheduled' | 'ended';
+  status: 'draft' | 'submitted' | 'approved' | 'active' | 'paused' | 'stopped' | 'ended';
   ctr: number; // Click-through rate
+  isPaid?: boolean; // Whether payment has been processed
 }
 
 const CompanyAdvertisingManagement: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'profile-banner' | 'in-feed-ads'>('profile-banner');
+  const [activeTab, setActiveTab] = useState<'all' | 'banner-ads' | 'in-feed-ads'>('all');
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([
     {
       id: 1,
-      type: 'profile-banner',
+      type: 'banner-ads',
       title: 'Premium Partner Showcase',
       imageUrl: 'https://via.placeholder.com/1200x400/FF6B35/ffffff?text=Premium+Partner+Showcase',
       url: 'https://errandify.com/company/rumah-emas',
@@ -34,6 +35,7 @@ const CompanyAdvertisingManagement: React.FC = () => {
       endDate: '2026-07-15',
       status: 'active',
       ctr: 5.9,
+      isPaid: true,
     },
     {
       id: 2,
@@ -49,64 +51,160 @@ const CompanyAdvertisingManagement: React.FC = () => {
       endDate: '2026-07-31',
       status: 'active',
       ctr: 6.9,
+      isPaid: true,
     },
   ]);
 
   const [showNewAdModal, setShowNewAdModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showRefundWarning, setShowRefundWarning] = useState(false);
+  const [showStopWarning, setShowStopWarning] = useState(false);
   const [editingAd, setEditingAd] = useState<Advertisement | null>(null);
+  const [stopWarningAd, setStopWarningAd] = useState<Advertisement | null>(null);
   const [newAdType, setNewAdType] = useState<'profile-banner' | 'in-feed-ads'>('profile-banner');
 
-  const filteredAds = advertisements.filter(ad => ad.type === activeTab);
+  const filteredAds = activeTab === 'all' ? advertisements : advertisements.filter(ad => ad.type === activeTab);
   const totalBudget = filteredAds.reduce((sum, ad) => sum + ad.budget, 0);
   const totalSpent = filteredAds.reduce((sum, ad) => sum + ad.spent, 0);
   const totalImpressions = filteredAds.reduce((sum, ad) => sum + ad.impressions, 0);
 
+  // Get ad type specific metrics
+  const getAdTypeMetrics = (type: 'all' | 'banner-ads' | 'in-feed-ads') => {
+    const typeAds = type === 'all' ? advertisements : advertisements.filter(ad => ad.type === type);
+    return {
+      count: typeAds.length,
+      budget: typeAds.reduce((sum, ad) => sum + ad.budget, 0),
+      impressions: typeAds.reduce((sum, ad) => sum + ad.impressions, 0),
+      ctr: typeAds.length > 0 ? (typeAds.reduce((sum, ad) => sum + ad.ctr, 0) / typeAds.length).toFixed(1) : 0,
+    };
+  };
+
   const handlePauseAd = (id: number) => {
     setAdvertisements(advertisements.map(ad =>
-      ad.id === id ? { ...ad, status: ad.status === 'active' ? 'scheduled' : 'active' } : ad
+      ad.id === id ? { ...ad, status: ad.status === 'active' ? 'paused' : 'active' } : ad
     ));
   };
 
-  const handleDeleteAd = (id: number) => {
-    setAdvertisements(advertisements.filter(ad => ad.id !== id));
+  const handleStopAd = (ad: Advertisement) => {
+    setStopWarningAd(ad);
+    setShowStopWarning(true);
   };
 
-  const handleEditAd = (ad: Advertisement) => {
-    setEditingAd(ad);
-    setShowEditModal(true);
-  };
-
-  const handleSaveEdit = () => {
-    if (editingAd) {
+  const confirmStopAd = () => {
+    if (stopWarningAd) {
       setAdvertisements(advertisements.map(ad =>
-        ad.id === editingAd.id ? editingAd : ad
+        ad.id === stopWarningAd.id ? { ...ad, status: 'stopped' } : ad
       ));
-      setShowEditModal(false);
-      setEditingAd(null);
+      setShowStopWarning(false);
+      setStopWarningAd(null);
     }
   };
 
-  const handleCampaignSubmit = (campaignData: any) => {
-    // Convert campaign wizard data to advertisement format
-    const newAds = campaignData.map((campaign: any, index: number) => ({
-      id: Date.now() + index,
-      type: campaign.type === 'hero-banner' ? 'profile-banner' : 'in-feed-ads',
-      title: campaign.title,
-      imageUrl: campaign.imageUrl,
-      url: campaign.url,
-      budget: campaign.budget,
-      spent: 0,
-      impressions: 0,
-      clicks: 0,
-      startDate: campaign.startDate,
-      endDate: campaign.endDate,
-      status: 'scheduled' as const,
-      ctr: 0,
-    }));
+  const handleEditAd = (ad: Advertisement) => {
+    if (ad.status === 'draft' || ad.status === 'rejected') {
+      setEditingAd(ad);
+      setShowEditModal(true);
+    }
+  };
 
-    setAdvertisements([...advertisements, ...newAds]);
-    setShowNewAdModal(false);
+  const handleSaveEdit = async () => {
+    if (editingAd) {
+      try {
+        const response = await fetch(`/api/advertising/campaigns/${editingAd.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: editingAd.title,
+            image_url: editingAd.imageUrl,
+            budget: editingAd.budget,
+            starts_at: editingAd.startDate,
+            ends_at: editingAd.endDate,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(`Error: ${error.error || 'Failed to update campaign'}`);
+          return;
+        }
+
+        const data = await response.json();
+
+        // Update local state
+        setAdvertisements(advertisements.map(ad =>
+          ad.id === editingAd.id ? editingAd : ad
+        ));
+        setShowEditModal(false);
+        setEditingAd(null);
+
+        // Show success notification
+        alert('Campaign updated successfully!');
+      } catch (error) {
+        console.error('Failed to update campaign:', error);
+        alert('Failed to update campaign. Please try again.');
+      }
+    }
+  };
+
+  const handleCampaignSubmit = async (campaignData: any) => {
+    try {
+      // Get company ID from localStorage or context
+      const companyId = localStorage.getItem('selectedCompanyId') || 1;
+
+      // Create campaigns via API
+      for (const campaign of campaignData) {
+        const response = await fetch('/api/advertising/campaigns', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            company_id: parseInt(companyId),
+            title: campaign.title,
+            description: campaign.description,
+            image_url: campaign.imageUrl,
+            budget: campaign.budget,
+            starts_at: campaign.startDate,
+            ends_at: campaign.endDate,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(`Error: ${error.error || 'Failed to create campaign'}`);
+          return;
+        }
+
+        const data = await response.json();
+
+        // Add to local state
+        const newAd: Advertisement = {
+          id: data.campaign.id,
+          type: campaign.type === 'hero-banner' ? 'profile-banner' : 'in-feed-ads',
+          title: data.campaign.title,
+          imageUrl: data.campaign.image_url,
+          url: campaign.url,
+          budget: data.campaign.budget,
+          spent: 0,
+          impressions: 0,
+          clicks: 0,
+          startDate: campaign.startDate,
+          endDate: campaign.endDate,
+          status: 'scheduled' as const,
+          ctr: 0,
+        };
+
+        setAdvertisements(prev => [...prev, newAd]);
+      }
+
+      setShowNewAdModal(false);
+      alert('Campaign(s) created successfully!');
+    } catch (error) {
+      console.error('Failed to create campaign:', error);
+      alert('Failed to create campaign. Please try again.');
+    }
   };
 
   return (
@@ -130,7 +228,7 @@ const CompanyAdvertisingManagement: React.FC = () => {
       {/* Header */}
       <div className="ads-header" style={{marginBottom: '24px'}}>
         <div>
-          <h2 style={{margin: '0 0 4px 0', fontSize: '28px', fontWeight: '800'}}>Your Campaigns</h2>
+          <h2 style={{margin: '0 0 4px 0', fontSize: '28px', fontWeight: '800'}}>Active Advertising Campaigns</h2>
           <p className="subtitle" style={{margin: 0, fontSize: '14px', color: '#666'}}>Manage and optimize your active advertising</p>
         </div>
         <button className="btn-primary" onClick={() => setShowNewAdModal(true)} style={{padding: '12px 24px', background: 'linear-gradient(135deg, #FF6B35, #FF8C5A)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', fontSize: '14px', boxShadow: '0 4px 12px rgba(255,107,53,0.2)'}}>
@@ -182,10 +280,16 @@ const CompanyAdvertisingManagement: React.FC = () => {
       {/* Tabs */}
       <div className="ads-tabs">
         <button
-          className={`tab ${activeTab === 'profile-banner' ? 'active' : ''}`}
-          onClick={() => setActiveTab('profile-banner')}
+          className={`tab ${activeTab === 'all' ? 'active' : ''}`}
+          onClick={() => setActiveTab('all')}
         >
-          📅 Profile Banner Ads
+          📊 All Ads
+        </button>
+        <button
+          className={`tab ${activeTab === 'banner-ads' ? 'active' : ''}`}
+          onClick={() => setActiveTab('banner-ads')}
+        >
+          📅 Banner Ads
         </button>
         <button
           className={`tab ${activeTab === 'in-feed-ads' ? 'active' : ''}`}
@@ -227,36 +331,63 @@ const CompanyAdvertisingManagement: React.FC = () => {
         </div>
       )}
 
-      {/* AI Effectiveness Insights - Only show if they have campaigns */}
+      {/* AI Effectiveness Insights - Dynamic based on activeTab */}
       {filteredAds.length > 0 && (
         <div style={{background: 'linear-gradient(135deg, #FFF8F5 0%, #FFE5D9 100%)', border: '1px solid #FFD5C0', borderRadius: '12px', padding: '20px', marginBottom: '24px'}}>
           <div style={{display: 'flex', alignItems: 'start', gap: '12px', marginBottom: '16px'}}>
             <div style={{fontSize: '24px'}}>🤖</div>
             <div>
               <h3 style={{margin: '0 0 8px 0', fontSize: '16px', fontWeight: '700'}}>AI Performance Insights</h3>
-              <p style={{margin: 0, fontSize: '13px', color: '#666'}}>Based on your {filteredAds.length} active campaign(s)</p>
+              <p style={{margin: 0, fontSize: '13px', color: '#666'}}>
+                Based on your {filteredAds.length}
+                {activeTab === 'all' ? ' active campaign(s)' : activeTab === 'banner-ads' ? ' banner campaign(s)' : ' in-feed campaign(s)'}
+              </p>
             </div>
           </div>
           <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px'}}>
             <div style={{background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #FFE5D9'}}>
               <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>AI Recommendation</div>
-              <div style={{fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>Increase Browse Hero rotation by 30%</div>
-              <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>Your CTR is 20% above average</div>
+              <div style={{fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>
+                {activeTab === 'banner-ads'
+                  ? 'Increase rotation frequency by 25%'
+                  : activeTab === 'in-feed-ads'
+                  ? 'Optimize placement timing'
+                  : 'Diversify across all ad types'}
+              </div>
+              <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>
+                {activeTab === 'banner-ads'
+                  ? 'Banner CTR is performing well'
+                  : activeTab === 'in-feed-ads'
+                  ? 'In-feed engagement trending up'
+                  : 'Mixed portfolio performing strong'}
+              </div>
             </div>
             <div style={{background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #FFE5D9'}}>
               <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>Next Best Action</div>
-              <div style={{fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>Test Email Newsletter this week</div>
-              <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>Haven't tried yet • High ROI potential</div>
+              <div style={{fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>
+                {activeTab === 'banner-ads'
+                  ? 'Test seasonal variations'
+                  : activeTab === 'in-feed-ads'
+                  ? 'A/B test copy variations'
+                  : 'Launch bundle campaign'}
+              </div>
+              <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>High ROI potential</div>
             </div>
             <div style={{background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #FFE5D9'}}>
               <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>Estimated Monthly ROI</div>
-              <div style={{fontSize: '13px', fontWeight: '600', color: '#27AE60'}}>+$4,200 revenue</div>
-              <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>Based on 2-week performance trend</div>
+              <div style={{fontSize: '13px', fontWeight: '600', color: '#27AE60'}}>
+                +SGD ${filteredAds.length > 0 ? (filteredAds.length * 2100).toLocaleString() : '0'}
+              </div>
+              <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>Based on current performance</div>
             </div>
             <div style={{background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #FFE5D9'}}>
-              <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>Budget Efficiency</div>
-              <div style={{fontSize: '13px', fontWeight: '600', color: '#5BA3D0'}}>97% optimized</div>
-              <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>Bid strategy is working well</div>
+              <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>Avg CTR</div>
+              <div style={{fontSize: '13px', fontWeight: '600', color: '#5BA3D0'}}>
+                {(filteredAds.reduce((sum, ad) => sum + ad.ctr, 0) / (filteredAds.length || 1)).toFixed(1)}%
+              </div>
+              <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>
+                {activeTab === 'banner-ads' ? '20% above average' : 'Optimized engagement'}
+              </div>
             </div>
           </div>
           <button style={{width: '100%', marginTop: '12px', padding: '10px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer'}}>
@@ -377,11 +508,27 @@ const CompanyAdvertisingManagement: React.FC = () => {
             </div>
 
             <div className="ad-actions">
-              <button className="btn-edit" onClick={() => handleEditAd(ad)}>✏️ Edit</button>
-              <button className="btn-pause" onClick={() => handlePauseAd(ad.id)}>
-                {ad.status === 'active' ? '⏸ Pause' : '▶ Resume'}
-              </button>
-              <button className="btn-delete" onClick={() => handleDeleteAd(ad.id)}>🗑 Delete</button>
+              {/* Pause/Resume Button - Only for active/paused */}
+              {(ad.status === 'active' || ad.status === 'paused') && (
+                <button
+                  className="btn-action"
+                  onClick={() => handlePauseAd(ad.id)}
+                  title={ad.status === 'active' ? 'Pause campaign (no refund, can resume later)' : 'Resume campaign'}
+                >
+                  {ad.status === 'active' ? '⏸ Pause' : '▶ Resume'}
+                </button>
+              )}
+
+              {/* Stop Button - Only for paid campaigns */}
+              {ad.isPaid && (ad.status === 'active' || ad.status === 'paused') && (
+                <button
+                  className="btn-action btn-stop"
+                  onClick={() => handleStopAd(ad)}
+                  title="Stop campaign permanently (cannot be reversed)"
+                >
+                  ⏹ Stop
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -393,6 +540,80 @@ const CompanyAdvertisingManagement: React.FC = () => {
         onClose={() => setShowNewAdModal(false)}
         onCampaignSubmit={handleCampaignSubmit}
       />
+
+      {/* STOP CAMPAIGN WARNING MODAL */}
+      {showStopWarning && stopWarningAd && (
+        <div className="modal-overlay" onClick={() => setShowStopWarning(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>⚠️ Stop Campaign</h3>
+              <button className="close-btn" onClick={() => setShowStopWarning(false)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ padding: '24px' }}>
+              <p style={{ fontSize: '16px', color: '#333', marginBottom: '16px', lineHeight: '1.6' }}>
+                You are about to <strong>permanently stop</strong> the campaign:
+              </p>
+              <div style={{
+                background: '#FFF5F0',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                borderLeft: '4px solid #FF6B35',
+                marginBottom: '20px'
+              }}>
+                <strong>{stopWarningAd.title}</strong>
+              </div>
+
+              <div style={{ background: '#FFF9F5', padding: '16px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #FFE5D9' }}>
+                <p style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '700', color: '#FF6B35' }}>⚠️ Important:</p>
+                <ul style={{ margin: '0', paddingLeft: '20px', fontSize: '13px', color: '#555', lineHeight: '1.8' }}>
+                  <li><strong>This action cannot be reversed</strong></li>
+                  <li>Campaign will stop immediately</li>
+                  <li>No refund for remaining budget</li>
+                  <li>Cannot restart this campaign</li>
+                </ul>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  className="btn-confirm"
+                  onClick={confirmStopAd}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    background: '#E74C3C',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  Yes, Stop Campaign
+                </button>
+                <button
+                  className="btn-cancel"
+                  onClick={() => setShowStopWarning(false)}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    background: '#f0f0f0',
+                    color: '#333',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    marginLeft: '12px'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Old Modal - Hidden for now */}
       {false && showNewAdModal && (
@@ -899,37 +1120,49 @@ const CompanyAdvertisingManagement: React.FC = () => {
           border-top: 2px solid #FFE5D9;
         }
 
-        .btn-edit,
-        .btn-pause,
-        .btn-delete {
+        .btn-action {
           flex: 1;
-          padding: 10px 12px;
-          border: 2px solid #FFE5D9;
-          background: #fff;
-          border-radius: 8px;
+          padding: 12px 16px;
+          border: none;
+          background: linear-gradient(135deg, #FF6B35, #FF8C5A);
+          color: white;
+          border-radius: 10px;
           cursor: pointer;
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 700;
-          color: #FF6B35;
           transition: all 0.3s;
+          white-space: nowrap;
+          text-align: center;
         }
 
-        .btn-edit:hover {
-          background: #FFF5F0;
-          border-color: #FF8C5A;
-          color: #FF8C5A;
+        .btn-action:hover:not(:disabled) {
+          background: linear-gradient(135deg, #FF5525, #FF7C4A);
+          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+          transform: translateY(-2px);
         }
 
-        .btn-pause:hover {
-          background: #FFF5F0;
-          border-color: #FF8C5A;
-          color: #FF8C5A;
+        .btn-action:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          background: #ccc;
         }
 
-        .btn-delete:hover {
-          color: #E74C3C;
-          border-color: #E74C3C;
-          background: #fff0f0;
+        .btn-action.btn-stop {
+          background: linear-gradient(135deg, #E74C3C, #E8653A);
+        }
+
+        .btn-action.btn-stop:hover:not(:disabled) {
+          background: linear-gradient(135deg, #D43C2A, #D85526);
+          box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-action.btn-delete {
+          background: linear-gradient(135deg, #E74C3C, #E8653A);
+        }
+
+        .btn-action.btn-delete:hover:not(:disabled) {
+          background: linear-gradient(135deg, #D43C2A, #D85526);
+          box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
         }
 
         .modal-overlay {

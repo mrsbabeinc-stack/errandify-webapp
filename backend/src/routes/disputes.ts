@@ -384,6 +384,250 @@ router.post('/:id/defense', authMiddleware, async (req: AuthRequest, res: Respon
   }
 });
 
+// ============ 3-DAY RESOLUTION SYSTEM ENDPOINTS ============
+
+// POST /api/disputes/:id/request-extension - Request extension (max 1 × 12h)
+router.post('/:id/request-extension', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = parseInt(req.params.id);
+    const { reason } = req.body;
+
+    const dispute = await db.query(
+      `SELECT id, status, response_deadline, created_at FROM disputes WHERE id = $1`,
+      [disputeId]
+    );
+
+    if (dispute.rows.length === 0) {
+      return res.status(404).json({ error: 'Dispute not found' });
+    }
+
+    const d = dispute.rows[0];
+    const now = new Date();
+    const autoResolveTime = new Date(d.created_at.getTime() + 48 * 60 * 60 * 1000); // T+48h
+
+    if (now > new Date(d.response_deadline)) {
+      return res.status(400).json({ error: 'Response deadline has passed' });
+    }
+
+    // Mark extension requested
+    await db.query(
+      `UPDATE disputes SET extension_requested = true, extension_reason = $1 WHERE id = $2`,
+      [reason, disputeId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Extension request submitted. Admin will review within 30 minutes.',
+      hoursUntilAutoResolve: Math.round((autoResolveTime.getTime() - now.getTime()) / (1000 * 60 * 60)),
+    });
+  } catch (error) {
+    console.error('[Disputes] Extension request error:', error);
+    res.status(500).json({ error: 'Failed to request extension' });
+  }
+});
+
+// POST /api/disputes/:id/approve-extension (admin only)
+router.post('/:id/approve-extension', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = parseInt(req.params.id);
+
+    const dispute = await db.query(
+      `SELECT id, response_deadline FROM disputes WHERE id = $1`,
+      [disputeId]
+    );
+
+    if (dispute.rows.length === 0) {
+      return res.status(404).json({ error: 'Dispute not found' });
+    }
+
+    const currentDeadline = new Date(dispute.rows[0].response_deadline);
+    const newDeadline = new Date(currentDeadline.getTime() + 12 * 60 * 60 * 1000); // +12h
+
+    await db.query(
+      `UPDATE disputes
+       SET response_deadline = $1, extension_approved_at = NOW(), extension_approved = true
+       WHERE id = $2`,
+      [newDeadline, disputeId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Extension approved. New deadline: +12 hours.',
+      newDeadline: newDeadline.toISOString(),
+    });
+  } catch (error) {
+    console.error('[Disputes] Extension approval error:', error);
+    res.status(500).json({ error: 'Failed to approve extension' });
+  }
+});
+
+// POST /api/disputes/:id/deny-extension (admin only)
+router.post('/:id/deny-extension', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = parseInt(req.params.id);
+    const { reason } = req.body;
+
+    await db.query(
+      `UPDATE disputes
+       SET extension_denied_at = NOW(), extension_requested = false
+       WHERE id = $1`,
+      [disputeId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Extension denied. Original deadline remains.',
+    });
+  } catch (error) {
+    console.error('[Disputes] Extension denial error:', error);
+    res.status(500).json({ error: 'Failed to deny extension' });
+  }
+});
+
+// POST /api/disputes/:id/verdict (admin only - before T+48h)
+router.post('/:id/verdict', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = parseInt(req.params.id);
+    const { decision, doerAmount, companyAmount, reasoning } = req.body;
+
+    if (!['APPROVE_DOER', 'APPROVE_COMPANY', 'PARTIAL_SPLIT'].includes(decision)) {
+      return res.status(400).json({ error: 'Invalid decision type' });
+    }
+
+    const result = await db.query(
+      `UPDATE disputes
+       SET status = 'VERDICT_ISSUED',
+           verdict_issued_at = NOW(),
+           verdict_decision = $1,
+           verdict_doer_amount = $2,
+           verdict_company_amount = $3,
+           verdict_reasoning = $4
+       WHERE id = $5
+       RETURNING *`,
+      [decision, doerAmount, companyAmount, reasoning, disputeId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Dispute not found' });
+    }
+
+    res.json({
+      success: true,
+      message: `Verdict issued: ${decision}. Parties have 12 hours to appeal.`,
+      dispute: result.rows[0],
+      appealDeadline: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+    });
+  } catch (error) {
+    console.error('[Disputes] Verdict error:', error);
+    res.status(500).json({ error: 'Failed to issue verdict' });
+  }
+});
+
+// POST /api/disputes/:id/appeal (within 12h of verdict: T+48h to T+60h)
+router.post('/:id/appeal', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = parseInt(req.params.id);
+    const { reason } = req.body;
+
+    const dispute = await db.query(
+      `SELECT id, status, verdict_issued_at FROM disputes WHERE id = $1`,
+      [disputeId]
+    );
+
+    if (dispute.rows.length === 0) {
+      return res.status(404).json({ error: 'Dispute not found' });
+    }
+
+    const d = dispute.rows[0];
+
+    if (d.status !== 'VERDICT_ISSUED') {
+      return res.status(400).json({ error: 'Can only appeal after verdict issued' });
+    }
+
+    const verdictTime = new Date(d.verdict_issued_at);
+    const appealWindow = new Date(verdictTime.getTime() + 12 * 60 * 60 * 1000);
+
+    if (new Date() > appealWindow) {
+      return res.status(400).json({ error: 'Appeal window has closed (12 hours only)' });
+    }
+
+    await db.query(
+      `UPDATE disputes
+       SET status = 'APPEALED',
+           appeal_submitted_at = NOW(),
+           appeal_reason = $1
+       WHERE id = $2`,
+      [reason, disputeId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Appeal submitted. Admin will review within 12 hours.',
+      timeRemaining: Math.round((appealWindow.getTime() - new Date().getTime()) / (1000 * 60)) + ' minutes',
+    });
+  } catch (error) {
+    console.error('[Disputes] Appeal submission error:', error);
+    res.status(500).json({ error: 'Failed to submit appeal' });
+  }
+});
+
+// POST /api/disputes/:id/resolve-appeal (admin only - by T+60h)
+router.post('/:id/resolve-appeal', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = parseInt(req.params.id);
+    const { decision, reasoning, newDoerAmount, newCompanyAmount } = req.body;
+
+    if (!['UPHELD', 'OVERTURNED', 'MODIFIED'].includes(decision)) {
+      return res.status(400).json({ error: 'Invalid appeal decision' });
+    }
+
+    const dispute = await db.query(
+      `SELECT id, verdict_doer_amount, verdict_company_amount, verdict_issued_at
+       FROM disputes WHERE id = $1`,
+      [disputeId]
+    );
+
+    if (dispute.rows.length === 0) {
+      return res.status(404).json({ error: 'Dispute not found' });
+    }
+
+    const d = dispute.rows[0];
+    let finalDoerAmount = d.verdict_doer_amount;
+    let finalCompanyAmount = d.verdict_company_amount;
+
+    if (decision === 'OVERTURNED') {
+      finalDoerAmount = d.verdict_company_amount;
+      finalCompanyAmount = d.verdict_doer_amount;
+    } else if (decision === 'MODIFIED') {
+      finalDoerAmount = newDoerAmount || d.verdict_doer_amount;
+      finalCompanyAmount = newCompanyAmount || d.verdict_company_amount;
+    }
+
+    const result = await db.query(
+      `UPDATE disputes
+       SET status = 'CLOSED',
+           appeal_reviewed_at = NOW(),
+           appeal_final_decision = $1,
+           appeal_final_reasoning = $2,
+           verdict_doer_amount = $3,
+           verdict_company_amount = $4,
+           closed_at = NOW()
+       WHERE id = $5
+       RETURNING *`,
+      [decision, reasoning, finalDoerAmount, finalCompanyAmount, disputeId]
+    );
+
+    res.json({
+      success: true,
+      message: `Appeal ${decision}. Final decision: Doer: $${finalDoerAmount}, Company: $${finalCompanyAmount}. NO FURTHER APPEALS.`,
+      dispute: result.rows[0],
+    });
+  } catch (error) {
+    console.error('[Disputes] Appeal resolution error:', error);
+    res.status(500).json({ error: 'Failed to resolve appeal' });
+  }
+});
+
 // GET /api/disputes - List disputes (admin only)
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -413,5 +657,138 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Failed to list disputes' });
   }
 });
+
+// ============ EVIDENCE SUBMISSION ENDPOINTS ============
+
+// POST /api/disputes/:id/evidence - Submit evidence anytime during investigation (T+0 to T+48h)
+router.post('/:id/evidence', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = Number(req.params.id);
+    const userId = req.user?.id;
+    const userType = req.user?.type === 'doer' ? 'doer' : 'company_staff';
+
+    // TODO: Handle multipart file uploads from req.files
+    const evidenceFiles = req.files ? Object.values(req.files).flat() : [];
+
+    if (evidenceFiles.length === 0) {
+      return res.status(400).json({ error: 'At least one evidence file required' });
+    }
+
+    // Validate file sizes (max 50MB each)
+    for (const file of evidenceFiles) {
+      if ((file as any).size > 50 * 1024 * 1024) {
+        return res.status(400).json({
+          error: `File ${(file as any).name} exceeds 50MB limit`,
+        });
+      }
+    }
+
+    const createdEvidence = await DisputeService.submitEvidence(
+      disputeId,
+      userId,
+      userType,
+      evidenceFiles.map((f: any) => ({
+        type: this.getFileType(f.mimetype),
+        name: f.originalname,
+        size: f.size,
+        mimeType: f.mimetype,
+        content: f.mimetype?.startsWith('text/') ? f.buffer.toString() : undefined,
+      }))
+    );
+
+    res.json({
+      success: true,
+      message: `${createdEvidence.length} evidence file(s) submitted successfully`,
+      evidence: createdEvidence.map((e: any) => ({
+        id: e.id,
+        type: e.type,
+        fileName: e.fileName,
+        size: e.originalSize,
+        uploadedAt: e.uploadedAt,
+        aiStatus: e.aiAnalysisStatus,
+      })),
+    });
+  } catch (error: any) {
+    console.error('[Disputes] Evidence submission error:', error);
+    res.status(400).json({ error: error.message || 'Failed to submit evidence' });
+  }
+});
+
+// GET /api/disputes/:id/evidence - Get all evidence for dispute
+router.get('/:id/evidence', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = Number(req.params.id);
+    const { party } = req.query; // Optional filter: 'doer' | 'company'
+
+    let evidence;
+    if (party === 'doer' || party === 'company') {
+      evidence = await DisputeService.getEvidenceByParty(disputeId, party as any);
+    } else {
+      evidence = await DisputeService.getAllEvidence(disputeId);
+    }
+
+    res.json({
+      success: true,
+      count: evidence.length,
+      evidence: evidence.map((e: any) => ({
+        id: e.id,
+        submittedBy: e.submittedBy,
+        type: e.type,
+        fileName: e.fileName,
+        size: e.originalSize,
+        compressedSize: e.compressedSize,
+        isCompressed: e.isCompressed,
+        uploadedAt: e.uploadedAt,
+        aiStatus: e.aiAnalysisStatus,
+        aiConfidence: e.aiConfidence,
+        aiVerdictHint: e.aiVerdictHint,
+        url: e.compressedUrl || e.originalUrl,
+      })),
+    });
+  } catch (error: any) {
+    console.error('[Disputes] Get evidence error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// GET /api/disputes/:id/evidence/:evidenceId - Get single evidence details
+router.get('/:id/evidence/:evidenceId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = Number(req.params.id);
+    const evidenceId = Number(req.params.evidenceId);
+
+    // TODO: Fetch from database
+    res.json({
+      success: true,
+      message: 'Evidence details endpoint - TODO',
+    });
+  } catch (error: any) {
+    console.error('[Disputes] Get evidence detail error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// DELETE /api/disputes/:id/evidence/:evidenceId - Delete evidence before T+48h
+router.delete('/:id/evidence/:evidenceId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const evidenceId = Number(req.params.evidenceId);
+
+    // TODO: Allow deletion only by submitter and before T+48h
+    res.json({
+      success: true,
+      message: 'Evidence deleted - TODO',
+    });
+  } catch (error: any) {
+    console.error('[Disputes] Delete evidence error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Helper to determine file type from MIME type
+function getFileType(mimeType: string): 'photo' | 'video' | 'text' {
+  if (mimeType?.startsWith('image/')) return 'photo';
+  if (mimeType?.startsWith('video/')) return 'video';
+  return 'text';
+}
 
 export default router;

@@ -326,10 +326,14 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
           display: 'flex',
           flexDirection: 'column',
           gap: '12px',
-          maxHeight: '600px',
+          maxHeight: '400px',
           overflowY: 'auto',
-          paddingRight: '8px',
-        }}>
+          paddingRight: '12px',
+          scrollBehavior: 'smooth',
+          borderRadius: '8px',
+        }}
+        className="payment-holds-scroll"
+        >
           {filteredHolds.map((hold) => (
             <div
               key={hold.id}
@@ -511,6 +515,31 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
           </p>
         </div>
       )}
+
+      <style>{`
+        .payment-holds-scroll::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .payment-holds-scroll::-webkit-scrollbar-track {
+          background: #f5f5f5;
+          border-radius: 10px;
+        }
+
+        .payment-holds-scroll::-webkit-scrollbar-thumb {
+          background: #FF6B35;
+          border-radius: 10px;
+        }
+
+        .payment-holds-scroll::-webkit-scrollbar-thumb:hover {
+          background: #E55A2B;
+        }
+
+        .payment-holds-scroll {
+          scrollbar-color: #FF6B35 #f5f5f5;
+          scrollbar-width: thin;
+        }
+      `}</style>
     </div>
   );
 }

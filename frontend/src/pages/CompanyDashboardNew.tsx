@@ -88,6 +88,13 @@ const CompanyDashboardNew: React.FC = () => {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [actionItemFilter, setActionItemFilter] = useState<'all' | 'high' | 'medium' | 'low' | 'done'>('all');
   const [invoiceFilter, setInvoiceFilter] = useState<string>('');
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showChurnPreventionModal, setShowChurnPreventionModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState<{tier: string, billingType: string} | null>(null);
+  const [showDowngradeModal, setShowDowngradeModal] = useState<{tier: string, billingType: string} | null>(null);
+  const [upgradeConfirmationStep, setUpgradeConfirmationStep] = useState(false);
+  const [downgradeConfirmationStep, setDowngradeConfirmationStep] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // Security & Privacy state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [show2FAModal, setShow2FAModal] = useState(false);
@@ -208,6 +215,8 @@ const CompanyDashboardNew: React.FC = () => {
           ep_balance: 3450,
           logo_url: '',
           rating: 4.8,
+          billing_type: 'annual',
+          renewal_date: '2027-08-01',
         });
       }
     } catch (err) {
@@ -220,6 +229,8 @@ const CompanyDashboardNew: React.FC = () => {
         wallet_balance: 15240,
         ep_balance: 3450,
         logo_url: '',
+        billing_type: 'annual',
+        renewal_date: '2027-08-01',
         rating: 4.8,
       });
     } finally {
@@ -1523,28 +1534,242 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 <div>
                   <h3 style={{margin: '0 0 16px 0', fontSize: '16px', fontWeight: '700', color: '#333'}}>✨ Your Current Benefits</h3>
                   <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px'}}>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
-                      <span style={{fontSize: '18px'}}>✓</span>
-                      <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Unlimited staff members</span>
+                    {company?.subscription_tier === 'silver' && (
+                      <>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Commission: 18% (save 2%)</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Ad Credit: SGD 50/month</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>EP Multiplier: 2x</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Team: Up to 5 people</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Monthly Ad Credit: SGD 50</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Milestone Bonus: SGD 20 Ad Credits (one-time at 50 errands)</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Features: Team coordination, AI dashboard</span>
+                        </div>
+                      </>
+                    )}
+                    {company?.subscription_tier === 'gold' && (
+                      <>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Commission: 17% (save 3%)</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Monthly Ad Credit: SGD 200</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>EP Multiplier: 3x</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Team: Up to 15 people</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Milestone Bonuses: SGD 50 Ad Credits at 50 errands, SGD 100 Ad Credits at 100 errands (one-time)</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Features: All Silver + events, top newsletter</span>
+                        </div>
+                      </>
+                    )}
+                    {company?.subscription_tier === 'platinum' && (
+                      <>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Commission: 16% (save 4%)</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Ad Credit: SGD 500/month</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>EP Multiplier: 5x</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Team: Unlimited</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Milestones: SGD 100 at 50, SGD 200 at 100, SGD 500 at 200</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
+                          <span style={{fontSize: '18px'}}>✓</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Features: All Gold + blog, quarterly newsletter, priority events</span>
+                        </div>
+                      </>
+                    )}
+                    {(!company?.subscription_tier || company?.subscription_tier === 'free') && (
+                      <>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: '#f9f9f9', borderRadius: '8px', border: '1px solid #ddd'}}>
+                          <span style={{fontSize: '18px'}}>✕</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#999'}}>Free tier - 20% commission, 1x EP, 1 person only</span>
+                        </div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: '#f9f9f9', borderRadius: '8px', border: '1px solid #ddd'}}>
+                          <span style={{fontSize: '18px'}}>✕</span>
+                          <span style={{fontSize: '14px', fontWeight: '600', color: '#999'}}>No ad credits or milestone rewards</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Shortcuts to tracking dashboards */}
+                  <div style={{marginTop: '32px', paddingTop: '32px', borderTop: '2px solid #FFD9B3', display: 'flex', gap: '12px', flexWrap: 'wrap'}}>
+                    <button
+                      onClick={() => {
+                        const trackingSection = document.querySelector('[data-benefits-tracking]');
+                        trackingSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      style={{flex: '1', minWidth: '200px', padding: '12px 24px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)'}}
+                      onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)', e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 107, 53, 0.4)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)', e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)')}
+                    >
+                      📊 View Benefits & Tracking
+                    </button>
+                    <button
+                      onClick={() => {
+                        const pricingSection = document.getElementById('pricing-section');
+                        pricingSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      style={{flex: '1', minWidth: '200px', padding: '12px 24px', background: 'white', color: '#FF6B35', border: '2px solid #FF6B35', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = '#FFF8F5')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}
+                    >
+                      💰 Compare Plans
+                    </button>
+                    <button
+                      onClick={() => setShowChurnPreventionModal(true)}
+                      style={{flex: '1', minWidth: '200px', padding: '12px 24px', background: '#fee2e2', color: '#991b1b', border: '2px solid #fca5a5', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = '#fecaca')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = '#fee2e2')}
+                    >
+                      ❌ Cancel Subscription
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* BILLING HISTORY SECTION */}
+              <div style={{background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '32px', marginBottom: '48px'}}>
+                <h3 style={{margin: '0 0 24px 0', fontSize: '24px', fontWeight: '700', color: '#333'}}>📋 Billing History</h3>
+                <div style={{overflowX: 'auto'}}>
+                  <table style={{width: '100%', borderCollapse: 'collapse'}}>
+                    <thead>
+                      <tr style={{background: '#f9fafb', borderBottom: '2px solid #e5e7eb'}}>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '700', color: '#666'}}>Date</th>
+                        <th style={{padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '700', color: '#666'}}>Description</th>
+                        <th style={{padding: '12px', textAlign: 'right', fontSize: '14px', fontWeight: '700', color: '#666'}}>Amount</th>
+                        <th style={{padding: '12px', textAlign: 'center', fontSize: '14px', fontWeight: '700', color: '#666'}}>Status</th>
+                        <th style={{padding: '12px', textAlign: 'center', fontSize: '14px', fontWeight: '700', color: '#666'}}>Invoice</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style={{borderBottom: '1px solid #e5e7eb', background: 'white'}}>
+                        <td style={{padding: '12px', fontSize: '14px', color: '#333'}}>Aug 1, 2026</td>
+                        <td style={{padding: '12px', fontSize: '14px', color: '#333'}}>Gold Partner - Annual Subscription</td>
+                        <td style={{padding: '12px', textAlign: 'right', fontSize: '14px', fontWeight: '600', color: '#FF6B35'}}>SGD $748</td>
+                        <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>Paid</span></td>
+                        <td style={{padding: '12px', textAlign: 'center'}}><a href="#" style={{color: '#FF6B35', textDecoration: 'none', fontWeight: '600'}}>Download</a></td>
+                      </tr>
+                      <tr style={{borderBottom: '1px solid #e5e7eb', background: '#fafafa'}}>
+                        <td style={{padding: '12px', fontSize: '14px', color: '#333'}}>Jul 15, 2026</td>
+                        <td style={{padding: '12px', fontSize: '14px', color: '#333'}}>Upgrade from Silver to Gold (Prorated)</td>
+                        <td style={{padding: '12px', textAlign: 'right', fontSize: '14px', fontWeight: '600', color: '#FF6B35'}}>SGD $37.40</td>
+                        <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>Paid</span></td>
+                        <td style={{padding: '12px', textAlign: 'center'}}><a href="#" style={{color: '#FF6B35', textDecoration: 'none', fontWeight: '600'}}>Download</a></td>
+                      </tr>
+                      <tr style={{borderBottom: '1px solid #e5e7eb', background: 'white'}}>
+                        <td style={{padding: '12px', fontSize: '14px', color: '#333'}}>Jul 1, 2026</td>
+                        <td style={{padding: '12px', fontSize: '14px', color: '#333'}}>Silver Partner - Annual Subscription</td>
+                        <td style={{padding: '12px', textAlign: 'right', fontSize: '14px', fontWeight: '600', color: '#FF6B35'}}>SGD $268</td>
+                        <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>Paid</span></td>
+                        <td style={{padding: '12px', textAlign: 'center'}}><a href="#" style={{color: '#FF6B35', textDecoration: 'none', fontWeight: '600'}}>Download</a></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* AD CREDITS TRACKER SECTION */}
+              <div style={{background: 'linear-gradient(135deg, #E0F2FE 0%, #F0F9FF 100%)', border: '2px solid #0284c7', borderRadius: '12px', padding: '32px', marginBottom: '48px'}}>
+                <h3 style={{margin: '0 0 24px 0', fontSize: '24px', fontWeight: '700', color: '#0c4a6e'}}>💳 Ad Credits Tracker</h3>
+
+                {/* Current Month Usage */}
+                <div style={{background: 'white', borderRadius: '12px', padding: '24px', marginBottom: '24px', border: '1px solid #0284c7'}}>
+                  <p style={{margin: '0 0 12px 0', fontSize: '14px', fontWeight: '700', color: '#0c4a6e', textTransform: 'uppercase'}}>August 2026 Usage</p>
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
+                    <span style={{fontSize: '16px', fontWeight: '600', color: '#333'}}>SGD 125 / SGD 200 used</span>
+                    <span style={{fontSize: '14px', fontWeight: '700', color: '#FF6B35'}}>62.5%</span>
+                  </div>
+                  <div style={{background: '#e0e7ff', borderRadius: '8px', height: '12px', overflow: 'hidden'}}>
+                    <div style={{background: '#FF6B35', height: '100%', width: '62.5%', transition: 'width 0.3s'}}></div>
+                  </div>
+                  <p style={{margin: '12px 0 0 0', fontSize: '12px', color: '#666'}}>SGD 75 available until Sep 1</p>
+                </div>
+
+                {/* 12-Month History */}
+                <div style={{background: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #0284c7'}}>
+                  <p style={{margin: '0 0 16px 0', fontSize: '14px', fontWeight: '700', color: '#0c4a6e', textTransform: 'uppercase'}}>Last 12 Months</p>
+                  <div style={{display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '12px'}}>
+                    <div style={{textAlign: 'center', padding: '12px', background: '#f9fafb', borderRadius: '8px'}}>
+                      <p style={{margin: '0 0 4px 0', fontSize: '11px', color: '#666', fontWeight: '600'}}>Aug</p>
+                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#333'}}>125</p>
+                      <p style={{margin: '4px 0 0 0', fontSize: '10px', color: '#999'}}>of 200</p>
                     </div>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
-                      <span style={{fontSize: '18px'}}>✓</span>
-                      <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Enhanced AI recommendations</span>
+                    <div style={{textAlign: 'center', padding: '12px', background: '#fef3c7', borderRadius: '8px'}}>
+                      <p style={{margin: '0 0 4px 0', fontSize: '11px', color: '#92400e', fontWeight: '600'}}>Jul</p>
+                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#92400e'}}>200</p>
+                      <p style={{margin: '4px 0 0 0', fontSize: '10px', color: '#b45309'}}>fully used</p>
                     </div>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
-                      <span style={{fontSize: '18px'}}>✓</span>
-                      <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>10% discount on ads</span>
+                    <div style={{textAlign: 'center', padding: '12px', background: '#f9fafb', borderRadius: '8px'}}>
+                      <p style={{margin: '0 0 4px 0', fontSize: '11px', color: '#666', fontWeight: '600'}}>Jun</p>
+                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#333'}}>160</p>
+                      <p style={{margin: '4px 0 0 0', fontSize: '10px', color: '#999'}}>of 200</p>
                     </div>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'white', borderRadius: '8px', border: '1px solid #FFD9B3'}}>
-                      <span style={{fontSize: '18px'}}>✓</span>
-                      <span style={{fontSize: '14px', fontWeight: '600', color: '#333'}}>Performance dashboard</span>
+                    <div style={{textAlign: 'center', padding: '12px', background: '#f9fafb', borderRadius: '8px'}}>
+                      <p style={{margin: '0 0 4px 0', fontSize: '11px', color: '#666', fontWeight: '600'}}>May</p>
+                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#333'}}>90</p>
+                      <p style={{margin: '4px 0 0 0', fontSize: '10px', color: '#999'}}>of 200</p>
+                    </div>
+                    <div style={{textAlign: 'center', padding: '12px', background: '#f9fafb', borderRadius: '8px'}}>
+                      <p style={{margin: '0 0 4px 0', fontSize: '11px', color: '#666', fontWeight: '600'}}>Apr</p>
+                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#333'}}>180</p>
+                      <p style={{margin: '4px 0 0 0', fontSize: '10px', color: '#999'}}>of 200</p>
+                    </div>
+                    <div style={{textAlign: 'center', padding: '12px', background: '#fef3c7', borderRadius: '8px'}}>
+                      <p style={{margin: '0 0 4px 0', fontSize: '11px', color: '#92400e', fontWeight: '600'}}>Mar</p>
+                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#92400e'}}>200</p>
+                      <p style={{margin: '4px 0 0 0', fontSize: '10px', color: '#b45309'}}>fully used</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* UPGRADE/DOWNGRADE SECTION - BOTTOM */}
-              <div style={{marginBottom: '40px'}}>
+              <div style={{marginBottom: '40px'}} id="pricing-section">
                 <h2 style={{margin: '0 0 12px 0', fontSize: '32px', fontWeight: '700', color: '#333'}}>Choose Your Plan</h2>
                 <p style={{margin: '0 0 24px 0', fontSize: '16px', color: '#666', fontWeight: '500'}}>Upgrade or downgrade your subscription anytime. Changes take effect on next renewal date.</p>
 
@@ -1572,34 +1797,54 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
               <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px', marginBottom: '40px'}}>
                 {/* This creates exactly 3 columns */}
                 {/* Silver Plan */}
+                {console.log('[DEBUG] Rendering pricing cards - company tier:', company?.subscription_tier)}
                 <div style={{border: pricingBillingCycle === 'annual' ? '2px solid #FFD9B3' : '1px solid #e0e0e0', borderRadius: '16px', padding: '32px', textAlign: 'center', background: pricingBillingCycle === 'annual' ? 'linear-gradient(135deg, #FFF9F5 0%, #FFF3E0 100%)' : 'white', transition: 'all 0.3s ease', cursor: 'pointer', transform: pricingBillingCycle === 'annual' ? 'scale(1.02)' : 'scale(1)'}} onMouseEnter={(e) => {e.currentTarget.style.transform = pricingBillingCycle === 'annual' ? 'scale(1.05) translateY(-8px)' : 'translateY(-8px)'; e.currentTarget.style.boxShadow = pricingBillingCycle === 'annual' ? '0 16px 40px rgba(255, 107, 53, 0.2)' : '0 12px 32px rgba(0,0,0,0.12)'}} onMouseLeave={(e) => {e.currentTarget.style.transform = pricingBillingCycle === 'annual' ? 'scale(1.02)' : 'translateY(0)'; e.currentTarget.style.boxShadow = pricingBillingCycle === 'annual' ? '0 8px 20px rgba(255, 107, 53, 0.1)' : 'none'}}>
                   <div style={{marginBottom: '24px'}}>
                     <p style={{margin: '0 0 12px 0', fontSize: '28px'}}>🥈</p>
                     <h3 style={{margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700', color: pricingBillingCycle === 'annual' ? '#FF6B35' : '#333'}}>Silver</h3>
-                    <p style={{margin: 0, fontSize: '14px', color: '#666', fontWeight: '500'}}>Perfect for startups</p>
+                    <p style={{margin: '0 0 6px 0', fontSize: '14px', color: '#666', fontWeight: '500'}}>Perfect for startups</p>
+                    <p style={{margin: 0, fontSize: '13px', color: '#999', fontWeight: '600'}}>👥 Up to 5 staff</p>
                   </div>
 
                   <div style={{background: pricingBillingCycle === 'annual' ? 'white' : '#FFF9F5', borderRadius: '12px', padding: '20px', marginBottom: '20px', border: pricingBillingCycle === 'annual' ? '1px solid #FFE4C4' : 'none'}}>
-                    <p style={{margin: '0 0 6px 0', fontSize: '12px', color: '#999', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px'}}>PRICE (SGD)</p>
+                    <p style={{margin: '0 0 6px 0', fontSize: '12px', color: '#999', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px'}}>PRICE</p>
                     <p style={{margin: '0 0 2px 0', fontSize: '36px', fontWeight: '700', color: '#FF6B35'}}>
-                      {pricingBillingCycle === 'annual' ? '990' : '99'}
+                      SGD {pricingBillingCycle === 'annual' ? '276' : '28'}
                     </p>
                     <p style={{margin: 0, fontSize: '13px', color: '#666', fontWeight: '500'}}>per {pricingBillingCycle === 'annual' ? 'year' : 'month'}</p>
+                    {pricingBillingCycle === 'annual' && (
+                      <p style={{margin: '8px 0 0 0', fontSize: '12px', color: '#999', fontWeight: '600'}}>SGD 0.76/day</p>
+                    )}
                   </div>
 
                   {pricingBillingCycle === 'annual' && (
                     <div style={{background: 'linear-gradient(135deg, #e8f5e9 0%, #f1f8f6 100%)', borderRadius: '8px', padding: '14px', marginBottom: '24px', border: '1px solid #c8e6c9'}}>
-                      <p style={{margin: 0, fontSize: '13px', color: '#2e7d32', fontWeight: '700'}}>✨ Save 17%<br/><span style={{fontSize: '12px', fontWeight: '600'}}>SGD 204/year</span></p>
+                      <p style={{margin: 0, fontSize: '13px', color: '#2e7d32', fontWeight: '700'}}>✨ Save 18%<br/><span style={{fontSize: '12px', fontWeight: '600'}}>SGD 60/year</span></p>
                     </div>
                   )}
 
                   <div style={{textAlign: 'left', marginBottom: '24px', paddingBottom: '24px', borderBottom: pricingBillingCycle === 'annual' ? '1px solid #FFE4C4' : '1px solid #e0e0e0'}}>
-                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Up to 5 staff members</div>
-                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Basic AI recommendations</div>
-                    <div style={{margin: '12px 0', fontSize: '14px', color: '#666', fontWeight: '500'}}>✕ Performance dashboard</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Commission: 18% (save 2%)</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Monthly Ad Credit: SGD 50</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ EP Multiplier: 2x</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Team: Up to 5 people</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Milestone Bonus: SGD 20 Ad Credits (one-time at 50 errands)</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Features: Team coordination, AI dashboard</div>
                   </div>
 
-                  <button style={{width: '100%', padding: '12px 16px', background: pricingBillingCycle === 'annual' ? '#FF6B35' : '#f5f5f5', border: pricingBillingCycle === 'annual' ? 'none' : '1px solid #ddd', borderRadius: '8px', fontWeight: pricingBillingCycle === 'annual' ? '700' : '700', fontSize: '14px', color: pricingBillingCycle === 'annual' ? 'white' : '#333', cursor: 'pointer', transition: 'all 0.2s'}} onMouseEnter={(e) => e.currentTarget.style.background = pricingBillingCycle === 'annual' ? '#FF8C5A' : '#e8e8e8'} onMouseLeave={(e) => e.currentTarget.style.background = pricingBillingCycle === 'annual' ? '#FF6B35' : '#f5f5f5'}>Upgrade to Silver</button>
+                  {company?.subscription_tier === 'gold' || company?.subscription_tier === 'platinum' ? (
+                    <button
+                      onClick={() => setShowDowngradeModal({tier: 'silver', billingType: pricingBillingCycle})}
+                      style={{width: '100%', padding: '12px 16px', background: '#fee2e2', border: '2px solid #fca5a5', borderRadius: '8px', fontWeight: '700', fontSize: '14px', color: '#991b1b', cursor: 'pointer', transition: 'all 0.2s'}} onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'} onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}>
+                        ⬇️ Downgrade to Silver
+                      </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowUpgradeModal({tier: 'silver', billingType: pricingBillingCycle})}
+                      style={{width: '100%', padding: '12px 16px', background: pricingBillingCycle === 'annual' ? '#FF6B35' : '#f5f5f5', border: pricingBillingCycle === 'annual' ? 'none' : '1px solid #ddd', borderRadius: '8px', fontWeight: '700', fontSize: '14px', color: pricingBillingCycle === 'annual' ? 'white' : '#333', cursor: 'pointer', transition: 'all 0.2s'}} onMouseEnter={(e) => e.currentTarget.style.background = pricingBillingCycle === 'annual' ? '#FF8C5A' : '#e8e8e8'} onMouseLeave={(e) => e.currentTarget.style.background = pricingBillingCycle === 'annual' ? '#FF6B35' : '#f5f5f5'}>
+                        Upgrade to Silver
+                      </button>
+                  )}
                 </div>
 
                 {/* Gold Plan (Current) */}
@@ -1609,31 +1854,55 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                   <div style={{marginBottom: '24px'}}>
                     <p style={{margin: '0 0 12px 0', fontSize: '28px'}}>🏆</p>
                     <h3 style={{margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700', color: '#FF6B35'}}>Gold</h3>
-                    <p style={{margin: 0, fontSize: '14px', color: '#666', fontWeight: '500'}}>Best for growing teams</p>
+                    <p style={{margin: '0 0 6px 0', fontSize: '14px', color: '#666', fontWeight: '500'}}>Best for growing teams</p>
+                    <p style={{margin: 0, fontSize: '13px', color: '#999', fontWeight: '600'}}>👥 Up to 15 staff</p>
                   </div>
 
                   <div style={{background: 'white', borderRadius: '12px', padding: '20px', marginBottom: '20px'}}>
-                    <p style={{margin: '0 0 6px 0', fontSize: '12px', color: '#999', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px'}}>PRICE (SGD)</p>
+                    <p style={{margin: '0 0 6px 0', fontSize: '12px', color: '#999', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px'}}>PRICE</p>
                     <p style={{margin: '0 0 2px 0', fontSize: '36px', fontWeight: '700', color: '#FF6B35'}}>
-                      {pricingBillingCycle === 'annual' ? '1,990' : '199'}
+                      SGD {pricingBillingCycle === 'annual' ? '768' : '78'}
                     </p>
                     <p style={{margin: 0, fontSize: '13px', color: '#666', fontWeight: '500'}}>per {pricingBillingCycle === 'annual' ? 'year' : 'month'}</p>
+                    {pricingBillingCycle === 'annual' && (
+                      <p style={{margin: '8px 0 0 0', fontSize: '12px', color: '#999', fontWeight: '600'}}>SGD 2.10/day</p>
+                    )}
                   </div>
 
                   {pricingBillingCycle === 'annual' && (
                     <div style={{background: 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)', borderRadius: '8px', padding: '14px', marginBottom: '24px', border: '1px solid #ffd699'}}>
-                      <p style={{margin: 0, fontSize: '13px', color: '#f57c00', fontWeight: '700'}}>✨ Save 17%<br/><span style={{fontSize: '12px', fontWeight: '600'}}>SGD 408/year</span></p>
+                      <p style={{margin: 0, fontSize: '13px', color: '#f57c00', fontWeight: '700'}}>✨ Save 18%<br/><span style={{fontSize: '12px', fontWeight: '600'}}>SGD 168/year</span></p>
                     </div>
                   )}
 
                   <div style={{textAlign: 'left', marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #FFD9B3'}}>
-                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Unlimited staff members</div>
-                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Enhanced AI recommendations</div>
-                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ 10% discount on ads</div>
-                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Performance dashboard</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Commission: 17% (save 3%)</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Monthly Ad Credit: SGD 200</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ EP Multiplier: 3x</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Team: Up to 15 people</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Milestone Bonuses: SGD 50 Ad Credits at 50 errands, SGD 100 Ad Credits at 100 errands (one-time)</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Features: All Silver + events, top newsletter</div>
                   </div>
 
-                  <button style={{width: '100%', padding: '12px 16px', background: '#FF6B35', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '14px', color: 'white', cursor: 'pointer', transition: 'all 0.2s'}} disabled>Current Plan</button>
+                  {company?.subscription_tier === 'gold' ? (
+                    <button
+                      disabled
+                      style={{width: '100%', padding: '12px 16px', background: '#FF6B35', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '14px', color: 'white', cursor: 'not-allowed', transition: 'all 0.2s'}}>
+                        ✓ Current Plan
+                      </button>
+                  ) : company?.subscription_tier === 'platinum' ? (
+                    <button
+                      onClick={() => setShowDowngradeModal({tier: 'gold', billingType: pricingBillingCycle})}
+                      style={{width: '100%', padding: '12px 16px', background: '#fee2e2', border: '2px solid #fca5a5', borderRadius: '8px', fontWeight: '700', fontSize: '14px', color: '#991b1b', cursor: 'pointer', transition: 'all 0.2s'}} onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'} onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}>
+                        ⬇️ Downgrade to Gold
+                      </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowUpgradeModal({tier: 'gold', billingType: pricingBillingCycle})}
+                      style={{width: '100%', padding: '12px 16px', background: '#FF6B35', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '14px', color: 'white', cursor: 'pointer', transition: 'all 0.2s'}} onMouseEnter={(e) => e.currentTarget.style.background = '#ff8c5a'} onMouseLeave={(e) => e.currentTarget.style.background = '#FF6B35'}>
+                        Upgrade to Gold
+                      </button>
+                  )}
                 </div>
 
                 {/* Platinum Plan */}
@@ -1641,31 +1910,49 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                   <div style={{marginBottom: '24px'}}>
                     <p style={{margin: '0 0 12px 0', fontSize: '28px'}}>💎</p>
                     <h3 style={{margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700', color: '#6366f1'}}>Platinum</h3>
-                    <p style={{margin: 0, fontSize: '14px', color: '#666', fontWeight: '500'}}>For enterprise scale</p>
+                    <p style={{margin: '0 0 6px 0', fontSize: '14px', color: '#666', fontWeight: '500'}}>For enterprise scale</p>
+                    <p style={{margin: 0, fontSize: '13px', color: '#999', fontWeight: '600'}}>👥 Unlimited staff</p>
                   </div>
 
                   <div style={{background: pricingBillingCycle === 'annual' ? '#f8f9ff' : 'white', borderRadius: '12px', padding: '20px', marginBottom: '20px', border: pricingBillingCycle === 'annual' ? '1px solid #ddd9ff' : 'none'}}>
-                    <p style={{margin: '0 0 6px 0', fontSize: '12px', color: '#999', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px'}}>PRICE (SGD)</p>
+                    <p style={{margin: '0 0 6px 0', fontSize: '12px', color: '#999', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px'}}>PRICE</p>
                     <p style={{margin: '0 0 2px 0', fontSize: '36px', fontWeight: '700', color: '#6366f1'}}>
-                      {pricingBillingCycle === 'annual' ? '3,990' : '399'}
+                      SGD {pricingBillingCycle === 'annual' ? '1,456' : '148'}
                     </p>
                     <p style={{margin: 0, fontSize: '13px', color: '#666', fontWeight: '500'}}>per {pricingBillingCycle === 'annual' ? 'year' : 'month'}</p>
+                    {pricingBillingCycle === 'annual' && (
+                      <p style={{margin: '8px 0 0 0', fontSize: '12px', color: '#999', fontWeight: '600'}}>SGD 3.99/day</p>
+                    )}
                   </div>
 
                   {pricingBillingCycle === 'annual' && (
                     <div style={{background: 'linear-gradient(135deg, #e8ebff 0%, #dfe2ff 100%)', borderRadius: '8px', padding: '14px', marginBottom: '24px', border: '1px solid #c7cffe'}}>
-                      <p style={{margin: 0, fontSize: '13px', color: '#4f46e5', fontWeight: '700'}}>✨ Save 17%<br/><span style={{fontSize: '12px', fontWeight: '600'}}>SGD 816/year</span></p>
+                      <p style={{margin: 0, fontSize: '13px', color: '#4f46e5', fontWeight: '700'}}>✨ Save 18%<br/><span style={{fontSize: '12px', fontWeight: '600'}}>SGD 320/year</span></p>
                     </div>
                   )}
 
                   <div style={{textAlign: 'left', marginBottom: '24px', paddingBottom: '24px', borderBottom: pricingBillingCycle === 'annual' ? '1px solid #ddd9ff' : '1px solid #d0d9f7'}}>
-                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Unlimited staff members</div>
-                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Premium AI recommendations</div>
-                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ 20% discount on ads</div>
-                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Performance dashboard</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Commission: 16% (save 4%)</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Monthly Ad Credit: SGD 500</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ EP Multiplier: 5x</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Team: Unlimited</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Milestone Bonuses: SGD 100 Ad Credits at 50 errands, SGD 200 Ad Credits at 100 errands, SGD 500 Ad Credits at 200 errands (one-time)</div>
+                    <div style={{margin: '12px 0', fontSize: '14px', color: '#333', fontWeight: '500'}}>✓ Features: All Gold + blog, quarterly newsletter, priority events</div>
                   </div>
 
-                  <button style={{width: '100%', padding: '12px 16px', background: pricingBillingCycle === 'annual' ? '#6366f1' : 'white', border: pricingBillingCycle === 'annual' ? 'none' : '2px solid #6366f1', borderRadius: '8px', fontWeight: '700', fontSize: '14px', color: pricingBillingCycle === 'annual' ? 'white' : '#6366f1', cursor: 'pointer', transition: 'all 0.2s'}} onMouseEnter={(e) => e.currentTarget.style.background = pricingBillingCycle === 'annual' ? '#818cf8' : '#f0f4ff'} onMouseLeave={(e) => e.currentTarget.style.background = pricingBillingCycle === 'annual' ? '#6366f1' : 'white'} onClick={() => alert('Upgrade to Platinum - SGD $3,990/year - Redirecting to Stripe checkout')}>Upgrade to Platinum</button>
+                  {company?.subscription_tier === 'platinum' ? (
+                    <button
+                      disabled
+                      style={{width: '100%', padding: '12px 16px', background: '#ccc', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '14px', color: '#999', cursor: 'not-allowed', transition: 'all 0.2s'}}>
+                        ✓ Current Plan
+                      </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowUpgradeModal({tier: 'platinum', billingType: pricingBillingCycle})}
+                      style={{width: '100%', padding: '12px 16px', background: pricingBillingCycle === 'annual' ? '#6366f1' : 'white', border: pricingBillingCycle === 'annual' ? 'none' : '2px solid #6366f1', borderRadius: '8px', fontWeight: '700', fontSize: '14px', color: pricingBillingCycle === 'annual' ? 'white' : '#6366f1', cursor: 'pointer', transition: 'all 0.2s'}} onMouseEnter={(e) => e.currentTarget.style.background = pricingBillingCycle === 'annual' ? '#818cf8' : '#f0f4ff'} onMouseLeave={(e) => e.currentTarget.style.background = pricingBillingCycle === 'annual' ? '#6366f1' : 'white'}>
+                        Upgrade to Platinum
+                      </button>
+                  )}
                 </div>
               </div>
 
@@ -1720,6 +2007,20 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       </div>
                     </div>
 
+                    {/* DISCOURAGEMENT BOX - WARN AGAINST DOWNGRADE */}
+                    <div style={{background: 'linear-gradient(135deg, #FECACA 0%, #FEA5A5 100%)', border: '3px solid #DC2626', borderRadius: '12px', padding: '18px', marginBottom: '24px'}}>
+                      <p style={{margin: '0 0 10px 0', fontSize: '14px', fontWeight: '800', color: '#7F1D1D', textTransform: 'uppercase'}}>⚠️ Think Twice Before Downgrading!</p>
+                      <p style={{margin: 0, fontSize: '13px', color: '#991B1B', fontWeight: '600', lineHeight: '1.5'}}>
+                        You're currently saving <strong>SGD {company?.subscription_tier === 'platinum' ? '7,372' : company?.subscription_tier === 'gold' ? '2,626' : '228'}/year</strong> with your plan. Downgrading means losing valuable benefits like:
+                      </p>
+                      <ul style={{margin: '8px 0 0 0', paddingLeft: '20px', fontSize: '12px', color: '#7F1D1D', fontWeight: '600', lineHeight: '1.4'}}>
+                        <li>{company?.subscription_tier === 'platinum' ? '5x EP Multiplier (down to 3x)' : company?.subscription_tier === 'gold' ? '3x EP Multiplier (down to 2x)' : '2x EP Multiplier (down to 1x)'}</li>
+                        <li>{company?.subscription_tier === 'platinum' ? 'SGD 500/month ad credits' : company?.subscription_tier === 'gold' ? 'SGD 200/month ad credits' : 'SGD 50/month ad credits'}</li>
+                        <li>Team coordination and advanced features</li>
+                      </ul>
+                      <p style={{margin: '10px 0 0 0', fontSize: '12px', color: '#7F1D1D', fontWeight: '700'}}>💡 Contact support@errandify.com for better pricing options!</p>
+                    </div>
+
                     <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
                       <div style={{background: '#fffbeb', padding: '14px', borderRadius: '10px', border: '2px solid #fcd34d'}}>
                         <p style={{margin: '0 0 6px 0', fontSize: '12px', fontWeight: '700', color: '#F39C12', textTransform: 'uppercase'}}>⏰ 7 Months to Transition</p>
@@ -1727,26 +2028,140 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#666'}}>Plenty of time to adjust before feature limits apply</p>
                       </div>
 
-                      <div style={{background: 'white', padding: '14px', borderRadius: '10px', border: '2px solid #fde68a'}}>
-                        <p style={{margin: '0 0 6px 0', fontSize: '12px', fontWeight: '700', color: '#F39C12', textTransform: 'uppercase'}}>💰 Lower Price at Renewal</p>
-                        <p style={{margin: 0, fontSize: '14px', color: '#333', fontWeight: '600'}}>Pay reduced amount starting Aug 1, 2027</p>
-                        <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#666'}}>Example: Downgrade from Gold to Silver = Save SGD $1,000/year</p>
+                      <div style={{background: '#FEE2E2', padding: '14px', borderRadius: '10px', border: '2px solid #DC2626'}}>
+                        <p style={{margin: '0 0 6px 0', fontSize: '12px', fontWeight: '700', color: '#DC2626', textTransform: 'uppercase'}}>❌ Revenue Loss at Renewal</p>
+                        <p style={{margin: 0, fontSize: '14px', color: '#7F1D1D', fontWeight: '600'}}>You LOSE earning potential, not just pay less</p>
+                        <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#991B1B', fontWeight: '600'}}>Example: Gold to Silver = Lose SGD 2,400/year in benefits + commission savings</p>
                       </div>
 
-                      <div style={{background: 'white', padding: '14px', borderRadius: '10px', border: '2px solid #fde68a'}}>
-                        <p style={{margin: '0 0 6px 0', fontSize: '12px', fontWeight: '700', color: '#F39C12', textTransform: 'uppercase'}}>⚠️ Feature Limits After Renewal</p>
-                        <p style={{margin: 0, fontSize: '14px', color: '#333', fontWeight: '600'}}>New plan limits become active on Aug 1</p>
-                        <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#666'}}>Silver: max 5 staff • No performance dashboard</p>
+                      <div style={{background: '#FEE2E2', padding: '14px', borderRadius: '10px', border: '2px solid #DC2626'}}>
+                        <p style={{margin: '0 0 6px 0', fontSize: '12px', fontWeight: '700', color: '#DC2626', textTransform: 'uppercase'}}>❌ Severe Feature Restrictions</p>
+                        <p style={{margin: 0, fontSize: '14px', color: '#7F1D1D', fontWeight: '600'}}>Your business capabilities will be LIMITED</p>
+                        <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#991B1B', fontWeight: '600'}}>Smaller team, fewer features, less earning potential</p>
                       </div>
 
-                      <div style={{background: 'white', padding: '14px', borderRadius: '10px', border: '2px solid #fde68a'}}>
-                        <p style={{margin: '0 0 6px 0', fontSize: '12px', fontWeight: '700', color: '#F39C12', textTransform: 'uppercase'}}>✓ Data Stays Intact</p>
-                        <p style={{margin: 0, fontSize: '14px', color: '#333', fontWeight: '600'}}>Nothing is deleted during downgrade</p>
-                        <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#666'}}>All errand history, staff records, and data preserved</p>
+                      <div style={{background: '#FEE2E2', padding: '14px', borderRadius: '10px', border: '2px solid #DC2626'}}>
+                        <p style={{margin: '0 0 6px 0', fontSize: '12px', fontWeight: '700', color: '#DC2626', textTransform: 'uppercase'}}>⚠️ Lost Growth Opportunity</p>
+                        <p style={{margin: 0, fontSize: '14px', color: '#7F1D1D', fontWeight: '600'}}>Your data stays, but your earning power doesn't</p>
+                        <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#991B1B', fontWeight: '600'}}>You can't grow as fast with lower multipliers and ad credits</p>
                       </div>
 
                       <div style={{background: '#fef3c7', padding: '14px', borderRadius: '10px', border: '2px solid #fbbf24'}}>
                         <p style={{margin: 0, fontSize: '12px', fontWeight: '700', color: '#D97706'}}>ℹ️ If you have more staff than limit, you can adjust before renewal</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* TRACKING & BENEFITS DASHBOARDS */}
+                <div style={{marginTop: '48px'}} data-benefits-tracking>
+                  <h2 style={{margin: '0 0 32px 0', fontSize: '28px', fontWeight: '700', color: '#333'}}>📊 Your Subscription Benefits & Tracking</h2>
+
+                  {/* Three Column Grid for Tracking Cards */}
+                  <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px'}}>
+                    {/* Card 1: Ad Credit Usage */}
+                    <div style={{background: 'linear-gradient(135deg, #FFF8F5 0%, #FFEEE4 100%)', border: '2px solid #FF6B35', borderRadius: '16px', padding: '24px'}}>
+                      <h3 style={{margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700', color: '#333'}}>💳 Ad Credit Usage</h3>
+                      <div style={{background: 'white', borderRadius: '12px', padding: '16px', marginBottom: '16px', border: '1px solid #FFD9B3'}}>
+                        <p style={{margin: '0 0 8px 0', fontSize: '12px', color: '#8B4513', fontWeight: '700', textTransform: 'uppercase'}}>This Month</p>
+                        <div style={{display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px'}}>
+                          <p style={{margin: 0, fontSize: '28px', fontWeight: '800', color: '#FF6B35'}}>
+                            {company?.subscription_tier === 'gold' ? 'SGD45' : company?.subscription_tier === 'platinum' ? 'SGD320' : 'SGD50'}
+                          </p>
+                          <p style={{margin: 0, fontSize: '14px', color: '#666', fontWeight: '600'}}>
+                            / {company?.subscription_tier === 'gold' ? 'SGD200' : company?.subscription_tier === 'platinum' ? 'SGD500' : 'SGD50'}
+                          </p>
+                        </div>
+                        <div style={{background: '#f0f0f0', borderRadius: '8px', height: '8px', overflow: 'hidden'}}>
+                          <div style={{background: '#FF6B35', height: '100%', width: company?.subscription_tier === 'gold' ? '22.5%' : company?.subscription_tier === 'platinum' ? '64%' : '100%', borderRadius: '8px'}}></div>
+                        </div>
+                        <p style={{margin: '8px 0 0 0', fontSize: '12px', color: '#666', fontWeight: '600'}}>
+                          {company?.subscription_tier === 'gold' ? '77.5%' : company?.subscription_tier === 'platinum' ? '36%' : '100%'} remaining
+                        </p>
+                      </div>
+                      <div style={{background: '#fef3c7', borderRadius: '8px', padding: '12px', border: '1px solid #fbbf24', fontSize: '13px', color: '#92400e'}}>
+                        <strong>💡 Tip:</strong> Ad credits reset every month. Use them to promote your services!
+                      </div>
+                    </div>
+
+                    {/* Card 2: Milestone Progress */}
+                    <div style={{background: 'linear-gradient(135deg, #FFF9F7 0%, #FFF5F0 100%)', border: '2px solid #FF6B35', borderRadius: '16px', padding: '24px'}}>
+                      <h3 style={{margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700', color: '#333'}}>🎯 Milestone Progress</h3>
+                      <div style={{background: 'white', borderRadius: '12px', padding: '16px', marginBottom: '16px', border: '1px solid #FFD9B3'}}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
+                          <p style={{margin: 0, fontSize: '12px', color: '#8B4513', fontWeight: '700', textTransform: 'uppercase'}}>50 Errands Completed</p>
+                          <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#FF6B35'}}>38 / 50</p>
+                        </div>
+                        <div style={{background: '#f0f0f0', borderRadius: '8px', height: '8px', overflow: 'hidden', marginBottom: '12px'}}>
+                          <div style={{background: '#FF6B35', height: '100%', width: '76%', borderRadius: '8px'}}></div>
+                        </div>
+                        {company?.subscription_tier === 'gold' || company?.subscription_tier === 'platinum' ? (
+                          <>
+                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
+                              <p style={{margin: 0, fontSize: '12px', color: '#8B4513', fontWeight: '700', textTransform: 'uppercase'}}>100 Errands Completed</p>
+                              <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#999'}}>38 / 100</p>
+                            </div>
+                            <div style={{background: '#f0f0f0', borderRadius: '8px', height: '8px', overflow: 'hidden'}}>
+                              <div style={{background: '#ccc', height: '100%', width: '38%', borderRadius: '8px'}}></div>
+                            </div>
+                          </>
+                        ) : null}
+                        {company?.subscription_tier === 'platinum' ? (
+                          <div style={{marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                            <p style={{margin: 0, fontSize: '12px', color: '#8B4513', fontWeight: '700', textTransform: 'uppercase'}}>200 Errands Completed</p>
+                            <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#999'}}>38 / 200</p>
+                          </div>
+                        ) : null}
+                      </div>
+                      <div style={{background: '#dbeafe', borderRadius: '8px', padding: '12px', border: '1px solid #93c5fd', fontSize: '13px', color: '#1e40af'}}>
+                        <strong>🎁 Next Reward:</strong> Complete 12 more errands to earn <strong>SGD {company?.subscription_tier === 'gold' ? '50' : company?.subscription_tier === 'platinum' ? '100' : '20'} in Ad Credits</strong>! Automatically added to your account.
+                      </div>
+                    </div>
+
+                    {/* Card 3: Commission Savings & ROI */}
+                    <div style={{background: 'linear-gradient(135deg, #FFEEE4 0%, #FFE4C4 100%)', border: '2px solid #FF6B35', borderRadius: '16px', padding: '24px'}}>
+                      <h3 style={{margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700', color: '#333'}}>💰 Savings & ROI</h3>
+                      <div style={{background: 'white', borderRadius: '12px', padding: '16px', marginBottom: '16px', border: '1px solid #FFD9B3'}}>
+                        <p style={{margin: '0 0 8px 0', fontSize: '12px', color: '#8B4513', fontWeight: '700', textTransform: 'uppercase'}}>Monthly Commission Saved</p>
+                        <p style={{margin: '0 0 12px 0', fontSize: '28px', fontWeight: '800', color: '#FF6B35'}}>
+                          SGD {company?.subscription_tier === 'gold' ? '38' : company?.subscription_tier === 'platinum' ? '76' : '19'}
+                        </p>
+                        <p style={{margin: 0, fontSize: '12px', color: '#666', fontWeight: '600'}}>
+                          vs Free tier at 20% commission on SGD 950 tasks
+                        </p>
+                      </div>
+                      <div style={{background: 'white', borderRadius: '12px', padding: '16px', border: '1px solid #FFD9B3'}}>
+                        <p style={{margin: '0 0 8px 0', fontSize: '12px', color: '#8B4513', fontWeight: '700', textTransform: 'uppercase'}}>Annual ROI</p>
+                        <p style={{margin: '0 0 4px 0', fontSize: '26px', fontWeight: '800', color: '#4ade80'}}>
+                          {company?.subscription_tier === 'gold' ? '381%' : company?.subscription_tier === 'platinum' ? '621%' : '507%'}
+                        </p>
+                        <p style={{margin: 0, fontSize: '12px', color: '#666', fontWeight: '600'}}>
+                          {company?.subscription_tier === 'gold' ? 'SGD 2,626 saved annually' : company?.subscription_tier === 'platinum' ? 'SGD 7,372 saved annually' : 'SGD 2,688 saved annually'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* EP Multiplier Impact */}
+                  <div style={{marginTop: '32px', background: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)', border: '2px solid #0ea5e9', borderRadius: '16px', padding: '24px'}}>
+                    <h3 style={{margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700', color: '#333'}}>⚡ EP Multiplier Impact</h3>
+                    <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px'}}>
+                      <div style={{background: 'white', borderRadius: '12px', padding: '16px', border: '1px solid #bae6fd'}}>
+                        <p style={{margin: '0 0 8px 0', fontSize: '12px', color: '#0c4a6e', fontWeight: '700', textTransform: 'uppercase'}}>Your Multiplier</p>
+                        <p style={{margin: 0, fontSize: '28px', fontWeight: '800', color: '#0ea5e9'}}>
+                          {company?.subscription_tier === 'gold' ? '3x' : company?.subscription_tier === 'platinum' ? '5x' : company?.subscription_tier === 'silver' ? '2x' : '1x'}
+                        </p>
+                      </div>
+                      <div style={{background: 'white', borderRadius: '12px', padding: '16px', border: '1px solid #bae6fd'}}>
+                        <p style={{margin: '0 0 8px 0', fontSize: '12px', color: '#0c4a6e', fontWeight: '700', textTransform: 'uppercase'}}>EP Earned This Month</p>
+                        <p style={{margin: 0, fontSize: '28px', fontWeight: '800', color: '#0ea5e9'}}>
+                          {company?.subscription_tier === 'gold' ? '450' : company?.subscription_tier === 'platinum' ? '750' : '300'} EP
+                        </p>
+                      </div>
+                      <div style={{background: '#e0f2fe', borderRadius: '12px', padding: '16px', border: '1px solid #bae6fd', gridColumn: '1 / -1'}}>
+                        <p style={{margin: 0, fontSize: '13px', color: '#0c4a6e', fontWeight: '600'}}>
+                          <strong>Comparison:</strong> Without your plan (1x multiplier), you&apos;d earn {company?.subscription_tier === 'gold' ? '150' : company?.subscription_tier === 'platinum' ? '150' : '150'} EP. You&apos;re earning <strong>{company?.subscription_tier === 'gold' ? '3x' : company?.subscription_tier === 'platinum' ? '5x' : '2x'} more!</strong>
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -2865,6 +3280,414 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
         </div>
       )}
 
+      {/* Downgrade Warning Modal */}
+      {showDowngradeModal && (
+        <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001}}>
+          <div style={{background: 'linear-gradient(135deg, #FEE2E2 0%, #FEA5A5 100%)', borderRadius: '16px', padding: '40px', maxWidth: '650px', width: '90%', boxShadow: '0 12px 40px rgba(0,0,0,0.3)', border: '3px solid #DC2626'}}>
+            <h2 style={{margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800', color: '#7F1D1D'}}>⚠️ Are You Sure?</h2>
+            <p style={{margin: '0 0 24px 0', fontSize: '16px', color: '#991B1B', fontWeight: '600'}}>Downgrading to {showDowngradeModal.tier.charAt(0).toUpperCase() + showDowngradeModal.tier.slice(1)} means losing valuable benefits</p>
+
+            {/* What You're Losing */}
+            <div style={{background: 'rgba(255,255,255,0.8)', borderRadius: '12px', padding: '20px', marginBottom: '20px', border: '2px solid #DC2626'}}>
+              <h3 style={{margin: '0 0 16px 0', fontSize: '16px', fontWeight: '700', color: '#7F1D1D'}}>💔 You'll Lose:</h3>
+
+              {company?.subscription_tier === 'platinum' && showDowngradeModal.tier !== 'platinum' && (
+                <>
+                  <div style={{margin: '10px 0', padding: '10px', background: '#FEE2E2', borderRadius: '8px', borderLeft: '4px solid #DC2626'}}>
+                    <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#7F1D1D'}}>⚡ EP Multiplier: 5x → {showDowngradeModal.tier === 'gold' ? '3x' : '2x'}</p>
+                  </div>
+                  <div style={{margin: '10px 0', padding: '10px', background: '#FEE2E2', borderRadius: '8px', borderLeft: '4px solid #DC2626'}}>
+                    <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#7F1D1D'}}>💳 Monthly Ad Credits: SGD 500 → SGD {showDowngradeModal.tier === 'gold' ? '200' : '50'}</p>
+                  </div>
+                  <div style={{margin: '10px 0', padding: '10px', background: '#FEE2E2', borderRadius: '8px', borderLeft: '4px solid #DC2626'}}>
+                    <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#7F1D1D'}}>👥 Team: Unlimited → {showDowngradeModal.tier === 'gold' ? '15 people' : '5 people'}</p>
+                  </div>
+                  <div style={{margin: '10px 0', padding: '10px', background: '#FEE2E2', borderRadius: '8px', borderLeft: '4px solid #DC2626'}}>
+                    <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#7F1D1D'}}>💰 Annual Savings: SGD 7,372 → SGD {showDowngradeModal.tier === 'gold' ? '2,626' : '228'}</p>
+                  </div>
+                </>
+              )}
+
+              {company?.subscription_tier === 'gold' && showDowngradeModal.tier === 'silver' && (
+                <>
+                  <div style={{margin: '10px 0', padding: '10px', background: '#FEE2E2', borderRadius: '8px', borderLeft: '4px solid #DC2626'}}>
+                    <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#7F1D1D'}}>⚡ EP Multiplier: 3x → 2x</p>
+                  </div>
+                  <div style={{margin: '10px 0', padding: '10px', background: '#FEE2E2', borderRadius: '8px', borderLeft: '4px solid #DC2626'}}>
+                    <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#7F1D1D'}}>💳 Monthly Ad Credits: SGD 200 → SGD 50</p>
+                  </div>
+                  <div style={{margin: '10px 0', padding: '10px', background: '#FEE2E2', borderRadius: '8px', borderLeft: '4px solid #DC2626'}}>
+                    <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#7F1D1D'}}>👥 Team: Up to 15 people → 5 people</p>
+                  </div>
+                  <div style={{margin: '10px 0', padding: '10px', background: '#FEE2E2', borderRadius: '8px', borderLeft: '4px solid #DC2626'}}>
+                    <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#7F1D1D'}}>💰 Annual Savings: SGD 2,626 → SGD 228</p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Renewal Info */}
+            <div style={{background: '#fff3cd', borderRadius: '8px', padding: '16px', marginBottom: '20px', border: '2px solid #ffc107'}}>
+              <p style={{margin: '0 0 8px 0', fontSize: '14px', fontWeight: '700', color: '#856404'}}>⏰ Takes Effect at Next Renewal</p>
+              <p style={{margin: '0 0 4px 0', fontSize: '13px', color: '#856404', fontWeight: '600'}}>August 1, 2027</p>
+              <p style={{margin: 0, fontSize: '12px', color: '#856404'}}>You'll keep current benefits until then</p>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{display: 'flex', gap: '12px'}}>
+              {!downgradeConfirmationStep ? (
+                <>
+                  <button
+                    onClick={() => setDowngradeConfirmationStep(true)}
+                    style={{flex: 1, padding: '12px 20px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#b91c1c')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = '#DC2626')}
+                  >
+                    Confirm Downgrade
+                  </button>
+                  <button
+                    onClick={() => {setShowDowngradeModal(null); setDowngradeConfirmationStep(false);}}
+                    style={{flex: 1, padding: '12px 20px', background: 'white', color: '#DC2626', border: '2px solid #DC2626', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#FEE2E2')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}
+                  >
+                    Keep Current Plan
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div style={{flex: 1, padding: '16px', background: '#FEE2E2', borderRadius: '8px', border: '1px solid #FEC2C2', display: 'flex', alignItems: 'center', gap: '12px'}}>
+                    <span style={{fontSize: '20px'}}>⚠️</span>
+                    <div>
+                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#333'}}>Final Confirmation</p>
+                      <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#666'}}>You'll lose benefits effective Aug 1, 2027</p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {downgradeConfirmationStep && (
+              <div style={{display: 'flex', gap: '12px', marginTop: '16px'}}>
+                <button
+                  onClick={async () => {
+                    try {
+                      const token = localStorage.getItem('token');
+                      const response = await fetch('/api/subscriptions/downgrade', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({tier: showDowngradeModal.tier})
+                      });
+                      const data = await response.json();
+                      if (data.success) {
+                        setErrorMessage(`✅ Downgrade scheduled to ${showDowngradeModal.tier.toUpperCase()}. Changes take effect on August 1, 2027.`);
+                        setShowDowngradeModal(null);
+                        setDowngradeConfirmationStep(false);
+                        setTimeout(() => window.location.reload(), 4000);
+                      } else {
+                        setErrorMessage(data.error || 'Failed to schedule downgrade');
+                      }
+                    } catch (error: any) {
+                      setErrorMessage(error.message || 'An error occurred');
+                    }
+                  }}
+                  style={{flex: 1, padding: '12px 20px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#b91c1c')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = '#DC2626')}
+                >
+                  Yes, Downgrade Now
+                </button>
+                <button
+                  onClick={() => setDowngradeConfirmationStep(false)}
+                  style={{flex: 1, padding: '12px 20px', background: 'white', color: '#666', border: '2px solid #ddd', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade Confirmation Modal */}
+      {showUpgradeModal && (
+        <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001}}>
+          <div style={{background: 'linear-gradient(135deg, #FFF8F5 0%, #FFEEE4 100%)', borderRadius: '16px', padding: '40px', maxWidth: '600px', width: '90%', boxShadow: '0 12px 40px rgba(0,0,0,0.2)', border: '2px solid #FF6B35'}}>
+            <h2 style={{margin: '0 0 16px 0', fontSize: '28px', fontWeight: '800', color: '#333'}}>🎉 Upgrade to {showUpgradeModal.tier.charAt(0).toUpperCase() + showUpgradeModal.tier.slice(1)}</h2>
+            <p style={{margin: '0 0 24px 0', fontSize: '16px', color: '#666', fontWeight: '500'}}>Here's what you'll GAIN with this upgrade:</p>
+
+            {/* Benefits Comparison */}
+            <div style={{background: 'white', borderRadius: '12px', padding: '20px', marginBottom: '24px', border: '1px solid #FFD9B3'}}>
+              {(company?.subscription_tier === 'silver' && showUpgradeModal.tier === 'gold') && (
+                <>
+                  <div style={{marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #FFD9B3'}}>
+                    <p style={{margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>💰 Commission Rate</p>
+                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>18% → <span style={{color: '#FF6B35', fontSize: '18px'}}>17%</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+1% SAVE</span></p>
+                  </div>
+                  <div style={{marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #FFD9B3'}}>
+                    <p style={{margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>📊 Ad Credits</p>
+                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>SGD 50/month → <span style={{color: '#FF6B35', fontSize: '18px'}}>SGD 200/month</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+SGD 150</span></p>
+                  </div>
+                  <div style={{marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #FFD9B3'}}>
+                    <p style={{margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>⚡ EP Multiplier</p>
+                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>2x → <span style={{color: '#FF6B35', fontSize: '18px'}}>3x</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+50%</span></p>
+                  </div>
+                  <div>
+                    <p style={{margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>👥 Team Members</p>
+                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>5 people → <span style={{color: '#FF6B35', fontSize: '18px'}}>15 people</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+10</span></p>
+                  </div>
+                </>
+              )}
+              {((company?.subscription_tier === 'silver' || company?.subscription_tier === 'gold') && showUpgradeModal.tier === 'platinum') && (
+                <>
+                  <div style={{marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #FFD9B3'}}>
+                    <p style={{margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>💰 Commission Rate</p>
+                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>{company?.subscription_tier === 'silver' ? '18%' : '17%'} → <span style={{color: '#6366f1', fontSize: '18px'}}>16%</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+{company?.subscription_tier === 'silver' ? '2' : '1'}% SAVE</span></p>
+                  </div>
+                  <div style={{marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #FFD9B3'}}>
+                    <p style={{margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>📊 Ad Credits</p>
+                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>SGD {company?.subscription_tier === 'silver' ? '50' : '200'}/month → <span style={{color: '#6366f1', fontSize: '18px'}}>SGD 500/month</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+SGD {company?.subscription_tier === 'silver' ? '450' : '300'}</span></p>
+                  </div>
+                  <div style={{marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #FFD9B3'}}>
+                    <p style={{margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>⚡ EP Multiplier</p>
+                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>{company?.subscription_tier === 'silver' ? '2x' : '3x'} → <span style={{color: '#6366f1', fontSize: '18px'}}>5x</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+{company?.subscription_tier === 'silver' ? '150' : '67'}%</span></p>
+                  </div>
+                  <div>
+                    <p style={{margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>👥 Team Members</p>
+                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>{company?.subscription_tier === 'silver' ? '5' : '15'} people → <span style={{color: '#6366f1', fontSize: '18px'}}>Unlimited</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+∞</span></p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Price */}
+            <div style={{background: '#fff3cd', borderRadius: '8px', padding: '16px', marginBottom: '24px', border: '1px solid #ffc107'}}>
+              <p style={{margin: 0, fontSize: '16px', fontWeight: '700', color: '#856404'}}>
+                💳 {showUpgradeModal.billingType === 'monthly' ? 'SGD 28/month' : 'SGD 276/year'}
+                {showUpgradeModal.billingType === 'annual' && <span style={{fontSize: '12px', color: '#999'}}> (Save 18% - SGD 60/year)</span>}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{display: 'flex', gap: '12px'}}>
+              {!upgradeConfirmationStep ? (
+                <>
+                  <button
+                    onClick={() => setUpgradeConfirmationStep(true)}
+                    style={{flex: 1, padding: '12px 20px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#ff8c5a')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = '#FF6B35')}
+                  >
+                    💳 Proceed to Payment
+                  </button>
+                  <button
+                    onClick={() => {setShowUpgradeModal(null); setUpgradeConfirmationStep(false);}}
+                    style={{flex: 1, padding: '12px 20px', background: 'white', color: '#FF6B35', border: '2px solid #FF6B35', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#FFF8F5')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}
+                  >
+                    Back
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div style={{flex: 1, padding: '16px', background: '#FFF3CD', borderRadius: '8px', border: '1px solid #FFD9B3', display: 'flex', alignItems: 'center', gap: '12px'}}>
+                    <span style={{fontSize: '20px'}}>⚠️</span>
+                    <div>
+                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#333'}}>Final Confirmation</p>
+                      <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#666'}}>This will charge your card immediately</p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {upgradeConfirmationStep && (
+              <div style={{display: 'flex', gap: '12px', marginTop: '16px'}}>
+                <button
+                  onClick={async () => {
+                    try {
+                      const token = localStorage.getItem('token');
+                      const response = await fetch('/api/subscriptions/checkout', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({tier: showUpgradeModal.tier, billingType: showUpgradeModal.billingType})
+                      });
+                      const data = await response.json();
+                      if (data.success) {
+                        if (data.isDemo) {
+                          setErrorMessage(`✅ ${data.message}. Ready to proceed to Stripe checkout.`);
+                          setShowUpgradeModal(null);
+                          setUpgradeConfirmationStep(false);
+                        } else if (data.checkout_url) {
+                          window.location.href = data.checkout_url;
+                        }
+                      } else {
+                        setErrorMessage(data.error || 'Failed to create checkout session');
+                      }
+                    } catch (error: any) {
+                      setErrorMessage(error.message || 'An error occurred');
+                    }
+                  }}
+                  style={{flex: 1, padding: '12px 20px', background: '#22c55e', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#16a34a')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = '#22c55e')}
+                >
+                  ✅ Yes, Upgrade Now
+                </button>
+                <button
+                  onClick={() => setUpgradeConfirmationStep(false)}
+                  style={{flex: 1, padding: '12px 20px', background: 'white', color: '#666', border: '2px solid #ddd', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Churn Prevention Modal */}
+      {showChurnPreventionModal && (
+        <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001}}>
+          <div style={{background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)', borderRadius: '16px', padding: '40px', maxWidth: '600px', width: '90%', boxShadow: '0 12px 40px rgba(0,0,0,0.2)', border: '2px solid #FF9800'}}>
+            <div style={{textAlign: 'center', marginBottom: '24px'}}>
+              <div style={{fontSize: '48px', marginBottom: '16px'}}>🎁</div>
+              <h2 style={{margin: '0 0 12px 0', fontSize: '28px', fontWeight: '800', color: '#333'}}>Hold on!</h2>
+              <p style={{margin: 0, fontSize: '16px', color: '#666', fontWeight: '500'}}>We have a special offer just for you</p>
+            </div>
+
+            {/* Discount Offer */}
+            <div style={{background: 'white', borderRadius: '12px', padding: '24px', marginBottom: '24px', border: '2px solid #FF9800', textAlign: 'center'}}>
+              <div style={{fontSize: '14px', color: '#666', marginBottom: '8px'}}>Get</div>
+              <div style={{fontSize: '40px', fontWeight: '800', color: '#FF9800', marginBottom: '8px'}}>10% OFF</div>
+              <div style={{fontSize: '14px', color: '#666', marginBottom: '16px'}}>For your next 3 months</div>
+              <div style={{fontSize: '18px', fontWeight: '700', color: '#FF6B35'}}>Save SGD $224/quarter</div>
+              <p style={{margin: '16px 0 0 0', fontSize: '12px', color: '#999'}}>Just for staying with us!</p>
+            </div>
+
+            {/* Why Stay */}
+            <div style={{background: '#fff9e6', borderRadius: '8px', padding: '16px', marginBottom: '24px'}}>
+              <p style={{margin: '0 0 8px 0', fontSize: '13px', fontWeight: '700', color: '#333'}}>✅ Keep all your benefits</p>
+              <p style={{margin: '0 0 8px 0', fontSize: '13px', fontWeight: '700', color: '#333'}}>✅ No hidden fees or commitments</p>
+              <p style={{margin: 0, fontSize: '13px', fontWeight: '700', color: '#333'}}>✅ Cancel anytime if you change your mind</p>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{display: 'flex', gap: '12px'}}>
+              <button
+                onClick={() => {
+                  setShowChurnPreventionModal(false);
+                  setErrorMessage('✅ Discount applied! Enjoy 10% off for 3 months.');
+                }}
+                style={{flex: 1, padding: '14px 24px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#ff8c5a')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#FF6B35')}
+              >
+                🎉 Claim Offer
+              </button>
+              <button
+                onClick={() => {
+                  setShowChurnPreventionModal(false);
+                  setShowCancelModal(true);
+                }}
+                style={{flex: 1, padding: '14px 24px', background: 'white', color: '#666', border: '2px solid #ddd', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}
+              >
+                Still Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Subscription Modal */}
+      {showCancelModal && (
+        <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001}}>
+          <div style={{background: 'linear-gradient(135deg, #FFF8F5 0%, #FFEEE4 100%)', borderRadius: '16px', padding: '40px', maxWidth: '600px', width: '90%', boxShadow: '0 12px 40px rgba(0,0,0,0.2)', border: '2px solid #FF6B35'}}>
+            <h2 style={{margin: '0 0 16px 0', fontSize: '28px', fontWeight: '800', color: '#333'}}>⚠️ Wait! Don't Go Yet</h2>
+            <p style={{margin: '0 0 24px 0', fontSize: '16px', color: '#666', fontWeight: '500'}}>Before you cancel, let's show you what you'd be giving up:</p>
+
+            {/* Value Breakdown */}
+            <div style={{background: 'white', borderRadius: '12px', padding: '20px', marginBottom: '24px', border: '1px solid #FFD9B3'}}>
+              <div style={{marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #FFD9B3'}}>
+                <p style={{margin: '0 0 8px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>💰 Annual Savings Lost</p>
+                <p style={{margin: 0, fontSize: '24px', fontWeight: '800', color: '#FF6B35'}}>SGD {company?.subscription_tier === 'platinum' ? '1,300' : company?.subscription_tier === 'gold' ? '600' : '250'}/year</p>
+                <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#999'}}>From commission reduction</p>
+              </div>
+
+              <div style={{marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #FFD9B3'}}>
+                <p style={{margin: '0 0 8px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>📊 Ad Credits Lost</p>
+                <p style={{margin: 0, fontSize: '20px', fontWeight: '800', color: '#FF6B35'}}>SGD {company?.subscription_tier === 'platinum' ? '6,000' : company?.subscription_tier === 'gold' ? '2,400' : '600'}/year</p>
+                <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#999'}}>Monthly allocation expires</p>
+              </div>
+
+              <div style={{marginBottom: '0', paddingBottom: '0'}}>
+                <p style={{margin: '0 0 8px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>⚡ EP Multiplier Lost</p>
+                <p style={{margin: 0, fontSize: '20px', fontWeight: '800', color: '#FF6B35'}}>Back to 1x</p>
+                <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#999'}}>From {company?.subscription_tier === 'platinum' ? '5x' : company?.subscription_tier === 'gold' ? '3x' : '2x'} multiplier</p>
+              </div>
+            </div>
+
+            {/* Cancellation Date */}
+            <div style={{background: '#fff3cd', borderRadius: '8px', padding: '16px', marginBottom: '24px', border: '1px solid #ffc107'}}>
+              <p style={{margin: 0, fontSize: '14px', fontWeight: '600', color: '#856404'}}>
+                ⏰ {company?.billing_type === 'monthly' ? 'Your subscription cancels end of this month' : 'Your subscription cancels Aug 1, 2027'}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{display: 'flex', gap: '12px'}}>
+              <button
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('/api/subscriptions/cancel', {
+                      method: 'POST',
+                      headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                      setErrorMessage('✅ Subscription cancelled. Your premium benefits will end on your next renewal date.');
+                      setShowCancelModal(false);
+                      setTimeout(() => window.location.reload(), 2000);
+                    } else {
+                      setErrorMessage(data.error || 'Failed to cancel subscription');
+                    }
+                  } catch (error: any) {
+                    setErrorMessage(error.message || 'An error occurred');
+                  }
+                }}
+                style={{flex: 1, padding: '12px 20px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#c82333')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#dc3545')}
+              >
+                Yes, Cancel My Subscription
+              </button>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                style={{flex: 1, padding: '12px 20px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#ff8c5a')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#FF6B35')}
+              >
+                🎉 Keep My Subscription
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Delete Account Modal */}
       {showDeleteAccountModal && (
         <div style={{
@@ -3096,6 +3919,28 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Error/Success Modal */}
+      {errorMessage && (
+        <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000}}>
+          <div style={{background: 'white', borderRadius: '16px', padding: '40px', maxWidth: '500px', width: '90%', boxShadow: '0 12px 40px rgba(0,0,0,0.3)', textAlign: 'center'}}>
+            <div style={{fontSize: '48px', marginBottom: '16px'}}>
+              {errorMessage.includes('✅') ? '✅' : errorMessage.includes('Error') ? '❌' : '⚠️'}
+            </div>
+            <p style={{margin: '0 0 24px 0', fontSize: '16px', color: '#333', fontWeight: '600', lineHeight: '1.6'}}>
+              {errorMessage}
+            </p>
+            <button
+              onClick={() => setErrorMessage(null)}
+              style={{width: '100%', padding: '12px 24px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'}}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#ff8c5a')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#FF6B35')}
+            >
+              OK
+            </button>
           </div>
         </div>
       )}

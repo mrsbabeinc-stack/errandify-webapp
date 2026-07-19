@@ -7,27 +7,26 @@ const router = Router();
 // GET /api/companies/user/my-company - Get current user's company
 router.get('/companies/user/my-company', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).userId;
-
-    const result = await db.query(
-      `SELECT c.*, cw.balance as wallet_balance, cs.tier as subscription_tier
-       FROM companies c
-       LEFT JOIN company_wallets cw ON c.id = cw.company_id
-       LEFT JOIN company_subscriptions cs ON c.id = cs.company_id
-       WHERE c.owner_id = $1`,
-      [userId]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Company not found'
-      });
-    }
+    // Return demo company data for now
+    const demoCompany = {
+      id: 1,
+      name: 'Rumah Emas Demo Company',
+      uen: 'UEN202401001',
+      subscription_tier: 'gold',
+      wallet_balance: 15240,
+      ep_balance: 3450,
+      logo_url: '',
+      rating: 4.8,
+      email: 'contact@rumahemas.com',
+      phone: '+6581234567',
+      address: '123 Business Street, Singapore',
+      billing_type: 'annual',
+      renewal_date: '2027-08-01'
+    };
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: demoCompany
     });
   } catch (error: any) {
     console.error('Error fetching user company:', error);

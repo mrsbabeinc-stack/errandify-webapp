@@ -18,6 +18,7 @@ export const RATING_BONUSES = {
 /**
  * Award EP to a user
  * - Awards immediately upon task/rating completion
+ * - Applies subscription tier multiplier (2x, 3x, 5x) if provided
  * - Logs transaction for audit trail
  * - Updates tier if threshold crossed
  * - Resets monthly counter on month change
@@ -26,6 +27,9 @@ export async function awardEp(request) {
     const client = await db.getClient();
     try {
         await client.query('BEGIN');
+        // Apply multiplier if subscription is active
+        const multiplier = request.multiplier || 1;
+        const awardAmount = request.amount * multiplier;
         // Ensure gamification record exists
         await client.query(`INSERT INTO user_gamification (user_id, total_ep, current_month_ep, tier)
        VALUES ($1, 0, 0, 'bronze')
@@ -42,15 +46,15 @@ export async function awardEp(request) {
                 await client.query(`UPDATE user_gamification SET current_month_ep = 0 WHERE user_id = $1`, [request.userId]);
             }
         }
-        // Log the transaction
-        await client.query(`INSERT INTO ep_transactions (user_id, amount, reason, related_errand_id, created_at)
-       VALUES ($1, $2, $3, $4, NOW())`, [request.userId, request.amount, request.reason, request.errandId || null]);
+        // Log the transaction with multiplier
+        await client.query(`INSERT INTO ep_transactions (user_id, amount, reason, related_errand_id, multiplier, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())`, [request.userId, awardAmount, request.reason, request.errandId || null, multiplier]);
         // Update gamification stats
         const updateResult = await client.query(`UPDATE user_gamification
        SET total_ep = total_ep + $1,
            current_month_ep = current_month_ep + $1
        WHERE user_id = $2
-       RETURNING total_ep, current_month_ep`, [request.amount, request.userId]);
+       RETURNING total_ep, current_month_ep`, [awardAmount, request.userId]);
         const updated = updateResult.rows[0];
         // Update tier based on total_ep
         const newTier = calculateTier(updated.total_ep);

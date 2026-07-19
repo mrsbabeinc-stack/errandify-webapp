@@ -5,6 +5,7 @@ export interface EPAwardRequest {
   amount: number;
   reason: string;
   errandId?: number;
+  multiplier?: number; // Subscription tier multiplier (2x, 3x, 5x)
 }
 
 export interface UserGamification {
@@ -38,6 +39,7 @@ export const RATING_BONUSES = {
 /**
  * Award EP to a user
  * - Awards immediately upon task/rating completion
+ * - Applies subscription tier multiplier (2x, 3x, 5x) if provided
  * - Logs transaction for audit trail
  * - Updates tier if threshold crossed
  * - Resets monthly counter on month change
@@ -47,6 +49,10 @@ export async function awardEp(request: EPAwardRequest): Promise<number> {
 
   try {
     await client.query('BEGIN');
+
+    // Apply multiplier if subscription is active
+    const multiplier = request.multiplier || 1;
+    const awardAmount = request.amount * multiplier;
 
     // Ensure gamification record exists
     await client.query(
@@ -77,11 +83,11 @@ export async function awardEp(request: EPAwardRequest): Promise<number> {
       }
     }
 
-    // Log the transaction
+    // Log the transaction with multiplier
     await client.query(
-      `INSERT INTO ep_transactions (user_id, amount, reason, related_errand_id, created_at)
-       VALUES ($1, $2, $3, $4, NOW())`,
-      [request.userId, request.amount, request.reason, request.errandId || null]
+      `INSERT INTO ep_transactions (user_id, amount, reason, related_errand_id, multiplier, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [request.userId, awardAmount, request.reason, request.errandId || null, multiplier]
     );
 
     // Update gamification stats
@@ -91,7 +97,7 @@ export async function awardEp(request: EPAwardRequest): Promise<number> {
            current_month_ep = current_month_ep + $1
        WHERE user_id = $2
        RETURNING total_ep, current_month_ep`,
-      [request.amount, request.userId]
+      [awardAmount, request.userId]
     );
 
     const updated = updateResult.rows[0];

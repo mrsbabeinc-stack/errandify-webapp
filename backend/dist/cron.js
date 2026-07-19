@@ -212,12 +212,38 @@ export function startCrons() {
     setInterval(checkEventReminders1Hour, 60 * 60 * 1000);
     setInterval(checkEventRemindersDayOf, 60 * 60 * 1000);
     // Dispute auto-resolution - run every 6 hours
+    // Advertising campaign jobs - run hourly for schedule checks
+    setInterval(checkAdvertisingSchedules, 60 * 60 * 1000);
+    console.log('[CRON] Advertising schedule checks scheduled to run every hour');
     setInterval(checkDisputeAutoResolution, 6 * 60 * 60 * 1000);
     console.log('[CRON] Dispute auto-resolution scheduled to run every 6 hours');
     // Offline notification cleanup - run every hour
     setInterval(cleanupOfflineNotifications, 60 * 60 * 1000);
     console.log('[CRON] Offline notification cleanup scheduled to run every hour');
+    // Subscription management - run on 1st of month at 00:00 UTC
+    const nextMonthFirst = getNextMonthFirst();
+    const msUntilMonthFirst = nextMonthFirst.getTime() - new Date().getTime();
+    setTimeout(() => {
+        allocateMonthlySubscriptionCredits().catch(console.error);
+        setTimeout(() => expireSubscriptionCredits().catch(console.error), 60 * 60 * 1000);
+        setTimeout(() => processPendingSubscriptionDowngrades().catch(console.error), 2 * 60 * 60 * 1000);
+        // Then repeat every month
+        setInterval(() => {
+            allocateMonthlySubscriptionCredits().catch(console.error);
+            setTimeout(() => expireSubscriptionCredits().catch(console.error), 60 * 60 * 1000);
+            setTimeout(() => processPendingSubscriptionDowngrades().catch(console.error), 2 * 60 * 60 * 1000);
+        }, 30 * 24 * 60 * 60 * 1000); // Run monthly
+    }, msUntilMonthFirst);
+    console.log(`[CRON] Subscription jobs scheduled for ${nextMonthFirst.toISOString()}`);
     console.log('[CRON] All cron jobs started successfully');
+}
+/**
+ * Helper: Get next 1st of month at 00:00 UTC
+ */
+function getNextMonthFirst() {
+    const now = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
+    return next;
 }
 /**
  * Check and auto-resolve disputes (Level 1 & escalate Level 2+)
@@ -395,5 +421,105 @@ export async function cleanupOfflineNotifications() {
     }
     catch (error) {
         console.error('[CRON] Offline notification cleanup failed:', error);
+    }
+}
+// ============================================
+// ADVERTISING CAMPAIGN JOBS
+// ============================================
+/**
+ * Check for due ad schedules and execute transitions
+ * Run hourly
+ */
+export async function checkAdvertisingSchedules() {
+    try {
+        const { advertisingJobScheduler } = await import('./services/advertisingJobScheduler.js');
+        await advertisingJobScheduler.checkAndExecuteSchedules();
+    }
+    catch (error) {
+        console.error('[CRON] Advertising schedule check failed:', error);
+    }
+}
+/**
+ * Generate daily performance data for active campaigns
+ * Run daily at midnight
+ */
+export async function generateAdvertisingPerformance() {
+    try {
+        const { advertisingJobScheduler } = await import('./services/advertisingJobScheduler.js');
+        await advertisingJobScheduler.generateDailyPerformance();
+    }
+    catch (error) {
+        console.error('[CRON] Advertising performance generation failed:', error);
+    }
+}
+/**
+ * Archive expired campaigns
+ * Run daily
+ */
+export async function archiveExpiredAdvertisingCampaigns() {
+    try {
+        const { advertisingJobScheduler } = await import('./services/advertisingJobScheduler.js');
+        await advertisingJobScheduler.archiveExpiredCampaigns();
+    }
+    catch (error) {
+        console.error('[CRON] Advertising campaign archival failed:', error);
+    }
+}
+/**
+ * Cleanup old executed schedules
+ * Run weekly
+ */
+export async function cleanupAdvertisingSchedules() {
+    try {
+        const { advertisingJobScheduler } = await import('./services/advertisingJobScheduler.js');
+        await advertisingJobScheduler.cleanupOldSchedules();
+    }
+    catch (error) {
+        console.error('[CRON] Advertising schedule cleanup failed:', error);
+    }
+}
+/**
+ * Allocate monthly subscription ad credits
+ * Run on 1st of month at 00:00 UTC
+ */
+export async function allocateMonthlySubscriptionCredits() {
+    try {
+        console.log('[CRON] Allocating monthly subscription ad credits...');
+        const { allocateMonthlyCredits } = await import('./services/adCreditService.js');
+        await allocateMonthlyCredits();
+        console.log('[CRON] ✅ Monthly credits allocated');
+    }
+    catch (error) {
+        console.error('[CRON] Monthly credit allocation failed:', error);
+    }
+}
+/**
+ * Expire old subscription ad credits
+ * Run on 1st of month at 01:00 UTC
+ */
+export async function expireSubscriptionCredits() {
+    try {
+        console.log('[CRON] Expiring old subscription ad credits...');
+        const { expireOldCredits } = await import('./services/adCreditService.js');
+        await expireOldCredits();
+        console.log('[CRON] ✅ Old credits expired');
+    }
+    catch (error) {
+        console.error('[CRON] Credit expiration failed:', error);
+    }
+}
+/**
+ * Process pending subscription downgrades
+ * Run on 1st of month at 02:00 UTC
+ */
+export async function processPendingSubscriptionDowngrades() {
+    try {
+        console.log('[CRON] Processing pending subscription downgrades...');
+        const { processPendingDowngrades } = await import('./services/subscriptionService.js');
+        await processPendingDowngrades();
+        console.log('[CRON] ✅ Pending downgrades processed');
+    }
+    catch (error) {
+        console.error('[CRON] Downgrade processing failed:', error);
     }
 }

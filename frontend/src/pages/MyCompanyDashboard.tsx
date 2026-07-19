@@ -2,6 +2,7 @@ import '../styles/MyCompanyDashboard.css';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToastNotification } from '../utils/toastNotification';
+import CompanySubscriptionBilling from './CompanySubscriptionBilling';
 
 interface Company {
   id: number;
@@ -68,6 +69,7 @@ const MyCompanyDashboard: React.FC = () => {
   });
   const [savingBiz, setSavingBiz] = useState(false);
   const [availableErrands, setAvailableErrands] = useState<any[]>([]);
+  const [showSubscription, setShowSubscription] = useState(false);
 
   const fetchCompanyData = async () => {
     try {
@@ -582,6 +584,20 @@ const MyCompanyDashboard: React.FC = () => {
             Details
           </button>
         </div>
+      </div>
+
+      {/* Subscription Section */}
+      <div className="mybiz-section">
+        <button className="mybiz-toggle-btn" onClick={() => setShowSubscription(!showSubscription)}>
+          <span className="toggle-icon">{showSubscription ? '▼' : '▶'}</span>
+          <span className="toggle-label">💳 Subscription & Billing</span>
+        </button>
+
+        {showSubscription && (
+          <div className="mybiz-content-wrapper">
+            <CompanySubscriptionBilling />
+          </div>
+        )}
       </div>
 
       {/* Main Actions */}
