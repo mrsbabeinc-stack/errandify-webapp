@@ -92,10 +92,10 @@ export default function WalletBreakdown({ data }: WalletBreakdownProps) {
             <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.8 }}>Ready for withdrawal • {percentage(walletData.available)}%</p>
           </div>
 
-          {/* On Hold (48h) */}
+          {/* On Hold (48h) - Asker Budget */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <p style={{ margin: 0, fontSize: '12px', fontWeight: '600' }}>⏳ On Hold (48h Auto-Release)</p>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: '600' }}>⏳ Stripe Hold (Asker Budget, 48h)</p>
               <p style={{ margin: 0, fontSize: '13px', fontWeight: '700' }}>SGD ${walletData.onHold.toFixed(2)}</p>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.3)', borderRadius: '6px', height: '8px', overflow: 'hidden' }}>
@@ -108,13 +108,13 @@ export default function WalletBreakdown({ data }: WalletBreakdownProps) {
                 }}
               />
             </div>
-            <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.8 }}>Errand holds • Auto-releases after 48hrs if no dispute</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.8 }}>Held by Stripe • Auto-releases after 48hrs if no dispute</p>
           </div>
 
           {/* Pending Admin */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <p style={{ margin: 0, fontSize: '12px', fontWeight: '600' }}>⚠️ Pending Admin Review</p>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: '600' }}>⚠️ Held by Stripe (Pending Admin)</p>
               <p style={{ margin: 0, fontSize: '13px', fontWeight: '700' }}>SGD ${walletData.pending.toFixed(2)}</p>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.3)', borderRadius: '6px', height: '8px', overflow: 'hidden' }}>
@@ -127,7 +127,7 @@ export default function WalletBreakdown({ data }: WalletBreakdownProps) {
                 }}
               />
             </div>
-            <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.8 }}>Disputes & pending approvals • Awaiting admin decision</p>
+            <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.8 }}>Advertising campaigns + errand disputes • Held in Stripe escrow • Admin deducts on approval or releases on rejection</p>
           </div>
 
           {/* Subscription (if any) */}
@@ -150,7 +150,7 @@ export default function WalletBreakdown({ data }: WalletBreakdownProps) {
             fontSize: '11px',
             lineHeight: '1.5',
           }}>
-            💡 <strong>How it works:</strong> Errand payments hold for 48 hours. Advertis ing charges immediately upon approval. If you dispute an errand, admin will decide. Your available balance can be withdrawn anytime.
+            💡 <strong>How it works:</strong> When you post an errand, Stripe holds your budget for 48h (auto-releases if no dispute). When advertising, Stripe holds the fee on submit (deducted on admin approval, released on rejection). Available balance can be withdrawn anytime.
           </div>
         </div>
       )}
