@@ -1692,21 +1692,21 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         <td style={{padding: '12px', fontSize: '14px', color: '#333'}}>Gold Partner - Annual Subscription</td>
                         <td style={{padding: '12px', textAlign: 'right', fontSize: '14px', fontWeight: '600', color: '#FF6B35'}}>SGD $748</td>
                         <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>Paid</span></td>
-                        <td style={{padding: '12px', textAlign: 'center'}}><a href="#" style={{color: '#FF6B35', textDecoration: 'none', fontWeight: '600'}}>Download</a></td>
+                        <td style={{padding: '12px', textAlign: 'center'}}><button onClick={() => setErrorMessage('📥 Invoice download functionality will be available when integrated with Stripe webhooks.')} style={{background: 'none', border: 'none', color: '#FF6B35', textDecoration: 'underline', fontWeight: '600', cursor: 'pointer'}}>Download</button></td>
                       </tr>
                       <tr style={{borderBottom: '1px solid #e5e7eb', background: '#fafafa'}}>
                         <td style={{padding: '12px', fontSize: '14px', color: '#333'}}>Jul 15, 2026</td>
                         <td style={{padding: '12px', fontSize: '14px', color: '#333'}}>Upgrade from Silver to Gold (Prorated)</td>
                         <td style={{padding: '12px', textAlign: 'right', fontSize: '14px', fontWeight: '600', color: '#FF6B35'}}>SGD $37.40</td>
                         <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>Paid</span></td>
-                        <td style={{padding: '12px', textAlign: 'center'}}><a href="#" style={{color: '#FF6B35', textDecoration: 'none', fontWeight: '600'}}>Download</a></td>
+                        <td style={{padding: '12px', textAlign: 'center'}}><button onClick={() => setErrorMessage('📥 Invoice download functionality will be available when integrated with Stripe webhooks.')} style={{background: 'none', border: 'none', color: '#FF6B35', textDecoration: 'underline', fontWeight: '600', cursor: 'pointer'}}>Download</button></td>
                       </tr>
                       <tr style={{borderBottom: '1px solid #e5e7eb', background: 'white'}}>
                         <td style={{padding: '12px', fontSize: '14px', color: '#333'}}>Jul 1, 2026</td>
                         <td style={{padding: '12px', fontSize: '14px', color: '#333'}}>Silver Partner - Annual Subscription</td>
                         <td style={{padding: '12px', textAlign: 'right', fontSize: '14px', fontWeight: '600', color: '#FF6B35'}}>SGD $268</td>
                         <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>Paid</span></td>
-                        <td style={{padding: '12px', textAlign: 'center'}}><a href="#" style={{color: '#FF6B35', textDecoration: 'none', fontWeight: '600'}}>Download</a></td>
+                        <td style={{padding: '12px', textAlign: 'center'}}><button onClick={() => setErrorMessage('📥 Invoice download functionality will be available when integrated with Stripe webhooks.')} style={{background: 'none', border: 'none', color: '#FF6B35', textDecoration: 'underline', fontWeight: '600', cursor: 'pointer'}}>Download</button></td>
                       </tr>
                     </tbody>
                   </table>
