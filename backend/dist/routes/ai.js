@@ -1173,9 +1173,199 @@ router.post('/suggestions', async (req, res) => {
             'petcare': 'petcare',
             'delivery': 'delivery',
         };
-        // Use provided category or detect from title/description
-        let detectedCategory = categoryMap[category] || 'homehelp';
-        // Parallel calls to Qwen for skills, description, and notes
+        // Simple spell-correction patterns for common typos
+        // Includes both word replacements and regex patterns for double letters
+        const commonCorrections = {
+            'mu ': 'my ',
+            'yu ': 'you ',
+            'teh ': 'the ',
+            'recieve': 'receive',
+            'occured': 'occurred',
+            'seperate': 'separate',
+            'definately': 'definitely',
+            'recomend': 'recommend',
+            'begining': 'beginning',
+            'adress': 'address',
+            'suceed': 'succeed',
+            'excelent': 'excellent',
+            'occassion': 'occasion',
+            'untill': 'until',
+            'wich': 'which',
+            'wiht': 'with',
+            'taht': 'that',
+            'thier': 'their',
+            'becuase': 'because',
+            'accomodate': 'accommodate',
+            'goverment': 'government',
+            'sentance': 'sentence',
+            'foriegn': 'foreign',
+            'neccessary': 'necessary',
+            'resturant': 'restaurant',
+            'writting': 'writing',
+            'studing': 'studying',
+            'bussiness': 'business',
+        };
+        // Regex patterns for common double-letter typos and single-letter mistakes
+        const doubleLetterCorrections = [
+            [/\bturorr\b/gi, 'tutor'],
+            [/\btutorr\b/gi, 'tutor'],
+            [/\btutory\b/gi, 'tutor'],
+            [/\btutro\b/gi, 'tutor'],
+            [/\bclenaing\b/gi, 'cleaning'],
+            [/\bclening\b/gi, 'cleaning'],
+            [/\bhelpp\b/gi, 'help'],
+            [/\bmovving\b/gi, 'moving'],
+        ];
+        // Spell-check the title first
+        let correctedTitle = title;
+        let hasCorrections = false;
+        if (title.trim().length > 0) {
+            // Try Qwen first if API key is available
+            if (qwenApiKey) {
+                try {
+                    console.log('[Suggestions] Spell-checking title with Qwen:', title);
+                    const spellCheckResponse = await axios.post(`${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'), {
+                        model: 'qwen-max',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: `You are a spelling and grammar corrector. Check the following task title for spelling errors and typos. If there are errors, correct them. If there are no errors, return the title unchanged.\n\nIMPORTANT: Return ONLY the corrected title, nothing else. No explanations, no quotes.\n\nTitle: "${title}"`,
+                            },
+                        ],
+                    }, {
+                        headers: {
+                            'Authorization': `Bearer ${qwenApiKey}`,
+                            'X-DashScope-AsyncRequest': 'false',
+                            'Content-Type': 'application/json',
+                        },
+                        timeout: 2000,
+                    });
+                    let correctionText = spellCheckResponse.data?.choices?.[0]?.message?.content?.trim() || title;
+                    // Validate Qwen's correction - if it changed too much, reject it
+                    // Compare word counts: if too different, use pattern matching instead
+                    const originalWords = title.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+                    const correctedWords = correctionText.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+                    const wordCountDiff = Math.abs(originalWords.length - correctedWords.length);
+                    if (wordCountDiff > 1) {
+                        console.log('[Suggestions] ⚠️ Qwen correction too aggressive (word count diff=' + wordCountDiff + '), rejecting');
+                        correctionText = title; // Reject it and use pattern matching instead
+                    }
+                    if (correctionText && correctionText !== title) {
+                        console.log('[Suggestions] ✅ Title corrected with Qwen from "' + title + '" to "' + correctionText + '"');
+                        correctedTitle = correctionText;
+                        hasCorrections = true;
+                    }
+                    else {
+                        correctedTitle = title;
+                    }
+                }
+                catch (spellErr) {
+                    console.warn('[Suggestions] Qwen spell-check failed, falling back to pattern matching:', spellErr instanceof Error ? spellErr.message : String(spellErr));
+                    // Fall through to pattern matching
+                }
+            }
+            // If no Qwen correction or Qwen failed, use pattern matching
+            if (!hasCorrections) {
+                let patternCorrected = title;
+                // Check common word corrections first
+                for (const [typo, correct] of Object.entries(commonCorrections)) {
+                    const regex = new RegExp('\\b' + typo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+                    if (regex.test(patternCorrected)) {
+                        patternCorrected = patternCorrected.replace(regex, correct);
+                        hasCorrections = true;
+                    }
+                }
+                // Check double-letter patterns
+                if (!hasCorrections) {
+                    for (const [pattern, replacement] of doubleLetterCorrections) {
+                        if (pattern.test(patternCorrected)) {
+                            patternCorrected = patternCorrected.replace(pattern, replacement);
+                            hasCorrections = true;
+                            break;
+                        }
+                    }
+                }
+                if (hasCorrections) {
+                    console.log('[Suggestions] ✅ Title corrected with pattern matching from "' + title + '" to "' + patternCorrected + '"');
+                    correctedTitle = patternCorrected;
+                }
+            }
+        }
+        // NOW detect category - AFTER spell-check so we use correctedTitle
+        let detectedCategory = categoryMap[category];
+        // If no category provided, try to detect from corrected title keywords
+        if (!detectedCategory) {
+            const titleLower = correctedTitle.toLowerCase();
+            // Keyword-based category detection - check childcare/education FIRST (most specific)
+            if (titleLower.includes('tutor') || titleLower.includes('teach') || titleLower.includes('lesson') ||
+                titleLower.includes('babysit') || titleLower.includes('nanny') || titleLower.includes('childcare') ||
+                titleLower.includes('child') || titleLower.includes('kid')) {
+                detectedCategory = 'childcare';
+            }
+            else if (titleLower.includes('walk') || titleLower.includes('pet') || titleLower.includes('dog') || titleLower.includes('cat')) {
+                detectedCategory = 'petcare';
+            }
+            else if (titleLower.includes('move') || titleLower.includes('deliver') || titleLower.includes('transport')) {
+                detectedCategory = 'delivery';
+            }
+            else if (titleLower.includes('elder') || titleLower.includes('senior')) {
+                detectedCategory = 'eldercare';
+            }
+            else if (titleLower.includes('event') || titleLower.includes('party') || titleLower.includes('wedding')) {
+                detectedCategory = 'eventhelp';
+            }
+            else if (titleLower.includes('tech') || titleLower.includes('computer') || titleLower.includes('software')) {
+                detectedCategory = 'tech-support';
+            }
+            else if (titleLower.includes('data') || titleLower.includes('entry') || titleLower.includes('spreadsheet')) {
+                detectedCategory = 'data-entry';
+            }
+            else if (titleLower.includes('clean') || titleLower.includes('repair') || titleLower.includes('fix') || titleLower.includes('wash')) {
+                detectedCategory = 'homehelp';
+            }
+            else {
+                detectedCategory = 'homehelp'; // Default fallback
+            }
+            console.log('[Suggestions] Category detected from corrected title:', titleLower, '→', detectedCategory);
+        }
+        else {
+            console.log('[Suggestions] Using provided category:', category, '→', detectedCategory);
+        }
+        // Enhanced skill map - more specific to task titles when possible
+        const titleKeywordSkillMap = {
+            'childcare': {
+                'tutor': ['Teaching Ability', 'Subject Expertise', 'Patience', 'Communication'],
+                'babysit': ['Child Safety Awareness', 'Communication', 'Patience', 'Activity Planning'],
+                'nanny': ['Child Care Experience', 'Responsibility', 'Communication', 'Patience'],
+                'default': ['Child Safety Awareness', 'Communication', 'Patience', 'Activity Planning'],
+            },
+            'homehelp': {
+                'clean': ['Attention to Detail', 'Time Management', 'Physical Stamina', 'Organization'],
+                'organiz': ['Organization', 'Attention to Detail', 'Time Management', 'Communication'],
+                'repair': ['Problem-solving', 'Technical Skills', 'Attention to Detail', 'Reliability'],
+                'paint': ['Attention to Detail', 'Physical Stamina', 'Precision', 'Technical Skills'],
+                'default': ['Attention to Detail', 'Time Management', 'Physical Stamina', 'Problem-solving'],
+            },
+            'petcare': {
+                'walk': ['Physical Fitness', 'Animal Care Experience', 'Reliability', 'Communication'],
+                'sit': ['Animal Care Experience', 'Patience', 'Responsibility', 'Communication'],
+                'groom': ['Animal Care Experience', 'Attention to Detail', 'Physical Fitness', 'Communication'],
+                'default': ['Animal Care Experience', 'Patience', 'Physical Fitness', 'Communication'],
+            },
+            'delivery': {
+                'move': ['Physical Strength', 'Problem-solving', 'Reliability', 'Teamwork'],
+                'deliver': ['Navigation Skills', 'Reliability', 'Customer Service', 'Physical Fitness'],
+                'transport': ['Reliability', 'Navigation Skills', 'Physical Fitness', 'Customer Service'],
+                'default': ['Reliability', 'Navigation Skills', 'Physical Fitness', 'Customer Service'],
+            },
+            'eldercare': {
+                'care': ['Patience', 'Communication Skills', 'Physical Care Experience', 'Empathy'],
+                'companion': ['Communication Skills', 'Empathy', 'Patience', 'Listening Skills'],
+                'help': ['Patience', 'Communication Skills', 'Physical Care Experience', 'Empathy'],
+                'default': ['Patience', 'Communication Skills', 'Physical Care Experience', 'Empathy'],
+            },
+        };
+        // Parallel calls to Qwen for skills, description, and notes - using corrected title
         const skillMap = {
             'eldercare': ['Patience', 'Communication Skills', 'Physical Care Experience', 'Empathy'],
             'childcare': ['Child Safety Awareness', 'Communication', 'Patience', 'Activity Planning'],
@@ -1185,6 +1375,41 @@ router.post('/suggestions', async (req, res) => {
             'eventhelp': ['Organization', 'Communication', 'Physical Stamina', 'Problem-solving'],
             'tech-support': ['Technical Knowledge', 'Problem-solving', 'Patience', 'Communication'],
             'data-entry': ['Data Entry Skills', 'Accuracy', 'Time Management', 'Attention to Detail'],
+        };
+        // Keyword-based certification suggestions for more specific tasks
+        const titleKeywordCertMap = {
+            'childcare': {
+                'tutor': {
+                    required: ['Teaching Certification', 'Subject Expertise'],
+                    optional: ['TESOL Certification', 'Special Education Training']
+                },
+                'babysit': {
+                    required: [],
+                    optional: ['CPR Certification', 'First Aid Certification', 'Background Check', 'Child Care License']
+                },
+                'nanny': {
+                    required: ['Child Care License'],
+                    optional: ['CPR Certification', 'First Aid Certification', 'Background Check']
+                },
+                'default': {
+                    required: ['Child Care License'],
+                    optional: ['CPR Certification', 'First Aid Certification', 'Background Check']
+                }
+            },
+            'homehelp': {
+                'clean': {
+                    required: [],
+                    optional: ['Cleaning Certification', 'Safety Training', 'Chemical Handling Certification']
+                },
+                'repair': {
+                    required: [],
+                    optional: ['Handyman License', 'Safety Training', 'Electrical Certification']
+                },
+                'default': {
+                    required: [],
+                    optional: ['Cleaning Certification', 'Safety Training', 'Chemical Handling Certification']
+                }
+            }
         };
         const certificationMap = {
             'eldercare': {
@@ -1258,7 +1483,7 @@ router.post('/suggestions', async (req, res) => {
                 messages: [
                     {
                         role: 'user',
-                        content: `You are a skills assessment expert. Given a task, list 4-5 specific skills required to complete it successfully. Return ONLY the skills as a comma-separated list. Be specific to THIS task, not generic.\n\nTask: "${title}"\nCategory: ${detectedCategory}\nWhat specific skills are required?`,
+                        content: `You are a skills assessment expert. Given a task, list 4-5 specific skills required to complete it successfully. Return ONLY the skills as a comma-separated list. Be specific to THIS task, not generic.\n\nTask: "${correctedTitle}"\nCategory: ${detectedCategory}\nWhat specific skills are required?`,
                     },
                 ],
             }, {
@@ -1274,7 +1499,7 @@ router.post('/suggestions', async (req, res) => {
                 messages: [
                     {
                         role: 'user',
-                        content: `You are a task description expert. Write a clear, specific task description that helps doers understand exactly what work is needed. Include: (1) What specifically needs to be done, (2) What the doer should bring/know, (3) Expected outcome. Keep it under 180 characters. Be direct and specific, not generic.\n\nTask: "${title}"\nCategory: ${detectedCategory}\nDate: ${date || 'TBD'}\nTime: ${time || 'TBD'}\n\nWrite a clear description of what this task involves and what doers should expect.`,
+                        content: `You are a task description expert. Write a clear, specific task description that helps doers understand exactly what work is needed. Include: (1) What specifically needs to be done, (2) What the doer should bring/know, (3) Expected outcome. Keep it under 180 characters. Be direct and specific, not generic.\n\nTask: "${correctedTitle}"\nCategory: ${detectedCategory}\nDate: ${date || 'TBD'}\nTime: ${time || 'TBD'}\n\nWrite a clear description of what this task involves and what doers should expect.`,
                     },
                 ],
             }, {
@@ -1290,7 +1515,7 @@ router.post('/suggestions', async (req, res) => {
                 messages: [
                     {
                         role: 'user',
-                        content: `You are a task screening expert. Generate 2-3 specific, practical questions the task poster should ask potential doers. Focus on: (1) Experience/qualifications needed, (2) Safety or quality concerns, (3) Logistical requirements. Use action-oriented language like "Ask doer about..." or "Verify...". Keep under 220 characters. Be specific to this task type.\n\nTask: "${title}"\nCategory: ${detectedCategory}\nWhat important questions should be asked to qualified doers for this task?`,
+                        content: `You are a task screening expert. Generate 2-3 specific, practical questions the task poster should ask potential doers. Focus on: (1) Experience/qualifications needed, (2) Safety or quality concerns, (3) Logistical requirements. Use action-oriented language like "Ask doer about..." or "Verify...". Keep under 220 characters. Be specific to this task type.\n\nTask: "${correctedTitle}"\nCategory: ${detectedCategory}\nWhat important questions should be asked to qualified doers for this task?`,
                     },
                 ],
             }, {
@@ -1337,23 +1562,90 @@ router.post('/suggestions', async (req, res) => {
         else {
             console.warn('[Qwen] Notes generation failed');
         }
-        // Fallback to basic skills if Qwen fails
+        // Fallback to basic skills if Qwen fails - use title-specific skills if available
         if (skills.length === 0) {
-            skills = skillMap[detectedCategory] || ['Problem-solving', 'Communication', 'Reliability'];
-            console.log('[Suggestions] Using fallback skills for', detectedCategory, ':', skills);
+            const categorySkills = titleKeywordSkillMap[detectedCategory];
+            if (categorySkills) {
+                // Try to match keywords in the corrected title
+                const titleLower = correctedTitle.toLowerCase();
+                for (const [keyword, keywordSkills] of Object.entries(categorySkills)) {
+                    if (keyword !== 'default' && titleLower.includes(keyword)) {
+                        skills = keywordSkills;
+                        console.log('[Suggestions] Using keyword-matched skills for', keyword, ':', skills);
+                        break;
+                    }
+                }
+            }
+            // If still no match, use default skills
+            if (skills.length === 0) {
+                skills = (titleKeywordSkillMap[detectedCategory]?.default) || skillMap[detectedCategory] || ['Problem-solving', 'Communication', 'Reliability'];
+                console.log('[Suggestions] Using fallback skills for', detectedCategory, ':', skills);
+            }
         }
-        // Fallback if Qwen not used
+        // Fallback if Qwen not used - generate tips specific to the corrected title
         if (!suggestedDescription) {
-            suggestedDescription = descriptionSuggestions[detectedCategory] || 'Describe what needs to be done, what doers should expect, and any special requirements.';
-            console.log('[Qwen] Using fallback description');
+            const titleLower = correctedTitle.toLowerCase();
+            // Generate contextual tips based on category and keywords
+            if (detectedCategory === 'childcare' && titleLower.includes('tutor')) {
+                suggestedDescription = 'Tutoring help for child. Specify subject(s), grade level, time needed, and learning goals.';
+            }
+            else if (detectedCategory === 'homehelp' && titleLower.includes('clean')) {
+                suggestedDescription = 'Professional cleaning service. Specify areas (bedroom, kitchen, bathroom) and condition.';
+            }
+            else if (detectedCategory === 'petcare' && titleLower.includes('walk')) {
+                suggestedDescription = 'Dog walking service. Specify pet type, size, behavior, and walk duration/frequency.';
+            }
+            else if (detectedCategory === 'delivery' && titleLower.includes('move')) {
+                suggestedDescription = 'Moving/delivery help. Specify items, quantity, size, weight, and destination.';
+            }
+            else {
+                suggestedDescription = descriptionSuggestions[detectedCategory] || 'Describe what needs to be done, what doers should expect, and any special requirements.';
+            }
+            console.log('[Suggestions] Using contextual description:', suggestedDescription);
         }
-        // Fallback if Qwen not used
+        // Fallback if Qwen not used - generate practical notes based on category
         if (!notes) {
-            notes = notesSuggestions[detectedCategory] || 'Add important questions or requirements for potential doers.';
-            console.log('[Qwen] Using fallback notes');
+            const titleLower = correctedTitle.toLowerCase();
+            if (detectedCategory === 'childcare') {
+                notes = 'Ask doer: Experience with this age group? Any certifications? Background check? References?';
+            }
+            else if (detectedCategory === 'homehelp' && titleLower.includes('clean')) {
+                notes = 'Ask doer: Own cleaning supplies or expect to be provided? Availability? References?';
+            }
+            else if (detectedCategory === 'petcare') {
+                notes = 'Ask doer: Experience with this pet type? Comfortable with [pet behavior]? Insurance?';
+            }
+            else if (detectedCategory === 'delivery') {
+                notes = 'Ask doer: Vehicle type? Can handle fragile items? Insurance? Availability?';
+            }
+            else {
+                notes = notesSuggestions[detectedCategory] || 'Add important questions or requirements for potential doers.';
+            }
+            console.log('[Suggestions] Using contextual notes:', notes);
         }
-        // Get certifications for this category
-        const certifications = certificationMap[detectedCategory] || { required: [], optional: [] };
+        // Get certifications for this category - use title-specific if available
+        let certifications = { required: [], optional: [] };
+        const categoryCerts = titleKeywordCertMap[detectedCategory];
+        if (categoryCerts) {
+            // Try to match keywords in the corrected title
+            const titleLower = correctedTitle.toLowerCase();
+            for (const [keyword, keywordCerts] of Object.entries(categoryCerts)) {
+                if (keyword !== 'default' && titleLower.includes(keyword)) {
+                    certifications = keywordCerts;
+                    console.log('[Suggestions] Using keyword-matched certifications for', keyword);
+                    break;
+                }
+            }
+            // If still no match, use default for this category
+            if (certifications.required.length === 0 && certifications.optional.length === 0) {
+                certifications = categoryCerts.default || certificationMap[detectedCategory] || { required: [], optional: [] };
+                console.log('[Suggestions] Using default category certifications');
+            }
+        }
+        else {
+            // Fall back to general certification map
+            certifications = certificationMap[detectedCategory] || { required: [], optional: [] };
+        }
         // Ensure all response fields have valid values
         const responseData = {
             category: String(detectedCategory || 'homehelp'),
@@ -1361,6 +1653,8 @@ router.post('/suggestions', async (req, res) => {
             notes: String(notes || 'Share any special requirements with doers.'),
             skills: Array.isArray(skills) ? skills : [],
             certifications: certifications,
+            correctedTitle: String(correctedTitle || title),
+            hasCorrections: hasCorrections,
         };
         console.log('[Suggestions] ✅ SUCCESS - Returning response');
         console.log('[Suggestions] Category:', responseData.category);

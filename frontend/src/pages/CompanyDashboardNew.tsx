@@ -2406,14 +2406,50 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
-                onClick={() => {
+                onClick={async () => {
+                  if (!passwordForm.current || !passwordForm.new || !passwordForm.confirm) {
+                    alert('❌ All fields are required');
+                    return;
+                  }
                   if (passwordForm.new !== passwordForm.confirm) {
                     alert('❌ Passwords do not match');
                     return;
                   }
-                  alert('✅ Password changed successfully!\n\nYour new password is now active.');
-                  setPasswordForm({ current: '', new: '', confirm: '' });
-                  setShowPasswordModal(false);
+                  if (passwordForm.new.length < 8) {
+                    alert('❌ Password must be at least 8 characters');
+                    return;
+                  }
+                  if (passwordForm.new === passwordForm.current) {
+                    alert('❌ New password must be different from current password');
+                    return;
+                  }
+
+                  try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`${API_URL}/api/users/change-password`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        currentPassword: passwordForm.current,
+                        newPassword: passwordForm.new,
+                        confirmPassword: passwordForm.confirm,
+                      }),
+                    });
+
+                    if (response.ok) {
+                      alert('✅ Password changed successfully!\n\nYour new password is now active.');
+                      setPasswordForm({ current: '', new: '', confirm: '' });
+                      setShowPasswordModal(false);
+                    } else {
+                      const error = await response.json();
+                      alert(`❌ ${error.error || 'Failed to change password'}`);
+                    }
+                  } catch (error: any) {
+                    alert(`❌ Error: ${error.message || 'Failed to change password'}`);
+                  }
                 }}
                 style={{
                   flex: 1,
