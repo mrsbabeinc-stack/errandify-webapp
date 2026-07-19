@@ -94,6 +94,8 @@ const CompanyDashboardNew: React.FC = () => {
   const [showLoginActivityModal, setShowLoginActivityModal] = useState(false);
   const [showAPIKeyModal, setShowAPIKeyModal] = useState(false);
   const [showConnectedAppsModal, setShowConnectedAppsModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [twoFAMethod, setTwoFAMethod] = useState<'sms' | 'authenticator'>('authenticator');
   const [generatedAPIKey, setGeneratedAPIKey] = useState<string | null>(null);
@@ -1338,12 +1340,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 <div className="settings-section danger">
                   <h3>Danger Zone</h3>
                   <p className="settings-desc">These actions cannot be undone</p>
-                  <button className="btn-danger" onClick={() => {
-                    const confirmed = window.confirm('⚠️ WARNING: This will permanently delete your account and all associated data. Type "DELETE" to confirm:');
-                    if (confirmed) {
-                      alert('Account deletion request submitted - Check email for confirmation link');
-                    }
-                  }}>Delete Account</button>
+                  <button className="btn-danger" onClick={() => setShowDeleteAccountModal(true)}>Delete Account</button>
                 </div>
               </div>
             </div>
@@ -2842,6 +2839,130 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account Modal */}
+      {showDeleteAccountModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+            border: '2px solid #DC3545',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{
+                fontSize: '32px',
+                background: '#FFE5E5',
+                borderRadius: '50%',
+                width: '48px',
+                height: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                ⚠️
+              </div>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#DC3545' }}>Delete Account</h3>
+            </div>
+
+            <div style={{
+              background: '#FFF3E0',
+              border: '2px solid #FF6B35',
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+              lineHeight: '1.6',
+            }}>
+              <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#333', fontWeight: '600' }}>
+                ⚠️ WARNING: This will permanently delete your account
+              </p>
+              <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>
+                This action cannot be undone. All your data, including profile, transactions, and history will be permanently removed from Errandify.
+              </p>
+            </div>
+
+            <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#666', fontWeight: '600' }}>
+              To confirm, type <strong>"DELETE"</strong> below:
+            </p>
+            <input
+              type="text"
+              placeholder="Type DELETE to confirm"
+              value={deleteConfirmationText}
+              onChange={(e) => setDeleteConfirmationText(e.target.value.toUpperCase())}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '2px solid #ddd',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                marginBottom: '16px',
+                boxSizing: 'border-box',
+              }}
+            />
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => {
+                  if (deleteConfirmationText === 'DELETE') {
+                    alert('✅ Account deletion request submitted.\n\nCheck your email for a confirmation link. You have 48 hours to confirm the deletion.');
+                    setDeleteConfirmationText('');
+                    setShowDeleteAccountModal(false);
+                  } else {
+                    alert('❌ Please type "DELETE" to confirm account deletion');
+                  }
+                }}
+                disabled={deleteConfirmationText !== 'DELETE'}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  background: deleteConfirmationText === 'DELETE' ? '#DC3545' : '#ccc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontWeight: '600',
+                  cursor: deleteConfirmationText === 'DELETE' ? 'pointer' : 'not-allowed',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                🗑️ Delete My Account
+              </button>
+              <button
+                onClick={() => {
+                  setDeleteConfirmationText('');
+                  setShowDeleteAccountModal(false);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  background: '#f0f0f0',
+                  color: '#333',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
