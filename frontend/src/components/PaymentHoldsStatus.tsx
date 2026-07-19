@@ -28,6 +28,8 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
   const [selectedHold, setSelectedHold] = useState<PaymentHold | null>(null);
   const [showDisputeForm, setShowDisputeForm] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
+  const [filterType, setFilterType] = useState<'all' | 'errand' | 'advertising' | 'dispute'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'HOLD' | 'PENDING_REVIEW' | 'RELEASED'>('all');
 
   // Mock data for demo
   const getMockHolds = (): PaymentHold[] => [
@@ -194,6 +196,12 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
   const totalOnHold = holds.filter(h => h.status === 'HOLD').reduce((s, h) => s + h.amount, 0);
   const totalPending = holds.filter(h => h.status === 'PENDING_REVIEW').reduce((s, h) => s + h.amount, 0);
 
+  const filteredHolds = activeHolds.filter(hold => {
+    const typeMatch = filterType === 'all' || hold.type === filterType;
+    const statusMatch = filterStatus === 'all' || hold.status === filterStatus;
+    return typeMatch && statusMatch;
+  });
+
   if (loading) {
     return <div style={{ padding: '20px', color: '#999' }}>Loading payment holds...</div>;
   }
@@ -237,8 +245,65 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
         </div>
       </div>
 
-      {/* No Active Holds */}
-      {activeHolds.length === 0 ? (
+      {/* Filter Tabs */}
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {[
+              { id: 'all', label: 'All Types', icon: '📋' },
+              { id: 'errand', label: 'Errands', icon: '📦' },
+              { id: 'advertising', label: 'Advertising', icon: '📸' },
+              { id: 'dispute', label: 'Disputes', icon: '⚔️' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setFilterType(tab.id as any)}
+                style={{
+                  padding: '6px 12px',
+                  border: filterType === tab.id ? '2px solid #FF6B35' : '2px solid #ddd',
+                  background: filterType === tab.id ? '#FFF3E0' : 'white',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: filterType === tab.id ? '#FF6B35' : '#666',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {[
+              { id: 'all', label: 'All Status', icon: '📊' },
+              { id: 'HOLD', label: 'On Hold', icon: '⏳' },
+              { id: 'PENDING_REVIEW', label: 'Awaiting Admin', icon: '⚠️' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setFilterStatus(tab.id as any)}
+                style={{
+                  padding: '6px 12px',
+                  border: filterStatus === tab.id ? '2px solid #FF9800' : '2px solid #ddd',
+                  background: filterStatus === tab.id ? '#FFF8E1' : 'white',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: filterStatus === tab.id ? '#FF9800' : '#666',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* No Results Message */}
+      {filteredHolds.length === 0 ? (
         <div style={{
           background: '#E8F5E9',
           border: '2px solid #4CAF50',
@@ -247,12 +312,25 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
           textAlign: 'center',
           color: '#2E7D32',
         }}>
-          <p style={{ margin: 0, fontSize: '14px', fontWeight: '600' }}>✅ No Active Holds</p>
-          <p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>All your payments are either released or completed</p>
+          <p style={{ margin: 0, fontSize: '14px', fontWeight: '600' }}>
+            {activeHolds.length === 0 ? '✅ No Active Holds' : '✅ No Results'}
+          </p>
+          <p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
+            {activeHolds.length === 0
+              ? 'All your payments are either released or completed'
+              : 'Try adjusting your filters'}
+          </p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {activeHolds.map((hold) => (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          maxHeight: '600px',
+          overflowY: 'auto',
+          paddingRight: '8px',
+        }}>
+          {filteredHolds.map((hold) => (
             <div
               key={hold.id}
               style={{
@@ -418,34 +496,19 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
         </div>
       )}
 
-      {/* Released Holds Info */}
+      {/* Released Holds Info - Compact Summary */}
       {holds.some(h => h.status === 'RELEASED') && (
-        <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '2px solid #FFE0B2' }}>
-          <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '700', color: '#333' }}>
-            ✅ Recently Released ({holds.filter(h => h.status === 'RELEASED').length})
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {holds.filter(h => h.status === 'RELEASED').map((hold) => (
-              <div
-                key={hold.id}
-                style={{
-                  background: '#E8F5E9',
-                  border: '2px solid #4CAF50',
-                  borderRadius: '8px',
-                  padding: '12px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  fontSize: '12px',
-                }}
-              >
-                <span style={{ color: '#2E7D32', fontWeight: '600' }}>
-                  {hold.type === 'errand' && `Errand ${hold.referenceId}`} • Released {new Date(hold.releasedAt || '').toLocaleDateString()}
-                </span>
-                <span style={{ color: '#2E7D32', fontWeight: '700' }}>+SGD ${hold.amount.toFixed(2)}</span>
-              </div>
-            ))}
-          </div>
+        <div style={{
+          marginTop: '16px',
+          paddingTop: '16px',
+          borderTop: '1px solid #FFE0B2',
+          background: '#F1F8F4',
+          borderRadius: '8px',
+          padding: '12px',
+        }}>
+          <p style={{ margin: 0, fontSize: '12px', color: '#2E7D32', fontWeight: '600' }}>
+            ✅ {holds.filter(h => h.status === 'RELEASED').length} Recently Released • Total: SGD ${holds.filter(h => h.status === 'RELEASED').reduce((s, h) => s + h.amount, 0).toFixed(2)}
+          </p>
         </div>
       )}
     </div>
