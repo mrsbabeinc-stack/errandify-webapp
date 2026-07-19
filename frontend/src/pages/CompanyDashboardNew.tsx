@@ -122,7 +122,9 @@ const CompanyDashboardNew: React.FC = () => {
     address: '123 Business District, Singapore 089999',
     frequency: 'Monthly',
   });
-  const [rewardsTab, setRewardsTab] = useState<'overview' | 'gift' | 'redeemed' | 'history'>('overview');
+  const [rewardsTab, setRewardsTab] = useState<'overview' | 'gift' | 'redeemed' | 'history' | 'buy-ep'>('overview');
+  const [selectedEPPackage, setSelectedEPPackage] = useState<{id: number, ep_amount: number, price_sgd: number, discount_percent: number} | null>(null);
+  const [epPurchaseStep, setEpPurchaseStep] = useState(0); // 0: select, 1: confirm, 2: processing
   const [giftSearch, setGiftSearch] = useState('');
   const [giftCategoryFilter, setGiftCategoryFilter] = useState<'all' | 'discount' | 'partner'>('all');
   const [confirmRedeemData, setConfirmRedeemData] = useState<{ points: number; code: string; amount: number; name: string } | null>(null);
@@ -2287,7 +2289,155 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 >
                   📋 All Transactions
                 </button>
+                <button
+                  onClick={() => setRewardsTab('buy-ep')}
+                  style={{
+                    padding: '14px 28px',
+                    border: 'none',
+                    background: 'none',
+                    cursor: 'pointer',
+                    fontWeight: rewardsTab === 'buy-ep' ? '700' : '500',
+                    fontSize: '15px',
+                    color: rewardsTab === 'buy-ep' ? '#FF6B35' : '#999',
+                    borderBottom: rewardsTab === 'buy-ep' ? '3px solid #FF6B35' : 'none',
+                    marginBottom: '-2px',
+                    transition: 'all 0.3s ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  💳 Buy EP
+                </button>
               </div>
+
+              {/* BUY EP TAB - Warm & Engaging */}
+              {rewardsTab === 'buy-ep' && (
+                <div>
+                  {/* Header with warm greeting */}
+                  <div style={{marginBottom: '32px', paddingBottom: '20px', borderBottom: '2px solid #FFF0E6'}}>
+                    <h3 style={{margin: '0 0 8px 0', fontSize: '20px', fontWeight: '700', color: '#8B4513'}}>💳 Boost Your Team's EP</h3>
+                    <p style={{margin: 0, fontSize: '14px', color: '#999', fontWeight: '500'}}>Get more Errandify Points to recognize and reward your team members instantly</p>
+                  </div>
+
+                  {/* EP Packages Grid - 4 Packages */}
+                  <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '40px'}}>
+                    {[
+                      { id: 1, ep_amount: 1000, price_sgd: 10.00, discount_percent: 0, emoji: '🚀' },
+                      { id: 2, ep_amount: 5000, price_sgd: 45.00, discount_percent: 10, emoji: '⭐', popular: true },
+                      { id: 3, ep_amount: 10000, price_sgd: 80.00, discount_percent: 20, emoji: '🎯' },
+                      { id: 4, ep_amount: 25000, price_sgd: 180.00, discount_percent: 28, emoji: '💎' },
+                    ].map((pkg) => (
+                      <div key={pkg.id} style={{
+                        position: 'relative',
+                        background: pkg.popular ? 'linear-gradient(135deg, #FFE4C4 0%, #FFDAB9 100%)' : 'white',
+                        borderRadius: '16px',
+                        border: pkg.popular ? '3px solid #FF6B35' : '2px solid #FFE4C4',
+                        padding: '28px',
+                        boxShadow: pkg.popular ? '0 8px 24px rgba(255, 107, 53, 0.15)' : '0 4px 12px rgba(0, 0, 0, 0.08)',
+                        transition: 'all 0.3s ease',
+                        cursor: 'pointer',
+                        transform: 'scale(1)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                        e.currentTarget.style.boxShadow = pkg.popular ? '0 12px 32px rgba(255, 107, 53, 0.25)' : '0 8px 24px rgba(0, 0, 0, 0.12)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = pkg.popular ? '0 8px 24px rgba(255, 107, 53, 0.15)' : '0 4px 12px rgba(0, 0, 0, 0.08)';
+                      }}>
+                        {pkg.popular && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '-12px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: '#FF6B35',
+                            color: 'white',
+                            padding: '6px 16px',
+                            borderRadius: '20px',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            ⭐ Most Popular
+                          </div>
+                        )}
+
+                        <div style={{textAlign: 'center', marginBottom: '20px'}}>
+                          <div style={{fontSize: '40px', marginBottom: '12px'}}>{pkg.emoji}</div>
+                          <div style={{fontSize: '28px', fontWeight: '800', color: '#FF6B35', marginBottom: '8px'}}>
+                            {pkg.ep_amount.toLocaleString()}
+                          </div>
+                          <div style={{fontSize: '14px', color: '#999', marginBottom: '16px'}}>Errandify Points</div>
+
+                          <div style={{fontSize: '24px', fontWeight: '700', color: '#333', marginBottom: '4px'}}>
+                            SGD ${pkg.price_sgd.toFixed(2)}
+                          </div>
+                          {pkg.discount_percent > 0 && (
+                            <div style={{fontSize: '12px', color: '#22c55e', fontWeight: '700', marginBottom: '12px'}}>
+                              💚 Save {pkg.discount_percent}%
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setSelectedEPPackage(pkg);
+                            setEpPurchaseStep(0);
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '14px 20px',
+                            background: '#FF6B35',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '10px',
+                            fontSize: '14px',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = '#ff8c5a')}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = '#FF6B35')}
+                        >
+                          🛒 Buy Now
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Purchase History */}
+                  <div style={{background: 'white', border: '2px solid #FFE4C4', borderRadius: '16px', padding: '28px'}}>
+                    <h4 style={{margin: '0 0 20px 0', fontSize: '16px', fontWeight: '700', color: '#8B4513'}}>📋 Your Purchase History</h4>
+                    <div style={{overflowX: 'auto'}}>
+                      <table style={{width: '100%', borderCollapse: 'collapse'}}>
+                        <thead>
+                          <tr style={{background: '#FFF5F0', borderBottom: '2px solid #FFE4C4'}}>
+                            <th style={{padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#666'}}>Date</th>
+                            <th style={{padding: '12px', textAlign: 'left', fontSize: '13px', fontWeight: '700', color: '#666'}}>Amount</th>
+                            <th style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '700', color: '#666'}}>Price</th>
+                            <th style={{padding: '12px', textAlign: 'center', fontSize: '13px', fontWeight: '700', color: '#666'}}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr style={{borderBottom: '1px solid #FFE4C4'}}>
+                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jul 15, 2026</td>
+                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>5,000 EP</td>
+                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>SGD $45</td>
+                            <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Paid</span></td>
+                          </tr>
+                          <tr>
+                            <td style={{padding: '12px', fontSize: '13px', color: '#333'}}>Jul 08, 2026</td>
+                            <td style={{padding: '12px', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>10,000 EP</td>
+                            <td style={{padding: '12px', textAlign: 'right', fontSize: '13px', fontWeight: '600', color: '#FF6B35'}}>SGD $80</td>
+                            <td style={{padding: '12px', textAlign: 'center'}}><span style={{background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600'}}>✅ Paid</span></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* OVERVIEW TAB */}
               {rewardsTab === 'overview' && (
@@ -3608,6 +3758,97 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 Still Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* EP Purchase Confirmation Modal */}
+      {selectedEPPackage && (
+        <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001}}>
+          <div style={{background: 'linear-gradient(135deg, #FFF8F5 0%, #FFEEE4 100%)', borderRadius: '16px', padding: '40px', maxWidth: '500px', width: '90%', boxShadow: '0 12px 40px rgba(0,0,0,0.2)', border: '2px solid #FF6B35'}}>
+            <div style={{textAlign: 'center', marginBottom: '24px'}}>
+              <div style={{fontSize: '48px', marginBottom: '16px'}}>🎉</div>
+              <h2 style={{margin: '0 0 8px 0', fontSize: '26px', fontWeight: '800', color: '#333'}}>Ready to Boost Your Team?</h2>
+              <p style={{margin: '0 0 24px 0', fontSize: '15px', color: '#666', fontWeight: '500'}}>Reward your team members with Errandify Points</p>
+            </div>
+
+            {/* Package Details */}
+            <div style={{background: 'white', borderRadius: '12px', padding: '24px', marginBottom: '24px', border: '2px solid #FFD9B3'}}>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px', paddingBottom: '20px', borderBottom: '2px solid #FFD9B3'}}>
+                <div>
+                  <p style={{margin: '0 0 8px 0', fontSize: '12px', color: '#999', fontWeight: '600', textTransform: 'uppercase'}}>You'll Get</p>
+                  <p style={{margin: 0, fontSize: '28px', fontWeight: '800', color: '#FF6B35'}}>{selectedEPPackage.ep_amount.toLocaleString()}</p>
+                  <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#666'}}>Errandify Points</p>
+                </div>
+                <div>
+                  <p style={{margin: '0 0 8px 0', fontSize: '12px', color: '#999', fontWeight: '600', textTransform: 'uppercase'}}>You'll Pay</p>
+                  <p style={{margin: 0, fontSize: '28px', fontWeight: '800', color: '#FF6B35'}}>SGD ${selectedEPPackage.price_sgd.toFixed(2)}</p>
+                  {selectedEPPackage.discount_percent > 0 && (
+                    <p style={{margin: '4px 0 0 0', fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>💚 Save {selectedEPPackage.discount_percent}%</p>
+                  )}
+                </div>
+              </div>
+
+              <div style={{background: '#FFF5F0', borderRadius: '8px', padding: '12px', textAlign: 'center'}}>
+                <p style={{margin: 0, fontSize: '12px', color: '#FF6B35', fontWeight: '600'}}>✨ Payment will be processed securely via Stripe</p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{display: 'flex', gap: '12px'}}>
+              <button
+                onClick={async () => {
+                  try {
+                    setEpPurchaseStep(2);
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('/api/wallet/purchase-ep', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({package_id: selectedEPPackage.id})
+                    });
+                    const data = await response.json();
+                    if (data.success && data.checkout_url) {
+                      setErrorMessage(`✨ Redirecting to Stripe checkout for ${selectedEPPackage.ep_amount.toLocaleString()} EP...`);
+                      setTimeout(() => {
+                        // In demo mode, show success instead of redirecting
+                        if (data.isDemo) {
+                          setErrorMessage(`🎉 Your purchase of ${selectedEPPackage.ep_amount.toLocaleString()} EP for SGD $${selectedEPPackage.price_sgd.toFixed(2)} is ready! In production, you'll be redirected to Stripe.`);
+                          setSelectedEPPackage(null);
+                        } else {
+                          window.location.href = data.checkout_url;
+                        }
+                      }, 1500);
+                    } else {
+                      setErrorMessage(data.error || 'Failed to initiate purchase');
+                      setSelectedEPPackage(null);
+                    }
+                  } catch (error: any) {
+                    setErrorMessage(error.message || 'An error occurred');
+                    setSelectedEPPackage(null);
+                  }
+                }}
+                style={{flex: 1, padding: '14px 20px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s ease'}}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#ff8c5a')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#FF6B35')}
+              >
+                {epPurchaseStep === 2 ? '⏳ Processing...' : '💳 Proceed to Payment'}
+              </button>
+              <button
+                onClick={() => setSelectedEPPackage(null)}
+                style={{flex: 1, padding: '14px 20px', background: 'white', color: '#FF6B35', border: '2px solid #FF6B35', borderRadius: '10px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s ease'}}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#FFF8F5')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}
+              >
+                Not Now
+              </button>
+            </div>
+
+            <p style={{margin: '16px 0 0 0', fontSize: '12px', color: '#999', textAlign: 'center'}}>
+              💚 Your team will thank you for the recognition!
+            </p>
           </div>
         </div>
       )}

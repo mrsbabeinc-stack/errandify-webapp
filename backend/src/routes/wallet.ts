@@ -865,4 +865,122 @@ router.post('/award-ep-bonus', authMiddleware, async (req: AuthRequest, res: Res
   }
 });
 
+// ==================== EP PURCHASE SYSTEM ====================
+
+// EP Packages configuration
+const EP_PACKAGES = [
+  { id: 1, ep_amount: 1000, price_sgd: 10.00, discount_percent: 0, is_popular: false, display_order: 1 },
+  { id: 2, ep_amount: 5000, price_sgd: 45.00, discount_percent: 10, is_popular: true, display_order: 2 },
+  { id: 3, ep_amount: 10000, price_sgd: 80.00, discount_percent: 20, is_popular: false, display_order: 3 },
+  { id: 4, ep_amount: 25000, price_sgd: 180.00, discount_percent: 28, is_popular: false, display_order: 4 },
+];
+
+// GET /api/wallet/ep-packages - Get all available EP packages
+router.get('/ep-packages', async (req: any, res: Response) => {
+  try {
+    res.json({
+      success: true,
+      data: EP_PACKAGES,
+    });
+  } catch (error) {
+    console.error('Get packages error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch packages' });
+  }
+});
+
+// POST /api/wallet/purchase-ep - Initiate EP purchase via Stripe
+router.post('/purchase-ep', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { package_id } = req.body;
+    const companyId = parseInt(req.companyId || req.userId || '0', 10);
+
+    if (!package_id) {
+      return res.status(400).json({ success: false, error: 'package_id required' });
+    }
+
+    const packageData = EP_PACKAGES.find(p => p.id === package_id);
+    if (!packageData) {
+      return res.status(400).json({ success: false, error: 'Invalid package' });
+    }
+
+    // Demo mode - return Stripe-like response
+    res.json({
+      success: true,
+      isDemo: true,
+      checkout_url: `https://checkout.stripe.com/pay/cs_demo_ep_${Date.now()}`,
+      package_id: package_id,
+      ep_amount: packageData.ep_amount,
+      price_sgd: packageData.price_sgd,
+      discount_percent: packageData.discount_percent,
+      message: `✨ Ready to purchase ${packageData.ep_amount} EP for SGD $${packageData.price_sgd}${packageData.discount_percent > 0 ? ` (Save ${packageData.discount_percent}%)` : ''}!`,
+    });
+  } catch (error) {
+    console.error('Purchase EP error:', error);
+    res.status(500).json({ success: false, error: 'Failed to initiate purchase' });
+  }
+});
+
+// POST /api/wallet/ep-purchase-webhook - Stripe webhook for payment success
+router.post('/ep-purchase-webhook', async (req: any, res: Response) => {
+  try {
+    const event = req.body;
+
+    if (event.type === 'payment_intent.succeeded') {
+      const paymentIntent = event.data.object;
+      const companyId = parseInt(paymentIntent.metadata?.companyId || '0', 10);
+      const epAmount = parseInt(paymentIntent.metadata?.ep_amount || '0', 10);
+
+      if (companyId && epAmount) {
+        // Award EP to company wallet
+        await db.query(
+          `UPDATE wallet_balance SET ep_balance = ep_balance + ? WHERE company_id = ?`,
+          [epAmount, companyId]
+        );
+
+        console.log(`✅ Awarded ${epAmount} EP to company ${companyId}`);
+      }
+    }
+
+    res.json({ success: true, received: true });
+  } catch (error) {
+    console.error('Webhook error:', error);
+    res.status(500).json({ success: false, error: 'Webhook processing failed' });
+  }
+});
+
+// GET /api/wallet/ep-purchase-history - Get EP purchase transaction history
+router.get('/ep-purchase-history', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Demo data showing sample purchases
+    const history = [
+      {
+        id: 1,
+        date: '2026-07-15',
+        ep_amount: 5000,
+        price_sgd: 45.00,
+        status: 'completed',
+        package_id: 2,
+      },
+      {
+        id: 2,
+        date: '2026-07-08',
+        ep_amount: 10000,
+        price_sgd: 80.00,
+        status: 'completed',
+        package_id: 3,
+      },
+    ];
+
+    res.json({
+      success: true,
+      data: history,
+    });
+  } catch (error) {
+    console.error('Get purchase history error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch history' });
+  }
+});
+
 export default router;
