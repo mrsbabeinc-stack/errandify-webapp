@@ -913,4 +913,203 @@ router.post('/change-password', authMiddleware, async (req: AuthRequest, res: Re
   }
 });
 
+// Check account deletion eligibility
+router.get('/deletion-eligibility', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId;
+
+    // Check for active/pending errands (as asker or doer)
+    const errandsResult = await db.query(
+      `SELECT COUNT(*) as count FROM errands
+       WHERE (asker_id = $1 OR id IN (SELECT errand_id FROM errand_assignments WHERE doer_id = $1))
+       AND status IN ('posted', 'bidding', 'accepted', 'in_progress', 'pending_review')`,
+      [userId]
+    );
+
+    const pendingErrands = parseInt(errandsResult.rows[0]?.count || 0);
+
+    // Check for payment holds (money held in escrow)
+    const holdsResult = await db.query(
+      `SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total_held
+       FROM payment_holds
+       WHERE user_id = $1 AND status IN ('HOLD', 'PENDING_REVIEW')`,
+      [userId]
+    );
+
+    const pendingHolds = parseInt(holdsResult.rows[0]?.count || 0);
+    const totalHeld = parseFloat(holdsResult.rows[0]?.total_held || 0);
+
+    // Check for pending disputes
+    const disputesResult = await db.query(
+      `SELECT COUNT(*) as count FROM disputes
+       WHERE (asker_id = $1 OR doer_id = $1 OR reporter_id = $1)
+       AND status IN ('open', 'pending_review', 'under_investigation')`,
+      [userId]
+    );
+
+    const pendingDisputes = parseInt(disputesResult.rows[0]?.count || 0);
+
+    // Check for outstanding payments (user owes platform fees, subscription, etc.)
+    const paymentsResult = await db.query(
+      `SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total_owed
+       FROM transactions
+       WHERE user_id = $1 AND status IN ('pending', 'overdue')
+       AND type IN ('ADVERTISING', 'SUBSCRIPTION', 'PLATFORM_FEE')`,
+      [userId]
+    );
+
+    const outstandingPayments = parseInt(paymentsResult.rows[0]?.count || 0);
+    const totalOwed = parseFloat(paymentsResult.rows[0]?.total_owed || 0);
+
+    // Check for pending withdrawals
+    const withdrawalsResult = await db.query(
+      `SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total_pending
+       FROM wallet_transactions
+       WHERE user_id = $1 AND type = 'WITHDRAWAL' AND status = 'pending'`,
+      [userId]
+    );
+
+    const pendingWithdrawals = parseInt(withdrawalsResult.rows[0]?.count || 0);
+    const totalWithdrawalPending = parseFloat(withdrawalsResult.rows[0]?.total_pending || 0);
+
+    // Check for active company (if user is company owner)
+    const companyResult = await db.query(
+      `SELECT COUNT(*) as count FROM companies
+       WHERE owner_id = $1`,
+      [userId]
+    );
+
+    const activeCompanies = parseInt(companyResult.rows[0]?.count || 0);
+
+    // Build eligibility response
+    const canDelete = pendingErrands === 0 && pendingHolds === 0 && pendingDisputes === 0 &&
+                     outstandingPayments === 0 && pendingWithdrawals === 0 && activeCompanies === 0;
+
+    const blockers: Array<{ type: string; count: number; message: string; details?: string }> = [];
+
+    if (pendingErrands > 0) {
+      blockers.push({
+        type: 'PENDING_ERRANDS',
+        count: pendingErrands,
+        message: `${pendingErrands} active errand${pendingErrands > 1 ? 's' : ''} in progress`,
+        details: 'Complete or cancel all active errands before deletion',
+      });
+    }
+
+    if (pendingHolds > 0) {
+      blockers.push({
+        type: 'PAYMENT_HOLDS',
+        count: pendingHolds,
+        message: `SGD $${totalHeld.toFixed(2)} held in escrow`,
+        details: 'Wait for holds to release (typically 48 hours) or resolve disputes',
+      });
+    }
+
+    if (pendingDisputes > 0) {
+      blockers.push({
+        type: 'PENDING_DISPUTES',
+        count: pendingDisputes,
+        message: `${pendingDisputes} pending dispute${pendingDisputes > 1 ? 's' : ''}`,
+        details: 'Resolve all disputes before account deletion',
+      });
+    }
+
+    if (outstandingPayments > 0) {
+      blockers.push({
+        type: 'OUTSTANDING_PAYMENTS',
+        count: outstandingPayments,
+        message: `SGD $${totalOwed.toFixed(2)} outstanding payment${outstandingPayments > 1 ? 's' : ''}`,
+        details: 'Settle all payment obligations before deletion',
+      });
+    }
+
+    if (pendingWithdrawals > 0) {
+      blockers.push({
+        type: 'PENDING_WITHDRAWALS',
+        count: pendingWithdrawals,
+        message: `SGD $${totalWithdrawalPending.toFixed(2)} withdrawal${pendingWithdrawals > 1 ? 's' : ''} in progress`,
+        details: 'Wait for pending withdrawals to complete',
+      });
+    }
+
+    if (activeCompanies > 0) {
+      blockers.push({
+        type: 'ACTIVE_COMPANY',
+        count: activeCompanies,
+        message: `${activeCompanies} company${activeCompanies > 1 ? 'ies' : ''} owned`,
+        details: 'Transfer or delete owned companies first',
+      });
+    }
+
+    res.json({
+      success: true,
+      canDelete,
+      blockers,
+      summary: {
+        pendingErrands,
+        pendingHolds,
+        totalHeld,
+        pendingDisputes,
+        outstandingPayments,
+        totalOwed,
+        pendingWithdrawals,
+        totalWithdrawalPending,
+        activeCompanies,
+      },
+    });
+  } catch (error: any) {
+    console.error('Deletion eligibility check error:', error);
+    res.status(500).json({ error: 'Failed to check deletion eligibility' });
+  }
+});
+
+// Delete account
+router.post('/delete-account', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId;
+
+    // Re-check eligibility before deletion
+    const eligibilityResult = await db.query(
+      `SELECT COUNT(*) as pending_errands FROM errands
+       WHERE (asker_id = $1 OR id IN (SELECT errand_id FROM errand_assignments WHERE doer_id = $1))
+       AND status IN ('posted', 'bidding', 'accepted', 'in_progress', 'pending_review')`,
+      [userId]
+    );
+
+    if (parseInt(eligibilityResult.rows[0]?.pending_errands || 0) > 0) {
+      return res.status(400).json({ error: 'Cannot delete account with active errands' });
+    }
+
+    const holdsResult = await db.query(
+      `SELECT COUNT(*) as count FROM payment_holds
+       WHERE user_id = $1 AND status IN ('HOLD', 'PENDING_REVIEW')`,
+      [userId]
+    );
+
+    if (parseInt(holdsResult.rows[0]?.count || 0) > 0) {
+      return res.status(400).json({ error: 'Cannot delete account with active payment holds' });
+    }
+
+    // Mark user as deleted (soft delete)
+    await db.query(
+      `UPDATE users SET
+        is_deleted = true,
+        email = NULL,
+        mobile = NULL,
+        password_hash = NULL,
+        display_name = 'Deleted User'
+       WHERE id = $1`,
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Account deletion request submitted. Check email for confirmation.',
+    });
+  } catch (error: any) {
+    console.error('Account deletion error:', error);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+});
+
 export default router;

@@ -96,6 +96,9 @@ const CompanyDashboardNew: React.FC = () => {
   const [showConnectedAppsModal, setShowConnectedAppsModal] = useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+  const [deletionBlockers, setDeletionBlockers] = useState<Array<{ type: string; count: number; message: string; details?: string }>>([]);
+  const [canDeleteAccount, setCanDeleteAccount] = useState(false);
+  const [deletionCheckLoading, setDeletionCheckLoading] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [twoFAMethod, setTwoFAMethod] = useState<'sms' | 'authenticator'>('authenticator');
   const [generatedAPIKey, setGeneratedAPIKey] = useState<string | null>(null);
@@ -1340,7 +1343,26 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 <div className="settings-section danger">
                   <h3>Danger Zone</h3>
                   <p className="settings-desc">These actions cannot be undone</p>
-                  <button className="btn-danger" onClick={() => setShowDeleteAccountModal(true)}>Delete Account</button>
+                  <button className="btn-danger" onClick={async () => {
+                    setDeletionCheckLoading(true);
+                    try {
+                      const token = localStorage.getItem('token');
+                      const response = await fetch(`${API_URL}/api/users/deletion-eligibility`, {
+                        headers: {
+                          'Authorization': `Bearer ${token}`,
+                        },
+                      });
+                      const data = await response.json();
+                      setDeletionBlockers(data.blockers || []);
+                      setCanDeleteAccount(data.canDelete || false);
+                      setShowDeleteAccountModal(true);
+                    } catch (error) {
+                      console.error('Error checking deletion eligibility:', error);
+                      alert('❌ Error checking account status. Please try again.');
+                    } finally {
+                      setDeletionCheckLoading(false);
+                    }
+                  }}>Delete Account</button>
                 </div>
               </div>
             </div>
@@ -2861,8 +2883,10 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
             background: 'white',
             borderRadius: '12px',
             padding: '24px',
-            maxWidth: '500px',
+            maxWidth: '600px',
             width: '90%',
+            maxHeight: '80vh',
+            overflow: 'auto',
             boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
             border: '2px solid #DC3545',
           }}>
@@ -2882,87 +2906,196 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#DC3545' }}>Delete Account</h3>
             </div>
 
-            <div style={{
-              background: '#FFF3E0',
-              border: '2px solid #FF6B35',
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-              lineHeight: '1.6',
-            }}>
-              <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#333', fontWeight: '600' }}>
-                ⚠️ WARNING: This will permanently delete your account
-              </p>
-              <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>
-                This action cannot be undone. All your data, including profile, transactions, and history will be permanently removed from Errandify.
-              </p>
-            </div>
+            {!canDeleteAccount && deletionBlockers.length > 0 ? (
+              <>
+                <div style={{
+                  background: '#FFF3E0',
+                  border: '2px solid #FF6B35',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  marginBottom: '16px',
+                }}>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#333', fontWeight: '600' }}>
+                    ❌ Cannot Delete Account
+                  </p>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>
+                    Your account has active obligations that must be resolved before deletion.
+                  </p>
+                </div>
 
-            <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#666', fontWeight: '600' }}>
-              To confirm, type <strong>"DELETE"</strong> below:
-            </p>
-            <input
-              type="text"
-              placeholder="Type DELETE to confirm"
-              value={deleteConfirmationText}
-              onChange={(e) => setDeleteConfirmationText(e.target.value.toUpperCase())}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '2px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '14px',
-                fontFamily: 'inherit',
-                marginBottom: '16px',
-                boxSizing: 'border-box',
-              }}
-            />
+                <div style={{ marginBottom: '16px' }}>
+                  <p style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: '600', color: '#333' }}>
+                    Pending Issues ({deletionBlockers.length}):
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {deletionBlockers.map((blocker, idx) => (
+                      <div key={idx} style={{
+                        background: '#FCE4EC',
+                        border: '1px solid #F48FB1',
+                        borderRadius: '6px',
+                        padding: '12px',
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '13px', fontWeight: '600', color: '#C2185B' }}>
+                            {blocker.type === 'PENDING_ERRANDS' && '📦 Active Errands'}
+                            {blocker.type === 'PAYMENT_HOLDS' && '💰 Payment Holds'}
+                            {blocker.type === 'PENDING_DISPUTES' && '⚔️ Disputes'}
+                            {blocker.type === 'OUTSTANDING_PAYMENTS' && '💳 Outstanding Payments'}
+                            {blocker.type === 'PENDING_WITHDRAWALS' && '🏦 Pending Withdrawals'}
+                            {blocker.type === 'ACTIVE_COMPANY' && '🏢 Company Owned'}
+                          </span>
+                          <span style={{ fontSize: '12px', fontWeight: '700', color: '#DC3545' }}>
+                            {blocker.message}
+                          </span>
+                        </div>
+                        {blocker.details && (
+                          <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#666' }}>
+                            💡 {blocker.details}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                onClick={() => {
-                  if (deleteConfirmationText === 'DELETE') {
-                    alert('✅ Account deletion request submitted.\n\nCheck your email for a confirmation link. You have 48 hours to confirm the deletion.');
+                <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#666', textAlign: 'center', fontStyle: 'italic' }}>
+                  Please resolve these issues before requesting account deletion.
+                </p>
+
+                <button
+                  onClick={() => {
                     setDeleteConfirmationText('');
                     setShowDeleteAccountModal(false);
-                  } else {
-                    alert('❌ Please type "DELETE" to confirm account deletion');
-                  }
-                }}
-                disabled={deleteConfirmationText !== 'DELETE'}
-                style={{
-                  flex: 1,
-                  padding: '10px',
-                  background: deleteConfirmationText === 'DELETE' ? '#DC3545' : '#ccc',
-                  color: 'white',
-                  border: 'none',
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: '#f0f0f0',
+                    color: '#333',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Close
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{
+                  background: '#FFF3E0',
+                  border: '2px solid #FF6B35',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  marginBottom: '16px',
+                  lineHeight: '1.6',
+                }}>
+                  <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#333', fontWeight: '600' }}>
+                    ⚠️ WARNING: This will permanently delete your account
+                  </p>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>
+                    This action cannot be undone. All your data, including profile, transactions, and history will be permanently removed from Errandify.
+                  </p>
+                </div>
+
+                <div style={{
+                  background: '#E8F5E9',
+                  border: '1px solid #4CAF50',
                   borderRadius: '6px',
-                  fontWeight: '600',
-                  cursor: deleteConfirmationText === 'DELETE' ? 'pointer' : 'not-allowed',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                🗑️ Delete My Account
-              </button>
-              <button
-                onClick={() => {
-                  setDeleteConfirmationText('');
-                  setShowDeleteAccountModal(false);
-                }}
-                style={{
-                  flex: 1,
-                  padding: '10px',
-                  background: '#f0f0f0',
-                  color: '#333',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                }}
-              >
-                Cancel
-              </button>
-            </div>
+                  padding: '12px',
+                  marginBottom: '16px',
+                }}>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#2E7D32' }}>
+                    ✅ Your account is eligible for deletion
+                  </p>
+                </div>
+
+                <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#666', fontWeight: '600' }}>
+                  To confirm, type <strong>"DELETE"</strong> below:
+                </p>
+                <input
+                  type="text"
+                  placeholder="Type DELETE to confirm"
+                  value={deleteConfirmationText}
+                  onChange={(e) => setDeleteConfirmationText(e.target.value.toUpperCase())}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '2px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    marginBottom: '16px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={async () => {
+                      if (deleteConfirmationText === 'DELETE') {
+                        try {
+                          const token = localStorage.getItem('token');
+                          const response = await fetch(`${API_URL}/api/users/delete-account`, {
+                            method: 'POST',
+                            headers: {
+                              'Authorization': `Bearer ${token}`,
+                              'Content-Type': 'application/json',
+                            },
+                          });
+
+                          if (response.ok) {
+                            alert('✅ Account deletion request submitted.\n\nCheck your email for a confirmation link. You have 48 hours to confirm the deletion.');
+                            setDeleteConfirmationText('');
+                            setShowDeleteAccountModal(false);
+                          } else {
+                            const error = await response.json();
+                            alert(`❌ ${error.error || 'Failed to delete account'}`);
+                          }
+                        } catch (error: any) {
+                          alert(`❌ Error: ${error.message || 'Failed to delete account'}`);
+                        }
+                      } else {
+                        alert('❌ Please type "DELETE" to confirm account deletion');
+                      }
+                    }}
+                    disabled={deleteConfirmationText !== 'DELETE'}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      background: deleteConfirmationText === 'DELETE' ? '#DC3545' : '#ccc',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: deleteConfirmationText === 'DELETE' ? 'pointer' : 'not-allowed',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    🗑️ Delete My Account
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDeleteConfirmationText('');
+                      setShowDeleteAccountModal(false);
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      background: '#f0f0f0',
+                      color: '#333',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
