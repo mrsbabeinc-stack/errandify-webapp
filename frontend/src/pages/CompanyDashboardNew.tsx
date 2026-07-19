@@ -126,6 +126,7 @@ const CompanyDashboardNew: React.FC = () => {
   const [selectedEPPackage, setSelectedEPPackage] = useState<{id: number, ep_amount: number, price_sgd: number, discount_percent: number} | null>(null);
   const [customEPAmount, setCustomEPAmount] = useState<number | ''>('');
   const [epPurchaseStep, setEpPurchaseStep] = useState(0); // 0: select, 1: confirm, 2: processing
+  const [isCustomEPPurchase, setIsCustomEPPurchase] = useState(false);
   const [giftSearch, setGiftSearch] = useState('');
   const [giftCategoryFilter, setGiftCategoryFilter] = useState<'all' | 'discount' | 'partner'>('all');
   const [confirmRedeemData, setConfirmRedeemData] = useState<{ points: number; code: string; amount: number; name: string } | null>(null);
@@ -2401,6 +2402,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                           <button
                             onClick={() => {
                               setSelectedEPPackage(pkg);
+                              setIsCustomEPPurchase(false);
                               setEpPurchaseStep(0);
                               setCustomEPAmount('');
                             }}
@@ -2483,11 +2485,12 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         if (customEPAmount && typeof customEPAmount === 'number' && customEPAmount >= 1000 && customEPAmount % 1000 === 0) {
                           const basePriceSgd = customEPAmount / 100;
                           setSelectedEPPackage({
-                            id: 99,
+                            id: 0,
                             ep_amount: customEPAmount,
                             price_sgd: basePriceSgd,
                             discount_percent: 0
                           });
+                          setIsCustomEPPurchase(true);
                           setEpPurchaseStep(0);
                         }
                       }}
@@ -3966,13 +3969,17 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                   try {
                     setEpPurchaseStep(2);
                     const token = localStorage.getItem('token');
+                    const requestBody = isCustomEPPurchase
+                      ? {custom_ep_amount: selectedEPPackage.ep_amount}
+                      : {package_id: selectedEPPackage.id};
+
                     const response = await fetch('/api/wallet/purchase-ep', {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                       },
-                      body: JSON.stringify({package_id: selectedEPPackage.id})
+                      body: JSON.stringify(requestBody)
                     });
                     const data = await response.json();
                     if (data.success && data.checkout_url) {
@@ -3980,8 +3987,9 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       setTimeout(() => {
                         // In demo mode, show success instead of redirecting
                         if (data.isDemo) {
-                          setErrorMessage(`🎉 Your purchase of ${selectedEPPackage.ep_amount.toLocaleString()} EP for SGD $${selectedEPPackage.price_sgd.toFixed(2)} is ready! In production, you'll be redirected to Stripe.`);
+                          setErrorMessage(`🎉 Your purchase of ${selectedEPPackage.ep_amount.toLocaleString()} EP for SGD $${data.total_price_sgd.toFixed(2)} (including fees) is ready! In production, you'll be redirected to Stripe.`);
                           setSelectedEPPackage(null);
+                          setIsCustomEPPurchase(false);
                         } else {
                           window.location.href = data.checkout_url;
                         }
@@ -3989,10 +3997,12 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                     } else {
                       setErrorMessage(data.error || 'Failed to initiate purchase');
                       setSelectedEPPackage(null);
+                      setIsCustomEPPurchase(false);
                     }
                   } catch (error: any) {
                     setErrorMessage(error.message || 'An error occurred');
                     setSelectedEPPackage(null);
+                    setIsCustomEPPurchase(false);
                   }
                 }}
                 style={{flex: 1, padding: '14px 20px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s ease'}}
