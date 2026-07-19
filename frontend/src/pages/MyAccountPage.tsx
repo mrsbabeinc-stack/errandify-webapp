@@ -2119,6 +2119,65 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                   <p className="text-xs text-gray-600 mt-1">Current Balance: <span className="font-bold text-green-600">{profileData?.errandifyPoints ?? userBalance} EP</span></p>
                 </div>
 
+                {/* Buy EP Section */}
+                <div className="bg-white rounded-xl border-2 border-orange-300 overflow-hidden shadow-md">
+                  <div className="bg-gradient-to-r from-orange-400 to-red-500 text-white p-3">
+                    <h3 className="text-sm font-bold">💳 Buy More EP 💳</h3>
+                    <p className="text-xs mt-1 opacity-90">Boost your rewards and redeem amazing offers!</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 p-3">
+                    <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-lg p-2 hover:shadow-md transition cursor-pointer" onClick={() => {
+                      setModalMessage('💳 1,000 EP for SGD $10.59 (incl. Stripe fees)\n\nNavigating to EP purchase...');
+                      setShowSuccessModal(true);
+                      setTimeout(() => window.location.href = '/rewards#buy-ep', 1500);
+                    }}>
+                      <p className="text-2xl mb-1">🚀</p>
+                      <p className="font-bold text-xs text-gray-900">1,000 EP</p>
+                      <p className="text-xs text-orange-600 font-bold mb-1">SGD $10.59</p>
+                      <button className="w-full bg-orange-500 text-white py-1 rounded text-xs font-bold hover:bg-orange-600 transition">
+                        Buy Now
+                      </button>
+                    </div>
+                    <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-lg p-2 hover:shadow-md transition cursor-pointer border-3 border-orange-500" onClick={() => {
+                      setModalMessage('💳 5,000 EP for SGD $46.61 (incl. fees)\n⭐ Most Popular!\n\nNavigating to EP purchase...');
+                      setShowSuccessModal(true);
+                      setTimeout(() => window.location.href = '/rewards#buy-ep', 1500);
+                    }}>
+                      <div style={{position: 'absolute', top: '-8px', right: '8px', background: '#FF6B35', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '9px', fontWeight: 'bold'}}>⭐ POPULAR</div>
+                      <p className="text-2xl mb-1">⭐</p>
+                      <p className="font-bold text-xs text-gray-900">5,000 EP</p>
+                      <p className="text-xs text-orange-600 font-bold mb-1">SGD $46.61</p>
+                      <button className="w-full bg-orange-500 text-white py-1 rounded text-xs font-bold hover:bg-orange-600 transition">
+                        Buy Now
+                      </button>
+                    </div>
+                    <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-lg p-2 hover:shadow-md transition cursor-pointer" onClick={() => {
+                      setModalMessage('💳 10,000 EP for SGD $82.62 (incl. fees)\n💚 Save 20%!\n\nNavigating to EP purchase...');
+                      setShowSuccessModal(true);
+                      setTimeout(() => window.location.href = '/rewards#buy-ep', 1500);
+                    }}>
+                      <p className="text-2xl mb-1">🎯</p>
+                      <p className="font-bold text-xs text-gray-900">10,000 EP</p>
+                      <p className="text-xs text-orange-600 font-bold mb-1">SGD $82.62</p>
+                      <button className="w-full bg-orange-500 text-white py-1 rounded text-xs font-bold hover:bg-orange-600 transition">
+                        Buy Now
+                      </button>
+                    </div>
+                    <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-lg p-2 hover:shadow-md transition cursor-pointer" onClick={() => {
+                      setModalMessage('💳 25,000 EP for SGD $185.52 (incl. fees)\n💚 Save 28%!\n\nNavigating to EP purchase...');
+                      setShowSuccessModal(true);
+                      setTimeout(() => window.location.href = '/rewards#buy-ep', 1500);
+                    }}>
+                      <p className="text-2xl mb-1">💎</p>
+                      <p className="font-bold text-xs text-gray-900">25,000 EP</p>
+                      <p className="text-xs text-orange-600 font-bold mb-1">SGD $185.52</p>
+                      <button className="w-full bg-orange-500 text-white py-1 rounded text-xs font-bold hover:bg-orange-600 transition">
+                        Buy Now
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Available Rewards - Happy Cards */}
                 <div className="bg-white rounded-xl border-2 border-yellow-200 overflow-hidden shadow-md">
                   <div className="bg-gradient-to-r from-errandify-orange to-orange-500 text-white p-3">
