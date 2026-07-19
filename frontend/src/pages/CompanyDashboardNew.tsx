@@ -20,6 +20,7 @@ import DoerCompletedErrands from '../components/DoerCompletedErrands';
 import DoerReviews from '../components/DoerReviews';
 import ReviewQueuePanel from '../components/ReviewQueuePanel';
 import GiftingModal from '../components/GiftingModal';
+import AddPaymentMethodModal from '../components/AddPaymentMethodModal';
 import CompanyAdvertisingManagement from '../components/CompanyAdvertisingManagement';
 import CompanyOperatingHours from '../components/CompanyOperatingHours';
 import StaffLeaveApplication from '../components/StaffLeaveApplication';
@@ -106,6 +107,7 @@ const CompanyDashboardNew: React.FC = () => {
   const [historyFilter, setHistoryFilter] = useState<'all' | 'redeemed' | 'gifted' | 'received'>('all');
   const [historySearch, setHistorySearch] = useState('');
   const [showGiftingModal, setShowGiftingModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pricingBillingCycle, setPricingBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
     asker: false,
@@ -1145,9 +1147,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         }}>Remove</button>
                       </div>
                     </div>
-                    <button className="btn-add-payment" onClick={() => {
-                      alert('💳 Add Payment Method\n\nSupported methods:\n• Visa/Mastercard\n• Apple Pay\n• Google Pay\n• Bank Transfer (Singapore)\n\nClick OK to open payment form.');
-                    }}>+ Add Payment Method</button>
+                    <button className="btn-add-payment" onClick={() => setShowPaymentModal(true)}>+ Add Payment Method</button>
                   </div>
 
                   <div className="billing-info">
@@ -2300,6 +2300,16 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
             console.error('Error sending gift:', error);
             alert('❌ Error sending gift. Please try again.');
           }
+        }}
+        userBalance={stats.pointsBalance}
+      />
+
+      {/* Payment Method Modal */}
+      <AddPaymentMethodModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={() => {
+          fetchCompanyData();
         }}
         userBalance={stats.pointsBalance}
       />
