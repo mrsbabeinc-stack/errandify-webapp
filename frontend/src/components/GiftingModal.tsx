@@ -90,6 +90,8 @@ const GiftingModal: React.FC<GiftingModalProps> = ({ isOpen, onClose, onSendGift
 
   const totalCost = calculateCost();
   const canSend = totalCost > 0 && recipients.length > 0 && userBalance >= totalCost;
+  const needsMoreEP = totalCost > userBalance && userBalance > 0;
+  const epDeficit = totalCost - userBalance;
 
   // Group management functions
   const handleCreateGroup = () => {
@@ -478,6 +480,42 @@ const GiftingModal: React.FC<GiftingModalProps> = ({ isOpen, onClose, onSendGift
               </div>
             </div>
 
+            {needsMoreEP && (
+              <div style={{background: 'linear-gradient(135deg, #FFF9F0 0%, #FFFAF7 100%)', border: '2px solid #FFD9B3', borderRadius: '12px', padding: '16px', marginBottom: '24px'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px'}}>
+                  <div style={{fontSize: '24px'}}>💳</div>
+                  <div>
+                    <div style={{fontSize: '14px', fontWeight: '700', color: '#333'}}>Need More EP?</div>
+                    <div style={{fontSize: '12px', color: '#666'}}>Buy EP to complete this gift</div>
+                  </div>
+                </div>
+                <div style={{background: 'white', border: '1px solid #FFE4C4', borderRadius: '8px', padding: '12px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                  <div>
+                    <div style={{fontSize: '12px', color: '#666'}}>You need</div>
+                    <div style={{fontSize: '18px', fontWeight: '700', color: '#FF6B35'}}>{epDeficit} more EP</div>
+                  </div>
+                  <div style={{textAlign: 'right'}}>
+                    <div style={{fontSize: '12px', color: '#666'}}>Approx cost:</div>
+                    <div style={{fontSize: '16px', fontWeight: '700', color: '#333'}}>SGD ${(epDeficit * 0.01 + (epDeficit * 0.01 * 0.029 + 0.30)).toFixed(2)}</div>
+                    <div style={{fontSize: '10px', color: '#999'}}>incl. Stripe fees</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const buyEpURL = `/company/dashboard#`;
+                    window.location.href = buyEpURL;
+                    onClose();
+                  }}
+                  style={{width: '100%', padding: '12px', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s', marginBottom: '8px'}}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  💳 Buy {epDeficit} EP Now
+                </button>
+                <div style={{fontSize: '12px', color: '#999', textAlign: 'center'}}>After purchasing, return here to complete your gift</div>
+              </div>
+            )}
+
             <div style={{display: 'flex', gap: '12px'}}>
               <button
                 onClick={() => setStep('details')}
@@ -497,9 +535,9 @@ const GiftingModal: React.FC<GiftingModalProps> = ({ isOpen, onClose, onSendGift
                 Review & Confirm →
               </button>
             </div>
-            {!canSend && (
+            {!canSend && !needsMoreEP && (
               <div style={{fontSize: '13px', color: '#E74C3C', marginTop: '12px', textAlign: 'center', fontWeight: '600'}}>
-                {totalCost > userBalance ? `❌ Need ${totalCost - userBalance} more EP` : '⚠️ Select recipients and gift details'}
+                ⚠️ Select recipients and gift details
               </div>
             )}
           </div>
