@@ -21,6 +21,8 @@ import DoerReviews from '../components/DoerReviews';
 import ReviewQueuePanel from '../components/ReviewQueuePanel';
 import GiftingModal from '../components/GiftingModal';
 import AddPaymentMethodModal from '../components/AddPaymentMethodModal';
+import PaymentHoldsStatus from '../components/PaymentHoldsStatus';
+import WalletBreakdown from '../components/WalletBreakdown';
 import CompanyAdvertisingManagement from '../components/CompanyAdvertisingManagement';
 import CompanyOperatingHours from '../components/CompanyOperatingHours';
 import StaffLeaveApplication from '../components/StaffLeaveApplication';
@@ -1129,6 +1131,22 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
 
                 <div className="settings-section">
                   <h3>Payment & Billing</h3>
+
+                  {/* Wallet Breakdown */}
+                  <div style={{ marginBottom: '24px' }}>
+                    <WalletBreakdown data={{
+                      total: stats.pointsBalance,
+                      available: Math.floor(stats.pointsBalance * 0.5),
+                      onHold: Math.floor(stats.pointsBalance * 0.3),
+                      pending: Math.floor(stats.pointsBalance * 0.18),
+                      subscription: 199,
+                    }} />
+                  </div>
+
+                  {/* Payment Holds Status */}
+                  <div style={{ marginBottom: '24px' }}>
+                    <PaymentHoldsStatus companyId={company?.id} />
+                  </div>
 
                   <div className="payment-methods">
                     <h4>Payment Methods</h4>

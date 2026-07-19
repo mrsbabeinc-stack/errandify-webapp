@@ -1,7 +1,7 @@
 // Service Worker for Push Notifications
 // Handles background sync, push events, and offline notifications
 
-const CACHE_NAME = 'errandify-v38-payment-stripe';
+const CACHE_NAME = 'errandify-v39-payment-workflow';
 const urlsToCache = [
   '/',
   '/index.html',

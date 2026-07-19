@@ -77,6 +77,7 @@ import { RegionalPerformanceReport } from './pages/admin/reports/RegionalPerform
 import UsersSafetyPage from './pages/admin/UsersSafety';
 import DisputesPage from './pages/admin/Disputes';
 import OperationsPage from './pages/admin/Operations';
+import AdminPaymentManagement from './pages/admin/AdminPaymentManagement';
 import DiscountCodesPage from './pages/admin/DiscountCodesPage';
 import { ErrandifyPointsEnhancedPage as AdminErrandifyPointsPage } from './pages/admin/ErrandifyPointsEnhanced';
 import { GrantEPEnhancedPage as GrantPointsPage } from './pages/admin/GrantPointsEnhanced';
@@ -505,6 +506,7 @@ export default function App() {
         <Route path="/admin/manage/discounts" element={isAuthenticated && isAdmin ? <DiscountCodesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/reports" element={isAuthenticated && isAdmin ? <ReportsPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/referral-tracking" element={isAuthenticated && isAdmin ? <ReferralTracking /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/payment-management" element={isAuthenticated && isAdmin ? <AdminPaymentManagement /> : <Navigate to="/login" replace />} />
 
         {/* Operations & Management Routes (TIER 1) */}
         <Route path="/admin/operations/auth-management" element={isAuthenticated && isAdmin ? <AdminAuthManagement /> : <Navigate to="/login" replace />} />

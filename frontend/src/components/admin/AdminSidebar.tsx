@@ -85,6 +85,14 @@ const menuItems: MenuItem[] = [
     ]
   },
   {
+    id: 'payment-management',
+    label: 'Payment Management',
+    icon: '💳',
+    children: [
+      { id: 'payment-holds', label: 'Payment Holds & Disputes', icon: '⏳', path: '/admin/payment-management' },
+    ]
+  },
+  {
     id: 'communications',
     label: 'Communications (Marcom)',
     icon: '📧',
