@@ -2891,6 +2891,13 @@ body {
   flex: 1;
 }
 
+.invoice-number {
+  font-weight: 700;
+  color: #FF6B35;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
 .invoice-date {
   font-weight: 600;
   color: #333;

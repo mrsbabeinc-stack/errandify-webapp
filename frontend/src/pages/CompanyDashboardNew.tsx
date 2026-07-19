@@ -1214,6 +1214,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       {(!invoiceFilter || invoiceFilter === '2026-07') && (
                         <div className="invoice-item">
                           <div className="invoice-left">
+                            <span className="invoice-number">INV-2026-07-001</span>
                             <span className="invoice-date">🕐 Jul 10, 2026</span>
                             <span className="invoice-desc">Gold Partner - Monthly Subscription</span>
                           </div>
@@ -1227,6 +1228,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       {(!invoiceFilter || invoiceFilter === '2026-06') && (
                         <div className="invoice-item">
                           <div className="invoice-left">
+                            <span className="invoice-number">INV-2026-06-001</span>
                             <span className="invoice-date">Jun 10, 2026</span>
                             <span className="invoice-desc">Gold Partner - Monthly Subscription</span>
                           </div>
@@ -1240,6 +1242,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       {(!invoiceFilter || invoiceFilter === '2026-05') && (
                         <div className="invoice-item">
                           <div className="invoice-left">
+                            <span className="invoice-number">INV-2026-05-001</span>
                             <span className="invoice-date">May 10, 2026</span>
                             <span className="invoice-desc">Gold Partner - Monthly Subscription</span>
                           </div>
@@ -1253,6 +1256,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       {(!invoiceFilter || invoiceFilter === '2026-04') && (
                         <div className="invoice-item">
                           <div className="invoice-left">
+                            <span className="invoice-number">INV-2026-04-001</span>
                             <span className="invoice-date">Apr 10, 2026</span>
                             <span className="invoice-desc">Gold Partner - Monthly Subscription</span>
                           </div>
@@ -1266,6 +1270,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       {(!invoiceFilter || invoiceFilter === '2026-03') && (
                         <div className="invoice-item">
                           <div className="invoice-left">
+                            <span className="invoice-number">INV-2026-03-001</span>
                             <span className="invoice-date">Mar 10, 2026</span>
                             <span className="invoice-desc">Gold Partner - Monthly Subscription</span>
                           </div>
@@ -1279,6 +1284,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       {(!invoiceFilter || invoiceFilter === '2026-02') && (
                         <div className="invoice-item">
                           <div className="invoice-left">
+                            <span className="invoice-number">INV-2026-02-001</span>
                             <span className="invoice-date">Feb 10, 2026</span>
                             <span className="invoice-desc">Gold Partner - Monthly Subscription</span>
                           </div>
@@ -1292,6 +1298,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       {(!invoiceFilter || invoiceFilter === '2026-01') && (
                         <div className="invoice-item">
                           <div className="invoice-left">
+                            <span className="invoice-number">INV-2026-01-001</span>
                             <span className="invoice-date">Jan 10, 2026</span>
                             <span className="invoice-desc">Gold Partner - Monthly Subscription</span>
                           </div>
