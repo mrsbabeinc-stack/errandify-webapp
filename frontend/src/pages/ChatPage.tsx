@@ -164,7 +164,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
 
         return {
           id: errand.id,
-          formattedId: errand.errandId || errand.formatted_id || `ER${errand.id}`,
+          formattedId: `ER${errand.id}`,
           title: errand.title,
           otherPartyName,
           status: errand.status,
@@ -438,7 +438,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
       ) : (
         <div style={{display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '6px'}}>
           {filteredConversations.map((conversation) => (
-            <div key={conversation.id} style={{minWidth: 0, background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 100%)', borderRadius: '12px', padding: '12px 14px', boxShadow: '0 2px 12px rgba(255, 107, 53, 0.12)', border: '1px solid #FFE0CC', position: 'relative', transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)', cursor: 'pointer'}} onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.18)'; e.currentTarget.style.transform = 'translateY(-2px)';}} onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 2px 12px rgba(255, 107, 53, 0.12)'; e.currentTarget.style.transform = 'translateY(0)';}}>
+            <div key={conversation.id} style={{minWidth: 0, background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 100%)', borderRadius: '12px', padding: '10px 12px', boxShadow: '0 2px 12px rgba(255, 107, 53, 0.12)', border: '1px solid #FFE0CC', position: 'relative', transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)', cursor: 'pointer'}} onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.18)'; e.currentTarget.style.transform = 'translateY(-2px)';}} onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 2px 12px rgba(255, 107, 53, 0.12)'; e.currentTarget.style.transform = 'translateY(0)';}}>
               {/* Unread Badge */}
               {unreadCounts.get(conversation.id) && unreadCounts.get(conversation.id)! > 0 && (
                 <div style={{position: 'absolute', top: '4px', right: '4px', background: '#E63946', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700', boxShadow: '0 1px 4px rgba(230, 57, 70, 0.25)', border: '1.5px solid white'}}>
@@ -446,13 +446,13 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 </div>
               )}
               {/* Line 1: Title + Errand ID */}
-              <div style={{display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, marginBottom: '6px'}}>
-                <h3 style={{fontWeight: '700', fontSize: '15px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0}}>{conversation.title}</h3>
-                <span style={{fontSize: '12px', fontWeight: '600', color: '#FF6B35', background: '#FFF0E6', padding: '3px 9px', borderRadius: '8px', whiteSpace: 'nowrap', flexShrink: 0}}>{conversation.formattedId}</span>
+              <div style={{display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: 0, marginBottom: '4px'}}>
+                <h3 style={{fontWeight: '700', fontSize: '15px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0}}>{conversation.title}</h3>
+                <span style={{fontSize: '12px', fontWeight: '600', color: '#FF6B35', whiteSpace: 'nowrap', flexShrink: 0}}>{conversation.formattedId}</span>
               </div>
 
               {/* Line 2: Date + Location (smaller, muted) */}
-              <div style={{display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, marginBottom: '8px', fontSize: '12px', color: '#888', fontWeight: '500'}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, marginBottom: '5px', fontSize: '12px', color: '#888', fontWeight: '500'}}>
                 {conversation.deadline && (
                   <span style={{whiteSpace: 'nowrap', flexShrink: 0}}>📅 {new Date(conversation.deadline).toLocaleDateString()}</span>
                 )}
