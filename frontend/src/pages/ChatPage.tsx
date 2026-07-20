@@ -449,10 +449,10 @@ export default function ChatPage({ userRole }: ChatPageProps) {
               <div style={{display: 'flex', alignItems: 'flex-start', gap: '10px', justifyContent: 'space-between'}}>
                 {/* Left column: title + ID, date + location, By */}
                 <div style={{flex: 1, minWidth: 0}}>
-                  {/* Title first, Errand ID to its right */}
+                  {/* Title first, Errand ID packed right next to it */}
                   <div style={{display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, marginBottom: '8px'}}>
-                    <h3 style={{fontWeight: '800', fontSize: '16px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0}}>{conversation.title}</h3>
-                    <span style={{fontSize: '11px', fontWeight: '800', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '4px 8px', borderRadius: '6px', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 2px 8px rgba(255, 107, 53, 0.25)'}}>{conversation.formattedId}</span>
+                    <h3 style={{fontWeight: '800', fontSize: '16px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0}}>{conversation.title}</h3>
+                    <span style={{fontSize: '11px', fontWeight: '700', color: '#FF6B35', background: '#FFF0E6', padding: '3px 8px', borderRadius: '6px', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'monospace'}}>{conversation.formattedId}</span>
                   </div>
                   {/* Date + Location */}
                   <div style={{display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, marginBottom: '6px'}}>
