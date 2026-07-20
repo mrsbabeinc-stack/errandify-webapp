@@ -287,7 +287,7 @@ export default function MyOfferPage() {
         </div>
 
         {/* Filter Tabs - Organized by priority */}
-        <div style={{display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '8px'}}>
+        <div style={{display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', paddingBottom: '8px'}}>
           {['all', 'in_progress', 'confirmed', 'open', 'completed_unconfirmed', 'completed', 'rated', 'expired'].map((status) => {
             // Count by ERRAND status, not bid status
             const count = bids.filter(b => {

@@ -356,7 +356,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
         </div>
 
         {/* View Filter - All/Asker/Doer */}
-        <div style={{display: 'flex', gap: '8px', marginBottom: '10px', overflowX: 'auto', paddingBottom: '6px'}}>
+        <div style={{display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap', paddingBottom: '6px'}}>
           {['all', 'asker', 'doer'].map((filter) => (
             <button
               key={filter}
@@ -385,7 +385,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
         </div>
 
         {/* Status Filter Buttons */}
-        <div style={{display: 'flex', gap: '6px', marginBottom: '12px', overflowX: 'auto', paddingBottom: '6px'}}>
+        <div style={{display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap', paddingBottom: '6px'}}>
           {[
             { value: 'all', label: 'All' },
             { value: 'confirmed', label: 'Confirmed' },

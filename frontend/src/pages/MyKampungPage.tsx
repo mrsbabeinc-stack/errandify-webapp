@@ -768,7 +768,7 @@ export default function MyKampungPage() {
 
       <div className="w-full" style={{maxWidth: '1200px', margin: '0 auto'}}>
         {/* Tab Navigation */}
-        <div className="flex gap-1.5 mb-4 overflow-x-auto pb-2" style={{marginBottom: '24px', paddingBottom: '12px', position: 'relative', zIndex: 1}}>
+        <div className="flex gap-1.5 mb-4 flex-wrap pb-2" style={{marginBottom: '24px', paddingBottom: '12px', position: 'relative', zIndex: 1}}>
           <button
             onClick={() => setActiveTab('feed')}
             style={{
@@ -1078,7 +1078,7 @@ export default function MyKampungPage() {
             </div>
 
             {/* News Type Filter */}
-            <div className="flex gap-1 mb-2 overflow-x-auto pb-1">
+            <div className="flex gap-1 mb-2 flex-wrap pb-1">
               {[
                 { key: 'all', label: 'All', icon: '📰' },
                 { key: 'community', label: 'Community', icon: '🏘️' },
@@ -1105,7 +1105,7 @@ export default function MyKampungPage() {
                 new Set(newsItems.map((item: any) => item.category).filter(Boolean))
               ).sort();
               return categories.length > 0 ? (
-                <div className="flex gap-1 mb-2 overflow-x-auto pb-1">
+                <div className="flex gap-1 mb-2 flex-wrap pb-1">
                   <button
                     onClick={() => setNewsCategoryFilter('all')}
                     className={`py-1 px-2 rounded text-sm font-bold whitespace-nowrap transition ${
