@@ -18,8 +18,8 @@ export function formatUserId(user: any): string {
   return user.formatted_user_id || user.formattedUserId || user.userId || '';
 }
 
-/** Standard offer/bid ID. Falls back to the errand ID it belongs to. */
+/** Standard offer/bid ID: OF26<category>-<4char> (stored in bids.offer_id). */
 export function formatOfferId(bid: any): string {
   if (!bid) return '';
-  return bid.formatted_id || bid.formattedId || formatErrandId(bid.errand) || '';
+  return bid.offer_id || bid.offerId || bid.formatted_offer_id || '';
 }

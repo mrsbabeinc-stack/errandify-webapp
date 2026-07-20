@@ -10,22 +10,24 @@ import postalCodeLookup from '../services/postalCodeToAreaLookup.js';
 const router = Router();
 
 // Category code mapping for OFFERID
+// Canonical category codes — MUST match generateErrandId in routes/errands.ts
 const categoryCodeMap: Record<string, string> = {
   'home-maintenance': 'HM',
   'cleaning-household': 'CL',
-  'food-beverage': 'FB',
-  'furniture-assembly': 'FA',
+  'food-beverage': 'FD',
+  'furniture-assembly': 'FR',
   'shopping-errands': 'SH',
-  'delivery-moving': 'DE',
+  'delivery-moving': 'DV',
   'travel-mobility': 'TR',
   'event-planning': 'EV',
   'childcare-education': 'CH',
-  'eldercare-healthcare': 'EH',
+  'eldercare-healthcare': 'EL',
   'pet-care': 'PC',
-  'personal-care': 'PE',
-  'tech-support': 'TE',
-  'creative-arts': 'CR',
-  'admin-business': 'AB',
+  'personal-care': 'PS',
+  'tech-support': 'TC',
+  'creative-arts': 'AR',
+  'admin-business': 'AD',
+  'charity-community': 'CC',
 };
 
 // Generate unique OFFERID: OF[YY][CATEGORY][4-RANDOM-CHARS]
