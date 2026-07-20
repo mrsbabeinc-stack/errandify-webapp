@@ -50,7 +50,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
     }
   }, [userRole, navigate]);
 
-  const categories = [
+  const FALLBACK_CATEGORIES = [
     // GROUP 1: HOME & HOUSEHOLD
     { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50', purpose: 'Repairs, renovations, plumbing, electrical', group: '🏠 Home & Household' },
     { id: 'cleaning-household', name: 'Cleaning & Household', icon: '🧹', color: 'from-errandify-orange-100 to-errandify-orange-50', purpose: 'House cleaning, laundry, organizing', group: '🏠 Home & Household' },
@@ -76,6 +76,15 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
     { id: 'charity-community', name: 'Charity & Community', icon: '❤️', color: 'from-red-100 to-red-50', purpose: 'Volunteer work, community service', group: '💡 Skills & Services' },
   ];
 
+  // Categories come from the DB (category_codes table) via /api/categories
+  const [categories, setCategories] = useState<any[]>(FALLBACK_CATEGORIES);
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/categories`)
+      .then((r) => r.json())
+      .then((d) => { if (d?.data?.length) setCategories(d.data); })
+      .catch(() => { /* keep fallback */ });
+  }, []);
+
   // Group categories by their group field - same as HomePage
   const groupedCategories = categories.reduce((acc, cat) => {
     if (!acc[cat.group]) {
@@ -83,7 +92,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
     }
     acc[cat.group].push(cat);
     return acc;
-  }, {} as Record<string, typeof categories>);
+  }, {} as Record<string, any[]>);
 
   const categoryNames: Record<string, string> = {
     // New category names
@@ -298,7 +307,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
           {/* Show all categories */}
           <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: isMobile ? '5px' : '8px', marginBottom: '6px'}}>
             {Object.entries(groupedCategories).flatMap(([groupName, cats]) =>
-              cats.map((category) => {
+              (cats as any[]).map((category) => {
                 const isSelected = selectedCategories.includes(category.id);
                 return (
                   <button

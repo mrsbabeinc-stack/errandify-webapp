@@ -28,7 +28,8 @@ export default function HomePage({ userRole }: HomePageProps) {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const categories: Category[] = [
+  // Fallback list (used until the DB-backed /api/categories responds)
+  const FALLBACK_CATEGORIES: Category[] = [
     // GROUP 1: HOME & HOUSEHOLD
     { id: 'home-maintenance', name: 'Home Maintenance', icon: '🏠', color: 'from-orange-100 to-orange-50', purpose: 'Repairs, renovations, plumbing, electrical', group: '🏠 Home & Household' },
     { id: 'cleaning-household', name: 'Cleaning & Household', icon: '🧹', color: 'from-errandify-orange-100 to-errandify-orange-50', purpose: 'House cleaning, laundry, organizing', group: '🏠 Home & Household' },
@@ -53,6 +54,15 @@ export default function HomePage({ userRole }: HomePageProps) {
     { id: 'admin-business', name: 'Admin & Business', icon: '📚', color: 'from-slate-100 to-slate-50', purpose: 'Bookkeeping, document prep, data entry', group: '💡 Skills & Services' },
     { id: 'charity-community', name: 'Charity & Community', icon: '❤️', color: 'from-red-100 to-red-50', purpose: 'Volunteer work, community service', group: '💡 Skills & Services' },
   ];
+
+  // Categories come from the DB (category_codes table) via /api/categories
+  const [categories, setCategories] = useState<Category[]>(FALLBACK_CATEGORIES);
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/categories`)
+      .then((r) => r.json())
+      .then((d) => { if (d?.data?.length) setCategories(d.data); })
+      .catch(() => { /* keep fallback */ });
+  }, []);
 
   // Group categories by their group field
   const groupedCategories = categories.reduce((acc, cat) => {

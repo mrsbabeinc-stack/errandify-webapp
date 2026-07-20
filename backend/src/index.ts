@@ -5,6 +5,7 @@ import { config } from './config.js';
 import { initializeSocket } from './socket.js';
 import authRoutes from './routes/auth.js';
 import errandRoutes from './routes/errands.js';
+import categoryRoutes from './routes/categories.js';
 import chatRoutes from './routes/chat.js';
 import userRoutes from './routes/users.js';
 import hanaRoutes from './routes/hana.js';
@@ -517,6 +518,7 @@ app.use('/api/errands', errandSearchRoutes);
 app.use('/api/errands', activityLogRoutes);
 // Mount main errand routes LAST so specific routes take precedence
 app.use('/api/errands', errandRoutes);
+app.use('/api/categories', categoryRoutes);
 app.use('/api/screening', screeningRoutes);
 app.use('/api/ratings', ratingsRoutes);
 app.use('/api/gamification', gamificationRoutes);
