@@ -36,6 +36,13 @@ export default function MyOfferPage() {
   const [bids, setBids] = useState<Bid[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // Phone-only: let the offer title use a full line so it isn't truncated
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 640);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedErrandId, setSelectedErrandId] = useState<number | null>(null);
@@ -436,14 +443,16 @@ export default function MyOfferPage() {
                 }}
               >
                 {/* Line 1: Title, Errand ID, Status */}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px'}}>
-                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0}}>
-                    <h3 style={{fontWeight: '700', color: '#FF6B35', fontSize: '14px', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px', flexWrap: isMobile ? 'wrap' : 'nowrap'}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: isMobile ? '1 1 100%' : 1, minWidth: 0}}>
+                    <h3 style={{fontWeight: '700', color: '#FF6B35', fontSize: '14px', margin: 0, whiteSpace: isMobile ? 'normal' : 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
                       {bid.errand?.title || 'Errand #' + bid.errand_id}
                     </h3>
-                    <span style={{fontSize: '11px', color: '#666', background: '#FFF0E6', padding: '4px 8px', borderRadius: '6px', fontFamily: 'monospace', whiteSpace: 'nowrap', fontWeight: '600'}}>
-                      {bid.errand?.formatted_id || `ER26${String(bid.errand_id).padStart(2, '0')}-${String(bid.id).slice(-4).toUpperCase().padEnd(4, '0')}`}
-                    </span>
+                    {!isMobile && (
+                      <span style={{fontSize: '11px', color: '#666', background: '#FFF0E6', padding: '4px 8px', borderRadius: '6px', fontFamily: 'monospace', whiteSpace: 'nowrap', fontWeight: '600'}}>
+                        {bid.errand?.formatted_id || `ER26${String(bid.errand_id).padStart(2, '0')}-${String(bid.id).slice(-4).toUpperCase().padEnd(4, '0')}`}
+                      </span>
+                    )}
                   </div>
                   <span style={{padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', border: '1.5px solid #FF6B35', color: '#FF6B35', background: '#FFF5F0', whiteSpace: 'nowrap'}}>
                     {getStatusLabel(bid.errand?.status || bid.status)}
