@@ -132,6 +132,10 @@ import CompanyStaffManagement from './pages/CompanyStaffManagement';
 import CompanyPostErrandPage from './pages/CompanyPostErrandPage';
 import CompanyDashboardNew from './pages/CompanyDashboardNew';
 import StripeCheckoutDummy from './pages/StripeCheckoutDummy';
+import AdvertisingDashboard from './pages/AdvertisingDashboard';
+import CreateCampaignModal from './components/CreateCampaignModal';
+import CampaignWizard from './components/CampaignWizard';
+import CreateCampaignPage from './pages/CreateCampaignPage';
 import StaffDashboard from './pages/StaffDashboard';
 import DoerActiveErrands from './components/DoerActiveErrands';
 import StaffLeaveApplication from './components/StaffLeaveApplication';
@@ -592,6 +596,11 @@ export default function App() {
         <Route path="/stripe-checkout" element={<StripeCheckoutDummy />} />
         <Route path="/company/staff" element={isAuthenticated ? <CompanyStaffManagement /> : <Navigate to="/login" replace />} />
         <Route path="/company/post-errand" element={isAuthenticated ? <CompanyPostErrandPage /> : <Navigate to="/login" replace />} />
+
+        {/* Advertising Routes */}
+        <Route path="/advertising" element={isAuthenticated ? <AdvertisingDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/advertising/create" element={isAuthenticated ? <CreateCampaignPage /> : <Navigate to="/login" replace />} />
+
         <Route path="/staff/dashboard" element={isAuthenticated ? <DoerActiveErrands /> : <Navigate to="/login" replace />} />
         <Route path="/staff/clock-in" element={isAuthenticated ? <StaffAttendanceClockIn /> : <Navigate to="/login" replace />} />
         <Route path="/staff/attendance-history" element={isAuthenticated ? <StaffAttendanceHistory /> : <Navigate to="/login" replace />} />

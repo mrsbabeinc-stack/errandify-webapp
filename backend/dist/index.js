@@ -23,6 +23,7 @@ import screeningRoutes from './routes/screening.js';
 import ratingsRoutes from './routes/ratings.js';
 import gamificationRoutes from './routes/gamification.js';
 import walletRoutes from './routes/wallet.js';
+import staffRoutes from './routes/staff.js';
 import userProfileRoutes from './routes/userProfile.js';
 import userDataExportRoutes from './routes/userDataExport.js';
 import errandSearchRoutes from './routes/errandSearch.js';
@@ -50,8 +51,11 @@ import salaryBenefitsRoutes from './routes/salaryBenefits.js';
 import holidaysRoutes from './routes/holidays.js';
 import advertisingRoutes from './routes/advertising.js';
 import advertisingAdminRoutes from './routes/advertisingAdmin.js';
+import adCreditMonitoringRoutes from './routes/adCreditMonitoring.js';
+import adPaymentRoutes from './routes/adPayment.js';
 import rbacRoutes from './routes/rbac.js';
 import leavesRoutes from './routes/leaves.js';
+import leaveApprovalsRoutes from './routes/leaveApprovals.js';
 import subscriptionsRoutes from './routes/subscriptions.js';
 import subscriptionWebhooksRoutes from './routes/webhooks-subscriptions.js';
 import { startCrons } from './cron.js';
@@ -395,17 +399,35 @@ const app = express();
       CREATE TABLE IF NOT EXISTS subscription_ad_credits (
         id SERIAL PRIMARY KEY,
         company_id INTEGER NOT NULL REFERENCES companies(id),
-        amount DECIMAL(10, 2),
-        spent DECIMAL(10, 2) DEFAULT 0,
+        month VARCHAR(20),
+        allocated_amount DECIMAL(10, 2),
+        used_amount DECIMAL(10, 2) DEFAULT 0,
         expires_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
+        updated_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(company_id, month)
       );
     `);
         console.log('Migration: subscription_ad_credits table created');
     }
     catch (error) {
         console.log('Migration: subscription_ad_credits table already exists');
+    }
+    try {
+        await db.query(`
+      CREATE TABLE IF NOT EXISTS ad_credit_usage_log (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER NOT NULL REFERENCES companies(id),
+        campaign_id INTEGER,
+        amount DECIMAL(10, 2),
+        action VARCHAR(50),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+        console.log('Migration: ad_credit_usage_log table created');
+    }
+    catch (error) {
+        console.log('Migration: ad_credit_usage_log table already exists');
     }
     try {
         await db.query(`
@@ -492,6 +514,7 @@ app.use('/api/screening', screeningRoutes);
 app.use('/api/ratings', ratingsRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/staff', staffRoutes);
 app.use('/api/user-profile', userProfileRoutes);
 app.use('/api/user-data', userDataExportRoutes);
 app.use('/api/admin', adminRoutes);
@@ -500,10 +523,15 @@ app.use('/api/admin', salaryBenefitsRoutes);
 app.use('/api/admin', holidaysRoutes);
 app.use('/api/admin', rbacRoutes);
 app.use('/api/admin', leavesRoutes);
+app.use('/api/leave', leaveApprovalsRoutes);
+app.use('/api/operations', leaveApprovalsRoutes);
+app.use('/api/approvals', leaveApprovalsRoutes);
 app.use('/api/subscriptions', subscriptionsRoutes);
 app.use('/webhooks', subscriptionWebhooksRoutes);
 app.use('/api/advertising', advertisingRoutes);
 app.use('/api/admin/advertising', advertisingAdminRoutes);
+app.use('/api/ad-credits', adCreditMonitoringRoutes);
+app.use('/api/ad-payment', adPaymentRoutes);
 app.use('/api/speech', speechRoutes);
 app.use('/api/questions', questionsRoutes);
 // app.use('/api/email', emailRoutes); // TODO: Fix email module imports

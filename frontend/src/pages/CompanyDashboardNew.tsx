@@ -27,6 +27,8 @@ import CompanyAdvertisingManagement from '../components/CompanyAdvertisingManage
 import CompanyOperatingHours from '../components/CompanyOperatingHours';
 import StaffLeaveApplication from '../components/StaffLeaveApplication';
 import ManagerLeaveApproval from '../components/ManagerLeaveApproval';
+import AdCreditTracker from '../components/AdCreditTracker';
+import AdCreditReminder from '../components/AdCreditReminder';
 
 interface Company {
   id: number;
@@ -220,7 +222,7 @@ const CompanyDashboardNew: React.FC = () => {
         setCompany(data.data);
       } else {
         setCompany({
-          id: 1,
+          id: 3,
           name: 'Rumah Emas Demo Company',
           uen: 'UEN202401001',
           subscription_tier: 'gold',
@@ -235,7 +237,7 @@ const CompanyDashboardNew: React.FC = () => {
     } catch (err) {
       console.error('Error fetching company data:', err);
       setCompany({
-        id: 1,
+        id: 3,
         name: 'Rumah Emas Demo Company',
         uen: 'UEN202401001',
         subscription_tier: 'gold',
@@ -475,6 +477,11 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                     ▶
                   </button>
                 </div>
+              </div>
+
+              {/* Ad Credit Reminder - Top Priority */}
+              <div style={{ marginBottom: '24px' }}>
+                <AdCreditReminder companyId={company?.id || 3} compact={false} />
               </div>
 
               {/* Follow-ups & Action Items - Moved Up */}
@@ -893,7 +900,16 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
 
           {activeSection === 'ads' && (
             <div className="section-content">
-              <CompanyAdvertisingManagement />
+              {/* Ad Credit Tracker */}
+              <div style={{ marginBottom: '40px' }}>
+                <AdCreditTracker companyId={company?.id || 3} />
+              </div>
+
+              {/* Advertising Management */}
+              <div style={{ marginTop: '40px' }}>
+                <h2 style={{ marginBottom: '20px' }}>📢 Campaign Management</h2>
+                <CompanyAdvertisingManagement />
+              </div>
             </div>
           )}
 
@@ -901,20 +917,20 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
             <div className="section-content">
               <h2>🚀 Staff Active Tasks</h2>
               <p style={{fontSize: '14px', color: '#666', marginBottom: '20px'}}>View all allocated tasks assigned to your staff members</p>
-              <ManagerStaffAllocations companyId={company?.id || 1} defaultFilter="all" />
+              <ManagerStaffAllocations companyId={company?.id || 3} defaultFilter="all" />
             </div>
           )}
 
           {activeSection === 'review-approval' && (
             <div className="section-content">
               <h2>Review Approval</h2>
-              <ReviewApprovalPanel companyId={company?.id || 1} />
+              <ReviewApprovalPanel companyId={company?.id || 3} />
             </div>
           )}
 
           {activeSection === 'disputes' && (
             <div className="section-content">
-              <CompanyDisputeCenter companyId={company?.id || 1} />
+              <CompanyDisputeCenter companyId={company?.id || 3} />
             </div>
           )}
 
@@ -1726,60 +1742,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 </div>
               </div>
 
-              {/* AD CREDITS TRACKER SECTION */}
-              <div style={{background: 'linear-gradient(135deg, #E0F2FE 0%, #F0F9FF 100%)', border: '2px solid #0284c7', borderRadius: '12px', padding: '32px', marginBottom: '48px'}}>
-                <h3 style={{margin: '0 0 24px 0', fontSize: '24px', fontWeight: '700', color: '#0c4a6e'}}>💳 Ad Credits Tracker</h3>
-
-                {/* Current Month Usage */}
-                <div style={{background: 'white', borderRadius: '12px', padding: '24px', marginBottom: '24px', border: '1px solid #0284c7'}}>
-                  <p style={{margin: '0 0 12px 0', fontSize: '14px', fontWeight: '700', color: '#0c4a6e', textTransform: 'uppercase'}}>August 2026 Usage</p>
-                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
-                    <span style={{fontSize: '16px', fontWeight: '600', color: '#333'}}>SGD 125 / SGD 200 used</span>
-                    <span style={{fontSize: '14px', fontWeight: '700', color: '#FF6B35'}}>62.5%</span>
-                  </div>
-                  <div style={{background: '#e0e7ff', borderRadius: '8px', height: '12px', overflow: 'hidden'}}>
-                    <div style={{background: '#FF6B35', height: '100%', width: '62.5%', transition: 'width 0.3s'}}></div>
-                  </div>
-                  <p style={{margin: '12px 0 0 0', fontSize: '12px', color: '#666'}}>SGD 75 available until Sep 1</p>
-                </div>
-
-                {/* 12-Month History */}
-                <div style={{background: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #0284c7'}}>
-                  <p style={{margin: '0 0 16px 0', fontSize: '14px', fontWeight: '700', color: '#0c4a6e', textTransform: 'uppercase'}}>Last 12 Months</p>
-                  <div style={{display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '12px'}}>
-                    <div style={{textAlign: 'center', padding: '12px', background: '#f9fafb', borderRadius: '8px'}}>
-                      <p style={{margin: '0 0 4px 0', fontSize: '11px', color: '#666', fontWeight: '600'}}>Aug</p>
-                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#333'}}>125</p>
-                      <p style={{margin: '4px 0 0 0', fontSize: '10px', color: '#999'}}>of 200</p>
-                    </div>
-                    <div style={{textAlign: 'center', padding: '12px', background: '#fef3c7', borderRadius: '8px'}}>
-                      <p style={{margin: '0 0 4px 0', fontSize: '11px', color: '#92400e', fontWeight: '600'}}>Jul</p>
-                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#92400e'}}>200</p>
-                      <p style={{margin: '4px 0 0 0', fontSize: '10px', color: '#b45309'}}>fully used</p>
-                    </div>
-                    <div style={{textAlign: 'center', padding: '12px', background: '#f9fafb', borderRadius: '8px'}}>
-                      <p style={{margin: '0 0 4px 0', fontSize: '11px', color: '#666', fontWeight: '600'}}>Jun</p>
-                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#333'}}>160</p>
-                      <p style={{margin: '4px 0 0 0', fontSize: '10px', color: '#999'}}>of 200</p>
-                    </div>
-                    <div style={{textAlign: 'center', padding: '12px', background: '#f9fafb', borderRadius: '8px'}}>
-                      <p style={{margin: '0 0 4px 0', fontSize: '11px', color: '#666', fontWeight: '600'}}>May</p>
-                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#333'}}>90</p>
-                      <p style={{margin: '4px 0 0 0', fontSize: '10px', color: '#999'}}>of 200</p>
-                    </div>
-                    <div style={{textAlign: 'center', padding: '12px', background: '#f9fafb', borderRadius: '8px'}}>
-                      <p style={{margin: '0 0 4px 0', fontSize: '11px', color: '#666', fontWeight: '600'}}>Apr</p>
-                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#333'}}>180</p>
-                      <p style={{margin: '4px 0 0 0', fontSize: '10px', color: '#999'}}>of 200</p>
-                    </div>
-                    <div style={{textAlign: 'center', padding: '12px', background: '#fef3c7', borderRadius: '8px'}}>
-                      <p style={{margin: '0 0 4px 0', fontSize: '11px', color: '#92400e', fontWeight: '600'}}>Mar</p>
-                      <p style={{margin: 0, fontSize: '14px', fontWeight: '700', color: '#92400e'}}>200</p>
-                      <p style={{margin: '4px 0 0 0', fontSize: '10px', color: '#b45309'}}>fully used</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* REMOVE THIS SECTION - USE AdCreditTracker INSTEAD */}
 
               {/* UPGRADE/DOWNGRADE SECTION - BOTTOM */}
               <div style={{marginBottom: '40px'}} id="pricing-section">
@@ -2072,29 +2035,10 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
 
                   {/* Three Column Grid for Tracking Cards */}
                   <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px'}}>
-                    {/* Card 1: Ad Credit Usage */}
+                    {/* Card 1: Ad Credit Usage - Uses AdCreditTracker Component */}
                     <div style={{background: 'linear-gradient(135deg, #FFF8F5 0%, #FFEEE4 100%)', border: '2px solid #FF6B35', borderRadius: '16px', padding: '24px'}}>
                       <h3 style={{margin: '0 0 16px 0', fontSize: '18px', fontWeight: '700', color: '#333'}}>💳 Ad Credit Usage</h3>
-                      <div style={{background: 'white', borderRadius: '12px', padding: '16px', marginBottom: '16px', border: '1px solid #FFD9B3'}}>
-                        <p style={{margin: '0 0 8px 0', fontSize: '12px', color: '#8B4513', fontWeight: '700', textTransform: 'uppercase'}}>This Month</p>
-                        <div style={{display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px'}}>
-                          <p style={{margin: 0, fontSize: '28px', fontWeight: '800', color: '#FF6B35'}}>
-                            {company?.subscription_tier === 'gold' ? 'SGD45' : company?.subscription_tier === 'platinum' ? 'SGD320' : 'SGD50'}
-                          </p>
-                          <p style={{margin: 0, fontSize: '14px', color: '#666', fontWeight: '600'}}>
-                            / {company?.subscription_tier === 'gold' ? 'SGD200' : company?.subscription_tier === 'platinum' ? 'SGD500' : 'SGD50'}
-                          </p>
-                        </div>
-                        <div style={{background: '#f0f0f0', borderRadius: '8px', height: '8px', overflow: 'hidden'}}>
-                          <div style={{background: '#FF6B35', height: '100%', width: company?.subscription_tier === 'gold' ? '22.5%' : company?.subscription_tier === 'platinum' ? '64%' : '100%', borderRadius: '8px'}}></div>
-                        </div>
-                        <p style={{margin: '8px 0 0 0', fontSize: '12px', color: '#666', fontWeight: '600'}}>
-                          {company?.subscription_tier === 'gold' ? '77.5%' : company?.subscription_tier === 'platinum' ? '36%' : '100%'} remaining
-                        </p>
-                      </div>
-                      <div style={{background: '#fef3c7', borderRadius: '8px', padding: '12px', border: '1px solid #fbbf24', fontSize: '13px', color: '#92400e'}}>
-                        <strong>💡 Tip:</strong> Ad credits reset every month. Use them to promote your services!
-                      </div>
+                      {company && <AdCreditTracker companyId={company.id} compact={true} />}
                     </div>
 
                     {/* Card 2: Milestone Progress */}

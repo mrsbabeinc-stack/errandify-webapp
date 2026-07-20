@@ -735,6 +735,14 @@ router.post('/purchase-ep', authMiddleware, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Either package_id or custom_ep_amount required' });
         }
         // Demo mode - return Stripe-like response with fee breakdown
+        // In production, this would create a real Stripe session with the metadata
+        const metadata = {
+            userId: companyId,
+            companyId: isCustomEPPurchase ? null : companyId,
+            epAmount: epAmount.toString(),
+            basePriceSgd: basePriceSgd.toString(),
+            stripeFee: stripeFee.toString(),
+        };
         res.json({
             success: true,
             isDemo: true,
@@ -743,6 +751,7 @@ router.post('/purchase-ep', authMiddleware, async (req, res) => {
             base_price_sgd: basePriceSgd,
             stripe_fee_sgd: stripeFee,
             total_price_sgd: totalPriceSgd,
+            metadata: metadata,
             message: `✨ Ready to purchase ${epAmount.toLocaleString()} EP for SGD $${totalPriceSgd.toFixed(2)} (includes SGD $${stripeFee.toFixed(2)} Stripe fee)!`,
         });
     }
@@ -757,12 +766,38 @@ router.post('/ep-purchase-webhook', async (req, res) => {
         const event = req.body;
         if (event.type === 'payment_intent.succeeded') {
             const paymentIntent = event.data.object;
-            const companyId = parseInt(paymentIntent.metadata?.companyId || '0', 10);
+            const userId = paymentIntent.metadata?.userId;
+            const companyId = paymentIntent.metadata?.companyId;
             const epAmount = parseInt(paymentIntent.metadata?.ep_amount || '0', 10);
-            if (companyId && epAmount) {
-                // Award EP to company wallet
-                await db.query(`UPDATE wallet_balance SET ep_balance = ep_balance + ? WHERE company_id = ?`, [epAmount, companyId]);
-                console.log(`✅ Awarded ${epAmount} EP to company ${companyId}`);
+            if (epAmount > 0) {
+                if (userId) {
+                    // Award EP to individual user
+                    await db.query(`UPDATE users SET errandify_points = errandify_points + $1 WHERE id = $2`, [epAmount, userId]);
+                    console.log(`✅ Awarded ${epAmount} EP to user ${userId}`);
+                    // Log transaction
+                    await db.query(`INSERT INTO ep_purchase_transactions (user_id, ep_amount, sgd_price, stripe_fee, total_paid, status)
+             VALUES ($1, $2, $3, $4, $5, 'completed')`, [
+                        userId,
+                        epAmount,
+                        paymentIntent.metadata?.basePriceSgd || 0,
+                        paymentIntent.metadata?.stripeFee || 0,
+                        paymentIntent.amount_received / 100, // Convert cents to SGD
+                    ]);
+                }
+                else if (companyId) {
+                    // Award EP to company
+                    await db.query(`UPDATE companies SET ep_balance = ep_balance + $1 WHERE id = $2`, [epAmount, companyId]);
+                    console.log(`✅ Awarded ${epAmount} EP to company ${companyId}`);
+                    // Log transaction
+                    await db.query(`INSERT INTO ep_purchase_transactions (company_id, ep_amount, sgd_price, stripe_fee, total_paid, status)
+             VALUES ($1, $2, $3, $4, $5, 'completed')`, [
+                        companyId,
+                        epAmount,
+                        paymentIntent.metadata?.basePriceSgd || 0,
+                        paymentIntent.metadata?.stripeFee || 0,
+                        paymentIntent.amount_received / 100,
+                    ]);
+                }
             }
         }
         res.json({ success: true, received: true });
@@ -852,29 +887,64 @@ router.post('/ep-purchase-webhook-demo', async (req, res) => {
 router.get('/ep-purchase-history', authMiddleware, async (req, res) => {
     try {
         const userId = parseInt(req.userId || '0', 10);
-        // Demo data showing sample purchases
-        const history = [
-            {
-                id: 1,
-                date: '2026-07-15',
-                ep_amount: 5000,
-                price_sgd: 45.00,
-                status: 'completed',
-                package_id: 2,
-            },
-            {
-                id: 2,
-                date: '2026-07-08',
-                ep_amount: 10000,
-                price_sgd: 80.00,
-                status: 'completed',
-                package_id: 3,
-            },
-        ];
-        res.json({
-            success: true,
-            data: history,
-        });
+        // Try to fetch from database, fall back to demo data if table doesn't exist
+        try {
+            const result = await db.query(`SELECT
+           id,
+           user_id,
+           company_id,
+           ep_amount,
+           sgd_price,
+           stripe_fee,
+           total_paid,
+           status,
+           created_at
+         FROM ep_purchase_transactions
+         WHERE user_id = $1 OR company_id = (SELECT company_id FROM users WHERE id = $1)
+         ORDER BY created_at DESC
+         LIMIT 50`, [userId]);
+            const transactions = result.rows.map((row) => ({
+                id: row.id,
+                date: new Date(row.created_at).toISOString().split('T')[0],
+                ep_amount: row.ep_amount,
+                price_sgd: row.sgd_price,
+                stripe_fee: row.stripe_fee,
+                total_paid: row.total_paid,
+                status: row.status,
+            }));
+            return res.json({
+                success: true,
+                data: transactions,
+            });
+        }
+        catch (dbError) {
+            console.log('Database query failed, returning demo data:', dbError instanceof Error ? dbError.message : dbError);
+            // Demo data showing sample purchases
+            const history = [
+                {
+                    id: 1,
+                    date: '2026-07-15',
+                    ep_amount: 5000,
+                    price_sgd: 45.00,
+                    stripe_fee: 1.61,
+                    total_paid: 46.61,
+                    status: 'completed',
+                },
+                {
+                    id: 2,
+                    date: '2026-07-08',
+                    ep_amount: 10000,
+                    price_sgd: 80.00,
+                    stripe_fee: 2.62,
+                    total_paid: 82.62,
+                    status: 'completed',
+                },
+            ];
+            res.json({
+                success: true,
+                data: history,
+            });
+        }
     }
     catch (error) {
         console.error('Get purchase history error:', error);

@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useToastNotification } from '../utils/toastNotification';
+import AdCreditTracker from '../components/AdCreditTracker';
 
 interface Subscription {
   tier: string;
@@ -55,6 +56,7 @@ export default function CompanySubscriptionBilling() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [selectedBillingType, setSelectedBillingType] = useState<'monthly' | 'annual'>('monthly');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [companyId, setCompanyId] = useState<number>(3); // Default to 3 for demo
 
   useEffect(() => {
     fetchSubscriptionData();
@@ -247,6 +249,14 @@ export default function CompanySubscriptionBilling() {
               <p className="text-lg font-semibold text-gray-900">{subscription.ep_multiplier}x</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Ad Credits Tracker */}
+      {subscription && subscription.is_active && (
+        <div>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">📊 Your Ad Credits</h3>
+          <AdCreditTracker companyId={companyId} />
         </div>
       )}
 

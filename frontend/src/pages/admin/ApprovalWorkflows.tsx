@@ -58,83 +58,44 @@ const ApprovalWorkflows: React.FC = () => {
   const loadApprovals = async () => {
     try {
       setLoading(true);
-      const saved = localStorage.getItem('approvals');
-      let mockRequests: ApprovalRequest[] = [
-        {
-          request_id: 1,
-          request_number: 'APR-2026-001',
-          module: 'expense',
-          request_type: 'Travel Claim',
-          requester_name: 'John Doe',
-          requester_id: 'EMP-001',
-          amount: 2500,
-          description: 'Business trip to KL',
-          submission_date: '2026-07-15',
-          current_level: 1,
-          status: 'pending',
-          approval_chain: [
-            { step_id: 1, level: 1, approver_role: 'Manager', amount_limit: 5000, status: 'pending' },
-            { step_id: 2, level: 2, approver_role: 'Finance Head', amount_limit: 50000, status: 'pending' },
-          ],
-          notes: 'Waiting for manager approval',
-          created_date: new Date().toISOString(),
-        },
-        {
-          request_id: 2,
-          request_number: 'APR-2026-002',
-          module: 'payroll',
-          request_type: 'Bonus Disbursement',
-          requester_name: 'Jane Smith',
-          requester_id: 'EMP-002',
-          amount: 5000,
-          description: 'Mid-year performance bonus',
-          submission_date: '2026-07-14',
-          current_level: 2,
-          status: 'pending',
-          approval_chain: [
-            { step_id: 1, level: 1, approver_role: 'HR Manager', amount_limit: 10000, status: 'approved' },
-            { step_id: 2, level: 2, approver_role: 'Finance Director', amount_limit: 50000, status: 'pending' },
-            { step_id: 3, level: 3, approver_role: 'CEO', amount_limit: 100000, status: 'pending' },
-          ],
-          notes: 'HR approved, waiting for Finance',
-          created_date: new Date().toISOString(),
-        },
-        {
-          request_id: 3,
-          request_number: 'APR-2026-003',
-          module: 'purchase',
-          request_type: 'Purchase Order',
-          requester_name: 'Bob Wilson',
-          requester_id: 'EMP-003',
-          amount: 15000,
-          description: 'IT Equipment - Laptops',
-          submission_date: '2026-07-10',
-          current_level: 1,
-          status: 'approved',
-          approval_chain: [
-            { step_id: 1, level: 1, approver_role: 'Procurement Manager', amount_limit: 20000, status: 'approved' },
-            { step_id: 2, level: 2, approver_role: 'Finance Head', amount_limit: 100000, status: 'approved' },
-          ],
-          notes: 'All approvals received',
-          created_date: new Date().toISOString(),
-        },
-      ];
+      const companyId = localStorage.getItem('companyId') || localStorage.getItem('current_company_id') || '1';
+      const token = localStorage.getItem('token');
 
-      if (saved) {
-        const savedRequests = JSON.parse(saved);
-        mockRequests = [...mockRequests, ...savedRequests];
-      }
-
-      let filtered = mockRequests;
+      let url = `/api/approvals/requests?company_id=${companyId}`;
       if (selectedStatus !== 'all') {
-        filtered = filtered.filter(r => r.status === selectedStatus);
+        url += `&status=${selectedStatus}`;
       }
       if (selectedModule !== 'all') {
-        filtered = filtered.filter(r => r.module === selectedModule);
+        url += `&module=${selectedModule}`;
       }
 
-      setRequests(filtered);
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setRequests(data.data.map((req: any) => ({
+          request_id: req.id,
+          request_number: req.request_number,
+          module: req.module,
+          request_type: req.request_type,
+          requester_name: req.requester_name,
+          requester_id: req.requester_id,
+          amount: req.amount,
+          description: req.description,
+          submission_date: req.submission_date,
+          current_level: req.current_level,
+          status: req.status,
+          approval_chain: [],
+          notes: req.description,
+          created_date: req.created_at
+        })));
+      }
     } catch (error) {
+      console.error('Error loading approvals:', error);
       showToast('Failed to load approvals', 'error');
     } finally {
       setLoading(false);

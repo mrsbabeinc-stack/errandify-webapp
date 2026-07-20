@@ -132,9 +132,11 @@ const StaffLeaveApplication: React.FC = () => {
       const staffId = localStorage.getItem('staffId') || sessionStorage.getItem('staffId') || 'S001';
       const staffName = localStorage.getItem('staffName') || sessionStorage.getItem('staffName') || 'Current User';
 
+      // Get company ID from localStorage
+      const companyId = localStorage.getItem('companyId') || localStorage.getItem('current_company_id') || '1';
+
       const leaveData = {
-        staff_id: staffId,
-        staff_name: staffName,
+        company_id: parseInt(companyId),
         leave_type: reason,
         start_date: startDate,
         end_date: endDate || startDate,
@@ -152,7 +154,15 @@ const StaffLeaveApplication: React.FC = () => {
 
       console.log('[LeaveApplication] Submitting leave request:', leaveData);
 
-      const response = await leaveAPI.create(leaveData);
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/leave/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(leaveData)
+      }).then(r => r.json());
 
       if (response.success) {
         console.log('[LeaveApplication] Leave request created successfully:', response.data);

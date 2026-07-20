@@ -7,27 +7,57 @@ const router = Router();
 // GET /api/companies/user/my-company - Get current user's company
 router.get('/companies/user/my-company', authMiddleware, async (req: Request, res: Response) => {
   try {
-    // Return demo company data for now
-    const demoCompany = {
-      id: 1,
-      name: 'Rumah Emas Demo Company',
-      uen: 'UEN202401001',
-      subscription_tier: 'gold',
-      wallet_balance: 15240,
-      ep_balance: 3450,
-      logo_url: '',
-      rating: 4.8,
-      email: 'contact@rumahemas.com',
-      phone: '+6581234567',
-      address: '123 Business Street, Singapore',
-      billing_type: 'annual',
-      renewal_date: '2027-08-01'
-    };
+    // Get company data from database (company 3 for demo)
+    const result = await db.query(
+      `SELECT id, company_name as name, uen, subscription_status as subscription_tier
+       FROM companies WHERE id = $1`,
+      [3]
+    );
 
-    res.json({
-      success: true,
-      data: demoCompany
-    });
+    if (result.rows && result.rows.length > 0) {
+      const company = result.rows[0];
+      // Add demo data for fields not in database
+      const demoCompany = {
+        id: company.id,
+        name: company.name,
+        uen: company.uen,
+        subscription_tier: company.subscription_tier,
+        wallet_balance: 15240,
+        ep_balance: 3450,
+        logo_url: '',
+        rating: 4.8,
+        email: 'contact@rumahemas.com',
+        phone: '+6581234567',
+        address: '123 Business Street, Singapore',
+        billing_type: 'annual',
+        renewal_date: '2027-08-01'
+      };
+
+      res.json({
+        success: true,
+        data: demoCompany
+      });
+    } else {
+      // Fallback if company not found
+      res.json({
+        success: true,
+        data: {
+          id: 3,
+          name: 'Rumah Emas Demo Company',
+          uen: 'UEN202401001',
+          subscription_tier: 'premium',
+          wallet_balance: 15240,
+          ep_balance: 3450,
+          logo_url: '',
+          rating: 4.8,
+          email: 'contact@rumahemas.com',
+          phone: '+6581234567',
+          address: '123 Business Street, Singapore',
+          billing_type: 'annual',
+          renewal_date: '2027-08-01'
+        }
+      });
+    }
   } catch (error: any) {
     console.error('Error fetching user company:', error);
     res.status(500).json({

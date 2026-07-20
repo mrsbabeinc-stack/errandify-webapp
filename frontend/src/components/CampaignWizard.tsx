@@ -19,20 +19,73 @@ interface CampaignWizardProps {
   onCampaignSubmit?: (campaigns: CampaignData[]) => void;
 }
 
+interface AdCreditStatus {
+  available_credits_sgd: number;
+  available_credits_cents: number;
+  usage_percentage: number;
+}
+
 const CampaignWizard: React.FC<CampaignWizardProps> = ({ isOpen, onClose, onCampaignSubmit }) => {
   const [step, setStep] = useState<'package-setup' | 'campaign-details' | 'refund-warning'>('package-setup');
   const [campaigns, setCampaigns] = useState<CampaignData[]>([]);
   const [currentCampaign, setCurrentCampaign] = useState<Partial<CampaignData> | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [pendingSubmission, setPendingSubmission] = useState<CampaignData[] | null>(null);
+  const [creditStatus, setCreditStatus] = useState<AdCreditStatus | null>(null);
+  const [loadingCredits, setLoadingCredits] = useState(false);
 
-  // Reset to step 1 when modal opens
+  // Fetch ad credit status when modal opens
   React.useEffect(() => {
     if (isOpen) {
       setStep('package-setup');
       setPendingSubmission(null);
+      fetchCredits();
     }
   }, [isOpen]);
+
+  const fetchCredits = async () => {
+    try {
+      setLoadingCredits(true);
+      const companyId = localStorage.getItem('selectedCompanyId') || 3;
+      console.log('🎯 Fetching credits for company:', companyId);
+
+      const response = await fetch(`/api/ad-payment/status/${companyId}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+
+      console.log('📊 Credit API response status:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Credit data received:', data);
+
+        // Extract from API response - must come from database, not hardcoded
+        const availableSgd = parseFloat(data.data?.credits?.available_sgd) || 0;
+        const usagePercentage = parseFloat(data.data?.credits?.usage_percentage) || 0;
+
+        setCreditStatus({
+          available_credits_sgd: availableSgd,
+          available_credits_cents: availableSgd * 100,
+          usage_percentage: usagePercentage
+        });
+
+        console.log('💾 Credit status updated:', {
+          available_sgd: availableSgd,
+          usage_percentage: usagePercentage
+        });
+      } else {
+        console.warn('⚠️ Credit API returned error:', response.status);
+        const errorData = await response.text();
+        console.warn('Error response:', errorData);
+        setCreditStatus(null);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching credits:', error);
+      setCreditStatus(null);
+    } finally {
+      setLoadingCredits(false);
+    }
+  };
 
   // Package setup state
   const [selectedTypes, setSelectedTypes] = useState<Set<'hero-banner' | 'in-feed-ads'>>(new Set());
@@ -461,8 +514,21 @@ const CampaignWizard: React.FC<CampaignWizardProps> = ({ isOpen, onClose, onCamp
       <>
       <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000}}>
         <div style={{background: 'white', borderRadius: '12px', padding: '40px', maxWidth: '750px', width: '90%'}}>
-          <h1 style={{margin: '0 0 8px 0', fontSize: '32px', fontWeight: '700', color: '#333'}}>📦 Build Your Ad Campaign</h1>
-          <p style={{margin: '0 0 12px 0', fontSize: '15px', color: '#666'}}>Select one or both ad types for your package</p>
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '24px'}}>
+            <div>
+              <h1 style={{margin: '0 0 8px 0', fontSize: '32px', fontWeight: '700', color: '#333'}}>📦 Build Your Ad Campaign</h1>
+              <p style={{margin: '0 0 12px 0', fontSize: '15px', color: '#666'}}>Select one or both ad types for your package</p>
+            </div>
+            {creditStatus && (
+              <div style={{background: '#FFF8F5', border: '2px solid #FF6B35', borderRadius: '8px', padding: '12px 16px', minWidth: '200px', textAlign: 'right'}}>
+                <div style={{fontSize: '11px', color: '#666', marginBottom: '4px', textTransform: 'uppercase', fontWeight: '600'}}>Available Credits</div>
+                <div style={{fontSize: '18px', fontWeight: '700', color: '#FF6B35'}}>SGD ${creditStatus.available_credits_sgd.toFixed(2)}</div>
+                <div style={{fontSize: '12px', color: '#999', marginTop: '4px'}}>
+                  {creditStatus.usage_percentage}% used
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Pro Tip Banner */}
           <div style={{background: '#FFF8F5', border: '2px solid #FF6B35', borderRadius: '8px', padding: '16px', marginBottom: '32px', display: 'flex', alignItems: 'start', gap: '12px'}}>
@@ -1206,21 +1272,104 @@ const CampaignWizard: React.FC<CampaignWizardProps> = ({ isOpen, onClose, onCamp
 
   // STEP 3: Refund Warning before Payment
   if (step === 'refund-warning' && pendingSubmission) {
+    const totalCost = pendingSubmission.reduce((sum, c) => sum + c.budget, 0);
+    const bundleDiscount = pendingSubmission.length > 1 ? (pendingSubmission.length === 2 ? 15 : 20) : 0;
+    const discountAmount = (totalCost * bundleDiscount) / 100;
+    const finalTotal = totalCost - discountAmount;
+
+    const creditsAvailableCents = creditStatus?.available_credits_cents || 0;
+    const creditsToUse = Math.min(creditsAvailableCents, finalTotal * 100);
+    const stripeToPay = Math.max(0, (finalTotal * 100) - creditsToUse);
+    const balanceAfter = creditsAvailableCents - creditsToUse;
+
     return (
-      <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001, padding: '20px'}}>
-        <div style={{background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '500px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)'}}>
+      <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001, padding: '20px', overflowY: 'auto'}}>
+        <div style={{background: 'white', borderRadius: '16px', padding: '32px', maxWidth: '500px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', margin: '20px auto'}}>
 
           {/* Header */}
           <div style={{textAlign: 'center', marginBottom: '24px'}}>
-            <div style={{fontSize: '48px', marginBottom: '12px'}}>⚠️</div>
+            <div style={{fontSize: '48px', marginBottom: '12px'}}>💳</div>
             <h2 style={{margin: '0 0 8px 0', fontSize: '20px', fontWeight: '800', color: '#333'}}>
-              Payment Policy
+              Payment Breakdown
             </h2>
-            <p style={{margin: 0, fontSize: '13px', color: '#666'}}>Please read carefully before proceeding</p>
+            <p style={{margin: 0, fontSize: '13px', color: '#666'}}>Review your credits and payment details</p>
+          </div>
+
+          {/* Current Credits Status */}
+          <div style={{background: '#E8F5E9', border: '2px solid #4CAF50', borderRadius: '12px', padding: '16px', marginBottom: '20px'}}>
+            <div style={{fontSize: '12px', fontWeight: '700', color: '#2E7D32', marginBottom: '8px', textTransform: 'uppercase'}}>✓ Your Ad Credits</div>
+            <div style={{fontSize: '18px', fontWeight: '700', color: '#1B5E20', marginBottom: '8px'}}>SGD ${(creditsAvailableCents / 100).toFixed(2)}</div>
+            <div style={{fontSize: '12px', color: '#558B2F', lineHeight: '1.5'}}>
+              Available from your {creditStatus?.usage_percentage && creditStatus.usage_percentage < 100 ? 'active subscription tier' : 'subscription plan'}
+            </div>
+          </div>
+
+          {/* Payment Calculation */}
+          <div style={{background: '#FFF8F5', border: '1px solid #FFD5C0', borderRadius: '12px', padding: '16px', marginBottom: '20px'}}>
+            <div style={{fontSize: '12px', fontWeight: '700', color: '#666', marginBottom: '12px', textTransform: 'uppercase'}}>Payment Breakdown</div>
+
+            {/* Campaign Cost */}
+            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px'}}>
+              <span>Campaign Total</span>
+              <span style={{fontWeight: '600'}}>SGD ${totalCost.toFixed(2)}</span>
+            </div>
+
+            {/* Bundle Discount */}
+            {bundleDiscount > 0 && (
+              <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: '#27AE60'}}>
+                <span>Bundle Discount ({bundleDiscount}%)</span>
+                <span style={{fontWeight: '600'}}>-SGD ${discountAmount.toFixed(2)}</span>
+              </div>
+            )}
+
+            {/* Final Cost */}
+            <div style={{display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid #FFD5C0', marginBottom: '12px', fontSize: '14px', fontWeight: '700'}}>
+              <span>Final Cost</span>
+              <span style={{color: '#FF6B35'}}>SGD ${finalTotal.toFixed(2)}</span>
+            </div>
+
+            {/* Credits Applied */}
+            <div style={{background: 'white', borderRadius: '8px', padding: '12px', marginBottom: '8px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '13px'}}>
+                <span>Credits Applied</span>
+                <span style={{fontWeight: '600', color: '#4CAF50'}}>SGD ${(creditsToUse / 100).toFixed(2)}</span>
+              </div>
+              <div style={{fontSize: '11px', color: '#999'}}>From your available balance</div>
+            </div>
+
+            {/* Stripe Payment */}
+            {stripeToPay > 0 && (
+              <div style={{background: 'white', borderRadius: '8px', padding: '12px', marginBottom: '8px', border: '1px solid #FFB399'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '13px'}}>
+                  <span>Stripe Charge</span>
+                  <span style={{fontWeight: '600', color: '#FF6B35'}}>SGD ${(stripeToPay / 100).toFixed(2)}</span>
+                </div>
+                <div style={{fontSize: '11px', color: '#999'}}>After credit deduction</div>
+              </div>
+            )}
+
+            {stripeToPay === 0 && (
+              <div style={{background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)', borderRadius: '8px', padding: '12px', marginBottom: '8px', border: '1px solid #A5D6A7'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '13px'}}>
+                  <span>Stripe Charge</span>
+                  <span style={{fontWeight: '600', color: '#2E7D32'}}>SGD $0.00</span>
+                </div>
+                <div style={{fontSize: '11px', color: '#558B2F'}}>✅ Fully covered by credits! No card charge.</div>
+              </div>
+            )}
+          </div>
+
+          {/* Balance After */}
+          <div style={{background: '#F0F8FF', border: '1px solid #B0D4FF', borderRadius: '12px', padding: '12px', marginBottom: '20px', fontSize: '12px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '4px'}}>
+              <span style={{color: '#1565C0', fontWeight: '600'}}>Credits After Campaign:</span>
+              <span style={{fontWeight: '700', color: '#0D47A1'}}>SGD ${(balanceAfter / 100).toFixed(2)}</span>
+            </div>
+            <div style={{fontSize: '11px', color: '#666'}}>Remaining credit balance for future campaigns</div>
           </div>
 
           {/* Policy Content */}
-          <div style={{background: '#FFF5F0', border: '2px solid #FF6B35', borderRadius: '12px', padding: '20px', marginBottom: '24px'}}>
+          <div style={{background: '#FFF5F0', border: '2px solid #FF6B35', borderRadius: '12px', padding: '20px', marginBottom: '16px'}}>
             <div style={{marginBottom: '16px'}}>
               <h3 style={{margin: '0 0 12px 0', fontSize: '14px', fontWeight: '700', color: '#FF6B35', display: 'flex', alignItems: 'center', gap: '8px'}}>
                 <span>❌</span> No Refunds - Ever

@@ -41,8 +41,6 @@ function getEndOfMonth(): Date {
  * Allocate monthly ad credits (called by cron on 1st of month)
  */
 export async function allocateMonthlyCredits(companyId?: number): Promise<number> {
-  const now = new Date();
-  const monthKey = getCurrentMonthKey();
   const expiresAt = getEndOfMonth();
 
   let query = `
@@ -52,33 +50,28 @@ export async function allocateMonthlyCredits(companyId?: number): Promise<number
     WHERE cs.status = 'active'
   `;
 
+  const params: any[] = [];
   if (companyId) {
-    query += ` AND cs.company_id = ${companyId}`;
+    query += ` AND cs.company_id = $1`;
+    params.push(companyId);
   }
 
-  const subscriptions = await db.query(query);
+  const result = await db.query(query, params);
+  const subscriptions = result.rows || [];
 
   let allocated = 0;
 
   for (const sub of subscriptions) {
-    // Check if already allocated this month
-    const existing = await db.query(
-      'SELECT id FROM subscription_ad_credits WHERE company_id = ? AND month = ?',
-      [sub.company_id, monthKey]
+    // Insert or update ad credits for this company
+    await db.query(
+      `INSERT INTO subscription_ad_credits (company_id, amount, spent, expires_at, created_at)
+       VALUES ($1, $2, COALESCE(0, 0), $3, NOW())
+       ON CONFLICT (company_id) DO UPDATE SET amount = EXCLUDED.amount, expires_at = EXCLUDED.expires_at`,
+      [sub.company_id, sub.ad_credit_monthly, expiresAt]
     );
 
-    if (existing.length === 0) {
-      // Allocate new credits
-      await db.query(
-        `INSERT INTO subscription_ad_credits
-         (company_id, month, allocated_amount, used_amount, expires_at, created_at)
-         VALUES (?, ?, ?, 0, ?, NOW())`,
-        [sub.company_id, monthKey, sub.ad_credit_monthly, expiresAt]
-      );
-
-      allocated++;
-      console.log(`✅ Allocated ${sub.ad_credit_monthly / 100} credits to company ${sub.company_id}`);
-    }
+    allocated++;
+    console.log(`✅ Allocated SGD $${sub.ad_credit_monthly / 100} credits to company ${sub.company_id}`);
   }
 
   return allocated;
@@ -88,21 +81,22 @@ export async function allocateMonthlyCredits(companyId?: number): Promise<number
  * Get current month's ad credits for company
  */
 export async function getCredits(companyId: number): Promise<AdCredit | null> {
-  const monthKey = getCurrentMonthKey();
-
   const result = await db.query(
-    `SELECT *,
-            (allocated_amount - used_amount) as available_amount
+    `SELECT id, company_id, amount as allocated_amount, spent as used_amount,
+            (amount - COALESCE(spent, 0)) as available_amount,
+            expires_at, created_at
      FROM subscription_ad_credits
-     WHERE company_id = ? AND month = ?`,
-    [companyId, monthKey]
+     WHERE company_id = $1
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [companyId]
   );
 
-  if (result.length === 0) {
+  if (result.rows && result.rows.length === 0) {
     return null;
   }
 
-  return result[0];
+  return result.rows?.[0] || null;
 }
 
 /**
@@ -124,10 +118,10 @@ export async function deductCredits(
     );
   }
 
-  // Deduct from used_amount
+  // Deduct from spent column
   await db.query(
-    'UPDATE subscription_ad_credits SET used_amount = used_amount + ? WHERE company_id = ? AND month = ?',
-    [amountCents, companyId, getCurrentMonthKey()]
+    'UPDATE subscription_ad_credits SET spent = spent + $1 WHERE company_id = $2',
+    [amountCents, companyId]
   );
 
   console.log(`💳 Deducted SGD $${amountCents / 100} from company ${companyId}`);
@@ -149,11 +143,11 @@ export async function refundCredits(
     return;
   }
 
-  const newUsedAmount = Math.max(0, credits.used_amount - amountCents);
+  const newSpentAmount = Math.max(0, (credits.used_amount || 0) - amountCents);
 
   await db.query(
-    'UPDATE subscription_ad_credits SET used_amount = ? WHERE company_id = ? AND month = ?',
-    [newUsedAmount, companyId, getCurrentMonthKey()]
+    'UPDATE subscription_ad_credits SET spent = $1 WHERE company_id = $2',
+    [newSpentAmount, companyId]
   );
 
   console.log(`💸 Refunded SGD $${amountCents / 100} to company ${companyId}`);
@@ -167,27 +161,24 @@ export async function addBonusCredits(
   bonusAmountCents: number,
   reason: string
 ): Promise<void> {
-  const monthKey = getCurrentMonthKey();
-
   // Check if allocation exists, if not create it
   const existing = await db.query(
-    'SELECT id FROM subscription_ad_credits WHERE company_id = ? AND month = ?',
-    [companyId, monthKey]
+    'SELECT id FROM subscription_ad_credits WHERE company_id = $1',
+    [companyId]
   );
 
-  if (existing.length === 0) {
+  if ((existing.rows || []).length === 0) {
     const expiresAt = getEndOfMonth();
     await db.query(
-      `INSERT INTO subscription_ad_credits
-       (company_id, month, allocated_amount, used_amount, expires_at, created_at)
-       VALUES (?, ?, ?, 0, ?, NOW())`,
-      [companyId, monthKey, bonusAmountCents, expiresAt]
+      `INSERT INTO subscription_ad_credits (company_id, amount, spent, expires_at, created_at)
+       VALUES ($1, $2, 0, $3, NOW())`,
+      [companyId, bonusAmountCents, expiresAt]
     );
   } else {
     // Add to existing allocation
     await db.query(
-      'UPDATE subscription_ad_credits SET allocated_amount = allocated_amount + ? WHERE company_id = ? AND month = ?',
-      [bonusAmountCents, companyId, monthKey]
+      'UPDATE subscription_ad_credits SET amount = amount + $1 WHERE company_id = $2',
+      [bonusAmountCents, companyId]
     );
   }
 
@@ -202,16 +193,17 @@ export async function getCreditHistory(
   limit: number = 12
 ): Promise<AdCredit[]> {
   const result = await db.query(
-    `SELECT *,
-            (allocated_amount - used_amount) as available_amount
+    `SELECT id, company_id, amount as allocated_amount, spent as used_amount,
+            (amount - COALESCE(spent, 0)) as available_amount,
+            expires_at, created_at
      FROM subscription_ad_credits
-     WHERE company_id = ?
-     ORDER BY month DESC
-     LIMIT ?`,
+     WHERE company_id = $1
+     ORDER BY created_at DESC
+     LIMIT $2`,
     [companyId, limit]
   );
 
-  return result;
+  return result.rows || [];
 }
 
 /**
@@ -222,11 +214,11 @@ export async function expireOldCredits(): Promise<number> {
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   const result = await db.query(
-    'UPDATE subscription_ad_credits SET updated_at = NOW() WHERE expires_at <= ?',
+    'UPDATE subscription_ad_credits SET updated_at = NOW() WHERE expires_at <= $1',
     [today]
   );
 
   console.log(`⏰ Expired old ad credits`);
 
-  return result.affectedRows || 0;
+  return result.rowCount || 0;
 }

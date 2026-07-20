@@ -2,11 +2,13 @@ import db from '../db.js';
 import Stripe from 'stripe';
 import { campaignModel, performanceModel, scheduleModel } from '../models/Campaign.js';
 import { advertisingNotifications } from './advertisingNotifications.js';
+import * as adCreditService from './adCreditService.js';
+import * as adPaymentService from './adCreditPaymentService.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2023-10-16' });
 
 export const advertisingService = {
-  async approveCampaign(campaignId: number, adminId: number, adminNotes?: string): Promise<any> {
+  async approveCampaign(campaignId: number, _adminId: number, adminNotes?: string): Promise<any> {
     const campaign = await campaignModel.getById(campaignId);
     if (!campaign) throw new Error('Campaign not found');
     if (campaign.status !== 'submitted') throw new Error('Only submitted campaigns can be approved');
@@ -16,10 +18,30 @@ export const advertisingService = {
       if (companyResult.rows.length === 0) throw new Error('Company not found');
       const company = companyResult.rows[0];
 
+      // Convert budget to cents for ad credit tracking
+      const budgetInCents = Math.round(campaign.budget * 100);
+
+      // Check if company has enough ad credits allocated for this month
+      const credits = await adCreditService.getCredits(campaign.company_id);
+      if (!credits) {
+        throw new Error('No ad credits allocated for this month. Please subscribe to a plan to run advertising campaigns.');
+      }
+
+      // Calculate available credits (allocated - used)
+      const availableCents = credits.allocated_amount - credits.used_amount;
+      if (availableCents < budgetInCents) {
+        throw new Error(
+          `Insufficient ad credits. Available: SGD $${(availableCents / 100).toFixed(2)}, Required: SGD $${campaign.budget.toFixed(2)}. Please wait for next month's allocation or upgrade your plan.`
+        );
+      }
+
+      // Deduct ad credits from monthly allocation
+      await adCreditService.deductCredits(campaign.company_id, budgetInCents);
+
       let stripeChargeId = `test_charge_${campaignId}_${Date.now()}`;
-      
+
       await db.query(`INSERT INTO payment_holds_status (transaction_id, amount, status, hold_reason, created_at) VALUES ($1, $2, $3, $4, NOW())`, [`campaign_${campaignId}`, campaign.budget, 'held', `Advertising campaign hold: ${campaign.title}`]);
-      
+
       await campaignModel.update(campaignId, {
         status: 'approved',
         stripe_charge_id: stripeChargeId,
@@ -30,6 +52,15 @@ export const advertisingService = {
       await scheduleModel.create(campaignId, campaign.starts_at, 'start');
       await scheduleModel.create(campaignId, campaign.ends_at, 'end');
 
+      // Log credit usage
+      await db.query(
+        `INSERT INTO ad_credit_usage_log (company_id, campaign_id, amount, action, created_at)
+         VALUES ($1, $2, $3, 'campaign_approved', NOW())`,
+        [campaign.company_id, campaignId, budgetInCents]
+      );
+
+      const remainingCredits = (availableCents - budgetInCents) / 100;
+
       await advertisingNotifications.notifyCampaignApproved({
         companyId: campaign.company_id,
         companyName: company.name,
@@ -38,16 +69,37 @@ export const advertisingService = {
         chargeAmount: campaign.budget,
       });
 
-      return { success: true, campaignId, status: 'approved', stripeChargeId, message: `Campaign approved and payment of SGD $${campaign.budget.toFixed(2)} has been charged` };
+      return {
+        success: true,
+        campaignId,
+        status: 'approved',
+        stripeChargeId,
+        creditsUsed: campaign.budget,
+        creditsRemaining: remainingCredits,
+        message: `Campaign approved! Ad credits deducted: SGD $${campaign.budget.toFixed(2)}. Remaining this month: SGD $${remainingCredits.toFixed(2)}`
+      };
     } catch (error) {
       console.error('[ADVERTISING] Campaign approval failed:', error);
       throw error;
     }
   },
 
-  async rejectCampaign(campaignId: number, adminId: number, rejectionReason: string): Promise<any> {
+  async rejectCampaign(campaignId: number, _adminId: number, rejectionReason: string): Promise<any> {
     const campaign = await campaignModel.getById(campaignId);
     if (!campaign) throw new Error('Campaign not found');
+
+    // If campaign was approved, refund the ad credits
+    if (campaign.status === 'approved') {
+      const budgetInCents = Math.round(campaign.budget * 100);
+      await adCreditService.refundCredits(campaign.company_id, budgetInCents);
+
+      // Log refund
+      await db.query(
+        `INSERT INTO ad_credit_usage_log (company_id, campaign_id, amount, action, created_at)
+         VALUES ($1, $2, $3, 'campaign_rejected_refund', NOW())`,
+        [campaign.company_id, campaignId, budgetInCents]
+      );
+    }
 
     await campaignModel.update(campaignId, { status: 'rejected', rejection_reason: rejectionReason, admin_notes: rejectionReason });
 
@@ -62,7 +114,7 @@ export const advertisingService = {
       rejectionReason,
     });
 
-    return { success: true, campaignId, status: 'rejected', rejectionReason, message: 'Campaign rejected and company notified' };
+    return { success: true, campaignId, status: 'rejected', rejectionReason, message: 'Campaign rejected. Ad credits refunded.' };
   },
 
   async startCampaign(campaignId: number): Promise<void> {

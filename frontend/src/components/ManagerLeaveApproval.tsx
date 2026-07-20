@@ -14,46 +14,53 @@ interface LeaveRequest {
 }
 
 const ManagerLeaveApproval: React.FC = () => {
-  const [requests, setRequests] = useState<LeaveRequest[]>([
-    {
-      id: 1,
-      staffName: 'Jordan Smith',
-      startDate: '2026-07-15',
-      endDate: '2026-07-17',
-      period: 'full-day',
-      reason: 'Training/Workshop',
-      notes: 'React Advanced Training Course',
-      status: 'pending',
-      appliedAt: '2026-07-10 14:30',
-    },
-    {
-      id: 2,
-      staffName: 'Ava Johnson',
-      startDate: '2026-07-18',
-      endDate: '2026-07-18',
-      period: 'morning',
-      reason: 'Medical',
-      notes: 'Doctor appointment - will be back by afternoon',
-      status: 'pending',
-      appliedAt: '2026-07-11 09:15',
-    },
-    {
-      id: 3,
-      staffName: 'Liam Brown',
-      startDate: '2026-07-20',
-      endDate: '2026-07-22',
-      period: 'full-day',
-      reason: 'Other',
-      notes: 'Attending major client event in Kuala Lumpur',
-      status: 'pending',
-      appliedAt: '2026-07-10 11:00',
-    },
-  ]);
+  const [requests, setRequests] = useState<LeaveRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
 
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [tab, setTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [approving, setApproving] = useState(false);
+
+  // Fetch leave requests on mount
+  React.useEffect(() => {
+    fetchLeaveRequests();
+  }, [tab]);
+
+  const fetchLeaveRequests = async () => {
+    try {
+      setLoadingRequests(true);
+      const companyId = localStorage.getItem('companyId') || localStorage.getItem('current_company_id') || '1';
+      const token = localStorage.getItem('token');
+
+      const response = await fetch(`/api/leave/requests?company_id=${companyId}&status=${tab}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setRequests(data.data.map((req: any) => ({
+          id: req.id,
+          staffName: req.staff_name || 'Unknown',
+          startDate: req.start_date,
+          endDate: req.end_date,
+          period: req.period || 'full-day',
+          reason: req.reason || 'Not specified',
+          notes: req.notes || '',
+          status: req.status,
+          appliedAt: new Date(req.created_at).toLocaleString(),
+          rejectionReason: req.rejected_reason
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching leave requests:', error);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
 
   const reasonMap: Record<string, string> = {
     training: '🏋️ Training/Workshop',
@@ -66,11 +73,31 @@ const ManagerLeaveApproval: React.FC = () => {
     other: '📝 Other',
   };
 
-  const handleApprove = (requestId: number) => {
-    setRequests(
-      requests.map((r) => (r.id === requestId ? { ...r, status: 'approved' } : r))
-    );
-    setSelectedRequest(null);
+  const handleApprove = async (requestId: number) => {
+    try {
+      setApproving(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/leave/request/${requestId}/approve`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ approval_notes: '' })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setRequests(
+          requests.map((r) => (r.id === requestId ? { ...r, status: 'approved' } : r))
+        );
+        setSelectedRequest(null);
+      }
+    } catch (error) {
+      console.error('Error approving leave:', error);
+    } finally {
+      setApproving(false);
+    }
   };
 
   const handleRejectClick = (request: LeaveRequest) => {
@@ -78,22 +105,46 @@ const ManagerLeaveApproval: React.FC = () => {
     setShowRejectModal(true);
   };
 
-  const handleRejectConfirm = () => {
+  const handleRejectConfirm = async () => {
     if (selectedRequest && rejectionReason.trim()) {
-      setRequests(
-        requests.map((r) =>
-          r.id === selectedRequest.id
-            ? { ...r, status: 'rejected', rejectionReason }
-            : r
-        )
-      );
-      setShowRejectModal(false);
-      setSelectedRequest(null);
-      setRejectionReason('');
+      try {
+        setApproving(true);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/leave/request/${selectedRequest.id}/reject`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ rejected_reason: rejectionReason })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          setRequests(
+            requests.map((r) =>
+              r.id === selectedRequest.id
+                ? { ...r, status: 'rejected', rejectionReason }
+                : r
+            )
+          );
+          setShowRejectModal(false);
+          setSelectedRequest(null);
+          setRejectionReason('');
+        }
+      } catch (error) {
+        console.error('Error rejecting leave:', error);
+      } finally {
+        setApproving(false);
+      }
     }
   };
 
   const filteredRequests = requests.filter((r) => r.status === tab);
+
+  if (loadingRequests) {
+    return <div style={{ padding: '24px', textAlign: 'center' }}>Loading leave requests...</div>;
+  }
 
   return (
     <div style={{ padding: '24px', maxWidth: '1000px' }}>
