@@ -66,6 +66,39 @@ export default function HanaTaskCreation({
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const speakAudioRef = useRef<HTMLAudioElement | null>(null);
+  const speakSeqRef = useRef(0);
+
+  // Read a line out loud via the backend TTS endpoint (one voice at a time, softer volume)
+  const speakText = async (text: string) => {
+    const mySeq = ++speakSeqRef.current;
+    // Stop anything already playing (prevents overlapping = echo)
+    if (speakAudioRef.current) {
+      speakAudioRef.current.pause();
+      speakAudioRef.current.currentTime = 0;
+      speakAudioRef.current = null;
+    }
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/chat/hana/speak`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, language: 'en' }),
+      });
+      const data = await res.json();
+      const src = data?.data?.audio;
+      // A newer speak request superseded this one — don't play (avoids double voice)
+      if (!src || mySeq !== speakSeqRef.current) return;
+      const audio = new Audio(src);
+      audio.volume = 0.55;
+      speakAudioRef.current = audio;
+      setIsSpeaking(true);
+      audio.onended = () => setIsSpeaking(false);
+      audio.onerror = () => setIsSpeaking(false);
+      await audio.play().catch(() => setIsSpeaking(false));
+    } catch {
+      setIsSpeaking(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -163,7 +196,7 @@ export default function HanaTaskCreation({
     const example = getExampleByCategory(categoryToUse);
     setHanaMessage(`Hi! What errand do you need help with?\n\nExample:\n'${example}'`);
     setCurrentStep('input');
-    triggerSpeaking();
+    speakText('Hi! What errand do you need help with?');
   };
 
   const triggerSpeaking = () => {
@@ -492,22 +525,22 @@ export default function HanaTaskCreation({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 z-40 flex items-end justify-center p-0">
-      {/* Full-height sheet (no page peeking behind at the top) */}
-      <div className="bg-white shadow-2xl w-full h-screen max-w-2xl flex flex-col overflow-hidden">
+      {/* Full-height sheet with a rounded top (no page peeking behind) */}
+      <div className="bg-white shadow-2xl w-full h-screen max-w-2xl flex flex-col overflow-hidden rounded-t-3xl">
         {/* Header */}
-        <div className="bg-gradient-to-r from-errandify-orange to-orange-400 px-5 py-4 flex items-center justify-between flex-shrink-0 shadow-md">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-white/25 flex items-center justify-center text-xl flex-shrink-0">💬</div>
-            <div>
-              <h1 className="text-lg font-bold text-white leading-tight">Hana (Your AI Sister)</h1>
-              <p className="text-orange-100 text-xs">Chat With Hana</p>
+        <div className="bg-gradient-to-r from-errandify-orange to-orange-400 px-5 py-3 flex items-center justify-between flex-shrink-0 shadow-md">
+          <div className="flex items-center gap-3 min-w-0">
+            <img src="/images/hana-avatar.png" alt="Hana" className="w-10 h-10 rounded-full object-cover border-2 border-white/60 flex-shrink-0" />
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold text-white whitespace-nowrap leading-tight">Hana <span className="text-xs font-medium text-orange-100">(Your AI Sister)</span></h1>
+              <p className="text-orange-100 text-[11px] leading-tight">Chat With Hana</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onSkipToManual}
-              className="px-3 py-2 bg-white text-errandify-orange rounded-full font-bold hover:bg-orange-100 text-sm flex-shrink-0"
+              className="px-2.5 py-1.5 bg-white text-errandify-orange rounded-full font-bold hover:bg-orange-100 text-xs flex-shrink-0"
               title="Skip Hana and enter details manually"
             >
               ✎ Manual
@@ -538,23 +571,40 @@ export default function HanaTaskCreation({
             <div className="flex-shrink-0 pb-2">
               <div className="relative animate-slideDown mx-auto max-w-md"
                    style={{
-                     background: 'linear-gradient(135deg, #FFFBF7 0%, #FFE8D6 50%, #FFD9BB 100%)',
-                     border: '2px solid #FF8C42',
-                     borderRadius: '24px',
-                     padding: '18px 24px',
-                     boxShadow: `
-                       0 12px 24px rgba(255, 140, 66, 0.18),
-                       0 6px 12px rgba(255, 140, 66, 0.12),
-                       0 2px 4px rgba(0, 0, 0, 0.08),
-                       inset -1px -1px 2px rgba(255, 255, 255, 0.6),
-                       inset 1px 1px 2px rgba(255, 140, 66, 0.1)
-                     `,
-                     transform: 'perspective(1000px) rotateX(2deg)',
+                     background: 'linear-gradient(180deg, #FFFFFF 0%, #FFF7F0 100%)',
+                     border: '1px solid rgba(255,140,66,0.20)',
+                     borderRadius: '28px',
+                     padding: '20px 22px 18px',
+                     boxShadow: '0 20px 44px rgba(255,107,53,0.20), 0 8px 18px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)',
                    }}>
-                <p className="whitespace-pre-line text-base font-bold text-center leading-relaxed"
-                   style={{color: '#5C4033', fontFamily: "'Inter', 'Segoe UI', sans-serif", letterSpacing: '-0.3px'}}>
-                  {hanaMessage}
-                </p>
+                {/* subtle top accent */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-14 h-1.5 rounded-full" style={{ background: 'linear-gradient(90deg,#FFB366,#FF6B35)', marginTop: '-4px' }} />
+                <button
+                  type="button"
+                  onClick={() => speakText('Hi! What errand do you need help with?')}
+                  className={`absolute top-3 right-4 text-lg w-8 h-8 rounded-full flex items-center justify-center hover:scale-110 transition-transform ${isSpeaking ? 'bg-orange-100' : ''}`}
+                  title="Hear it again"
+                >
+                  {isSpeaking ? '🔊' : '🔈'}
+                </button>
+                {(() => {
+                  const [greeting, ...rest] = hanaMessage.split(/\n\nExample:\n/);
+                  const example = (rest[0] || '').replace(/^'/, '').replace(/'$/, '');
+                  return (
+                    <>
+                      <p className="text-lg font-extrabold text-center leading-snug pr-6"
+                         style={{ color: '#3A2A1E', fontFamily: "'Inter','Segoe UI',sans-serif", letterSpacing: '-0.3px' }}>
+                        {greeting}
+                      </p>
+                      {example && (
+                        <div className="mt-3 rounded-2xl px-4 py-2.5 text-center" style={{ background: 'rgba(255,140,66,0.10)' }}>
+                          <p className="text-[10px] font-extrabold uppercase tracking-widest" style={{ color: '#FF6B35' }}>Example</p>
+                          <p className="text-sm font-semibold mt-0.5 leading-snug" style={{ color: '#6B4A35' }}>{example}</p>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
                 {/* Speech bubble tail - 3D pointing down */}
                 {/* Outer tail (shadow for depth) */}
                 <div style={{
@@ -569,7 +619,7 @@ export default function HanaTaskCreation({
                   borderTop: '10px solid rgba(255, 140, 66, 0.25)',
                   filter: 'drop-shadow(0 2px 3px rgba(0, 0, 0, 0.1))',
                 }} />
-                {/* Inner tail (main color) */}
+                {/* Inner tail (matches card bottom) */}
                 <div style={{
                   position: 'absolute',
                   bottom: '-8px',
@@ -579,19 +629,7 @@ export default function HanaTaskCreation({
                   height: '0',
                   borderLeft: '7px solid transparent',
                   borderRight: '7px solid transparent',
-                  borderTop: '8px solid #FF8C42',
-                }} />
-                {/* Inner tail highlight (3D effect) */}
-                <div style={{
-                  position: 'absolute',
-                  bottom: '-6px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '0',
-                  height: '0',
-                  borderLeft: '5px solid transparent',
-                  borderRight: '5px solid transparent',
-                  borderTop: '6px solid #FFFBF7',
+                  borderTop: '8px solid #FFF7F0',
                 }} />
               </div>
             </div>
@@ -613,8 +651,8 @@ export default function HanaTaskCreation({
                   }
                 }}
                 placeholder="Type all details here..."
-                className="w-full px-4 pt-3 pb-16 bg-transparent rounded-2xl focus:outline-none text-base font-semibold resize-none"
-                rows={5}
+                className="w-full px-4 pt-3 pb-14 bg-transparent rounded-2xl focus:outline-none text-base font-semibold resize-none"
+                rows={2}
                 disabled={loading || isRecording}
                 autoFocus
               />
