@@ -35,6 +35,13 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   const [userBids, setUserBids] = useState<Record<string, number>>({}); // taskId -> bidAmount
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [filterFavorites, setFilterFavorites] = useState(false);
+  // Phone-only compaction so all 16 category filters fit without scrolling (desktop unchanged)
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 640);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // Redirect askers to their own errands page
   useEffect(() => {
@@ -289,7 +296,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
           </p>
 
           {/* Show all categories */}
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '6px'}}>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: isMobile ? '5px' : '8px', marginBottom: '6px'}}>
             {Object.entries(groupedCategories).flatMap(([groupName, cats]) =>
               cats.map((category) => {
                 const isSelected = selectedCategories.includes(category.id);
@@ -298,8 +305,8 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                     key={category.id}
                     onClick={() => handleCategoryToggle(category.id)}
                     style={{
-                      padding: '12px 8px',
-                      borderRadius: '12px',
+                      padding: isMobile ? '5px 3px' : '12px 8px',
+                      borderRadius: isMobile ? '10px' : '12px',
                       fontSize: '12px',
                       fontWeight: '600',
                       border: 'none',
@@ -331,8 +338,8 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
                     }}
                     title={category.purpose}
                   >
-                    <div style={{fontSize: '24px', marginBottom: '6px'}}>{category.icon}</div>
-                    <div style={{fontSize: '13px', fontWeight: '600', lineHeight: '1.3'}}>{category.name}</div>
+                    <div style={{fontSize: isMobile ? '20px' : '24px', marginBottom: isMobile ? '1px' : '6px'}}>{category.icon}</div>
+                    <div style={{fontSize: isMobile ? '10px' : '13px', fontWeight: '600', lineHeight: isMobile ? '1.1' : '1.3'}}>{category.name}</div>
                   </button>
                 );
               })

@@ -12,6 +12,16 @@ html {
   font-size: 16px;
 }
 
+/* Mobile: never allow horizontal/side scrolling on any page */
+@media (max-width: 640px) {
+  html,
+  body,
+  #root {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+}
+
 @media (min-width: 320px) and (max-width: 480px) {
   /* Mobile-first responsive */
   body {
