@@ -34,6 +34,13 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
   const [errands, setErrands] = useState<Errand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // Phone-only compaction of the header blocks (desktop unchanged)
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 640);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [offerFilter, setOfferFilter] = useState<string>('all'); // 'all', 'has-offers', 'no-offers'
@@ -289,17 +296,17 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
     <AdminThemeWrapper title="📋 MyErrands" showBackButton onBack={() => navigate('/home')}>
       <div className="max-w-3xl mx-auto">
         {/* Header Subtitle */}
-        <div style={{marginBottom: '16px', background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF5F0 100%)', borderRadius: '12px', padding: '16px', border: '2px solid #FFE0D6', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.12)'}}>
-          <p style={{color: '#555', fontSize: '14px', margin: 0, fontWeight: '500', lineHeight: '1.6'}}>
+        <div style={{marginBottom: isMobile ? '8px' : '16px', background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF5F0 100%)', borderRadius: '12px', padding: isMobile ? '8px 12px' : '16px', border: '2px solid #FFE0D6', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.12)'}}>
+          <p style={{color: '#555', fontSize: isMobile ? '12px' : '14px', margin: 0, fontWeight: '500', lineHeight: '1.4'}}>
             {userRole === 'asker' ? '✨ Manage your posted tasks and track all activity' : '✨ View and manage your active tasks'} 🎯
           </p>
         </div>
 
         {/* Summary Section for Askers - URGENT ITEMS */}
         {userRole === 'asker' && summary && (summary.needsAction > 0 || summary.waitingRating > 0 || summary.undecidedOffers > 0) && (
-          <div style={{marginBottom: '16px', background: 'linear-gradient(135deg, #FFE8D6 0%, #FFD4B3 100%)', borderRadius: '12px', padding: '16px', border: '2px solid #FF6B35', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.2)'}}>
-            <p style={{fontSize: '13px', fontWeight: '700', color: '#FF6B35', margin: '0 0 12px 0'}}>🚨 REQUIRES IMMEDIATE ATTENTION</p>
-            <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+          <div style={{marginBottom: isMobile ? '8px' : '16px', background: 'linear-gradient(135deg, #FFE8D6 0%, #FFD4B3 100%)', borderRadius: '12px', padding: isMobile ? '10px 12px' : '16px', border: '2px solid #FF6B35', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.2)'}}>
+            <p style={{fontSize: '13px', fontWeight: '700', color: '#FF6B35', margin: isMobile ? '0 0 6px 0' : '0 0 12px 0'}}>🚨 REQUIRES IMMEDIATE ATTENTION</p>
+            <div style={{display: 'flex', flexDirection: 'column', gap: isMobile ? '5px' : '10px'}}>
               {summary.undecidedOffers > 0 && (
                 <div
                   style={{background: 'rgba(255,255,255,0.6)', padding: '10px 12px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s'}}
@@ -383,7 +390,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
         {/* Filters Section */}
         <div className="mb-3 space-y-2">
           {/* Status Filter */}
-          <div className="flex gap-1 overflow-x-auto pb-1">
+          <div className="flex flex-wrap gap-1 pb-1">
             <button
               onClick={() => setStatusFilter('all')}
               className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
@@ -553,9 +560,9 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                 {/* Balanced 2-Row Card Layout */}
                 <div style={{width: '100%', padding: '14px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '10px'}}>
                   {/* ROW 1: Status | Title + ID | Actions on Right */}
-                  <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'}}>
+                  <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: isMobile ? 'wrap' : 'nowrap'}}>
                     {/* Left Section: Status + Title + ID */}
-                    <div style={{display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1}}>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: isMobile ? '1 1 100%' : 1}}>
                       {/* Status Badge */}
                       <span style={{fontSize: '11px', background: 'linear-gradient(135deg, #FFE8D6 0%, #FFD4B3 100%)', color: '#FF6B35', padding: '6px 10px', borderRadius: '8px', fontWeight: '700', flexShrink: 0}}>
                         {capitalizeStatus(errand.status)}
@@ -567,9 +574,11 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
                           <h3 className="font-bold text-errandify-brown truncate text-sm">
                             {errand.title}
                           </h3>
-                          <span className="font-mono text-xs text-gray-400 flex-shrink-0">
-                            {errand.errandId}
-                          </span>
+                          {!isMobile && (
+                            <span className="font-mono text-xs text-gray-400 flex-shrink-0">
+                              {errand.errandId}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
