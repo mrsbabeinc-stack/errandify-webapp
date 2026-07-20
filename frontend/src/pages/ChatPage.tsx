@@ -164,7 +164,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
 
         return {
           id: errand.id,
-          formattedId: `ER${errand.id}`,
+          formattedId: errand.formatted_id || errand.errandId || `ER${errand.id}`,
           title: errand.title,
           otherPartyName,
           status: errand.status,
