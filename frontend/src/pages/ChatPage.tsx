@@ -4,6 +4,7 @@ import axios from 'axios';
 import TaskChatbox from '../components/TaskChatbox';
 import AdminThemeWrapper from '../components/AdminThemeWrapper';
 import { initializeSocket, getSocket, isSocketConnected as checkSocketConnected } from '../utils/socketClient';
+import { formatErrandId } from '../utils/formatId';
 
 interface ChatPageProps {
   userRole: 'asker' | 'doer';
@@ -164,7 +165,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
 
         return {
           id: errand.id,
-          formattedId: errand.formatted_id || errand.errandId || `ER${errand.id}`,
+          formattedId: formatErrandId(errand),
           title: errand.title,
           otherPartyName,
           status: errand.status,
@@ -446,7 +447,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 </div>
               )}
               {/* Line 1: Title + Errand ID */}
-              <div style={{display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: 0, marginBottom: '4px'}}>
+              <div style={{display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: 0, marginBottom: '2px'}}>
                 <h3 style={{fontWeight: '700', fontSize: '15px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0}}>{conversation.title}</h3>
                 <span style={{fontSize: '12px', fontWeight: '600', color: '#FF6B35', whiteSpace: 'nowrap', flexShrink: 0}}>{conversation.formattedId}</span>
               </div>

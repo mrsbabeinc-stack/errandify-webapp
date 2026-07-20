@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { formatErrandId } from '../utils/formatId';
 import { validateMessage, validateImage, validateAudio, validateFileUpload, moderateWithAI } from '../utils/messageValidator';
 import { addNotification } from '../utils/notificationStore';
 import { speechService } from '../services/speechService';
@@ -134,7 +135,7 @@ export default function TaskChatbox({
         console.log('[TaskChatbox] API Errand Details:', apiDetails);
         console.log('[TaskChatbox] Location:', apiDetails.location);
         console.log('[TaskChatbox] Postal Code:', apiDetails.postal_code);
-        setErrandFormattedId(apiDetails.formattedId || `ER${taskId}`);
+        setErrandFormattedId(formatErrandId(apiDetails));
         setApiErrandDetails(apiDetails);
       }
     } catch (err: any) {

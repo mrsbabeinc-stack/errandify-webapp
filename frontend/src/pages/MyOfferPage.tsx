@@ -4,6 +4,7 @@ import axios from 'axios';
 import TaskChatbox from '../components/TaskChatbox';
 import AdminThemeWrapper from '../components/AdminThemeWrapper';
 import { getSocket } from '../utils/socketClient';
+import { formatErrandId } from '../utils/formatId';
 
 interface Bid {
   id: number;
@@ -450,7 +451,7 @@ export default function MyOfferPage() {
                     </h3>
                     {!isMobile && (
                       <span style={{fontSize: '11px', color: '#666', background: '#FFF0E6', padding: '4px 8px', borderRadius: '6px', fontFamily: 'monospace', whiteSpace: 'nowrap', fontWeight: '600'}}>
-                        {bid.errand?.formatted_id || `ER26${String(bid.errand_id).padStart(2, '0')}-${String(bid.id).slice(-4).toUpperCase().padEnd(4, '0')}`}
+                        {formatErrandId(bid.errand)}
                       </span>
                     )}
                   </div>
