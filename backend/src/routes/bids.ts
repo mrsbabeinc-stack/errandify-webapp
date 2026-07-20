@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import axios from 'axios';
+import { getCategoryCode } from '../utils/categoryCodes.js';
 import { activityLogService } from '../services/activityLogService.js';
 import * as contentMod from '../modules/content-moderation.js';
 import { notifyUser } from '../socket.js';
@@ -10,30 +11,11 @@ import postalCodeLookup from '../services/postalCodeToAreaLookup.js';
 const router = Router();
 
 // Category code mapping for OFFERID
-// Canonical category codes — MUST match generateErrandId in routes/errands.ts
-const categoryCodeMap: Record<string, string> = {
-  'home-maintenance': 'HM',
-  'cleaning-household': 'CL',
-  'food-beverage': 'FD',
-  'furniture-assembly': 'FR',
-  'shopping-errands': 'SH',
-  'delivery-moving': 'DV',
-  'travel-mobility': 'TR',
-  'event-planning': 'EV',
-  'childcare-education': 'CH',
-  'eldercare-healthcare': 'EL',
-  'pet-care': 'PC',
-  'personal-care': 'PS',
-  'tech-support': 'TC',
-  'creative-arts': 'AR',
-  'admin-business': 'AD',
-  'charity-community': 'CC',
-};
 
 // Generate unique OFFERID: OF[YY][CATEGORY][4-RANDOM-CHARS]
 function generateOfferId(category: string): string {
   const year = new Date().getFullYear().toString().slice(-2); // 26
-  const categoryCode = categoryCodeMap[category.toLowerCase()] || 'XX';
+  const categoryCode = getCategoryCode(category);
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
   for (let i = 0; i < 4; i++) {

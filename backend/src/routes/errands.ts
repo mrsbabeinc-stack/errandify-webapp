@@ -5,35 +5,17 @@ import { activityLogService } from '../services/activityLogService.js';
 import { sendCriticalEmail } from '../services/emailNotifications.js';
 import { generateRecurringInstances } from '../services/recurringService.js';
 import { moderateContent } from '../services/contentModerationService.js';
+import { getCategoryCode } from '../utils/categoryCodes.js';
 
 const router = Router();
 
-// Category codes mapping
-const categoryCodeMap: { [key: string]: string } = {
-  'home-maintenance': 'HM',
-  'cleaning-household': 'CL',
-  'food-beverage': 'FD',
-  'furniture-assembly': 'FR',
-  'shopping-errands': 'SH',
-  'delivery-moving': 'DV',
-  'travel-mobility': 'TR',
-  'event-planning': 'EV',
-  'childcare-education': 'CH',
-  'eldercare-healthcare': 'EL',
-  'pet-care': 'PC',
-  'personal-care': 'PS',
-  'tech-support': 'TC',
-  'creative-arts': 'AR',
-  'admin-business': 'AD',
-  'charity-community': 'CC',
-};
-
 // Generate unique errand ID: ER26HM-XXXX
 // Format: ER[YEAR_SHORT][CATEGORY_CODE]-[4_RANDOM_CHARS]
+// Category codes come from the `category_codes` DB table (see utils/categoryCodes).
 // Example: ER26FD-K9M7 (Food & Beverage)
 function generateErrandId(category: string): string {
   const year = new Date().getFullYear().toString().slice(-2); // Get last 2 digits: 2026 -> 26
-  const categoryCode = categoryCodeMap[category.toLowerCase()] || 'XX';
+  const categoryCode = getCategoryCode(category);
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
   for (let i = 0; i < 4; i++) {

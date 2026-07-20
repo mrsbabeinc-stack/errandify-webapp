@@ -59,6 +59,7 @@ import leaveApprovalsRoutes from './routes/leaveApprovals.js';
 import subscriptionsRoutes from './routes/subscriptions.js';
 import subscriptionWebhooksRoutes from './routes/webhooks-subscriptions.js';
 import { startCrons } from './cron.js';
+import { loadCategoryCodes } from './utils/categoryCodes.js';
 import db from './db.js';
 
 const app = express();
@@ -599,6 +600,9 @@ const testDatabase = async () => {
     console.log(`Environment: ${config.nodeEnv}`);
     console.log(`SingPass enabled: ${config.singpass.useSingpass}`);
     console.log(`Socket.io enabled on ws://localhost:${PORT}`);
+
+    // Load the 16 category codes from the DB into memory (for ID generation)
+    loadCategoryCodes();
 
     // Start background cron jobs (wrapped in try-catch to prevent startup crash)
     try {
