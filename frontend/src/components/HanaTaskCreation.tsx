@@ -569,42 +569,48 @@ export default function HanaTaskCreation({
           {/* Speech Bubble - Renders First but Appears Second (Centered, Happy 3D Design) */}
           {hanaMessage && (
             <div className="flex-shrink-0 pb-2">
-              <div className="relative animate-slideDown mx-auto max-w-md"
+              <div className="relative animate-slideDown mx-auto max-w-md overflow-hidden"
                    style={{
-                     background: 'linear-gradient(180deg, #FFFFFF 0%, #FFF7F0 100%)',
-                     border: '1px solid rgba(255,140,66,0.20)',
-                     borderRadius: '28px',
-                     padding: '20px 22px 18px',
-                     boxShadow: '0 20px 44px rgba(255,107,53,0.20), 0 8px 18px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)',
+                     background: 'linear-gradient(160deg, #FFFFFF 0%, #FFF3E9 55%, #FFE7D3 100%)',
+                     border: '1px solid rgba(255,140,66,0.28)',
+                     borderRadius: '26px',
+                     boxShadow: '0 18px 40px rgba(255,107,53,0.22), 0 6px 14px rgba(0,0,0,0.08)',
                    }}>
-                {/* subtle top accent */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-14 h-1.5 rounded-full" style={{ background: 'linear-gradient(90deg,#FFB366,#FF6B35)', marginTop: '-4px' }} />
-                <button
-                  type="button"
-                  onClick={() => speakText('Hi! What errand do you need help with?')}
-                  className={`absolute top-3 right-4 text-lg w-8 h-8 rounded-full flex items-center justify-center hover:scale-110 transition-transform ${isSpeaking ? 'bg-orange-100' : ''}`}
-                  title="Hear it again"
-                >
-                  {isSpeaking ? '🔊' : '🔈'}
-                </button>
-                {(() => {
-                  const [greeting, ...rest] = hanaMessage.split(/\n\nExample:\n/);
-                  const example = (rest[0] || '').replace(/^'/, '').replace(/'$/, '');
-                  return (
-                    <>
-                      <p className="text-lg font-extrabold text-center leading-snug pr-6"
-                         style={{ color: '#3A2A1E', fontFamily: "'Inter','Segoe UI',sans-serif", letterSpacing: '-0.3px' }}>
-                        {greeting}
-                      </p>
-                      {example && (
-                        <div className="mt-3 rounded-2xl px-4 py-2.5 text-center" style={{ background: 'rgba(255,140,66,0.10)' }}>
-                          <p className="text-[10px] font-extrabold uppercase tracking-widest" style={{ color: '#FF6B35' }}>Example</p>
-                          <p className="text-sm font-semibold mt-0.5 leading-snug" style={{ color: '#6B4A35' }}>{example}</p>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
+                {/* Hana header row (ties the card to the theme) */}
+                <div className="flex items-center gap-2.5 px-5 pt-4 pb-3" style={{ borderBottom: '1px solid rgba(255,140,66,0.15)' }}>
+                  <img src="/images/hana-avatar.png" alt="Hana" className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0" />
+                  <span className="text-sm font-extrabold" style={{ color: '#FF6B35' }}>Hana</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,140,66,0.14)', color: '#C4551F' }}>AI Sister</span>
+                  <button
+                    type="button"
+                    onClick={() => speakText('Hi! What errand do you need help with?')}
+                    className={`ml-auto text-base w-8 h-8 rounded-full flex items-center justify-center hover:scale-110 transition-transform ${isSpeaking ? 'bg-orange-200' : 'bg-white/70'}`}
+                    title="Hear it again"
+                  >
+                    {isSpeaking ? '🔊' : '🔈'}
+                  </button>
+                </div>
+                {/* Message body */}
+                <div className="px-5 py-4">
+                  {(() => {
+                    const [greeting, ...rest] = hanaMessage.split(/\n\nExample:\n/);
+                    const example = (rest[0] || '').replace(/^'/, '').replace(/'$/, '');
+                    return (
+                      <>
+                        <p className="text-lg font-extrabold text-center leading-snug"
+                           style={{ color: '#3A2A1E', fontFamily: "'Inter','Segoe UI',sans-serif", letterSpacing: '-0.3px' }}>
+                          {greeting}
+                        </p>
+                        {example && (
+                          <div className="mt-3 rounded-2xl px-4 py-3 text-center bg-white/70" style={{ border: '1px dashed rgba(255,140,66,0.45)' }}>
+                            <p className="text-[10px] font-extrabold uppercase tracking-widest mb-1" style={{ color: '#FF6B35' }}>💡 Example</p>
+                            <p className="text-sm font-semibold leading-snug" style={{ color: '#6B4A35' }}>{example}</p>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
                 {/* Speech bubble tail - 3D pointing down */}
                 {/* Outer tail (shadow for depth) */}
                 <div style={{
@@ -629,7 +635,7 @@ export default function HanaTaskCreation({
                   height: '0',
                   borderLeft: '7px solid transparent',
                   borderRight: '7px solid transparent',
-                  borderTop: '8px solid #FFF7F0',
+                  borderTop: '8px solid #FFE7D3',
                 }} />
               </div>
             </div>
