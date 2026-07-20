@@ -112,7 +112,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
               {/* Profile Photo & Alias */}
               <button
                 onClick={handleProfileClick}
-                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                className="hidden sm:flex items-center gap-2 hover:opacity-80 transition-opacity"
                 title={userProfile.alias || userProfile.display_name || userProfile.name || 'User'}
               >
                 {profileImage ? (
@@ -126,7 +126,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
                     {(userProfile.alias || userProfile.name || 'U').charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="text-sm font-semibold text-gray-700 max-w-[100px] truncate">
+                <span className="hidden min-[480px]:inline text-sm font-semibold text-gray-700 max-w-[100px] truncate">
                   {userProfile.alias || userProfile.display_name || userProfile.name || 'User'}
                 </span>
               </button>

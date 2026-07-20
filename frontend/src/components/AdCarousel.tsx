@@ -79,18 +79,18 @@ export default function AdCarousel() {
     <div className="max-w-6xl mx-auto px-4 py-2">
       {/* AD CAROUSEL */}
       <div
-        className={`${currentAd.bgColor} rounded-2xl shadow-lg p-4 text-white relative overflow-hidden transition-all duration-500 min-h-[90px]`}
+        className={`${currentAd.bgColor} rounded-2xl shadow-lg p-3 sm:p-4 text-white relative overflow-hidden transition-all duration-500 min-h-[64px] sm:min-h-[90px]`}
         onMouseEnter={() => setIsAutoPlay(false)}
         onMouseLeave={() => setIsAutoPlay(true)}
       >
         {/* CONTENT */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-2 sm:gap-3">
           {/* LEFT: Icon */}
-          <div className="text-5xl flex-shrink-0">{currentAd.image}</div>
+          <div className="text-3xl sm:text-5xl flex-shrink-0">{currentAd.image}</div>
 
           {/* CENTER: Text */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold mb-0.5">{currentAd.title}</h3>
+            <h3 className="text-sm sm:text-lg font-bold mb-0.5 leading-tight">{currentAd.title}</h3>
             <p className="text-white text-opacity-90 text-xs leading-snug">{currentAd.description}</p>
           </div>
 
@@ -99,7 +99,7 @@ export default function AdCarousel() {
             <div className="flex-shrink-0">
               <a
                 href={currentAd.cta.url}
-                className="bg-white text-gray-900 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-100 transition whitespace-nowrap shadow-lg hover:shadow-xl active:scale-95"
+                className="bg-white text-gray-900 px-3 py-1.5 text-xs sm:px-6 sm:py-2.5 sm:text-sm rounded-xl font-bold hover:bg-gray-100 transition whitespace-nowrap shadow-lg hover:shadow-xl active:scale-95"
               >
                 {currentAd.cta.label} →
               </a>

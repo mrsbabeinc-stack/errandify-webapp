@@ -24,6 +24,13 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   const [userImage, setUserImage] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const { unreadCount: unreadNotifications } = useNotificationCount(3000);
+  // Phone-only compaction so the home page can fit all 16 categories (desktop unchanged)
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 640);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     fetchProfileImage();
@@ -108,7 +115,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
       backdropFilter: 'blur(20px)',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     }}>
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '100px', padding: '16px 12px 20px 12px', position: 'relative'}}>
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: isMobile ? '58px' : '68px', padding: isMobile ? '6px 8px 8px 8px' : '10px 12px 12px 12px', position: 'relative'}}>
         {/* Navigation Items */}
         <div style={{display: 'flex', justifyContent: 'space-around', alignItems: 'center', width: '100%', gap: '4px', position: 'relative'}}>
           {navItems.map((item, index) => {
@@ -144,7 +151,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                       style={{width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', opacity: 0.6}}
                     />
                   ) : (
-                    <span style={{fontSize: '32px', opacity: 0.6}}>{item.icon}</span>
+                    <span style={{fontSize: isMobile ? '22px' : '28px', opacity: 0.6}}>{item.icon}</span>
                   )}
                   <span style={{fontSize: '11px', fontWeight: '700', fontFamily: 'inherit'}}>{item.label}</span>
                 </div>
@@ -161,7 +168,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  padding: active ? '12px 16px' : '10px 14px',
+                  padding: active ? (isMobile ? '6px 8px' : '8px 14px') : (isMobile ? '5px 6px' : '7px 12px'),
                   borderRadius: '18px',
                   transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   fontSize: '12px',
@@ -205,8 +212,8 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                     src={item.image}
                     alt={item.label}
                     style={{
-                      width: '32px',
-                      height: '32px',
+                      width: isMobile ? '22px' : '28px',
+                      height: isMobile ? '22px' : '28px',
                       borderRadius: '50%',
                       objectFit: 'cover',
                       border: active ? '3px solid white' : '2px solid rgba(255, 107, 53, 0.2)',
@@ -215,7 +222,7 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
                     }}
                   />
                 ) : (
-                  <span style={{fontSize: '32px', transition: 'transform 0.3s', lineHeight: 1}}>
+                  <span style={{fontSize: isMobile ? '22px' : '28px', transition: 'transform 0.3s', lineHeight: 1}}>
                     {item.icon}
                   </span>
                 )}

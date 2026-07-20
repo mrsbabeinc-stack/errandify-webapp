@@ -786,7 +786,7 @@ export default function HanaCustomerService() {
             setIsOpen(true);
             setIsMinimized(false);
           }}
-          className="floating-button fixed bottom-20 right-6 w-12 h-12 bg-white rounded-full hover:shadow-lg transition-all hover:scale-105 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange active:scale-95"
+          className="floating-button fixed bottom-24 right-6 w-12 h-12 bg-white rounded-full hover:shadow-lg transition-all hover:scale-105 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange active:scale-95"
           style={{
             boxShadow: '0 3px 0 rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.1)',
           }}
@@ -802,7 +802,7 @@ export default function HanaCustomerService() {
 
       {/* Modal */}
       {isOpen && !isMinimized && (
-        <div className="fixed bottom-20 right-6 z-50 max-h-96 overflow-hidden">
+        <div className="fixed bottom-24 right-6 z-50 max-h-96 overflow-hidden">
           {/* Close Button */}
           <button
             onClick={handleClose}
@@ -1030,7 +1030,7 @@ export default function HanaCustomerService() {
       {isOpen && isMinimized && (
         <button
           onClick={() => setIsMinimized(false)}
-          className="floating-button fixed bottom-20 right-6 w-12 h-12 bg-white rounded-full transition-all hover:scale-105 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange ring-2 ring-orange-300 active:scale-95"
+          className="floating-button fixed bottom-24 right-6 w-12 h-12 bg-white rounded-full transition-all hover:scale-105 flex items-center justify-center z-50 overflow-hidden border-2 border-errandify-orange ring-2 ring-orange-300 active:scale-95"
           style={{
             boxShadow: '0 3px 0 rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.1)',
           }}
