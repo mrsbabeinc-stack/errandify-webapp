@@ -451,31 +451,31 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 <div style={{flex: 1, minWidth: 0}}>
                   {/* Title first, Errand ID packed right next to it */}
                   <div style={{display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, marginBottom: '8px'}}>
-                    <h3 style={{fontWeight: '800', fontSize: '16px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0}}>{conversation.title}</h3>
-                    <span style={{fontSize: '11px', fontWeight: '700', color: '#FF6B35', background: '#FFF0E6', padding: '3px 8px', borderRadius: '6px', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'monospace'}}>{conversation.formattedId}</span>
+                    <h3 style={{fontWeight: '700', fontSize: '15px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0}}>{conversation.title}</h3>
+                    <span style={{fontSize: '13px', fontWeight: '600', color: '#FF6B35', background: '#FFF0E6', padding: '4px 10px', borderRadius: '8px', whiteSpace: 'nowrap', flexShrink: 0}}>{conversation.formattedId}</span>
                   </div>
                   {/* Date + Location */}
-                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, marginBottom: '6px'}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, marginBottom: '8px'}}>
                     {conversation.deadline && (
-                      <span style={{fontSize: '12px', color: '#FF6B35', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0, background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '6px'}}>📅 {new Date(conversation.deadline).toLocaleDateString()}</span>
+                      <span style={{fontSize: '13px', color: '#FF6B35', fontWeight: '600', whiteSpace: 'nowrap', flexShrink: 0, background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '8px'}}>📅 {new Date(conversation.deadline).toLocaleDateString()}</span>
                     )}
                     {(conversation.location || conversation.postal) && (
-                      <span style={{fontSize: '12px', fontWeight: '700', color: '#FF6B35', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '6px'}}>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</span>
+                      <span style={{fontSize: '13px', fontWeight: '600', color: '#FF6B35', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '8px'}}>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</span>
                     )}
                   </div>
-                  <div style={{fontSize: '12px', color: '#999'}}>By {conversation.otherPartyName}</div>
+                  <div style={{fontSize: '13px', color: '#999', fontWeight: '500'}}>By {conversation.otherPartyName}</div>
                 </div>
-                {/* Right column: Chat button on top, smaller status below */}
-                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', flexShrink: 0}}>
+                {/* Right column: Chat button on top, status below (same size) */}
+                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '8px', flexShrink: 0}}>
                   <button
                     onClick={() => handleOpenChat(conversation.id)}
-                    style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', color: 'white', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s', boxShadow: '0 2px 8px rgba(255, 107, 53, 0.2)', flexShrink: 0}}
+                    style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', color: 'white', padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', transition: 'all 0.15s', boxShadow: '0 2px 8px rgba(255, 107, 53, 0.2)', flexShrink: 0}}
                     onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)'; e.currentTarget.style.transform = 'translateY(-1px)';}}
                     onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.2)'; e.currentTarget.style.transform = 'translateY(0)';}}
                   >
                     💬 Chat
                   </button>
-                  <span style={{padding: '3px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', whiteSpace: 'nowrap', background: getStatusColor(conversation.status).includes('orange') ? 'linear-gradient(135deg, #FFD89B 0%, #FFC870 100%)' : getStatusColor(conversation.status).includes('green') ? 'linear-gradient(135deg, #A8E6C1 0%, #7DD9B5 100%)' : 'linear-gradient(135deg, #E8E8E8 0%, #D8D8D8 100%)', color: getStatusColor(conversation.status).includes('orange') ? '#B85A1D' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#555'}}>
+                  <span style={{padding: '4px 10px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap', textAlign: 'center', background: getStatusColor(conversation.status).includes('orange') ? 'linear-gradient(135deg, #FFD89B 0%, #FFC870 100%)' : getStatusColor(conversation.status).includes('green') ? 'linear-gradient(135deg, #A8E6C1 0%, #7DD9B5 100%)' : 'linear-gradient(135deg, #E8E8E8 0%, #D8D8D8 100%)', color: getStatusColor(conversation.status).includes('orange') ? '#B85A1D' : getStatusColor(conversation.status).includes('green') ? '#2E7D32' : '#555'}}>
                     {getStatusLabel(conversation.status).replace('Awaiting Confirmation', 'Awaiting').replace('Completed', 'Done')}
                   </span>
                 </div>
