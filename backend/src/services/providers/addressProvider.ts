@@ -14,6 +14,7 @@ import db from '../../db.js';
 import { normalizePostalCode } from '../postalCodeNormalizer.js';
 import { getPlanningAreaFromPostalCode } from '../postalCodeToAreaLookup.js';
 import { queryMapbox } from './mapboxProvider.js';
+import { queryOneMap } from './oneMapProvider.js';
 
 export interface AddressLookupResult {
   postal_code: string;
@@ -53,14 +54,21 @@ export async function lookupAddress(postalCode: string): Promise<AddressLookupRe
 
     console.log('[AddressProvider] Cache miss for', normalized);
 
-    // Query Mapbox (primary provider)
+    // Query OneMap (SLA, free, accurate for Singapore) - primary provider
+    const oneMapResult = await queryOneMap(normalized);
+    if (oneMapResult) {
+      const addressData = await enrichWithAreaAndCache(oneMapResult);
+      return addressData;
+    }
+
+    // Query Mapbox (secondary provider)
     const mapboxResult = await queryMapbox(normalized);
     if (mapboxResult) {
       const addressData = await enrichWithAreaAndCache(mapboxResult);
       return addressData;
     }
 
-    console.log('[AddressProvider] Mapbox failed, trying fallback with local database...');
+    console.log('[AddressProvider] Providers failed, trying fallback with local database...');
 
     // Fallback: Query local singapore_postcodes table for full address
     try {

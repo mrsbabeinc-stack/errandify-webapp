@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { getAreaFromPostalCode } from '../data/singaporePostalCodes';
 
 export default function CreateErrandPage() {
   console.log('===== CreateErrandPage LOADED =====');
@@ -1409,37 +1408,18 @@ export default function CreateErrandPage() {
 
                       // Only look up postal code if exactly 6 digits
                       if (code.length === 6 && /^\d+$/.test(code)) {
-                        // Get area from comprehensive postal code database
-                        const areaName = getAreaFromPostalCode(code);
-
-                        // Set area immediately (no waiting for OneMap)
-                        if (areaName) {
-                          setFormData((prev) => ({
-                            ...prev,
-                            location: areaName,
-                          }));
-                          setArea(areaName);
-                          console.log('[PostalCode] Area auto-set to:', areaName);
-                        }
-
-                        // Call backend to lookup address via OneMap (which has auth token)
-                        const token = localStorage.getItem('token');
-                        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`, {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`,
-                          },
-                          body: JSON.stringify({ input: code }), // Just send postal code
-                        })
+                        // Accurate area + full address from the backend (OneMap/Mapbox)
+                        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/address/${code}`)
                           .then(res => res.json())
                           .then(data => {
-                            console.log('[Extract] Response:', data);
-                            if (data.success && data.data.fullAddress && data.data.fullAddress !== `Singapore ${code}`) {
-                              console.log('[Extract] Setting full address to:', data.data.fullAddress);
-                              setFullAddress(data.data.fullAddress);
-                            } else {
-                              console.log('[Extract] No address found or default fallback');
+                            if (data.success && data.data) {
+                              if (data.data.area) {
+                                setArea(data.data.area);
+                                setFormData((prev) => ({ ...prev, location: data.data.area }));
+                              }
+                              if (data.data.fullAddress) {
+                                setFullAddress(data.data.fullAddress);
+                              }
                             }
                           })
                           .catch(err => {
