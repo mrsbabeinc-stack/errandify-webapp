@@ -31,13 +31,6 @@ export default function ChatPage({ userRole }: ChatPageProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [allConversations, setAllConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
-  // Phone-only: let the chat card title take a full line so the status badge isn't clipped
-  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 640);
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 640);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
   const [error, setError] = useState('');
   const [selectedErrandId, setSelectedErrandId] = useState<number | null>(null);
   const [showChatbox, setShowChatbox] = useState(false);
@@ -443,9 +436,9 @@ export default function ChatPage({ userRole }: ChatPageProps) {
           <p className="text-xs text-gray-400">Try adjusting your search or filters</p>
         </div>
       ) : (
-        <div style={{display: 'grid', gap: '6px'}}>
+        <div style={{display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '6px'}}>
           {filteredConversations.map((conversation) => (
-            <div key={conversation.id} style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 100%)', borderRadius: '12px', padding: '12px 14px', boxShadow: '0 2px 12px rgba(255, 107, 53, 0.12)', border: '1px solid #FFE0CC', position: 'relative', transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)', cursor: 'pointer'}} onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.18)'; e.currentTarget.style.transform = 'translateY(-2px)';}} onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 2px 12px rgba(255, 107, 53, 0.12)'; e.currentTarget.style.transform = 'translateY(0)';}}>
+            <div key={conversation.id} style={{minWidth: 0, background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 100%)', borderRadius: '12px', padding: '12px 14px', boxShadow: '0 2px 12px rgba(255, 107, 53, 0.12)', border: '1px solid #FFE0CC', position: 'relative', transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)', cursor: 'pointer'}} onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.18)'; e.currentTarget.style.transform = 'translateY(-2px)';}} onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 2px 12px rgba(255, 107, 53, 0.12)'; e.currentTarget.style.transform = 'translateY(0)';}}>
               {/* Unread Badge */}
               {unreadCounts.get(conversation.id) && unreadCounts.get(conversation.id)! > 0 && (
                 <div style={{position: 'absolute', top: '4px', right: '4px', background: '#E63946', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700', boxShadow: '0 1px 4px rgba(230, 57, 70, 0.25)', border: '1.5px solid white'}}>
@@ -453,8 +446,8 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 </div>
               )}
               {/* Row 1: ID Badge + Title + Status + Chat Button */}
-              <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', justifyContent: 'space-between', flexWrap: isMobile ? 'wrap' : 'nowrap'}}>
-                <div style={{display: 'flex', alignItems: 'center', gap: '10px', flex: isMobile ? '1 1 100%' : 1, minWidth: 0}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', justifyContent: 'space-between'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0}}>
                   <span style={{fontSize: '12px', fontWeight: '800', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '6px 12px', borderRadius: '8px', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 3px 10px rgba(255, 107, 53, 0.3)'}}>{conversation.formattedId}</span>
                   <h3 style={{fontWeight: '800', fontSize: '16px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0}}>{conversation.title}</h3>
                 </div>
@@ -464,13 +457,13 @@ export default function ChatPage({ userRole }: ChatPageProps) {
               </div>
 
               {/* Row 2: Date | Area | Chat Button */}
-              <div style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap'}}>
-                <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0, flexWrap: 'wrap'}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between', marginBottom: '6px'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0}}>
                   {conversation.deadline && (
-                    <span style={{fontSize: '12px', color: '#FF6B35', fontWeight: '700', whiteSpace: 'nowrap', background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '6px'}}>📅 {new Date(conversation.deadline).toLocaleDateString()}</span>
+                    <span style={{fontSize: '12px', color: '#FF6B35', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0, background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '6px'}}>📅 {new Date(conversation.deadline).toLocaleDateString()}</span>
                   )}
                   {(conversation.location || conversation.postal) && (
-                    <span style={{fontSize: '12px', fontWeight: '700', color: '#FF6B35', whiteSpace: 'nowrap', background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '6px'}}>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</span>
+                    <span style={{fontSize: '12px', fontWeight: '700', color: '#FF6B35', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '6px'}}>📍 {conversation.postal}{conversation.location && conversation.postal ? ', ' : ''}{conversation.location}</span>
                   )}
                 </div>
                 <button
