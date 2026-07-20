@@ -31,6 +31,13 @@ export default function AdminThemeWrapper({
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<'asker' | 'doer'>('asker');
+  // On phones, hide the profile name/avatar so it doesn't overlap the role toggle (profile is in the bottom nav)
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 640);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     const loadUserProfile = () => {
@@ -136,7 +143,7 @@ export default function AdminThemeWrapper({
                 <button
                   onClick={handleProfileClick}
                   style={{
-                    display: 'flex',
+                    display: isMobile ? 'none' : 'flex',
                     alignItems: 'center',
                     gap: 8,
                     background: 'none',
