@@ -41,7 +41,7 @@ export const blogPosts: BlogPost[] = [
       title: 'Eileen\'s Salary Progression',
       description: 'Part-time service staff ($1,800) → Assistant manager ($3,500) → General Manager ($5,200)',
       chart: 'https://via.placeholder.com/600x300?text=Salary+Progression:+1800→3500→5200'
-    }
+    },
     author: 'Eileen (Singapore)',
     category: 'stories',
     readTime: 13,
