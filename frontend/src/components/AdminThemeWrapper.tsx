@@ -214,7 +214,8 @@ export default function AdminThemeWrapper({
       {/* Content Area */}
       <div style={{
         flex: 1,
-        overflow: 'auto',
+        overflowY: 'auto',
+        overflowX: isMobile ? 'hidden' : 'auto',
         WebkitOverflowScrolling: 'touch',
         display: 'flex',
         flexDirection: 'column',
@@ -266,7 +267,8 @@ export default function AdminThemeWrapper({
         {/* Content - Scrollable */}
         <div style={{
           flex: 1,
-          overflow: 'auto',
+          overflowY: 'auto',
+          overflowX: isMobile ? 'hidden' : 'auto',
           WebkitOverflowScrolling: 'touch'
         }}>
           {children}

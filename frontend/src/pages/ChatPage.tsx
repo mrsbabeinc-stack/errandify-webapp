@@ -31,6 +31,13 @@ export default function ChatPage({ userRole }: ChatPageProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [allConversations, setAllConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  // Phone-only: let the chat card title take a full line so the status badge isn't clipped
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 640);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
   const [error, setError] = useState('');
   const [selectedErrandId, setSelectedErrandId] = useState<number | null>(null);
   const [showChatbox, setShowChatbox] = useState(false);
@@ -446,8 +453,8 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                 </div>
               )}
               {/* Row 1: ID Badge + Title + Status + Chat Button */}
-              <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', justifyContent: 'space-between'}}>
-                <div style={{display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', justifyContent: 'space-between', flexWrap: isMobile ? 'wrap' : 'nowrap'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '10px', flex: isMobile ? '1 1 100%' : 1, minWidth: 0}}>
                   <span style={{fontSize: '12px', fontWeight: '800', color: 'white', background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', padding: '6px 12px', borderRadius: '8px', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 3px 10px rgba(255, 107, 53, 0.3)'}}>{conversation.formattedId}</span>
                   <h3 style={{fontWeight: '800', fontSize: '16px', color: '#2D2D2D', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0}}>{conversation.title}</h3>
                 </div>
@@ -457,8 +464,8 @@ export default function ChatPage({ userRole }: ChatPageProps) {
               </div>
 
               {/* Row 2: Date | Area | Chat Button */}
-              <div style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between', marginBottom: '6px'}}>
-                <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: 1}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0, flexWrap: 'wrap'}}>
                   {conversation.deadline && (
                     <span style={{fontSize: '12px', color: '#FF6B35', fontWeight: '700', whiteSpace: 'nowrap', background: 'rgba(255, 107, 53, 0.1)', padding: '4px 10px', borderRadius: '6px'}}>📅 {new Date(conversation.deadline).toLocaleDateString()}</span>
                   )}
