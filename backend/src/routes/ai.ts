@@ -22,6 +22,9 @@ function fallbackTitleClean(title: string): string {
   cleaned = cleaned.replace(/,?\s*budget\s*\$?\s*\d+(?:\.\d{2})?/gi, '');
   cleaned = cleaned.replace(/,?\s*\$\s*\d+(?:\.\d{2})?(?:\s+budget)?/gi, '');
 
+  // Remove any standalone 6-digit postal code (with surrounding comma/space), anywhere
+  cleaned = cleaned.replace(/,?\s*\b\d{6}\b/g, '');
+
   // Remove time ranges like "2pm-5pm", "from 2pm-5pm"
   cleaned = cleaned.replace(/\s+(?:from\s+)?\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)?\s*[-–]\s*\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m|p\.m)?/gi, '');
 
