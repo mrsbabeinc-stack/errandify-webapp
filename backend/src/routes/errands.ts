@@ -817,7 +817,12 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
 
     // Check if errand is confirmed
     const errandResult = await db.query(
-      'SELECT status, accepted_bid_id, stripe_payment_intent_id FROM errands WHERE id = $1',
+      // payment_intent_id, not stripe_payment_intent_id — the wrong name threw on
+    // the FIRST query of the handler, so no errand could ever be marked complete.
+    // The whole lifecycle stopped at in_progress, which also meant nothing could
+    // be rated (ratings refuse anything not completed) and no referral bonus or EP
+    // could ever be awarded.
+      'SELECT status, accepted_bid_id, payment_intent_id FROM errands WHERE id = $1',
       [id]
     );
 
@@ -827,8 +832,17 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
 
     const errand = errandResult.rows[0];
 
-    if (errand.status !== 'confirmed') {
-      return res.status(400).json({ error: 'Errand must be confirmed before completion' });
+    // in_progress has to be allowed, not just confirmed. POST /:id/start moves a
+    // confirmed errand to in_progress, and this gate then refused it — so an
+    // errand that had actually been started could never be completed. The only
+    // way through was to never press start, which is the opposite of the
+    // intended flow.
+    if (!['confirmed', 'in_progress'].includes(errand.status)) {
+      return res.status(400).json({
+        error: errand.status === 'completed'
+          ? 'This errand is already marked complete.'
+          : 'This errand needs to be accepted and underway before it can be completed.',
+      });
     }
 
     // Verify this doer accepted the bid

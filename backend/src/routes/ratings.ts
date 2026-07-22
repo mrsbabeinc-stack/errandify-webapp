@@ -87,8 +87,12 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     const task = taskResult.rows[0];
 
-    // Verify task is completed
-    if (!task.status.includes('completed')) {
+    // 'rated' has to count as completed, or mutual rating cannot work at all.
+    // Submitting a rating moves the errand from 'completed' to 'rated', and this
+    // check then refused the SECOND person — so whoever rated first silently
+    // locked the other one out, and no errand could ever carry ratings from both
+    // sides. The duplicate guard below is what actually prevents rating twice.
+    if (!['completed', 'rated'].includes(task.status)) {
       return res.status(400).json({ error: 'Can only rate completed tasks' });
     }
 
@@ -263,6 +267,11 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Column names below were rated_user_id, task_id and comment — none of which
+// exist on `ratings` (they are ratee_id, errand_id and review_text). The
+// INSERT above always used the right ones, so every rating ever submitted was
+// stored correctly and then never readable: profiles showed no reviews and
+// both read endpoints returned 500.
 // GET /api/ratings/user/:userId - Get all ratings for a user
 router.get('/user/:userId', async (req: AuthRequest, res: Response) => {
   try {
@@ -272,14 +281,14 @@ router.get('/user/:userId', async (req: AuthRequest, res: Response) => {
       `SELECT
          r.id,
          r.rating,
-         r.comment,
+         r.review_text AS comment,
          r.created_at,
          u.display_name as rater_name,
          e.title as task_title
        FROM ratings r
        JOIN users u ON r.rater_id = u.id
-       JOIN errands e ON r.task_id = e.id
-       WHERE r.rated_user_id = $1
+       JOIN errands e ON r.errand_id = e.id
+       WHERE r.ratee_id = $1
        ORDER BY r.created_at DESC
        LIMIT 50`,
       [userId]
@@ -338,7 +347,7 @@ router.get('/user/:userId/summary', async (req: AuthRequest, res: Response) => {
          MAX(rating) as max_rating,
          MIN(rating) as min_rating
        FROM ratings
-       WHERE rated_user_id = $1`,
+       WHERE ratee_id = $1`,
       [userId]
     );
 
@@ -367,7 +376,7 @@ async function updateUserRating(userId: number) {
          AVG(rating) as avg_rating,
          COUNT(*) as total_ratings
        FROM ratings
-       WHERE rated_user_id = $1`,
+       WHERE ratee_id = $1`,
       [userId]
     );
 
