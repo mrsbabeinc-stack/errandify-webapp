@@ -12,13 +12,10 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
 
   const [formData, setFormData] = useState({
     criminalRecord: false,
-    agreeBackgroundVerification: false,
     accurateInformation: false,
     agreeTerms: false,
     agreePrivacy: false,
     responsibleUse: false,
-    noDisputes: false,
-    noCancelledAccounts: false,
     authorizedToWork: false,
   });
 
@@ -39,7 +36,6 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
     const newErrors: Record<string, string> = {};
 
     // Required checkboxes (safety critical)
-    if (!formData.agreeBackgroundVerification) newErrors.agreeBackgroundVerification = 'Required';
     if (!formData.accurateInformation) newErrors.accurateInformation = 'Required';
     if (!formData.agreeTerms) newErrors.agreeTerms = 'Required';
     if (!formData.agreePrivacy) newErrors.agreePrivacy = 'Required';
@@ -77,9 +73,6 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
           responsible_use: formData.responsibleUse,
           authorized_to_work: formData.authorizedToWork,
           accurate_information: formData.accurateInformation,
-          agreed_background_verification: formData.agreeBackgroundVerification,
-          no_disputes: formData.noDisputes,
-          no_cancelled_accounts: formData.noCancelledAccounts,
         })
       });
 
@@ -133,116 +126,18 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
                 discouraging thing to put in front of a new user.
                 It is now asked at the point someone chooses work it applies
                 to. See components/SensitiveWorkDeclaration.tsx. */}
-            {/* Section 2: Background Verification */}
-            <div className="border-b-2 border-gray-200 pb-8">
-              <h2 className="text-xl font-bold text-errandify-brown mb-6">
-                Background Verification Agreement
-              </h2>
-              <div className="space-y-4">
-                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  errors.agreeBackgroundVerification
-                    ? 'border-red-500 bg-red-50'
-                    : formData.agreeBackgroundVerification
-                    ? 'border-errandify-orange bg-orange-50'
-                    : 'border-gray-300 hover:border-errandify-orange'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={formData.agreeBackgroundVerification}
-                    onChange={() => handleCheckboxChange('agreeBackgroundVerification')}
-                    disabled={loading}
-                    className="w-5 h-5 mt-1 flex-shrink-0 cursor-pointer"
-                  />
-                  <span className="text-sm font-semibold text-errandify-brown">
-                    I agree to background verification and screening *
-                  </span>
-                </label>
-
-                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  errors.accurateInformation
-                    ? 'border-red-500 bg-red-50'
-                    : formData.accurateInformation
-                    ? 'border-errandify-orange bg-orange-50'
-                    : 'border-gray-300 hover:border-errandify-orange'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={formData.accurateInformation}
-                    onChange={() => handleCheckboxChange('accurateInformation')}
-                    disabled={loading}
-                    className="w-5 h-5 mt-1 flex-shrink-0 cursor-pointer"
-                  />
-                  <span className="text-sm font-semibold text-errandify-brown">
-                    My information is accurate and up-to-date *
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            {/* Section 3: Risk Assessment (Optional) */}
-            <div className="border-b-2 border-gray-200 pb-8">
-              <h2 className="text-xl font-bold text-errandify-brown mb-4">
-                Risk Assessment <span className="text-sm font-normal text-gray-600">(Optional)</span>
-              </h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Help us understand your history better
-              </p>
-              <div className="space-y-4">
-                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  formData.noDisputes
-                    ? 'border-errandify-orange bg-orange-50'
-                    : 'border-gray-300 hover:border-errandify-orange'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={formData.noDisputes}
-                    onChange={() => handleCheckboxChange('noDisputes')}
-                    disabled={loading}
-                    className="w-5 h-5 mt-1 flex-shrink-0 cursor-pointer"
-                  />
-                  <span className="text-sm font-semibold text-errandify-brown">
-                    I have no disputes in the past 2 years
-                  </span>
-                </label>
-
-                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  formData.noCancelledAccounts
-                    ? 'border-errandify-orange bg-orange-50'
-                    : 'border-gray-300 hover:border-errandify-orange'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={formData.noCancelledAccounts}
-                    onChange={() => handleCheckboxChange('noCancelledAccounts')}
-                    disabled={loading}
-                    className="w-5 h-5 mt-1 flex-shrink-0 cursor-pointer"
-                  />
-                  <span className="text-sm font-semibold text-errandify-brown">
-                    I have never had an account cancelled
-                  </span>
-                </label>
-
-                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  errors.authorizedToWork
-                    ? 'border-red-500 bg-red-50'
-                    : formData.authorizedToWork
-                    ? 'border-errandify-orange bg-orange-50'
-                    : 'border-gray-300 hover:border-errandify-orange'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={formData.authorizedToWork}
-                    onChange={() => handleCheckboxChange('authorizedToWork')}
-                    disabled={loading}
-                    className="w-5 h-5 mt-1 flex-shrink-0 cursor-pointer"
-                  />
-                  <span className="text-sm font-semibold text-errandify-brown">
-                    I am authorized to work in Singapore *
-                  </span>
-                </label>
-              </div>
-            </div>
-
+            {/* Two sections used to sit here and both are gone.
+                "Background Verification Agreement" asked everyone to consent to
+                screening. Screening now only happens for work involving
+                children, vulnerable adults, home access or driving passengers —
+                so for most people that consent covered nothing, and the
+                agreement to it is asked in SensitiveWorkDeclaration at the point
+                it becomes real.
+                "Risk Assessment — help us understand your history better" asked
+                new users to attest that they had no past disputes and no
+                cancelled account. Optional, unverifiable, and framed as
+                suspicion of someone who has not done anything yet. We already
+                know both facts for our own accounts. */}
             {/* Section 4: Terms & Agreements */}
             <div className="pb-8">
               <h2 className="text-xl font-bold text-errandify-brown mb-6">
