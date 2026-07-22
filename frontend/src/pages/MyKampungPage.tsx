@@ -499,6 +499,26 @@ export default function MyKampungPage() {
             💭 Discussions
           </button>
           <button
+            onClick={() => setActiveTab('announcements')}
+            style={{
+              padding: '12px 20px',
+              borderRadius: '16px',
+              fontSize: '14px',
+              fontWeight: '800',
+              whiteSpace: 'nowrap',
+              border: activeTab === 'announcements' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              background: activeTab === 'announcements' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
+              color: activeTab === 'announcements' ? 'white' : '#FF6B35',
+              boxShadow: activeTab === 'announcements' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
+            }}
+            onMouseEnter={(e) => {if (activeTab !== 'announcements') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
+            onMouseLeave={(e) => {if (activeTab !== 'announcements') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
+          >
+            📢 Announcements
+          </button>
+          <button
             onClick={() => setActiveTab('news')}
             style={{
               padding: '12px 20px',

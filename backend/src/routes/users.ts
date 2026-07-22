@@ -362,19 +362,29 @@ router.get('/:id/ratings', async (req, res) => {
 
     const ratings = result.rows;
 
-    // Calculate stats
+    // Calculate stats.
+    //
+    // ratings.rating is NUMERIC, which pg hands back as a string ("4.0"), so
+    // `sum + r.rating` concatenated instead of adding: "0" + "4.0" + "4.0"...
+    // then dividing that by the count produced NaN, which serialises to null.
+    // A user with four 4-star reviews was reported as having no average at all,
+    // and MyAccountPage called .toFixed(1) on it and took the page down.
+    //
+    // The breakdown had the same root cause: `r.rating === 5` compares a string
+    // to a number and is never true, so every bucket read zero.
+    const scores = ratings.map((r) => Number(r.rating)).filter((n) => !Number.isNaN(n));
     const totalRatings = ratings.length;
     const averageRating =
-      totalRatings > 0
-        ? Math.round((ratings.reduce((sum, r) => sum + r.rating, 0) / totalRatings) * 10) / 10
+      scores.length > 0
+        ? Math.round((scores.reduce((sum, n) => sum + n, 0) / scores.length) * 10) / 10
         : 0;
 
     const ratingBreakdown = {
-      5: ratings.filter((r) => r.rating === 5).length,
-      4: ratings.filter((r) => r.rating === 4).length,
-      3: ratings.filter((r) => r.rating === 3).length,
-      2: ratings.filter((r) => r.rating === 2).length,
-      1: ratings.filter((r) => r.rating === 1).length,
+      5: scores.filter((n) => Math.round(n) === 5).length,
+      4: scores.filter((n) => Math.round(n) === 4).length,
+      3: scores.filter((n) => Math.round(n) === 3).length,
+      2: scores.filter((n) => Math.round(n) === 2).length,
+      1: scores.filter((n) => Math.round(n) === 1).length,
     };
 
     res.json({
@@ -384,7 +394,7 @@ router.get('/:id/ratings', async (req, res) => {
         reviewCount: totalRatings,
         reviews: ratings.map((r) => ({
           id: r.id,
-          score: r.rating,
+          score: Number(r.rating),
           comment: r.comment,
           raterName: r.rater_name,
           raterAlias: r.rater_alias,

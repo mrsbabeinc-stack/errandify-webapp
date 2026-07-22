@@ -1260,7 +1260,12 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
               <div className="bg-gradient-to-br from-yellow-300 via-orange-200 to-orange-300 rounded-xl p-3 border-2 border-yellow-400 shadow-md">
                 <div className="text-center">
                   <p className="text-base font-black text-orange-900 mb-1">✨ People Love You!</p>
-                  <p className="text-4xl font-black text-orange-700">{ratings.averageRating.toFixed(1)}</p>
+                  {/* Guarded: the API returned null here whenever the average
+                      could not be computed, and .toFixed() on that crashed the
+                      whole account page rather than degrading to a dash. */}
+                  <p className="text-4xl font-black text-orange-700">
+                    {typeof ratings.averageRating === 'number' ? ratings.averageRating.toFixed(1) : '—'}
+                  </p>
                   <div className="flex gap-1 justify-center mb-1">
                     {[...Array(5)].map((_, i) => (
                       <span key={i} className="text-lg">{i < Math.floor(ratings.averageRating) ? '⭐' : '✨'}</span>
