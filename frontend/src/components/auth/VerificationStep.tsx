@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { OFFENCE_OPTIONS, ASKS_THIRD_SCHEDULE, type OffenceType } from '../../constants/offenceOptions';
+import { OFFENCE_OPTIONS, type OffenceType } from '../../constants/offenceOptions';
 import { useToastNotification } from '../../utils/toastNotification';
 
 interface VerificationStepProps {
@@ -34,8 +34,12 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Whether the Third Schedule question applies to the offence they picked.
-  const asksThirdSchedule = !!offenceType && ASKS_THIRD_SCHEDULE.includes(offenceType);
+  // A Third Schedule offence never becomes spent (RCA s7C(a)), so a yes fixes
+  // the outcome and nothing asked afterwards could change it. Everything below
+  // that question is therefore skipped entirely rather than asked and ignored.
+  const settledByThirdSchedule = thirdSchedule === 'yes';
+
+  const canShowConvictionDate = thirdSchedule === 'no' && overThreshold === 'no';
 
   const handleCheckboxChange = (field: keyof typeof formData) => {
     setFormData(prev => ({
@@ -59,9 +63,13 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
 
     if (hasConviction === null) newErrors.hasConviction = 'Required';
     if (hasConviction === true) {
-      if (!offenceType) newErrors.offenceType = 'Required';
-      if (asksThirdSchedule && !thirdSchedule) newErrors.thirdSchedule = 'Required';
-      if (!overThreshold) newErrors.overThreshold = 'Required';
+      if (!thirdSchedule) newErrors.thirdSchedule = 'Required';
+      // A settled case is not asked the rest, so it cannot be required to
+      // answer them.
+      if (thirdSchedule && !settledByThirdSchedule) {
+        if (!offenceType) newErrors.offenceType = 'Required';
+        if (!overThreshold) newErrors.overThreshold = 'Required';
+      }
     }
 
     setErrors(newErrors);
@@ -104,16 +112,19 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
       }
 
       const tri = (v: string | null) => (v === 'yes' ? true : v === 'no' ? false : null);
-      const canStillSpend = (!asksThirdSchedule || thirdSchedule === 'no') && overThreshold === 'no';
+      const canStillSpend = thirdSchedule === 'no' && overThreshold === 'no';
 
       const scRes = await fetch(`${API_URL}/api/screening/declare`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           hasUnspentConviction: Boolean(hasConviction),
-          offenceType: hasConviction ? offenceType : null,
-          thirdScheduleOffence: hasConviction ? (asksThirdSchedule ? tri(thirdSchedule) : false) : null,
-          exceededSentenceThreshold: hasConviction ? tri(overThreshold) : null,
+          // A settled case sends nulls for what it was never asked, rather
+          // than values left in state from an answer the person changed.
+          offenceType: hasConviction && !settledByThirdSchedule ? offenceType : null,
+          thirdScheduleOffence: hasConviction ? tri(thirdSchedule) : null,
+          exceededSentenceThreshold:
+            hasConviction && !settledByThirdSchedule ? tri(overThreshold) : null,
           convictedOn: hasConviction && canStillSpend ? convictedOn || null : null,
           applicantNote: hasConviction ? applicantNote : null,
           understoodRestrictions: true,
@@ -221,6 +232,70 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
                     any of them does not remove you from Errandify.
                   </p>
 
+                  {/* FIRST, because a yes here settles everything. Under RCA
+                      s7C(a) a Third Schedule offence never becomes spent, so
+                      the outcome is already fixed — permanent, every category
+                      closed — and the offence type, the sentence and the
+                      conviction date cannot move it. Asking them anyway would
+                      collect criminal detail we have no use for, which is both
+                      pointless and the sort of thing PDPA exists to stop.
+
+                      Asking it first also fixes a tone problem: it used to come
+                      after the offence type, so someone who answered
+                      "shoplifting" was then asked whether it was homicide. Up
+                      front it reads as triage. After their answer it read as an
+                      accusation. */}
+                  <div>
+                    <p className="text-sm font-semibold text-errandify-brown mb-1">
+                      Was it one of these — rape, homicide, kidnapping or gang robbery?
+                    </p>
+                    <p className="text-xs text-gray-600 mb-2">
+                      Singapore law treats these differently from other offences. For almost
+                      everyone the answer is no.
+                    </p>
+                    <div className="flex gap-2 items-center">
+                      {(['yes', 'no'] as const).map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setThirdSchedule(v)}
+                          className={`px-5 py-2 rounded-lg border-2 text-sm font-semibold bg-white ${
+                            thirdSchedule === v ? 'border-errandify-orange text-errandify-orange' : 'border-gray-200 text-gray-600'
+                          }`}
+                        >
+                          {v === 'yes' ? 'Yes' : 'No'}
+                        </button>
+                      ))}
+                      {/* Secondary on purpose — an equal third button invites a
+                          shrug, but removing it forces a guess. Not certain
+                          continues to the rest, because a reviewer needs the
+                          detail that a definite yes would have made moot. */}
+                      <button
+                        type="button"
+                        onClick={() => setThirdSchedule('unsure')}
+                        className={`text-xs underline ml-1 ${
+                          thirdSchedule === 'unsure' ? 'text-errandify-orange' : 'text-gray-500'
+                        }`}
+                      >
+                        I'm not certain
+                      </button>
+                    </div>
+                    {errors.thirdSchedule && <p className="text-red-600 text-xs mt-1">Please answer this</p>}
+                  </div>
+
+                  {thirdSchedule === 'yes' && (
+                    <div className="text-sm text-gray-700 bg-white border-2 border-errandify-orange/30 rounded-lg p-4">
+                      Thank you — that's everything we need to ask. Errands involving children,
+                      vulnerable adults, home access or driving passengers won't be available on
+                      your account. The rest of Errandify is open to you as normal, and you can
+                      post errands of your own without restriction.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {hasConviction === true && thirdSchedule !== null && thirdSchedule !== 'yes' && (
+                <div className="mt-4 space-y-4">
                   {/* Asked so we can restrict less, not more. Without it every
                       conviction closed all seven categories, so a shoplifting
                       record barred someone from childcare and eldercare too.
@@ -254,43 +329,6 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
                     {errors.offenceType && <p className="text-red-600 text-xs mt-1">Please pick one</p>}
                   </div>
 
-                  {/* Only where it could plausibly apply. Asking someone who
-                      just answered "shoplifting" whether it was rape or
-                      homicide reads as an accusation, not a question. The
-                      sentence threshold below is asked of everyone and is the
-                      real backstop — see ASKS_THIRD_SCHEDULE. */}
-                  <div className={asksThirdSchedule ? '' : 'hidden'}>
-                    <p className="text-sm font-semibold text-errandify-brown mb-2">
-                      Was it a serious offence — rape, homicide, kidnapping or gang robbery?
-                    </p>
-                    <div className="flex gap-2 items-center">
-                      {(['yes', 'no'] as const).map((v) => (
-                        <button
-                          key={v}
-                          type="button"
-                          onClick={() => setThirdSchedule(v)}
-                          className={`px-5 py-2 rounded-lg border-2 text-sm font-semibold bg-white ${
-                            thirdSchedule === v ? 'border-errandify-orange text-errandify-orange' : 'border-gray-200 text-gray-600'
-                          }`}
-                        >
-                          {v === 'yes' ? 'Yes' : 'No'}
-                        </button>
-                      ))}
-                      {/* Secondary on purpose — an equal third button invites a
-                          shrug, but removing it forces a guess. */}
-                      <button
-                        type="button"
-                        onClick={() => setThirdSchedule('unsure')}
-                        className={`text-xs underline ml-1 ${
-                          thirdSchedule === 'unsure' ? 'text-errandify-orange' : 'text-gray-500'
-                        }`}
-                      >
-                        I'm not certain
-                      </button>
-                    </div>
-                    {errors.thirdSchedule && <p className="text-red-600 text-xs mt-1">Please answer this</p>}
-                  </div>
-
                   <div>
                     <p className="text-sm font-semibold text-errandify-brown mb-2">
                       Was the sentence more than 3 months in prison, or a fine over $2,000?
@@ -321,7 +359,7 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
                     {errors.overThreshold && <p className="text-red-600 text-xs mt-1">Please answer this</p>}
                   </div>
 
-                  {thirdSchedule === 'no' && overThreshold === 'no' && (
+                  {canShowConvictionDate && (
                     <div>
                       <p className="text-sm font-semibold text-errandify-brown mb-1">When were you convicted?</p>
                       <p className="text-xs text-gray-500 mb-2">This tells us when the restriction lifts.</p>
