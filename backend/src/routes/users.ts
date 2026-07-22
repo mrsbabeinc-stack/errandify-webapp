@@ -191,9 +191,17 @@ router.patch('/categories', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'At least one category must be selected' });
     }
 
+    // category_preferences is not a column. The two that exist are
+    // category_can_help and category_need_help — the split matters, because a
+    // doer's "what I can help with" and an asker's "what I need help with" are
+    // different lists on the same person. This route sets the doer side, which
+    // is what the category picker after signup is choosing.
     const result = await db.query(
-      'UPDATE users SET category_preferences = $1 WHERE id = $2 RETURNING id, category_preferences',
-      [JSON.stringify(categories), req.userId]
+      'UPDATE users SET category_can_help = $1 WHERE id = $2 RETURNING id, category_can_help',
+      // A Postgres text[], not jsonb — JSON.stringify produced a string that
+      // could not be cast to an array, so the update threw even once the column
+      // name was right. node-postgres maps a JS array straight onto text[].
+      [categories, req.userId]
     );
 
     if (result.rows.length === 0) {
@@ -203,7 +211,7 @@ router.patch('/categories', authMiddleware, async (req, res) => {
     res.json({
       success: true,
       data: {
-        categories: result.rows[0].category_preferences,
+        categories: result.rows[0].category_can_help,
       },
     });
   } catch (error) {
@@ -424,7 +432,7 @@ router.post('/category-preferences', authMiddleware, async (req: AuthRequest, re
 
     // Update user's category preferences
     await db.query(
-      'UPDATE users SET category_preferences = $1 WHERE id = $2',
+      'UPDATE users SET category_can_help = $1 WHERE id = $2',
       [preferredCategories, userId]
     );
 
