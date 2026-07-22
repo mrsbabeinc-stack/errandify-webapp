@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import axios from 'axios';
 import App from './App';
+import { getApiUrl } from './utils/apiUrl';
 import './index.css';
 
 // Lazy-load ResponsiveVoice.JS only when needed (speeds up app startup)
@@ -27,10 +28,20 @@ export const loadResponsiveVoice = () => {
   });
 };
 
-// Set up axios to use the API URL from environment
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+// Set up axios to use the API URL from environment.
+//
+// This used to fall back to http://localhost:8080, which is not where the
+// backend runs — it listens on 3000, and the other 338 call sites in this app
+// say so. Anything relying on axios's default baseURL was pointed at a dead
+// port whenever VITE_API_URL was unset.
+//
+// getApiUrl falls back to the page's own origin instead, which is right in
+// both environments: in dev that is the Vite server, whose proxy forwards
+// /api to the backend, and in production the API is served from the same
+// origin. No port is hardcoded either way.
+const apiUrl = getApiUrl();
 console.log('[API Config] VITE_API_URL:', import.meta.env.VITE_API_URL);
-console.log('[API Config] Using:', apiUrl);
+console.log('[API Config] Using:', apiUrl || '(same origin)');
 axios.defaults.baseURL = apiUrl;
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
